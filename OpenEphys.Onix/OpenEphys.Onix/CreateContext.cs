@@ -16,7 +16,11 @@ namespace OpenEphys.Onix
 
         public IObservable<ContextTask> Generate()
         {
-            return Observable.Defer(() => Observable.Return(new ContextTask(Driver, Index)));
+            return Observable.Defer(() =>
+            {
+                var context = new ContextTask(Driver, Index);
+                return Observable.Return(context);
+            });
         }
     }
 }
