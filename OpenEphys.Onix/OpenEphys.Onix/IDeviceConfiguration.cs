@@ -4,8 +4,10 @@ namespace OpenEphys.Onix
 {
     internal interface IDeviceConfiguration
     {
-        string Name { get; }
+        string DeviceName { get; set; }
 
-        Type Type { get; }
+        Type DeviceType { get; }
+
+        IObservable<ContextTask> Process(IObservable<ContextTask> source);
     }
 }

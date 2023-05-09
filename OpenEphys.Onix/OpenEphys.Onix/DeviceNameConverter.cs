@@ -112,8 +112,8 @@ namespace OpenEphys.Onix
                                      let factory = ExpressionBuilder.GetWorkflowElement(element) as DeviceFactory
                                      where factory != null
                                      from device in factory.GetDevices()
-                                     where device.Type == targetType
-                                     select device.Name)
+                                     where device.DeviceType == targetType
+                                     select device.DeviceName)
                                      .Distinct()
                                      .ToList();
                         return new StandardValuesCollection(names);

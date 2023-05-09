@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using Bonsai;
 
 namespace OpenEphys.Onix
@@ -20,15 +21,26 @@ namespace OpenEphys.Onix
 
         public uint DeviceIndex { get; set; }
 
-        internal Type DeviceType { get; }
-
-        string IDeviceConfiguration.Name => DeviceName;
-
-        Type IDeviceConfiguration.Type => DeviceType;
+        [Browsable(false)]
+        public Type DeviceType { get; }
 
         internal override IEnumerable<IDeviceConfiguration> GetDevices()
         {
             yield return this;
+        }
+    }
+
+    public abstract class HubDeviceFactory : DeviceFactory
+    {
+        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
+        {
+            var output = source;
+            foreach (var device in GetDevices())
+            {
+                output = device.Process(output);
+            }
+
+            return output;
         }
     }
 }
