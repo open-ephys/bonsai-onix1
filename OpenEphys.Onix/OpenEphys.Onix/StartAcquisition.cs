@@ -8,7 +8,7 @@ namespace OpenEphys.Onix
 {
     public class StartAcquisition : Combinator<ContextTask, oni.Frame>
     {
-        public int ReadSize { get; set; } = 28;
+        public int ReadSize { get; set; } = 2048;
 
         public int WriteSize { get; set; } = 2048;
 
