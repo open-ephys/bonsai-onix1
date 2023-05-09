@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
-using System.Runtime.Remoting.Channels;
-using System.Text;
-using System.Threading.Tasks;
 using Bonsai;
+using oni;
 
 namespace OpenEphys.Onix
 {
@@ -28,6 +24,9 @@ namespace OpenEphys.Onix
         readonly BehaviorSubject<ChannelDirection> direction09 = new(ChannelDirection.Input);
         readonly BehaviorSubject<ChannelDirection> direction10 = new(ChannelDirection.Input);
         readonly BehaviorSubject<ChannelDirection> direction11 = new(ChannelDirection.Input);
+
+        [Category(ConfigurationCategory)]
+        public string DeviceName { get; set; }
 
         [Category(ConfigurationCategory)]
         public uint DeviceIndex { get; set; } = 6;
@@ -178,10 +177,11 @@ namespace OpenEphys.Onix
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
+            var deviceName = DeviceName;
             var deviceIndex = DeviceIndex;
             return source.ConfigureDevice(context =>
             {
-                if (!context.DeviceTable.TryGetValue(deviceIndex, out oni.Device device))
+                if (!context.DeviceTable.TryGetValue(deviceIndex, out Device device))
                 {
                     throw new InvalidOperationException("Selected device index is invalid.");
                 }
@@ -208,7 +208,10 @@ namespace OpenEphys.Onix
                     context.WriteRegister(deviceIndex, Register.CHDIR, io_reg);
                 }
 
+                var deviceInfo = new DeviceInfo(context, deviceIndex);
+                var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
                 return new CompositeDisposable(
+                    disposable,
                     direction00.Subscribe(newValue => SetIO(0, newValue)),
                     direction01.Subscribe(newValue => SetIO(1, newValue)),
                     direction02.Subscribe(newValue => SetIO(2, newValue)),

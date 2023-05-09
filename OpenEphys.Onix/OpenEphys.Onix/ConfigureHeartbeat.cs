@@ -1,17 +1,18 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Linq;
-using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Bonsai;
+using oni;
 
 namespace OpenEphys.Onix
 {
     public class ConfigureHeartbeat : Sink<ContextTask>
     {
         readonly BehaviorSubject<uint> beatsPerSecond = new BehaviorSubject<uint>(10);
+
+        public string DeviceName { get; set; }
 
         public uint DeviceIndex { get; set; }
 
@@ -26,10 +27,11 @@ namespace OpenEphys.Onix
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
+            var deviceName = DeviceName;
             var deviceIndex = DeviceIndex;
             return source.ConfigureDevice(context =>
             {
-                if (!context.DeviceTable.TryGetValue(deviceIndex, out oni.Device device))
+                if (!context.DeviceTable.TryGetValue(deviceIndex, out Device device))
                 {
                     throw new InvalidOperationException("Selected device index is invalid.");
                 }
@@ -41,7 +43,13 @@ namespace OpenEphys.Onix
                     var clkHz = context.ReadRegister(deviceIndex, Register.CLK_HZ);
                     context.WriteRegister(deviceIndex, Register.CLK_DIV, clkHz / newValue);
                 });
-                return Disposable.Create(() => subscription.Dispose());
+
+                var deviceInfo = new DeviceInfo(context, deviceIndex);
+                var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
+                return new CompositeDisposable(
+                    disposable,
+                    subscription
+                );
             });
         }
 

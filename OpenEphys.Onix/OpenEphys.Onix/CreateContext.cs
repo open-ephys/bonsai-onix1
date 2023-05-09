@@ -21,16 +21,10 @@ namespace OpenEphys.Onix
             {
                 var driver = Driver;
                 var index = Index;
-                var disposable = ContextManager.ReserveContext(driver, index);
                 var context = new ContextTask(driver, index);
-                var subject = disposable.Subject;
                 observer.OnNext(context);
-                subject.OnNext(context);
-
                 return Disposable.Create(() =>
                 {
-                    subject.OnCompleted();
-                    disposable.Dispose();
                     context.Dispose();
                 });
             });

@@ -1,30 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Bonsai;
 using oni;
-using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
     public class AnalogInput : Source<ManagedFrame<short>>
     {
-        public string Driver { get; set; } = "riffa";
-
-        public int Index { get; set; }
-
-        public uint DeviceIndex { get; set; }
+        public string DeviceName { get; set; }
 
         public override IObservable<ManagedFrame<short>> Generate()
         {
             return Observable.Using(
-                () => ContextManager.ReserveContext(Driver, Index),
-                disposable => disposable.Subject.SelectMany(context =>
+                () => DeviceManager.ReserveDevice(DeviceName),
+                disposable => disposable.Subject.SelectMany(deviceInfo =>
                 {
-                    if (!context.DeviceTable.TryGetValue(DeviceIndex, out oni.Device device))
+                    var (context, deviceIndex) = deviceInfo;
+                    if (!context.DeviceTable.TryGetValue(deviceIndex, out Device device))
                     {
                         throw new InvalidOperationException("Selected device index is invalid.");
                     }
