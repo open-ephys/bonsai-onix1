@@ -28,10 +28,8 @@ namespace OpenEphys.Onix
         public ConfigureAnalogIO()
             : base(typeof(AnalogIO))
         {
+            DeviceIndex = 6;
         }
-
-        [Category(ConfigurationCategory)]
-        public uint DeviceIndex { get; set; } = 6;
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 0.")]

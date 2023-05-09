@@ -17,8 +17,6 @@ namespace OpenEphys.Onix
         {
         }
 
-        public uint DeviceIndex { get; set; }
-
         [Range(1, 10e6)]
         [Category("Configuration")]
         [Description("Rate at which beats are produced.")]

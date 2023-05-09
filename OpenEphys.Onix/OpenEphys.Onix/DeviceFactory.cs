@@ -18,7 +18,9 @@ namespace OpenEphys.Onix
 
         public string DeviceName { get; set; }
 
-        protected Type DeviceType { get; }
+        public uint DeviceIndex { get; set; }
+
+        internal Type DeviceType { get; }
 
         string IDeviceConfiguration.Name => DeviceName;
 
