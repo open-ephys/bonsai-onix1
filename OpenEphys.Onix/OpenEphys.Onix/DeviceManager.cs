@@ -12,11 +12,19 @@ namespace OpenEphys.Onix
 
         internal static IDisposable RegisterDevice(string name, DeviceInfo deviceInfo)
         {
-            var disposable = ReserveDevice(name);
-            var subject = disposable.Subject;
-            subject.OnNext(deviceInfo);
-            subject.OnCompleted();
-            return disposable;
+            lock (managerLock)
+            {
+                var disposable = ReserveDevice(name);
+                var subject = disposable.Subject;
+                if (subject.IsCompleted)
+                {
+                    throw new InvalidOperationException("A device with the same name has already been configured.");
+                }
+
+                subject.OnNext(deviceInfo);
+                subject.OnCompleted();
+                return disposable;
+            }
         }
 
         internal static DeviceDisposable ReserveDevice(string name)
@@ -54,13 +62,13 @@ namespace OpenEphys.Onix
         {
             IDisposable resource;
 
-            public DeviceDisposable(ISubject<DeviceInfo> subject, IDisposable disposable)
+            public DeviceDisposable(AsyncSubject<DeviceInfo> subject, IDisposable disposable)
             {
                 Subject = subject ?? throw new ArgumentNullException(nameof(subject));
                 resource = disposable ?? throw new ArgumentNullException(nameof(disposable));
             }
 
-            public ISubject<DeviceInfo> Subject { get; private set; }
+            public AsyncSubject<DeviceInfo> Subject { get; private set; }
 
             public void Dispose()
             {
