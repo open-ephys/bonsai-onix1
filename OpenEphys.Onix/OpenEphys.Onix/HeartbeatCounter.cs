@@ -6,7 +6,7 @@ using oni;
 
 namespace OpenEphys.Onix
 {
-    public class Heartbeat : Source<ManagedFrame<ushort>>
+    public class HeartbeatCounter : Source<ManagedFrame<ushort>>
     {
         public string DeviceName { get; set; }
 
@@ -16,6 +16,7 @@ namespace OpenEphys.Onix
                 () => DeviceManager.ReserveDevice(DeviceName),
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
                 {
+                    deviceInfo.AssertType(typeof(Heartbeat));
                     var (context, deviceIndex) = deviceInfo;
                     if (!context.DeviceTable.TryGetValue(deviceIndex, out Device device))
                     {

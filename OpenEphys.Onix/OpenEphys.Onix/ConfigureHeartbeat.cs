@@ -37,14 +37,14 @@ namespace OpenEphys.Onix
                 }
 
                 // Enable only takes effect after context reset
-                context.WriteRegister(deviceIndex, Register.ENABLE, 1);
+                context.WriteRegister(deviceIndex, Heartbeat.ENABLE, 1);
                 var subscription = beatsPerSecond.Subscribe(newValue =>
                 {
-                    var clkHz = context.ReadRegister(deviceIndex, Register.CLK_HZ);
-                    context.WriteRegister(deviceIndex, Register.CLK_DIV, clkHz / newValue);
+                    var clkHz = context.ReadRegister(deviceIndex, Heartbeat.CLK_HZ);
+                    context.WriteRegister(deviceIndex, Heartbeat.CLK_DIV, clkHz / newValue);
                 });
 
-                var deviceInfo = new DeviceInfo(context, deviceIndex);
+                var deviceInfo = new DeviceInfo(context, typeof(Heartbeat), deviceIndex);
                 var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
                 return new CompositeDisposable(
                     disposable,
@@ -52,12 +52,12 @@ namespace OpenEphys.Onix
                 );
             });
         }
+    }
 
-        private static class Register
-        {
-            public const uint ENABLE = 0;  // Enable the heartbeat
-            public const uint CLK_DIV = 1;  // Heartbeat clock divider ratio. Default results in 10 Hz heartbeat. Values less than CLK_HZ / 10e6 Hz will result in 1kHz.
-            public const uint CLK_HZ = 2; // The frequency parameter, CLK_HZ, used in the calculation of CLK_DIV
-        }
+    static class Heartbeat
+    {
+        public const uint ENABLE = 0;  // Enable the heartbeat
+        public const uint CLK_DIV = 1;  // Heartbeat clock divider ratio. Default results in 10 Hz heartbeat. Values less than CLK_HZ / 10e6 Hz will result in 1kHz.
+        public const uint CLK_HZ = 2; // The frequency parameter, CLK_HZ, used in the calculation of CLK_DIV
     }
 }

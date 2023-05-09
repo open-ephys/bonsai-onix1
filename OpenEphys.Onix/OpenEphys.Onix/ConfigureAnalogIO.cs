@@ -187,28 +187,28 @@ namespace OpenEphys.Onix
                 }
 
                 // Enable only takes effect after context reset
-                context.WriteRegister(deviceIndex, Register.ENABLE, 1);
-                context.WriteRegister(deviceIndex, Register.CH00INRANGE, (uint)InputRange00);
-                context.WriteRegister(deviceIndex, Register.CH00INRANGE, (uint)InputRange01);
-                context.WriteRegister(deviceIndex, Register.CH00INRANGE, (uint)InputRange02);
-                context.WriteRegister(deviceIndex, Register.CH00INRANGE, (uint)InputRange03);
-                context.WriteRegister(deviceIndex, Register.CH00INRANGE, (uint)InputRange04);
-                context.WriteRegister(deviceIndex, Register.CH00INRANGE, (uint)InputRange05);
-                context.WriteRegister(deviceIndex, Register.CH00INRANGE, (uint)InputRange06);
-                context.WriteRegister(deviceIndex, Register.CH00INRANGE, (uint)InputRange07);
-                context.WriteRegister(deviceIndex, Register.CH00INRANGE, (uint)InputRange08);
-                context.WriteRegister(deviceIndex, Register.CH00INRANGE, (uint)InputRange09);
-                context.WriteRegister(deviceIndex, Register.CH00INRANGE, (uint)InputRange10);
-                context.WriteRegister(deviceIndex, Register.CH00INRANGE, (uint)InputRange11);
+                context.WriteRegister(deviceIndex, AnalogIO.ENABLE, 1);
+                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange00);
+                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange01);
+                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange02);
+                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange03);
+                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange04);
+                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange05);
+                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange06);
+                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange07);
+                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange08);
+                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange09);
+                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange10);
+                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange11);
 
                 var io_reg = 0u;
                 void SetIO(int channel, ChannelDirection direction)
                 {
                     io_reg = (io_reg & ~((uint)1 << channel)) | ((uint)(direction) << channel);
-                    context.WriteRegister(deviceIndex, Register.CHDIR, io_reg);
+                    context.WriteRegister(deviceIndex, AnalogIO.CHDIR, io_reg);
                 }
 
-                var deviceInfo = new DeviceInfo(context, deviceIndex);
+                var deviceInfo = new DeviceInfo(context, typeof(AnalogIO), deviceIndex);
                 var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
                 return new CompositeDisposable(
                     disposable,
@@ -227,24 +227,24 @@ namespace OpenEphys.Onix
                 );
             });
         }
+    }
 
-        private static class Register
-        {
-            public const uint ENABLE = 0;
-            public const uint CHDIR = 1;
-            public const uint CH00INRANGE = 2;
-            public const uint CH01INRANGE = 3;
-            public const uint CH02INRANGE = 4;
-            public const uint CH03INRANGE = 5;
-            public const uint CH04INRANGE = 6;
-            public const uint CH05INRANGE = 7;
-            public const uint CH06INRANGE = 8;
-            public const uint CH07INRANGE = 9;
-            public const uint CH08INRANGE = 10;
-            public const uint CH09INRANGE = 11;
-            public const uint CH10INRANGE = 12;
-            public const uint CH11INRANGE = 13;
-        }
+    static class AnalogIO
+    {
+        public const uint ENABLE = 0;
+        public const uint CHDIR = 1;
+        public const uint CH00INRANGE = 2;
+        public const uint CH01INRANGE = 3;
+        public const uint CH02INRANGE = 4;
+        public const uint CH03INRANGE = 5;
+        public const uint CH04INRANGE = 6;
+        public const uint CH05INRANGE = 7;
+        public const uint CH06INRANGE = 8;
+        public const uint CH07INRANGE = 9;
+        public const uint CH08INRANGE = 10;
+        public const uint CH09INRANGE = 11;
+        public const uint CH10INRANGE = 12;
+        public const uint CH11INRANGE = 13;
     }
 
     public enum VoltageRange

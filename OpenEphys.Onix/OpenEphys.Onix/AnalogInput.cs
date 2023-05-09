@@ -16,6 +16,7 @@ namespace OpenEphys.Onix
                 () => DeviceManager.ReserveDevice(DeviceName),
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
                 {
+                    deviceInfo.AssertType(typeof(AnalogIO));
                     var (context, deviceIndex) = deviceInfo;
                     if (!context.DeviceTable.TryGetValue(deviceIndex, out Device device))
                     {
