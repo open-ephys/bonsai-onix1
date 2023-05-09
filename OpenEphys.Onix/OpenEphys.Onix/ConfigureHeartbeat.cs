@@ -1,15 +1,17 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Bonsai;
 
 namespace OpenEphys.Onix
 {
-    public class HeartbeatDevice : Combinator<ContextTask, ManagedFrame<ushort>>
+    public class ConfigureHeartbeat : Sink<ContextTask>
     {
-        readonly BehaviorSubject<uint> beatsPerSecond = new BehaviorSubject<uint>(0);
+        readonly BehaviorSubject<uint> beatsPerSecond = new BehaviorSubject<uint>(10);
 
         public uint DeviceIndex { get; set; }
 
@@ -22,36 +24,24 @@ namespace OpenEphys.Onix
             set { beatsPerSecond.OnNext(value); }
         }
 
-        public override IObservable<ManagedFrame<ushort>> Process(IObservable<ContextTask> source)
+        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var deviceIndex = DeviceIndex;
-            return source.SelectMany(context =>
+            return source.ConfigureDevice(context =>
             {
                 if (!context.DeviceTable.TryGetValue(deviceIndex, out oni.Device device))
                 {
                     throw new InvalidOperationException("Selected device index is invalid.");
                 }
 
-                var bps = BeatsPerSecond;
-
                 // Enable only takes effect after context reset
                 context.WriteRegister(deviceIndex, Register.ENABLE, 1);
-                if (bps != 0)
-                {
-                    var clkHz = context.ReadRegister(deviceIndex, Register.CLK_HZ);
-                    context.WriteRegister(deviceIndex, Register.CLK_DIV, clkHz / bps);
-                }
-
                 var subscription = beatsPerSecond.Subscribe(newValue =>
                 {
                     var clkHz = context.ReadRegister(deviceIndex, Register.CLK_HZ);
                     context.WriteRegister(deviceIndex, Register.CLK_DIV, clkHz / newValue);
                 });
-
-                subscription.Dispose();
-                return context.FrameReceived
-                    .Where(frame => frame.DeviceAddress == device.Address)
-                    .Select(frame => new ManagedFrame<ushort>(frame));
+                return Disposable.Create(() => subscription.Dispose());
             });
         }
 

@@ -12,6 +12,7 @@
     <PackageOutputPath></PackageOutputPath>
     <PackageTags>Bonsai Rx Open Ephys Onix</PackageTags>
     <TargetFramework>net472</TargetFramework>
+    <LangVersion>9.0</LangVersion>
     <Features>strict</Features>
     <Version>0.1.0</Version>
     <Platforms>x64</Platforms>
