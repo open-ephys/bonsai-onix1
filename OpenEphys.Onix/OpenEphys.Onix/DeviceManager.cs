@@ -18,7 +18,25 @@ namespace OpenEphys.Onix
                 var subject = disposable.Subject;
                 if (subject.IsCompleted)
                 {
-                    throw new InvalidOperationException("A device with the same name has already been configured.");
+                    throw new InvalidOperationException(
+                        "A device with the same name has already been configured."
+                    );
+                }
+
+                foreach (var entry in deviceMap)
+                {
+                    if (!entry.Value.Subject.IsCompleted)
+                    {
+                        continue;
+                    }
+
+                    var info = entry.Value.Subject.GetResult();
+                    if (info.Context == deviceInfo.Context && info.DeviceIndex == deviceInfo.DeviceIndex)
+                    {
+                        throw new InvalidOperationException(
+                            "A device with the same index has already been configured in this context."
+                        );
+                    }
                 }
 
                 subject.OnNext(deviceInfo);
