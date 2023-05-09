@@ -3,26 +3,20 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32825.248
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenEphys.Onix", "OpenEphys.Onix\OpenEphys.Onix.csproj", "{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenEphys.Onix", "OpenEphys.Onix\OpenEphys.Onix.csproj", "{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
 		Debug|ARM64 = Debug|ARM64
 		Debug|x64 = Debug|x64
-		Release|Any CPU = Release|Any CPU
 		Release|ARM64 = Release|ARM64
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}.Debug|ARM64.ActiveCfg = Debug|ARM64
-		{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}.Debug|ARM64.Build.0 = Debug|ARM64
+		{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}.Debug|ARM64.ActiveCfg = Debug|x64
+		{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}.Debug|ARM64.Build.0 = Debug|x64
 		{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}.Debug|x64.ActiveCfg = Debug|x64
 		{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}.Debug|x64.Build.0 = Debug|x64
-		{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}.Release|Any CPU.Build.0 = Release|Any CPU
 		{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}.Release|ARM64.ActiveCfg = Release|ARM64
 		{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}.Release|ARM64.Build.0 = Release|ARM64
 		{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}.Release|x64.ActiveCfg = Release|x64
