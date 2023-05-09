@@ -8,11 +8,14 @@ using oni;
 
 namespace OpenEphys.Onix
 {
-    public class ConfigureHeartbeat : Sink<ContextTask>
+    public class ConfigureHeartbeat : SingleDeviceFactory
     {
         readonly BehaviorSubject<uint> beatsPerSecond = new BehaviorSubject<uint>(10);
 
-        public string DeviceName { get; set; }
+        public ConfigureHeartbeat()
+            : base(typeof(Heartbeat))
+        {
+        }
 
         public uint DeviceIndex { get; set; }
 
@@ -44,7 +47,7 @@ namespace OpenEphys.Onix
                     context.WriteRegister(deviceIndex, Heartbeat.CLK_DIV, clkHz / newValue);
                 });
 
-                var deviceInfo = new DeviceInfo(context, typeof(Heartbeat), deviceIndex);
+                var deviceInfo = new DeviceInfo(context, DeviceType, deviceIndex);
                 var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
                 return new CompositeDisposable(
                     disposable,
@@ -59,5 +62,13 @@ namespace OpenEphys.Onix
         public const uint ENABLE = 0;  // Enable the heartbeat
         public const uint CLK_DIV = 1;  // Heartbeat clock divider ratio. Default results in 10 Hz heartbeat. Values less than CLK_HZ / 10e6 Hz will result in 1kHz.
         public const uint CLK_HZ = 2; // The frequency parameter, CLK_HZ, used in the calculation of CLK_DIV
+
+        internal class NameConverter : DeviceNameConverter
+        {
+            public NameConverter()
+                : base(typeof(Heartbeat))
+            {
+            }
+        }
     }
 }

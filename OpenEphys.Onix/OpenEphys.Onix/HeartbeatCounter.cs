@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Reactive.Linq;
 using Bonsai;
@@ -8,6 +9,7 @@ namespace OpenEphys.Onix
 {
     public class HeartbeatCounter : Source<ManagedFrame<ushort>>
     {
+        [TypeConverter(typeof(Heartbeat.NameConverter))]
         public string DeviceName { get; set; }
 
         public override IObservable<ManagedFrame<ushort>> Generate()

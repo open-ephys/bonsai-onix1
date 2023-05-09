@@ -7,7 +7,7 @@ using oni;
 
 namespace OpenEphys.Onix
 {
-    public class ConfigureAnalogIO : Sink<ContextTask>
+    public class ConfigureAnalogIO : SingleDeviceFactory
     {
         const string ConfigurationCategory = "Configuration";
         const string AcquisitionCategory = "Acquisition";
@@ -25,8 +25,10 @@ namespace OpenEphys.Onix
         readonly BehaviorSubject<ChannelDirection> direction10 = new(ChannelDirection.Input);
         readonly BehaviorSubject<ChannelDirection> direction11 = new(ChannelDirection.Input);
 
-        [Category(ConfigurationCategory)]
-        public string DeviceName { get; set; }
+        public ConfigureAnalogIO()
+            : base(typeof(AnalogIO))
+        {
+        }
 
         [Category(ConfigurationCategory)]
         public uint DeviceIndex { get; set; } = 6;
@@ -208,7 +210,7 @@ namespace OpenEphys.Onix
                     context.WriteRegister(deviceIndex, AnalogIO.CHDIR, io_reg);
                 }
 
-                var deviceInfo = new DeviceInfo(context, typeof(AnalogIO), deviceIndex);
+                var deviceInfo = new DeviceInfo(context, DeviceType, deviceIndex);
                 var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
                 return new CompositeDisposable(
                     disposable,
@@ -245,6 +247,14 @@ namespace OpenEphys.Onix
         public const uint CH09INRANGE = 11;
         public const uint CH10INRANGE = 12;
         public const uint CH11INRANGE = 13;
+
+        internal class NameConverter : DeviceNameConverter
+        {
+            public NameConverter()
+                : base(typeof(AnalogIO))
+            {
+            }
+        }
     }
 
     public enum VoltageRange
