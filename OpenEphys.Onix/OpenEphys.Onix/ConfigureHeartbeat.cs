@@ -36,12 +36,7 @@ namespace OpenEphys.Onix
             var deviceIndex = DeviceIndex;
             return source.ConfigureDevice(context =>
             {
-                if (!context.DeviceTable.TryGetValue(deviceIndex, out Device device))
-                {
-                    throw new InvalidOperationException("Selected device index is invalid.");
-                }
-
-                // Enable only takes effect after context reset
+                var device = context.GetDevice(deviceIndex, DeviceID.Heartbeat);
                 context.WriteRegister(deviceIndex, Heartbeat.ENABLE, 1);
                 var subscription = beatsPerSecond.Subscribe(newValue =>
                 {

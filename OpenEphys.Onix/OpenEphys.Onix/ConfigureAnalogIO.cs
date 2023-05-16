@@ -182,12 +182,7 @@ namespace OpenEphys.Onix
             var deviceIndex = DeviceIndex;
             return source.ConfigureDevice(context =>
             {
-                if (!context.DeviceTable.TryGetValue(deviceIndex, out Device device))
-                {
-                    throw new InvalidOperationException("Selected device index is invalid.");
-                }
-
-                // Enable only takes effect after context reset
+                var device = context.GetDevice(deviceIndex, DeviceID.BreakoutAnalogIO);
                 context.WriteRegister(deviceIndex, AnalogIO.ENABLE, 1);
                 context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange00);
                 context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange01);
