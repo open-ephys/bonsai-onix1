@@ -17,8 +17,12 @@ namespace OpenEphys.Onix
         {
         }
 
+        [Category(ConfigurationCategory)]
+        [Description("Specifies whether the heartbeat device is enabled.")]
+        public bool Enable { get; set; } = true;
+
         [Range(1, 10e6)]
-        [Category("Configuration")]
+        [Category(ConfigurationCategory)]
         [Description("Rate at which beats are produced.")]
         public uint BeatsPerSecond
         {

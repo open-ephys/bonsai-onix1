@@ -7,6 +7,9 @@ namespace OpenEphys.Onix
 {
     public abstract class DeviceFactory : Sink<ContextTask>
     {
+        internal const string ConfigurationCategory = "Configuration";
+        internal const string AcquisitionCategory = "Acquisition";
+
         internal abstract IEnumerable<IDeviceConfiguration> GetDevices();
     }
 

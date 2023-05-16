@@ -9,9 +9,6 @@ namespace OpenEphys.Onix
 {
     public class ConfigureAnalogIO : SingleDeviceFactory
     {
-        const string ConfigurationCategory = "Configuration";
-        const string AcquisitionCategory = "Acquisition";
-
         readonly BehaviorSubject<ChannelDirection> direction00 = new(ChannelDirection.Input);
         readonly BehaviorSubject<ChannelDirection> direction01 = new(ChannelDirection.Input);
         readonly BehaviorSubject<ChannelDirection> direction02 = new(ChannelDirection.Input);
@@ -30,6 +27,10 @@ namespace OpenEphys.Onix
         {
             DeviceIndex = 6;
         }
+
+        [Category(ConfigurationCategory)]
+        [Description("Specifies whether the heartbeat device is enabled.")]
+        public bool Enable { get; set; } = true;
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 0.")]
