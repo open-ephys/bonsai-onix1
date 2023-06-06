@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,6 +32,8 @@ namespace OpenEphys.Onix
         private BlockingCollection<oni.Frame> FrameQueue;
         private CancellationTokenSource CollectFramesTokenSource;
         private CancellationToken CollectFramesToken;
+        event Action<ContextTask> configureLink;
+        event Func<ContextTask, IDisposable> configureDevice;
 
         // NOTE: There was a GC memory leak around here
         internal Subject<oni.Frame> FrameReceived = new Subject<oni.Frame>();
@@ -90,6 +94,40 @@ namespace OpenEphys.Onix
         public uint MaxReadFrameSize { get; private set; }
         public uint MaxWriteFrameSize { get; private set; }
         public Dictionary<uint, oni.Device> DeviceTable { get; private set; }
+
+        internal void ConfigureLink(Action<ContextTask> action)
+        {
+            configureLink += action;
+        }
+
+        internal void ConfigureDevice(Func<ContextTask, IDisposable> selector)
+        {
+            configureDevice += selector;
+        }
+
+        internal IDisposable Configure()
+        {
+            var linkAction = Interlocked.Exchange(ref configureLink, null);
+            var deviceAction = Interlocked.Exchange(ref configureDevice, null);
+            if (linkAction != null)
+            {
+                linkAction(this);
+                Reset();
+            }
+
+            if (deviceAction != null)
+            {
+                try
+                {
+                    return new CompositeDisposable(
+                        from selector in deviceAction.GetInvocationList().Cast<Func<ContextTask, IDisposable>>()
+                        select selector(this));
+                }
+                finally { Reset(); }
+            }
+
+            return Disposable.Empty;
+        }
 
         internal void Start()
         {

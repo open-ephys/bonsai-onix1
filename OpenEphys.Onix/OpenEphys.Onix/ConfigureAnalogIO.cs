@@ -2,8 +2,6 @@
 using System.ComponentModel;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
-using Bonsai;
-using oni;
 
 namespace OpenEphys.Onix
 {

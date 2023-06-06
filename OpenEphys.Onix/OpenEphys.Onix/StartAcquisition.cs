@@ -18,7 +18,7 @@ namespace OpenEphys.Onix
             {
                 return Observable.Create<oni.Frame>(observer =>
                 {
-                    context.Reset();
+                    var configuration = context.Configure();
                     context.BlockReadSize = ReadSize;
                     context.BlockWriteSize = WriteSize;
                     var frameSubscription = context.FrameReceived.SubscribeSafe(observer);
@@ -27,6 +27,7 @@ namespace OpenEphys.Onix
                     {
                         context.Stop();
                         frameSubscription.Dispose();
+                        configuration.Dispose();
                     });
                 });
             });
