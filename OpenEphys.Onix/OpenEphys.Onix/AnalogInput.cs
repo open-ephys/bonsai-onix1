@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reactive.Linq;
 using Bonsai;
-using oni;
 
 namespace OpenEphys.Onix
 {
@@ -18,14 +17,8 @@ namespace OpenEphys.Onix
                 () => DeviceManager.ReserveDevice(DeviceName),
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
                 {
-                    deviceInfo.AssertType(typeof(AnalogIO));
-                    var (context, deviceIndex) = deviceInfo;
-                    if (!context.DeviceTable.TryGetValue(deviceIndex, out Device device))
-                    {
-                        throw new InvalidOperationException("Selected device index is invalid.");
-                    }
-
-                    return context.FrameReceived
+                    var device = deviceInfo.GetDevice(typeof(AnalogIO));
+                    return deviceInfo.Context.FrameReceived
                         .Where(frame => frame.DeviceAddress == device.Address)
                         .Select(frame => new ManagedFrame<short>(frame));
                 }));

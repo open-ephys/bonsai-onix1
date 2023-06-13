@@ -4,18 +4,18 @@ namespace OpenEphys.Onix
 {
     internal class DeviceInfo
     {
-        public DeviceInfo(ContextTask context, Type deviceType, uint deviceIndex)
+        public DeviceInfo(ContextTask context, Type deviceType, uint deviceAddress)
         {
             Context = context ?? throw new ArgumentNullException(nameof(context));
             DeviceType = deviceType ?? throw new ArgumentNullException(nameof(deviceType));
-            DeviceIndex = deviceIndex;
+            DeviceAddress = deviceAddress;
         }
 
         public ContextTask Context { get; }
 
         public Type DeviceType { get; }
 
-        public uint DeviceIndex { get; }
+        public uint DeviceAddress { get; }
 
         public void AssertType(Type expectedType)
         {
@@ -27,10 +27,10 @@ namespace OpenEphys.Onix
             }
         }
 
-        public void Deconstruct(out ContextTask context, out uint deviceIndex)
+        public void Deconstruct(out ContextTask context, out uint deviceAddress)
         {
             context = Context;
-            deviceIndex = DeviceIndex;
+            deviceAddress = DeviceAddress;
         }
     }
 }

@@ -12,7 +12,7 @@ namespace OpenEphys.Onix
             if (destinationType == typeof(string))
             {
                 var device = (SingleDeviceFactory)value;
-                return $"Index: {device.DeviceIndex}";
+                return $"Address: {device.DeviceAddress}";
             }
 
             return base.ConvertTo(context, culture, value, destinationType);

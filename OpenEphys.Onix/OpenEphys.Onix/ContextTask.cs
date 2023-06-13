@@ -298,19 +298,19 @@ namespace OpenEphys.Onix
             }
         }
 
-        internal uint ReadRegister(uint deviceIndex, uint registerAddress)
+        internal uint ReadRegister(uint deviceAddress, uint registerAddress)
         {
             lock (regLock)
             {
-                return ctx.ReadRegister(deviceIndex, registerAddress);
+                return ctx.ReadRegister(deviceAddress, registerAddress);
             }
         }
 
-        internal void WriteRegister(uint deviceIndex, uint registerAddress, uint value)
+        internal void WriteRegister(uint deviceAddress, uint registerAddress, uint value)
         {
             lock (regLock)
             {
-                ctx.WriteRegister(deviceIndex, registerAddress, value);
+                ctx.WriteRegister(deviceAddress, registerAddress, value);
             }
         }
 
@@ -322,31 +322,31 @@ namespace OpenEphys.Onix
             }
         }
 
-        public void Write<T>(uint deviceIndex, T data) where T : unmanaged
+        public void Write<T>(uint deviceAddress, T data) where T : unmanaged
         {
             lock (writeLock)
             {
-                ctx.Write(deviceIndex, data);
+                ctx.Write(deviceAddress, data);
             }
         }
 
-        public void Write<T>(uint deviceIndex, T[] data) where T : unmanaged
+        public void Write<T>(uint deviceAddress, T[] data) where T : unmanaged
         {
             lock (writeLock)
             {
-                ctx.Write(deviceIndex, data);
+                ctx.Write(deviceAddress, data);
             }
         }
 
-        public void Write(uint deviceIndex, IntPtr data, int dataSize)
+        public void Write(uint deviceAddress, IntPtr data, int dataSize)
         {
             lock (writeLock)
             {
-                ctx.Write(deviceIndex, data, dataSize);
+                ctx.Write(deviceAddress, data, dataSize);
             }
         }
 
-        public oni.Hub GetHub(uint deviceIndex) { return ctx.GetHub(deviceIndex); }
+        public oni.Hub GetHub(uint deviceAddress) { return ctx.GetHub(deviceAddress); }
         #endregion
 
         private void OnFrameReceived(oni.Frame frame)

@@ -22,7 +22,7 @@ namespace OpenEphys.Onix
 
         public string DeviceName { get; set; }
 
-        public uint DeviceIndex { get; set; }
+        public uint DeviceAddress { get; set; }
 
         [Browsable(false)]
         public Type DeviceType { get; }

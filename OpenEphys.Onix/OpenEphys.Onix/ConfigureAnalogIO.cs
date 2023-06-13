@@ -23,7 +23,7 @@ namespace OpenEphys.Onix
         public ConfigureAnalogIO()
             : base(typeof(AnalogIO))
         {
-            DeviceIndex = 6;
+            DeviceAddress = 6;
         }
 
         [Category(ConfigurationCategory)]
@@ -177,32 +177,32 @@ namespace OpenEphys.Onix
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var deviceName = DeviceName;
-            var deviceIndex = DeviceIndex;
+            var deviceAddress = DeviceAddress;
             return source.ConfigureDevice(context =>
             {
-                var device = context.GetDevice(deviceIndex, DeviceID.BreakoutAnalogIO);
-                context.WriteRegister(deviceIndex, AnalogIO.ENABLE, 1);
-                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange00);
-                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange01);
-                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange02);
-                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange03);
-                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange04);
-                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange05);
-                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange06);
-                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange07);
-                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange08);
-                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange09);
-                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange10);
-                context.WriteRegister(deviceIndex, AnalogIO.CH00INRANGE, (uint)InputRange11);
+                var device = context.GetDevice(deviceAddress, DeviceID.BreakoutAnalogIO);
+                context.WriteRegister(deviceAddress, AnalogIO.ENABLE, 1);
+                context.WriteRegister(deviceAddress, AnalogIO.CH00INRANGE, (uint)InputRange00);
+                context.WriteRegister(deviceAddress, AnalogIO.CH00INRANGE, (uint)InputRange01);
+                context.WriteRegister(deviceAddress, AnalogIO.CH00INRANGE, (uint)InputRange02);
+                context.WriteRegister(deviceAddress, AnalogIO.CH00INRANGE, (uint)InputRange03);
+                context.WriteRegister(deviceAddress, AnalogIO.CH00INRANGE, (uint)InputRange04);
+                context.WriteRegister(deviceAddress, AnalogIO.CH00INRANGE, (uint)InputRange05);
+                context.WriteRegister(deviceAddress, AnalogIO.CH00INRANGE, (uint)InputRange06);
+                context.WriteRegister(deviceAddress, AnalogIO.CH00INRANGE, (uint)InputRange07);
+                context.WriteRegister(deviceAddress, AnalogIO.CH00INRANGE, (uint)InputRange08);
+                context.WriteRegister(deviceAddress, AnalogIO.CH00INRANGE, (uint)InputRange09);
+                context.WriteRegister(deviceAddress, AnalogIO.CH00INRANGE, (uint)InputRange10);
+                context.WriteRegister(deviceAddress, AnalogIO.CH00INRANGE, (uint)InputRange11);
 
                 var io_reg = 0u;
                 void SetIO(int channel, ChannelDirection direction)
                 {
                     io_reg = (io_reg & ~((uint)1 << channel)) | ((uint)(direction) << channel);
-                    context.WriteRegister(deviceIndex, AnalogIO.CHDIR, io_reg);
+                    context.WriteRegister(deviceAddress, AnalogIO.CHDIR, io_reg);
                 }
 
-                var deviceInfo = new DeviceInfo(context, DeviceType, deviceIndex);
+                var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
                 var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
                 return new CompositeDisposable(
                     disposable,

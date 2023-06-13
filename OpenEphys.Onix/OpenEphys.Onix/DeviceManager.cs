@@ -31,10 +31,10 @@ namespace OpenEphys.Onix
                     }
 
                     var info = entry.Value.Subject.GetResult();
-                    if (info.Context == deviceInfo.Context && info.DeviceIndex == deviceInfo.DeviceIndex)
+                    if (info.Context == deviceInfo.Context && info.DeviceAddress == deviceInfo.DeviceAddress)
                     {
                         throw new InvalidOperationException(
-                            "A device with the same index has already been configured in this context."
+                            "A device with the same address has already been configured in this context."
                         );
                     }
                 }

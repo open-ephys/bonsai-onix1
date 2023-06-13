@@ -32,18 +32,18 @@ namespace OpenEphys.Onix
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var deviceName = DeviceName;
-            var deviceIndex = DeviceIndex;
+            var deviceAddress = DeviceAddress;
             return source.ConfigureDevice(context =>
             {
-                var device = context.GetDevice(deviceIndex, DeviceID.Heartbeat);
-                context.WriteRegister(deviceIndex, Heartbeat.ENABLE, 1);
+                var device = context.GetDevice(deviceAddress, DeviceID.Heartbeat);
+                context.WriteRegister(deviceAddress, Heartbeat.ENABLE, 1);
                 var subscription = beatsPerSecond.Subscribe(newValue =>
                 {
-                    var clkHz = context.ReadRegister(deviceIndex, Heartbeat.CLK_HZ);
-                    context.WriteRegister(deviceIndex, Heartbeat.CLK_DIV, clkHz / newValue);
+                    var clkHz = context.ReadRegister(deviceAddress, Heartbeat.CLK_HZ);
+                    context.WriteRegister(deviceAddress, Heartbeat.CLK_DIV, clkHz / newValue);
                 });
 
-                var deviceInfo = new DeviceInfo(context, DeviceType, deviceIndex);
+                var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
                 var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
                 return new CompositeDisposable(
                     disposable,
