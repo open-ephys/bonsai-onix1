@@ -5,14 +5,14 @@ namespace OpenEphys.Onix
 {
     static class ContextHelper
     {
-        public static Device GetDevice(this ContextTask context, uint address, DeviceID id)
+        public static Device GetDevice(this ContextTask context, uint address, int id)
         {
             if (!context.DeviceTable.TryGetValue(address, out Device device))
             {
                 throw new InvalidOperationException($"The specified device '{id}:{address}' is not present in the device table.");
             }
 
-            if (device.ID != (int)id)
+            if (device.ID != id)
             {
                 throw new InvalidOperationException($"The selected device is not a {id} device.");
             }

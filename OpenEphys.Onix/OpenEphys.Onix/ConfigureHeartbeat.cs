@@ -35,7 +35,7 @@ namespace OpenEphys.Onix
             var deviceAddress = DeviceAddress;
             return source.ConfigureDevice(context =>
             {
-                var device = context.GetDevice(deviceAddress, DeviceID.Heartbeat);
+                var device = context.GetDevice(deviceAddress, Heartbeat.ID);
                 context.WriteRegister(deviceAddress, Heartbeat.ENABLE, 1);
                 var subscription = beatsPerSecond.Subscribe(newValue =>
                 {
@@ -55,6 +55,8 @@ namespace OpenEphys.Onix
 
     static class Heartbeat
     {
+        public const int ID = 12;
+
         public const uint ENABLE = 0;  // Enable the heartbeat
         public const uint CLK_DIV = 1;  // Heartbeat clock divider ratio. Default results in 10 Hz heartbeat. Values less than CLK_HZ / 10e6 Hz will result in 1kHz.
         public const uint CLK_HZ = 2; // The frequency parameter, CLK_HZ, used in the calculation of CLK_DIV

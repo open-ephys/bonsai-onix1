@@ -27,7 +27,7 @@ namespace OpenEphys.Onix
         }
 
         [Category(ConfigurationCategory)]
-        [Description("Specifies whether the heartbeat device is enabled.")]
+        [Description("Specifies whether the analog IO device is enabled.")]
         public bool Enable { get; set; } = true;
 
         [Category(ConfigurationCategory)]
@@ -180,7 +180,7 @@ namespace OpenEphys.Onix
             var deviceAddress = DeviceAddress;
             return source.ConfigureDevice(context =>
             {
-                var device = context.GetDevice(deviceAddress, DeviceID.BreakoutAnalogIO);
+                var device = context.GetDevice(deviceAddress, AnalogIO.ID);
                 context.WriteRegister(deviceAddress, AnalogIO.ENABLE, 1);
                 context.WriteRegister(deviceAddress, AnalogIO.CH00INRANGE, (uint)InputRange00);
                 context.WriteRegister(deviceAddress, AnalogIO.CH00INRANGE, (uint)InputRange01);
@@ -225,6 +225,8 @@ namespace OpenEphys.Onix
 
     static class AnalogIO
     {
+        public const int ID = 22;
+
         public const uint ENABLE = 0;
         public const uint CHDIR = 1;
         public const uint CH00INRANGE = 2;
