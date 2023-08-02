@@ -41,7 +41,7 @@ namespace OpenEphys.Onix
                 frame.Data);
         }
 
-        public static IObservable<Mat> Buffer(IObservable<oni.Frame> source, int count, uint channels, Depth depth)
+        public static IObservable<Mat> Buffer(this IObservable<oni.Frame> source, int count, uint channels, Depth depth)
         {
             if (source == null)
             {
@@ -65,12 +65,13 @@ namespace OpenEphys.Onix
                         else
                         {
                             var frameIndex = 0;
-                            while (frameIndex < frameHeader.Cols)
+                            var frameSamples = frameHeader.Cols;
+                            while (frameIndex < frameSamples)
                             {
                                 activeBuffer ??= new Mat((int)channels, count, depth, channels: 1);
-                                var samplesToCopy = Math.Min(frameHeader.Cols - frameIndex, activeBuffer.Cols - bufferIndex);
+                                var samplesToCopy = Math.Min(frameSamples - frameIndex, activeBuffer.Cols - bufferIndex);
                                 using var bufferSubRect = activeBuffer.GetSubRect(new Rect(bufferIndex, 0, samplesToCopy, activeBuffer.Rows));
-                                using var frameSubRect = samplesToCopy != frameHeader.Cols
+                                using var frameSubRect = samplesToCopy != frameSamples
                                     ? frameHeader.GetSubRect(new Rect(frameIndex, 0, samplesToCopy, frameHeader.Rows))
                                     : frameHeader;
                                 CV.Copy(frameSubRect, bufferSubRect);
