@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Title>OpenEphys.Onix</Title>
+    <Description>A package for the Bonsai visual programming language.</Description>
+    <Authors></Authors>
+    <Copyright>Copyright ©  2023</Copyright>
+    <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
+    <PackageProjectUrl></PackageProjectUrl>
+    <PackageLicenseExpression></PackageLicenseExpression>
+    <PackageIcon></PackageIcon>
+    <PackageOutputPath></PackageOutputPath>
+    <PackageTags>Bonsai Rx Open Ephys Onix</PackageTags>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Features>strict</Features>
+    <Version>0.1.0</Version>
+    <Platforms>x64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Bonsai.Core" Version="2.8.0" />
+    <PackageReference Include="OpenCV.Net" Version="3.4.2" />
+    <PackageReference Include="clroni" Version="6.0.0-build230711" />
+  </ItemGroup>
+
+</Project>
