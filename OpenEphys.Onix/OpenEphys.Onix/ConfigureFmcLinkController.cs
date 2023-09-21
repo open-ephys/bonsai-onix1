@@ -19,9 +19,11 @@ namespace OpenEphys.Onix
 
         public bool GPO1 { get; set; }
 
-        public int MinVoltage { get; set; }
+        [Description("Specifies the minimum link voltage at which the hub is expected to operate.")]
+        public double MinVoltage { get; set; }
 
-        public int MaxVoltage { get; set; }
+        [Description("Specifies the maximum link voltage at which the hub is expected to operate.")]
+        public double MaxVoltage { get; set; }
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
@@ -30,11 +32,27 @@ namespace OpenEphys.Onix
             {
                 var device = context.GetDevice(deviceAddress, FmcLinkController.ID);
                 context.WriteRegister(deviceAddress, FmcLinkController.ENABLE, 1);
-                context.WriteRegister(deviceAddress, FmcLinkController.PORTVOLTAGE, 0);
 
-                for (int v = MinVoltage; v < MaxVoltage; v += 2)
+                var hasLock = false;
+                var minVoltage = (uint)(MinVoltage * 10);
+                var maxVoltage = (uint)(MaxVoltage * 10);
+                for (uint voltage = minVoltage; voltage <= maxVoltage; voltage += 2)
                 {
-                    context.ReadRegister(deviceAddress, FmcLinkController.LINKSTATE);
+                    context.WriteRegister(deviceAddress, FmcLinkController.PORTVOLTAGE, 0);
+                    context.WriteRegister(deviceAddress, FmcLinkController.PORTVOLTAGE, voltage);
+
+                    var linkState = context.ReadRegister(deviceAddress, FmcLinkController.LINKSTATE);
+                    if ((linkState & FmcLinkController.LINKSTATE_SL) != 0)
+                    {
+                        // as a first pass, check if lock is stable in the next step
+                        if (hasLock) break;
+                        else hasLock = true;
+                    }
+                }
+
+                if (!hasLock)
+                {
+                    throw new InvalidOperationException("Unable to get SERDES lock on FMC link controller.");
                 }
             }).ConfigureDevice(context =>
             {
@@ -52,6 +70,9 @@ namespace OpenEphys.Onix
             public const uint PORTVOLTAGE = 3; // 10 * link voltage
             public const uint SAVEVOLTAGE = 4; // Save link voltage to non-volatile EEPROM if greater than 0. This voltage will be applied after POR.
             public const uint LINKSTATE = 5; // bit 1 pass; bit 0 lock
+
+            public const uint LINKSTATE_PP = 0x2; // parity check pass bit
+            public const uint LINKSTATE_SL = 0x1; // SERDES lock bit
         }
     }
 }

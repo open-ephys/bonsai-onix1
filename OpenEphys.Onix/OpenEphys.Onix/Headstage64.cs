@@ -11,6 +11,9 @@ namespace OpenEphys.Onix
         public Headstage64()
         {
             Port = PortName.PortA;
+            LinkController.Passthrough = false;
+            LinkController.MinVoltage = 3.3;
+            LinkController.MaxVoltage = 8.0;
         }
 
         [TypeConverter(typeof(HubDeviceConverter))]
