@@ -26,7 +26,7 @@ namespace OpenEphys.Onix
             return source.ConfigureDevice(context =>
             {
                 var device = context.GetDevice(deviceAddress, Bno055.ID);
-                context.WriteRegister(deviceAddress, Bno055.ENABLE, 1);
+                context.WriteRegister(deviceAddress, Bno055.ENABLE, Enable ? 1u : 0);
 
                 var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
                 var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
