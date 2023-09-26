@@ -10,10 +10,13 @@ namespace OpenEphys.Onix
         {
             Clock = frame.Clock;
             var payload = (Bno055Payload*)frame.Data.ToPointer();
+            HubClock = unchecked((ulong)IPAddress.NetworkToHostOrder(payload->HubClock));
             Payload = *payload;
         }
 
         public ulong Clock { get; }
+
+        public ulong HubClock { get; }
 
         public Bno055Payload Payload { get; }
     }
