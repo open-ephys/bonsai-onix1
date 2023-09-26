@@ -12,8 +12,8 @@ namespace OpenEphys.Onix
         {
             Port = PortName.PortA;
             LinkController.Passthrough = false;
-            LinkController.MinVoltage = 3.3;
-            LinkController.MaxVoltage = 8.0;
+            LinkController.MinVoltage = 5.0;
+            LinkController.MaxVoltage = 7.0;
         }
 
         [TypeConverter(typeof(HubDeviceConverter))]

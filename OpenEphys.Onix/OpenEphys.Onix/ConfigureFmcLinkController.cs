@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Reactive.Disposables;
+using System.Threading;
 
 namespace OpenEphys.Onix
 {
@@ -38,8 +39,11 @@ namespace OpenEphys.Onix
                 var maxVoltage = (uint)(MaxVoltage * 10);
                 for (uint voltage = minVoltage; voltage <= maxVoltage; voltage += 2)
                 {
+                    const int WaitUntilVoltageSettles = 200;
                     context.WriteRegister(deviceAddress, FmcLinkController.PORTVOLTAGE, 0);
+                    Thread.Sleep(WaitUntilVoltageSettles);
                     context.WriteRegister(deviceAddress, FmcLinkController.PORTVOLTAGE, voltage);
+                    Thread.Sleep(WaitUntilVoltageSettles);
 
                     var linkState = context.ReadRegister(deviceAddress, FmcLinkController.LINKSTATE);
                     if ((linkState & FmcLinkController.LINKSTATE_SL) != 0)
@@ -52,6 +56,7 @@ namespace OpenEphys.Onix
 
                 if (!hasLock)
                 {
+                    context.WriteRegister(deviceAddress, FmcLinkController.PORTVOLTAGE, 0);
                     throw new InvalidOperationException("Unable to get SERDES lock on FMC link controller.");
                 }
             }).ConfigureDevice(context =>
