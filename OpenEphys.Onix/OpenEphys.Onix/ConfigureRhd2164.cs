@@ -16,12 +16,13 @@ namespace OpenEphys.Onix
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
+            var enable = Enable;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
             return source.ConfigureDevice(context =>
             {
                 var device = context.GetDevice(deviceAddress, Rhd2164.ID);
-                context.WriteRegister(deviceAddress, Rhd2164.ENABLE, 1);
+                context.WriteRegister(deviceAddress, Rhd2164.ENABLE, enable ? 1u : 0);
 
                 var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
                 var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
