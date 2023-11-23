@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Runtime.InteropServices;
 using OpenCV.Net;
 
@@ -7,13 +6,12 @@ namespace OpenEphys.Onix
 {
     public class Rhd2164DataFrame
     {
-        public unsafe Rhd2164DataFrame(oni.Frame frame)
+        public Rhd2164DataFrame(ulong clock, long hubClock, Mat amplifierData, Mat auxData)
         {
-            Clock = frame.Clock;
-            var payload = (Rhd2164Payload*)frame.Data.ToPointer();
-            HubClock = unchecked((ulong)IPAddress.NetworkToHostOrder(payload->HubClock));
-            AmplifierData = MatHelper.GetMatData(64, 1, Depth.S16, payload->AmplifierData);
-            AuxData = MatHelper.GetMatData(3, 1, Depth.S16, payload->AuxData);
+            Clock = clock;
+            HubClock = unchecked((ulong)IPAddress.NetworkToHostOrder(hubClock));
+            AmplifierData = amplifierData;
+            AuxData = auxData;
         }
 
         public ulong Clock { get; }
@@ -28,8 +26,11 @@ namespace OpenEphys.Onix
     [StructLayout(LayoutKind.Sequential)]
     unsafe struct Rhd2164Payload
     {
+        public const int AmplifierChannelCount = 64;
+        public const int AuxChannelCount = 3;
+
         public long HubClock;
-        public fixed short AmplifierData[64];
-        public fixed short AuxData[3];
+        public fixed ushort AmplifierData[AmplifierChannelCount];
+        public fixed ushort AuxData[AuxChannelCount];
     }
 }
