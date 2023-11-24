@@ -15,10 +15,20 @@ namespace OpenEphys.Onix
         public bool Enable { get; set; } = true;
 
         [Category(ConfigurationCategory)]
+        [Description("Specifies the raw ADC output format used for amplifier conversions.")]
         public Rhd2164AmplifierDataFormat AmplifierDataFormat { get; set; }
 
         [Category(ConfigurationCategory)]
+        [Description("Specifies the cutoff frequency for the DSP high-pass filter used for amplifier offset removal.")]
         public Rhd2164DspCutoff DspCutoff { get; set; }
+
+        [Category(ConfigurationCategory)]
+        [Description("Specifies the lower cutoff frequency of the pre-ADC amplifiers.")]
+        public Rhd2164AnalogLowCutoff AnalogLowCutoff { get; set; }
+
+        [Category(ConfigurationCategory)]
+        [Description("Specifies the upper cutoff frequency of the pre-ADC amplifiers.")]
+        public Rhd2164AnalogHighCutoff AnalogHighCutoff { get; set; }
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
@@ -30,7 +40,6 @@ namespace OpenEphys.Onix
                 // config register format following RHD2164 datasheet
                 // https://intantech.com/files/Intan_RHD2000_series_datasheet.pdf
                 var device = context.GetDevice(deviceAddress, Rhd2164.ID);
-                context.WriteRegister(deviceAddress, Rhd2164.ENABLE, enable ? 1u : 0);
 
                 var format = 0;
                 var amplifierDataFormat = AmplifierDataFormat;
@@ -43,7 +52,22 @@ namespace OpenEphys.Onix
                     format |= (int)dspCutoff;
                 }
 
+                var highCutoff = Rhd2164Config.AnalogHighCutoffToRegisters[AnalogHighCutoff];
+                var lowCutoff = Rhd2164Config.AnalogLowCutoffToRegisters[AnalogLowCutoff];
+                var bw0 = highCutoff[0] & 0b00111111;
+                var bw1 = highCutoff[1] & 0b00011111;
+                var bw2 = highCutoff[2] & 0b00111111;
+                var bw3 = highCutoff[3] & 0b00011111;
+                var bw4 = lowCutoff[0] & 0b01111111;
+                var bw5 = (lowCutoff[2] << 6) & 0b01000000 | lowCutoff[1] & 0b00111111;
+                context.WriteRegister(deviceAddress, Rhd2164.BW0, (uint)bw0);
+                context.WriteRegister(deviceAddress, Rhd2164.BW1, (uint)bw1);
+                context.WriteRegister(deviceAddress, Rhd2164.BW2, (uint)bw2);
+                context.WriteRegister(deviceAddress, Rhd2164.BW3, (uint)bw3);
+                context.WriteRegister(deviceAddress, Rhd2164.BW4, (uint)bw4);
+                context.WriteRegister(deviceAddress, Rhd2164.BW5, (uint)bw5);
                 context.WriteRegister(deviceAddress, Rhd2164.FORMAT, (uint)format);
+                context.WriteRegister(deviceAddress, Rhd2164.ENABLE, enable ? 1u : 0);
 
                 var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
                 var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
