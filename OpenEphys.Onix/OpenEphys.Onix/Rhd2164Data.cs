@@ -26,19 +26,19 @@ namespace OpenEphys.Onix
                     {
                         var sampleIndex = 0;
                         var device = deviceInfo.GetDevice(typeof(Rhd2164));
-                        var amplifierBuffer = new short[Rhd2164Payload.AmplifierChannelCount * bufferSize];
-                        var auxBuffer = new short[Rhd2164Payload.AuxChannelCount * bufferSize];
+                        var amplifierBuffer = new short[Rhd2164.AmplifierChannelCount * bufferSize];
+                        var auxBuffer = new short[Rhd2164.AuxChannelCount * bufferSize];
 
                         var frameObserver = Observer.Create<oni.Frame>(
                             frame =>
                             {
                                 var payload = (Rhd2164Payload*)frame.Data.ToPointer();
-                                Marshal.Copy(new IntPtr(payload->AmplifierData), amplifierBuffer, sampleIndex, Rhd2164Payload.AmplifierChannelCount);
-                                Marshal.Copy(new IntPtr(payload->AuxData), amplifierBuffer, sampleIndex, Rhd2164Payload.AuxChannelCount);
+                                Marshal.Copy(new IntPtr(payload->AmplifierData), amplifierBuffer, sampleIndex * Rhd2164.AmplifierChannelCount, Rhd2164.AmplifierChannelCount);
+                                Marshal.Copy(new IntPtr(payload->AuxData), auxBuffer, sampleIndex * Rhd2164.AuxChannelCount, Rhd2164.AuxChannelCount);
                                 if (++sampleIndex >= bufferSize)
                                 {
-                                    var amplifierData = BufferHelper.CopyBuffer(amplifierBuffer, bufferSize, Rhd2164Payload.AmplifierChannelCount, Depth.U16);
-                                    var auxData = BufferHelper.CopyBuffer(auxBuffer, bufferSize, Rhd2164Payload.AuxChannelCount, Depth.U16);
+                                    var amplifierData = BufferHelper.CopyBuffer(amplifierBuffer, bufferSize, Rhd2164.AmplifierChannelCount, Depth.U16);
+                                    var auxData = BufferHelper.CopyBuffer(auxBuffer, bufferSize, Rhd2164.AuxChannelCount, Depth.U16);
                                     observer.OnNext(new Rhd2164DataFrame(frame.Clock, payload->HubClock, amplifierData, auxData));
                                     sampleIndex = 0;
                                 }

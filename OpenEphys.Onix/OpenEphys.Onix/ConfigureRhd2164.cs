@@ -93,6 +93,10 @@ namespace OpenEphys.Onix
     {
         public const int ID = 3;
 
+        // constants
+        public const int AmplifierChannelCount = 64;
+        public const int AuxChannelCount = 3;
+
         // managed registers
         public const uint ENABLE = 0x8000;
 

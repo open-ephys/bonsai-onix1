@@ -23,14 +23,11 @@ namespace OpenEphys.Onix
         public Mat AuxData { get; }
     }
 
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
     unsafe struct Rhd2164Payload
     {
-        public const int AmplifierChannelCount = 64;
-        public const int AuxChannelCount = 3;
-
         public long HubClock;
-        public fixed ushort AmplifierData[AmplifierChannelCount];
-        public fixed ushort AuxData[AuxChannelCount];
+        public fixed ushort AmplifierData[Rhd2164.AmplifierChannelCount];
+        public fixed ushort AuxData[Rhd2164.AuxChannelCount];
     }
 }
