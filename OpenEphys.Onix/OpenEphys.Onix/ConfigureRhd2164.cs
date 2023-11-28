@@ -114,15 +114,15 @@ namespace OpenEphys.Onix
         public const uint BW2 = 0x0a; // On-Chip Amplifier Bandwidth Select 2
         public const uint BW3 = 0x0b; // On-Chip Amplifier Bandwidth Select 3
         public const uint BW4 = 0x0c; // On-Chip Amplifier Bandwidth Select 4
-        public const uint BW5 = 0x0e; // On-Chip Amplifier Bandwidth Select 5
-        public const uint PWR0 = 0x0f; // Individual Amplifier Power 0
-        public const uint PWR1 = 0x10; // Individual Amplifier Power 1
-        public const uint PWR2 = 0x11; // Individual Amplifier Power 2
-        public const uint PWR3 = 0x12; // Individual Amplifier Power 3
-        public const uint PWR4 = 0x13; // Individual Amplifier Power 4
-        public const uint PWR5 = 0x14; // Individual Amplifier Power 5
-        public const uint PWR6 = 0x15; // Individual Amplifier Power 6
-        public const uint PWR7 = 0x16; // Individual Amplifier Power 7
+        public const uint BW5 = 0x0d; // On-Chip Amplifier Bandwidth Select 5
+        public const uint PWR0 = 0x0e; // Individual Amplifier Power 0
+        public const uint PWR1 = 0x0f; // Individual Amplifier Power 1
+        public const uint PWR2 = 0x10; // Individual Amplifier Power 2
+        public const uint PWR3 = 0x11; // Individual Amplifier Power 3
+        public const uint PWR4 = 0x12; // Individual Amplifier Power 4
+        public const uint PWR5 = 0x13; // Individual Amplifier Power 5
+        public const uint PWR6 = 0x14; // Individual Amplifier Power 6
+        public const uint PWR7 = 0x15; // Individual Amplifier Power 7
 
         internal class NameConverter : DeviceNameConverter
         {
