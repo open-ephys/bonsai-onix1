@@ -93,7 +93,8 @@ namespace OpenEphys.Onix
     {
         public const int ID = 3;
 
-        public const uint ENABLE = 0x10000;  // Enable the heartbeat
+        // managed registers
+        public const uint ENABLE = 0x8000;
 
         // unmanaged registers
         public const uint ADCCONF = 0x00; // ADC Configuration and Amplifier Fast Settle
