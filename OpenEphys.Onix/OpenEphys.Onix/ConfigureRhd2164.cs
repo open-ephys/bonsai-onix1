@@ -60,18 +60,25 @@ namespace OpenEphys.Onix
 
                 var highCutoff = Rhd2164Config.AnalogHighCutoffToRegisters[AnalogHighCutoff];
                 var lowCutoff = Rhd2164Config.AnalogLowCutoffToRegisters[AnalogLowCutoff];
-                var bw0 = highCutoff[0] & 0b00111111;
-                var bw1 = highCutoff[1] & 0b00011111;
-                var bw2 = highCutoff[2] & 0b00111111;
-                var bw3 = highCutoff[3] & 0b00011111;
-                var bw4 = lowCutoff[0] & 0b01111111;
-                var bw5 = (lowCutoff[2] << 6) & 0b01000000 | lowCutoff[1] & 0b00111111;
-                context.WriteRegister(deviceAddress, Rhd2164.BW0, (uint)bw0);
-                context.WriteRegister(deviceAddress, Rhd2164.BW1, (uint)bw1);
-                context.WriteRegister(deviceAddress, Rhd2164.BW2, (uint)bw2);
-                context.WriteRegister(deviceAddress, Rhd2164.BW3, (uint)bw3);
-                context.WriteRegister(deviceAddress, Rhd2164.BW4, (uint)bw4);
-                context.WriteRegister(deviceAddress, Rhd2164.BW5, (uint)bw5);
+                var bw0 = context.ReadRegister(deviceAddress, Rhd2164.BW0);
+                var bw1 = context.ReadRegister(deviceAddress, Rhd2164.BW1);
+                var bw2 = context.ReadRegister(deviceAddress, Rhd2164.BW2);
+                var bw3 = context.ReadRegister(deviceAddress, Rhd2164.BW3);
+                var bw4 = context.ReadRegister(deviceAddress, Rhd2164.BW4);
+                var bw5 = context.ReadRegister(deviceAddress, Rhd2164.BW5);
+                bw0 = BitHelper.Replace(bw0, 0b00111111, (uint)highCutoff[0]);
+                bw1 = BitHelper.Replace(bw1, 0b00011111, (uint)highCutoff[1]);
+                bw2 = BitHelper.Replace(bw2, 0b00111111, (uint)highCutoff[2]);
+                bw3 = BitHelper.Replace(bw3, 0b00011111, (uint)highCutoff[3]);
+                bw4 = BitHelper.Replace(bw4, 0b01111111, (uint)lowCutoff[0]);
+                bw5 = BitHelper.Replace(bw5, 0b01111111, ((uint)lowCutoff[2] << 6) & 0b01000000 |
+                                                          (uint)lowCutoff[1] & 0b00111111);
+                context.WriteRegister(deviceAddress, Rhd2164.BW0, bw0);
+                context.WriteRegister(deviceAddress, Rhd2164.BW1, bw1);
+                context.WriteRegister(deviceAddress, Rhd2164.BW2, bw2);
+                context.WriteRegister(deviceAddress, Rhd2164.BW3, bw3);
+                context.WriteRegister(deviceAddress, Rhd2164.BW4, bw4);
+                context.WriteRegister(deviceAddress, Rhd2164.BW5, bw5);
                 context.WriteRegister(deviceAddress, Rhd2164.FORMAT, format);
                 context.WriteRegister(deviceAddress, Rhd2164.ENABLE, enable ? 1u : 0);
 
