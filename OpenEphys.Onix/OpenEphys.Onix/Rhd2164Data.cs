@@ -14,7 +14,7 @@ namespace OpenEphys.Onix
         [TypeConverter(typeof(Rhd2164.NameConverter))]
         public string DeviceName { get; set; }
 
-        public int BufferSize { get; set; }
+        public int BufferSize { get; set; } = 30;
 
         public unsafe override IObservable<Rhd2164DataFrame> Generate()
         {
