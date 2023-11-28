@@ -24,11 +24,11 @@ namespace OpenEphys.Onix
 
         [Category(ConfigurationCategory)]
         [Description("Specifies the lower cutoff frequency of the pre-ADC amplifiers.")]
-        public Rhd2164AnalogLowCutoff AnalogLowCutoff { get; set; }
+        public Rhd2164AnalogLowCutoff AnalogLowCutoff { get; set; } = Rhd2164AnalogLowCutoff.Low100mHz;
 
         [Category(ConfigurationCategory)]
         [Description("Specifies the upper cutoff frequency of the pre-ADC amplifiers.")]
-        public Rhd2164AnalogHighCutoff AnalogHighCutoff { get; set; }
+        public Rhd2164AnalogHighCutoff AnalogHighCutoff { get; set; } = Rhd2164AnalogHighCutoff.High10000Hz;
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
