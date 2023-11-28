@@ -41,15 +41,21 @@ namespace OpenEphys.Onix
                 // https://intantech.com/files/Intan_RHD2000_series_datasheet.pdf
                 var device = context.GetDevice(deviceAddress, Rhd2164.ID);
 
-                var format = 0;
+                var format = context.ReadRegister(deviceAddress, Rhd2164.FORMAT);
                 var amplifierDataFormat = AmplifierDataFormat;
-                format |= (int)amplifierDataFormat << 6;
+                format &= ~(1u << 6);
+                format |= (uint)amplifierDataFormat << 6;
 
                 var dspCutoff = DspCutoff;
-                if (dspCutoff != Rhd2164DspCutoff.Off)
+                if (dspCutoff == Rhd2164DspCutoff.Off)
+                {
+                    format &= ~(1u << 4);
+                }
+                else
                 {
                     format |= 1 << 4;
-                    format |= (int)dspCutoff;
+                    format &= ~0xFu;
+                    format |= (uint)dspCutoff;
                 }
 
                 var highCutoff = Rhd2164Config.AnalogHighCutoffToRegisters[AnalogHighCutoff];
@@ -66,7 +72,7 @@ namespace OpenEphys.Onix
                 context.WriteRegister(deviceAddress, Rhd2164.BW3, (uint)bw3);
                 context.WriteRegister(deviceAddress, Rhd2164.BW4, (uint)bw4);
                 context.WriteRegister(deviceAddress, Rhd2164.BW5, (uint)bw5);
-                context.WriteRegister(deviceAddress, Rhd2164.FORMAT, (uint)format);
+                context.WriteRegister(deviceAddress, Rhd2164.FORMAT, format);
                 context.WriteRegister(deviceAddress, Rhd2164.ENABLE, enable ? 1u : 0);
 
                 var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
