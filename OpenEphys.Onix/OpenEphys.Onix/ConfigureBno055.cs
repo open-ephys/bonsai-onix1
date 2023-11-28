@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Reactive.Disposables;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OpenEphys.Onix
 {
@@ -39,6 +34,12 @@ namespace OpenEphys.Onix
     {
         public const int ID = 9;
 
+        // constants
+        public const float EulerAngleScale = 1f / 16; // 1 degree = 16 LSB
+        public const float QuaternionScale = 1f / (1 << 14); // 1 = 2^14 LSB
+        public const float AccelerationScale = 1f / 100; // 1m / s^2 = 100 LSB
+
+        // managed registers
         public const uint ENABLE = 0x10000;  // Enable the heartbeat
 
         internal class NameConverter : DeviceNameConverter
