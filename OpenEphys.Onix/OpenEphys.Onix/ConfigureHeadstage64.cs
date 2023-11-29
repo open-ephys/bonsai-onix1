@@ -4,12 +4,12 @@ using Bonsai;
 
 namespace OpenEphys.Onix
 {
-    public class Headstage64 : HubDeviceFactory, INamedElement
+    public class ConfigureHeadstage64 : HubDeviceFactory, INamedElement
     {
         PortName port;
         readonly ConfigureFmcLinkController LinkController = new();
 
-        public Headstage64()
+        public ConfigureHeadstage64()
         {
             Port = PortName.PortA;
             LinkController.Passthrough = false;
