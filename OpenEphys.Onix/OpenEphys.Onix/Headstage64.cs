@@ -27,6 +27,10 @@ namespace OpenEphys.Onix
         [TypeConverter(typeof(HubDeviceConverter))]
         public ConfigureBno055 Bno055 { get; set; } = new();
 
+        [Category(ConfigurationCategory)]
+        [TypeConverter(typeof(HubDeviceConverter))]
+        public ConfigureTS4231 TS4231 { get; set; } = new() { Enable = false };
+
         public PortName Port
         {
             get { return port; }
@@ -36,8 +40,11 @@ namespace OpenEphys.Onix
                 LinkController.DeviceAddress = (uint)port;
                 Rhd2164.DeviceName = !string.IsNullOrEmpty(Name) ? $"{Name}.Rhd2164" : null;
                 Bno055.DeviceName = !string.IsNullOrEmpty(Name) ? $"{Name}.Bno055" : null;
-                Rhd2164.DeviceAddress = ((uint)port << 8) + 0;
-                Bno055.DeviceAddress = ((uint)port << 8) + 1;
+                TS4231.DeviceName = !string.IsNullOrEmpty(Name) ? $"{Name}.TS4231" : null;
+                var offset = (uint)port << 8;
+                Rhd2164.DeviceAddress = offset + 0;
+                Bno055.DeviceAddress = offset + 1;
+                TS4231.DeviceAddress = offset + 2;
             }
         }
 
@@ -46,6 +53,7 @@ namespace OpenEphys.Onix
             yield return LinkController;
             yield return Rhd2164;
             yield return Bno055;
+            yield return TS4231;
         }
     }
 
