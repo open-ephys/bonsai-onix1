@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
-using System.Net;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
@@ -38,7 +37,7 @@ namespace OpenEphys.Onix
                                 var payload = (Rhd2164Payload*)frame.Data.ToPointer();
                                 Marshal.Copy(new IntPtr(payload->AmplifierData), amplifierBuffer, sampleIndex * Rhd2164.AmplifierChannelCount, Rhd2164.AmplifierChannelCount);
                                 Marshal.Copy(new IntPtr(payload->AuxData), auxBuffer, sampleIndex * Rhd2164.AuxChannelCount, Rhd2164.AuxChannelCount);
-                                hubClockBuffer[sampleIndex] = unchecked((ulong)IPAddress.NetworkToHostOrder((long)payload->HubClock));
+                                hubClockBuffer[sampleIndex] = BitHelper.SwapEndian(payload->HubClock);
                                 clockBuffer[sampleIndex] = frame.Clock;
                                 if (++sampleIndex >= bufferSize)
                                 {

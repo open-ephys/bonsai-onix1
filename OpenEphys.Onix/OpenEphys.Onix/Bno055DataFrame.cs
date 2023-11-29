@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
@@ -11,7 +10,7 @@ namespace OpenEphys.Onix
         {
             Clock = frame.Clock;
             var payload = (Bno055Payload*)frame.Data.ToPointer();
-            HubClock = unchecked((ulong)IPAddress.NetworkToHostOrder((long)payload->HubClock));
+            HubClock = BitHelper.SwapEndian(payload->HubClock);
             EulerAngle = new Vector3(
                 y: Bno055.EulerAngleScale * payload->EulerAngle[0],  // yaw
                 z: Bno055.EulerAngleScale * payload->EulerAngle[1],  // roll
