@@ -40,7 +40,7 @@ namespace OpenEphys.Onix
         public const float AccelerationScale = 1f / 100; // 1m / s^2 = 100 LSB
 
         // managed registers
-        public const uint ENABLE = 0x10000;  // Enable the heartbeat
+        public const uint ENABLE = 0x0; // Enable or disable the data output stream
 
         internal class NameConverter : DeviceNameConverter
         {

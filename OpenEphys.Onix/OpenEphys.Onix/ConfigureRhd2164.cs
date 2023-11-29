@@ -98,7 +98,7 @@ namespace OpenEphys.Onix
         public const int AuxChannelCount = 3;
 
         // managed registers
-        public const uint ENABLE = 0x8000;
+        public const uint ENABLE = 0x8000; // Enable or disable the data output stream
 
         // unmanaged registers
         public const uint ADCCONF = 0x00; // ADC Configuration and Amplifier Fast Settle
