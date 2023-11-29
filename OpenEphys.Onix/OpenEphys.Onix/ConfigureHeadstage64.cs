@@ -6,6 +6,7 @@ namespace OpenEphys.Onix
 {
     public class ConfigureHeadstage64 : HubDeviceFactory, INamedElement
     {
+        string name;
         PortName port;
         readonly ConfigureFmcLinkController LinkController = new();
 
@@ -17,7 +18,15 @@ namespace OpenEphys.Onix
             LinkController.MaxVoltage = 7.0;
         }
 
-        public string Name { get; set; }
+        public string Name
+        {
+            get { return name; }
+            set
+            {
+                name = value;
+                UpdateDeviceNames(name);
+            }
+        }
 
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
@@ -37,15 +46,20 @@ namespace OpenEphys.Onix
             set
             {
                 port = value;
-                LinkController.DeviceAddress = (uint)port;
-                Rhd2164.DeviceName = !string.IsNullOrEmpty(Name) ? $"{Name}.Rhd2164" : null;
-                Bno055.DeviceName = !string.IsNullOrEmpty(Name) ? $"{Name}.Bno055" : null;
-                TS4231.DeviceName = !string.IsNullOrEmpty(Name) ? $"{Name}.TS4231" : null;
                 var offset = (uint)port << 8;
+                LinkController.DeviceAddress = (uint)port;
                 Rhd2164.DeviceAddress = offset + 0;
                 Bno055.DeviceAddress = offset + 1;
                 TS4231.DeviceAddress = offset + 2;
+                UpdateDeviceNames(Name);
             }
+        }
+
+        private void UpdateDeviceNames(string name)
+        {
+            Rhd2164.DeviceName = !string.IsNullOrEmpty(name) ? $"{name}.Rhd2164" : null;
+            Bno055.DeviceName = !string.IsNullOrEmpty(name) ? $"{name}.Bno055" : null;
+            TS4231.DeviceName = !string.IsNullOrEmpty(name) ? $"{name}.TS4231" : null;
         }
 
         internal override IEnumerable<IDeviceConfiguration> GetDevices()
