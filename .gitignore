@@ -5,3 +5,4 @@ Packages
 *.user
 *.exe
 *.exe.settings
+*.exe.WebView2

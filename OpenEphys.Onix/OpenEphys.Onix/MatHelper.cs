@@ -7,6 +7,12 @@ namespace OpenEphys.Onix
 {
     static class MatHelper
     {
+        public static unsafe Mat GetMatData(int rows, int cols, Depth depth, void* data)
+        {
+            var mat = new Mat(rows, cols, depth, channels: 1, (IntPtr)data);
+            return mat.Clone();
+        }
+
         public static uint GetElementSize(Depth depth)
         {
             return depth switch
