@@ -9,24 +9,24 @@ namespace OpenEphys.Onix
 {
     public class ConfigureLoadTester : SingleDeviceFactory
     {
-        readonly BehaviorSubject<uint> frameHz = new BehaviorSubject<uint>(1000);
+        readonly BehaviorSubject<uint> frameHz = new(1000);
 
         public ConfigureLoadTester()
             : base(typeof(LoadTester))
         {
         }
 
-        [Category("Configuration")]
+        [Category(ConfigurationCategory)]
         [Description("Number of repetitions of the 16-bit unsigned integer 42 sent with each read-frame.")]
         [Range(0, 10e6)]
         public uint ReceivedWords { get; set; }
 
-        [Category("Configuration")]
+        [Category(ConfigurationCategory)]
         [Description("Number of repetitions of the 32-bit integer 42 sent with each write frame.")]
         [Range(0, 10e6)]
         public uint TransmittedWords { get; set; }
 
-        [Category("Acquisition")]
+        [Category(AcquisitionCategory)]
         [Description("Specifies the rate at which frames are produced.")]
         public uint FrameHz
         {
