@@ -22,11 +22,16 @@ namespace OpenEphys.Onix
                 var driver = Driver;
                 var index = Index;
                 var context = new ContextTask(driver, index);
-                observer.OnNext(context);
-                return Disposable.Create(() =>
+                try
+                {
+                    observer.OnNext(context);
+                    return context;
+                }
+                catch
                 {
                     context.Dispose();
-                });
+                    throw;
+                }
             });
         }
     }
