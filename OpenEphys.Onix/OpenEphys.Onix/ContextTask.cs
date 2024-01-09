@@ -95,11 +95,15 @@ namespace OpenEphys.Onix
         public uint MaxWriteFrameSize { get; private set; }
         public Dictionary<uint, oni.Device> DeviceTable { get; private set; }
 
+        // NB: This is where actions that reconfigure the link controller, or otherwise
+        // change the device table should be executed
         internal void ConfigureLink(Action<ContextTask> action)
         {
             configureLink += action;
         }
 
+        // NB: Actions queued using this method should assume that the device table
+        // is finalized and cannot be changed
         internal void ConfigureDevice(Func<ContextTask, IDisposable> selector)
         {
             configureDevice += selector;
@@ -294,6 +298,7 @@ namespace OpenEphys.Onix
             }
             set
             {
+                // PortA and PortB each have a bit in portfunc
                 ctx.SetCustomOption((int)oni.ONIXOption.PORTFUNC, value);
             }
         }
