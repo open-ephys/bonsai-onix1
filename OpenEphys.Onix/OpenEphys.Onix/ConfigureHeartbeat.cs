@@ -9,7 +9,7 @@ namespace OpenEphys.Onix
 {
     public class ConfigureHeartbeat : SingleDeviceFactory
     {
-        readonly BehaviorSubject<uint> beatsPerSecond = new BehaviorSubject<uint>(10);
+        readonly BehaviorSubject<uint> beatsPerSecond = new(10);
 
         public ConfigureHeartbeat()
             : base(typeof(Heartbeat))
@@ -25,8 +25,8 @@ namespace OpenEphys.Onix
         [Description("Rate at which beats are produced.")]
         public uint BeatsPerSecond
         {
-            get { return beatsPerSecond.Value; }
-            set { beatsPerSecond.OnNext(value); }
+            get => beatsPerSecond.Value;
+            set => beatsPerSecond.OnNext(value);
         }
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
