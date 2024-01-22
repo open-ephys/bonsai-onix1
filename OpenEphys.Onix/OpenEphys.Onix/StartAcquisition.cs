@@ -18,16 +18,26 @@ namespace OpenEphys.Onix
             {
                 return Observable.Create<oni.Frame>(observer =>
                 {
-                    var configuration = context.Configure();
-                    context.BlockReadSize = ReadSize;
-                    context.BlockWriteSize = WriteSize;
-                    var frameSubscription = context.FrameReceived.SubscribeSafe(observer);
-                    context.Start();
+                    var disposable = new CompositeDisposable(capacity: 2)
+                    {
+                        context.Configure(),
+                        context.FrameReceived.SubscribeSafe(observer)
+                    };
+                    try
+                    {
+                        context.BlockReadSize = ReadSize;
+                        context.BlockWriteSize = WriteSize;
+                        context.Start();
+                    }
+                    catch
+                    {
+                        disposable.Dispose();
+                        throw;
+                    }
                     return Disposable.Create(() =>
                     {
                         context.Stop();
-                        frameSubscription.Dispose();
-                        configuration.Dispose();
+                        disposable.Dispose();
                     });
                 });
             });
