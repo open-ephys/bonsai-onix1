@@ -28,6 +28,15 @@ namespace OpenEphys.Onix
         [Description("Specifies the maximum link voltage at which the hub is expected to operate.")]
         public double MaxVoltage { get; set; }
 
+        [Description("Specifies an optional link voltage offset to ensure stable operation after lock is established.")]
+        public double VoltageOffset { get; set; } = 0.2;
+
+        protected virtual bool CheckLinkState(ContextTask context, uint deviceAddress)
+        {
+            var linkState = context.ReadRegister(deviceAddress, FmcLinkController.LINKSTATE);
+            return (linkState & FmcLinkController.LINKSTATE_SL) != 0;
+        }
+
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var deviceAddress = DeviceAddress;
@@ -48,6 +57,7 @@ namespace OpenEphys.Onix
                 var hasLock = false;
                 var minVoltage = (uint)(MinVoltage * 10);
                 var maxVoltage = (uint)(MaxVoltage * 10);
+                var safetyVoltage = (uint)(VoltageOffset * 10);
                 for (uint voltage = minVoltage; voltage <= maxVoltage; voltage += 2)
                 {
                     const int WaitUntilVoltageSettles = 200;
@@ -56,12 +66,14 @@ namespace OpenEphys.Onix
                     context.WriteRegister(deviceAddress, FmcLinkController.PORTVOLTAGE, voltage);
                     Thread.Sleep(WaitUntilVoltageSettles);
 
-                    var linkState = context.ReadRegister(deviceAddress, FmcLinkController.LINKSTATE);
-                    if ((linkState & FmcLinkController.LINKSTATE_SL) != 0)
+                    if (CheckLinkState(context, deviceAddress))
                     {
-                        // as a first pass, check if lock is stable in the next step
-                        if (hasLock) break;
-                        else hasLock = true;
+                        context.WriteRegister(
+                            deviceAddress,
+                            FmcLinkController.PORTVOLTAGE,
+                            voltage + safetyVoltage);
+                        hasLock = true;
+                        break;
                     }
                 }
 
@@ -70,9 +82,6 @@ namespace OpenEphys.Onix
                     context.WriteRegister(deviceAddress, FmcLinkController.PORTVOLTAGE, 0);
                     throw new InvalidOperationException("Unable to get SERDES lock on FMC link controller.");
                 }
-            }).ConfigureDevice(context =>
-            {
-                return Disposable.Empty;
             });
         }
 
