@@ -13,7 +13,7 @@ namespace OpenEphys.Onix
         public ConfigureHeadstage64()
         {
             Port = PortName.PortA;
-            LinkController.Passthrough = false;
+            LinkController.HubConfiguration = HubConfiguration.Standard;
             LinkController.MinVoltage = 5.0;
             LinkController.MaxVoltage = 7.0;
         }

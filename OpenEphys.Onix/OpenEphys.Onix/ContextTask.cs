@@ -32,6 +32,7 @@ namespace OpenEphys.Onix
         private BlockingCollection<oni.Frame> FrameQueue;
         private CancellationTokenSource CollectFramesTokenSource;
         private CancellationToken CollectFramesToken;
+        event Action<ContextTask> configureHost;
         event Action<ContextTask> configureLink;
         event Func<ContextTask, IDisposable> configureDevice;
 
@@ -95,8 +96,15 @@ namespace OpenEphys.Onix
         public uint MaxWriteFrameSize { get; private set; }
         public Dictionary<uint, oni.Device> DeviceTable { get; private set; }
 
-        // NB: This is where actions that reconfigure the link controller, or otherwise
+        // NB: This is where actions that reconfigure the hub state, or otherwise
         // change the device table should be executed
+        internal void ConfigureHost(Action<ContextTask> action)
+        {
+            configureHost += action;
+        }
+
+        // NB: This is where actions that calibrate port voltage or otherwise
+        // check link lock state should be executed
         internal void ConfigureLink(Action<ContextTask> action)
         {
             configureLink += action;
@@ -111,8 +119,15 @@ namespace OpenEphys.Onix
 
         internal IDisposable Configure()
         {
+            var hostAction = Interlocked.Exchange(ref configureHost, null);
             var linkAction = Interlocked.Exchange(ref configureLink, null);
             var deviceAction = Interlocked.Exchange(ref configureDevice, null);
+            if (hostAction != null)
+            {
+                hostAction(this);
+                Reset();
+            }
+
             if (linkAction != null)
             {
                 linkAction(this);
@@ -299,16 +314,16 @@ namespace OpenEphys.Onix
             }
         }
 
-        public int HubState
+        public PassthroughState HubState
         {
             get
             {
-                return ctx.GetCustomOption((int)oni.ONIXOption.PORTFUNC);
+                return (PassthroughState)ctx.GetCustomOption((int)oni.ONIXOption.PORTFUNC);
             }
             set
             {
                 // PortA and PortB each have a bit in portfunc
-                ctx.SetCustomOption((int)oni.ONIXOption.PORTFUNC, value);
+                ctx.SetCustomOption((int)oni.ONIXOption.PORTFUNC, (int)value);
             }
         }
 

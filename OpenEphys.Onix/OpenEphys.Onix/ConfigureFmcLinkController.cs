@@ -16,7 +16,9 @@ namespace OpenEphys.Onix
         [Description("Specifies whether the link controller device is enabled.")]
         public bool Enable { get; set; } = true;
 
-        public bool Passthrough { get; set; }
+        [Category(ConfigurationCategory)]
+        [Description("Specifies whether the hub device should be configured in standard or passthrough mode.")]
+        public HubConfiguration HubConfiguration { get; set; }
 
         public bool GPO1 { get; set; }
 
@@ -29,7 +31,16 @@ namespace OpenEphys.Onix
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var deviceAddress = DeviceAddress;
-            return source.ConfigureLink(context =>
+            var hubConfiguration = HubConfiguration;
+            return source.ConfigureHost(context =>
+            {
+                // configure passthrough mode on the FMC link controller
+                // assuming the device address is the port number
+                var portShift = ((int)deviceAddress - 1) * 2;
+                var passthroughState = (hubConfiguration == HubConfiguration.Passthrough ? 1 : 0) << portShift;
+                context.HubState = (PassthroughState)(((int)context.HubState & ~(1 << portShift)) | passthroughState);
+            })
+            .ConfigureLink(context =>
             {
                 var device = context.GetDevice(deviceAddress, FmcLinkController.ID);
                 context.WriteRegister(deviceAddress, FmcLinkController.ENABLE, 1);
