@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Reactive.Disposables;
 using System.Threading;
 
 namespace OpenEphys.Onix
@@ -39,6 +38,7 @@ namespace OpenEphys.Onix
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
+            var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
             var hubConfiguration = HubConfiguration;
             return source.ConfigureHost(context =>
@@ -82,6 +82,11 @@ namespace OpenEphys.Onix
                     context.WriteRegister(deviceAddress, FmcLinkController.PORTVOLTAGE, 0);
                     throw new InvalidOperationException("Unable to get SERDES lock on FMC link controller.");
                 }
+            })
+            .ConfigureDevice(context =>
+            {
+                var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
+                return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
         }
 

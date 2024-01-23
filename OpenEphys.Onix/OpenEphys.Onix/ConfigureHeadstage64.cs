@@ -57,6 +57,7 @@ namespace OpenEphys.Onix
 
         private void UpdateDeviceNames(string name)
         {
+            LinkController.DeviceName = !string.IsNullOrEmpty(name) ? $"{name}.LinkController" : null;
             Rhd2164.DeviceName = !string.IsNullOrEmpty(name) ? $"{name}.Rhd2164" : null;
             Bno055.DeviceName = !string.IsNullOrEmpty(name) ? $"{name}.Bno055" : null;
             TS4231.DeviceName = !string.IsNullOrEmpty(name) ? $"{name}.TS4231" : null;
