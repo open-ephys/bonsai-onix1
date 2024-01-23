@@ -15,7 +15,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>9.0</LangVersion>
     <Features>strict</Features>
-    <Version>0.1.1</Version>
+    <Version>0.1.0</Version>
     <Platforms>x64</Platforms>
   </PropertyGroup>
 
