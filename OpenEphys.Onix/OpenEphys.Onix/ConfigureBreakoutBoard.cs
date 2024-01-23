@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
-using Bonsai;
 
 namespace OpenEphys.Onix
 {
-    public class ConfigureBreakoutBoard : HubDeviceFactory, INamedElement
+    public class ConfigureBreakoutBoard : HubDeviceFactory
     {
         [TypeConverter(typeof(HubDeviceConverter))]
         public ConfigureHeartbeat Heartbeat { get; set; } = new();

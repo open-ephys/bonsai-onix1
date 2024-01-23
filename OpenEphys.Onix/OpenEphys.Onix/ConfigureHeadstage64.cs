@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
-using Bonsai;
 
 namespace OpenEphys.Onix
 {
-    public class ConfigureHeadstage64 : HubDeviceFactory, INamedElement
+    public class ConfigureHeadstage64 : HubDeviceFactory
     {
         PortName port;
         readonly ConfigureFmcLinkController LinkController = new();

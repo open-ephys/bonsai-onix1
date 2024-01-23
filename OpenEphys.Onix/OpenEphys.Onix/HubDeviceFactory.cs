@@ -5,7 +5,15 @@ namespace OpenEphys.Onix
 {
     public abstract class HubDeviceFactory : DeviceFactory, INamedElement
     {
+        const string BaseTypePrefix = "Configure";
         string _name;
+
+        protected HubDeviceFactory()
+        {
+            var baseName = GetType().Name;
+            var prefixIndex = baseName.IndexOf(BaseTypePrefix);
+            Name = prefixIndex >= 0 ? baseName.Substring(prefixIndex + BaseTypePrefix.Length) : baseName;
+        }
 
         public string Name
         {
