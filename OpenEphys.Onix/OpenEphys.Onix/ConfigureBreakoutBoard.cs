@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using Bonsai;
 
 namespace OpenEphys.Onix
 {
-    public class BreakoutBoard : HubDeviceFactory, INamedElement
+    public class ConfigureBreakoutBoard : HubDeviceFactory, INamedElement
     {
         string name;
 
-        public BreakoutBoard() { Name = null; }
+        public ConfigureBreakoutBoard() { Name = null; }
 
         [TypeConverter(typeof(HubDeviceConverter))]
         public ConfigureHeartbeat Heartbeat { get; set; } = new();
@@ -29,7 +28,7 @@ namespace OpenEphys.Onix
             set
             {
                 name = value;
-                var baseName = string.IsNullOrWhiteSpace(name) ? nameof(BreakoutBoard) : name;
+                var baseName = string.IsNullOrWhiteSpace(name) ? nameof(ConfigureBreakoutBoard) : name;
                 foreach (var device in GetDevices())
                 {
                     device.DeviceName = $"{baseName}/{device.DeviceType.Name}";
