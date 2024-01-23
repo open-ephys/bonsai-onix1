@@ -6,10 +6,6 @@ namespace OpenEphys.Onix
 {
     public class ConfigureBreakoutBoard : HubDeviceFactory, INamedElement
     {
-        string name;
-
-        public ConfigureBreakoutBoard() { Name = null; }
-
         [TypeConverter(typeof(HubDeviceConverter))]
         public ConfigureHeartbeat Heartbeat { get; set; } = new();
 
@@ -20,20 +16,6 @@ namespace OpenEphys.Onix
         {
             yield return Heartbeat;
             yield return AnalogIO;
-        }
-
-        public string Name
-        {
-            get { return name; }
-            set
-            {
-                name = value;
-                var baseName = string.IsNullOrWhiteSpace(name) ? nameof(ConfigureBreakoutBoard) : name;
-                foreach (var device in GetDevices())
-                {
-                    device.DeviceName = $"{baseName}/{device.DeviceType.Name}";
-                }
-            }
         }
     }
 }
