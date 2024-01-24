@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Threading;
+using Bonsai;
 
 namespace OpenEphys.Onix
 {
@@ -26,6 +27,17 @@ namespace OpenEphys.Onix
 
         [Description("Specifies the maximum link voltage at which the hub is expected to operate.")]
         public double MaxVoltage { get; set; }
+
+        [Description("Specifies the voltage step size when searching for a SERDES lock.")]
+        public double VoltageIncrement { get; set; } = 0.2;
+
+        [Description("Link voltage turn off settle time in milliseconds.")]
+        [Range(0, 1000)]
+        public int VoltageOffSettleMillis { get; set; } = 500;
+
+        [Description("Link voltage turn on settle time in milliseconds.")]
+        [Range(0, 1000)]
+        public int VoltageOnSettleMillis { get; set; } = 1000;
 
         [Description("Specifies an optional link voltage offset to ensure stable operation after lock is established.")]
         public double VoltageOffset { get; set; } = 0.2;
@@ -58,23 +70,27 @@ namespace OpenEphys.Onix
                 var minVoltage = (uint)(MinVoltage * 10);
                 var maxVoltage = (uint)(MaxVoltage * 10);
                 var safetyVoltage = (uint)(VoltageOffset * 10);
-                for (uint voltage = minVoltage; voltage <= maxVoltage; voltage += 2)
+                var voltageIncrement = (uint)(VoltageIncrement * 10);
+
+                for (uint voltage = minVoltage; voltage <= maxVoltage; voltage += voltageIncrement)
                 {
-                    const int WaitUntilVoltageSettles = 200;
-                    device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
-                    Thread.Sleep(WaitUntilVoltageSettles);
-                    device.WriteRegister(FmcLinkController.PORTVOLTAGE, voltage);
-                    Thread.Sleep(WaitUntilVoltageSettles);
+
+                    context.WriteRegister(deviceAddress, FmcLinkController.PORTVOLTAGE, 0);
+                    Thread.Sleep(VoltageOffSettleMillis);
+                    context.WriteRegister(deviceAddress, FmcLinkController.PORTVOLTAGE, voltage);
+                    Thread.Sleep(VoltageOnSettleMillis);
 
                     if (CheckLinkState(device))
                     {
-                        device.WriteRegister(
-                            FmcLinkController.PORTVOLTAGE,
-                            voltage + safetyVoltage);
-                        hasLock = true;
+                        context.WriteRegister(deviceAddress, FmcLinkController.PORTVOLTAGE, 0);
+                        Thread.Sleep(VoltageOffSettleMillis);
+                        context.WriteRegister(deviceAddress, FmcLinkController.PORTVOLTAGE, voltage + safetyVoltage);
+                        Thread.Sleep(VoltageOnSettleMillis);
+                        hasLock = CheckLinkState(device); // Final check
                         break;
                     }
                 }
+
 
                 if (!hasLock)
                 {
@@ -89,7 +105,7 @@ namespace OpenEphys.Onix
             });
         }
 
-        static class FmcLinkController
+        internal static class FmcLinkController
         {
             public const int ID = 23;
 

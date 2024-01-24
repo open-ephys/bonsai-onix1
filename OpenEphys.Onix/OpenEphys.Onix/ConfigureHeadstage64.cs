@@ -10,12 +10,17 @@ namespace OpenEphys.Onix
 
         public ConfigureHeadstage64()
         {
+            // TODO: The issue with this headstage is that its locking voltage is far, far lower than the votlage requried for full
+            // functionality. Locking occurs at aroud 2V on the headstage (enough to turn 1.8V on). Full functionality is 5.0 volts.
+            // Whats worse: the port voltage can only go down to 3.3V, which means that its very hard to find a the true lowest voltage
+            // for a lock and then add a large offset to that.
             Port = PortName.PortA;
             LinkController.HubConfiguration = HubConfiguration.Standard;
-            LinkController.MinVoltage = 5.0;
-            LinkController.MaxVoltage = 7.0;
-        }
+            LinkController.MinVoltage = 3.3;
+            LinkController.MaxVoltage = 5.0;
+            LinkController.VoltageOffset = 3.0;
 
+        }
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
         public ConfigureRhd2164 Rhd2164 { get; set; } = new();
