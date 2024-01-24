@@ -32,18 +32,4 @@ namespace OpenEphys.Onix
             yield return this;
         }
     }
-
-    public abstract class HubDeviceFactory : DeviceFactory
-    {
-        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
-        {
-            var output = source;
-            foreach (var device in GetDevices())
-            {
-                output = device.Process(output);
-            }
-
-            return output;
-        }
-    }
 }
