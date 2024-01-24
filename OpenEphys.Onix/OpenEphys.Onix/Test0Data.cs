@@ -30,10 +30,10 @@ namespace OpenEphys.Onix
                 Observable.Create<Test0DataFrame>(observer =>
                 {
                     // Find number of dummy words in the frame
-                    var dummyWords = (int)deviceInfo.Context.ReadRegister(deviceInfo.DeviceAddress, Test0.NUMTESTWORDS);
+                    var device = deviceInfo.GetDeviceContext(typeof(Test0));
+                    var dummyWords = (int)device.ReadRegister(Test0.NUMTESTWORDS);
 
                     var sampleIndex = 0;
-                    var device = deviceInfo.GetDevice(typeof(Test0));
                     var dummyBuffer = new short[dummyWords * bufferSize];
                     var messageBuffer = new short[bufferSize];
                     var hubClockBuffer = new ulong[bufferSize];

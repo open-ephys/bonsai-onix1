@@ -10,6 +10,12 @@ namespace OpenEphys.Onix
         static readonly Dictionary<string, ResourceHandle> deviceMap = new();
         static readonly object managerLock = new();
 
+        internal static IDisposable RegisterDevice(string name, DeviceContext device, Type deviceType)
+        {
+            var deviceInfo = new DeviceInfo(device.Context, deviceType, device.Address);
+            return RegisterDevice(name, deviceInfo);
+        }
+
         internal static IDisposable RegisterDevice(string name, DeviceInfo deviceInfo)
         {
             lock (managerLock)

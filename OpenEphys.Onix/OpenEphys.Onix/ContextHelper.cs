@@ -5,7 +5,7 @@ namespace OpenEphys.Onix
 {
     static class ContextHelper
     {
-        public static Device GetDevice(this ContextTask context, uint address, int id)
+        public static DeviceContext GetDeviceContext(this ContextTask context, uint address, int id)
         {
             if (!context.DeviceTable.TryGetValue(address, out Device device))
             {
@@ -17,10 +17,10 @@ namespace OpenEphys.Onix
                 throw new InvalidOperationException($"The selected device is not a {id} device.");
             }
 
-            return device;
+            return new DeviceContext(context, device);
         }
 
-        public static Device GetDevice(this DeviceInfo deviceInfo, Type expectedType)
+        public static DeviceContext GetDeviceContext(this DeviceInfo deviceInfo, Type expectedType)
         {
             deviceInfo.AssertType(expectedType);
             if (!deviceInfo.Context.DeviceTable.TryGetValue(deviceInfo.DeviceAddress, out Device device))
@@ -30,7 +30,7 @@ namespace OpenEphys.Onix
                 );
             }
 
-            return device;
+            return new DeviceContext(deviceInfo.Context, device);
         }
     }
 }

@@ -25,7 +25,7 @@ namespace OpenEphys.Onix
                     Observable.Create<Rhd2164DataFrame>(observer =>
                     {
                         var sampleIndex = 0;
-                        var device = deviceInfo.GetDevice(typeof(Rhd2164));
+                        var device = deviceInfo.GetDeviceContext(typeof(Rhd2164));
                         var amplifierBuffer = new short[Rhd2164.AmplifierChannelCount * bufferSize];
                         var auxBuffer = new short[Rhd2164.AuxChannelCount * bufferSize];
                         var hubClockBuffer = new ulong[bufferSize];

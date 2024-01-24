@@ -35,18 +35,16 @@ namespace OpenEphys.Onix
             var deviceAddress = DeviceAddress;
             return source.ConfigureDevice(context =>
             {
-                var device = context.GetDevice(deviceAddress, Heartbeat.ID);
-                context.WriteRegister(deviceAddress, Heartbeat.ENABLE, 1);
+                var device = context.GetDeviceContext(deviceAddress, Heartbeat.ID);
+                device.WriteRegister(Heartbeat.ENABLE, 1);
                 var subscription = beatsPerSecond.Subscribe(newValue =>
                 {
-                    var clkHz = context.ReadRegister(deviceAddress, Heartbeat.CLK_HZ);
-                    context.WriteRegister(deviceAddress, Heartbeat.CLK_DIV, clkHz / newValue);
+                    var clkHz = device.ReadRegister(Heartbeat.CLK_HZ);
+                    device.WriteRegister(Heartbeat.CLK_DIV, clkHz / newValue);
                 });
 
-                var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
-                var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
                 return new CompositeDisposable(
-                    disposable,
+                    DeviceManager.RegisterDevice(deviceName, device, DeviceType),
                     subscription
                 );
             });

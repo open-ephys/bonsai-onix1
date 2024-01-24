@@ -17,7 +17,7 @@ namespace OpenEphys.Onix
                 () => DeviceManager.ReserveDevice(DeviceName),
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
                 {
-                    var device = deviceInfo.GetDevice(typeof(Heartbeat));
+                    var device = deviceInfo.GetDeviceContext(typeof(Heartbeat));
                     return deviceInfo.Context.FrameReceived
                         .Where(frame => frame.DeviceAddress == device.Address)
                         .Select(frame => new ManagedFrame<ushort>(frame));
