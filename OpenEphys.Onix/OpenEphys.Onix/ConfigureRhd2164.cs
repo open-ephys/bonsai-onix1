@@ -39,9 +39,9 @@ namespace OpenEphys.Onix
             {
                 // config register format following RHD2164 datasheet
                 // https://intantech.com/files/Intan_RHD2000_series_datasheet.pdf
-                var device = context.GetDevice(deviceAddress, Rhd2164.ID);
+                var device = context.GetDeviceContext(deviceAddress, Rhd2164.ID);
 
-                var format = context.ReadRegister(deviceAddress, Rhd2164.FORMAT);
+                var format = device.ReadRegister(Rhd2164.FORMAT);
                 var amplifierDataFormat = AmplifierDataFormat;
                 format &= ~(1u << 6);
                 format |= (uint)amplifierDataFormat << 6;
@@ -60,12 +60,12 @@ namespace OpenEphys.Onix
 
                 var highCutoff = Rhd2164Config.AnalogHighCutoffToRegisters[AnalogHighCutoff];
                 var lowCutoff = Rhd2164Config.AnalogLowCutoffToRegisters[AnalogLowCutoff];
-                var bw0 = context.ReadRegister(deviceAddress, Rhd2164.BW0);
-                var bw1 = context.ReadRegister(deviceAddress, Rhd2164.BW1);
-                var bw2 = context.ReadRegister(deviceAddress, Rhd2164.BW2);
-                var bw3 = context.ReadRegister(deviceAddress, Rhd2164.BW3);
-                var bw4 = context.ReadRegister(deviceAddress, Rhd2164.BW4);
-                var bw5 = context.ReadRegister(deviceAddress, Rhd2164.BW5);
+                var bw0 = device.ReadRegister(Rhd2164.BW0);
+                var bw1 = device.ReadRegister(Rhd2164.BW1);
+                var bw2 = device.ReadRegister(Rhd2164.BW2);
+                var bw3 = device.ReadRegister(Rhd2164.BW3);
+                var bw4 = device.ReadRegister(Rhd2164.BW4);
+                var bw5 = device.ReadRegister(Rhd2164.BW5);
                 bw0 = BitHelper.Replace(bw0, 0b00111111, (uint)highCutoff[0]);
                 bw1 = BitHelper.Replace(bw1, 0b00011111, (uint)highCutoff[1]);
                 bw2 = BitHelper.Replace(bw2, 0b00111111, (uint)highCutoff[2]);
@@ -73,18 +73,16 @@ namespace OpenEphys.Onix
                 bw4 = BitHelper.Replace(bw4, 0b01111111, (uint)lowCutoff[0]);
                 bw5 = BitHelper.Replace(bw5, 0b01111111, ((uint)lowCutoff[2] << 6) & 0b01000000 |
                                                           (uint)lowCutoff[1] & 0b00111111);
-                context.WriteRegister(deviceAddress, Rhd2164.BW0, bw0);
-                context.WriteRegister(deviceAddress, Rhd2164.BW1, bw1);
-                context.WriteRegister(deviceAddress, Rhd2164.BW2, bw2);
-                context.WriteRegister(deviceAddress, Rhd2164.BW3, bw3);
-                context.WriteRegister(deviceAddress, Rhd2164.BW4, bw4);
-                context.WriteRegister(deviceAddress, Rhd2164.BW5, bw5);
-                context.WriteRegister(deviceAddress, Rhd2164.FORMAT, format);
-                context.WriteRegister(deviceAddress, Rhd2164.ENABLE, enable ? 1u : 0);
+                device.WriteRegister(Rhd2164.BW0, bw0);
+                device.WriteRegister(Rhd2164.BW1, bw1);
+                device.WriteRegister(Rhd2164.BW2, bw2);
+                device.WriteRegister(Rhd2164.BW3, bw3);
+                device.WriteRegister(Rhd2164.BW4, bw4);
+                device.WriteRegister(Rhd2164.BW5, bw5);
+                device.WriteRegister(Rhd2164.FORMAT, format);
+                device.WriteRegister(Rhd2164.ENABLE, enable ? 1u : 0);
 
-                var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
-                var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
-                return disposable;
+                return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
             });
         }
     }

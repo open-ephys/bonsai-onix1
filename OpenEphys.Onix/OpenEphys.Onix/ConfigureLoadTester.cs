@@ -42,26 +42,26 @@ namespace OpenEphys.Onix
             var transmittedWords = TransmittedWords;
             return source.ConfigureDevice(context =>
             {
-                var device = context.GetDevice(deviceAddress, LoadTester.ID);
-                context.WriteRegister(deviceAddress, LoadTester.ENABLE, 1);
+                var device = context.GetDeviceContext(deviceAddress, LoadTester.ID);
+                device.WriteRegister(LoadTester.ENABLE, 1);
 
-                var clk_hz = context.ReadRegister(deviceAddress, LoadTester.CLK_HZ);
+                var clk_hz = device.ReadRegister(LoadTester.CLK_HZ);
                 // Assumes 8-byte timer
                 uint ValidSize()
                 {
-                    var clk_div = context.ReadRegister(deviceAddress, LoadTester.CLK_DIV);
+                    var clk_div = device.ReadRegister(LoadTester.CLK_DIV);
                     return clk_div - 4 - 10; // -10 is overhead hack
                 }
 
                 var max_size = ValidSize();
                 var bounded = receivedWords > max_size ? max_size : receivedWords;
-                context.WriteRegister(deviceAddress, LoadTester.DT0H16_WORDS, bounded);
+                device.WriteRegister(LoadTester.DT0H16_WORDS, bounded);
 
                 var writeArray = Enumerable.Repeat((uint)42, (int)(transmittedWords + 2)).ToArray();
-                context.WriteRegister(deviceAddress, LoadTester.HTOD32_WORDS, transmittedWords);
+                device.WriteRegister(LoadTester.HTOD32_WORDS, transmittedWords);
                 var frameHzSubscription = frameHz.Subscribe(newValue =>
                 {
-                    context.WriteRegister(deviceAddress, LoadTester.CLK_DIV, clk_hz / newValue);
+                    device.WriteRegister(LoadTester.CLK_DIV, clk_hz / newValue);
                     var max_size = ValidSize();
                     if (receivedWords > max_size)
                     {
@@ -69,10 +69,8 @@ namespace OpenEphys.Onix
                     }
                 });
 
-                var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
-                var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
                 return new CompositeDisposable(
-                    disposable,
+                    DeviceManager.RegisterDevice(deviceName, device, DeviceType),
                     frameHzSubscription
                 );
             });

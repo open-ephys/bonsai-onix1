@@ -17,11 +17,8 @@ namespace OpenEphys.Onix
                 () => DeviceManager.ReserveDevice(DeviceName),
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
                 {
-                    var device = deviceInfo.GetDevice(typeof(AnalogIO));
-                    return source.Do(data =>
-                    {
-                        deviceInfo.Context.Write(device.Address, data);
-                    });
+                    var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));
+                    return source.Do(device.Write);
                 }));
         }
     }

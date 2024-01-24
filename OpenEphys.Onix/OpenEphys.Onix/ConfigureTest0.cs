@@ -42,14 +42,11 @@ namespace OpenEphys.Onix
             var deviceAddress = DeviceAddress;
             return source.ConfigureDevice(context =>
             {
-                var device = context.GetDevice(deviceAddress, Test0.ID);
-                context.WriteRegister(deviceAddress, Test0.ENABLE, Enable ? 1u : 0);
-                FrameRateHz = context.ReadRegister(deviceAddress, Test0.FRAMERATE);
-                DummyCount = context.ReadRegister(deviceAddress, Test0.NUMTESTWORDS);
-
-                var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
-                var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
-                return disposable;
+                var device = context.GetDeviceContext(deviceAddress, Test0.ID);
+                device.WriteRegister(Test0.ENABLE, Enable ? 1u : 0);
+                FrameRateHz = device.ReadRegister(Test0.FRAMERATE);
+                DummyCount = device.ReadRegister(Test0.NUMTESTWORDS);
+                return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
             });
         }
     }

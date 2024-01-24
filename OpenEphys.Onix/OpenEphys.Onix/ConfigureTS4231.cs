@@ -20,12 +20,9 @@ namespace OpenEphys.Onix
             var deviceAddress = DeviceAddress;
             return source.ConfigureDevice(context =>
             {
-                var device = context.GetDevice(deviceAddress, TS4231.ID);
-                context.WriteRegister(deviceAddress, TS4231.ENABLE, Enable ? 1u : 0);
-
-                var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
-                var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
-                return disposable;
+                var device = context.GetDeviceContext(deviceAddress, TS4231.ID);
+                device.WriteRegister(TS4231.ENABLE, Enable ? 1u : 0);
+                return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
             });
         }
     }
