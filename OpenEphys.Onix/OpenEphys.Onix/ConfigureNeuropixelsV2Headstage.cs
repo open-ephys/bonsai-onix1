@@ -11,7 +11,7 @@ namespace OpenEphys.Onix
         public ConfigureNeuropixelsV2Headstage()
         {
             Port = PortName.PortA;
-            LinkController.HubConfiguration = HubConfiguration.Standard;
+            LinkController.HubConfiguration = HubConfiguration.Passthrough;
             LinkController.MinVoltage = 5.0;
             LinkController.MaxVoltage = 7.0;
         }
@@ -26,9 +26,9 @@ namespace OpenEphys.Onix
             set
             {
                 port = value;
-                var offset = (uint)port << 8;
+                var serializerAddress = ((uint)port - 1) + 8;
                 LinkController.DeviceAddress = (uint)port;
-                NeuropixelsV2.DeviceAddress = offset + 0;
+                NeuropixelsV2.DeviceAddress = serializerAddress;
             }
         }
 
