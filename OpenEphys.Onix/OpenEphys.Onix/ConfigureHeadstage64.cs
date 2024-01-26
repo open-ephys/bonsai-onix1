@@ -17,10 +17,12 @@ namespace OpenEphys.Onix
             Port = PortName.PortA;
             LinkController.HubConfiguration = HubConfiguration.Standard;
             LinkController.MinVoltage = 3.3;
-            LinkController.MaxVoltage = 5.0;
-            LinkController.VoltageOffset = 3.0;
-
+            LinkController.MaxVoltage = 6.0;
+            LinkController.VoltageOffset = 3.4;
+            LinkController.VoltageOffSettleMillis = 4000; // TODO: It takes a huge amount of time to get to 0, almost 10 seconds
+            LinkController.VoltageOnSettleMillis = 100;
         }
+
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
         public ConfigureRhd2164 Rhd2164 { get; set; } = new();

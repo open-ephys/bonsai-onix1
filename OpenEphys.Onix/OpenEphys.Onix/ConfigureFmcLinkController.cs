@@ -33,11 +33,11 @@ namespace OpenEphys.Onix
 
         [Description("Link voltage turn off settle time in milliseconds.")]
         [Range(0, 1000)]
-        public int VoltageOffSettleMillis { get; set; } = 500;
+        public int VoltageOffSettleMillis { get; set; } = 200;
 
         [Description("Link voltage turn on settle time in milliseconds.")]
         [Range(0, 1000)]
-        public int VoltageOnSettleMillis { get; set; } = 1000;
+        public int VoltageOnSettleMillis { get; set; } = 200;
 
         [Description("Specifies an optional link voltage offset to ensure stable operation after lock is established.")]
         public double VoltageOffset { get; set; } = 0.2;
@@ -79,6 +79,7 @@ namespace OpenEphys.Onix
                     Thread.Sleep(VoltageOffSettleMillis);
                     context.WriteRegister(deviceAddress, FmcLinkController.PORTVOLTAGE, voltage);
                     Thread.Sleep(VoltageOnSettleMillis);
+                    context.WriteRegister(deviceAddress, FmcLinkController.PORTVOLTAGE, 33); // Actively pull voltage to lowest level before turning off
 
                     if (CheckLinkState(device))
                     {
