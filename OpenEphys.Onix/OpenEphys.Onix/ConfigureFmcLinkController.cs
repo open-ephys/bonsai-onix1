@@ -79,9 +79,10 @@ namespace OpenEphys.Onix
                     Thread.Sleep(VoltageOffSettleMillis);
                     context.WriteRegister(deviceAddress, FmcLinkController.PORTVOLTAGE, voltage);
                     Thread.Sleep(VoltageOnSettleMillis);
+                    hasLock = CheckLinkState(device);
                     context.WriteRegister(deviceAddress, FmcLinkController.PORTVOLTAGE, 33); // Actively pull voltage to lowest level before turning off
 
-                    if (CheckLinkState(device))
+                    if (hasLock)
                     {
                         context.WriteRegister(deviceAddress, FmcLinkController.PORTVOLTAGE, 0);
                         Thread.Sleep(VoltageOffSettleMillis);
