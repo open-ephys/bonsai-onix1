@@ -137,12 +137,12 @@ namespace OpenEphys.Onix
             if (deviceAction != null)
             {
                 var invocationList = deviceAction.GetInvocationList();
-                var disposable = new CompositeDisposable(invocationList.Length);
+                var disposable = new StackDisposable(invocationList.Length);
                 try
                 {
                     foreach (var selector in invocationList.Cast<Func<ContextTask, IDisposable>>())
                     {
-                        disposable.Add(selector(this));
+                        disposable.Push(selector(this));
                     }
                     return disposable;
                 }
