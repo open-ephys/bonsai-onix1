@@ -18,11 +18,7 @@ namespace OpenEphys.Onix
             {
                 return Observable.Create<oni.Frame>(observer =>
                 {
-                    var disposable = new CompositeDisposable(capacity: 2)
-                    {
-                        context.Configure(),
-                        context.FrameReceived.SubscribeSafe(observer)
-                    };
+                    var disposable = context.FrameReceived.SubscribeSafe(observer);
                     try
                     {
                         context.BlockReadSize = ReadSize;

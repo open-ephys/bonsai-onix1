@@ -32,6 +32,7 @@ namespace OpenEphys.Onix
         private BlockingCollection<oni.Frame> FrameQueue;
         private CancellationTokenSource CollectFramesTokenSource;
         private CancellationToken CollectFramesToken;
+        private IDisposable ContextConfiguration;
         event Action<ContextTask> configureHost;
         event Action<ContextTask> configureLink;
         event Func<ContextTask, IDisposable> configureDevice;
@@ -117,7 +118,7 @@ namespace OpenEphys.Onix
             configureDevice += selector;
         }
 
-        internal IDisposable Configure()
+        private IDisposable ConfigureContext()
         {
             var hostAction = Interlocked.Exchange(ref configureHost, null);
             var linkAction = Interlocked.Exchange(ref configureLink, null);
@@ -162,6 +163,9 @@ namespace OpenEphys.Onix
             lock (runLock)
             {
                 if (running) return;
+
+                // NB: Configure context before starting acquisition
+                ContextConfiguration = ConfigureContext();
 
                 // NB: Stuff related to sync mode is 100% ONIX, not ONI, so long term another place
                 // to do this separation might be needed
@@ -262,6 +266,8 @@ namespace OpenEphys.Onix
                 FrameQueue = null;
                 ctx.Stop();
                 running = false;
+
+                ContextConfiguration?.Dispose();
             }
         }
 
