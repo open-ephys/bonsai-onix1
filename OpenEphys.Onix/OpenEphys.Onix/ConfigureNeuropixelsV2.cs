@@ -23,7 +23,7 @@ namespace OpenEphys.Onix
             return source.ConfigureDevice(context =>
             {
                 // configure device via the DS90UB9x deserializer device
-                var device = context.GetDeviceContext(deviceAddress, DS90UB9x.ID);
+                var device = context.GetPassthroughDeviceContext(deviceAddress, DS90UB9x.ID);
                 device.WriteRegister(DS90UB9x.ENABLE, enable ? 1u : 0);
 
                 // configure deserializer aliases and serializer power supply

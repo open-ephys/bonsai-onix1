@@ -26,9 +26,9 @@ namespace OpenEphys.Onix
             set
             {
                 port = value;
-                var serializerAddress = ((uint)port - 1) + 8;
+                var offset = (uint)port << 8;
                 LinkController.DeviceAddress = (uint)port;
-                NeuropixelsV2Beta.DeviceAddress = serializerAddress;
+                NeuropixelsV2Beta.DeviceAddress = offset + 0;
             }
         }
 

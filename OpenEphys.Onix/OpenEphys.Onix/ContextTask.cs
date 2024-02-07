@@ -222,7 +222,8 @@ namespace OpenEphys.Onix
                         {
                             if (FrameQueue.TryTake(out oni.Frame frame, QueueTimeoutMilliseconds, CollectFramesToken))
                             {
-                                OnFrameReceived(frame);
+                                FrameReceived.OnNext(frame);
+                                frame.Dispose();
                             }
                         }
                     }
@@ -258,9 +259,8 @@ namespace OpenEphys.Onix
                 // Clear queue and free memory
                 while (FrameQueue?.Count > 0)
                 {
-                    oni.Frame frame;
-                    frame = FrameQueue.Take();
-                    DisposeFrame(frame);
+                    var frame = FrameQueue.Take();
+                    frame.Dispose();
                 }
                 FrameQueue?.Dispose();
                 FrameQueue = null;
@@ -381,19 +381,22 @@ namespace OpenEphys.Onix
             }
         }
 
-        public oni.Hub GetHub(uint deviceAddress) { return ctx.GetHub(deviceAddress); }
+        public oni.Hub GetHub(uint deviceAddress) => ctx.GetHub(deviceAddress);
+
+        public virtual uint GetPassthroughDeviceAddress(uint deviceAddress)
+        {
+            var hubAddress = (deviceAddress & 0xFF00u) >> 8;
+            if (hubAddress == 0)
+            {
+                throw new ArgumentException(
+                    "Device addresses on hub zero cannot be used to create passthrough devices.",
+                    nameof(deviceAddress));
+            }
+
+            return hubAddress + 7;
+        }
+
         #endregion
-
-        private void OnFrameReceived(oni.Frame frame)
-        {
-            FrameReceived.OnNext(frame);
-            DisposeFrame(frame);
-        }
-
-        private static void DisposeFrame(oni.Frame frame)
-        {
-            frame.Dispose();
-        }
 
         public void Dispose()
         {
