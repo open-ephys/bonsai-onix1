@@ -4,10 +4,10 @@ using System.Reactive.Disposables;
 
 namespace OpenEphys.Onix
 {
-    public class ConfigureNeuropixelsV2Beta : SingleDeviceFactory
+    public class ConfigureNeuropixelsV2eBeta : SingleDeviceFactory
     {
-        public ConfigureNeuropixelsV2Beta()
-            : base(typeof(NeuropixelsV2Beta))
+        public ConfigureNeuropixelsV2eBeta()
+            : base(typeof(NeuropixelsV2eBeta))
         {
         }
 
@@ -35,39 +35,39 @@ namespace OpenEphys.Onix
 
                 // Change all the GPIOs to locally-controlled outputs; output state set to default
                 var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
-                var gpo10Config = NeuropixelsV2Beta.DefaultGPO10Config;
-                var gpo32Config = NeuropixelsV2Beta.DefaultGPO32Config;
+                var gpo10Config = NeuropixelsV2eBeta.DefaultGPO10Config;
+                var gpo32Config = NeuropixelsV2eBeta.DefaultGPO32Config;
                 serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO10, gpo10Config);
                 serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO32, gpo32Config);
 
                 // read probe metadata
-                var probeAMetadata = ReadProbeMetadata(serializer, ref gpo32Config, NeuropixelsV2Beta.SelectProbeA);
-                var probeBMetadata = ReadProbeMetadata(serializer, ref gpo32Config, NeuropixelsV2Beta.SelectProbeB);
+                var probeAMetadata = ReadProbeMetadata(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeA);
+                var probeBMetadata = ReadProbeMetadata(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeB);
 
                 // toggle probe LED
-                gpo32Config = (gpo32Config & ~NeuropixelsV2Beta.GPO32LedMask) | (EnableLed ? 0 : NeuropixelsV2Beta.GPO32LedMask);
+                gpo32Config = (gpo32Config & ~NeuropixelsV2eBeta.GPO32LedMask) | (EnableLed ? 0 : NeuropixelsV2eBeta.GPO32LedMask);
                 serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO32, gpo32Config);
 
                 // REC_NRESET and NRESET go high on both probes to take the ASIC out of reset
                 // TODO: not sure if REC_NRESET and NRESET are tied together on flex
-                gpo10Config |= NeuropixelsV2Beta.GPO10ResetMask | NeuropixelsV2Beta.GPO10NResetMask;
+                gpo10Config |= NeuropixelsV2eBeta.GPO10ResetMask | NeuropixelsV2eBeta.GPO10NResetMask;
                 serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO10, gpo10Config);
                 System.Threading.Thread.Sleep(20);
 
                 // configure probe streaming
-                var probeControl = new I2CRegisterContext(device, NeuropixelsV2Beta.ProbeAddress);
+                var probeControl = new I2CRegisterContext(device, NeuropixelsV2eBeta.ProbeAddress);
 
                 // configure probe A streaming
                 if (probeAMetadata.Version != byte.MaxValue)
                 {
-                    SelectProbe(serializer, ref gpo32Config, NeuropixelsV2Beta.SelectProbeA);
+                    SelectProbe(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeA);
                     ConfigureProbeStreaming(probeControl);
                 }
 
                 // configure probe B streaming
                 if (probeBMetadata.Version != byte.MaxValue)
                 {
-                    SelectProbe(serializer, ref gpo32Config, NeuropixelsV2Beta.SelectProbeB);
+                    SelectProbe(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeB);
                     ConfigureProbeStreaming(probeControl);
                 }
 
@@ -80,8 +80,8 @@ namespace OpenEphys.Onix
                 var disposable = DeviceManager.RegisterDevice(deviceName, device, DeviceType);
                 var shutdown = Disposable.Create(() =>
                 {
-                    serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO10, NeuropixelsV2Beta.DefaultGPO10Config);
-                    serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO32, NeuropixelsV2Beta.DefaultGPO32Config);
+                    serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO10, NeuropixelsV2eBeta.DefaultGPO10Config);
+                    serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO32, NeuropixelsV2eBeta.DefaultGPO32Config);
                 });
                 return new CompositeDisposable(
                     shutdown,
@@ -112,27 +112,27 @@ namespace OpenEphys.Onix
             uint coaxMode = 0x4 + (uint)DS90UB9xMode.Raw12BitHighFrequency; // 0x4 maintains coax mode
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.PortMode, coaxMode);
 
-            uint alias = NeuropixelsV2Beta.ProbeAddress << 1;
+            uint alias = NeuropixelsV2eBeta.ProbeAddress << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID1, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias1, alias);
 
-            alias = NeuropixelsV2Beta.FlexEEPROMAddress << 1;
+            alias = NeuropixelsV2eBeta.FlexEEPROMAddress << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID2, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias2, alias);
         }
 
-        NeuropixelsV2Metadata ReadProbeMetadata(I2CRegisterContext serializer, ref uint gpo32Config, byte probeSelect)
+        NeuropixelsV2eMetadata ReadProbeMetadata(I2CRegisterContext serializer, ref uint gpo32Config, byte probeSelect)
         {
             SelectProbe(serializer, ref gpo32Config, probeSelect);
-            return new NeuropixelsV2Metadata(serializer);
+            return new NeuropixelsV2eMetadata(serializer);
         }
 
         static void SelectProbe(I2CRegisterContext serializer, ref uint gpo32Config, byte probeSelect)
         {
             gpo32Config = probeSelect switch
             {
-                NeuropixelsV2Beta.SelectProbeA => gpo32Config | NeuropixelsV2Beta.ProbeSelectMask,
-                NeuropixelsV2Beta.SelectProbeB => gpo32Config & ~NeuropixelsV2Beta.ProbeSelectMask,
+                NeuropixelsV2eBeta.SelectProbeA => gpo32Config | NeuropixelsV2eBeta.ProbeSelectMask,
+                NeuropixelsV2eBeta.SelectProbeB => gpo32Config & ~NeuropixelsV2eBeta.ProbeSelectMask,
                 _ => gpo32Config
             };
             serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO32, gpo32Config);
@@ -141,10 +141,10 @@ namespace OpenEphys.Onix
 
         static void SyncProbes(I2CRegisterContext serializer, uint gpo10Config)
         {
-            gpo10Config &= ~NeuropixelsV2Beta.GPO10NResetMask;
+            gpo10Config &= ~NeuropixelsV2eBeta.GPO10NResetMask;
             serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO10, gpo10Config);
 
-            gpo10Config |= NeuropixelsV2Beta.GPO10NResetMask;
+            gpo10Config |= NeuropixelsV2eBeta.GPO10NResetMask;
             serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO10, gpo10Config);
         }
 
@@ -155,7 +155,7 @@ namespace OpenEphys.Onix
         }
     }
 
-    static class NeuropixelsV2Beta
+    static class NeuropixelsV2eBeta
     {
         public const int ProbeAddress = 0x70;
         public const int FlexEEPROMAddress = 0x50;
@@ -179,7 +179,7 @@ namespace OpenEphys.Onix
         internal class NameConverter : DeviceNameConverter
         {
             public NameConverter()
-                : base(typeof(NeuropixelsV2Beta))
+                : base(typeof(NeuropixelsV2eBeta))
             {
             }
         }

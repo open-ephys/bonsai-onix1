@@ -3,12 +3,12 @@ using System.ComponentModel;
 
 namespace OpenEphys.Onix
 {
-    public class ConfigureNeuropixelsV2Headstage : HubDeviceFactory
+    public class ConfigureNeuropixelsV2eHeadstage : HubDeviceFactory
     {
         PortName port;
         readonly ConfigureFmcLinkController LinkController = new();
 
-        public ConfigureNeuropixelsV2Headstage()
+        public ConfigureNeuropixelsV2eHeadstage()
         {
             Port = PortName.PortA;
             LinkController.HubConfiguration = HubConfiguration.Passthrough;
@@ -18,7 +18,7 @@ namespace OpenEphys.Onix
 
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
-        public ConfigureNeuropixelsV2 NeuropixelsV2 { get; set; } = new();
+        public ConfigureNeuropixelsV2e NeuropixelsV2 { get; set; } = new();
 
         public PortName Port
         {

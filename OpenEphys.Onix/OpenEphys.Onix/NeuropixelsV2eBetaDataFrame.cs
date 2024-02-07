@@ -3,9 +3,9 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
-    public class NeuropixelsV2BetaDataFrame
+    public class NeuropixelsV2eBetaDataFrame
     {
-        public NeuropixelsV2BetaDataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData, int[] frameCounter)
+        public NeuropixelsV2eBetaDataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData, int[] frameCounter)
         {
             Clock = clock;
             HubClock = hubClock;
@@ -30,17 +30,17 @@ namespace OpenEphys.Onix
         internal static unsafe void CopyAmplifierBuffer(ushort* superFrame, ushort[,] amplifierBuffer, int[] frameCounter, int index)
         {
             // Loop over 16 "frames" within each "super frame"
-            for (var i = 0; i < NeuropixelsV2Beta.FramesPerSuperFrame; i++)
+            for (var i = 0; i < NeuropixelsV2eBeta.FramesPerSuperFrame; i++)
             {
-                var frameOffset = i * NeuropixelsV2Beta.FrameWords;
-                var frameCounterIndex = index * NeuropixelsV2Beta.FramesPerSuperFrame + i;
+                var frameOffset = i * NeuropixelsV2eBeta.FrameWords;
+                var frameCounterIndex = index * NeuropixelsV2eBeta.FramesPerSuperFrame + i;
                 frameCounter[frameCounterIndex] = (superFrame[frameOffset] << 14) | (superFrame[frameOffset + 1] << 0);
 
                 // The period of data within super frame is 28 words (24 ADCs, 2 Syncs, 2 counters)
                 var adcDataOffset = 2 + frameOffset;
 
                 // Loop over ADC samples within each "frame" and map to channel position
-                for (var k = 0; k < NeuropixelsV2Beta.ADCsPerProbe; k++)
+                for (var k = 0; k < NeuropixelsV2eBeta.ADCsPerProbe; k++)
                 {
                     amplifierBuffer[RawToChannel[k, i], index] = superFrame[adcDataOffset + k];
                 }
@@ -84,6 +84,6 @@ namespace OpenEphys.Onix
         public ulong HubClock;
         public ushort ProbeIndex;
         public uint Reserved;
-        public fixed ushort SuperFrame[NeuropixelsV2Beta.FramesPerSuperFrame * NeuropixelsV2Beta.FrameWords];
+        public fixed ushort SuperFrame[NeuropixelsV2eBeta.FramesPerSuperFrame * NeuropixelsV2eBeta.FrameWords];
     }
 }

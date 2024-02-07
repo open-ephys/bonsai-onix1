@@ -8,51 +8,44 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
-    public class NeuropixelsV2BetaData : Source<NeuropixelsV2BetaDataFrame>
+    public class NeuropixelsV2eData : Source<NeuropixelsV2eDataFrame>
     {
-        [TypeConverter(typeof(NeuropixelsV2Beta.NameConverter))]
+        [TypeConverter(typeof(NeuropixelsV2e.NameConverter))]
         public string DeviceName { get; set; }
 
         public int BufferSize { get; set; } = 30;
 
         public NeuropixelsV2Probe ProbeIndex { get; set; }
 
-        public unsafe override IObservable<NeuropixelsV2BetaDataFrame> Generate()
+        public unsafe override IObservable<NeuropixelsV2eDataFrame> Generate()
         {
             var bufferSize = BufferSize;
             return Observable.Using(
                 () => DeviceManager.ReserveDevice(DeviceName),
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
                 {
-                    var device = deviceInfo.GetDeviceContext(typeof(NeuropixelsV2Beta));
+                    var device = deviceInfo.GetDeviceContext(typeof(NeuropixelsV2e));
                     var probeData = deviceInfo.Context.FrameReceived.Where(frame =>
                         frame.DeviceAddress == device.Address &&
-                        NeuropixelsV2BetaDataFrame.GetProbeIndex(frame) == (int)ProbeIndex);
-                    return Observable.Create<NeuropixelsV2BetaDataFrame>(observer =>
+                        NeuropixelsV2eDataFrame.GetProbeIndex(frame) == (int)ProbeIndex);
+                    return Observable.Create<NeuropixelsV2eDataFrame>(observer =>
                     {
                         var sampleIndex = 0;
-                        var amplifierBuffer = new ushort[NeuropixelsV2Beta.ChannelCount, bufferSize];
-                        var frameCounter = new int[NeuropixelsV2Beta.FramesPerSuperFrame * bufferSize];
+                        var amplifierBuffer = new ushort[NeuropixelsV2e.ChannelCount, bufferSize];
                         var hubClockBuffer = new ulong[bufferSize];
                         var clockBuffer = new ulong[bufferSize];
 
                         var frameObserver = Observer.Create<oni.Frame>(
                             frame =>
                             {
-                                var payload = (NeuropixelsV2BetaPayload*)frame.Data.ToPointer();
-                                NeuropixelsV2BetaDataFrame.CopyAmplifierBuffer(payload->SuperFrame, amplifierBuffer, frameCounter, sampleIndex);
+                                var payload = (NeuropixelsV2Payload*)frame.Data.ToPointer();
+                                NeuropixelsV2eDataFrame.CopyAmplifierBuffer(payload->AmplifierData, amplifierBuffer, sampleIndex);
                                 hubClockBuffer[sampleIndex] = BitHelper.SwapEndian(payload->HubClock);
                                 clockBuffer[sampleIndex] = frame.Clock;
                                 if (++sampleIndex >= bufferSize)
                                 {
                                     var amplifierData = Mat.FromArray(amplifierBuffer);
-                                    var dataFrame = new NeuropixelsV2BetaDataFrame(
-                                        clockBuffer,
-                                        hubClockBuffer,
-                                        amplifierData,
-                                        frameCounter);
-                                    observer.OnNext(dataFrame);
-                                    frameCounter = new int[NeuropixelsV2Beta.FramesPerSuperFrame * bufferSize];
+                                    observer.OnNext(new NeuropixelsV2eDataFrame(clockBuffer, hubClockBuffer, amplifierData));
                                     hubClockBuffer = new ulong[bufferSize];
                                     clockBuffer = new ulong[bufferSize];
                                     sampleIndex = 0;

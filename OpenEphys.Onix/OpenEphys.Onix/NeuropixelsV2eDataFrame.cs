@@ -3,9 +3,9 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
-    public class NeuropixelsV2DataFrame
+    public class NeuropixelsV2eDataFrame
     {
-        public NeuropixelsV2DataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData)
+        public NeuropixelsV2eDataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData)
         {
             Clock = clock;
             HubClock = hubClock;
@@ -27,12 +27,12 @@ namespace OpenEphys.Onix
         internal static unsafe void CopyAmplifierBuffer(ushort* amplifierData, ushort[,] amplifierBuffer, int index)
         {
             // Loop over 16 "frames" within each "super-frame"
-            for (int i = 0; i < NeuropixelsV2.FramesPerSuperFrame; i++)
+            for (int i = 0; i < NeuropixelsV2e.FramesPerSuperFrame; i++)
             {
                 // The period of ADC data within data array is 36 words
-                var adcDataOffset = i * NeuropixelsV2.FrameWords;
+                var adcDataOffset = i * NeuropixelsV2e.FrameWords;
 
-                for (int k = 0; k < NeuropixelsV2.ADCsPerProbe; k++)
+                for (int k = 0; k < NeuropixelsV2e.ADCsPerProbe; k++)
                 {
                     amplifierBuffer[RawToChannel[k, i], index] = amplifierData[ADCIndices[k] + adcDataOffset];
                 }
@@ -96,6 +96,6 @@ namespace OpenEphys.Onix
         public ulong HubClock;
         public ushort ProbeIndex;
         public ulong Reserved;
-        public fixed ushort AmplifierData[NeuropixelsV2.ChannelCount];
+        public fixed ushort AmplifierData[NeuropixelsV2e.ChannelCount];
     }
 }
