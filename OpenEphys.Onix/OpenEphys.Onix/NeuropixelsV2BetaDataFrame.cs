@@ -5,11 +5,10 @@ namespace OpenEphys.Onix
 {
     public class NeuropixelsV2BetaDataFrame
     {
-        public NeuropixelsV2BetaDataFrame(ulong[] clock, ulong[] hubClock, int probeIndex, Mat amplifierData, int[] frameCounter)
+        public NeuropixelsV2BetaDataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData, int[] frameCounter)
         {
             Clock = clock;
             HubClock = hubClock;
-            ProbeIndex = probeIndex;
             AmplifierData = amplifierData;
             FrameCounter = frameCounter;
         }
@@ -17,8 +16,6 @@ namespace OpenEphys.Onix
         public ulong[] Clock { get; }
 
         public ulong[] HubClock { get; }
-
-        public int ProbeIndex { get; }
 
         public Mat AmplifierData { get; }
 

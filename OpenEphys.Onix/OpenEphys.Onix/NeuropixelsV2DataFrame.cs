@@ -5,19 +5,16 @@ namespace OpenEphys.Onix
 {
     public class NeuropixelsV2DataFrame
     {
-        public NeuropixelsV2DataFrame(ulong[] clock, ulong[] hubClock, int probeIndex, Mat amplifierData)
+        public NeuropixelsV2DataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData)
         {
             Clock = clock;
             HubClock = hubClock;
-            ProbeIndex = probeIndex;
             AmplifierData = amplifierData;
         }
 
         public ulong[] Clock { get; }
 
         public ulong[] HubClock { get; }
-
-        public int ProbeIndex { get; }
 
         public Mat AmplifierData { get; }
 
