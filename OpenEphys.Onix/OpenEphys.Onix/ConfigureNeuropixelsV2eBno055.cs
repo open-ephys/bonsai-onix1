@@ -25,7 +25,8 @@ namespace OpenEphys.Onix
                 var device = context.GetPassthroughDeviceContext(deviceAddress, DS90UB9x.ID);
                 ConfigureDeserializer(device);
                 ConfigureBno055(device);
-                return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
+                var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
+                return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
         }
 

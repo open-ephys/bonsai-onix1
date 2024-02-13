@@ -77,7 +77,8 @@ namespace OpenEphys.Onix
                 // Still its good to get them roughly (i.e. within 10 PCLKs) started at the same time.
                 SyncProbes(serializer, gpo10Config);
 
-                var disposable = DeviceManager.RegisterDevice(deviceName, device, DeviceType);
+                var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
+                var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
                 var shutdown = Disposable.Create(() =>
                 {
                     serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO10, NeuropixelsV2eBeta.DefaultGPO10Config);
