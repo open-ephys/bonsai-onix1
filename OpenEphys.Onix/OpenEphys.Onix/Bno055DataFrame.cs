@@ -7,10 +7,19 @@ namespace OpenEphys.Onix
     public class Bno055DataFrame
     {
         public unsafe Bno055DataFrame(oni.Frame frame)
+            : this(frame.Clock, (Bno055Payload*)frame.Data.ToPointer())
         {
-            Clock = frame.Clock;
-            var payload = (Bno055Payload*)frame.Data.ToPointer();
+        }
+
+        internal unsafe Bno055DataFrame(ulong clock, Bno055Payload* payload)
+            : this(clock, &payload->Data)
+        {
             HubClock = payload->HubClock;
+        }
+
+        internal unsafe Bno055DataFrame(ulong clock, Bno055DataPayload* payload)
+        {
+            Clock = clock;
             EulerAngle = new Vector3(
                 x: Bno055.EulerAngleScale * payload->EulerAngle[0],  // yaw
                 y: Bno055.EulerAngleScale * payload->EulerAngle[1],  // roll
@@ -53,6 +62,12 @@ namespace OpenEphys.Onix
     unsafe struct Bno055Payload
     {
         public ulong HubClock;
+        public Bno055DataPayload Data;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    unsafe struct Bno055DataPayload
+    {
         public fixed short EulerAngle[3];
         public fixed short Quaternion[4];
         public fixed short Acceleration[3];
