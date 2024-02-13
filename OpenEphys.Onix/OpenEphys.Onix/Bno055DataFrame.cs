@@ -12,9 +12,9 @@ namespace OpenEphys.Onix
             var payload = (Bno055Payload*)frame.Data.ToPointer();
             HubClock = payload->HubClock;
             EulerAngle = new Vector3(
-                y: Bno055.EulerAngleScale * payload->EulerAngle[0],  // yaw
-                z: Bno055.EulerAngleScale * payload->EulerAngle[1],  // roll
-                x: Bno055.EulerAngleScale * payload->EulerAngle[2]); // pitch
+                x: Bno055.EulerAngleScale * payload->EulerAngle[0],  // yaw
+                y: Bno055.EulerAngleScale * payload->EulerAngle[1],  // roll
+                z: Bno055.EulerAngleScale * payload->EulerAngle[2]); // pitch
             Quaternion = new Quaternion(
                 w: Bno055.QuaternionScale * payload->Quaternion[0],
                 x: Bno055.QuaternionScale * payload->Quaternion[1],
