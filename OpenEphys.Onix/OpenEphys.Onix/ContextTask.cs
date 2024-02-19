@@ -32,6 +32,7 @@ namespace OpenEphys.Onix
         private BlockingCollection<oni.Frame> FrameQueue;
         private CancellationTokenSource CollectFramesTokenSource;
         private CancellationToken CollectFramesToken;
+        private IDisposable ContextConfiguration;
         event Action<ContextTask> configureHost;
         event Action<ContextTask> configureLink;
         event Func<ContextTask, IDisposable> configureDevice;
@@ -117,7 +118,7 @@ namespace OpenEphys.Onix
             configureDevice += selector;
         }
 
-        internal IDisposable Configure()
+        private IDisposable ConfigureContext()
         {
             var hostAction = Interlocked.Exchange(ref configureHost, null);
             var linkAction = Interlocked.Exchange(ref configureLink, null);
@@ -137,12 +138,12 @@ namespace OpenEphys.Onix
             if (deviceAction != null)
             {
                 var invocationList = deviceAction.GetInvocationList();
-                var disposable = new CompositeDisposable(invocationList.Length);
+                var disposable = new StackDisposable(invocationList.Length);
                 try
                 {
                     foreach (var selector in invocationList.Cast<Func<ContextTask, IDisposable>>())
                     {
-                        disposable.Add(selector(this));
+                        disposable.Push(selector(this));
                     }
                     return disposable;
                 }
@@ -162,6 +163,9 @@ namespace OpenEphys.Onix
             lock (runLock)
             {
                 if (running) return;
+
+                // NB: Configure context before starting acquisition
+                ContextConfiguration = ConfigureContext();
 
                 // NB: Stuff related to sync mode is 100% ONIX, not ONI, so long term another place
                 // to do this separation might be needed
@@ -218,7 +222,8 @@ namespace OpenEphys.Onix
                         {
                             if (FrameQueue.TryTake(out oni.Frame frame, QueueTimeoutMilliseconds, CollectFramesToken))
                             {
-                                OnFrameReceived(frame);
+                                FrameReceived.OnNext(frame);
+                                frame.Dispose();
                             }
                         }
                     }
@@ -254,14 +259,15 @@ namespace OpenEphys.Onix
                 // Clear queue and free memory
                 while (FrameQueue?.Count > 0)
                 {
-                    oni.Frame frame;
-                    frame = FrameQueue.Take();
-                    DisposeFrame(frame);
+                    var frame = FrameQueue.Take();
+                    frame.Dispose();
                 }
                 FrameQueue?.Dispose();
                 FrameQueue = null;
                 ctx.Stop();
                 running = false;
+
+                ContextConfiguration?.Dispose();
             }
         }
 
@@ -375,19 +381,22 @@ namespace OpenEphys.Onix
             }
         }
 
-        public oni.Hub GetHub(uint deviceAddress) { return ctx.GetHub(deviceAddress); }
+        public oni.Hub GetHub(uint deviceAddress) => ctx.GetHub(deviceAddress);
+
+        public virtual uint GetPassthroughDeviceAddress(uint deviceAddress)
+        {
+            var hubAddress = (deviceAddress & 0xFF00u) >> 8;
+            if (hubAddress == 0)
+            {
+                throw new ArgumentException(
+                    "Device addresses on hub zero cannot be used to create passthrough devices.",
+                    nameof(deviceAddress));
+            }
+
+            return hubAddress + 7;
+        }
+
         #endregion
-
-        private void OnFrameReceived(oni.Frame frame)
-        {
-            FrameReceived.OnNext(frame);
-            DisposeFrame(frame);
-        }
-
-        private static void DisposeFrame(oni.Frame frame)
-        {
-            frame.Dispose();
-        }
 
         public void Dispose()
         {

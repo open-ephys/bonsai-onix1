@@ -32,5 +32,11 @@ namespace OpenEphys.Onix
 
             return new DeviceContext(deviceInfo.Context, device);
         }
+
+        public static DeviceContext GetPassthroughDeviceContext(this ContextTask context, uint address, int id)
+        {
+            var passthroughDeviceAddress = context.GetPassthroughDeviceAddress(address);
+            return GetDeviceContext(context, passthroughDeviceAddress, id);
+        }
     }
 }
