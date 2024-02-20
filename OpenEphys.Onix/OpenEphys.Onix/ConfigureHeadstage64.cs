@@ -31,6 +31,10 @@ namespace OpenEphys.Onix
         [TypeConverter(typeof(HubDeviceConverter))]
         public ConfigureTS4231 TS4231 { get; set; } = new() { Enable = false };
 
+        [Category(ConfigurationCategory)]
+        [TypeConverter(typeof(HubDeviceConverter))]
+        public ConfigureHeadstage64ElectricalStimulator ElectricalStimulator { get; set; } = new() { Enable = false };
+
         public PortName Port
         {
             get { return port; }
@@ -42,6 +46,7 @@ namespace OpenEphys.Onix
                 Rhd2164.DeviceAddress = offset + 0;
                 Bno055.DeviceAddress = offset + 1;
                 TS4231.DeviceAddress = offset + 2;
+                ElectricalStimulator.DeviceAddress = offset + 3;
             }
         }
 
@@ -51,6 +56,7 @@ namespace OpenEphys.Onix
             yield return Rhd2164;
             yield return Bno055;
             yield return TS4231;
+            yield return ElectricalStimulator;
         }
 
         class ConfigureHeadstage64LinkController : ConfigureFmcLinkController
