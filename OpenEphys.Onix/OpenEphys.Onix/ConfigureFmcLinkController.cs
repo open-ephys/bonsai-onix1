@@ -89,6 +89,11 @@ namespace OpenEphys.Onix
                         context.WriteRegister(deviceAddress, FmcLinkController.PORTVOLTAGE, voltage + safetyVoltage);
                         Thread.Sleep(VoltageOnSettleMillis);
                         hasLock = CheckLinkState(device); // Final check
+
+                        // TODO: HACK HACK HACK. HeadstageRhs2116 needs a reset after power on to present device table.  HACK HACK HACK.
+                        Thread.Sleep(500);
+                        context.Reset(); 
+
                         break;
                     }
                 }
