@@ -38,18 +38,16 @@ namespace OpenEphys.Onix
         event Func<ContextTask, IDisposable> configureDevice;
 
         // NOTE: There was a GC memory leak around here
-        internal Subject<oni.Frame> FrameReceived = new Subject<oni.Frame>();
+        internal Subject<oni.Frame> FrameReceived = new();
 
         public static readonly string DefaultDriver = "riffa";
         public static readonly int DefaultIndex = 0;
 
         // TODO: These work for RIFFA implementation, but potentially not others!!
-        private readonly object readLock = new object();
-        private readonly object writeLock = new object();
-        private readonly object regLock = new object();
-
+        private readonly object readLock = new();
+        private readonly object writeLock = new();
+        private readonly object regLock = new();
         private bool running = false;
-        private readonly object runLock = new object();
 
         private readonly string contextDriver = DefaultDriver;
         private readonly int contextIndex = DefaultIndex;
@@ -73,16 +71,15 @@ namespace OpenEphys.Onix
 
         public void Reset()
         {
-            lock (runLock)
+            lock (regLock)
             {
                 Stop();
                 lock (readLock)
                     lock (writeLock)
-                        lock (regLock)
-                        {
-                            ctx?.Dispose();
-                            Initialize();
-                        }
+                    {
+                        ctx?.Dispose();
+                        Initialize();
+                    }
             }
         }
 
@@ -155,7 +152,7 @@ namespace OpenEphys.Onix
 
         internal void Start()
         {
-            lock (runLock)
+            lock (regLock)
             {
                 if (running) return;
 
@@ -240,7 +237,7 @@ namespace OpenEphys.Onix
 
         internal void Stop()
         {
-            lock (runLock)
+            lock (regLock)
             {
                 if (!running) return;
                 if ((distributeFrames != null || readFrames != null) && !distributeFrames.IsCanceled)
@@ -395,15 +392,14 @@ namespace OpenEphys.Onix
 
         public void Dispose()
         {
-            lock (runLock)
+            lock (regLock)
             {
                 Stop();
                 lock (readLock)
                     lock (writeLock)
-                        lock (regLock)
-                        {
-                            ctx?.Dispose();
-                        }
+                    {
+                        ctx?.Dispose();
+                    }
             }
 
             GC.SuppressFinalize(this);
