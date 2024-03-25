@@ -58,12 +58,7 @@ namespace OpenEphys.Onix
         {
             contextDriver = driver;
             contextIndex = index;
-            lock (readLock)
-                lock (writeLock)
-                    lock (regLock)
-                    {
-                        Initialize();
-                    }
+            Initialize();
         }
 
         private void Initialize()
