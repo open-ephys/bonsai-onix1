@@ -5,12 +5,12 @@ namespace OpenEphys.Onix
 {
     internal static class ObservableExtensions
     {
-        public static IObservable<ContextTask> ConfigureHost(this IObservable<ContextTask> source, Action<ContextTask> action)
+        public static IObservable<ContextTask> ConfigureHost(this IObservable<ContextTask> source, Func<ContextTask, IDisposable> action)
         {
             return source.Do(context => context.ConfigureHost(action));
         }
 
-        public static IObservable<ContextTask> ConfigureLink(this IObservable<ContextTask> source, Action<ContextTask> action)
+        public static IObservable<ContextTask> ConfigureLink(this IObservable<ContextTask> source, Func<ContextTask, IDisposable> action)
         {
             return source.Do(context => context.ConfigureLink(action));
         }

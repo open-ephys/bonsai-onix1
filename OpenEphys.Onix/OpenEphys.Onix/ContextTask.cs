@@ -33,8 +33,8 @@ namespace OpenEphys.Onix
         private CancellationTokenSource CollectFramesTokenSource;
         private CancellationToken CollectFramesToken;
         private IDisposable ContextConfiguration;
-        event Action<ContextTask> configureHost;
-        event Action<ContextTask> configureLink;
+        event Func<ContextTask, IDisposable> configureHost;
+        event Func<ContextTask, IDisposable> configureLink;
         event Func<ContextTask, IDisposable> configureDevice;
 
         // NOTE: There was a GC memory leak around here
@@ -93,14 +93,14 @@ namespace OpenEphys.Onix
 
         // NB: This is where actions that reconfigure the hub state, or otherwise
         // change the device table should be executed
-        internal void ConfigureHost(Action<ContextTask> action)
+        internal void ConfigureHost(Func<ContextTask, IDisposable> action)
         {
             configureHost += action;
         }
 
         // NB: This is where actions that calibrate port voltage or otherwise
         // check link lock state should be executed
-        internal void ConfigureLink(Action<ContextTask> action)
+        internal void ConfigureLink(Func<ContextTask, IDisposable> action)
         {
             configureLink += action;
         }
@@ -117,29 +117,24 @@ namespace OpenEphys.Onix
             var hostAction = Interlocked.Exchange(ref configureHost, null);
             var linkAction = Interlocked.Exchange(ref configureLink, null);
             var deviceAction = Interlocked.Exchange(ref configureDevice, null);
-            if (hostAction != null)
-            {
-                hostAction(this);
-                Reset();
-            }
+            var disposable = new StackDisposable();
+            ConfigureResources(disposable, hostAction);
+            ConfigureResources(disposable, linkAction);
+            ConfigureResources(disposable, deviceAction);
+            return disposable;
+        }
 
-            if (linkAction != null)
+        void ConfigureResources(StackDisposable disposable, Func<ContextTask, IDisposable> action)
+        {
+            if (action != null)
             {
-                linkAction(this);
-                Reset();
-            }
-
-            if (deviceAction != null)
-            {
-                var invocationList = deviceAction.GetInvocationList();
-                var disposable = new StackDisposable(invocationList.Length);
+                var invocationList = action.GetInvocationList();
                 try
                 {
                     foreach (var selector in invocationList.Cast<Func<ContextTask, IDisposable>>())
                     {
                         disposable.Push(selector(this));
                     }
-                    return disposable;
                 }
                 catch
                 {
@@ -148,8 +143,6 @@ namespace OpenEphys.Onix
                 }
                 finally { Reset(); }
             }
-
-            return Disposable.Empty;
         }
 
         internal void Start()
