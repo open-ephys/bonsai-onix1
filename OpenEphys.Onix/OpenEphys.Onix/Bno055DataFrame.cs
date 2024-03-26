@@ -21,9 +21,9 @@ namespace OpenEphys.Onix
         {
             Clock = clock;
             EulerAngle = new Vector3(
-                x: Bno055.EulerAngleScale * payload->EulerAngle[0],  // yaw
-                y: Bno055.EulerAngleScale * payload->EulerAngle[1],  // roll
-                z: Bno055.EulerAngleScale * payload->EulerAngle[2]); // pitch
+                x: Bno055.EulerAngleScale * payload->EulerAngle[0],
+                y: Bno055.EulerAngleScale * payload->EulerAngle[1],
+                z: Bno055.EulerAngleScale * payload->EulerAngle[2]);
             Quaternion = new Quaternion(
                 w: Bno055.QuaternionScale * payload->Quaternion[0],
                 x: Bno055.QuaternionScale * payload->Quaternion[1],
