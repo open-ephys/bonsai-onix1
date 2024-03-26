@@ -33,15 +33,22 @@ namespace OpenEphys.Onix
                         var pollingObserver = Observer.Create<TSource>(
                             _ =>
                             {
-                                var data = i2c.ReadBytes(NeuropixelsV2eBno055.DataAddress, sizeof(Bno055DataPayload));
-                                ulong clock = passthrough.ReadRegister(DS90UB9x.LASTI2CL);
-                                clock += (ulong)passthrough.ReadRegister(DS90UB9x.LASTI2CH) << 32;
-                                Bno055DataFrame frame;
-                                fixed (byte* dataPtr = data)
+                                Bno055DataFrame frame = default;
+                                device.Context.EnsureContext(() =>
                                 {
-                                    frame = new Bno055DataFrame(clock, (Bno055DataPayload*)dataPtr);
+                                    var data = i2c.ReadBytes(NeuropixelsV2eBno055.DataAddress, sizeof(Bno055DataPayload));
+                                    ulong clock = passthrough.ReadRegister(DS90UB9x.LASTI2CL);
+                                    clock += (ulong)passthrough.ReadRegister(DS90UB9x.LASTI2CH) << 32;
+                                    fixed (byte* dataPtr = data)
+                                    {
+                                        frame = new Bno055DataFrame(clock, (Bno055DataPayload*)dataPtr);
+                                    }
+                                });
+
+                                if (frame != null)
+                                {
+                                    observer.OnNext(frame);
                                 }
-                                observer.OnNext(frame);
                             },
                             observer.OnError,
                             observer.OnCompleted);

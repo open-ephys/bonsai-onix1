@@ -325,6 +325,17 @@ namespace OpenEphys.Onix
             }
         }
 
+        // NB: This is for actions that require synchronized register access and might
+        // be called asynchronously with context dispose
+        internal void EnsureContext(Action action)
+        {
+            lock (regLock)
+            {
+                if (ctx != null)
+                    action();
+            }
+        }
+
         internal uint ReadRegister(uint deviceAddress, uint registerAddress)
         {
             lock (regLock)
@@ -399,6 +410,7 @@ namespace OpenEphys.Onix
                     lock (writeLock)
                     {
                         ctx?.Dispose();
+                        ctx = null;
                     }
             }
 
