@@ -53,7 +53,8 @@ namespace OpenEphys.Onix
                     ConfigureProbeStreaming(probeControl);
                 }
 
-                var disposable = DeviceManager.RegisterDevice(deviceName, device, DeviceType);
+                var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
+                var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
                 var shutdown = Disposable.Create(() =>
                 {
                     serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO10, NeuropixelsV2e.DefaultGPO10Config);

@@ -7,14 +7,23 @@ namespace OpenEphys.Onix
     public class Bno055DataFrame
     {
         public unsafe Bno055DataFrame(oni.Frame frame)
+            : this(frame.Clock, (Bno055Payload*)frame.Data.ToPointer())
         {
-            Clock = frame.Clock;
-            var payload = (Bno055Payload*)frame.Data.ToPointer();
+        }
+
+        internal unsafe Bno055DataFrame(ulong clock, Bno055Payload* payload)
+            : this(clock, &payload->Data)
+        {
             HubClock = payload->HubClock;
+        }
+
+        internal unsafe Bno055DataFrame(ulong clock, Bno055DataPayload* payload)
+        {
+            Clock = clock;
             EulerAngle = new Vector3(
-                y: Bno055.EulerAngleScale * payload->EulerAngle[0],  // yaw
-                z: Bno055.EulerAngleScale * payload->EulerAngle[1],  // roll
-                x: Bno055.EulerAngleScale * payload->EulerAngle[2]); // pitch
+                x: Bno055.EulerAngleScale * payload->EulerAngle[0],
+                y: Bno055.EulerAngleScale * payload->EulerAngle[1],
+                z: Bno055.EulerAngleScale * payload->EulerAngle[2]);
             Quaternion = new Quaternion(
                 w: Bno055.QuaternionScale * payload->Quaternion[0],
                 x: Bno055.QuaternionScale * payload->Quaternion[1],
@@ -53,6 +62,12 @@ namespace OpenEphys.Onix
     unsafe struct Bno055Payload
     {
         public ulong HubClock;
+        public Bno055DataPayload Data;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    unsafe struct Bno055DataPayload
+    {
         public fixed short EulerAngle[3];
         public fixed short Quaternion[4];
         public fixed short Acceleration[3];

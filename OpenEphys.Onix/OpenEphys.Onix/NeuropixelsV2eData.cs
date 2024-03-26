@@ -25,8 +25,9 @@ namespace OpenEphys.Onix
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
                 {
                     var device = deviceInfo.GetDeviceContext(typeof(NeuropixelsV2e));
-                    var probeData = deviceInfo.Context.FrameReceived.Where(frame =>
-                        frame.DeviceAddress == device.Address &&
+                    var passthrough = device.GetPassthroughDeviceContext(DS90UB9x.ID);
+                    var probeData = device.Context.FrameReceived.Where(frame =>
+                        frame.DeviceAddress == passthrough.Address &&
                         NeuropixelsV2eDataFrame.GetProbeIndex(frame) == (int)ProbeIndex);
                     return Observable.Create<NeuropixelsV2eDataFrame>(observer =>
                     {

@@ -38,18 +38,17 @@ namespace OpenEphys.Onix
         event Func<ContextTask, IDisposable> configureDevice;
 
         // NOTE: There was a GC memory leak around here
-        internal Subject<oni.Frame> FrameReceived = new Subject<oni.Frame>();
+        internal Subject<oni.Frame> FrameReceived = new();
 
         public static readonly string DefaultDriver = "riffa";
         public static readonly int DefaultIndex = 0;
 
         // TODO: These work for RIFFA implementation, but potentially not others!!
-        private readonly object readLock = new object();
-        private readonly object writeLock = new object();
-        private readonly object regLock = new object();
-
+        private readonly object readLock = new();
+        private readonly object writeLock = new();
+        private readonly object regLock = new();
+        private readonly object disposeLock = new();
         private bool running = false;
-        private readonly object runLock = new object();
 
         private readonly string contextDriver = DefaultDriver;
         private readonly int contextIndex = DefaultIndex;
@@ -58,12 +57,7 @@ namespace OpenEphys.Onix
         {
             contextDriver = driver;
             contextIndex = index;
-            lock (readLock)
-                lock (writeLock)
-                    lock (regLock)
-                    {
-                        Initialize();
-                    }
+            Initialize();
         }
 
         private void Initialize()
@@ -78,17 +72,17 @@ namespace OpenEphys.Onix
 
         public void Reset()
         {
-            lock (runLock)
-            {
-                Stop();
-                lock (readLock)
-                    lock (writeLock)
-                        lock (regLock)
+            lock (disposeLock)
+                lock (regLock)
+                {
+                    Stop();
+                    lock (readLock)
+                        lock (writeLock)
                         {
                             ctx?.Dispose();
                             Initialize();
                         }
-            }
+                }
         }
 
         public uint SystemClockHz { get; private set; }
@@ -160,7 +154,7 @@ namespace OpenEphys.Onix
 
         internal void Start()
         {
-            lock (runLock)
+            lock (regLock)
             {
                 if (running) return;
 
@@ -245,7 +239,7 @@ namespace OpenEphys.Onix
 
         internal void Stop()
         {
-            lock (runLock)
+            lock (regLock)
             {
                 if (!running) return;
                 if ((distributeFrames != null || readFrames != null) && !distributeFrames.IsCanceled)
@@ -333,6 +327,17 @@ namespace OpenEphys.Onix
             }
         }
 
+        // NB: This is for actions that require synchronized register access and might
+        // be called asynchronously with context dispose
+        internal void EnsureContext(Action action)
+        {
+            lock (disposeLock)
+            {
+                if (ctx != null)
+                    action();
+            }
+        }
+
         internal uint ReadRegister(uint deviceAddress, uint registerAddress)
         {
             lock (regLock)
@@ -351,7 +356,7 @@ namespace OpenEphys.Onix
 
         public oni.Frame ReadFrame()
         {
-            lock (regLock)
+            lock (readLock)
             {
                 return ctx.ReadFrame();
             }
@@ -400,16 +405,17 @@ namespace OpenEphys.Onix
 
         public void Dispose()
         {
-            lock (runLock)
-            {
-                Stop();
-                lock (readLock)
-                    lock (writeLock)
-                        lock (regLock)
+            lock (disposeLock)
+                lock (regLock)
+                {
+                    Stop();
+                    lock (readLock)
+                        lock (writeLock)
                         {
                             ctx?.Dispose();
+                            ctx = null;
                         }
-            }
+                }
 
             GC.SuppressFinalize(this);
         }

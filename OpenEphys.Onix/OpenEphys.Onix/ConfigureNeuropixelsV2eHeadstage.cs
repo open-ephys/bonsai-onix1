@@ -20,6 +20,10 @@ namespace OpenEphys.Onix
         [TypeConverter(typeof(HubDeviceConverter))]
         public ConfigureNeuropixelsV2e NeuropixelsV2 { get; set; } = new();
 
+        [Category(ConfigurationCategory)]
+        [TypeConverter(typeof(HubDeviceConverter))]
+        public ConfigureNeuropixelsV2eBno055 Bno055 { get; set; } = new();
+
         public PortName Port
         {
             get { return port; }
@@ -29,6 +33,7 @@ namespace OpenEphys.Onix
                 var offset = (uint)port << 8;
                 LinkController.DeviceAddress = (uint)port;
                 NeuropixelsV2.DeviceAddress = offset + 0;
+                Bno055.DeviceAddress = offset + 1;
             }
         }
 
@@ -36,6 +41,7 @@ namespace OpenEphys.Onix
         {
             yield return LinkController;
             yield return NeuropixelsV2;
+            yield return Bno055;
         }
     }
 }
