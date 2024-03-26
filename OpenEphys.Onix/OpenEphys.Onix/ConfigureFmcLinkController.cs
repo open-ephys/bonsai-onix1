@@ -78,12 +78,13 @@ namespace OpenEphys.Onix
                     }
                 }
 
+                void dispose() => device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
                 if (!hasLock)
                 {
-                    device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
+                    dispose();
                     throw new InvalidOperationException("Unable to get SERDES lock on FMC link controller.");
                 }
-                return Disposable.Empty;
+                return Disposable.Create(dispose);
             })
             .ConfigureDevice(context => 
             {
