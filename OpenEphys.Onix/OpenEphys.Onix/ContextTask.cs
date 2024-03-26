@@ -47,6 +47,7 @@ namespace OpenEphys.Onix
         private readonly object readLock = new();
         private readonly object writeLock = new();
         private readonly object regLock = new();
+        private readonly object disposeLock = new();
         private bool running = false;
 
         private readonly string contextDriver = DefaultDriver;
@@ -71,16 +72,17 @@ namespace OpenEphys.Onix
 
         public void Reset()
         {
-            lock (regLock)
-            {
-                Stop();
-                lock (readLock)
-                    lock (writeLock)
-                    {
-                        ctx?.Dispose();
-                        Initialize();
-                    }
-            }
+            lock (disposeLock)
+                lock (regLock)
+                {
+                    Stop();
+                    lock (readLock)
+                        lock (writeLock)
+                        {
+                            ctx?.Dispose();
+                            Initialize();
+                        }
+                }
         }
 
         public uint SystemClockHz { get; private set; }
@@ -329,7 +331,7 @@ namespace OpenEphys.Onix
         // be called asynchronously with context dispose
         internal void EnsureContext(Action action)
         {
-            lock (regLock)
+            lock (disposeLock)
             {
                 if (ctx != null)
                     action();
@@ -403,16 +405,17 @@ namespace OpenEphys.Onix
 
         public void Dispose()
         {
-            lock (regLock)
-            {
-                Stop();
-                lock (readLock)
-                    lock (writeLock)
-                    {
-                        ctx?.Dispose();
-                        ctx = null;
-                    }
-            }
+            lock (disposeLock)
+                lock (regLock)
+                {
+                    Stop();
+                    lock (readLock)
+                        lock (writeLock)
+                        {
+                            ctx?.Dispose();
+                            ctx = null;
+                        }
+                }
 
             GC.SuppressFinalize(this);
         }
