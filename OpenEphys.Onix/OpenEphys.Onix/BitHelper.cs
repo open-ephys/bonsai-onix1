@@ -8,10 +8,5 @@ namespace OpenEphys.Onix
         {
             return (value & ~mask) | (bits & mask);
         }
-
-        internal static ulong SwapEndian(ulong value)
-        {
-            return unchecked((ulong)IPAddress.NetworkToHostOrder((long)value));
-        }
     }
 }

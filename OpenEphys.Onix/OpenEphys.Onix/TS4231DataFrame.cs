@@ -8,7 +8,7 @@ namespace OpenEphys.Onix
         {
             Clock = frame.Clock;
             var payload = (TS4231Payload*)frame.Data.ToPointer();
-            HubClock = BitHelper.SwapEndian(payload->HubClock);
+            HubClock = payload->HubClock;
             SensorIndex = payload->SensorIndex;
             EnvelopeWidth = payload->EnvelopeWidth;
             EnvelopeType = payload->EnvelopeType;

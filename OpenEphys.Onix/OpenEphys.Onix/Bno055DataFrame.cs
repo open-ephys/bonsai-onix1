@@ -10,7 +10,7 @@ namespace OpenEphys.Onix
         {
             Clock = frame.Clock;
             var payload = (Bno055Payload*)frame.Data.ToPointer();
-            HubClock = BitHelper.SwapEndian(payload->HubClock);
+            HubClock = payload->HubClock;
             EulerAngle = new Vector3(
                 y: Bno055.EulerAngleScale * payload->EulerAngle[0],  // yaw
                 z: Bno055.EulerAngleScale * payload->EulerAngle[1],  // roll

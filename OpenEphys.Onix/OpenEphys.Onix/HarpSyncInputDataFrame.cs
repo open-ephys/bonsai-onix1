@@ -8,8 +8,8 @@ namespace OpenEphys.Onix
         {
             Clock = frame.Clock;
             var payload = (HarpSyncInputPayload*)frame.Data.ToPointer();
-            HubClock = BitHelper.SwapEndian(payload->HubClock);
-            HarpTime = ((uint)payload->HarpTimeHigh << 16) | ((uint)payload->HarpTimeLow << 0);
+            HubClock = payload->HubClock;
+            HarpTime = payload->HarpTime;
         }
 
         public ulong Clock { get; }
@@ -23,7 +23,6 @@ namespace OpenEphys.Onix
     struct HarpSyncInputPayload
     {
         public ulong HubClock;
-        public ushort HarpTimeHigh;
-        public ushort HarpTimeLow;
+        public uint HarpTime;
     }
 }

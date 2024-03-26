@@ -40,7 +40,7 @@ namespace OpenEphys.Onix
                             {
                                 var payload = (NeuropixelsV2Payload*)frame.Data.ToPointer();
                                 NeuropixelsV2eDataFrame.CopyAmplifierBuffer(payload->AmplifierData, amplifierBuffer, sampleIndex);
-                                hubClockBuffer[sampleIndex] = BitHelper.SwapEndian(payload->HubClock);
+                                hubClockBuffer[sampleIndex] = payload->HubClock;
                                 clockBuffer[sampleIndex] = frame.Clock;
                                 if (++sampleIndex >= bufferSize)
                                 {
