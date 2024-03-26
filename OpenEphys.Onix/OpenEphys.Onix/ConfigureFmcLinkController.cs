@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Reactive.Disposables;
 using System.Threading;
 
 namespace OpenEphys.Onix
@@ -48,6 +49,7 @@ namespace OpenEphys.Onix
                 var portShift = ((int)deviceAddress - 1) * 2;
                 var passthroughState = (hubConfiguration == HubConfiguration.Passthrough ? 1 : 0) << portShift;
                 context.HubState = (PassthroughState)(((int)context.HubState & ~(1 << portShift)) | passthroughState);
+                return Disposable.Empty;
             })
             .ConfigureLink(context =>
             {
@@ -76,11 +78,13 @@ namespace OpenEphys.Onix
                     }
                 }
 
+                void dispose() => device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
                 if (!hasLock)
                 {
-                    device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
+                    dispose();
                     throw new InvalidOperationException("Unable to get SERDES lock on FMC link controller.");
                 }
+                return Disposable.Create(dispose);
             })
             .ConfigureDevice(context => 
             {
