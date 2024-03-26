@@ -8,13 +8,13 @@ namespace OpenEphys.Onix
         {
             Clock = frame.Clock;
             var payload = (HarpSyncInputPayload*)frame.Data.ToPointer();
-            HubClock = payload->HubClock;
+            HubSyncCounter = payload->HubSyncCounter;
             HarpTime = payload->HarpTime;
         }
 
         public ulong Clock { get; }
 
-        public ulong HubClock { get; }
+        public ulong HubSyncCounter { get; }
 
         public uint HarpTime { get; }
     }
@@ -22,7 +22,7 @@ namespace OpenEphys.Onix
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct HarpSyncInputPayload
     {
-        public ulong HubClock;
+        public ulong HubSyncCounter;
         public uint HarpTime;
     }
 }

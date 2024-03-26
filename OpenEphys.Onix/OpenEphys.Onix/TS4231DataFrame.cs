@@ -8,7 +8,7 @@ namespace OpenEphys.Onix
         {
             Clock = frame.Clock;
             var payload = (TS4231Payload*)frame.Data.ToPointer();
-            HubClock = payload->HubClock;
+            HubSyncCounter = payload->HubSyncCounter;
             SensorIndex = payload->SensorIndex;
             EnvelopeWidth = payload->EnvelopeWidth;
             EnvelopeType = payload->EnvelopeType;
@@ -16,7 +16,7 @@ namespace OpenEphys.Onix
 
         public ulong Clock { get; }
 
-        public ulong HubClock { get; }
+        public ulong HubSyncCounter { get; }
 
         public int SensorIndex { get; }
 
@@ -28,7 +28,7 @@ namespace OpenEphys.Onix
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct TS4231Payload
     {
-        public ulong HubClock;
+        public ulong HubSyncCounter;
         public ushort SensorIndex;
         public uint EnvelopeWidth;
         public TS4231Envelope EnvelopeType;

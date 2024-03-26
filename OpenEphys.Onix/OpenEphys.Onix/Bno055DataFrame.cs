@@ -14,7 +14,7 @@ namespace OpenEphys.Onix
         internal unsafe Bno055DataFrame(ulong clock, Bno055Payload* payload)
             : this(clock, &payload->Data)
         {
-            HubClock = payload->HubClock;
+            HubSyncCounter = payload->HubSyncCounter;
         }
 
         internal unsafe Bno055DataFrame(ulong clock, Bno055DataPayload* payload)
@@ -43,7 +43,7 @@ namespace OpenEphys.Onix
 
         public ulong Clock { get; }
 
-        public ulong HubClock { get; }
+        public ulong HubSyncCounter { get; }
 
         public Vector3 EulerAngle { get; }
 
@@ -61,7 +61,7 @@ namespace OpenEphys.Onix
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     unsafe struct Bno055Payload
     {
-        public ulong HubClock;
+        public ulong HubSyncCounter;
         public Bno055DataPayload Data;
     }
 

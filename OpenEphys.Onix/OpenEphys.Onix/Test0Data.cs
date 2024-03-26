@@ -36,7 +36,7 @@ namespace OpenEphys.Onix
                     var sampleIndex = 0;
                     var dummyBuffer = new short[dummyWords * bufferSize];
                     var messageBuffer = new short[bufferSize];
-                    var hubClockBuffer = new ulong[bufferSize];
+                    var hubSyncCounterBuffer = new ulong[bufferSize];
                     var clockBuffer = new ulong[bufferSize];
 
                     var frameObserver = Observer.Create<oni.Frame>(
@@ -45,14 +45,14 @@ namespace OpenEphys.Onix
                             var payload = (Test0PayloadHeader*)frame.Data.ToPointer();
                             Marshal.Copy(new IntPtr(payload + 1), dummyBuffer, sampleIndex * dummyWords, dummyWords);
                             messageBuffer[sampleIndex] = payload->Message;
-                            hubClockBuffer[sampleIndex] = payload->HubClock;
+                            hubSyncCounterBuffer[sampleIndex] = payload->HubSyncCounter;
                             clockBuffer[sampleIndex] = frame.Clock;
                             if (++sampleIndex >= bufferSize)
                             {
                                 var dummy = BufferHelper.CopyBuffer(dummyBuffer, bufferSize, dummyWords, Depth.S16);
                                 var message = BufferHelper.CopyBuffer(messageBuffer, bufferSize, 1, Depth.S16);
-                                observer.OnNext(new Test0DataFrame(clockBuffer, hubClockBuffer, message, dummy));
-                                hubClockBuffer = new ulong[bufferSize];
+                                observer.OnNext(new Test0DataFrame(clockBuffer, hubSyncCounterBuffer, message, dummy));
+                                hubSyncCounterBuffer = new ulong[bufferSize];
                                 clockBuffer = new ulong[bufferSize];
                                 sampleIndex = 0;
                             }

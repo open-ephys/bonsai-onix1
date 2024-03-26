@@ -33,7 +33,7 @@ namespace OpenEphys.Onix
                     {
                         var sampleIndex = 0;
                         var amplifierBuffer = new ushort[NeuropixelsV2e.ChannelCount, bufferSize];
-                        var hubClockBuffer = new ulong[bufferSize];
+                        var hubSyncCounterBuffer = new ulong[bufferSize];
                         var clockBuffer = new ulong[bufferSize];
 
                         var frameObserver = Observer.Create<oni.Frame>(
@@ -41,13 +41,13 @@ namespace OpenEphys.Onix
                             {
                                 var payload = (NeuropixelsV2Payload*)frame.Data.ToPointer();
                                 NeuropixelsV2eDataFrame.CopyAmplifierBuffer(payload->AmplifierData, amplifierBuffer, sampleIndex);
-                                hubClockBuffer[sampleIndex] = payload->HubClock;
+                                hubSyncCounterBuffer[sampleIndex] = payload->HubSyncCounter;
                                 clockBuffer[sampleIndex] = frame.Clock;
                                 if (++sampleIndex >= bufferSize)
                                 {
                                     var amplifierData = Mat.FromArray(amplifierBuffer);
-                                    observer.OnNext(new NeuropixelsV2eDataFrame(clockBuffer, hubClockBuffer, amplifierData));
-                                    hubClockBuffer = new ulong[bufferSize];
+                                    observer.OnNext(new NeuropixelsV2eDataFrame(clockBuffer, hubSyncCounterBuffer, amplifierData));
+                                    hubSyncCounterBuffer = new ulong[bufferSize];
                                     clockBuffer = new ulong[bufferSize];
                                     sampleIndex = 0;
                                 }

@@ -11,7 +11,7 @@ namespace OpenEphys.Onix
 
             FrameClock = frame.Clock;
             DeviceAddress = frame.DeviceAddress;
-            HubClock = payload->HubClock;
+            HubSyncCounter = payload->HubSyncCounter;
             PercentUsed = 100.0 * payload->Usage / totalMemory;
             BytesUsed = payload->Usage * 4;
 
@@ -21,7 +21,7 @@ namespace OpenEphys.Onix
 
         public uint DeviceAddress { get; private set; }
 
-        public ulong HubClock { get; }
+        public ulong HubSyncCounter { get; }
 
         public double PercentUsed { get; }
 
@@ -31,7 +31,7 @@ namespace OpenEphys.Onix
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct MemoryUsagePayload
     {
-        public ulong HubClock;
+        public ulong HubSyncCounter;
         public uint Usage;
     }
 }

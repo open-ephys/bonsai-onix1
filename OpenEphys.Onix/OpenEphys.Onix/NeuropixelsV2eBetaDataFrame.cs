@@ -5,17 +5,17 @@ namespace OpenEphys.Onix
 {
     public class NeuropixelsV2eBetaDataFrame
     {
-        public NeuropixelsV2eBetaDataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData, int[] frameCounter)
+        public NeuropixelsV2eBetaDataFrame(ulong[] clock, ulong[] hubSyncCounter, Mat amplifierData, int[] frameCounter)
         {
             Clock = clock;
-            HubClock = hubClock;
+            HubSyncCounter = hubSyncCounter;
             AmplifierData = amplifierData;
             FrameCounter = frameCounter;
         }
 
         public ulong[] Clock { get; }
 
-        public ulong[] HubClock { get; }
+        public ulong[] HubSyncCounter { get; }
 
         public Mat AmplifierData { get; }
 
@@ -81,7 +81,7 @@ namespace OpenEphys.Onix
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     unsafe struct NeuropixelsV2BetaPayload
     {
-        public ulong HubClock;
+        public ulong HubSyncCounter;
         public ushort ProbeIndex;
         public uint Reserved;
         public fixed ushort SuperFrame[NeuropixelsV2eBeta.FramesPerSuperFrame * NeuropixelsV2eBeta.FrameWords];

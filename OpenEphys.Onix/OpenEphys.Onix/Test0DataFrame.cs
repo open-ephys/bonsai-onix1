@@ -5,17 +5,17 @@ namespace OpenEphys.Onix
 {
     public class Test0DataFrame
     {
-        public Test0DataFrame(ulong[] clock, ulong[] hubClock, Mat message, Mat dummy)
+        public Test0DataFrame(ulong[] clock, ulong[] hubSyncCounter, Mat message, Mat dummy)
         {
             Clock = clock;
-            HubClock = hubClock;
+            HubSyncCounter = hubSyncCounter;
             Message = message;
             Dummy = dummy;
         }
 
         public ulong[] Clock { get; }
 
-        public ulong[] HubClock { get; }
+        public ulong[] HubSyncCounter { get; }
 
         public Mat Message { get; }
 
@@ -25,7 +25,7 @@ namespace OpenEphys.Onix
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct Test0PayloadHeader
     {
-        public ulong HubClock;
+        public ulong HubSyncCounter;
         public short Message;
     }
 }

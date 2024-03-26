@@ -34,7 +34,7 @@ namespace OpenEphys.Onix
                         var sampleIndex = 0;
                         var amplifierBuffer = new ushort[NeuropixelsV2eBeta.ChannelCount, bufferSize];
                         var frameCounter = new int[NeuropixelsV2eBeta.FramesPerSuperFrame * bufferSize];
-                        var hubClockBuffer = new ulong[bufferSize];
+                        var hubSyncCounterBuffer = new ulong[bufferSize];
                         var clockBuffer = new ulong[bufferSize];
 
                         var frameObserver = Observer.Create<oni.Frame>(
@@ -42,19 +42,19 @@ namespace OpenEphys.Onix
                             {
                                 var payload = (NeuropixelsV2BetaPayload*)frame.Data.ToPointer();
                                 NeuropixelsV2eBetaDataFrame.CopyAmplifierBuffer(payload->SuperFrame, amplifierBuffer, frameCounter, sampleIndex);
-                                hubClockBuffer[sampleIndex] = payload->HubClock;
+                                hubSyncCounterBuffer[sampleIndex] = payload->HubSyncCounter;
                                 clockBuffer[sampleIndex] = frame.Clock;
                                 if (++sampleIndex >= bufferSize)
                                 {
                                     var amplifierData = Mat.FromArray(amplifierBuffer);
                                     var dataFrame = new NeuropixelsV2eBetaDataFrame(
                                         clockBuffer,
-                                        hubClockBuffer,
+                                        hubSyncCounterBuffer,
                                         amplifierData,
                                         frameCounter);
                                     observer.OnNext(dataFrame);
                                     frameCounter = new int[NeuropixelsV2eBeta.FramesPerSuperFrame * bufferSize];
-                                    hubClockBuffer = new ulong[bufferSize];
+                                    hubSyncCounterBuffer = new ulong[bufferSize];
                                     clockBuffer = new ulong[bufferSize];
                                     sampleIndex = 0;
                                 }

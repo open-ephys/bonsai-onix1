@@ -28,7 +28,7 @@ namespace OpenEphys.Onix
                         var device = deviceInfo.GetDeviceContext(typeof(Rhd2164));
                         var amplifierBuffer = new short[Rhd2164.AmplifierChannelCount * bufferSize];
                         var auxBuffer = new short[Rhd2164.AuxChannelCount * bufferSize];
-                        var hubClockBuffer = new ulong[bufferSize];
+                        var hubSyncCounterBuffer = new ulong[bufferSize];
                         var clockBuffer = new ulong[bufferSize];
 
                         var frameObserver = Observer.Create<oni.Frame>(
@@ -37,14 +37,14 @@ namespace OpenEphys.Onix
                                 var payload = (Rhd2164Payload*)frame.Data.ToPointer();
                                 Marshal.Copy(new IntPtr(payload->AmplifierData), amplifierBuffer, sampleIndex * Rhd2164.AmplifierChannelCount, Rhd2164.AmplifierChannelCount);
                                 Marshal.Copy(new IntPtr(payload->AuxData), auxBuffer, sampleIndex * Rhd2164.AuxChannelCount, Rhd2164.AuxChannelCount);
-                                hubClockBuffer[sampleIndex] = payload->HubClock;
+                                hubSyncCounterBuffer[sampleIndex] = payload->HubSyncCounter;
                                 clockBuffer[sampleIndex] = frame.Clock;
                                 if (++sampleIndex >= bufferSize)
                                 {
                                     var amplifierData = BufferHelper.CopyBuffer(amplifierBuffer, bufferSize, Rhd2164.AmplifierChannelCount, Depth.U16);
                                     var auxData = BufferHelper.CopyBuffer(auxBuffer, bufferSize, Rhd2164.AuxChannelCount, Depth.U16);
-                                    observer.OnNext(new Rhd2164DataFrame(clockBuffer, hubClockBuffer, amplifierData, auxData));
-                                    hubClockBuffer = new ulong[bufferSize];
+                                    observer.OnNext(new Rhd2164DataFrame(clockBuffer, hubSyncCounterBuffer, amplifierData, auxData));
+                                    hubSyncCounterBuffer = new ulong[bufferSize];
                                     clockBuffer = new ulong[bufferSize];
                                     sampleIndex = 0;
                                 }
