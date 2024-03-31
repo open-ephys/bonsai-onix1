@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -13,7 +14,7 @@ namespace OpenEphys.Onix
         readonly BehaviorSubject<Rhs2116AnalogLowCutoff> analogLowCutoffRecovery = new(Rhs2116AnalogLowCutoff.Low250Hz);
         readonly BehaviorSubject<Rhs2116AnalogHighCutoff> analogHighCutoff = new(Rhs2116AnalogHighCutoff.High10000Hz);
         readonly BehaviorSubject<bool> respectExternalActiveStim = new(true);
-        // TODO: readonly BehaviorSubject<Rhs2116StimuluSequence> stimulusSequence = new(BehaviorSubject<Rhs2116StimuluSequence>);
+        readonly BehaviorSubject<Rhs2116StimulusSequence> stimulusSequence = new(new Rhs2116StimulusSequence());
 
         public ConfigureRhs2116()
             : base(typeof(Rhs2116))
@@ -67,6 +68,14 @@ namespace OpenEphys.Onix
             set => respectExternalActiveStim.OnNext(value);
         }
 
+        [Category(AcquisitionCategory)]
+        [Description("Stimulus sequence.")]
+        public Rhs2116StimulusSequence StimulusSequence
+        {
+            get => stimulusSequence.Value;
+            set => stimulusSequence.OnNext(value);
+        }
+
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;
@@ -91,28 +100,67 @@ namespace OpenEphys.Onix
                     format |= (uint)dspCutoff;
                 }
 
-                device.WriteRegister(Rhs2116.FORMAT, format);
+                device.WriteRegister(Rhs2116.FORMAT, format); // NB: DC data only provided in unsigned. Force amplifier data to use unsigned for consistency
                 device.WriteRegister(Rhs2116.ENABLE, enable ? 1u : 0);
 
                 return new CompositeDisposable(
-                   DeviceManager.RegisterDevice(deviceName, device, DeviceType),
-                   analogLowCutoff.Subscribe(newValue => {
-                       var regs = Rhs2116Config.AnalogLowCutoffToRegisters[newValue];
-                       var reg = regs[2] << 13 | regs[1] << 7 | regs[0];
-                       device.WriteRegister(Rhs2116.BW2, reg);
-                   }),
-                   analogLowCutoffRecovery.Subscribe(newValue => {
-                       var regs = Rhs2116Config.AnalogLowCutoffToRegisters[newValue];
-                       var reg = regs[2] << 13 | regs[1] << 7 | regs[0];
-                       device.WriteRegister(Rhs2116.BW3, reg);
-                   }),
-                   analogHighCutoff.Subscribe(newValue => {
-                       var regs = Rhs2116Config.AnalogHighCutoffToRegisters[newValue];
-                       device.WriteRegister(Rhs2116.BW0, regs[1] << 6 | regs[0]);
-                       device.WriteRegister(Rhs2116.BW1, regs[3] << 6 | regs[2]);
-                       device.WriteRegister(Rhs2116.FASTSETTLESAMPLES, Rhs2116Config.AnalogHighCutoffToFastSettleSamples[newValue]);
+                    DeviceManager.RegisterDevice(deviceName, device, DeviceType),
+                    analogLowCutoff.Subscribe(newValue =>
+                    {
+                        var regs = Rhs2116Config.AnalogLowCutoffToRegisters[newValue];
+                        var reg = regs[2] << 13 | regs[1] << 7 | regs[0];
+                        device.WriteRegister(Rhs2116.BW2, reg);
+                    }),
+                    analogLowCutoffRecovery.Subscribe(newValue =>
+                    {
+                        var regs = Rhs2116Config.AnalogLowCutoffToRegisters[newValue];
+                        var reg = regs[2] << 13 | regs[1] << 7 | regs[0];
+                        device.WriteRegister(Rhs2116.BW3, reg);
+                    }),
+                    analogHighCutoff.Subscribe(newValue =>
+                    {
+                        var regs = Rhs2116Config.AnalogHighCutoffToRegisters[newValue];
+                        device.WriteRegister(Rhs2116.BW0, regs[1] << 6 | regs[0]);
+                        device.WriteRegister(Rhs2116.BW1, regs[3] << 6 | regs[2]);
+                        device.WriteRegister(Rhs2116.FASTSETTLESAMPLES, Rhs2116Config.AnalogHighCutoffToFastSettleSamples[newValue]);
+                    }),
+                    stimulusSequence.Subscribe(newValue =>
+                    {
+                        // Step size
+                        var reg = Rhs2116Config.StimulatorStepSizeToRegisters[newValue.CurrentStepSize];
+                        device.WriteRegister(Rhs2116.STEPSZ, reg[2] << 13 | reg[1] << 7 | reg[0]);
+
+                        // Anodic amplitudes
+                        // TODO: cache last write and compare?
+                        var a = newValue.AnodicAmplitudes;
+                        for (int i = 0; i < a.Count(); i++)
+                        {
+                            device.WriteRegister(Rhs2116.POS00 + (uint)i, a.ElementAt(i));
+                        }
+
+                        // Cathodic amplitudes
+                        // TODO: cache last write and compare?
+                        var c = newValue.CathodicAmplitudes;
+                        for (int i = 0; i < a.Count(); i++)
+                        {
+                            device.WriteRegister(Rhs2116.NEG00 + (uint)i, c.ElementAt(i));
+                        }
+
+                        // Create delta table and set length
+                        var dt = newValue.DeltaTable;
+                        device.WriteRegister(Rhs2116.NUMDELTAS, (uint)dt.Count);
+
+                        // TODO: If we want to do this efficently, we probably need a different data structure on the
+                        // FPGA ram that allows columns to be out of order (e.g. linked list)
+                        uint j = 0;
+                        foreach (var d in dt)
+                        {
+                            uint indexAndTime = j++ << 22 | (d.Key & 0x003FFFFF);
+                            device.WriteRegister(Rhs2116.DELTAIDXTIME, indexAndTime);
+                            device.WriteRegister(Rhs2116.DELTAPOLEN, d.Value);
+                        }
                     })
-               );
+                );
             });
         }
     }
@@ -123,6 +171,7 @@ namespace OpenEphys.Onix
 
         // constants
         public const int AmplifierChannelCount = 16;
+        public const int StimMemorySlotsAvailable = 1024;
 
         // managed registers
         public const uint ENABLE = 0x8000; // Enable or disable the data output stream (32767)

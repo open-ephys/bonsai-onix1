@@ -27,11 +27,16 @@ namespace OpenEphys.Onix
         [TypeConverter(typeof(HubDeviceConverter))]
         public ConfigureRhs2116 Rhs2116B { get; set; } = new();
 
+        [Category(ConfigurationCategory)]
+        [TypeConverter(typeof(HubDeviceConverter))]
+        public ConfigureRhs2116Trigger StimulusTrigger { get; set; } = new();
+
         internal override void UpdateDeviceNames(string hubName)
         {
             LinkController.DeviceName = $"{hubName}/{nameof(LinkController)}";
             Rhs2116A.DeviceName = $"{hubName}/{nameof(Rhs2116A)}";
             Rhs2116B.DeviceName = $"{hubName}/{nameof(Rhs2116B)}";
+            StimulusTrigger.DeviceName = $"{hubName}/{nameof(StimulusTrigger)}";
         }
 
         public PortName Port
@@ -44,6 +49,7 @@ namespace OpenEphys.Onix
                 LinkController.DeviceAddress = (uint)port;
                 Rhs2116A.DeviceAddress = offset + 0;
                 Rhs2116B.DeviceAddress = offset + 1;
+                StimulusTrigger.DeviceAddress = offset + 2;
             }
         }
 
@@ -52,6 +58,7 @@ namespace OpenEphys.Onix
             yield return LinkController;
             yield return Rhs2116A;
             yield return Rhs2116B;
+            yield return StimulusTrigger;
         }
 
         class ConfigureHeadstageRhs2116LinkController : ConfigureFmcLinkController
