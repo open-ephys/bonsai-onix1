@@ -1,4 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Xml.Serialization;
 
 namespace OpenEphys.Onix
 {
@@ -146,8 +151,6 @@ namespace OpenEphys.Onix
         High100Hz,
     }
 
-
-
     public enum Rhs2116DspCutoff
     {
         /// <summary>
@@ -250,10 +253,223 @@ namespace OpenEphys.Onix
         Step10000nA
     }
 
-    // NB: DC data only provided in unsigned. Force amplifier data to use unsigned for consistency
-    //public enum Rhs2116AmplifierDataFormat
-    //{
-    //    Unsigned,
-    //    TwosComplement
-    //}
+    public class Rhs2116Stimulus
+    {
+        [DisplayName("Number of Stimuli")]
+        public uint NumberOfStimuli { get; set; } = 0;
+
+        [DisplayName("Anodic First")]
+        public bool AnodicFirst { get; set; } = true;
+
+        [DisplayName("Delay (samples)")]
+        public uint DelaySamples { get; set; } = 0;
+
+        [DisplayName("Dwell (samples)")]
+        public uint DwellSamples { get; set; } = 0;
+
+        [DisplayName("Anodic Current (steps)")]
+        public byte AnodicAmplitudeSteps { get; set; } = 0;
+
+        [DisplayName("Anodic Width (samples)")]
+        public uint AnodicWidthSamples { get; set; } = 0;
+
+        [DisplayName("Cathodic Current (steps)")]
+        public byte CathodicAmplitudeSteps { get; set; } = 0;
+
+        [DisplayName("Cathodic Width (samples)")]
+        public uint CathodicWidthSamples { get; set; } = 0;
+
+        [DisplayName("Inter Stimulus Interval (samples)")]
+        public uint InterStimulusIntervalSamples { get; set; } = 0;
+
+        [XmlIgnore]
+        internal bool Valid
+        {
+            get
+            {
+                return NumberOfStimuli == 0
+                    ? DelaySamples == 0 && CathodicWidthSamples == 0 && InterStimulusIntervalSamples == 0 && AnodicAmplitudeSteps == 0 && CathodicAmplitudeSteps == 0
+                    : !(AnodicWidthSamples == 0 && AnodicAmplitudeSteps > 0)
+                      &&
+                      !(AnodicWidthSamples > 0 && AnodicAmplitudeSteps == 0)
+                      &&
+                      !(CathodicWidthSamples == 0 && CathodicAmplitudeSteps > 0)
+                      &&
+                      !(CathodicWidthSamples > 0 && CathodicAmplitudeSteps == 0)
+                      &&
+                      //           Non-zero anodic                          or               Non-zero cathodic
+                      ((AnodicWidthSamples > 0 && AnodicAmplitudeSteps > 0) || (CathodicWidthSamples > 0 && CathodicAmplitudeSteps > 0))
+                      &&
+                      //         Single pulse and possibly 0 ISI                   or          Multiple pulse and positive ISI
+                      ((NumberOfStimuli == 1 && InterStimulusIntervalSamples >= 0) || (NumberOfStimuli > 1 && InterStimulusIntervalSamples > 0));
+
+            }
+        }
+    }
+
+    public class Rhs2116StimulusSequence
+    {
+        public Rhs2116StimulusSequence()
+        {
+            // TODO: is there a nicer way to initialize this array?
+            Stimuli = new Rhs2116Stimulus[16];
+            for (var i = 0; i < Stimuli.Length; i++)
+            {
+                Stimuli[i] = new Rhs2116Stimulus();
+            }
+        }
+
+        public Rhs2116Stimulus[] Stimuli { get; set; }
+
+        // TODO: Should be set automatically to fit the largest required stimulus applitude
+        public Rhs2116StepSize CurrentStepSize { get; set; } = Rhs2116StepSize.Step5000nA;
+
+        /// <summary>
+        /// Maximum length of the sequence across all channels
+        /// </summary>
+        [XmlIgnore]
+        public uint SequenceLengthSamples
+        {
+            get
+            {
+                uint max = 0;
+
+                foreach (var stim in Stimuli)
+                {
+                    var len = stim.DelaySamples + stim.NumberOfStimuli * (stim.AnodicWidthSamples + stim.CathodicWidthSamples + stim.DwellSamples + stim.InterStimulusIntervalSamples);
+                    max = len > max ? len : max;
+
+                }
+
+                return max;
+            }
+        }
+
+        /// <summary>
+        /// Maximum peak to peak amplitude of the sequence across all channels.
+        /// </summary>
+        [XmlIgnore]
+        public int MaximumPeakToPeakAmplitudeSteps
+        {
+            get
+            {
+                int max = 0;
+
+                foreach (var stim in Stimuli)
+                {
+                    var p2p = stim.CathodicAmplitudeSteps + stim.AnodicAmplitudeSteps;
+                    max = p2p > max ? p2p : max;
+
+                }
+
+                return max;
+            }
+        }
+
+        /// <summary>
+        /// Is the stimulus sequence well define
+        /// </summary>
+        [XmlIgnore]
+        public bool Valid => Stimuli.ToList().All(s => s.Valid);
+
+        /// <summary>
+        /// Does the sequence fit in hardware
+        /// </summary>
+        [XmlIgnore]
+        public bool FitsInHardware => StimulusSlotsRequired <= Rhs2116.StimMemorySlotsAvailable;
+
+        /// <summary>
+        /// Number of hardware memory slots required by the sequence
+        /// </summary>
+        [XmlIgnore]
+        public int StimulusSlotsRequired => DeltaTable.Count;
+
+        [XmlIgnore]
+        public double CurrentStepSizeuA
+        {
+            get
+            {
+                return CurrentStepSize switch
+                {
+                    Rhs2116StepSize.Step10nA => 0.01,
+                    Rhs2116StepSize.Step20nA => 0.02,
+                    Rhs2116StepSize.Step50nA => 0.05,
+                    Rhs2116StepSize.Step100nA => 0.1,
+                    Rhs2116StepSize.Step200nA => 0.2,
+                    Rhs2116StepSize.Step500nA => 0.5,
+                    Rhs2116StepSize.Step1000nA => 1.0,
+                    Rhs2116StepSize.Step2000nA => 2.0,
+                    Rhs2116StepSize.Step5000nA => 5.0,
+                    Rhs2116StepSize.Step10000nA => 10.0,
+                    _ => throw new ArgumentException("Invalid stimulus step size selection."),
+                };
+            }
+        }
+
+        [XmlIgnore]
+        public double MaxPossibleAmplitudePerPhaseMicroAmps => CurrentStepSizeuA * 255;
+
+        internal IEnumerable<byte> AnodicAmplitudes => Stimuli.ToList().Select(x => x.AnodicAmplitudeSteps);
+
+        internal IEnumerable<byte> CathodicAmplitudes => Stimuli.ToList().Select(x => x.CathodicAmplitudeSteps);
+
+        /// <summary>
+        /// Generate the delta-table  representation of this stimulus sequence that can be uploaded to the RHS2116 device.
+        /// The resultant dictionary has a time, in samples as the key and a combimed [polary, enable] bit field as the value.
+        /// </summary>
+        [XmlIgnore]
+        internal Dictionary<uint, uint> DeltaTable
+        {
+            get
+            {
+                var table = new Dictionary<uint, BitArray>();
+
+                // Cycle through electrodes
+                for (int i = 0; i < Stimuli.Length; i++)
+                {
+                    var s = Stimuli[i];
+
+                    var e0 = s.AnodicFirst ? s.AnodicAmplitudeSteps > 0 : s.CathodicAmplitudeSteps > 0;
+                    var e1 = s.AnodicFirst ? s.CathodicAmplitudeSteps > 0 : s.AnodicAmplitudeSteps > 0;
+                    var d0 = s.AnodicFirst ? s.AnodicWidthSamples : s.CathodicWidthSamples;
+                    var d1 = d0 + s.DwellSamples;
+                    var d2 = d1 + (s.AnodicFirst ? s.CathodicWidthSamples : s.AnodicWidthSamples);
+
+                    var t0 = s.DelaySamples;
+
+                    for (int j = 0; j < s.NumberOfStimuli; j++)
+                    {
+                        AddOrInsert(ref table, i, t0, s.AnodicFirst, e0);
+                        AddOrInsert(ref table, i, t0 + d0, s.AnodicFirst, false);
+                        AddOrInsert(ref table, i, t0 + d1, !s.AnodicFirst, e1);
+                        AddOrInsert(ref table, i, t0 + d2, !s.AnodicFirst, false);
+
+                        t0 += d2 + s.InterStimulusIntervalSamples;
+                    }
+                }
+
+                return table.ToDictionary(d => d.Key, d =>
+                {
+                    int[] i = new int[1];
+                    d.Value.CopyTo(i, 0);
+                    return (uint)i[0];
+                });
+            }
+        }
+
+        private static void AddOrInsert(ref Dictionary<uint, BitArray> table, int channel, uint key, bool polarity, bool enable)
+        {
+            if (table.ContainsKey(key))
+            {
+                table[key][channel] = enable;
+                table[key][channel + 16] = polarity;
+            }
+            else
+            {
+                table.Add(key, new BitArray(32, false));
+                table[key][channel] = enable;
+                table[key][channel + 16] = polarity;
+            }
+        }
+    }
 }
