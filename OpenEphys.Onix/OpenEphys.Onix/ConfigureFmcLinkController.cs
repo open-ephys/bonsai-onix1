@@ -1,11 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Reactive.Disposables;
-using System.Threading;
 
 namespace OpenEphys.Onix
 {
-    public class ConfigureFmcLinkController : SingleDeviceFactory
+    public abstract class ConfigureFmcLinkController : SingleDeviceFactory
     {
         public ConfigureFmcLinkController()
             : base(typeof(FmcLinkController))
@@ -13,41 +12,16 @@ namespace OpenEphys.Onix
         }
 
         [Category(ConfigurationCategory)]
-        [Description("Specifies whether the link controller device is enabled.")]
-        public bool Enable { get; set; } = true;
-
-        [Category(ConfigurationCategory)]
         [Description("Specifies whether the hub device should be configured in standard or passthrough mode.")]
         public HubConfiguration HubConfiguration { get; set; }
 
-        public bool GPO1 { get; set; }
-
-        [Description("Specifies the minimum link voltage at which the hub is expected to operate.")]
-        public double MinVoltage { get; set; }
-
-        [Description("Specifies the maximum link voltage at which the hub is expected to operate.")]
-        public double MaxVoltage { get; set; }
-
-        [Description("Specifies the voltage step size when searching for a SERDES lock.")]
-        public double VoltageIncrement { get; set; } = 0.2;
-
-        [Description("Specifies an optional link voltage offset to ensure stable operation after lock is established.")]
-        public double VoltageOffset { get; set; } = 0.2;
-
-        protected virtual bool CheckLinkState(DeviceContext device)
+        protected bool CheckLinkState(DeviceContext device)
         {
             var linkState = device.ReadRegister(FmcLinkController.LINKSTATE);
             return (linkState & FmcLinkController.LINKSTATE_SL) != 0;
         }
 
-        protected virtual void SetPortVoltage(DeviceContext device, uint voltage)
-        {
-            const int WaitUntilVoltageSettles = 200;
-            device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
-            Thread.Sleep(WaitUntilVoltageSettles);
-            device.WriteRegister(FmcLinkController.PORTVOLTAGE, voltage);
-            Thread.Sleep(WaitUntilVoltageSettles);
-        }
+        protected abstract bool ConfigurePortVoltage(DeviceContext device);
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
@@ -66,27 +40,10 @@ namespace OpenEphys.Onix
             .ConfigureLink(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, FmcLinkController.ID);
+                void dispose() => device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
                 device.WriteRegister(FmcLinkController.ENABLE, 1);
 
-                var hasLock = false;
-                var minVoltage = (uint)(MinVoltage * 10);
-                var maxVoltage = (uint)(MaxVoltage * 10);
-                var voltageOffset = (uint)(VoltageOffset * 10);
-                var voltageIncrement = (uint)(VoltageIncrement * 10);
-
-                for (uint voltage = minVoltage; voltage <= maxVoltage; voltage += voltageIncrement)
-                {
-                    SetPortVoltage(device, voltage);
-                    if (CheckLinkState(device))
-                    {
-                        SetPortVoltage(device, voltage + voltageOffset);
-                        hasLock = CheckLinkState(device);
-                        break;
-                    }
-                }
-
-                void dispose() => device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
-                if (!hasLock)
+                if (!ConfigurePortVoltage(device))
                 {
                     dispose();
                     throw new InvalidOperationException("Unable to get SERDES lock on FMC link controller.");
