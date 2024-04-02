@@ -6,14 +6,12 @@ namespace OpenEphys.Onix
     public class ConfigureNeuropixelsV2eBetaHeadstage : HubDeviceFactory
     {
         PortName port;
-        readonly ConfigureFmcLinkController LinkController = new();
+        readonly ConfigureNeuropixelsV2eLinkController LinkController = new();
 
         public ConfigureNeuropixelsV2eBetaHeadstage()
         {
             Port = PortName.PortA;
             LinkController.HubConfiguration = HubConfiguration.Passthrough;
-            LinkController.MinVoltage = 5.0;
-            LinkController.MaxVoltage = 7.0;
         }
 
         [Category(ConfigurationCategory)]

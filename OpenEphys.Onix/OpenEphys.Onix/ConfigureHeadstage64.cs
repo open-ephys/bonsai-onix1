@@ -17,9 +17,6 @@ namespace OpenEphys.Onix
             // for a lock and then add a large offset to that.
             Port = PortName.PortA;
             LinkController.HubConfiguration = HubConfiguration.Standard;
-            LinkController.MinVoltage = 3.3;
-            LinkController.MaxVoltage = 6.0;
-            LinkController.VoltageOffset = 3.4;
         }
 
         [Category(ConfigurationCategory)]
@@ -58,18 +55,35 @@ namespace OpenEphys.Onix
 
         class ConfigureHeadstage64LinkController : ConfigureFmcLinkController
         {
-            protected override void SetPortVoltage(DeviceContext device, uint voltage)
+            protected override bool ConfigurePortVoltage(DeviceContext device)
             {
                 // TODO: It takes a huge amount of time to get to 0, almost 10 seconds.
                 // The best we can do at the moment is drive port voltage to minimum which
                 // is an active process and then settle from there to zero volts.
-                const int WaitUntilVoltageOffSettles = 4000;
-                const int WaitUntilVoltageOnSettles = 100;
-                device.WriteRegister(FmcLinkController.PORTVOLTAGE, 33);
+                const uint MinVoltage = 33;
+                const uint MaxVoltage = 60;
+                const uint VoltageOffset = 34;
+                const uint VoltageIncrement = 02;
+
+                // Start with highest voltage and ramp it down to find lowest lock voltage
+                var voltage = MaxVoltage;
+                for (; voltage >= MinVoltage; voltage -= VoltageIncrement)
+                {
+                    device.WriteRegister(FmcLinkController.PORTVOLTAGE, voltage);
+                    Thread.Sleep(200);
+                    if (!CheckLinkState(device))
+                    {
+                        if (voltage == MaxVoltage) return false;
+                        else break;
+                    }
+                }
+
+                device.WriteRegister(FmcLinkController.PORTVOLTAGE, MinVoltage);
                 device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
-                Thread.Sleep(WaitUntilVoltageOffSettles);
-                device.WriteRegister(FmcLinkController.PORTVOLTAGE, voltage);
-                Thread.Sleep(WaitUntilVoltageOnSettles);
+                Thread.Sleep(1000);
+                device.WriteRegister(FmcLinkController.PORTVOLTAGE, voltage + VoltageOffset);
+                Thread.Sleep(200);
+                return CheckLinkState(device);
             }
         }
     }
