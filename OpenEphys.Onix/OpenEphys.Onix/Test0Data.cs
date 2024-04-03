@@ -27,43 +27,43 @@ namespace OpenEphys.Onix
             return Observable.Using(
                 () => DeviceManager.ReserveDevice(DeviceName),
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
-                Observable.Create<Test0DataFrame>(observer =>
-                {
-                    // Find number of dummy words in the frame
-                    var device = deviceInfo.GetDeviceContext(typeof(Test0));
-                    var dummyWords = (int)device.ReadRegister(Test0.NUMTESTWORDS);
+                    Observable.Create<Test0DataFrame>(observer =>
+                    {
+                        // Find number of dummy words in the frame
+                        var device = deviceInfo.GetDeviceContext(typeof(Test0));
+                        var dummyWords = (int)device.ReadRegister(Test0.NUMTESTWORDS);
 
-                    var sampleIndex = 0;
-                    var dummyBuffer = new short[dummyWords * bufferSize];
-                    var messageBuffer = new short[bufferSize];
-                    var hubClockBuffer = new ulong[bufferSize];
-                    var clockBuffer = new ulong[bufferSize];
+                        var sampleIndex = 0;
+                        var dummyBuffer = new short[dummyWords * bufferSize];
+                        var messageBuffer = new short[bufferSize];
+                        var hubClockBuffer = new ulong[bufferSize];
+                        var clockBuffer = new ulong[bufferSize];
 
-                    var frameObserver = Observer.Create<oni.Frame>(
-                        frame =>
-                        {
-                            var payload = (Test0PayloadHeader*)frame.Data.ToPointer();
-                            Marshal.Copy(new IntPtr(payload + 1), dummyBuffer, sampleIndex * dummyWords, dummyWords);
-                            messageBuffer[sampleIndex] = payload->Message;
-                            hubClockBuffer[sampleIndex] = payload->HubClock;
-                            clockBuffer[sampleIndex] = frame.Clock;
-                            if (++sampleIndex >= bufferSize)
+                        var frameObserver = Observer.Create<oni.Frame>(
+                            frame =>
                             {
-                                var dummy = BufferHelper.CopyBuffer(dummyBuffer, bufferSize, dummyWords, Depth.S16);
-                                var message = BufferHelper.CopyBuffer(messageBuffer, bufferSize, 1, Depth.S16);
-                                observer.OnNext(new Test0DataFrame(clockBuffer, hubClockBuffer, message, dummy));
-                                hubClockBuffer = new ulong[bufferSize];
-                                clockBuffer = new ulong[bufferSize];
-                                sampleIndex = 0;
-                            }
-                        },
-                        observer.OnError,
-                        observer.OnCompleted);
+                                var payload = (Test0PayloadHeader*)frame.Data.ToPointer();
+                                Marshal.Copy(new IntPtr(payload + 1), dummyBuffer, sampleIndex * dummyWords, dummyWords);
+                                messageBuffer[sampleIndex] = payload->Message;
+                                hubClockBuffer[sampleIndex] = payload->HubClock;
+                                clockBuffer[sampleIndex] = frame.Clock;
+                                if (++sampleIndex >= bufferSize)
+                                {
+                                    var dummy = BufferHelper.CopyBuffer(dummyBuffer, bufferSize, dummyWords, Depth.S16);
+                                    var message = BufferHelper.CopyBuffer(messageBuffer, bufferSize, 1, Depth.S16);
+                                    observer.OnNext(new Test0DataFrame(clockBuffer, hubClockBuffer, message, dummy));
+                                    hubClockBuffer = new ulong[bufferSize];
+                                    clockBuffer = new ulong[bufferSize];
+                                    sampleIndex = 0;
+                                }
+                            },
+                            observer.OnError,
+                            observer.OnCompleted);
 
-                    return deviceInfo.Context.FrameReceived
-                        .Where(frame => frame.DeviceAddress == device.Address)
-                        .SubscribeSafe(frameObserver);
-                })));
+                        return deviceInfo.Context.FrameReceived
+                            .Where(frame => frame.DeviceAddress == device.Address)
+                            .SubscribeSafe(frameObserver);
+                    })));
         }
     }
 }
