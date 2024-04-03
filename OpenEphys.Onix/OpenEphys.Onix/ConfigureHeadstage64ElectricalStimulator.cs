@@ -1,148 +1,12 @@
 ﻿using System;
-using System.ComponentModel;
-using System.Drawing.Design;
-using System.Reactive.Disposables;
-using System.Reactive.Subjects;
-using Bonsai;
 
 namespace OpenEphys.Onix
 {
     public class ConfigureHeadstage64ElectricalStimulator : SingleDeviceFactory
     {
-
-        readonly BehaviorSubject<double> phaseOneCurrent = new(0);
-        readonly BehaviorSubject<double> interPhaseCurrent = new(0);
-        readonly BehaviorSubject<double> phaseTwoCurrent = new(0);
-        readonly BehaviorSubject<uint> phaseOneDuration = new(0);
-        readonly BehaviorSubject<uint> interPhaseInterval = new(0);
-        readonly BehaviorSubject<uint> phaseTwoDuration = new(0);
-        readonly BehaviorSubject<uint> interPulseInterval = new(0);
-        readonly BehaviorSubject<uint> burstPulseCount = new(0);
-        readonly BehaviorSubject<uint> interBurstInterval = new(0);
-        readonly BehaviorSubject<uint> trainBurstCount = new(0);
-        readonly BehaviorSubject<uint> trainDelay = new(0);
-        readonly BehaviorSubject<bool> powerEnable = new(false);
-
-        const double DacBitDepth = 16;
-        const double AbsMaxMicroAmps = 2500;
-
         public ConfigureHeadstage64ElectricalStimulator()
             : base(typeof(Headstage64ElectricalStimulator))
         {
-        }
-
-        [Category(AcquisitionCategory)]
-        [Description("Phase 1 pulse current (uA).")]
-        [Range(-AbsMaxMicroAmps, AbsMaxMicroAmps)]
-        [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
-        [Precision(3, 1)]
-        public double PhaseOneCurrent
-        {
-            get => phaseOneCurrent.Value;
-            set => phaseOneCurrent.OnNext(value);
-        }
-
-        [Category(AcquisitionCategory)]
-        [Description("Interphase rest current (uA).")]
-        [Range(-AbsMaxMicroAmps, AbsMaxMicroAmps)]
-        [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
-        [Precision(3, 1)]
-        public double InterPhaseCurrent
-        {
-            get => interPhaseCurrent.Value;
-            set => interPhaseCurrent.OnNext(value);
-        }
-
-        [Category(AcquisitionCategory)]
-        [Description("Phase 2 pulse current (uA).")]
-        [Range(-AbsMaxMicroAmps, AbsMaxMicroAmps)]
-        [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
-        [Precision(3, 1)]
-        public double PhaseTwoCurrent
-        {
-            get => phaseTwoCurrent.Value;
-            set => phaseTwoCurrent.OnNext(value);
-        }
-
-        [Category(AcquisitionCategory)]
-        [Description("Pulse train start delay (uSec).")]
-        [Range(0, uint.MaxValue)]
-        public uint TrainDelay
-        {
-            get => trainDelay.Value;
-            set => trainDelay.OnNext(value);
-        }
-
-        [Category(AcquisitionCategory)]
-        [Description("Phase 1 pulse duration (uSec).")]
-        [Range(0, uint.MaxValue)]
-        public uint PhaseOneDuration
-        {
-            get => phaseOneDuration.Value;
-            set => phaseOneDuration.OnNext(value);
-        }
-
-        [Category(AcquisitionCategory)]
-        [Description("Inter-phase interval (uSec).")]
-        [Range(0, uint.MaxValue)]
-        public uint InterPhaseInterval
-        {
-            get => interPhaseInterval.Value;
-            set => interPhaseInterval.OnNext(value);
-        }
-
-        [Category(AcquisitionCategory)]
-        [Description("Phase 2 pulse duration (uSec).")]
-        [Range(0, uint.MaxValue)]
-        public uint PhaseTwoDuration
-        {
-            get => phaseTwoDuration.Value;
-            set => phaseTwoDuration.OnNext(value);
-        }
-
-        [Category(AcquisitionCategory)]
-        [Description("Inter-pulse interval (uSec).")]
-        [Range(0, uint.MaxValue)]
-        public uint InterPulseInterval
-        {
-            get => interPulseInterval.Value;
-            set => interPulseInterval.OnNext(value);
-        }
-
-        [Category(AcquisitionCategory)]
-        [Description("Inter-burst interval (uSec).")]
-        [Range(0, uint.MaxValue)]
-        public uint InterBurstInterval
-        {
-            get => interBurstInterval.Value;
-            set => interBurstInterval.OnNext(value);
-        }
-
-        [Category(AcquisitionCategory)]
-        [Description("Number of pulses in each burst.")]
-        [Range(0, uint.MaxValue)]
-        public uint BurstPulseCount
-        {
-            get => burstPulseCount.Value;
-            set => burstPulseCount.OnNext(value);
-        }
-
-        [Category(AcquisitionCategory)]
-        [Description("Number of bursts in each train.")]
-        [Range(0, uint.MaxValue)]
-        public uint TrainBurstCount
-        {
-            get => trainBurstCount.Value;
-            set => trainBurstCount.OnNext(value);
-        }
-
-        [Category(AcquisitionCategory)]
-        [Description("Stimulator power on/off.")]
-        [Range(0, uint.MaxValue)]
-        public bool PowerEnable
-        {
-            get => powerEnable.Value;
-            set => powerEnable.OnNext(value);
         }
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
@@ -153,29 +17,7 @@ namespace OpenEphys.Onix
             {
                 var device = context.GetDeviceContext(deviceAddress, Headstage64ElectricalStimulator.ID);
                 device.WriteRegister(Headstage64ElectricalStimulator.ENABLE, 0);
-
-                static uint uAToCode(double currentuA)
-                {
-                    var k = 1 / (2 * AbsMaxMicroAmps / (Math.Pow(2, DacBitDepth) - 1)); // static
-                    return (uint)(k * (currentuA + AbsMaxMicroAmps));
-                }
-
-                return new CompositeDisposable(
-                    DeviceManager.RegisterDevice(deviceName, device, DeviceType),
-                    phaseOneCurrent.Subscribe(newValue => device.WriteRegister(Headstage64ElectricalStimulator.CURRENT1, uAToCode(newValue))),
-                    interPhaseCurrent.Subscribe(newValue => device.WriteRegister(Headstage64ElectricalStimulator.RESTCURR, uAToCode(newValue))),
-                    phaseTwoCurrent.Subscribe(newValue => device.WriteRegister(Headstage64ElectricalStimulator.CURRENT2, uAToCode(newValue))),
-                    trainDelay.Subscribe(newValue => device.WriteRegister(Headstage64ElectricalStimulator.TRAINDELAY, newValue)),
-                    phaseOneDuration.Subscribe(newValue => device.WriteRegister(Headstage64ElectricalStimulator.PULSEDUR1, newValue)),
-                    interPhaseInterval.Subscribe(newValue => device.WriteRegister(Headstage64ElectricalStimulator.INTERPHASEINTERVAL, newValue)),
-                    phaseTwoDuration.Subscribe(newValue => device.WriteRegister(Headstage64ElectricalStimulator.PULSEDUR2, newValue)),
-                    interPulseInterval.Subscribe(newValue => device.WriteRegister(Headstage64ElectricalStimulator.INTERPULSEINTERVAL, newValue)),
-                    interBurstInterval.Subscribe(newValue => device.WriteRegister(Headstage64ElectricalStimulator.INTERBURSTINTERVAL, newValue)),
-                    burstPulseCount.Subscribe(newValue => device.WriteRegister(Headstage64ElectricalStimulator.BURSTCOUNT, newValue)),
-                    trainBurstCount.Subscribe(newValue => device.WriteRegister(Headstage64ElectricalStimulator.TRAINCOUNT, newValue)),
-                    powerEnable.Subscribe(newValue => device.WriteRegister(Headstage64ElectricalStimulator.POWERON, newValue ? 1u: 0u))
-                );
-
+                return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
             });
         }
     }
