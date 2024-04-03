@@ -24,8 +24,9 @@ namespace OpenEphys.Onix
                 var subject = disposable.Subject;
                 if (subject.IsCompleted)
                 {
-                    throw new InvalidOperationException(
-                        "A device with the same name has already been configured."
+                    throw new ArgumentException(
+                        $"A device with the same name '{name}' has already been configured.",
+                        nameof(name)
                     );
                 }
 
@@ -39,8 +40,11 @@ namespace OpenEphys.Onix
                     var info = entry.Value.Subject.GetResult();
                     if (info.Context == deviceInfo.Context && info.DeviceAddress == deviceInfo.DeviceAddress)
                     {
-                        throw new InvalidOperationException(
-                            "A device with the same address has already been configured in this context."
+                        throw new ArgumentException(
+                            $"The specified device '{deviceInfo.DeviceType.Name}' could not be registered " +
+                            $"because another device '{info.DeviceType.Name}' with the same address " +
+                            $"{info.DeviceAddress} has already been configured in this context.",
+                            nameof(deviceInfo)
                         );
                     }
                 }
