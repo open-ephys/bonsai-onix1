@@ -60,10 +60,10 @@ namespace OpenEphys.Onix
                         observer.OnError,
                         observer.OnCompleted);
 
-                    return deviceInfo.Context.FrameReceived
-                        .Where(frame => frame.DeviceAddress == device.Address)
-                        .SubscribeSafe(frameObserver);
-                })));
+                        return deviceInfo.Context.FrameReceived
+                            .Where(frame => frame.DeviceAddress == device.Address)
+                            .SubscribeSafe(frameObserver);
+                    })));
         }
     }
 }
