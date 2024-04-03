@@ -12,7 +12,7 @@ namespace OpenEphys.Onix
 {
     public class Headstage64ElectricalStimulatorTrigger: Sink<bool>
     {
-        readonly BehaviorSubject<bool> enable = new(false);
+        readonly BehaviorSubject<bool> enable = new(true);
         readonly BehaviorSubject<double> phaseOneCurrent = new(0);
         readonly BehaviorSubject<double> interPhaseCurrent = new(0);
         readonly BehaviorSubject<double> phaseTwoCurrent = new(0);
