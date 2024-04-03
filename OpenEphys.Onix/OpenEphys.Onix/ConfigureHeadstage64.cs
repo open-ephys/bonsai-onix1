@@ -33,7 +33,7 @@ namespace OpenEphys.Onix
 
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
-        public ConfigureHeadstage64ElectricalStimulator ElectricalStimulator { get; set; } = new() { Enable = false };
+        public ConfigureHeadstage64ElectricalStimulator ElectricalStimulator { get; set; } = new();
 
         public PortName Port
         {

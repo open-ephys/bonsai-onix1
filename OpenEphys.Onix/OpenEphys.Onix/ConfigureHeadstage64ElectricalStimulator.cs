@@ -31,10 +31,6 @@ namespace OpenEphys.Onix
         {
         }
 
-        [Category(ConfigurationCategory)]
-        [Description("Specifies whether the electrical stimulation subcircuit will respect triggers.")]
-        public bool Enable { get; set; } = true;
-
         [Category(AcquisitionCategory)]
         [Description("Phase 1 pulse current (uA).")]
         [Range(-AbsMaxMicroAmps, AbsMaxMicroAmps)]
@@ -156,7 +152,7 @@ namespace OpenEphys.Onix
             return source.ConfigureDevice(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, Headstage64ElectricalStimulator.ID);
-                device.WriteRegister(Headstage64ElectricalStimulator.ENABLE, Enable ? 1u : 0u);
+                device.WriteRegister(Headstage64ElectricalStimulator.ENABLE, 0);
 
                 static uint uAToCode(double currentuA)
                 {
