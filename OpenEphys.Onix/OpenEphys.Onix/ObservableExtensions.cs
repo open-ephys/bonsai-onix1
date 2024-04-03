@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace OpenEphys.Onix
@@ -17,7 +19,37 @@ namespace OpenEphys.Onix
 
         public static IObservable<ContextTask> ConfigureDevice(this IObservable<ContextTask> source, Func<ContextTask, IDisposable> selector)
         {
-            return source.Do(context => context.ConfigureDevice(selector));
+            return Observable.Create<ContextTask>(observer =>
+            {
+                var contextObserver = Observer.Create<ContextTask>(
+                    context =>
+                    {
+                        context.ConfigureDevice(ctx =>
+                        {
+                            try
+                            {
+                                var disposable = selector(ctx);
+                                return Disposable.Create(() =>
+                                {
+                                    try { disposable.Dispose(); }
+                                    catch (Exception ex)
+                                    {
+                                        observer.OnError(ex);
+                                    }
+                                });
+                            }
+                            catch (Exception ex)
+                            {
+                                observer.OnError(ex);
+                                throw;
+                            }
+                        });
+                        observer.OnNext(context);
+                    },
+                    observer.OnError,
+                    observer.OnCompleted);
+                return source.SubscribeSafe(contextObserver);
+            });
         }
     }
 }
