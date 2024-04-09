@@ -21,9 +21,7 @@ namespace OpenEphys.Onix
                     var disposable = context.FrameReceived.SubscribeSafe(observer);
                     try
                     {
-                        context.BlockReadSize = ReadSize;
-                        context.BlockWriteSize = WriteSize;
-                        context.Start();
+                        context.Start(ReadSize, WriteSize);
                     }
                     catch
                     {
