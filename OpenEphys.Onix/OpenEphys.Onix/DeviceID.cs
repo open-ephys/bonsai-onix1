@@ -1,4 +1,4 @@
-﻿namespace OpenEphys.Onix
+namespace OpenEphys.Onix
 {
     internal enum DeviceID
     {
@@ -33,5 +33,6 @@
         MemoryUsage = 28,
         HarpSyncInput = 30,
         Rhs2116 = 31,
+        Rhs2116Trigger = 32,
     }
 }

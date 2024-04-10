@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Reactive.Disposables;
@@ -167,7 +167,7 @@ namespace OpenEphys.Onix
 
     static class Rhs2116
     {
-        public const int ID = 31;
+        public const int ID = (int)DeviceID.Rhs2116;
 
         // constants
         public const int AmplifierChannelCount = 16;
