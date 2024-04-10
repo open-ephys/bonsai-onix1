@@ -1,4 +1,4 @@
-namespace OpenEphys.Onix
+﻿namespace OpenEphys.Onix
 {
     internal enum DeviceID
     {
