@@ -50,7 +50,7 @@ namespace OpenEphys.Onix
     {
         [Description("Respect local triggers (e.g. via GPIO or TRIGGER register) and broadcast via sync pin. ")]
         Local = 0,
-        [Description("Receiver. Only resepct triggers received from sync pin")]
+        [Description("Receiver. Only respect triggers received from sync pin")]
         External = 1,
     }
 }
