@@ -2,6 +2,8 @@
 bin
 obj
 Packages
+Extensions
+Gallery
 *.user
 *.exe
 *.exe.settings
