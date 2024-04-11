@@ -56,6 +56,8 @@ namespace OpenEphys.Onix
             return source.ConfigureDevice(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, Rhs2116Trigger.ID);
+                var device_rhsA = context.GetDeviceContext(deviceAddress - 2, Rhs2116.ID);
+                var device_rhsB = context.GetDeviceContext(deviceAddress - 1, Rhs2116.ID);
                 device.WriteRegister(Rhs2116Trigger.TRIGGERSOURCE, (uint)triggerSource);
                 return new CompositeDisposable(
                     DeviceManager.RegisterDevice(deviceName, device, DeviceType),
@@ -63,19 +65,23 @@ namespace OpenEphys.Onix
                     {
                         var regs = Rhs2116Config.AnalogLowCutoffToRegisters[newValue];
                         var reg = regs[2] << 13 | regs[1] << 7 | regs[0];
+                        device_rhsA.WriteRegister(Rhs2116.BW3, reg); // TODO: Something like this for all updates?
+                        device_rhsB.WriteRegister(Rhs2116.BW3, reg);
                     }),
                     stimulusSequence.Subscribe(newValue =>
                     {
                         // Step size
                         var reg = Rhs2116Config.StimulatorStepSizeToRegisters[newValue.CurrentStepSize];
-                        device.WriteRegister(Rhs2116.STEPSZ, reg[2] << 13 | reg[1] << 7 | reg[0]);
+                        device_rhsA.WriteRegister(Rhs2116.STEPSZ, reg[2] << 13 | reg[1] << 7 | reg[0]);
+                        device_rhsB.WriteRegister(Rhs2116.STEPSZ, reg[2] << 13 | reg[1] << 7 | reg[0]);
 
                         // Anodic amplitudes
                         // TODO: cache last write and compare?
                         var a = newValue.AnodicAmplitudes;
                         for (int i = 0; i < a.Count(); i++)
                         {
-                            device.WriteRegister(Rhs2116.POS00 + (uint)i, a.ElementAt(i));
+                            device_rhsA.WriteRegister(Rhs2116.POS00 + (uint)i, a.ElementAt(i));
+                            device_rhsB.WriteRegister(Rhs2116.POS00 + (uint)i, a.ElementAt(i));
                         }
 
                         // Cathodic amplitudes
@@ -83,12 +89,14 @@ namespace OpenEphys.Onix
                         var c = newValue.CathodicAmplitudes;
                         for (int i = 0; i < a.Count(); i++)
                         {
-                            device.WriteRegister(Rhs2116.NEG00 + (uint)i, c.ElementAt(i));
+                            device_rhsA.WriteRegister(Rhs2116.NEG00 + (uint)i, c.ElementAt(i));
+                            device_rhsB.WriteRegister(Rhs2116.NEG00 + (uint)i, c.ElementAt(i));
                         }
 
                         // Create delta table and set length
                         var dt = newValue.DeltaTable;
-                        device.WriteRegister(Rhs2116.NUMDELTAS, (uint)dt.Count);
+                        device_rhsA.WriteRegister(Rhs2116.NUMDELTAS, (uint)dt.Count);
+                        device_rhsB.WriteRegister(Rhs2116.NUMDELTAS, (uint)dt.Count);
 
                         // TODO: If we want to do this efficently, we probably need a different data structure on the
                         // FPGA ram that allows columns to be out of order (e.g. linked list)
@@ -96,8 +104,12 @@ namespace OpenEphys.Onix
                         foreach (var d in dt)
                         {
                             uint indexAndTime = j++ << 22 | (d.Key & 0x003FFFFF);
-                            device.WriteRegister(Rhs2116.DELTAIDXTIME, indexAndTime);
-                            device.WriteRegister(Rhs2116.DELTAPOLEN, d.Value);
+                            
+                            device_rhsA.WriteRegister(Rhs2116.DELTAIDXTIME, indexAndTime);
+                            device_rhsA.WriteRegister(Rhs2116.DELTAPOLEN, d.Value);
+
+                            device_rhsB.WriteRegister(Rhs2116.DELTAIDXTIME, indexAndTime);
+                            device_rhsB.WriteRegister(Rhs2116.DELTAPOLEN, d.Value);
                         }
                     })
                 );
