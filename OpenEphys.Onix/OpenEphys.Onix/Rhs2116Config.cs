@@ -415,7 +415,7 @@ namespace OpenEphys.Onix
 
         /// <summary>
         /// Generate the delta-table  representation of this stimulus sequence that can be uploaded to the RHS2116 device.
-        /// The resultant dictionary has a time, in samples as the key and a combimed [polary, enable] bit field as the value.
+        /// The resultant dictionary has a time, in samples as the key and a combined [polarity, enable] bit field as the value.
         /// </summary>
         [XmlIgnore]
         internal Dictionary<uint, uint> DeltaTable
