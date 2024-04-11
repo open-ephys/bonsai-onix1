@@ -50,6 +50,15 @@ namespace OpenEphys.Onix
             }
         }
 
+        [Description("If defined, overrides automated voltage discovery and applies " +
+            "the specified voltage to the headstage. Warning: this device requires 5.5V to 6.0V " +
+            "for proper operation. Higher voltages can damage the headstage.")]
+        public double? PortVoltage
+        {
+            get => LinkController.PortVoltage;
+            set => LinkController.PortVoltage = value;
+        }
+
         internal override IEnumerable<IDeviceConfiguration> GetDevices()
         {
             yield return LinkController;
@@ -61,34 +70,45 @@ namespace OpenEphys.Onix
 
         class ConfigureHeadstage64LinkController : ConfigureFmcLinkController
         {
+            public double? PortVoltage { get; set; } = null;
+
             protected override bool ConfigurePortVoltage(DeviceContext device)
             {
-                // TODO: It takes a huge amount of time to get to 0, almost 10 seconds.
-                // The best we can do at the moment is drive port voltage to minimum which
-                // is an active process and then settle from there to zero volts.
-                const uint MinVoltage = 33;
-                const uint MaxVoltage = 60;
-                const uint VoltageOffset = 34;
-                const uint VoltageIncrement = 02;
-
-                // Start with highest voltage and ramp it down to find lowest lock voltage
-                var voltage = MaxVoltage;
-                for (; voltage >= MinVoltage; voltage -= VoltageIncrement)
+                if (PortVoltage == null)
                 {
-                    device.WriteRegister(FmcLinkController.PORTVOLTAGE, voltage);
-                    Thread.Sleep(200);
-                    if (!CheckLinkState(device))
+                    // TODO: It takes a huge amount of time to get to 0, almost 10 seconds.
+                    // The best we can do at the moment is drive port voltage to minimum which
+                    // is an active process and then settle from there to zero volts.
+                    const uint MinVoltage = 33;
+                    const uint MaxVoltage = 60;
+                    const uint VoltageOffset = 34;
+                    const uint VoltageIncrement = 02;
+
+                    // Start with highest voltage and ramp it down to find lowest lock voltage
+                    var voltage = MaxVoltage;
+                    for (; voltage >= MinVoltage; voltage -= VoltageIncrement)
                     {
-                        if (voltage == MaxVoltage) return false;
-                        else break;
+                        device.WriteRegister(FmcLinkController.PORTVOLTAGE, voltage);
+                        Thread.Sleep(200);
+                        if (!CheckLinkState(device))
+                        {
+                            if (voltage == MaxVoltage) return false;
+                            else break;
+                        }
                     }
+
+                    device.WriteRegister(FmcLinkController.PORTVOLTAGE, MinVoltage);
+                    device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
+                    Thread.Sleep(1000);
+                    device.WriteRegister(FmcLinkController.PORTVOLTAGE, voltage + VoltageOffset);
+
+                }
+                else
+                {
+                    device.WriteRegister(FmcLinkController.PORTVOLTAGE, (uint)(PortVoltage * 10));
                 }
 
-                device.WriteRegister(FmcLinkController.PORTVOLTAGE, MinVoltage);
-                device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
-                Thread.Sleep(1000);
-                device.WriteRegister(FmcLinkController.PORTVOLTAGE, voltage + VoltageOffset);
-                Thread.Sleep(200);
+                Thread.Sleep(500);
                 return CheckLinkState(device);
             }
         }
