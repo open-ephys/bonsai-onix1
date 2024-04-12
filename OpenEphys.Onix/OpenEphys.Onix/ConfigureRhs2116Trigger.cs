@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Linq;
+using System.Drawing.Design;
 
 namespace OpenEphys.Onix
 {
@@ -42,6 +43,7 @@ namespace OpenEphys.Onix
 
         [Category(AcquisitionCategory)]
         [Description("Stimulus sequence.")]
+        [Editor("OpenEphys.Onix.Design.Rhs2116StimulusSequenceEditor, OpenEphys.Onix.Design", typeof(UITypeEditor))]
         public Rhs2116StimulusSequence StimulusSequence
         {
             get => stimulusSequence.Value;
@@ -53,12 +55,15 @@ namespace OpenEphys.Onix
             var triggerSource = TriggerSource;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
+            
             return source.ConfigureDevice(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, Rhs2116Trigger.ID);
                 var device_rhsA = context.GetDeviceContext(deviceAddress - 2, Rhs2116.ID);
                 var device_rhsB = context.GetDeviceContext(deviceAddress - 1, Rhs2116.ID);
+
                 device.WriteRegister(Rhs2116Trigger.TRIGGERSOURCE, (uint)triggerSource);
+
                 return new CompositeDisposable(
                     DeviceManager.RegisterDevice(deviceName, device, DeviceType),
                     analogLowCutoffRecovery.Subscribe(newValue =>
@@ -104,7 +109,7 @@ namespace OpenEphys.Onix
                         foreach (var d in dt)
                         {
                             uint indexAndTime = j++ << 22 | (d.Key & 0x003FFFFF);
-                            
+
                             device_rhsA.WriteRegister(Rhs2116.DELTAIDXTIME, indexAndTime);
                             device_rhsA.WriteRegister(Rhs2116.DELTAPOLEN, d.Value);
 
