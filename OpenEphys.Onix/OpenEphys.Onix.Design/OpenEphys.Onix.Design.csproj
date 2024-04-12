@@ -1,28 +1,33 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Title>OpenEphys.Onix</Title>
+    <Title>OpenEphys.Onix.Design</Title>
     <Description>A package for the Bonsai visual programming language.</Description>
-    <Authors></Authors>
-    <Copyright>Copyright ©  2023</Copyright>
+    <Authors>Jon Newman, Goncalo Lopes, Brandon Parks</Authors>
+    <Copyright>Copyright © Jon Newman, Goncalo Lopes, Brandon Parks 2024</Copyright>
     <PackageProjectUrl></PackageProjectUrl>
     <PackageLicenseExpression></PackageLicenseExpression>
     <PackageIcon></PackageIcon>
     <PackageOutputPath></PackageOutputPath>
-    <PackageTags>Bonsai Rx Open Ephys Onix</PackageTags>
+    <PackageTags>Bonsai Rx OpenEphys.Onix.Design</PackageTags>
     <TargetFramework>net472</TargetFramework>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>9.0</LangVersion>
     <Features>strict</Features>
     <Version>0.1.0</Version>
+    <UseWindowsForms>true</UseWindowsForms>
     <Platforms>x64;AnyCPU</Platforms>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Bonsai.Core" Version="2.8.0" />
-    <PackageReference Include="clroni" Version="6.1.0" />
-    <PackageReference Include="OpenCV.Net" Version="3.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OpenEphys.ONIX\OpenEphys.ONIX.csproj" />
   </ItemGroup>
 
 </Project>
