@@ -183,17 +183,17 @@ namespace OpenEphys.Onix
                 var device = context.GetDeviceContext(deviceAddress, AnalogIO.ID);
                 device.WriteRegister(AnalogIO.ENABLE, Enable ? 1u : 0u);
                 device.WriteRegister(AnalogIO.CH00INRANGE, (uint)InputRange00);
-                device.WriteRegister(AnalogIO.CH00INRANGE, (uint)InputRange01);
-                device.WriteRegister(AnalogIO.CH00INRANGE, (uint)InputRange02);
-                device.WriteRegister(AnalogIO.CH00INRANGE, (uint)InputRange03);
-                device.WriteRegister(AnalogIO.CH00INRANGE, (uint)InputRange04);
-                device.WriteRegister(AnalogIO.CH00INRANGE, (uint)InputRange05);
-                device.WriteRegister(AnalogIO.CH00INRANGE, (uint)InputRange06);
-                device.WriteRegister(AnalogIO.CH00INRANGE, (uint)InputRange07);
-                device.WriteRegister(AnalogIO.CH00INRANGE, (uint)InputRange08);
-                device.WriteRegister(AnalogIO.CH00INRANGE, (uint)InputRange09);
-                device.WriteRegister(AnalogIO.CH00INRANGE, (uint)InputRange10);
-                device.WriteRegister(AnalogIO.CH00INRANGE, (uint)InputRange11);
+                device.WriteRegister(AnalogIO.CH01INRANGE, (uint)InputRange01);
+                device.WriteRegister(AnalogIO.CH02INRANGE, (uint)InputRange02);
+                device.WriteRegister(AnalogIO.CH03INRANGE, (uint)InputRange03);
+                device.WriteRegister(AnalogIO.CH04INRANGE, (uint)InputRange04);
+                device.WriteRegister(AnalogIO.CH05INRANGE, (uint)InputRange05);
+                device.WriteRegister(AnalogIO.CH06INRANGE, (uint)InputRange06);
+                device.WriteRegister(AnalogIO.CH07INRANGE, (uint)InputRange07);
+                device.WriteRegister(AnalogIO.CH08INRANGE, (uint)InputRange08);
+                device.WriteRegister(AnalogIO.CH09INRANGE, (uint)InputRange09);
+                device.WriteRegister(AnalogIO.CH10INRANGE, (uint)InputRange10);
+                device.WriteRegister(AnalogIO.CH11INRANGE, (uint)InputRange11);
 
                 var io_reg = 0u;
                 void SetIO(int channel, ChannelDirection direction)
