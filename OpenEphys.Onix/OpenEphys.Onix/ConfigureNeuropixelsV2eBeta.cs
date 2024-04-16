@@ -19,6 +19,10 @@ namespace OpenEphys.Onix
         [Description("Enable headstage LED when acquiring data.")]
         public bool EnableLed { get; set; } = true;
 
+        [Category(ConfigurationCategory)]
+        [Description("Specifies which reference to use for all probe electrodes.")]
+        public NeuropixelsV2eBetaChannelReference Reference { get; set; }
+
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;
@@ -177,6 +181,23 @@ namespace OpenEphys.Onix
         public const int ChannelCount = 384;
         public const int FrameWords = 28;
 
+        public const int PixelCount = 1280;
+        public const int ReferencePixelCount = 4;
+        public const int DummyRegisterCount = 4;
+        public const int RegistersPerShank = PixelCount + ReferencePixelCount + DummyRegisterCount;
+        public const int BaseBitsPerChannel = 4;
+
+        // memory map
+        public const int STATUS = 0x09;
+        public const int SR_CHAIN6 = 0x0C;
+        public const int SR_CHAIN5 = 0x0D;
+        public const int SR_CHAIN4 = 0x0E;
+        public const int SR_CHAIN3 = 0x0F;
+        public const int SR_CHAIN2 = 0x10;
+        public const int SR_CHAIN1 = 0x11;
+        public const int SR_LENGTH2 = 0x12;
+        public const int SR_LENGTH1 = 0x13;
+
         internal class NameConverter : DeviceNameConverter
         {
             public NameConverter()
@@ -184,5 +205,18 @@ namespace OpenEphys.Onix
             {
             }
         }
+    }
+
+    [Flags]
+    enum NeuropixelsV2eBetaStatus : uint
+    {
+        SR_OK = 1 << 7 // Indicates the SR chain comparison is OK
+    }
+
+    public enum NeuropixelsV2eBetaChannelReference : uint
+    {
+        External,
+        Tip,
+        Internal
     }
 }
