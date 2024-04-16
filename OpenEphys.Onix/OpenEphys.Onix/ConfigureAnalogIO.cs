@@ -17,99 +17,99 @@ namespace OpenEphys.Onix
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 0.")]
-        public VoltageRange InputRange00 { get; set; }
+        public AnalogIOVoltageRange InputRange00 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 1.")]
-        public VoltageRange InputRange01 { get; set; }
+        public AnalogIOVoltageRange InputRange01 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 2.")]
-        public VoltageRange InputRange02 { get; set; }
+        public AnalogIOVoltageRange InputRange02 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 3.")]
-        public VoltageRange InputRange03 { get; set; }
+        public AnalogIOVoltageRange InputRange03 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 4.")]
-        public VoltageRange InputRange04 { get; set; }
+        public AnalogIOVoltageRange InputRange04 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 5.")]
-        public VoltageRange InputRange05 { get; set; }
+        public AnalogIOVoltageRange InputRange05 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 6.")]
-        public VoltageRange InputRange06 { get; set; }
+        public AnalogIOVoltageRange InputRange06 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 7.")]
-        public VoltageRange InputRange07 { get; set; }
+        public AnalogIOVoltageRange InputRange07 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 8.")]
-        public VoltageRange InputRange08 { get; set; }
+        public AnalogIOVoltageRange InputRange08 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 9.")]
-        public VoltageRange InputRange09 { get; set; }
+        public AnalogIOVoltageRange InputRange09 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 10.")]
-        public VoltageRange InputRange10 { get; set; }
+        public AnalogIOVoltageRange InputRange10 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 11.")]
-        public VoltageRange InputRange11 { get; set; }
+        public AnalogIOVoltageRange InputRange11 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 0.")]
-        public ChannelDirection Direction00 { get; set; }
+        public AnalogIODirection Direction00 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 1.")]
-        public ChannelDirection Direction01 { get; set; }
+        public AnalogIODirection Direction01 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 2.")]
-        public ChannelDirection Direction02 { get; set; }
+        public AnalogIODirection Direction02 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 3.")]
-        public ChannelDirection Direction03 { get; set; }
+        public AnalogIODirection Direction03 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 4.")]
-        public ChannelDirection Direction04 { get; set; }
+        public AnalogIODirection Direction04 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 5.")]
-        public ChannelDirection Direction05 { get; set; }
+        public AnalogIODirection Direction05 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 6.")]
-        public ChannelDirection Direction06 { get; set; }
+        public AnalogIODirection Direction06 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 7.")]
-        public ChannelDirection Direction07 { get; set; }
+        public AnalogIODirection Direction07 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 8.")]
-        public ChannelDirection Direction08 { get; set; }
+        public AnalogIODirection Direction08 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 9.")]
-        public ChannelDirection Direction09 { get; set; }
+        public AnalogIODirection Direction09 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 10.")]
-        public ChannelDirection Direction10 { get; set; }
+        public AnalogIODirection Direction10 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 11.")]
-        public ChannelDirection Direction11 { get; set; }
+        public AnalogIODirection Direction11 { get; set; }
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
@@ -133,7 +133,7 @@ namespace OpenEphys.Onix
                 device.WriteRegister(AnalogIO.CH11INRANGE, (uint)InputRange11);
 
                 var io_reg = 0u;
-                void SetIO(int channel, ChannelDirection direction)
+                void SetIO(int channel, AnalogIODirection direction)
                 {
                     io_reg = (io_reg & ~((uint)1 << channel)) | ((uint)(direction) << channel);
                     device.WriteRegister(AnalogIO.CHDIR, io_reg);
@@ -160,6 +160,10 @@ namespace OpenEphys.Onix
     {
         public const int ID = 22;
 
+        // constants
+        public const int ChannelCount = 12;
+
+        // managed registers
         public const uint ENABLE = 0;
         public const uint CHDIR = 1;
         public const uint CH00INRANGE = 2;
@@ -184,7 +188,7 @@ namespace OpenEphys.Onix
         }
     }
 
-    public enum VoltageRange
+    public enum AnalogIOVoltageRange
     {
         [Description("+/-10.0 V")]
         TenVolts = 0,
@@ -194,7 +198,7 @@ namespace OpenEphys.Onix
         FiveVolts,
     }
 
-    public enum ChannelDirection
+    public enum AnalogIODirection
     {
         Input = 0,
         Output = 1
