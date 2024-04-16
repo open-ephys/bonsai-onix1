@@ -1,25 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Reactive.Disposables;
-using System.Reactive.Subjects;
 
 namespace OpenEphys.Onix
 {
     public class ConfigureAnalogIO : SingleDeviceFactory
     {
-        readonly BehaviorSubject<ChannelDirection> direction00 = new(ChannelDirection.Input);
-        readonly BehaviorSubject<ChannelDirection> direction01 = new(ChannelDirection.Input);
-        readonly BehaviorSubject<ChannelDirection> direction02 = new(ChannelDirection.Input);
-        readonly BehaviorSubject<ChannelDirection> direction03 = new(ChannelDirection.Input);
-        readonly BehaviorSubject<ChannelDirection> direction04 = new(ChannelDirection.Input);
-        readonly BehaviorSubject<ChannelDirection> direction05 = new(ChannelDirection.Input);
-        readonly BehaviorSubject<ChannelDirection> direction06 = new(ChannelDirection.Input);
-        readonly BehaviorSubject<ChannelDirection> direction07 = new(ChannelDirection.Input);
-        readonly BehaviorSubject<ChannelDirection> direction08 = new(ChannelDirection.Input);
-        readonly BehaviorSubject<ChannelDirection> direction09 = new(ChannelDirection.Input);
-        readonly BehaviorSubject<ChannelDirection> direction10 = new(ChannelDirection.Input);
-        readonly BehaviorSubject<ChannelDirection> direction11 = new(ChannelDirection.Input);
-
         public ConfigureAnalogIO()
             : base(typeof(AnalogIO))
         {
@@ -80,99 +65,51 @@ namespace OpenEphys.Onix
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 0.")]
-        public ChannelDirection Direction00
-        {
-            get => direction00.Value;
-            set => direction00.OnNext(value);
-        }
+        public ChannelDirection Direction00 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 1.")]
-        public ChannelDirection Direction01
-        {
-            get => direction01.Value;
-            set => direction01.OnNext(value);
-        }
+        public ChannelDirection Direction01 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 2.")]
-        public ChannelDirection Direction02
-        {
-            get => direction02.Value;
-            set => direction02.OnNext(value);
-        }
+        public ChannelDirection Direction02 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 3.")]
-        public ChannelDirection Direction03
-        {
-            get => direction03.Value;
-            set => direction03.OnNext(value);
-        }
+        public ChannelDirection Direction03 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 4.")]
-        public ChannelDirection Direction04
-        {
-            get => direction04.Value;
-            set => direction04.OnNext(value);
-        }
+        public ChannelDirection Direction04 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 5.")]
-        public ChannelDirection Direction05
-        {
-            get => direction05.Value;
-            set => direction05.OnNext(value);
-        }
+        public ChannelDirection Direction05 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 6.")]
-        public ChannelDirection Direction06
-        {
-            get => direction06.Value;
-            set => direction06.OnNext(value);
-        }
+        public ChannelDirection Direction06 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 7.")]
-        public ChannelDirection Direction07
-        {
-            get => direction07.Value;
-            set => direction07.OnNext(value);
-        }
+        public ChannelDirection Direction07 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 8.")]
-        public ChannelDirection Direction08
-        {
-            get => direction08.Value;
-            set => direction08.OnNext(value);
-        }
+        public ChannelDirection Direction08 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 9.")]
-        public ChannelDirection Direction09
-        {
-            get => direction09.Value;
-            set => direction09.OnNext(value);
-        }
+        public ChannelDirection Direction09 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 10.")]
-        public ChannelDirection Direction10
-        {
-            get => direction10.Value;
-            set => direction10.OnNext(value);
-        }
+        public ChannelDirection Direction10 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 11.")]
-        public ChannelDirection Direction11
-        {
-            get => direction11.Value;
-            set => direction11.OnNext(value);
-        }
+        public ChannelDirection Direction11 { get; set; }
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
@@ -202,21 +139,19 @@ namespace OpenEphys.Onix
                     device.WriteRegister(AnalogIO.CHDIR, io_reg);
                 }
 
-                return new CompositeDisposable(
-                    DeviceManager.RegisterDevice(deviceName, device, DeviceType),
-                    direction00.Subscribe(newValue => SetIO(0, newValue)),
-                    direction01.Subscribe(newValue => SetIO(1, newValue)),
-                    direction02.Subscribe(newValue => SetIO(2, newValue)),
-                    direction03.Subscribe(newValue => SetIO(3, newValue)),
-                    direction04.Subscribe(newValue => SetIO(4, newValue)),
-                    direction05.Subscribe(newValue => SetIO(5, newValue)),
-                    direction06.Subscribe(newValue => SetIO(6, newValue)),
-                    direction07.Subscribe(newValue => SetIO(7, newValue)),
-                    direction08.Subscribe(newValue => SetIO(8, newValue)),
-                    direction09.Subscribe(newValue => SetIO(9, newValue)),
-                    direction10.Subscribe(newValue => SetIO(10, newValue)),
-                    direction11.Subscribe(newValue => SetIO(11, newValue))
-                );
+                SetIO(0, Direction00);
+                SetIO(1, Direction01);
+                SetIO(2, Direction02);
+                SetIO(3, Direction03);
+                SetIO(4, Direction04);
+                SetIO(5, Direction05);
+                SetIO(6, Direction06);
+                SetIO(7, Direction07);
+                SetIO(8, Direction08);
+                SetIO(9, Direction09);
+                SetIO(10, Direction10);
+                SetIO(11, Direction11);
+                return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
             });
         }
     }
