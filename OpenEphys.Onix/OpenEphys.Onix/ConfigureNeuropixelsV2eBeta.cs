@@ -157,6 +157,7 @@ namespace OpenEphys.Onix
         {
             // Activate recording mode on NP
             i2cNP.WriteByte(0, 0b0100_0000);
+            i2cNP.WriteByte(1, 0b1110_1000);
         }
     }
 
