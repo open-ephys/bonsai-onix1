@@ -11,8 +11,19 @@ namespace OpenEphys.Onix
         {
         }
 
+        public NeuropixelsV2BetaRegisterContext(DeviceContext deviceContext, uint i2cAddress)
+            : base(deviceContext, i2cAddress)
+        {
+        }
+
         public void WriteConfiguration(NeuropixelsV2eBetaChannelReference reference)
         {
+            var shankBits = GenerateShankBits();
+            WriteShiftRegister(NeuropixelsV2eBeta.SR_CHAIN4, shankBits[0], read_check: true);
+            WriteShiftRegister(NeuropixelsV2eBeta.SR_CHAIN3, shankBits[1], read_check: true);
+            WriteShiftRegister(NeuropixelsV2eBeta.SR_CHAIN2, shankBits[2], read_check: true);
+            WriteShiftRegister(NeuropixelsV2eBeta.SR_CHAIN1, shankBits[3], read_check: true);
+
             var baseBits = GenerateBaseBits(reference);
             WriteShiftRegister(NeuropixelsV2eBeta.SR_CHAIN5, baseBits[0], true);
             WriteShiftRegister(NeuropixelsV2eBeta.SR_CHAIN6, baseBits[1], true);
@@ -59,6 +70,32 @@ namespace OpenEphys.Onix
             {
                 throw new WorkflowException("Shift register programming check failed.");
             }
+        }
+
+        public static BitArray[] GenerateShankBits()
+        {
+            BitArray[] shankBits =
+            {
+                new(NeuropixelsV2eBeta.RegistersPerShank, false),
+                new(NeuropixelsV2eBeta.RegistersPerShank, false),
+                new(NeuropixelsV2eBeta.RegistersPerShank, false),
+                new(NeuropixelsV2eBeta.RegistersPerShank, false)
+            };
+
+            const int PixelOffset = (NeuropixelsV2eBeta.PixelCount - 1) / 2;
+            const int ReferencePixelOffset = 3;
+            for (int i = 0; i < NeuropixelsV2eBeta.ChannelCount; i++)
+            {
+                var baseIndex = i % 2;
+                var pixelIndex = i / 2;
+                pixelIndex = baseIndex == 0
+                    ? pixelIndex + PixelOffset + 2 * ReferencePixelOffset
+                    : PixelOffset - pixelIndex + ReferencePixelOffset;
+
+                shankBits[0][pixelIndex] = true;
+            }
+
+            return shankBits;
         }
 
         public static BitArray[] GenerateBaseBits(NeuropixelsV2eBetaChannelReference reference)
