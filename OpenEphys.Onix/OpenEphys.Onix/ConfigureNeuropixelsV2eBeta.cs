@@ -59,12 +59,13 @@ namespace OpenEphys.Onix
                 System.Threading.Thread.Sleep(20);
 
                 // configure probe streaming
-                var probeControl = new I2CRegisterContext(device, NeuropixelsV2eBeta.ProbeAddress);
+                var probeControl = new NeuropixelsV2BetaRegisterContext(device, NeuropixelsV2eBeta.ProbeAddress);
 
                 // configure probe A streaming
                 if (probeAMetadata.Version != byte.MaxValue)
                 {
                     SelectProbe(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeA);
+                    probeControl.WriteConfiguration(Reference);
                     ConfigureProbeStreaming(probeControl);
                 }
 
@@ -72,6 +73,7 @@ namespace OpenEphys.Onix
                 if (probeBMetadata.Version != byte.MaxValue)
                 {
                     SelectProbe(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeB);
+                    probeControl.WriteConfiguration(Reference);
                     ConfigureProbeStreaming(probeControl);
                 }
 
@@ -157,6 +159,8 @@ namespace OpenEphys.Onix
         {
             // Activate recording mode on NP
             i2cNP.WriteByte(0, 0b0100_0000);
+
+            // Set default SR configurations (comment to use custom configuration)
             i2cNP.WriteByte(1, 0b1110_1000);
         }
     }
