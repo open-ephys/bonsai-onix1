@@ -13,8 +13,6 @@ namespace OpenEphys.Onix
     public class Rhs2116StimulusTrigger : Sink<bool>
     {
         readonly BehaviorSubject<Rhs2116StimulusSequence> stimulusSequence = new(new Rhs2116StimulusSequence());
-        readonly BehaviorSubject<Rhs2116AnalogLowCutoff> analogLowCutoffRecovery = new(Rhs2116AnalogLowCutoff.Low250Hz);
-        readonly BehaviorSubject<bool> respectExternalActiveStim = new(true);
 
         [TypeConverter(typeof(Rhs2116Trigger.NameConverter))]
         public string DeviceName { get; set; }
@@ -26,25 +24,6 @@ namespace OpenEphys.Onix
         {
             get => stimulusSequence.Value;
             set => stimulusSequence.OnNext(value);
-        }
-
-        [Category("Acquisition")]
-        [Description("Specifies the lower cutoff frequency of the pre-ADC amplifiers during stimulus recovery.")]
-        public Rhs2116AnalogLowCutoff AnalogLowCutoffRecovery
-        {
-            get => analogLowCutoffRecovery.Value;
-            set => analogLowCutoffRecovery.OnNext(value);
-        }
-        
-        [Category("Acquisition")]
-        [Description("If true, this device will apply AnalogLowCutoffRecovery " +
-            "if stimulation occurs via any RHS chip the same headstage or others that are connected " +
-            "using StimActive pin. If false, this device will apply AnalogLowCutoffRecovery during its " +
-            "own stimuli.")]
-        public bool RespectExternalActiveStim
-        {
-            get => respectExternalActiveStim.Value;
-            set => respectExternalActiveStim.OnNext(value);
         }
 
         private uint deviceAddress;
@@ -59,64 +38,49 @@ namespace OpenEphys.Onix
                   deviceDisposable.Subject.SelectMany(deviceInfo =>
                   {
                       deviceAddress = deviceInfo.DeviceAddress;
-                      var device_rhsA = deviceInfo.Context.GetDeviceContext(deviceAddress - 2, (int)DeviceID.Rhs2116);
-                      var device_rhsB = deviceInfo.Context.GetDeviceContext(deviceAddress - 1, (int)DeviceID.Rhs2116);
+                      var deviceRhsA = deviceInfo.Context.GetDeviceContext(deviceAddress - 2, 31);
+                      var deviceRhsB = deviceInfo.Context.GetDeviceContext(deviceAddress - 1, 31);
                       
                       return new CompositeDisposable(
                           deviceDisposable,
-                          analogLowCutoffRecovery.Subscribe(newValue =>
-                          {
-                              var regs = Rhs2116Config.AnalogLowCutoffToRegisters[newValue];
-                              var reg = regs[2] << 13 | regs[1] << 7 | regs[0];
-                              device_rhsA.WriteRegister(Rhs2116.BW3, reg);
-                              device_rhsB.WriteRegister(Rhs2116.BW3, reg);
-                          }),
-                          respectExternalActiveStim.Subscribe(newValue =>
-                          {
-                            device_rhsA.WriteRegister(Rhs2116.RESPECTSTIMACTIVE, newValue ? 1u : 0u);
-                          }),
                           stimulusSequence.Subscribe(newValue =>
                           {
                               // Step size
                               var reg = Rhs2116Config.StimulatorStepSizeToRegisters[newValue.CurrentStepSize];
-                              device_rhsA.WriteRegister(Rhs2116.STEPSZ, reg[2] << 13 | reg[1] << 7 | reg[0]);
-                              device_rhsB.WriteRegister(Rhs2116.STEPSZ, reg[2] << 13 | reg[1] << 7 | reg[0]);
+                              deviceRhsA.WriteRegister(Rhs2116.STEPSZ, reg[2] << 13 | reg[1] << 7 | reg[0]);
+                              deviceRhsB.WriteRegister(Rhs2116.STEPSZ, reg[2] << 13 | reg[1] << 7 | reg[0]);
 
                               // Anodic amplitudes
-                              // TODO: cache last write and compare?
                               var a = newValue.AnodicAmplitudes;
                               for (int i = 0; i < a.Count(); i++)
                               {
-                                  device_rhsA.WriteRegister(Rhs2116.POS00 + (uint)i, a.ElementAt(i));
-                                  device_rhsB.WriteRegister(Rhs2116.POS00 + (uint)i, a.ElementAt(i));
+                                  deviceRhsA.WriteRegister(Rhs2116.POS00 + (uint)i, a.ElementAt(i));
+                                  deviceRhsB.WriteRegister(Rhs2116.POS00 + (uint)i, a.ElementAt(i));
                               }
 
                               // Cathodic amplitudes
-                              // TODO: cache last write and compare?
                               var c = newValue.CathodicAmplitudes;
                               for (int i = 0; i < a.Count(); i++)
                               {
-                                  device_rhsA.WriteRegister(Rhs2116.NEG00 + (uint)i, c.ElementAt(i));
-                                  device_rhsB.WriteRegister(Rhs2116.NEG00 + (uint)i, c.ElementAt(i));
+                                  deviceRhsA.WriteRegister(Rhs2116.NEG00 + (uint)i, c.ElementAt(i));
+                                  deviceRhsB.WriteRegister(Rhs2116.NEG00 + (uint)i, c.ElementAt(i));
                               }
 
                               // Create delta table and set length
                               var dt = newValue.DeltaTable;
-                              device_rhsA.WriteRegister(Rhs2116.NUMDELTAS, (uint)dt.Count);
-                              device_rhsB.WriteRegister(Rhs2116.NUMDELTAS, (uint)dt.Count);
+                              deviceRhsA.WriteRegister(Rhs2116.NUMDELTAS, (uint)dt.Count);
+                              deviceRhsB.WriteRegister(Rhs2116.NUMDELTAS, (uint)dt.Count);
 
-                              // TODO: If we want to do this efficently, we probably need a different data structure on the
-                              // FPGA ram that allows columns to be out of order (e.g. linked list)
                               uint j = 0;
                               foreach (var d in dt)
                               {
                                   uint indexAndTime = j++ << 22 | (d.Key & 0x003FFFFF);
 
-                                  device_rhsA.WriteRegister(Rhs2116.DELTAIDXTIME, indexAndTime);
-                                  device_rhsA.WriteRegister(Rhs2116.DELTAPOLEN, d.Value);
+                                  deviceRhsA.WriteRegister(Rhs2116.DELTAIDXTIME, indexAndTime);
+                                  deviceRhsA.WriteRegister(Rhs2116.DELTAPOLEN, d.Value);
 
-                                  device_rhsB.WriteRegister(Rhs2116.DELTAIDXTIME, indexAndTime);
-                                  device_rhsB.WriteRegister(Rhs2116.DELTAPOLEN, d.Value);
+                                  deviceRhsB.WriteRegister(Rhs2116.DELTAIDXTIME, indexAndTime);
+                                  deviceRhsB.WriteRegister(Rhs2116.DELTAPOLEN, d.Value);
                               }
                           })
                         );

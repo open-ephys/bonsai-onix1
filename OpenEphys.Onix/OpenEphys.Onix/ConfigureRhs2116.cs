@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -10,6 +10,7 @@ namespace OpenEphys.Onix
     {
         readonly BehaviorSubject<Rhs2116AnalogLowCutoff> analogLowCutoff = new(Rhs2116AnalogLowCutoff.Low100mHz);
         readonly BehaviorSubject<Rhs2116AnalogHighCutoff> analogHighCutoff = new(Rhs2116AnalogHighCutoff.High10000Hz);
+        readonly BehaviorSubject<Rhs2116AnalogLowCutoff> analogLowCutoffRecovery = new(Rhs2116AnalogLowCutoff.Low250Hz);
 
         public ConfigureRhs2116()
             : base(typeof(Rhs2116))
@@ -28,6 +29,21 @@ namespace OpenEphys.Onix
         [Description("Specifies the cutoff frequency for the DSP high-pass filter used for amplifier offset removal.")]
         public Rhs2116DspCutoff DspCutoff { get; set; } = Rhs2116DspCutoff.Off;
 
+        [Category(ConfigurationCategory)]
+        [Description("If true, this device will apply AnalogLowCutoffRecovery " +
+            "if stimulation occurs via any RHS chip on the same headstage or others that are connected " +
+            "using StimActive pin. If false, this device will only apply AnalogLowCutoffRecovery during its " +
+            "own stimuli.")]
+        public bool RespectExternalActiveStim { get; set; } = true;
+
+        [Category(AcquisitionCategory)]
+        [Description("Specifies the lower cutoff frequency of the pre-ADC amplifiers during stimulus recovery.")]
+        public Rhs2116AnalogLowCutoff AnalogLowCutoffRecovery
+        {
+            get => analogLowCutoffRecovery.Value;
+            set => analogLowCutoffRecovery.OnNext(value);
+        }
+        
         [Category(AcquisitionCategory)]
         [Description("Specifies the lower cutoff frequency of the pre-ADC amplifiers.")]
         public Rhs2116AnalogLowCutoff AnalogLowCutoff
@@ -85,6 +101,12 @@ namespace OpenEphys.Onix
                         device.WriteRegister(Rhs2116.BW0, regs[1] << 6 | regs[0]);
                         device.WriteRegister(Rhs2116.BW1, regs[3] << 6 | regs[2]);
                         device.WriteRegister(Rhs2116.FASTSETTLESAMPLES, Rhs2116Config.AnalogHighCutoffToFastSettleSamples[newValue]);
+                    }),
+                    analogLowCutoffRecovery.Subscribe(newValue =>
+                    {
+                        var regs = Rhs2116Config.AnalogLowCutoffToRegisters[newValue];
+                        var reg = regs[2] << 13 | regs[1] << 7 | regs[0];
+                        device.WriteRegister(Rhs2116.BW3, reg);
                     })
                 );
             });
