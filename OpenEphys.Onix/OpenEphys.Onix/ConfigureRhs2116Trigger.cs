@@ -36,7 +36,7 @@ namespace OpenEphys.Onix
 
     static class Rhs2116Trigger
     {
-        public const int ID = (int)DeviceID.Rhs2116Trigger;
+        public const int ID = 32;
 
         // managed registers
         public const uint ENABLE = 0; // Writes and reads to ENABLE are ignored without error
