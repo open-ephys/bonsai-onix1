@@ -19,10 +19,10 @@ namespace OpenEphys.Onix
         public void WriteConfiguration(NeuropixelsV2eBetaChannelReference reference)
         {
             var shankBits = GenerateShankBits();
-            WriteShiftRegister(NeuropixelsV2eBeta.SR_CHAIN4, shankBits[0], read_check: true);
-            WriteShiftRegister(NeuropixelsV2eBeta.SR_CHAIN3, shankBits[1], read_check: true);
-            WriteShiftRegister(NeuropixelsV2eBeta.SR_CHAIN2, shankBits[2], read_check: true);
-            WriteShiftRegister(NeuropixelsV2eBeta.SR_CHAIN1, shankBits[3], read_check: true);
+            WriteShiftRegister(NeuropixelsV2eBeta.SR_CHAIN1, shankBits[0], read_check: true);
+            WriteShiftRegister(NeuropixelsV2eBeta.SR_CHAIN2, shankBits[1], read_check: true);
+            WriteShiftRegister(NeuropixelsV2eBeta.SR_CHAIN3, shankBits[2], read_check: true);
+            WriteShiftRegister(NeuropixelsV2eBeta.SR_CHAIN4, shankBits[3], read_check: true);
 
             var baseBits = GenerateBaseBits(reference);
             WriteShiftRegister(NeuropixelsV2eBeta.SR_CHAIN5, baseBits[0], true);
