@@ -65,7 +65,6 @@ namespace OpenEphys.Onix
                 if (probeAMetadata.Version != byte.MaxValue)
                 {
                     SelectProbe(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeA);
-                    probeControl.WriteConfiguration(Reference);
                     ConfigureProbeStreaming(probeControl);
                 }
 
@@ -73,7 +72,6 @@ namespace OpenEphys.Onix
                 if (probeBMetadata.Version != byte.MaxValue)
                 {
                     SelectProbe(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeB);
-                    probeControl.WriteConfiguration(Reference);
                     ConfigureProbeStreaming(probeControl);
                 }
 
