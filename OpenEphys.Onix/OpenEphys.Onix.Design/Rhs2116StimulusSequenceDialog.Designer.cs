@@ -28,128 +28,168 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.button_OK = new System.Windows.Forms.Button();
-            this.button_Cancel = new System.Windows.Forms.Button();
-            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
-            this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
-            this.linkLabel_Documentation = new System.Windows.Forms.LinkLabel();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
-            this.panel1.SuspendLayout();
-            this.statusStrip1.SuspendLayout();
+            this.components = new System.ComponentModel.Container();
+            this.SplitContainerWaveformAndProperties = new System.Windows.Forms.SplitContainer();
+            this.ZedGraphWaveform = new ZedGraph.ZedGraphControl();
+            this.MenuStrip = new System.Windows.Forms.MenuStrip();
+            this.LinkLabelDocumentation = new System.Windows.Forms.LinkLabel();
+            this.PropertyGridStimulusSequence = new System.Windows.Forms.PropertyGrid();
+            this.PanelButtons = new System.Windows.Forms.Panel();
+            this.ButtonOk = new System.Windows.Forms.Button();
+            this.ButtonCancel = new System.Windows.Forms.Button();
+            this.StatusStrip = new System.Windows.Forms.StatusStrip();
+            this.ToolStripStatusIsValid = new System.Windows.Forms.ToolStripStatusLabel();
+            ((System.ComponentModel.ISupportInitialize)(this.SplitContainerWaveformAndProperties)).BeginInit();
+            this.SplitContainerWaveformAndProperties.Panel1.SuspendLayout();
+            this.SplitContainerWaveformAndProperties.Panel2.SuspendLayout();
+            this.SplitContainerWaveformAndProperties.SuspendLayout();
+            this.PanelButtons.SuspendLayout();
+            this.StatusStrip.SuspendLayout();
             this.SuspendLayout();
             // 
-            // splitContainer1
+            // SplitContainerWaveformAndProperties
             // 
-            this.splitContainer1.Location = new System.Drawing.Point(0, 41);
-            this.splitContainer1.Name = "splitContainer1";
+            this.SplitContainerWaveformAndProperties.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.SplitContainerWaveformAndProperties.Location = new System.Drawing.Point(0, 0);
+            this.SplitContainerWaveformAndProperties.Name = "SplitContainerWaveformAndProperties";
             // 
-            // splitContainer1.Panel2
+            // SplitContainerWaveformAndProperties.Panel1
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.propertyGrid1);
-            this.splitContainer1.Size = new System.Drawing.Size(1440, 464);
-            this.splitContainer1.SplitterDistance = 1113;
-            this.splitContainer1.TabIndex = 0;
+            this.SplitContainerWaveformAndProperties.Panel1.Controls.Add(this.ZedGraphWaveform);
+            this.SplitContainerWaveformAndProperties.Panel1.Controls.Add(this.MenuStrip);
             // 
-            // propertyGrid1
+            // SplitContainerWaveformAndProperties.Panel2
             // 
-            this.propertyGrid1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.propertyGrid1.Location = new System.Drawing.Point(0, 0);
-            this.propertyGrid1.Name = "propertyGrid1";
-            this.propertyGrid1.Size = new System.Drawing.Size(323, 464);
-            this.propertyGrid1.TabIndex = 0;
+            this.SplitContainerWaveformAndProperties.Panel2.Controls.Add(this.LinkLabelDocumentation);
+            this.SplitContainerWaveformAndProperties.Panel2.Controls.Add(this.PropertyGridStimulusSequence);
+            this.SplitContainerWaveformAndProperties.Size = new System.Drawing.Size(1440, 508);
+            this.SplitContainerWaveformAndProperties.SplitterDistance = 1113;
+            this.SplitContainerWaveformAndProperties.TabIndex = 0;
             // 
-            // panel1
+            // ZedGraphWaveform
             // 
-            this.panel1.Controls.Add(this.button_OK);
-            this.panel1.Controls.Add(this.button_Cancel);
-            this.panel1.Location = new System.Drawing.Point(0, 507);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1437, 46);
-            this.panel1.TabIndex = 2;
+            this.ZedGraphWaveform.AutoScroll = true;
+            this.ZedGraphWaveform.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.ZedGraphWaveform.Location = new System.Drawing.Point(0, 36);
+            this.ZedGraphWaveform.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.ZedGraphWaveform.Name = "ZedGraphWaveform";
+            this.ZedGraphWaveform.ScrollGrace = 0D;
+            this.ZedGraphWaveform.ScrollMaxX = 0D;
+            this.ZedGraphWaveform.ScrollMaxY = 0D;
+            this.ZedGraphWaveform.ScrollMaxY2 = 0D;
+            this.ZedGraphWaveform.ScrollMinX = 0D;
+            this.ZedGraphWaveform.ScrollMinY = 0D;
+            this.ZedGraphWaveform.ScrollMinY2 = 0D;
+            this.ZedGraphWaveform.Size = new System.Drawing.Size(1113, 472);
+            this.ZedGraphWaveform.TabIndex = 4;
+            this.ZedGraphWaveform.UseExtendedPrintDialog = true;
             // 
-            // button_OK
+            // MenuStrip
             // 
-            this.button_OK.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button_OK.Location = new System.Drawing.Point(1194, 4);
-            this.button_OK.Name = "button_OK";
-            this.button_OK.Size = new System.Drawing.Size(116, 39);
-            this.button_OK.TabIndex = 1;
-            this.button_OK.Text = "OK";
-            this.button_OK.UseVisualStyleBackColor = true;
+            this.MenuStrip.GripMargin = new System.Windows.Forms.Padding(2, 2, 0, 2);
+            this.MenuStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
+            this.MenuStrip.Location = new System.Drawing.Point(0, 0);
+            this.MenuStrip.Name = "MenuStrip";
+            this.MenuStrip.Size = new System.Drawing.Size(1113, 36);
+            this.MenuStrip.TabIndex = 3;
+            this.MenuStrip.Text = "menuStrip1";
             // 
-            // button_Cancel
+            // LinkLabelDocumentation
             // 
-            this.button_Cancel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button_Cancel.Location = new System.Drawing.Point(1316, 4);
-            this.button_Cancel.Name = "button_Cancel";
-            this.button_Cancel.Size = new System.Drawing.Size(116, 39);
-            this.button_Cancel.TabIndex = 0;
-            this.button_Cancel.Text = "Cancel";
-            this.button_Cancel.UseVisualStyleBackColor = true;
-            this.button_Cancel.Click += new System.EventHandler(this.button_Cancel_Click);
+            this.LinkLabelDocumentation.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.LinkLabelDocumentation.AutoSize = true;
+            this.LinkLabelDocumentation.Location = new System.Drawing.Point(193, 9);
+            this.LinkLabelDocumentation.Name = "LinkLabelDocumentation";
+            this.LinkLabelDocumentation.Size = new System.Drawing.Size(118, 20);
+            this.LinkLabelDocumentation.TabIndex = 4;
+            this.LinkLabelDocumentation.TabStop = true;
+            this.LinkLabelDocumentation.Text = "Documentation";
+            this.LinkLabelDocumentation.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelDocumentation_LinkClicked);
             // 
-            // statusStrip1
+            // PropertyGridStimulusSequence
             // 
-            this.statusStrip1.ImageScalingSize = new System.Drawing.Size(24, 24);
-            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripStatusLabel1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 556);
-            this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1440, 32);
-            this.statusStrip1.TabIndex = 1;
-            this.statusStrip1.Text = "statusStrip1";
+            this.PropertyGridStimulusSequence.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.PropertyGridStimulusSequence.Location = new System.Drawing.Point(0, 0);
+            this.PropertyGridStimulusSequence.Name = "PropertyGridStimulusSequence";
+            this.PropertyGridStimulusSequence.Size = new System.Drawing.Size(323, 508);
+            this.PropertyGridStimulusSequence.TabIndex = 0;
+            this.PropertyGridStimulusSequence.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.PropertyGridStimulusSequence_PropertyValueChanged);
             // 
-            // toolStripStatusLabel1
+            // PanelButtons
             // 
-            this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(179, 25);
-            this.toolStripStatusLabel1.Text = "toolStripStatusLabel1";
+            this.PanelButtons.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.PanelButtons.Controls.Add(this.ButtonOk);
+            this.PanelButtons.Controls.Add(this.ButtonCancel);
+            this.PanelButtons.Location = new System.Drawing.Point(0, 516);
+            this.PanelButtons.Name = "PanelButtons";
+            this.PanelButtons.Size = new System.Drawing.Size(1440, 40);
+            this.PanelButtons.TabIndex = 2;
             // 
-            // menuStrip1
+            // ButtonOk
             // 
-            this.menuStrip1.GripMargin = new System.Windows.Forms.Padding(2, 2, 0, 2);
-            this.menuStrip1.ImageScalingSize = new System.Drawing.Size(24, 24);
-            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
-            this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1440, 24);
-            this.menuStrip1.TabIndex = 3;
-            this.menuStrip1.Text = "menuStrip1";
+            this.ButtonOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.ButtonOk.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ButtonOk.Location = new System.Drawing.Point(1221, 0);
+            this.ButtonOk.Name = "ButtonOk";
+            this.ButtonOk.Size = new System.Drawing.Size(100, 40);
+            this.ButtonOk.TabIndex = 1;
+            this.ButtonOk.Text = "OK";
+            this.ButtonOk.UseVisualStyleBackColor = true;
+            this.ButtonOk.Click += new System.EventHandler(this.ButtonOk_Click);
             // 
-            // linkLabel_Documentation
+            // ButtonCancel
             // 
-            this.linkLabel_Documentation.AutoSize = true;
-            this.linkLabel_Documentation.Location = new System.Drawing.Point(1313, 4);
-            this.linkLabel_Documentation.Name = "linkLabel_Documentation";
-            this.linkLabel_Documentation.Size = new System.Drawing.Size(118, 20);
-            this.linkLabel_Documentation.TabIndex = 4;
-            this.linkLabel_Documentation.TabStop = true;
-            this.linkLabel_Documentation.Text = "Documentation";
-            this.linkLabel_Documentation.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel_Documentation_LinkClicked);
+            this.ButtonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.ButtonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.ButtonCancel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ButtonCancel.Location = new System.Drawing.Point(1329, 0);
+            this.ButtonCancel.Name = "ButtonCancel";
+            this.ButtonCancel.Size = new System.Drawing.Size(100, 40);
+            this.ButtonCancel.TabIndex = 0;
+            this.ButtonCancel.Text = "Cancel";
+            this.ButtonCancel.UseVisualStyleBackColor = true;
+            // 
+            // StatusStrip
+            // 
+            this.StatusStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
+            this.StatusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.ToolStripStatusIsValid});
+            this.StatusStrip.Location = new System.Drawing.Point(0, 556);
+            this.StatusStrip.Name = "StatusStrip";
+            this.StatusStrip.Size = new System.Drawing.Size(1440, 32);
+            this.StatusStrip.TabIndex = 1;
+            this.StatusStrip.Text = "statusStrip1";
+            // 
+            // ToolStripStatusIsValid
+            // 
+            this.ToolStripStatusIsValid.Name = "ToolStripStatusIsValid";
+            this.ToolStripStatusIsValid.Size = new System.Drawing.Size(179, 25);
+            this.ToolStripStatusIsValid.Text = "toolStripStatusLabel1";
             // 
             // Rhs2116StimulusSequenceDialog
             // 
+            this.AcceptButton = this.ButtonOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.ButtonCancel;
             this.ClientSize = new System.Drawing.Size(1440, 588);
-            this.Controls.Add(this.linkLabel_Documentation);
-            this.Controls.Add(this.panel1);
-            this.Controls.Add(this.statusStrip1);
-            this.Controls.Add(this.menuStrip1);
-            this.Controls.Add(this.splitContainer1);
+            this.Controls.Add(this.PanelButtons);
+            this.Controls.Add(this.StatusStrip);
+            this.Controls.Add(this.SplitContainerWaveformAndProperties);
             this.Name = "Rhs2116StimulusSequenceDialog";
             this.Text = "Rhs2116StimulusSequenceDialog";
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-            this.splitContainer1.ResumeLayout(false);
-            this.panel1.ResumeLayout(false);
-            this.statusStrip1.ResumeLayout(false);
-            this.statusStrip1.PerformLayout();
+            this.SplitContainerWaveformAndProperties.Panel1.ResumeLayout(false);
+            this.SplitContainerWaveformAndProperties.Panel1.PerformLayout();
+            this.SplitContainerWaveformAndProperties.Panel2.ResumeLayout(false);
+            this.SplitContainerWaveformAndProperties.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.SplitContainerWaveformAndProperties)).EndInit();
+            this.SplitContainerWaveformAndProperties.ResumeLayout(false);
+            this.PanelButtons.ResumeLayout(false);
+            this.StatusStrip.ResumeLayout(false);
+            this.StatusStrip.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -157,14 +197,15 @@
 
         #endregion
 
-        private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.PropertyGrid propertyGrid1;
-        private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.StatusStrip statusStrip1;
-        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
-        private System.Windows.Forms.Button button_OK;
-        private System.Windows.Forms.Button button_Cancel;
-        private System.Windows.Forms.MenuStrip menuStrip1;
-        private System.Windows.Forms.LinkLabel linkLabel_Documentation;
+        private System.Windows.Forms.SplitContainer SplitContainerWaveformAndProperties;
+        private System.Windows.Forms.PropertyGrid PropertyGridStimulusSequence;
+        private System.Windows.Forms.Panel PanelButtons;
+        private System.Windows.Forms.StatusStrip StatusStrip;
+        private System.Windows.Forms.ToolStripStatusLabel ToolStripStatusIsValid;
+        private System.Windows.Forms.Button ButtonOk;
+        private System.Windows.Forms.Button ButtonCancel;
+        private System.Windows.Forms.MenuStrip MenuStrip;
+        private System.Windows.Forms.LinkLabel LinkLabelDocumentation;
+        private ZedGraph.ZedGraphControl ZedGraphWaveform;
     }
 }
