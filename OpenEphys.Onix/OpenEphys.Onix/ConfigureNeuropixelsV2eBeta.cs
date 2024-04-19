@@ -162,6 +162,9 @@ namespace OpenEphys.Onix
 
             // Set default SR configurations (comment to use custom configuration)
             i2cNP.WriteByte(1, 0b1110_1000);
+
+            // Set global ADC settings
+            i2cNP.WriteByte(3, 0b0000_1000);
         }
     }
 
