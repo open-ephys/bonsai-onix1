@@ -367,7 +367,7 @@ namespace OpenEphys.Onix
         }
 
         /// <summary>
-        /// Is the stimulus sequence well define
+        /// Is the stimulus sequence well defined
         /// </summary>
         [XmlIgnore]
         public bool Valid => Stimuli.ToList().All(s => s.Valid);
@@ -414,8 +414,8 @@ namespace OpenEphys.Onix
         internal IEnumerable<byte> CathodicAmplitudes => Stimuli.ToList().Select(x => x.CathodicAmplitudeSteps);
 
         /// <summary>
-        /// Generate the delta-table  representation of this stimulus sequence that can be uploaded to the RHS2116 device.
-        /// The resultant dictionary has a time, in samples as the key and a combined [polarity, enable] bit field as the value.
+        /// Generate the delta-table representation of this stimulus sequence that can be uploaded to the RHS2116 device.
+        /// The resultant dictionary has a time, in samples, as the key and a combined [polarity, enable] bit field as the value.
         /// </summary>
         [XmlIgnore]
         internal Dictionary<uint, uint> DeltaTable
