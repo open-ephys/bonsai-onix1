@@ -27,9 +27,7 @@ namespace OpenEphys.Onix
 
                 device.WriteRegister(Rhs2116Trigger.TRIGGERSOURCE, (uint)triggerSource);
 
-                return new CompositeDisposable(
-                    DeviceManager.RegisterDevice(deviceName, device, DeviceType)
-                );
+                return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
             });
         }
     }
