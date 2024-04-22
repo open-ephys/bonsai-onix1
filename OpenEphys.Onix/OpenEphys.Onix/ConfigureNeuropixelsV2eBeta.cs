@@ -65,6 +65,7 @@ namespace OpenEphys.Onix
                 if (probeAMetadata.Version != byte.MaxValue)
                 {
                     SelectProbe(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeA);
+                    probeControl.WriteConfiguration(Reference);
                     ConfigureProbeStreaming(probeControl);
                 }
 
@@ -72,6 +73,7 @@ namespace OpenEphys.Onix
                 if (probeBMetadata.Version != byte.MaxValue)
                 {
                     SelectProbe(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeB);
+                    probeControl.WriteConfiguration(Reference);
                     ConfigureProbeStreaming(probeControl);
                 }
 
@@ -157,9 +159,6 @@ namespace OpenEphys.Onix
         {
             // Activate recording mode on NP
             i2cNP.WriteByte(0, 0b0100_0000);
-
-            // Set default SR configurations (comment to use custom configuration)
-            i2cNP.WriteByte(1, 0b1110_1000);
 
             // Set global ADC settings
             i2cNP.WriteByte(3, 0b0000_1000);
