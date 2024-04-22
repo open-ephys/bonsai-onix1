@@ -88,6 +88,7 @@ namespace OpenEphys.Onix
 
             const int PixelOffset = (NeuropixelsV2eBeta.PixelCount - 1) / 2;
             const int ReferencePixelOffset = 3;
+            shankBits[0][2] = true;
             for (int i = 0; i < NeuropixelsV2eBeta.ChannelCount; i++)
             {
                 var baseIndex = i % 2;
