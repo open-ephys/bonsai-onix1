@@ -2,12 +2,15 @@
 using System.Drawing;
 using System.Windows.Forms;
 using ZedGraph;
+using OpenEphys.Onix;
 
 namespace OpenEphys.Onix.Design
 {
     public partial class Rhs2116StimulusSequenceDialog : Form
     {
         public Rhs2116StimulusSequence Sequence;
+
+        private const double SamplePeriodMicroSeconds = 1e6 / 30.1932367151e3;
 
         public Rhs2116StimulusSequenceDialog(Rhs2116StimulusSequence sequence)
         {
@@ -21,18 +24,9 @@ namespace OpenEphys.Onix.Design
 
             InitializeZedGraph();
             DrawStimulusWaveform();
-        }
 
-        private void LinkLabelDocumentation_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            try
-            {
-                System.Diagnostics.Process.Start("https://open-ephys.github.io/onix-docs/Software%20Guide/Bonsai.ONIX/Nodes/RHS2116TriggerDevice.html");
-            }
-            catch 
-            {
-                MessageBox.Show("Unable to open documentation link.");
-            }
+            SetStatusValidity();
+            SetNumberOfSlotsUsed();
         }
 
         private void ButtonOk_Click(object sender, EventArgs e)
@@ -68,6 +62,8 @@ namespace OpenEphys.Onix.Design
         private void PropertyGridStimulusSequence_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
             DrawStimulusWaveform();
+            SetStatusValidity();
+            SetNumberOfSlotsUsed();
         }
 
         private void DrawStimulusWaveform()
@@ -87,7 +83,7 @@ namespace OpenEphys.Onix.Design
 
             for (int i = 0; i < stimuli.Length; i++)
             {
-                PointPairList pointPairs = CreateStimulusWaveform(stimuli[i], Sequence.CurrentStepSizeuA, Sequence.SequenceLengthSamples, -peakToPeak * i);
+                PointPairList pointPairs = CreateStimulusWaveform(stimuli[i], -peakToPeak * i);
                 var curve = ZedGraphWaveform.GraphPane.AddCurve("Test", pointPairs, Color.CornflowerBlue, SymbolType.None);
 
                 curve.Label.IsVisible = false;
@@ -96,13 +92,11 @@ namespace OpenEphys.Onix.Design
 
             // Autoscale to view all data
             ZedGraphWaveform.GraphPane.XAxis.Scale.Min = 0;
-            ZedGraphWaveform.GraphPane.XAxis.Scale.Max = Sequence.SequenceLengthSamples > 0 ? Sequence.SequenceLengthSamples : 1;
+            ZedGraphWaveform.GraphPane.XAxis.Scale.Max = (Sequence.SequenceLengthSamples > 0 ? Sequence.SequenceLengthSamples : 1) * SamplePeriodMicroSeconds;
             ZedGraphWaveform.GraphPane.YAxis.Scale.Min = -peakToPeak * (stimuli.Length + 0.5);
             ZedGraphWaveform.GraphPane.YAxis.Scale.Max = peakToPeak * 1.5;
 
             // Change step size
-            ZedGraphWaveform.GraphPane.XAxis.Scale.MajorStep = 1;
-            ZedGraphWaveform.GraphPane.XAxis.Scale.MinorStep = 0;
             ZedGraphWaveform.GraphPane.YAxis.Scale.MajorStep = peakToPeak * 1.5;
             ZedGraphWaveform.GraphPane.YAxis.Scale.MinorStep = 0;
 
@@ -112,37 +106,37 @@ namespace OpenEphys.Onix.Design
             ZedGraphWaveform.Refresh();
         }
 
-        private PointPairList CreateStimulusWaveform(Rhs2116Stimulus stimulus, double currentStepSize, double sequenceLength, double yOffset)
+        private PointPairList CreateStimulusWaveform(Rhs2116Stimulus stimulus, double yOffset)
         {
             PointPairList points = new PointPairList
             {
                 { 0, yOffset },
-                { stimulus.DelaySamples, yOffset }
+                { stimulus.DelaySamples * SamplePeriodMicroSeconds, yOffset }
             };
 
             for (int i = 0; i < stimulus.NumberOfStimuli; i++)
             {
-                double amplitude = (stimulus.AnodicFirst ? stimulus.AnodicAmplitudeSteps : stimulus.CathodicAmplitudeSteps) * currentStepSize + yOffset;
-                double width = stimulus.AnodicFirst ? stimulus.AnodicWidthSamples : stimulus.CathodicWidthSamples;
+                double amplitude = (stimulus.AnodicFirst ? stimulus.AnodicAmplitudeSteps : stimulus.CathodicAmplitudeSteps) * Sequence.CurrentStepSizeuA + yOffset;
+                double width = (stimulus.AnodicFirst ? stimulus.AnodicWidthSamples : stimulus.CathodicWidthSamples) * SamplePeriodMicroSeconds;
 
                 // TODO?: Make this block (i.e., anodic/cathodic pulse) a function that returns a list of points to minimize errors
                 points.Add(points[points.Count - 1].X, amplitude);
                 points.Add(points[points.Count - 1].X + width, amplitude);
                 points.Add(points[points.Count - 1].X, yOffset);
 
-                points.Add(points[points.Count - 1].X + stimulus.DwellSamples, yOffset);
+                points.Add(points[points.Count - 1].X + stimulus.DwellSamples * SamplePeriodMicroSeconds, yOffset);
 
-                amplitude = -(stimulus.AnodicFirst ? stimulus.CathodicAmplitudeSteps : stimulus.AnodicAmplitudeSteps) * currentStepSize + yOffset;
-                width = stimulus.AnodicFirst ? stimulus.CathodicWidthSamples : stimulus.AnodicWidthSamples;
+                amplitude = -(stimulus.AnodicFirst ? stimulus.CathodicAmplitudeSteps : stimulus.AnodicAmplitudeSteps) * Sequence.CurrentStepSizeuA + yOffset;
+                width = (stimulus.AnodicFirst ? stimulus.CathodicWidthSamples : stimulus.AnodicWidthSamples) * SamplePeriodMicroSeconds;
 
                 points.Add(points[points.Count - 1].X, amplitude);
                 points.Add(points[points.Count - 1].X + width, amplitude);
                 points.Add(points[points.Count - 1].X, yOffset);
 
-                points.Add(points[points.Count - 1].X + stimulus.InterStimulusIntervalSamples, yOffset);
+                points.Add(points[points.Count - 1].X + stimulus.InterStimulusIntervalSamples * SamplePeriodMicroSeconds, yOffset);
             }
 
-            points.Add(sequenceLength, yOffset);
+            points.Add(Sequence.SequenceLengthSamples * SamplePeriodMicroSeconds, yOffset);
 
             return points;
         }
@@ -162,8 +156,49 @@ namespace OpenEphys.Onix.Design
             ZedGraphWaveform.GraphPane.YAxis.MinorTic.IsAllTics = false;
 
             // Add Axis labels and units
-            ZedGraphWaveform.GraphPane.XAxis.Title.Text = "Time [microseconds]";
-            ZedGraphWaveform.GraphPane.YAxis.Title.Text = "Amplitude [microamps]";
+            ZedGraphWaveform.GraphPane.XAxis.Title.Text = "Time [μs]";
+            ZedGraphWaveform.GraphPane.YAxis.Title.Text = "Amplitude [μA]";
+        }
+
+        private void SetStatusValidity()
+        {
+            if (Sequence.Valid && Sequence.FitsInHardware)
+            {
+                ToolStripStatusIsValid.Image = Properties.Resources.StatusReadyImage;
+                ToolStripStatusIsValid.Text = "Valid stimulus sequence";
+            }
+            else
+            {
+                if (!Sequence.FitsInHardware)
+                {
+                    ToolStripStatusIsValid.Image = Properties.Resources.StatusBlockedImage;
+                    ToolStripStatusIsValid.Text = "Stimulus sequence is too complex";
+                }
+                else
+                {
+                    ToolStripStatusIsValid.Image = Properties.Resources.StatusCriticalImage;
+                    ToolStripStatusIsValid.Text = "Stimulus sequence is not valid";
+                }
+            }
+        }
+
+        private void SetNumberOfSlotsUsed()
+        {
+            ToolStripStatusSlotsUsed.Text = string.Format("{0, 0:0%} of slots used", (double)Sequence.StimulusSlotsRequired / Sequence.MaxMemorySlotsAvailable);
+        }
+
+        private void LinkLabelDocumentation_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            try
+            {
+                System.Diagnostics.Process.Start("https://open-ephys.github.io/onix-docs/Software%20Guide/Bonsai.ONIX/Nodes/RHS2116TriggerDevice.html");
+            }
+            catch
+            {
+                MessageBox.Show("Unable to open documentation link. Please copy and paste the following link " +
+                    "manually to find the documentation: " +
+                    "https://open-ephys.github.io/onix-docs/Software%20Guide/Bonsai.ONIX/Nodes/RHS2116TriggerDevice.html");
+            }
         }
     }
 }
