@@ -379,6 +379,12 @@ namespace OpenEphys.Onix
         public bool FitsInHardware => StimulusSlotsRequired <= Rhs2116.StimMemorySlotsAvailable;
 
         /// <summary>
+        /// The maximum number of memory slots available
+        /// </summary>
+        [XmlIgnore]
+        public int MaxMemorySlotsAvailable => Rhs2116.StimMemorySlotsAvailable;
+
+        /// <summary>
         /// Number of hardware memory slots required by the sequence
         /// </summary>
         [XmlIgnore]
