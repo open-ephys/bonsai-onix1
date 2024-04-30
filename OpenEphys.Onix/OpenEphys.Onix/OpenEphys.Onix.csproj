@@ -2,20 +2,11 @@
 
   <PropertyGroup>
     <Title>OpenEphys.Onix</Title>
-    <Description>A package for the Bonsai visual programming language.</Description>
-    <Authors></Authors>
-    <Copyright>Copyright ©  2023</Copyright>
-    <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
-    <PackageProjectUrl></PackageProjectUrl>
-    <PackageLicenseExpression></PackageLicenseExpression>
-    <PackageIcon></PackageIcon>
-    <PackageOutputPath></PackageOutputPath>
+    <Description>Bonsai library containing interfaces for data acquisition and control of ONIX devices.</Description>
     <PackageTags>Bonsai Rx Open Ephys Onix</PackageTags>
     <TargetFramework>net472</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>9.0</LangVersion>
-    <Features>strict</Features>
-    <Version>0.1.0</Version>
+    <VersionPrefix>0.1.0</VersionPrefix>
     <Platforms>x64</Platforms>
   </PropertyGroup>
 
