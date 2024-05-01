@@ -11,6 +11,9 @@ namespace OpenEphys.Onix.Design
 {
     public partial class Rhs2116StimulusSequenceDialog : Form
     {
+        /// <summary>
+        /// Holds a local copy of the Rhs2116StimulusSequence until the user presses Okay
+        /// </summary>
         public Rhs2116StimulusSequence Sequence;
 
         private const double SamplePeriodMicroSeconds = 1e6 / 30.1932367151e3;
@@ -21,6 +24,10 @@ namespace OpenEphys.Onix.Design
 
         private ProbeGroup probeGroup;
 
+        /// <summary>
+        /// Opens a dialog allowing for easy changing of stimulus sequence parameters
+        /// </summary>
+        /// <param name="sequence"></param>
         public Rhs2116StimulusSequenceDialog(Rhs2116StimulusSequence sequence)
         {
             InitializeComponent();
