@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -55,7 +55,7 @@ namespace OpenEphys.Onix.Design
 
         private void LoadDefaultChannelLayout()
         {
-            textBoxChannelLayoutFilePath.Text = DefaultChannelLayoutFilePath; // TODO: Convert from relative to absolute path
+            textBoxChannelLayoutFilePath.Text = Path.GetFullPath(DefaultChannelLayoutFilePath);
 
             LoadChannelLayout(DefaultChannelLayoutFilePath);
         }
