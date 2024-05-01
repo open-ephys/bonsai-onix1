@@ -2,20 +2,11 @@
 
   <PropertyGroup>
     <Title>OpenEphys.Onix.Design</Title>
-    <Description>A package for the Bonsai visual programming language.</Description>
-    <Authors>Jon Newman, Goncalo Lopes, Brandon Parks</Authors>
-    <Copyright>Copyright © Jon Newman, Goncalo Lopes, Brandon Parks 2024</Copyright>
-    <PackageProjectUrl></PackageProjectUrl>
-    <PackageLicenseExpression></PackageLicenseExpression>
-    <PackageIcon></PackageIcon>
-    <PackageOutputPath></PackageOutputPath>
-    <PackageTags>Bonsai Rx OpenEphys.Onix.Design</PackageTags>
+    <Description>Bonsai Library containing visual interfaces for configuring ONIX devices.</Description>
+    <PackageTags>Bonsai Rx Open Ephys Onix Design</PackageTags>
     <TargetFramework>net472</TargetFramework>
-    <Features>strict</Features>
-    <Version>0.1.0</Version>
     <UseWindowsForms>true</UseWindowsForms>
-    <Platforms>x64;AnyCPU</Platforms>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <VersionPrefix>0.1.0</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup>
