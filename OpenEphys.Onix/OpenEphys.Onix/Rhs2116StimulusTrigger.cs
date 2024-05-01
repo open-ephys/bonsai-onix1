@@ -1,11 +1,12 @@
-using System;
+﻿using System;
 using System.ComponentModel;
+using System.Reactive;
 using System.Reactive.Subjects;
+using System.Reactive.Disposables;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Drawing.Design;
 using Bonsai;
-using System.Reactive.Disposables;
 
 namespace OpenEphys.Onix
 {
@@ -26,79 +27,76 @@ namespace OpenEphys.Onix
             set => stimulusSequence.OnNext(value);
         }
 
-        private uint deviceAddress;
-
         public override IObservable<bool> Process(IObservable<bool> source)
         {
-            var deviceDisposable = DeviceManager.ReserveDevice(DeviceName);
-            
             return Observable.Using(
-                () => 
-                {
-                  deviceDisposable.Subject.SelectMany(deviceInfo =>
-                  {
-                      deviceAddress = deviceInfo.DeviceAddress;
+                () => DeviceManager.ReserveDevice(DeviceName),
+                disposable => disposable.Subject.SelectMany(deviceInfo =>
+                    Observable.Create<bool>(observer =>
+                    {
+                        var device = deviceInfo.GetDeviceContext(typeof(Rhs2116Trigger));
+                        var triggerObserver = Observer.Create<bool>(
+                            value =>
+                            {
+                                device.WriteRegister(Rhs2116Trigger.TRIGGER, value ? 1u : 0u);
+                                observer.OnNext(value);
+                            },
+                            observer.OnError,
+                            observer.OnCompleted);
 
-                      var baseaddress = (deviceAddress & 0xFF00u) >> 8;
+                        var deviceAddress = deviceInfo.DeviceAddress;
 
-                      var rhsADeviceAddress = HeadstageRhs2116.GetRhs2116ADeviceAddress(baseaddress);
-                      var rhsBDeviceAddress = HeadstageRhs2116.GetRhs2116BDeviceAddress(baseaddress);
+                        var baseaddress = (deviceAddress & 0xFF00u) >> 8;
 
-                      var deviceRhsA = deviceInfo.Context.GetDeviceContext(rhsADeviceAddress, Rhs2116.ID);
-                      var deviceRhsB = deviceInfo.Context.GetDeviceContext(rhsBDeviceAddress, Rhs2116.ID);
+                        var rhsADeviceAddress = HeadstageRhs2116.GetRhs2116ADeviceAddress(baseaddress);
+                        var rhsBDeviceAddress = HeadstageRhs2116.GetRhs2116BDeviceAddress(baseaddress);
+
+                        var deviceRhsA = deviceInfo.Context.GetDeviceContext(rhsADeviceAddress, Rhs2116.ID);
+                        var deviceRhsB = deviceInfo.Context.GetDeviceContext(rhsBDeviceAddress, Rhs2116.ID);
                       
-                      return new CompositeDisposable(
-                          deviceDisposable,
-                          stimulusSequence.Subscribe(newValue =>
-                          {
-                              // Step size
-                              var reg = Rhs2116Config.StimulatorStepSizeToRegisters[newValue.CurrentStepSize];
-                              deviceRhsA.WriteRegister(Rhs2116.STEPSZ, reg[2] << 13 | reg[1] << 7 | reg[0]);
-                              deviceRhsB.WriteRegister(Rhs2116.STEPSZ, reg[2] << 13 | reg[1] << 7 | reg[0]);
+                        return new CompositeDisposable(
+                            stimulusSequence.Subscribe(value =>
+                            {
+                                // Step size
+                                var reg = Rhs2116Config.StimulatorStepSizeToRegisters[value.CurrentStepSize];
+                                deviceRhsA.WriteRegister(Rhs2116.STEPSZ, reg[2] << 13 | reg[1] << 7 | reg[0]);
+                                deviceRhsB.WriteRegister(Rhs2116.STEPSZ, reg[2] << 13 | reg[1] << 7 | reg[0]);
 
-                              // Anodic amplitudes
-                              var a = newValue.AnodicAmplitudes;
-                              for (int i = 0; i < a.Count(); i++)
-                              {
-                                  deviceRhsA.WriteRegister(Rhs2116.POS00 + (uint)i, a.ElementAt(i));
-                                  deviceRhsB.WriteRegister(Rhs2116.POS00 + (uint)i, a.ElementAt(i));
-                              }
+                                // Anodic amplitudes
+                                var a = value.AnodicAmplitudes;
+                                for (int i = 0; i < a.Count(); i++)
+                                {
+                                    deviceRhsA.WriteRegister(Rhs2116.POS00 + (uint)i, a.ElementAt(i));
+                                    deviceRhsB.WriteRegister(Rhs2116.POS00 + (uint)i, a.ElementAt(i));
+                                }
 
-                              // Cathodic amplitudes
-                              var c = newValue.CathodicAmplitudes;
-                              for (int i = 0; i < a.Count(); i++)
-                              {
-                                  deviceRhsA.WriteRegister(Rhs2116.NEG00 + (uint)i, c.ElementAt(i));
-                                  deviceRhsB.WriteRegister(Rhs2116.NEG00 + (uint)i, c.ElementAt(i));
-                              }
+                                // Cathodic amplitudes
+                                var c = value.CathodicAmplitudes;
+                                for (int i = 0; i < a.Count(); i++)
+                                {
+                                    deviceRhsA.WriteRegister(Rhs2116.NEG00 + (uint)i, c.ElementAt(i));
+                                    deviceRhsB.WriteRegister(Rhs2116.NEG00 + (uint)i, c.ElementAt(i));
+                                }
 
-                              // Create delta table and set length
-                              var dt = newValue.DeltaTable;
-                              deviceRhsA.WriteRegister(Rhs2116.NUMDELTAS, (uint)dt.Count);
-                              deviceRhsB.WriteRegister(Rhs2116.NUMDELTAS, (uint)dt.Count);
+                                // Create delta table and set length
+                                var dt = value.DeltaTable;
+                                deviceRhsA.WriteRegister(Rhs2116.NUMDELTAS, (uint)dt.Count);
+                                deviceRhsB.WriteRegister(Rhs2116.NUMDELTAS, (uint)dt.Count);
 
-                              uint j = 0;
-                              foreach (var d in dt)
-                              {
-                                  uint indexAndTime = j++ << 22 | (d.Key & 0x003FFFFF);
+                                uint j = 0;
+                                foreach (var d in dt)
+                                {
+                                    uint indexAndTime = j++ << 22 | (d.Key & 0x003FFFFF);
 
-                                  deviceRhsA.WriteRegister(Rhs2116.DELTAIDXTIME, indexAndTime);
-                                  deviceRhsA.WriteRegister(Rhs2116.DELTAPOLEN, d.Value);
+                                    deviceRhsA.WriteRegister(Rhs2116.DELTAIDXTIME, indexAndTime);
+                                    deviceRhsA.WriteRegister(Rhs2116.DELTAPOLEN, d.Value);
 
-                                  deviceRhsB.WriteRegister(Rhs2116.DELTAIDXTIME, indexAndTime);
-                                  deviceRhsB.WriteRegister(Rhs2116.DELTAPOLEN, d.Value);
-                              }
-                          })
-                        );
-                    });
-
-                    return new CompositeDisposable();
-                },
-                disposable => deviceDisposable.Subject.SelectMany(deviceInfo =>
-                {
-                    var device = deviceInfo.GetDeviceContext(typeof(Rhs2116Trigger));
-                    return source.Do(t => device.WriteRegister(Rhs2116Trigger.TRIGGER, t ? 1u : 0u));
-                }));
+                                    deviceRhsB.WriteRegister(Rhs2116.DELTAIDXTIME, indexAndTime);
+                                    deviceRhsB.WriteRegister(Rhs2116.DELTAPOLEN, d.Value);
+                                }
+                            }),
+                            source.SubscribeSafe(triggerObserver));
+                    })));
         }
     }
 }
