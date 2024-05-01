@@ -239,17 +239,50 @@ namespace OpenEphys.Onix
         Off
     }
 
+    /// <summary>
+    /// Step size of the stimulation amplitude in nA
+    /// </summary>
     public enum Rhs2116StepSize
     {
+        /// <summary>
+        /// 10 nA => 0.01 µA per step
+        /// </summary>
         Step10nA,
+        /// <summary>
+        /// 20 nA => 0.02 µA per step
+        /// </summary>
         Step20nA,
+        /// <summary>
+        /// 50 nA => 0.05 µA per step
+        /// </summary>
         Step50nA,
+        /// <summary>
+        /// 100 nA => 0.1 µA per step
+        /// </summary>
         Step100nA,
+        /// <summary>
+        /// 200 nA => 0.2 µA per step
+        /// </summary>
         Step200nA,
+        /// <summary>
+        /// 500 nA => 0.5 µA per step
+        /// </summary>
         Step500nA,
+        /// <summary>
+        /// 1000 nA => 1.0 µA per step
+        /// </summary>
         Step1000nA,
+        /// <summary>
+        /// 2000 nA => 2.0 µA per step
+        /// </summary>
         Step2000nA,
+        /// <summary>
+        /// 5000 nA => 5.0 µA per step
+        /// </summary>
         Step5000nA,
+        /// <summary>
+        /// 10000 nA => 10 µA per step
+        /// </summary>
         Step10000nA
     }
 
