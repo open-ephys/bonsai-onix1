@@ -150,7 +150,7 @@
             this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.buttonCancel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonCancel.Location = new System.Drawing.Point(266, 13);
+            this.buttonCancel.Location = new System.Drawing.Point(266, 15);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(100, 40);
             this.buttonCancel.TabIndex = 0;
@@ -192,14 +192,14 @@
             this.panelButtons.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelButtons.Location = new System.Drawing.Point(0, 0);
             this.panelButtons.Name = "panelButtons";
-            this.panelButtons.Size = new System.Drawing.Size(374, 56);
+            this.panelButtons.Size = new System.Drawing.Size(374, 58);
             this.panelButtons.TabIndex = 0;
             // 
             // buttonOk
             // 
             this.buttonOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonOk.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonOk.Location = new System.Drawing.Point(159, 13);
+            this.buttonOk.Location = new System.Drawing.Point(159, 15);
             this.buttonOk.Name = "buttonOk";
             this.buttonOk.Size = new System.Drawing.Size(100, 40);
             this.buttonOk.TabIndex = 4;
@@ -499,6 +499,7 @@
             this.checkBoxAnodicFirst.TabStop = false;
             this.checkBoxAnodicFirst.Text = "Anodic First";
             this.checkBoxAnodicFirst.UseVisualStyleBackColor = true;
+            this.checkBoxAnodicFirst.CheckedChanged += new System.EventHandler(this.Checkbox_CheckedChanged);
             // 
             // delaySamplesConverted
             // 
@@ -569,7 +570,7 @@
             this.checkboxBiphasicSymmetrical.TabStop = false;
             this.checkboxBiphasicSymmetrical.Text = "Biphasic Symmetric";
             this.checkboxBiphasicSymmetrical.UseVisualStyleBackColor = true;
-            this.checkboxBiphasicSymmetrical.CheckedChanged += new System.EventHandler(this.CheckboxBiphasicSymmetrical_CheckedChanged);
+            this.checkboxBiphasicSymmetrical.CheckedChanged += new System.EventHandler(this.Checkbox_CheckedChanged);
             // 
             // interStimulusIntervalSamples
             // 
@@ -745,7 +746,7 @@
             // 
             this.splitContainer2.Panel2.Controls.Add(this.panelButtons);
             this.splitContainer2.Size = new System.Drawing.Size(374, 850);
-            this.splitContainer2.SplitterDistance = 789;
+            this.splitContainer2.SplitterDistance = 787;
             this.splitContainer2.SplitterWidth = 5;
             this.splitContainer2.TabIndex = 0;
             // 
@@ -764,8 +765,8 @@
             // 
             this.splitContainer3.Panel2.Controls.Add(this.tabControlParameters);
             this.splitContainer3.Panel2MinSize = 315;
-            this.splitContainer3.Size = new System.Drawing.Size(374, 789);
-            this.splitContainer3.SplitterDistance = 301;
+            this.splitContainer3.Size = new System.Drawing.Size(374, 787);
+            this.splitContainer3.SplitterDistance = 299;
             this.splitContainer3.SplitterWidth = 8;
             this.splitContainer3.TabIndex = 0;
             // 
@@ -783,7 +784,7 @@
             this.zedGraphChannels.ScrollMinX = 0D;
             this.zedGraphChannels.ScrollMinY = 0D;
             this.zedGraphChannels.ScrollMinY2 = 0D;
-            this.zedGraphChannels.Size = new System.Drawing.Size(374, 301);
+            this.zedGraphChannels.Size = new System.Drawing.Size(374, 299);
             this.zedGraphChannels.TabIndex = 3;
             this.zedGraphChannels.UseExtendedPrintDialog = true;
             this.zedGraphChannels.MouseClick += new System.Windows.Forms.MouseEventHandler(this.ZedGraphChannels_MouseClick);

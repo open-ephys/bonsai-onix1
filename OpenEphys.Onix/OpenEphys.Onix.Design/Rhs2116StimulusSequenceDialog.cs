@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -206,19 +206,14 @@ namespace OpenEphys.Onix.Design
             zedGraphChannels.GraphPane.Title.IsVisible = false;
             zedGraphChannels.GraphPane.TitleGap = 0;
             zedGraphChannels.GraphPane.Border.IsVisible = false;
-            zedGraphChannels.GraphPane.IsFontsScaled = false;
+            zedGraphChannels.GraphPane.Chart.Border.IsVisible = false;
+            zedGraphChannels.GraphPane.IsFontsScaled = true;
 
             zedGraphChannels.GraphPane.XAxis.IsVisible = false;
             zedGraphChannels.GraphPane.YAxis.IsVisible = false;
 
-            zedGraphChannels.GraphPane.XAxis.Scale.Min = 0;
-            zedGraphChannels.GraphPane.XAxis.Scale.Max = 1;
-            zedGraphChannels.GraphPane.YAxis.Scale.Min = 0;
-            zedGraphChannels.GraphPane.YAxis.Scale.Max = 1;
-
-            zedGraphChannels.IsEnableZoom = false;
-            zedGraphChannels.IsEnableVPan = false;
-            zedGraphChannels.IsEnableHPan = false;
+            zedGraphChannels.ZoomButtons = MouseButtons.None;
+            zedGraphChannels.ZoomButtons2 = MouseButtons.None;
         }
 
         private void SetStatusValidity()
@@ -250,42 +245,54 @@ namespace OpenEphys.Onix.Design
 
         private void DrawChannels()
         {
-            // TODO: Here, take the parsed Probe Interface data and draw all channels listed there
-            EllipseObj circleObj = new(0.2, 0.4, 0.2, 0.2, Color.Black, Color.White)
+            double minX = 1e3, minY = 1e3, maxX = -1e3, maxY = -1e3;
+
+            for (int i = 0; i < probeGroup.Probes.Length; i++)
             {
-                ZOrder = ZOrder.D_BehindAxis,
-                Tag = "Circle_0"
-            };
+                PointD[] planarContours = ConvertFloatArrayToPointD(probeGroup.Probes[i].Probe_Planar_Contour);
+                PolyObj contour = new(planarContours, Color.LightGreen, Color.LightGreen)
+                {
+                    ZOrder = ZOrder.E_BehindCurves
+                };
 
-            zedGraphChannels.GraphPane.GraphObjList.Add(circleObj);
+                zedGraphChannels.GraphPane.GraphObjList.Add(contour);
 
-            TextObj textObj = new("0", 0.3, 0.3);
-            textObj.FontSpec.Size = 30;
-            textObj.FontSpec.Border.IsVisible = false;
-            textObj.FontSpec.Fill.IsVisible = false;
-            textObj.Tag = "Text_0";
-            textObj.ZOrder = ZOrder.A_InFront;
+                // Update Max/Min values
+                var tmp = planarContours.Min(p => p.X);
+                minX = tmp < minX ? tmp : minX;
 
-            zedGraphChannels.GraphPane.GraphObjList.Add(textObj);
+                tmp = planarContours.Min(p => p.Y);
+                minY = tmp < minY ? tmp : minY;
 
-            circleObj = new(0.6, 0.4, 0.2, 0.2, Color.Black, Color.White)
-            {
-                ZOrder = ZOrder.D_BehindAxis,
-                Tag = "Circle_1"
-            };
+                tmp = planarContours.Max(p => p.X);
+                maxX = tmp > maxX ? tmp : maxX;
 
-            zedGraphChannels.GraphPane.GraphObjList.Add(circleObj);
+                tmp = planarContours.Max(p => p.Y);
+                maxY = tmp > maxY ? tmp : maxY; 
+            }
 
-            textObj = new("1", 0.7, 0.3);
-            textObj.FontSpec.Size = 30;
-            textObj.FontSpec.Border.IsVisible = false;
-            textObj.FontSpec.Fill.IsVisible = false;
-            textObj.Tag = "Text_1";
-            textObj.ZOrder = ZOrder.A_InFront;
+            var rangeX = maxX - minX;
+            var rangeY = maxY - minY;
 
-            zedGraphChannels.GraphPane.GraphObjList.Add(textObj);
+            zedGraphChannels.GraphPane.XAxis.Scale.Min = minX - rangeX * 0.1; 
+            zedGraphChannels.GraphPane.XAxis.Scale.Max = maxX + rangeX * 0.1; 
+            zedGraphChannels.GraphPane.YAxis.Scale.Min = minY - rangeY * 0.1;
+            zedGraphChannels.GraphPane.YAxis.Scale.Max = maxY + rangeY * 0.1;
 
+            zedGraphChannels.AxisChange();
             zedGraphChannels.Refresh();
+        }
+
+        private PointD[] ConvertFloatArrayToPointD(float[][] floats)
+        {
+            PointD[] pointD = new PointD[floats.Length];
+
+            for (int i = 0; i < floats.Length; i++)
+            {
+                pointD[i] = new PointD(floats[i][0], floats[i][1]);
+            }
+
+            return pointD;
         }
 
         private void LinkLabelDocumentation_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
