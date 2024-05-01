@@ -305,10 +305,18 @@ namespace OpenEphys.Onix
 
             }
         }
+
+        public Rhs2116Stimulus Clone()
+        {
+          return (Rhs2116Stimulus)MemberwiseClone();
+        }
     }
 
     public class Rhs2116StimulusSequence
     {
+        /// <summary>
+        /// Default constructor for Rhs2116StimulusSequence
+        /// </summary>
         public Rhs2116StimulusSequence()
         {
             // TODO: is there a nicer way to initialize this array?
@@ -317,6 +325,16 @@ namespace OpenEphys.Onix
             {
                 Stimuli[i] = new Rhs2116Stimulus();
             }
+        }
+
+        /// <summary>
+        /// Copy construct for Rhs2116StimulusSequence; performs a shallow copy using MemberwiseClonse()
+        /// </summary>
+        /// <param name="sequence"></param>
+        public Rhs2116StimulusSequence(Rhs2116StimulusSequence sequence)
+        {
+          Stimuli = Array.ConvertAll(sequence.Stimuli, stimulus => stimulus.Clone());
+          CurrentStepSize = sequence.CurrentStepSize;
         }
 
         public Rhs2116Stimulus[] Stimuli { get; set; }
