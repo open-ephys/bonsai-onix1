@@ -587,17 +587,25 @@ namespace OpenEphys.Onix.Design
             }
         }
 
-        private void CheckboxBiphasicSymmetrical_CheckedChanged(object sender, EventArgs e)
+        private void Checkbox_CheckedChanged(object sender, EventArgs e)
         {
-            CheckBox checkBox = (CheckBox)sender;
-
-            if (checkBox.Checked)
+            if (checkboxBiphasicSymmetrical.Checked)
             {
-                groupBoxCathode.Visible = false;
+                if (checkBoxAnodicFirst.Checked)
+                {
+                    groupBoxCathode.Visible = false;
+                    groupBoxAnode.Visible = true;
+                }
+                else
+                {
+                    groupBoxCathode.Visible = true;
+                    groupBoxAnode.Visible = false;
+                }
             }
             else
             {
                 groupBoxCathode.Visible = true;
+                groupBoxAnode.Visible = true;
             }
         }
     }
