@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Reactive.Subjects;
 using System.Linq;
@@ -38,8 +38,14 @@ namespace OpenEphys.Onix
                   deviceDisposable.Subject.SelectMany(deviceInfo =>
                   {
                       deviceAddress = deviceInfo.DeviceAddress;
-                      var deviceRhsA = deviceInfo.Context.GetDeviceContext(deviceAddress - 2, 31);
-                      var deviceRhsB = deviceInfo.Context.GetDeviceContext(deviceAddress - 1, 31);
+
+                      var baseaddress = (deviceAddress & 0xFF00u) >> 8;
+
+                      var rhsADeviceAddress = HeadstageRhs2116.GetRhs2116ADeviceAddress(baseaddress);
+                      var rhsBDeviceAddress = HeadstageRhs2116.GetRhs2116BDeviceAddress(baseaddress);
+
+                      var deviceRhsA = deviceInfo.Context.GetDeviceContext(rhsADeviceAddress, Rhs2116.ID);
+                      var deviceRhsB = deviceInfo.Context.GetDeviceContext(rhsBDeviceAddress, Rhs2116.ID);
                       
                       return new CompositeDisposable(
                           deviceDisposable,

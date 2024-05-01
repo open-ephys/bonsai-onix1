@@ -47,9 +47,9 @@ namespace OpenEphys.Onix
                 port = value;
                 var offset = (uint)port << 8;
                 LinkController.DeviceAddress = (uint)port;
-                Rhs2116A.DeviceAddress = offset + 0;
-                Rhs2116B.DeviceAddress = offset + 1;
-                StimulusTrigger.DeviceAddress = offset + 2;
+                Rhs2116A.DeviceAddress = HeadstageRhs2116.GetRhs2116ADeviceAddress(offset);
+                Rhs2116B.DeviceAddress = HeadstageRhs2116.GetRhs2116BDeviceAddress(offset);
+                StimulusTrigger.DeviceAddress = HeadstageRhs2116.GetRhs2116StimulusTriggerDeviceAddress(offset);
             }
         }
 
@@ -101,5 +101,12 @@ namespace OpenEphys.Onix
                 Thread.Sleep(WaitUntilVoltageOnSettles);
             }
         }
+    }
+
+    internal static class HeadstageRhs2116
+    {
+      public static uint GetRhs2116ADeviceAddress(uint baseaddress) => baseaddress + 0;
+      public static uint GetRhs2116BDeviceAddress(uint baseaddress) => baseaddress + 1;
+      public static uint GetRhs2116StimulusTriggerDeviceAddress(uint baseaddress) => baseaddress + 2;
     }
 }
