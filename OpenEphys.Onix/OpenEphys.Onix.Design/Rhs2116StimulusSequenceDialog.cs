@@ -18,7 +18,7 @@ namespace OpenEphys.Onix.Design
         private readonly bool[] SelectedChannels = null;
 
         //private readonly string DefaultChannelLayoutFilePath = "../../Python/test.json";
-        private readonly string DefaultChannelLayoutFilePath = "../../Python/simple_rhs2116_probe_interface.json";
+        private readonly string DefaultChannelLayoutFilePath = "../../Python/simple_rhs2116_headstage_probe_interface.json";
 
         private ProbeGroup probeGroup;
 
