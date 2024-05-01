@@ -51,4 +51,4 @@ probegroup.add_probe(probeB)
 #plot_probe_group(probegroup, same_axes=True, with_contact_id=True, with_device_index=True)
 #plt.show()
 
-write_probeinterface('simple_rhs2116_probe_interface.json', probegroup)
+write_probeinterface('simple_rhs2116_headstage_probe_interface.json', probegroup)
