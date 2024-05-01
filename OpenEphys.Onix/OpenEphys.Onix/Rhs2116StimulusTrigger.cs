@@ -44,12 +44,10 @@ namespace OpenEphys.Onix
                             observer.OnError,
                             observer.OnCompleted);
 
-                        var deviceAddress = deviceInfo.DeviceAddress;
+                        var hubAddress = GenericHelper.GetHubAddressFromDeviceAddress(deviceInfo.DeviceAddress);
 
-                        var baseaddress = (deviceAddress & 0xFF00u) >> 8;
-
-                        var rhsADeviceAddress = HeadstageRhs2116.GetRhs2116ADeviceAddress(baseaddress);
-                        var rhsBDeviceAddress = HeadstageRhs2116.GetRhs2116BDeviceAddress(baseaddress);
+                        var rhsADeviceAddress = HeadstageRhs2116.GetRhs2116ADeviceAddress(hubAddress);
+                        var rhsBDeviceAddress = HeadstageRhs2116.GetRhs2116BDeviceAddress(hubAddress);
 
                         var deviceRhsA = deviceInfo.Context.GetDeviceContext(rhsADeviceAddress, Rhs2116.ID);
                         var deviceRhsB = deviceInfo.Context.GetDeviceContext(rhsBDeviceAddress, Rhs2116.ID);
