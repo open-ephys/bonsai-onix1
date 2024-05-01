@@ -3,6 +3,9 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using ZedGraph;
+using System.Text.Json;
+using System.IO;
+using System.Text.Json.Serialization;
 
 namespace OpenEphys.Onix.Design
 {
@@ -13,6 +16,11 @@ namespace OpenEphys.Onix.Design
         private const double SamplePeriodMicroSeconds = 1e6 / 30.1932367151e3;
 
         private readonly bool[] SelectedChannels = null;
+
+        //private readonly string DefaultChannelLayoutFilePath = "../../Python/test.json";
+        private readonly string DefaultChannelLayoutFilePath = "../../Python/simple_rhs2116_probe_interface.json";
+
+        private ProbeGroup probeGroup;
 
         public Rhs2116StimulusSequenceDialog(Rhs2116StimulusSequence sequence)
         {
@@ -25,19 +33,60 @@ namespace OpenEphys.Onix.Design
             DataGridViewStimulusTable.DataSource = Sequence.Stimuli;
             DataGridViewStimulusTable.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCellsExceptHeader);
 
-            ComboBoxStepSize.DataSource = Enum.GetValues(typeof(Rhs2116StepSize));
-            ComboBoxStepSize.SelectedIndex = (int)Sequence.CurrentStepSize;
-
-            ZedGraphWaveform.IsAutoScrollRange = true;
-
             SelectedChannels = new bool[16];
             SetAllChannels(true);
 
-            InitializeZedGraphWaveform();
-            DrawStimulusWaveform();
+            ComboBoxStepSize.DataSource = Enum.GetValues(typeof(Rhs2116StepSize));
+            ComboBoxStepSize.SelectedIndex = (int)Sequence.CurrentStepSize;
 
             InitializeZedGraphChannels();
+            LoadDefaultChannelLayout();
             DrawChannels();
+
+            InitializeZedGraphWaveform();
+            DrawStimulusWaveform();
+        }
+
+        private void LoadDefaultChannelLayout()
+        {
+            TextBoxChannelLayoutFilePath.Text = DefaultChannelLayoutFilePath; // TODO: Convert from relative to absolute path
+
+            LoadChannelLayout(DefaultChannelLayoutFilePath);
+        }
+
+        private void LoadChannelLayout(string channelLayoutFilePath)
+        {
+            string channelLayoutString = File.ReadAllText(channelLayoutFilePath);
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                IncludeFields = true,
+                AllowTrailingCommas = true,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+                NumberHandling = JsonNumberHandling.AllowReadingFromString
+            };
+
+            ProbeGroup probeGroup = JsonSerializer.Deserialize<ProbeGroup>(channelLayoutString, options);
+
+            MessageBox.Show(probeGroup.Specification);
+
+            //JsonNode channelLayoutNode = JsonNode.Parse(channelLayoutString);
+
+            //try
+            //{
+            //    string specification = channelLayoutNode["specification"].ToString();
+            //}
+            //catch
+            //{
+            //    MessageBox.Show("No \"specification\" field found in the JSON file. Please confirm this is a Probe Interface file.");
+            //    return;
+            //}
+
+            //JsonArray json = new JsonArray(channelLayoutNode);
+
+            //probeGroup = new ProbeGroup(json);
+            // HERE: TODO: Parse the node and put all relevant parameters into objects
         }
 
         private void ButtonOk_Click(object sender, EventArgs e)
@@ -161,6 +210,8 @@ namespace OpenEphys.Onix.Design
 
             ZedGraphWaveform.GraphPane.XAxis.Title.Text = "Time [μs]";
             ZedGraphWaveform.GraphPane.YAxis.Title.Text = "Amplitude [μA]";
+            
+            ZedGraphWaveform.IsAutoScrollRange = true;
         }
 
         private void InitializeZedGraphChannels()
@@ -212,6 +263,7 @@ namespace OpenEphys.Onix.Design
 
         private void DrawChannels()
         {
+            // TODO: Here, take the parsed Probe Interface data and draw all channels listed there
             EllipseObj circleObj = new EllipseObj(0.2, 0.4, 0.2, 0.2, Color.Black, Color.White)
             {
                 ZOrder = ZOrder.D_BehindAxis,
@@ -274,11 +326,11 @@ namespace OpenEphys.Onix.Design
             {
                 if (nearestObject is TextObj textObj)
                 {
-                    HighlightSelectedChannels(textObj.Tag.ToString());
+                    EnableSelectedChannel(textObj.Tag.ToString());
                 }
                 else if (nearestObject is EllipseObj circleObj)
                 {
-                    HighlightSelectedChannels(circleObj.Tag.ToString());
+                    EnableSelectedChannel(circleObj.Tag.ToString());
                 }
                 else
                 {
@@ -290,37 +342,56 @@ namespace OpenEphys.Onix.Design
                 SetAllChannels(true);
             }
 
+            VisualizeSelectedChannels();
+
             DrawStimulusWaveform();
 
             ZedGraphChannels.Refresh();
         }
 
-        private void HighlightSelectedChannels(string tag)
+        private void EnableSelectedChannel(string tag)
         {
             if (SelectedChannels.All(x => x))
                 SetAllChannels(false);
 
             string[] words = tag.Split('_');
-            int.TryParse(words[1], out int num);
+            if (int.TryParse(words[1], out int num))
+            {
+                SelectedChannels[num] = true;
+            }
+            else
+            {
+                MessageBox.Show("Warning: Invalid channel tag detected.");
+            }
+        }
 
-            EllipseObj circleObj = (EllipseObj)ZedGraphChannels.GraphPane.GraphObjList[string.Format("Circle_{0}", num)];
-            circleObj.Fill.Color = Color.Gray;
+        private void VisualizeSelectedChannels()
+        {
+            bool plotAllChannels = SelectedChannels.All(x => x);
 
-            SelectedChannels[num] = true;
+            for (int i = 0; i < SelectedChannels.Length; i++)
+            {
+                EllipseObj circleObj = (EllipseObj)ZedGraphChannels.GraphPane.GraphObjList[string.Format("Circle_{0}", i)];
+
+                if (circleObj != null)
+                {
+                    if (plotAllChannels || !SelectedChannels[i])
+                    {
+                        circleObj.Fill.Color = Color.White;
+                    }
+                    else
+                    {
+                        circleObj.Fill.Color = Color.SlateGray;
+                    }
+                }
+            }
         }
 
         private void SetAllChannels(bool status)
         {
             for (int i = 0; i < SelectedChannels.Length; i++) 
             { 
-                SelectedChannels[i] = status; 
-
-                EllipseObj circleObj = (EllipseObj)ZedGraphChannels.GraphPane.GraphObjList[string.Format("Circle_{0}", i)];
-
-                if (circleObj != null)
-                {
-                    circleObj.Fill.Color = Color.White;
-                }
+                SelectedChannels[i] = status;
             }
         }
 

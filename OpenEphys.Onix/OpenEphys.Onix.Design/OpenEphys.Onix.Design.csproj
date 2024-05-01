@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <PackageReference Include="Bonsai.Core" Version="2.8.1" />
+    <PackageReference Include="System.Text.Json" Version="8.0.3" />
     <PackageReference Include="ZedGraph" Version="5.1.7" />
   </ItemGroup>
 
