@@ -26,21 +26,21 @@ namespace OpenEphys.Onix.Design
         public float[][] Contact_Positions { get; set; }
         public string[] Contact_Shapes { get; set; }
         public ContactShapeParam[] Contact_Shape_Params { get; set; }
-        public float[][] Probe_Planar_Contours { get; set; }
+        public float[][] Probe_Planar_Contour { get; set; }
         public uint[] Device_Channel_Indices { get; set; }
         public uint[] Contact_Ids { get; set; }
         [JsonExtensionData]
         public Dictionary<string, JsonElement> ExtensionData { get; set; }
 
         public Probe(uint ndim, string si_units, float[][] contact_positions, string[] contact_shapes, 
-            ContactShapeParam[] contact_shape_params, float[][] probe_planar_contours, uint[] device_channel_indices, uint[] contact_ids)
+            ContactShapeParam[] contact_shape_params, float[][] probe_planar_contour, uint[] device_channel_indices, uint[] contact_ids)
         {
             Ndim = ndim;
             Si_Units = si_units;
             Contact_Positions = contact_positions;
             Contact_Shapes = contact_shapes;
             Contact_Shape_Params = contact_shape_params;
-            Probe_Planar_Contours = probe_planar_contours;
+            Probe_Planar_Contour = probe_planar_contour;
             Device_Channel_Indices = device_channel_indices;
             Contact_Ids = contact_ids;
         }

@@ -73,26 +73,7 @@ namespace OpenEphys.Onix.Design
                 NumberHandling = JsonNumberHandling.AllowReadingFromString
             };
 
-            ProbeGroup probeGroup = JsonSerializer.Deserialize<ProbeGroup>(channelLayoutString, options);
-
-            MessageBox.Show(probeGroup.Specification);
-
-            //JsonNode channelLayoutNode = JsonNode.Parse(channelLayoutString);
-
-            //try
-            //{
-            //    string specification = channelLayoutNode["specification"].ToString();
-            //}
-            //catch
-            //{
-            //    MessageBox.Show("No \"specification\" field found in the JSON file. Please confirm this is a Probe Interface file.");
-            //    return;
-            //}
-
-            //JsonArray json = new JsonArray(channelLayoutNode);
-
-            //probeGroup = new ProbeGroup(json);
-            // HERE: TODO: Parse the node and put all relevant parameters into objects
+            probeGroup = JsonSerializer.Deserialize<ProbeGroup>(channelLayoutString, options);
         }
 
         private void ButtonOk_Click(object sender, EventArgs e)
