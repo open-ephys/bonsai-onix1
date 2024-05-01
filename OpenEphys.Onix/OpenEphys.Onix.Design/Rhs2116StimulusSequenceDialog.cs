@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -17,7 +17,6 @@ namespace OpenEphys.Onix.Design
 
         private readonly bool[] SelectedChannels = null;
 
-        //private readonly string DefaultChannelLayoutFilePath = "../../Python/test.json";
         private readonly string DefaultChannelLayoutFilePath = "../../Python/simple_rhs2116_headstage_probe_interface.json";
 
         private ProbeGroup probeGroup;
@@ -28,16 +27,16 @@ namespace OpenEphys.Onix.Design
 
             Sequence = new Rhs2116StimulusSequence(sequence);
 
-            PropertyGridStimulusSequence.SelectedObject = Sequence;
+            propertyGridStimulusSequence.SelectedObject = Sequence;
 
-            DataGridViewStimulusTable.DataSource = Sequence.Stimuli;
-            DataGridViewStimulusTable.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCellsExceptHeader);
+            dataGridViewStimulusTable.DataSource = Sequence.Stimuli;
+            dataGridViewStimulusTable.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCellsExceptHeader);
 
             SelectedChannels = new bool[16];
             SetAllChannels(true);
 
-            ComboBoxStepSize.DataSource = Enum.GetValues(typeof(Rhs2116StepSize));
-            ComboBoxStepSize.SelectedIndex = (int)Sequence.CurrentStepSize;
+            comboBoxStepSize.DataSource = Enum.GetValues(typeof(Rhs2116StepSize));
+            comboBoxStepSize.SelectedIndex = (int)Sequence.CurrentStepSize;
 
             InitializeZedGraphChannels();
             LoadDefaultChannelLayout();
@@ -49,7 +48,7 @@ namespace OpenEphys.Onix.Design
 
         private void LoadDefaultChannelLayout()
         {
-            TextBoxChannelLayoutFilePath.Text = DefaultChannelLayoutFilePath; // TODO: Convert from relative to absolute path
+            textBoxChannelLayoutFilePath.Text = DefaultChannelLayoutFilePath; // TODO: Convert from relative to absolute path
 
             LoadChannelLayout(DefaultChannelLayoutFilePath);
         }
@@ -126,8 +125,8 @@ namespace OpenEphys.Onix.Design
 
         private void DrawStimulusWaveform()
         {
-            ZedGraphWaveform.GraphPane.CurveList.Clear();
-            ZedGraphWaveform.ZoomOutAll(ZedGraphWaveform.GraphPane);
+            zedGraphWaveform.GraphPane.CurveList.Clear();
+            zedGraphWaveform.ZoomOutAll(zedGraphWaveform.GraphPane);
 
             double peakToPeak = Sequence.MaximumPeakToPeakAmplitudeSteps > 0 ? 
                 Sequence.CurrentStepSizeuA * Sequence.MaximumPeakToPeakAmplitudeSteps :
@@ -140,31 +139,31 @@ namespace OpenEphys.Onix.Design
                 if (SelectedChannels[i])
                 {
                     PointPairList pointPairs = CreateStimulusWaveform(stimuli[i], -(peakToPeak * 1.1) * i);
-                    var curve = ZedGraphWaveform.GraphPane.AddCurve("Test", pointPairs, Color.CornflowerBlue, SymbolType.None);
+                    var curve = zedGraphWaveform.GraphPane.AddCurve("Test", pointPairs, Color.CornflowerBlue, SymbolType.None);
 
                     curve.Label.IsVisible = false;
                     curve.Line.Width = 3;
                 }
             }
 
-            ZedGraphWaveform.GraphPane.XAxis.Scale.Min = 0;
-            ZedGraphWaveform.GraphPane.XAxis.Scale.Max = (Sequence.SequenceLengthSamples > 0 ? Sequence.SequenceLengthSamples : 1) * SamplePeriodMicroSeconds;
-            ZedGraphWaveform.GraphPane.YAxis.Scale.Min = -peakToPeak * (stimuli.Length + 0.5);
-            ZedGraphWaveform.GraphPane.YAxis.Scale.Max = peakToPeak * 1.5;
+            zedGraphWaveform.GraphPane.XAxis.Scale.Min = 0;
+            zedGraphWaveform.GraphPane.XAxis.Scale.Max = (Sequence.SequenceLengthSamples > 0 ? Sequence.SequenceLengthSamples : 1) * SamplePeriodMicroSeconds;
+            zedGraphWaveform.GraphPane.YAxis.Scale.Min = -peakToPeak * (stimuli.Length + 0.5);
+            zedGraphWaveform.GraphPane.YAxis.Scale.Max = peakToPeak * 1.5;
 
-            ZedGraphWaveform.GraphPane.YAxis.Scale.MinorStep = 0;
+            zedGraphWaveform.GraphPane.YAxis.Scale.MinorStep = 0;
 
-            ZedGraphWaveform.AxisChange();
+            zedGraphWaveform.AxisChange();
 
             SetStatusValidity();
             SetPercentOfSlotsUsed();
 
-            ZedGraphWaveform.Refresh();
+            zedGraphWaveform.Refresh();
         }
 
         private PointPairList CreateStimulusWaveform(Rhs2116Stimulus stimulus, double yOffset)
         {
-            PointPairList points = new PointPairList
+            PointPairList points = new()
             {
                 { 0, yOffset },
                 { stimulus.DelaySamples * SamplePeriodMicroSeconds, yOffset }
@@ -198,107 +197,107 @@ namespace OpenEphys.Onix.Design
 
         private void InitializeZedGraphWaveform()
         {
-            ZedGraphWaveform.GraphPane.Title.IsVisible = false;
-            ZedGraphWaveform.GraphPane.TitleGap = 0;
-            ZedGraphWaveform.GraphPane.Border.IsVisible = false;
-            ZedGraphWaveform.GraphPane.IsFontsScaled = false;
+            zedGraphWaveform.GraphPane.Title.IsVisible = false;
+            zedGraphWaveform.GraphPane.TitleGap = 0;
+            zedGraphWaveform.GraphPane.Border.IsVisible = false;
+            zedGraphWaveform.GraphPane.IsFontsScaled = false;
 
-            ZedGraphWaveform.GraphPane.XAxis.MajorTic.IsAllTics = false;
-            ZedGraphWaveform.GraphPane.XAxis.MinorTic.IsAllTics = false;
-            ZedGraphWaveform.GraphPane.YAxis.MajorTic.IsAllTics = false;
-            ZedGraphWaveform.GraphPane.YAxis.MinorTic.IsAllTics = false;
+            zedGraphWaveform.GraphPane.XAxis.MajorTic.IsAllTics = false;
+            zedGraphWaveform.GraphPane.XAxis.MinorTic.IsAllTics = false;
+            zedGraphWaveform.GraphPane.YAxis.MajorTic.IsAllTics = false;
+            zedGraphWaveform.GraphPane.YAxis.MinorTic.IsAllTics = false;
 
-            ZedGraphWaveform.GraphPane.XAxis.Title.Text = "Time [μs]";
-            ZedGraphWaveform.GraphPane.YAxis.Title.Text = "Amplitude [μA]";
+            zedGraphWaveform.GraphPane.XAxis.Title.Text = "Time [μs]";
+            zedGraphWaveform.GraphPane.YAxis.Title.Text = "Amplitude [μA]";
             
-            ZedGraphWaveform.IsAutoScrollRange = true;
+            zedGraphWaveform.IsAutoScrollRange = true;
         }
 
         private void InitializeZedGraphChannels()
         {
-            ZedGraphChannels.GraphPane.Title.IsVisible = false;
-            ZedGraphChannels.GraphPane.TitleGap = 0;
-            ZedGraphChannels.GraphPane.Border.IsVisible = false;
-            ZedGraphChannels.GraphPane.IsFontsScaled = false;
+            zedGraphChannels.GraphPane.Title.IsVisible = false;
+            zedGraphChannels.GraphPane.TitleGap = 0;
+            zedGraphChannels.GraphPane.Border.IsVisible = false;
+            zedGraphChannels.GraphPane.IsFontsScaled = false;
 
-            ZedGraphChannels.GraphPane.XAxis.IsVisible = false;
-            ZedGraphChannels.GraphPane.YAxis.IsVisible = false;
+            zedGraphChannels.GraphPane.XAxis.IsVisible = false;
+            zedGraphChannels.GraphPane.YAxis.IsVisible = false;
 
-            ZedGraphChannels.GraphPane.XAxis.Scale.Min = 0;
-            ZedGraphChannels.GraphPane.XAxis.Scale.Max = 1;
-            ZedGraphChannels.GraphPane.YAxis.Scale.Min = 0;
-            ZedGraphChannels.GraphPane.YAxis.Scale.Max = 1;
+            zedGraphChannels.GraphPane.XAxis.Scale.Min = 0;
+            zedGraphChannels.GraphPane.XAxis.Scale.Max = 1;
+            zedGraphChannels.GraphPane.YAxis.Scale.Min = 0;
+            zedGraphChannels.GraphPane.YAxis.Scale.Max = 1;
 
-            ZedGraphChannels.IsEnableZoom = false;
-            ZedGraphChannels.IsEnableVPan = false;
-            ZedGraphChannels.IsEnableHPan = false;
+            zedGraphChannels.IsEnableZoom = false;
+            zedGraphChannels.IsEnableVPan = false;
+            zedGraphChannels.IsEnableHPan = false;
         }
 
         private void SetStatusValidity()
         {
             if (Sequence.Valid && Sequence.FitsInHardware)
             {
-                ToolStripStatusIsValid.Image = Properties.Resources.StatusReadyImage;
-                ToolStripStatusIsValid.Text = "Valid stimulus sequence";
+                toolStripStatusIsValid.Image = Properties.Resources.StatusReadyImage;
+                toolStripStatusIsValid.Text = "Valid stimulus sequence";
             }
             else
             {
                 if (!Sequence.FitsInHardware)
                 {
-                    ToolStripStatusIsValid.Image = Properties.Resources.StatusBlockedImage;
-                    ToolStripStatusIsValid.Text = "Stimulus sequence is too complex";
+                    toolStripStatusIsValid.Image = Properties.Resources.StatusBlockedImage;
+                    toolStripStatusIsValid.Text = "Stimulus sequence is too complex";
                 }
                 else
                 {
-                    ToolStripStatusIsValid.Image = Properties.Resources.StatusCriticalImage;
-                    ToolStripStatusIsValid.Text = "Stimulus sequence is not valid";
+                    toolStripStatusIsValid.Image = Properties.Resources.StatusCriticalImage;
+                    toolStripStatusIsValid.Text = "Stimulus sequence is not valid";
                 }
             }
         }
 
         private void SetPercentOfSlotsUsed()
         {
-            ToolStripStatusSlotsUsed.Text = string.Format("{0, 0:P1} of slots used", (double)Sequence.StimulusSlotsRequired / Sequence.MaxMemorySlotsAvailable);
+            toolStripStatusSlotsUsed.Text = string.Format("{0, 0:P1} of slots used", (double)Sequence.StimulusSlotsRequired / Sequence.MaxMemorySlotsAvailable);
         }
 
         private void DrawChannels()
         {
             // TODO: Here, take the parsed Probe Interface data and draw all channels listed there
-            EllipseObj circleObj = new EllipseObj(0.2, 0.4, 0.2, 0.2, Color.Black, Color.White)
+            EllipseObj circleObj = new(0.2, 0.4, 0.2, 0.2, Color.Black, Color.White)
             {
                 ZOrder = ZOrder.D_BehindAxis,
                 Tag = "Circle_0"
             };
 
-            ZedGraphChannels.GraphPane.GraphObjList.Add(circleObj);
+            zedGraphChannels.GraphPane.GraphObjList.Add(circleObj);
 
-            TextObj textObj = new TextObj("0", 0.3, 0.3);
+            TextObj textObj = new("0", 0.3, 0.3);
             textObj.FontSpec.Size = 30;
             textObj.FontSpec.Border.IsVisible = false;
             textObj.FontSpec.Fill.IsVisible = false;
             textObj.Tag = "Text_0";
             textObj.ZOrder = ZOrder.A_InFront;
 
-            ZedGraphChannels.GraphPane.GraphObjList.Add(textObj);
+            zedGraphChannels.GraphPane.GraphObjList.Add(textObj);
 
-            circleObj = new EllipseObj(0.6, 0.4, 0.2, 0.2, Color.Black, Color.White)
+            circleObj = new(0.6, 0.4, 0.2, 0.2, Color.Black, Color.White)
             {
                 ZOrder = ZOrder.D_BehindAxis,
                 Tag = "Circle_1"
             };
 
-            ZedGraphChannels.GraphPane.GraphObjList.Add(circleObj);
+            zedGraphChannels.GraphPane.GraphObjList.Add(circleObj);
 
-            textObj = new TextObj("1", 0.7, 0.3);
+            textObj = new("1", 0.7, 0.3);
             textObj.FontSpec.Size = 30;
             textObj.FontSpec.Border.IsVisible = false;
             textObj.FontSpec.Fill.IsVisible = false;
             textObj.Tag = "Text_1";
             textObj.ZOrder = ZOrder.A_InFront;
 
-            ZedGraphChannels.GraphPane.GraphObjList.Add(textObj);
+            zedGraphChannels.GraphPane.GraphObjList.Add(textObj);
 
-            ZedGraphChannels.Refresh();
+            zedGraphChannels.Refresh();
         }
 
         private void LinkLabelDocumentation_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -320,9 +319,9 @@ namespace OpenEphys.Onix.Design
             if (e.Button != MouseButtons.Left)
                 return;
 
-            PointF mouseClick = new PointF(e.X, e.Y);
+            PointF mouseClick = new(e.X, e.Y);
 
-            if (ZedGraphChannels.GraphPane.FindNearestObject(mouseClick, CreateGraphics(), out object nearestObject, out int _))
+            if (zedGraphChannels.GraphPane.FindNearestObject(mouseClick, CreateGraphics(), out object nearestObject, out int _))
             {
                 if (nearestObject is TextObj textObj)
                 {
@@ -346,7 +345,7 @@ namespace OpenEphys.Onix.Design
 
             DrawStimulusWaveform();
 
-            ZedGraphChannels.Refresh();
+            zedGraphChannels.Refresh();
         }
 
         private void EnableSelectedChannel(string tag)
@@ -371,7 +370,7 @@ namespace OpenEphys.Onix.Design
 
             for (int i = 0; i < SelectedChannels.Length; i++)
             {
-                EllipseObj circleObj = (EllipseObj)ZedGraphChannels.GraphPane.GraphObjList[string.Format("Circle_{0}", i)];
+                EllipseObj circleObj = (EllipseObj)zedGraphChannels.GraphPane.GraphObjList[string.Format("Circle_{0}", i)];
 
                 if (circleObj != null)
                 {
@@ -401,25 +400,25 @@ namespace OpenEphys.Onix.Design
             {
                 if (SelectedChannels[i])
                 {
-                    if (!uint.TryParse(DelaySamples.Text, out uint delay))
+                    if (!uint.TryParse(delaySamples.Text, out uint delay))
                     {
                         MessageBox.Show("Unable to parse Delay.");
                         return;
                     }
 
-                    if (!byte.TryParse(AmplitudeAnodic.Text, out byte amplitudeAnodic))
+                    if (!byte.TryParse(amplitudeAnodicSteps.Text, out byte amplitudeAnodic))
                     {
                         MessageBox.Show("Unable to parse anodic Amplitude.");
                         return;
                     }
 
-                    if (!uint.TryParse(PulseWidthAnodic.Text, out uint pulseWidthAnodic))
+                    if (!uint.TryParse(pulseWidthAnodicSamples.Text, out uint pulseWidthAnodic))
                     {
                         MessageBox.Show("Unable to parse anodic Pulse Width.");
                         return;
                     }
 
-                    if (!uint.TryParse(InterPulseInterval.Text, out uint interPulseInterval))
+                    if (!uint.TryParse(interPulseIntervalSamples.Text, out uint interPulseInterval))
                     {
                         MessageBox.Show("Unable to parse Inter-Pulse Interval.");
                         return;
@@ -428,28 +427,28 @@ namespace OpenEphys.Onix.Design
                     byte amplitudeCathodic = 0;
                     uint pulseWidthCathodic = 0;
 
-                    if (!CheckboxBiphasicSymmetrical.Checked)
+                    if (!checkboxBiphasicSymmetrical.Checked)
                     {
-                        if (!byte.TryParse(AmplitudeCathodic.Text, out amplitudeCathodic))
+                        if (!byte.TryParse(this.amplitudeCathodicSteps.Text, out amplitudeCathodic))
                         {
                             MessageBox.Show("Unable to parse cathodic Amplitude.");
                             return;
                         }
 
-                        if (!uint.TryParse(PulseWidthCathodic.Text, out pulseWidthCathodic))
+                        if (!uint.TryParse(this.pulseWidthCathodicSamples.Text, out pulseWidthCathodic))
                         {
                             MessageBox.Show("Unable to parse cathodic Pulse Width.");
                             return;
                         }
                     }
 
-                    if (!uint.TryParse(InterStimulusInterval.Text, out uint isi))
+                    if (!uint.TryParse(interStimulusIntervalSamples.Text, out uint isi))
                     {
                         MessageBox.Show("Unable to parse ISI.");
                         return;
                     }
 
-                    if (!uint.TryParse(NumberOfStimuli.Text, out uint numberOfStimuli))
+                    if (!uint.TryParse(numberOfStimuliText.Text, out uint numberOfStimuli))
                     {
                         MessageBox.Show("Unable to parse Number of Stimuli.");
                         return;
@@ -460,7 +459,7 @@ namespace OpenEphys.Onix.Design
                     Sequence.Stimuli[i].AnodicAmplitudeSteps = amplitudeAnodic;
                     Sequence.Stimuli[i].AnodicWidthSamples = pulseWidthAnodic;
                     
-                    if (!CheckboxBiphasicSymmetrical.Checked)
+                    if (!checkboxBiphasicSymmetrical.Checked)
                     {
                         Sequence.Stimuli[i].CathodicAmplitudeSteps = amplitudeCathodic;
                         Sequence.Stimuli[i].CathodicWidthSamples = pulseWidthCathodic;
@@ -477,7 +476,7 @@ namespace OpenEphys.Onix.Design
 
                     Sequence.Stimuli[i].NumberOfStimuli = numberOfStimuli;
 
-                    Sequence.Stimuli[i].AnodicFirst = CheckBoxAnodicFirst.Checked;
+                    Sequence.Stimuli[i].AnodicFirst = checkBoxAnodicFirst.Checked;
                 }
             }
 
@@ -494,17 +493,17 @@ namespace OpenEphys.Onix.Design
 
         private void DataGridViewStimulusTable_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
-            DataGridViewStimulusTable.BindingContext[DataGridViewStimulusTable.DataSource].EndCurrentEdit();
+            dataGridViewStimulusTable.BindingContext[dataGridViewStimulusTable.DataSource].EndCurrentEdit();
             DrawStimulusWaveform();
         }
 
         private void ComboBoxStepSize_SelectedIndexChanged(object sender, EventArgs e)
         {
-            Sequence.CurrentStepSize = (Rhs2116StepSize)ComboBoxStepSize.SelectedItem;
+            Sequence.CurrentStepSize = (Rhs2116StepSize)comboBoxStepSize.SelectedItem;
             DrawStimulusWaveform();
 
-            Amplitude_TextChanged(AmplitudeAnodic, e);
-            Amplitude_TextChanged(AmplitudeCathodic, e);
+            Amplitude_TextChanged(amplitudeAnodicSteps, e);
+            Amplitude_TextChanged(amplitudeCathodicSteps, e);
         }
 
         private void Samples_TextChanged(object sender, EventArgs e)
@@ -524,24 +523,24 @@ namespace OpenEphys.Onix.Design
 
             switch (textBox.Name)
             {
-                case nameof(DelaySamples):
-                    DelaySamplesConverted.Text = text;
+                case nameof(delaySamples):
+                    delaySamplesConverted.Text = text;
                     break;
 
-                case nameof(PulseWidthAnodic):
-                    PulseWidthAnodicConverted.Text = text;
+                case nameof(pulseWidthAnodicSamples):
+                    pulseWidthAnodicConverted.Text = text;
                     break;
 
-                case nameof(InterPulseInterval):
-                    InterPulseIntervalConverted.Text = text;
+                case nameof(interPulseIntervalSamples):
+                    interPulseIntervalConverted.Text = text;
                     break;
 
-                case nameof(PulseWidthCathodic):
-                    PulseWidthCathodicConverted.Text = text;
+                case nameof(pulseWidthCathodicSamples):
+                    pulseWidthCathodicConverted.Text = text;
                     break;
 
-                case nameof(InterStimulusInterval):
-                    InterStimulusIntervalConverted.Text = text;
+                case nameof(interStimulusIntervalSamples):
+                    interStimulusIntervalConverted.Text = text;
                     break;
 
                 default:
@@ -567,12 +566,12 @@ namespace OpenEphys.Onix.Design
 
             switch(textBox.Name)
             {
-                case nameof(AmplitudeAnodic):
-                    AmplitudeAnodicConverted.Text = text;
+                case nameof(amplitudeAnodicSteps):
+                    amplitudeAnodicConverted.Text = text;
                     break;
 
-                case nameof(AmplitudeCathodic):
-                    AmplitudeCathodicConverted.Text = text;
+                case nameof(amplitudeCathodicSteps):
+                    amplitudeCathodicConverted.Text = text;
                     break;
 
                 default:
@@ -587,11 +586,11 @@ namespace OpenEphys.Onix.Design
 
             if (checkBox.Checked)
             {
-                GroupBoxCathode.Visible = false;
+                groupBoxCathode.Visible = false;
             }
             else
             {
-                GroupBoxCathode.Visible = true;
+                groupBoxCathode.Visible = true;
             }
         }
     }

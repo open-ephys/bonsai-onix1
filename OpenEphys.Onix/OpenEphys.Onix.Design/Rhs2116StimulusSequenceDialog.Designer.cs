@@ -29,78 +29,78 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.ZedGraphWaveform = new ZedGraph.ZedGraphControl();
-            this.LinkLabelDocumentation = new System.Windows.Forms.LinkLabel();
-            this.ButtonCancel = new System.Windows.Forms.Button();
-            this.StatusStrip = new System.Windows.Forms.StatusStrip();
-            this.ToolStripStatusIsValid = new System.Windows.Forms.ToolStripStatusLabel();
-            this.ToolStripStatusSlotsUsed = new System.Windows.Forms.ToolStripStatusLabel();
-            this.PanelButtons = new System.Windows.Forms.Panel();
-            this.ButtonOk = new System.Windows.Forms.Button();
-            this.TabControlParameters = new System.Windows.Forms.TabControl();
-            this.TabPageAddPulse = new System.Windows.Forms.TabPage();
-            this.PanelParameters = new System.Windows.Forms.Panel();
-            this.GroupBoxCathode = new System.Windows.Forms.GroupBox();
-            this.PulseWidthCathodicConverted = new System.Windows.Forms.TextBox();
-            this.AmplitudeCathodicConverted = new System.Windows.Forms.TextBox();
-            this.LabelAmplitudeCathodic = new System.Windows.Forms.Label();
-            this.LabelPulseWidthCathodicText = new System.Windows.Forms.Label();
-            this.PulseWidthCathodic = new System.Windows.Forms.TextBox();
-            this.AmplitudeCathodic = new System.Windows.Forms.TextBox();
-            this.GroupBoxAnode = new System.Windows.Forms.GroupBox();
-            this.PulseWidthAnodicConverted = new System.Windows.Forms.TextBox();
-            this.AmplitudeAnodicConverted = new System.Windows.Forms.TextBox();
-            this.LabelAnplitudeAnodicText = new System.Windows.Forms.Label();
-            this.LabelPulseWidthAnodicText = new System.Windows.Forms.Label();
-            this.PulseWidthAnodic = new System.Windows.Forms.TextBox();
-            this.AmplitudeAnodic = new System.Windows.Forms.TextBox();
-            this.ComboBoxStepSize = new System.Windows.Forms.ComboBox();
+            this.zedGraphWaveform = new ZedGraph.ZedGraphControl();
+            this.linkLabelDocumentation = new System.Windows.Forms.LinkLabel();
+            this.buttonCancel = new System.Windows.Forms.Button();
+            this.statusStrip = new System.Windows.Forms.StatusStrip();
+            this.toolStripStatusIsValid = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusSlotsUsed = new System.Windows.Forms.ToolStripStatusLabel();
+            this.panelButtons = new System.Windows.Forms.Panel();
+            this.buttonOk = new System.Windows.Forms.Button();
+            this.tabControlParameters = new System.Windows.Forms.TabControl();
+            this.tabPageAddPulse = new System.Windows.Forms.TabPage();
+            this.panelParameters = new System.Windows.Forms.Panel();
+            this.groupBoxCathode = new System.Windows.Forms.GroupBox();
+            this.pulseWidthCathodicConverted = new System.Windows.Forms.TextBox();
+            this.amplitudeCathodicConverted = new System.Windows.Forms.TextBox();
+            this.labelAmplitudeCathodic = new System.Windows.Forms.Label();
+            this.labelPulseWidthCathodicText = new System.Windows.Forms.Label();
+            this.pulseWidthCathodicSamples = new System.Windows.Forms.TextBox();
+            this.amplitudeCathodicSteps = new System.Windows.Forms.TextBox();
+            this.groupBoxAnode = new System.Windows.Forms.GroupBox();
+            this.pulseWidthAnodicConverted = new System.Windows.Forms.TextBox();
+            this.amplitudeAnodicConverted = new System.Windows.Forms.TextBox();
+            this.labelAnplitudeAnodicText = new System.Windows.Forms.Label();
+            this.labelPulseWidthAnodicText = new System.Windows.Forms.Label();
+            this.pulseWidthAnodicSamples = new System.Windows.Forms.TextBox();
+            this.amplitudeAnodicSteps = new System.Windows.Forms.TextBox();
+            this.comboBoxStepSize = new System.Windows.Forms.ComboBox();
             this.button2 = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
-            this.InterStimulusIntervalConverted = new System.Windows.Forms.TextBox();
-            this.InterPulseIntervalConverted = new System.Windows.Forms.TextBox();
-            this.InterPulseInterval = new System.Windows.Forms.TextBox();
-            this.InterPulseIntervalText = new System.Windows.Forms.Label();
-            this.LabelStepSize = new System.Windows.Forms.Label();
-            this.CheckBoxAnodicFirst = new System.Windows.Forms.CheckBox();
-            this.DelaySamplesConverted = new System.Windows.Forms.TextBox();
-            this.ButtonAddPulses = new System.Windows.Forms.Button();
-            this.DelaySamples = new System.Windows.Forms.TextBox();
-            this.NumberOfPulsesText = new System.Windows.Forms.Label();
-            this.DelayText = new System.Windows.Forms.Label();
-            this.NumberOfStimuli = new System.Windows.Forms.TextBox();
-            this.CheckboxBiphasicSymmetrical = new System.Windows.Forms.CheckBox();
-            this.InterStimulusInterval = new System.Windows.Forms.TextBox();
-            this.InterStimulusIntervalText = new System.Windows.Forms.Label();
-            this.TabPageChannelLayout = new System.Windows.Forms.TabPage();
-            this.PanelChannelLayout = new System.Windows.Forms.Panel();
-            this.CustomChannelLayout = new System.Windows.Forms.Button();
-            this.DefaultChannelLayout = new System.Windows.Forms.Button();
-            this.TextBoxChannelLayoutFilePath = new System.Windows.Forms.TextBox();
-            this.TabPageEditorDialog = new System.Windows.Forms.TabPage();
-            this.PropertyGridStimulusSequence = new System.Windows.Forms.PropertyGrid();
-            this.TabControlVisualization = new System.Windows.Forms.TabControl();
-            this.TabPageWaveform = new System.Windows.Forms.TabPage();
-            this.TabPageTable = new System.Windows.Forms.TabPage();
-            this.DataGridViewStimulusTable = new System.Windows.Forms.DataGridView();
+            this.interStimulusIntervalConverted = new System.Windows.Forms.TextBox();
+            this.interPulseIntervalConverted = new System.Windows.Forms.TextBox();
+            this.interPulseIntervalSamples = new System.Windows.Forms.TextBox();
+            this.interPulseIntervalText = new System.Windows.Forms.Label();
+            this.labelStepSize = new System.Windows.Forms.Label();
+            this.checkBoxAnodicFirst = new System.Windows.Forms.CheckBox();
+            this.delaySamplesConverted = new System.Windows.Forms.TextBox();
+            this.buttonAddPulses = new System.Windows.Forms.Button();
+            this.delaySamples = new System.Windows.Forms.TextBox();
+            this.numberOfPulsesText = new System.Windows.Forms.Label();
+            this.delayText = new System.Windows.Forms.Label();
+            this.numberOfStimuliText = new System.Windows.Forms.TextBox();
+            this.checkboxBiphasicSymmetrical = new System.Windows.Forms.CheckBox();
+            this.interStimulusIntervalSamples = new System.Windows.Forms.TextBox();
+            this.interStimulusIntervalText = new System.Windows.Forms.Label();
+            this.tabPageChannelLayout = new System.Windows.Forms.TabPage();
+            this.panelChannelLayout = new System.Windows.Forms.Panel();
+            this.buttonCustomChannelLayout = new System.Windows.Forms.Button();
+            this.buttonDefaultChannelLayout = new System.Windows.Forms.Button();
+            this.textBoxChannelLayoutFilePath = new System.Windows.Forms.TextBox();
+            this.tabPageEditorDialog = new System.Windows.Forms.TabPage();
+            this.propertyGridStimulusSequence = new System.Windows.Forms.PropertyGrid();
+            this.tabControlVisualization = new System.Windows.Forms.TabControl();
+            this.tabPageWaveform = new System.Windows.Forms.TabPage();
+            this.tabPageTable = new System.Windows.Forms.TabPage();
+            this.dataGridViewStimulusTable = new System.Windows.Forms.DataGridView();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.splitContainer3 = new System.Windows.Forms.SplitContainer();
-            this.ZedGraphChannels = new ZedGraph.ZedGraphControl();
-            this.StatusStrip.SuspendLayout();
-            this.PanelButtons.SuspendLayout();
-            this.TabControlParameters.SuspendLayout();
-            this.TabPageAddPulse.SuspendLayout();
-            this.PanelParameters.SuspendLayout();
-            this.GroupBoxCathode.SuspendLayout();
-            this.GroupBoxAnode.SuspendLayout();
-            this.TabPageChannelLayout.SuspendLayout();
-            this.PanelChannelLayout.SuspendLayout();
-            this.TabPageEditorDialog.SuspendLayout();
-            this.TabControlVisualization.SuspendLayout();
-            this.TabPageWaveform.SuspendLayout();
-            this.TabPageTable.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.DataGridViewStimulusTable)).BeginInit();
+            this.zedGraphChannels = new ZedGraph.ZedGraphControl();
+            this.statusStrip.SuspendLayout();
+            this.panelButtons.SuspendLayout();
+            this.tabControlParameters.SuspendLayout();
+            this.tabPageAddPulse.SuspendLayout();
+            this.panelParameters.SuspendLayout();
+            this.groupBoxCathode.SuspendLayout();
+            this.groupBoxAnode.SuspendLayout();
+            this.tabPageChannelLayout.SuspendLayout();
+            this.panelChannelLayout.SuspendLayout();
+            this.tabPageEditorDialog.SuspendLayout();
+            this.tabControlVisualization.SuspendLayout();
+            this.tabPageWaveform.SuspendLayout();
+            this.tabPageTable.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewStimulusTable)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -115,331 +115,315 @@
             this.splitContainer3.SuspendLayout();
             this.SuspendLayout();
             // 
-            // ZedGraphWaveform
+            // zedGraphWaveform
             // 
-            this.ZedGraphWaveform.AutoScroll = true;
-            this.ZedGraphWaveform.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ZedGraphWaveform.Location = new System.Drawing.Point(2, 2);
-            this.ZedGraphWaveform.Name = "ZedGraphWaveform";
-            this.ZedGraphWaveform.ScrollGrace = 0D;
-            this.ZedGraphWaveform.ScrollMaxX = 0D;
-            this.ZedGraphWaveform.ScrollMaxY = 0D;
-            this.ZedGraphWaveform.ScrollMaxY2 = 0D;
-            this.ZedGraphWaveform.ScrollMinX = 0D;
-            this.ZedGraphWaveform.ScrollMinY = 0D;
-            this.ZedGraphWaveform.ScrollMinY2 = 0D;
-            this.ZedGraphWaveform.Size = new System.Drawing.Size(934, 521);
-            this.ZedGraphWaveform.TabIndex = 4;
-            this.ZedGraphWaveform.UseExtendedPrintDialog = true;
+            this.zedGraphWaveform.AutoScroll = true;
+            this.zedGraphWaveform.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.zedGraphWaveform.Location = new System.Drawing.Point(3, 3);
+            this.zedGraphWaveform.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
+            this.zedGraphWaveform.Name = "zedGraphWaveform";
+            this.zedGraphWaveform.ScrollGrace = 0D;
+            this.zedGraphWaveform.ScrollMaxX = 0D;
+            this.zedGraphWaveform.ScrollMaxY = 0D;
+            this.zedGraphWaveform.ScrollMaxY2 = 0D;
+            this.zedGraphWaveform.ScrollMinX = 0D;
+            this.zedGraphWaveform.ScrollMinY = 0D;
+            this.zedGraphWaveform.ScrollMinY2 = 0D;
+            this.zedGraphWaveform.Size = new System.Drawing.Size(1405, 811);
+            this.zedGraphWaveform.TabIndex = 4;
+            this.zedGraphWaveform.UseExtendedPrintDialog = true;
             // 
-            // LinkLabelDocumentation
+            // linkLabelDocumentation
             // 
-            this.LinkLabelDocumentation.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.LinkLabelDocumentation.AutoSize = true;
-            this.LinkLabelDocumentation.Location = new System.Drawing.Point(1114, 556);
-            this.LinkLabelDocumentation.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.LinkLabelDocumentation.Name = "LinkLabelDocumentation";
-            this.LinkLabelDocumentation.Size = new System.Drawing.Size(79, 13);
-            this.LinkLabelDocumentation.TabIndex = 4;
-            this.LinkLabelDocumentation.TabStop = true;
-            this.LinkLabelDocumentation.Text = "Documentation";
-            this.LinkLabelDocumentation.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelDocumentation_LinkClicked);
+            this.linkLabelDocumentation.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.linkLabelDocumentation.AutoSize = true;
+            this.linkLabelDocumentation.Location = new System.Drawing.Point(1671, 855);
+            this.linkLabelDocumentation.Name = "linkLabelDocumentation";
+            this.linkLabelDocumentation.Size = new System.Drawing.Size(118, 20);
+            this.linkLabelDocumentation.TabIndex = 4;
+            this.linkLabelDocumentation.TabStop = true;
+            this.linkLabelDocumentation.Text = "Documentation";
+            this.linkLabelDocumentation.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelDocumentation_LinkClicked);
             // 
-            // ButtonCancel
+            // buttonCancel
             // 
-            this.ButtonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.ButtonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.ButtonCancel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ButtonCancel.Location = new System.Drawing.Point(177, 0);
-            this.ButtonCancel.Margin = new System.Windows.Forms.Padding(2);
-            this.ButtonCancel.Name = "ButtonCancel";
-            this.ButtonCancel.Size = new System.Drawing.Size(67, 26);
-            this.ButtonCancel.TabIndex = 0;
-            this.ButtonCancel.Text = "Cancel";
-            this.ButtonCancel.UseVisualStyleBackColor = true;
+            this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.buttonCancel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonCancel.Location = new System.Drawing.Point(266, 12);
+            this.buttonCancel.Name = "buttonCancel";
+            this.buttonCancel.Size = new System.Drawing.Size(100, 40);
+            this.buttonCancel.TabIndex = 0;
+            this.buttonCancel.Text = "Cancel";
+            this.buttonCancel.UseVisualStyleBackColor = true;
             // 
-            // StatusStrip
+            // statusStrip
             // 
-            this.StatusStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
-            this.StatusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.ToolStripStatusIsValid,
-            this.ToolStripStatusSlotsUsed});
-            this.StatusStrip.Location = new System.Drawing.Point(0, 551);
-            this.StatusStrip.Name = "StatusStrip";
-            this.StatusStrip.Padding = new System.Windows.Forms.Padding(1, 0, 9, 0);
-            this.StatusStrip.Size = new System.Drawing.Size(1198, 22);
-            this.StatusStrip.SizingGrip = false;
-            this.StatusStrip.TabIndex = 1;
-            this.StatusStrip.Text = "statusStrip1";
+            this.statusStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
+            this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripStatusIsValid,
+            this.toolStripStatusSlotsUsed});
+            this.statusStrip.Location = new System.Drawing.Point(0, 850);
+            this.statusStrip.Name = "statusStrip";
+            this.statusStrip.Padding = new System.Windows.Forms.Padding(2, 0, 14, 0);
+            this.statusStrip.Size = new System.Drawing.Size(1797, 32);
+            this.statusStrip.SizingGrip = false;
+            this.statusStrip.TabIndex = 1;
+            this.statusStrip.Text = "statusStrip1";
             // 
-            // ToolStripStatusIsValid
+            // toolStripStatusIsValid
             // 
-            this.ToolStripStatusIsValid.Name = "ToolStripStatusIsValid";
-            this.ToolStripStatusIsValid.Size = new System.Drawing.Size(133, 17);
-            this.ToolStripStatusIsValid.Text = "Valid stimulus sequence";
+            this.toolStripStatusIsValid.Name = "toolStripStatusIsValid";
+            this.toolStripStatusIsValid.Size = new System.Drawing.Size(200, 25);
+            this.toolStripStatusIsValid.Text = "Valid stimulus sequence";
             // 
-            // ToolStripStatusSlotsUsed
+            // toolStripStatusSlotsUsed
             // 
-            this.ToolStripStatusSlotsUsed.Name = "ToolStripStatusSlotsUsed";
-            this.ToolStripStatusSlotsUsed.Size = new System.Drawing.Size(104, 17);
-            this.ToolStripStatusSlotsUsed.Text = "100% of slots used";
-            this.ToolStripStatusSlotsUsed.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.toolStripStatusSlotsUsed.Name = "toolStripStatusSlotsUsed";
+            this.toolStripStatusSlotsUsed.Size = new System.Drawing.Size(164, 25);
+            this.toolStripStatusSlotsUsed.Text = "100% of slots used";
+            this.toolStripStatusSlotsUsed.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // PanelButtons
+            // panelButtons
             // 
-            this.PanelButtons.AutoSize = true;
-            this.PanelButtons.Controls.Add(this.ButtonOk);
-            this.PanelButtons.Controls.Add(this.ButtonCancel);
-            this.PanelButtons.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.PanelButtons.Location = new System.Drawing.Point(0, 0);
-            this.PanelButtons.Margin = new System.Windows.Forms.Padding(2);
-            this.PanelButtons.Name = "PanelButtons";
-            this.PanelButtons.Size = new System.Drawing.Size(249, 28);
-            this.PanelButtons.TabIndex = 0;
+            this.panelButtons.AutoSize = true;
+            this.panelButtons.Controls.Add(this.buttonOk);
+            this.panelButtons.Controls.Add(this.buttonCancel);
+            this.panelButtons.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelButtons.Location = new System.Drawing.Point(0, 0);
+            this.panelButtons.Name = "panelButtons";
+            this.panelButtons.Size = new System.Drawing.Size(374, 55);
+            this.panelButtons.TabIndex = 0;
             // 
-            // ButtonOk
+            // buttonOk
             // 
-            this.ButtonOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.ButtonOk.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ButtonOk.Location = new System.Drawing.Point(106, 0);
-            this.ButtonOk.Margin = new System.Windows.Forms.Padding(2);
-            this.ButtonOk.Name = "ButtonOk";
-            this.ButtonOk.Size = new System.Drawing.Size(67, 26);
-            this.ButtonOk.TabIndex = 4;
-            this.ButtonOk.Text = "OK";
-            this.ButtonOk.UseVisualStyleBackColor = true;
-            this.ButtonOk.Click += new System.EventHandler(this.ButtonOk_Click);
+            this.buttonOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonOk.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonOk.Location = new System.Drawing.Point(159, 12);
+            this.buttonOk.Name = "buttonOk";
+            this.buttonOk.Size = new System.Drawing.Size(100, 40);
+            this.buttonOk.TabIndex = 4;
+            this.buttonOk.Text = "OK";
+            this.buttonOk.UseVisualStyleBackColor = true;
+            this.buttonOk.Click += new System.EventHandler(this.ButtonOk_Click);
             // 
-            // TabControlParameters
+            // tabControlParameters
             // 
-            this.TabControlParameters.Controls.Add(this.TabPageAddPulse);
-            this.TabControlParameters.Controls.Add(this.TabPageChannelLayout);
-            this.TabControlParameters.Controls.Add(this.TabPageEditorDialog);
-            this.TabControlParameters.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.TabControlParameters.Location = new System.Drawing.Point(0, 0);
-            this.TabControlParameters.Margin = new System.Windows.Forms.Padding(2);
-            this.TabControlParameters.MinimumSize = new System.Drawing.Size(248, 315);
-            this.TabControlParameters.Name = "TabControlParameters";
-            this.TabControlParameters.SelectedIndex = 0;
-            this.TabControlParameters.Size = new System.Drawing.Size(249, 315);
-            this.TabControlParameters.TabIndex = 1;
+            this.tabControlParameters.Controls.Add(this.tabPageAddPulse);
+            this.tabControlParameters.Controls.Add(this.tabPageChannelLayout);
+            this.tabControlParameters.Controls.Add(this.tabPageEditorDialog);
+            this.tabControlParameters.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tabControlParameters.Location = new System.Drawing.Point(0, 0);
+            this.tabControlParameters.MinimumSize = new System.Drawing.Size(372, 485);
+            this.tabControlParameters.Name = "tabControlParameters";
+            this.tabControlParameters.SelectedIndex = 0;
+            this.tabControlParameters.Size = new System.Drawing.Size(374, 485);
+            this.tabControlParameters.TabIndex = 1;
             // 
-            // TabPageAddPulse
+            // tabPageAddPulse
             // 
-            this.TabPageAddPulse.Controls.Add(this.PanelParameters);
-            this.TabPageAddPulse.Location = new System.Drawing.Point(4, 22);
-            this.TabPageAddPulse.Margin = new System.Windows.Forms.Padding(2);
-            this.TabPageAddPulse.Name = "TabPageAddPulse";
-            this.TabPageAddPulse.Padding = new System.Windows.Forms.Padding(2);
-            this.TabPageAddPulse.Size = new System.Drawing.Size(241, 289);
-            this.TabPageAddPulse.TabIndex = 0;
-            this.TabPageAddPulse.Text = "Add Pulses";
-            this.TabPageAddPulse.UseVisualStyleBackColor = true;
+            this.tabPageAddPulse.Controls.Add(this.panelParameters);
+            this.tabPageAddPulse.Location = new System.Drawing.Point(4, 29);
+            this.tabPageAddPulse.Name = "tabPageAddPulse";
+            this.tabPageAddPulse.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageAddPulse.Size = new System.Drawing.Size(366, 452);
+            this.tabPageAddPulse.TabIndex = 0;
+            this.tabPageAddPulse.Text = "Add Pulses";
+            this.tabPageAddPulse.UseVisualStyleBackColor = true;
             // 
-            // PanelParameters
+            // panelParameters
             // 
-            this.PanelParameters.AutoScroll = true;
-            this.PanelParameters.AutoSize = true;
-            this.PanelParameters.Controls.Add(this.GroupBoxCathode);
-            this.PanelParameters.Controls.Add(this.GroupBoxAnode);
-            this.PanelParameters.Controls.Add(this.ComboBoxStepSize);
-            this.PanelParameters.Controls.Add(this.button2);
-            this.PanelParameters.Controls.Add(this.button1);
-            this.PanelParameters.Controls.Add(this.InterStimulusIntervalConverted);
-            this.PanelParameters.Controls.Add(this.InterPulseIntervalConverted);
-            this.PanelParameters.Controls.Add(this.InterPulseInterval);
-            this.PanelParameters.Controls.Add(this.InterPulseIntervalText);
-            this.PanelParameters.Controls.Add(this.LabelStepSize);
-            this.PanelParameters.Controls.Add(this.CheckBoxAnodicFirst);
-            this.PanelParameters.Controls.Add(this.DelaySamplesConverted);
-            this.PanelParameters.Controls.Add(this.ButtonAddPulses);
-            this.PanelParameters.Controls.Add(this.DelaySamples);
-            this.PanelParameters.Controls.Add(this.NumberOfPulsesText);
-            this.PanelParameters.Controls.Add(this.DelayText);
-            this.PanelParameters.Controls.Add(this.NumberOfStimuli);
-            this.PanelParameters.Controls.Add(this.CheckboxBiphasicSymmetrical);
-            this.PanelParameters.Controls.Add(this.InterStimulusInterval);
-            this.PanelParameters.Controls.Add(this.InterStimulusIntervalText);
-            this.PanelParameters.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.PanelParameters.Location = new System.Drawing.Point(2, 2);
-            this.PanelParameters.Margin = new System.Windows.Forms.Padding(2);
-            this.PanelParameters.MinimumSize = new System.Drawing.Size(239, 284);
-            this.PanelParameters.Name = "PanelParameters";
-            this.PanelParameters.Size = new System.Drawing.Size(239, 285);
-            this.PanelParameters.TabIndex = 0;
+            this.panelParameters.AutoScroll = true;
+            this.panelParameters.AutoSize = true;
+            this.panelParameters.Controls.Add(this.groupBoxCathode);
+            this.panelParameters.Controls.Add(this.groupBoxAnode);
+            this.panelParameters.Controls.Add(this.comboBoxStepSize);
+            this.panelParameters.Controls.Add(this.button2);
+            this.panelParameters.Controls.Add(this.button1);
+            this.panelParameters.Controls.Add(this.interStimulusIntervalConverted);
+            this.panelParameters.Controls.Add(this.interPulseIntervalConverted);
+            this.panelParameters.Controls.Add(this.interPulseIntervalSamples);
+            this.panelParameters.Controls.Add(this.interPulseIntervalText);
+            this.panelParameters.Controls.Add(this.labelStepSize);
+            this.panelParameters.Controls.Add(this.checkBoxAnodicFirst);
+            this.panelParameters.Controls.Add(this.delaySamplesConverted);
+            this.panelParameters.Controls.Add(this.buttonAddPulses);
+            this.panelParameters.Controls.Add(this.delaySamples);
+            this.panelParameters.Controls.Add(this.numberOfPulsesText);
+            this.panelParameters.Controls.Add(this.delayText);
+            this.panelParameters.Controls.Add(this.numberOfStimuliText);
+            this.panelParameters.Controls.Add(this.checkboxBiphasicSymmetrical);
+            this.panelParameters.Controls.Add(this.interStimulusIntervalSamples);
+            this.panelParameters.Controls.Add(this.interStimulusIntervalText);
+            this.panelParameters.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelParameters.Location = new System.Drawing.Point(3, 3);
+            this.panelParameters.MinimumSize = new System.Drawing.Size(358, 437);
+            this.panelParameters.Name = "panelParameters";
+            this.panelParameters.Size = new System.Drawing.Size(360, 446);
+            this.panelParameters.TabIndex = 0;
             // 
-            // GroupBoxCathode
+            // groupBoxCathode
             // 
-            this.GroupBoxCathode.Controls.Add(this.PulseWidthCathodicConverted);
-            this.GroupBoxCathode.Controls.Add(this.AmplitudeCathodicConverted);
-            this.GroupBoxCathode.Controls.Add(this.LabelAmplitudeCathodic);
-            this.GroupBoxCathode.Controls.Add(this.LabelPulseWidthCathodicText);
-            this.GroupBoxCathode.Controls.Add(this.PulseWidthCathodic);
-            this.GroupBoxCathode.Controls.Add(this.AmplitudeCathodic);
-            this.GroupBoxCathode.Location = new System.Drawing.Point(0, 149);
-            this.GroupBoxCathode.Name = "GroupBoxCathode";
-            this.GroupBoxCathode.Size = new System.Drawing.Size(239, 56);
-            this.GroupBoxCathode.TabIndex = 4;
-            this.GroupBoxCathode.TabStop = false;
-            this.GroupBoxCathode.Text = "Cathode";
-            this.GroupBoxCathode.Visible = false;
+            this.groupBoxCathode.Controls.Add(this.pulseWidthCathodicConverted);
+            this.groupBoxCathode.Controls.Add(this.amplitudeCathodicConverted);
+            this.groupBoxCathode.Controls.Add(this.labelAmplitudeCathodic);
+            this.groupBoxCathode.Controls.Add(this.labelPulseWidthCathodicText);
+            this.groupBoxCathode.Controls.Add(this.pulseWidthCathodicSamples);
+            this.groupBoxCathode.Controls.Add(this.amplitudeCathodicSteps);
+            this.groupBoxCathode.Location = new System.Drawing.Point(0, 229);
+            this.groupBoxCathode.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.groupBoxCathode.Name = "groupBoxCathode";
+            this.groupBoxCathode.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.groupBoxCathode.Size = new System.Drawing.Size(358, 86);
+            this.groupBoxCathode.TabIndex = 4;
+            this.groupBoxCathode.TabStop = false;
+            this.groupBoxCathode.Text = "Cathode";
+            this.groupBoxCathode.Visible = false;
             // 
-            // PulseWidthCathodicConverted
+            // pulseWidthCathodicConverted
             // 
-            this.PulseWidthCathodicConverted.Enabled = false;
-            this.PulseWidthCathodicConverted.Location = new System.Drawing.Point(166, 32);
-            this.PulseWidthCathodicConverted.Margin = new System.Windows.Forms.Padding(2);
-            this.PulseWidthCathodicConverted.Name = "PulseWidthCathodicConverted";
-            this.PulseWidthCathodicConverted.ReadOnly = true;
-            this.PulseWidthCathodicConverted.Size = new System.Drawing.Size(65, 20);
-            this.PulseWidthCathodicConverted.TabIndex = 27;
-            this.PulseWidthCathodicConverted.TabStop = false;
+            this.pulseWidthCathodicConverted.Enabled = false;
+            this.pulseWidthCathodicConverted.Location = new System.Drawing.Point(249, 49);
+            this.pulseWidthCathodicConverted.Name = "pulseWidthCathodicConverted";
+            this.pulseWidthCathodicConverted.ReadOnly = true;
+            this.pulseWidthCathodicConverted.Size = new System.Drawing.Size(96, 26);
+            this.pulseWidthCathodicConverted.TabIndex = 27;
+            this.pulseWidthCathodicConverted.TabStop = false;
             // 
-            // AmplitudeCathodicConverted
+            // amplitudeCathodicConverted
             // 
-            this.AmplitudeCathodicConverted.Enabled = false;
-            this.AmplitudeCathodicConverted.Location = new System.Drawing.Point(166, 12);
-            this.AmplitudeCathodicConverted.Margin = new System.Windows.Forms.Padding(2);
-            this.AmplitudeCathodicConverted.Name = "AmplitudeCathodicConverted";
-            this.AmplitudeCathodicConverted.ReadOnly = true;
-            this.AmplitudeCathodicConverted.Size = new System.Drawing.Size(65, 20);
-            this.AmplitudeCathodicConverted.TabIndex = 26;
-            this.AmplitudeCathodicConverted.TabStop = false;
+            this.amplitudeCathodicConverted.Enabled = false;
+            this.amplitudeCathodicConverted.Location = new System.Drawing.Point(249, 18);
+            this.amplitudeCathodicConverted.Name = "amplitudeCathodicConverted";
+            this.amplitudeCathodicConverted.ReadOnly = true;
+            this.amplitudeCathodicConverted.Size = new System.Drawing.Size(96, 26);
+            this.amplitudeCathodicConverted.TabIndex = 26;
+            this.amplitudeCathodicConverted.TabStop = false;
             // 
-            // LabelAmplitudeCathodic
+            // labelAmplitudeCathodic
             // 
-            this.LabelAmplitudeCathodic.AutoSize = true;
-            this.LabelAmplitudeCathodic.Location = new System.Drawing.Point(39, 16);
-            this.LabelAmplitudeCathodic.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.LabelAmplitudeCathodic.Name = "LabelAmplitudeCathodic";
-            this.LabelAmplitudeCathodic.Size = new System.Drawing.Size(83, 13);
-            this.LabelAmplitudeCathodic.TabIndex = 23;
-            this.LabelAmplitudeCathodic.Text = "Amplitude Steps";
+            this.labelAmplitudeCathodic.AutoSize = true;
+            this.labelAmplitudeCathodic.Location = new System.Drawing.Point(58, 25);
+            this.labelAmplitudeCathodic.Name = "labelAmplitudeCathodic";
+            this.labelAmplitudeCathodic.Size = new System.Drawing.Size(126, 20);
+            this.labelAmplitudeCathodic.TabIndex = 23;
+            this.labelAmplitudeCathodic.Text = "Amplitude Steps";
             // 
-            // LabelPulseWidthCathodicText
+            // labelPulseWidthCathodicText
             // 
-            this.LabelPulseWidthCathodicText.AutoSize = true;
-            this.LabelPulseWidthCathodicText.Location = new System.Drawing.Point(15, 36);
-            this.LabelPulseWidthCathodicText.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.LabelPulseWidthCathodicText.Name = "LabelPulseWidthCathodicText";
-            this.LabelPulseWidthCathodicText.Size = new System.Drawing.Size(107, 13);
-            this.LabelPulseWidthCathodicText.TabIndex = 24;
-            this.LabelPulseWidthCathodicText.Text = "Pulse Width Samples";
+            this.labelPulseWidthCathodicText.AutoSize = true;
+            this.labelPulseWidthCathodicText.Location = new System.Drawing.Point(22, 55);
+            this.labelPulseWidthCathodicText.Name = "labelPulseWidthCathodicText";
+            this.labelPulseWidthCathodicText.Size = new System.Drawing.Size(159, 20);
+            this.labelPulseWidthCathodicText.TabIndex = 24;
+            this.labelPulseWidthCathodicText.Text = "Pulse Width Samples";
             // 
-            // PulseWidthCathodic
+            // pulseWidthCathodicSamples
             // 
-            this.PulseWidthCathodic.Location = new System.Drawing.Point(126, 32);
-            this.PulseWidthCathodic.Margin = new System.Windows.Forms.Padding(2);
-            this.PulseWidthCathodic.Name = "PulseWidthCathodic";
-            this.PulseWidthCathodic.Size = new System.Drawing.Size(30, 20);
-            this.PulseWidthCathodic.TabIndex = 5;
-            this.PulseWidthCathodic.TextChanged += new System.EventHandler(this.Samples_TextChanged);
-            this.PulseWidthCathodic.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
+            this.pulseWidthCathodicSamples.Location = new System.Drawing.Point(189, 49);
+            this.pulseWidthCathodicSamples.Name = "pulseWidthCathodicSamples";
+            this.pulseWidthCathodicSamples.Size = new System.Drawing.Size(43, 26);
+            this.pulseWidthCathodicSamples.TabIndex = 5;
+            this.pulseWidthCathodicSamples.TextChanged += new System.EventHandler(this.Samples_TextChanged);
+            this.pulseWidthCathodicSamples.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
             // 
-            // AmplitudeCathodic
+            // amplitudeCathodicSteps
             // 
-            this.AmplitudeCathodic.Location = new System.Drawing.Point(126, 12);
-            this.AmplitudeCathodic.Margin = new System.Windows.Forms.Padding(2);
-            this.AmplitudeCathodic.Name = "AmplitudeCathodic";
-            this.AmplitudeCathodic.Size = new System.Drawing.Size(30, 20);
-            this.AmplitudeCathodic.TabIndex = 4;
-            this.AmplitudeCathodic.TextChanged += new System.EventHandler(this.Amplitude_TextChanged);
-            this.AmplitudeCathodic.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
+            this.amplitudeCathodicSteps.Location = new System.Drawing.Point(189, 18);
+            this.amplitudeCathodicSteps.Name = "amplitudeCathodicSteps";
+            this.amplitudeCathodicSteps.Size = new System.Drawing.Size(43, 26);
+            this.amplitudeCathodicSteps.TabIndex = 4;
+            this.amplitudeCathodicSteps.TextChanged += new System.EventHandler(this.Amplitude_TextChanged);
+            this.amplitudeCathodicSteps.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
             // 
-            // GroupBoxAnode
+            // groupBoxAnode
             // 
-            this.GroupBoxAnode.Controls.Add(this.PulseWidthAnodicConverted);
-            this.GroupBoxAnode.Controls.Add(this.AmplitudeAnodicConverted);
-            this.GroupBoxAnode.Controls.Add(this.LabelAnplitudeAnodicText);
-            this.GroupBoxAnode.Controls.Add(this.LabelPulseWidthAnodicText);
-            this.GroupBoxAnode.Controls.Add(this.PulseWidthAnodic);
-            this.GroupBoxAnode.Controls.Add(this.AmplitudeAnodic);
-            this.GroupBoxAnode.Location = new System.Drawing.Point(0, 70);
-            this.GroupBoxAnode.Name = "GroupBoxAnode";
-            this.GroupBoxAnode.Size = new System.Drawing.Size(239, 56);
-            this.GroupBoxAnode.TabIndex = 1;
-            this.GroupBoxAnode.TabStop = false;
-            this.GroupBoxAnode.Text = "Anode";
+            this.groupBoxAnode.Controls.Add(this.pulseWidthAnodicConverted);
+            this.groupBoxAnode.Controls.Add(this.amplitudeAnodicConverted);
+            this.groupBoxAnode.Controls.Add(this.labelAnplitudeAnodicText);
+            this.groupBoxAnode.Controls.Add(this.labelPulseWidthAnodicText);
+            this.groupBoxAnode.Controls.Add(this.pulseWidthAnodicSamples);
+            this.groupBoxAnode.Controls.Add(this.amplitudeAnodicSteps);
+            this.groupBoxAnode.Location = new System.Drawing.Point(0, 108);
+            this.groupBoxAnode.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.groupBoxAnode.Name = "groupBoxAnode";
+            this.groupBoxAnode.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.groupBoxAnode.Size = new System.Drawing.Size(358, 86);
+            this.groupBoxAnode.TabIndex = 1;
+            this.groupBoxAnode.TabStop = false;
+            this.groupBoxAnode.Text = "Anode";
             // 
-            // PulseWidthAnodicConverted
+            // pulseWidthAnodicConverted
             // 
-            this.PulseWidthAnodicConverted.Enabled = false;
-            this.PulseWidthAnodicConverted.Location = new System.Drawing.Point(166, 32);
-            this.PulseWidthAnodicConverted.Margin = new System.Windows.Forms.Padding(2);
-            this.PulseWidthAnodicConverted.Name = "PulseWidthAnodicConverted";
-            this.PulseWidthAnodicConverted.ReadOnly = true;
-            this.PulseWidthAnodicConverted.Size = new System.Drawing.Size(65, 20);
-            this.PulseWidthAnodicConverted.TabIndex = 20;
-            this.PulseWidthAnodicConverted.TabStop = false;
+            this.pulseWidthAnodicConverted.Enabled = false;
+            this.pulseWidthAnodicConverted.Location = new System.Drawing.Point(249, 49);
+            this.pulseWidthAnodicConverted.Name = "pulseWidthAnodicConverted";
+            this.pulseWidthAnodicConverted.ReadOnly = true;
+            this.pulseWidthAnodicConverted.Size = new System.Drawing.Size(96, 26);
+            this.pulseWidthAnodicConverted.TabIndex = 20;
+            this.pulseWidthAnodicConverted.TabStop = false;
             // 
-            // AmplitudeAnodicConverted
+            // amplitudeAnodicConverted
             // 
-            this.AmplitudeAnodicConverted.Enabled = false;
-            this.AmplitudeAnodicConverted.Location = new System.Drawing.Point(166, 12);
-            this.AmplitudeAnodicConverted.Margin = new System.Windows.Forms.Padding(2);
-            this.AmplitudeAnodicConverted.Name = "AmplitudeAnodicConverted";
-            this.AmplitudeAnodicConverted.ReadOnly = true;
-            this.AmplitudeAnodicConverted.Size = new System.Drawing.Size(65, 20);
-            this.AmplitudeAnodicConverted.TabIndex = 19;
-            this.AmplitudeAnodicConverted.TabStop = false;
+            this.amplitudeAnodicConverted.Enabled = false;
+            this.amplitudeAnodicConverted.Location = new System.Drawing.Point(249, 18);
+            this.amplitudeAnodicConverted.Name = "amplitudeAnodicConverted";
+            this.amplitudeAnodicConverted.ReadOnly = true;
+            this.amplitudeAnodicConverted.Size = new System.Drawing.Size(96, 26);
+            this.amplitudeAnodicConverted.TabIndex = 19;
+            this.amplitudeAnodicConverted.TabStop = false;
             // 
-            // LabelAnplitudeAnodicText
+            // labelAnplitudeAnodicText
             // 
-            this.LabelAnplitudeAnodicText.AutoSize = true;
-            this.LabelAnplitudeAnodicText.Location = new System.Drawing.Point(39, 16);
-            this.LabelAnplitudeAnodicText.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.LabelAnplitudeAnodicText.Name = "LabelAnplitudeAnodicText";
-            this.LabelAnplitudeAnodicText.Size = new System.Drawing.Size(83, 13);
-            this.LabelAnplitudeAnodicText.TabIndex = 4;
-            this.LabelAnplitudeAnodicText.Text = "Amplitude Steps";
+            this.labelAnplitudeAnodicText.AutoSize = true;
+            this.labelAnplitudeAnodicText.Location = new System.Drawing.Point(58, 25);
+            this.labelAnplitudeAnodicText.Name = "labelAnplitudeAnodicText";
+            this.labelAnplitudeAnodicText.Size = new System.Drawing.Size(126, 20);
+            this.labelAnplitudeAnodicText.TabIndex = 4;
+            this.labelAnplitudeAnodicText.Text = "Amplitude Steps";
             // 
-            // LabelPulseWidthAnodicText
+            // labelPulseWidthAnodicText
             // 
-            this.LabelPulseWidthAnodicText.AutoSize = true;
-            this.LabelPulseWidthAnodicText.Location = new System.Drawing.Point(15, 36);
-            this.LabelPulseWidthAnodicText.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.LabelPulseWidthAnodicText.Name = "LabelPulseWidthAnodicText";
-            this.LabelPulseWidthAnodicText.Size = new System.Drawing.Size(107, 13);
-            this.LabelPulseWidthAnodicText.TabIndex = 7;
-            this.LabelPulseWidthAnodicText.Text = "Pulse Width Samples";
+            this.labelPulseWidthAnodicText.AutoSize = true;
+            this.labelPulseWidthAnodicText.Location = new System.Drawing.Point(22, 55);
+            this.labelPulseWidthAnodicText.Name = "labelPulseWidthAnodicText";
+            this.labelPulseWidthAnodicText.Size = new System.Drawing.Size(159, 20);
+            this.labelPulseWidthAnodicText.TabIndex = 7;
+            this.labelPulseWidthAnodicText.Text = "Pulse Width Samples";
             // 
-            // PulseWidthAnodic
+            // pulseWidthAnodicSamples
             // 
-            this.PulseWidthAnodic.Location = new System.Drawing.Point(126, 32);
-            this.PulseWidthAnodic.Margin = new System.Windows.Forms.Padding(2);
-            this.PulseWidthAnodic.Name = "PulseWidthAnodic";
-            this.PulseWidthAnodic.Size = new System.Drawing.Size(30, 20);
-            this.PulseWidthAnodic.TabIndex = 2;
-            this.PulseWidthAnodic.TextChanged += new System.EventHandler(this.Samples_TextChanged);
-            this.PulseWidthAnodic.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
+            this.pulseWidthAnodicSamples.Location = new System.Drawing.Point(189, 49);
+            this.pulseWidthAnodicSamples.Name = "pulseWidthAnodicSamples";
+            this.pulseWidthAnodicSamples.Size = new System.Drawing.Size(43, 26);
+            this.pulseWidthAnodicSamples.TabIndex = 2;
+            this.pulseWidthAnodicSamples.TextChanged += new System.EventHandler(this.Samples_TextChanged);
+            this.pulseWidthAnodicSamples.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
             // 
-            // AmplitudeAnodic
+            // amplitudeAnodicSteps
             // 
-            this.AmplitudeAnodic.Location = new System.Drawing.Point(126, 12);
-            this.AmplitudeAnodic.Margin = new System.Windows.Forms.Padding(2);
-            this.AmplitudeAnodic.Name = "AmplitudeAnodic";
-            this.AmplitudeAnodic.Size = new System.Drawing.Size(30, 20);
-            this.AmplitudeAnodic.TabIndex = 1;
-            this.AmplitudeAnodic.TextChanged += new System.EventHandler(this.Amplitude_TextChanged);
-            this.AmplitudeAnodic.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
+            this.amplitudeAnodicSteps.Location = new System.Drawing.Point(189, 18);
+            this.amplitudeAnodicSteps.Name = "amplitudeAnodicSteps";
+            this.amplitudeAnodicSteps.Size = new System.Drawing.Size(43, 26);
+            this.amplitudeAnodicSteps.TabIndex = 1;
+            this.amplitudeAnodicSteps.TextChanged += new System.EventHandler(this.Amplitude_TextChanged);
+            this.amplitudeAnodicSteps.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
             // 
-            // ComboBoxStepSize
+            // comboBoxStepSize
             // 
-            this.ComboBoxStepSize.FormattingEnabled = true;
-            this.ComboBoxStepSize.Location = new System.Drawing.Point(132, 46);
-            this.ComboBoxStepSize.Margin = new System.Windows.Forms.Padding(2);
-            this.ComboBoxStepSize.Name = "ComboBoxStepSize";
-            this.ComboBoxStepSize.Size = new System.Drawing.Size(90, 21);
-            this.ComboBoxStepSize.TabIndex = 34;
-            this.ComboBoxStepSize.TabStop = false;
-            this.ComboBoxStepSize.SelectedIndexChanged += new System.EventHandler(this.ComboBoxStepSize_SelectedIndexChanged);
+            this.comboBoxStepSize.FormattingEnabled = true;
+            this.comboBoxStepSize.Location = new System.Drawing.Point(198, 71);
+            this.comboBoxStepSize.Name = "comboBoxStepSize";
+            this.comboBoxStepSize.Size = new System.Drawing.Size(133, 28);
+            this.comboBoxStepSize.TabIndex = 34;
+            this.comboBoxStepSize.TabStop = false;
+            this.comboBoxStepSize.SelectedIndexChanged += new System.EventHandler(this.ComboBoxStepSize_SelectedIndexChanged);
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(161, 255);
-            this.button2.Margin = new System.Windows.Forms.Padding(2);
+            this.button2.Location = new System.Drawing.Point(242, 392);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(73, 27);
+            this.button2.Size = new System.Drawing.Size(110, 42);
             this.button2.TabIndex = 33;
             this.button2.TabStop = false;
             this.button2.Text = "Clear Pulses";
@@ -447,321 +431,302 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(83, 255);
-            this.button1.Margin = new System.Windows.Forms.Padding(2);
+            this.button1.Location = new System.Drawing.Point(124, 392);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 27);
+            this.button1.Size = new System.Drawing.Size(112, 42);
             this.button1.TabIndex = 32;
             this.button1.TabStop = false;
             this.button1.Text = "Read Pulses";
             this.button1.UseVisualStyleBackColor = true;
             // 
-            // InterStimulusIntervalConverted
+            // interStimulusIntervalConverted
             // 
-            this.InterStimulusIntervalConverted.Enabled = false;
-            this.InterStimulusIntervalConverted.Location = new System.Drawing.Point(166, 207);
-            this.InterStimulusIntervalConverted.Margin = new System.Windows.Forms.Padding(2);
-            this.InterStimulusIntervalConverted.Name = "InterStimulusIntervalConverted";
-            this.InterStimulusIntervalConverted.ReadOnly = true;
-            this.InterStimulusIntervalConverted.Size = new System.Drawing.Size(65, 20);
-            this.InterStimulusIntervalConverted.TabIndex = 31;
-            this.InterStimulusIntervalConverted.TabStop = false;
+            this.interStimulusIntervalConverted.Enabled = false;
+            this.interStimulusIntervalConverted.Location = new System.Drawing.Point(249, 318);
+            this.interStimulusIntervalConverted.Name = "interStimulusIntervalConverted";
+            this.interStimulusIntervalConverted.ReadOnly = true;
+            this.interStimulusIntervalConverted.Size = new System.Drawing.Size(96, 26);
+            this.interStimulusIntervalConverted.TabIndex = 31;
+            this.interStimulusIntervalConverted.TabStop = false;
             // 
-            // InterPulseIntervalConverted
+            // interPulseIntervalConverted
             // 
-            this.InterPulseIntervalConverted.Enabled = false;
-            this.InterPulseIntervalConverted.Location = new System.Drawing.Point(166, 129);
-            this.InterPulseIntervalConverted.Margin = new System.Windows.Forms.Padding(2);
-            this.InterPulseIntervalConverted.Name = "InterPulseIntervalConverted";
-            this.InterPulseIntervalConverted.ReadOnly = true;
-            this.InterPulseIntervalConverted.Size = new System.Drawing.Size(65, 20);
-            this.InterPulseIntervalConverted.TabIndex = 30;
-            this.InterPulseIntervalConverted.TabStop = false;
+            this.interPulseIntervalConverted.Enabled = false;
+            this.interPulseIntervalConverted.Location = new System.Drawing.Point(249, 198);
+            this.interPulseIntervalConverted.Name = "interPulseIntervalConverted";
+            this.interPulseIntervalConverted.ReadOnly = true;
+            this.interPulseIntervalConverted.Size = new System.Drawing.Size(96, 26);
+            this.interPulseIntervalConverted.TabIndex = 30;
+            this.interPulseIntervalConverted.TabStop = false;
             // 
-            // InterPulseInterval
+            // interPulseIntervalSamples
             // 
-            this.InterPulseInterval.Location = new System.Drawing.Point(126, 129);
-            this.InterPulseInterval.Margin = new System.Windows.Forms.Padding(2);
-            this.InterPulseInterval.Name = "InterPulseInterval";
-            this.InterPulseInterval.Size = new System.Drawing.Size(30, 20);
-            this.InterPulseInterval.TabIndex = 3;
-            this.InterPulseInterval.TextChanged += new System.EventHandler(this.Samples_TextChanged);
-            this.InterPulseInterval.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
+            this.interPulseIntervalSamples.Location = new System.Drawing.Point(189, 198);
+            this.interPulseIntervalSamples.Name = "interPulseIntervalSamples";
+            this.interPulseIntervalSamples.Size = new System.Drawing.Size(43, 26);
+            this.interPulseIntervalSamples.TabIndex = 3;
+            this.interPulseIntervalSamples.TextChanged += new System.EventHandler(this.Samples_TextChanged);
+            this.interPulseIntervalSamples.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
             // 
-            // InterPulseIntervalText
+            // interPulseIntervalText
             // 
-            this.InterPulseIntervalText.AutoSize = true;
-            this.InterPulseIntervalText.Location = new System.Drawing.Point(22, 133);
-            this.InterPulseIntervalText.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.InterPulseIntervalText.Name = "InterPulseIntervalText";
-            this.InterPulseIntervalText.Size = new System.Drawing.Size(100, 13);
-            this.InterPulseIntervalText.TabIndex = 29;
-            this.InterPulseIntervalText.Text = "Inter-Pulse Samples";
+            this.interPulseIntervalText.AutoSize = true;
+            this.interPulseIntervalText.Location = new System.Drawing.Point(33, 205);
+            this.interPulseIntervalText.Name = "interPulseIntervalText";
+            this.interPulseIntervalText.Size = new System.Drawing.Size(152, 20);
+            this.interPulseIntervalText.TabIndex = 29;
+            this.interPulseIntervalText.Text = "Inter-Pulse Samples";
             // 
-            // LabelStepSize
+            // labelStepSize
             // 
-            this.LabelStepSize.AutoSize = true;
-            this.LabelStepSize.Location = new System.Drawing.Point(132, 31);
-            this.LabelStepSize.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.LabelStepSize.Name = "LabelStepSize";
-            this.LabelStepSize.Size = new System.Drawing.Size(52, 13);
-            this.LabelStepSize.TabIndex = 17;
-            this.LabelStepSize.Text = "Step Size";
+            this.labelStepSize.AutoSize = true;
+            this.labelStepSize.Location = new System.Drawing.Point(198, 48);
+            this.labelStepSize.Name = "labelStepSize";
+            this.labelStepSize.Size = new System.Drawing.Size(78, 20);
+            this.labelStepSize.TabIndex = 17;
+            this.labelStepSize.Text = "Step Size";
             // 
-            // CheckBoxAnodicFirst
+            // checkBoxAnodicFirst
             // 
-            this.CheckBoxAnodicFirst.AutoSize = true;
-            this.CheckBoxAnodicFirst.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.CheckBoxAnodicFirst.Checked = true;
-            this.CheckBoxAnodicFirst.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.CheckBoxAnodicFirst.Location = new System.Drawing.Point(42, 49);
-            this.CheckBoxAnodicFirst.Margin = new System.Windows.Forms.Padding(2);
-            this.CheckBoxAnodicFirst.Name = "CheckBoxAnodicFirst";
-            this.CheckBoxAnodicFirst.Size = new System.Drawing.Size(81, 17);
-            this.CheckBoxAnodicFirst.TabIndex = 16;
-            this.CheckBoxAnodicFirst.TabStop = false;
-            this.CheckBoxAnodicFirst.Text = "Anodic First";
-            this.CheckBoxAnodicFirst.UseVisualStyleBackColor = true;
+            this.checkBoxAnodicFirst.AutoSize = true;
+            this.checkBoxAnodicFirst.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.checkBoxAnodicFirst.Checked = true;
+            this.checkBoxAnodicFirst.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxAnodicFirst.Location = new System.Drawing.Point(63, 75);
+            this.checkBoxAnodicFirst.Name = "checkBoxAnodicFirst";
+            this.checkBoxAnodicFirst.Size = new System.Drawing.Size(119, 24);
+            this.checkBoxAnodicFirst.TabIndex = 16;
+            this.checkBoxAnodicFirst.TabStop = false;
+            this.checkBoxAnodicFirst.Text = "Anodic First";
+            this.checkBoxAnodicFirst.UseVisualStyleBackColor = true;
             // 
-            // DelaySamplesConverted
+            // delaySamplesConverted
             // 
-            this.DelaySamplesConverted.Enabled = false;
-            this.DelaySamplesConverted.Location = new System.Drawing.Point(166, 7);
-            this.DelaySamplesConverted.Margin = new System.Windows.Forms.Padding(2);
-            this.DelaySamplesConverted.Name = "DelaySamplesConverted";
-            this.DelaySamplesConverted.ReadOnly = true;
-            this.DelaySamplesConverted.Size = new System.Drawing.Size(65, 20);
-            this.DelaySamplesConverted.TabIndex = 15;
-            this.DelaySamplesConverted.TabStop = false;
+            this.delaySamplesConverted.Enabled = false;
+            this.delaySamplesConverted.Location = new System.Drawing.Point(249, 11);
+            this.delaySamplesConverted.Name = "delaySamplesConverted";
+            this.delaySamplesConverted.ReadOnly = true;
+            this.delaySamplesConverted.Size = new System.Drawing.Size(96, 26);
+            this.delaySamplesConverted.TabIndex = 15;
+            this.delaySamplesConverted.TabStop = false;
             // 
-            // ButtonAddPulses
+            // buttonAddPulses
             // 
-            this.ButtonAddPulses.Location = new System.Drawing.Point(5, 255);
-            this.ButtonAddPulses.Margin = new System.Windows.Forms.Padding(2);
-            this.ButtonAddPulses.Name = "ButtonAddPulses";
-            this.ButtonAddPulses.Size = new System.Drawing.Size(75, 27);
-            this.ButtonAddPulses.TabIndex = 14;
-            this.ButtonAddPulses.TabStop = false;
-            this.ButtonAddPulses.Text = "Add Pulse(s)";
-            this.ButtonAddPulses.UseVisualStyleBackColor = true;
-            this.ButtonAddPulses.Click += new System.EventHandler(this.ButtonAddPulses_Click);
+            this.buttonAddPulses.Location = new System.Drawing.Point(8, 392);
+            this.buttonAddPulses.Name = "buttonAddPulses";
+            this.buttonAddPulses.Size = new System.Drawing.Size(112, 42);
+            this.buttonAddPulses.TabIndex = 14;
+            this.buttonAddPulses.TabStop = false;
+            this.buttonAddPulses.Text = "Add Pulse(s)";
+            this.buttonAddPulses.UseVisualStyleBackColor = true;
+            this.buttonAddPulses.Click += new System.EventHandler(this.ButtonAddPulses_Click);
             // 
-            // DelaySamples
+            // delaySamples
             // 
-            this.DelaySamples.Location = new System.Drawing.Point(126, 7);
-            this.DelaySamples.Margin = new System.Windows.Forms.Padding(2);
-            this.DelaySamples.Name = "DelaySamples";
-            this.DelaySamples.Size = new System.Drawing.Size(30, 20);
-            this.DelaySamples.TabIndex = 0;
-            this.DelaySamples.TextChanged += new System.EventHandler(this.Samples_TextChanged);
-            this.DelaySamples.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
+            this.delaySamples.Location = new System.Drawing.Point(189, 11);
+            this.delaySamples.Name = "delaySamples";
+            this.delaySamples.Size = new System.Drawing.Size(43, 26);
+            this.delaySamples.TabIndex = 0;
+            this.delaySamples.TextChanged += new System.EventHandler(this.Samples_TextChanged);
+            this.delaySamples.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
             // 
-            // NumberOfPulsesText
+            // numberOfPulsesText
             // 
-            this.NumberOfPulsesText.AutoSize = true;
-            this.NumberOfPulsesText.Location = new System.Drawing.Point(32, 232);
-            this.NumberOfPulsesText.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.NumberOfPulsesText.Name = "NumberOfPulsesText";
-            this.NumberOfPulsesText.Size = new System.Drawing.Size(90, 13);
-            this.NumberOfPulsesText.TabIndex = 13;
-            this.NumberOfPulsesText.Text = "Number of Pulses";
+            this.numberOfPulsesText.AutoSize = true;
+            this.numberOfPulsesText.Location = new System.Drawing.Point(48, 357);
+            this.numberOfPulsesText.Name = "numberOfPulsesText";
+            this.numberOfPulsesText.Size = new System.Drawing.Size(134, 20);
+            this.numberOfPulsesText.TabIndex = 13;
+            this.numberOfPulsesText.Text = "Number of Pulses";
             // 
-            // DelayText
+            // delayText
             // 
-            this.DelayText.AutoSize = true;
-            this.DelayText.Location = new System.Drawing.Point(45, 11);
-            this.DelayText.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.DelayText.Name = "DelayText";
-            this.DelayText.Size = new System.Drawing.Size(77, 13);
-            this.DelayText.TabIndex = 3;
-            this.DelayText.Text = "Delay Samples";
+            this.delayText.AutoSize = true;
+            this.delayText.Location = new System.Drawing.Point(68, 17);
+            this.delayText.Name = "delayText";
+            this.delayText.Size = new System.Drawing.Size(115, 20);
+            this.delayText.TabIndex = 3;
+            this.delayText.Text = "Delay Samples";
             // 
-            // NumberOfStimuli
+            // numberOfStimuliText
             // 
-            this.NumberOfStimuli.Location = new System.Drawing.Point(126, 228);
-            this.NumberOfStimuli.Margin = new System.Windows.Forms.Padding(2);
-            this.NumberOfStimuli.Name = "NumberOfStimuli";
-            this.NumberOfStimuli.Size = new System.Drawing.Size(30, 20);
-            this.NumberOfStimuli.TabIndex = 7;
-            this.NumberOfStimuli.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
+            this.numberOfStimuliText.Location = new System.Drawing.Point(189, 351);
+            this.numberOfStimuliText.Name = "numberOfStimuliText";
+            this.numberOfStimuliText.Size = new System.Drawing.Size(43, 26);
+            this.numberOfStimuliText.TabIndex = 7;
+            this.numberOfStimuliText.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
             // 
-            // CheckboxBiphasicSymmetrical
+            // checkboxBiphasicSymmetrical
             // 
-            this.CheckboxBiphasicSymmetrical.AutoSize = true;
-            this.CheckboxBiphasicSymmetrical.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.CheckboxBiphasicSymmetrical.Checked = true;
-            this.CheckboxBiphasicSymmetrical.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.CheckboxBiphasicSymmetrical.Location = new System.Drawing.Point(6, 34);
-            this.CheckboxBiphasicSymmetrical.Margin = new System.Windows.Forms.Padding(2);
-            this.CheckboxBiphasicSymmetrical.Name = "CheckboxBiphasicSymmetrical";
-            this.CheckboxBiphasicSymmetrical.Size = new System.Drawing.Size(117, 17);
-            this.CheckboxBiphasicSymmetrical.TabIndex = 5;
-            this.CheckboxBiphasicSymmetrical.TabStop = false;
-            this.CheckboxBiphasicSymmetrical.Text = "Biphasic Symmetric";
-            this.CheckboxBiphasicSymmetrical.UseVisualStyleBackColor = true;
-            this.CheckboxBiphasicSymmetrical.CheckedChanged += new System.EventHandler(this.CheckboxBiphasicSymmetrical_CheckedChanged);
+            this.checkboxBiphasicSymmetrical.AutoSize = true;
+            this.checkboxBiphasicSymmetrical.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.checkboxBiphasicSymmetrical.Checked = true;
+            this.checkboxBiphasicSymmetrical.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkboxBiphasicSymmetrical.Location = new System.Drawing.Point(9, 52);
+            this.checkboxBiphasicSymmetrical.Name = "checkboxBiphasicSymmetrical";
+            this.checkboxBiphasicSymmetrical.Size = new System.Drawing.Size(173, 24);
+            this.checkboxBiphasicSymmetrical.TabIndex = 5;
+            this.checkboxBiphasicSymmetrical.TabStop = false;
+            this.checkboxBiphasicSymmetrical.Text = "Biphasic Symmetric";
+            this.checkboxBiphasicSymmetrical.UseVisualStyleBackColor = true;
+            this.checkboxBiphasicSymmetrical.CheckedChanged += new System.EventHandler(this.CheckboxBiphasicSymmetrical_CheckedChanged);
             // 
-            // InterStimulusInterval
+            // interStimulusIntervalSamples
             // 
-            this.InterStimulusInterval.Location = new System.Drawing.Point(126, 207);
-            this.InterStimulusInterval.Margin = new System.Windows.Forms.Padding(2);
-            this.InterStimulusInterval.Name = "InterStimulusInterval";
-            this.InterStimulusInterval.Size = new System.Drawing.Size(30, 20);
-            this.InterStimulusInterval.TabIndex = 6;
-            this.InterStimulusInterval.TextChanged += new System.EventHandler(this.Samples_TextChanged);
-            this.InterStimulusInterval.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
+            this.interStimulusIntervalSamples.Location = new System.Drawing.Point(189, 318);
+            this.interStimulusIntervalSamples.Name = "interStimulusIntervalSamples";
+            this.interStimulusIntervalSamples.Size = new System.Drawing.Size(43, 26);
+            this.interStimulusIntervalSamples.TabIndex = 6;
+            this.interStimulusIntervalSamples.TextChanged += new System.EventHandler(this.Samples_TextChanged);
+            this.interStimulusIntervalSamples.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
             // 
-            // InterStimulusIntervalText
+            // interStimulusIntervalText
             // 
-            this.InterStimulusIntervalText.AutoSize = true;
-            this.InterStimulusIntervalText.Location = new System.Drawing.Point(9, 211);
-            this.InterStimulusIntervalText.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.InterStimulusIntervalText.Name = "InterStimulusIntervalText";
-            this.InterStimulusIntervalText.Size = new System.Drawing.Size(113, 13);
-            this.InterStimulusIntervalText.TabIndex = 9;
-            this.InterStimulusIntervalText.Text = "Inter-Stimulus Samples";
+            this.interStimulusIntervalText.AutoSize = true;
+            this.interStimulusIntervalText.Location = new System.Drawing.Point(14, 325);
+            this.interStimulusIntervalText.Name = "interStimulusIntervalText";
+            this.interStimulusIntervalText.Size = new System.Drawing.Size(174, 20);
+            this.interStimulusIntervalText.TabIndex = 9;
+            this.interStimulusIntervalText.Text = "Inter-Stimulus Samples";
             // 
-            // TabPageChannelLayout
+            // tabPageChannelLayout
             // 
-            this.TabPageChannelLayout.Controls.Add(this.PanelChannelLayout);
-            this.TabPageChannelLayout.Location = new System.Drawing.Point(4, 22);
-            this.TabPageChannelLayout.Name = "TabPageChannelLayout";
-            this.TabPageChannelLayout.Padding = new System.Windows.Forms.Padding(3);
-            this.TabPageChannelLayout.Size = new System.Drawing.Size(241, 289);
-            this.TabPageChannelLayout.TabIndex = 3;
-            this.TabPageChannelLayout.Text = "Channel Layout";
-            this.TabPageChannelLayout.UseVisualStyleBackColor = true;
+            this.tabPageChannelLayout.Controls.Add(this.panelChannelLayout);
+            this.tabPageChannelLayout.Location = new System.Drawing.Point(4, 29);
+            this.tabPageChannelLayout.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.tabPageChannelLayout.Name = "tabPageChannelLayout";
+            this.tabPageChannelLayout.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.tabPageChannelLayout.Size = new System.Drawing.Size(366, 452);
+            this.tabPageChannelLayout.TabIndex = 3;
+            this.tabPageChannelLayout.Text = "Channel Layout";
+            this.tabPageChannelLayout.UseVisualStyleBackColor = true;
             // 
-            // PanelChannelLayout
+            // panelChannelLayout
             // 
-            this.PanelChannelLayout.Controls.Add(this.CustomChannelLayout);
-            this.PanelChannelLayout.Controls.Add(this.DefaultChannelLayout);
-            this.PanelChannelLayout.Controls.Add(this.TextBoxChannelLayoutFilePath);
-            this.PanelChannelLayout.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.PanelChannelLayout.Location = new System.Drawing.Point(3, 3);
-            this.PanelChannelLayout.Name = "PanelChannelLayout";
-            this.PanelChannelLayout.Size = new System.Drawing.Size(235, 283);
-            this.PanelChannelLayout.TabIndex = 0;
+            this.panelChannelLayout.Controls.Add(this.buttonCustomChannelLayout);
+            this.panelChannelLayout.Controls.Add(this.buttonDefaultChannelLayout);
+            this.panelChannelLayout.Controls.Add(this.textBoxChannelLayoutFilePath);
+            this.panelChannelLayout.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelChannelLayout.Location = new System.Drawing.Point(4, 5);
+            this.panelChannelLayout.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.panelChannelLayout.Name = "panelChannelLayout";
+            this.panelChannelLayout.Size = new System.Drawing.Size(358, 442);
+            this.panelChannelLayout.TabIndex = 0;
             // 
-            // CustomChannelLayout
+            // buttonCustomChannelLayout
             // 
-            this.CustomChannelLayout.Location = new System.Drawing.Point(122, 85);
-            this.CustomChannelLayout.Name = "CustomChannelLayout";
-            this.CustomChannelLayout.Size = new System.Drawing.Size(86, 26);
-            this.CustomChannelLayout.TabIndex = 2;
-            this.CustomChannelLayout.Text = "Custom Layout";
-            this.CustomChannelLayout.UseVisualStyleBackColor = true;
+            this.buttonCustomChannelLayout.Location = new System.Drawing.Point(183, 131);
+            this.buttonCustomChannelLayout.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.buttonCustomChannelLayout.Name = "buttonCustomChannelLayout";
+            this.buttonCustomChannelLayout.Size = new System.Drawing.Size(129, 40);
+            this.buttonCustomChannelLayout.TabIndex = 2;
+            this.buttonCustomChannelLayout.Text = "Custom Layout";
+            this.buttonCustomChannelLayout.UseVisualStyleBackColor = true;
             // 
-            // DefaultChannelLayout
+            // buttonDefaultChannelLayout
             // 
-            this.DefaultChannelLayout.Location = new System.Drawing.Point(19, 85);
-            this.DefaultChannelLayout.Name = "DefaultChannelLayout";
-            this.DefaultChannelLayout.Size = new System.Drawing.Size(86, 26);
-            this.DefaultChannelLayout.TabIndex = 1;
-            this.DefaultChannelLayout.Text = "Default Layout";
-            this.DefaultChannelLayout.UseVisualStyleBackColor = true;
+            this.buttonDefaultChannelLayout.Location = new System.Drawing.Point(28, 131);
+            this.buttonDefaultChannelLayout.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.buttonDefaultChannelLayout.Name = "buttonDefaultChannelLayout";
+            this.buttonDefaultChannelLayout.Size = new System.Drawing.Size(129, 40);
+            this.buttonDefaultChannelLayout.TabIndex = 1;
+            this.buttonDefaultChannelLayout.Text = "Default Layout";
+            this.buttonDefaultChannelLayout.UseVisualStyleBackColor = true;
             // 
-            // TextBoxChannelLayoutFilePath
+            // textBoxChannelLayoutFilePath
             // 
-            this.TextBoxChannelLayoutFilePath.Location = new System.Drawing.Point(16, 9);
-            this.TextBoxChannelLayoutFilePath.Multiline = true;
-            this.TextBoxChannelLayoutFilePath.Name = "TextBoxChannelLayoutFilePath";
-            this.TextBoxChannelLayoutFilePath.ReadOnly = true;
-            this.TextBoxChannelLayoutFilePath.Size = new System.Drawing.Size(203, 67);
-            this.TextBoxChannelLayoutFilePath.TabIndex = 0;
+            this.textBoxChannelLayoutFilePath.Location = new System.Drawing.Point(24, 14);
+            this.textBoxChannelLayoutFilePath.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.textBoxChannelLayoutFilePath.Multiline = true;
+            this.textBoxChannelLayoutFilePath.Name = "textBoxChannelLayoutFilePath";
+            this.textBoxChannelLayoutFilePath.ReadOnly = true;
+            this.textBoxChannelLayoutFilePath.Size = new System.Drawing.Size(302, 101);
+            this.textBoxChannelLayoutFilePath.TabIndex = 0;
             // 
-            // TabPageEditorDialog
+            // tabPageEditorDialog
             // 
-            this.TabPageEditorDialog.Controls.Add(this.PropertyGridStimulusSequence);
-            this.TabPageEditorDialog.Location = new System.Drawing.Point(4, 22);
-            this.TabPageEditorDialog.Margin = new System.Windows.Forms.Padding(2);
-            this.TabPageEditorDialog.Name = "TabPageEditorDialog";
-            this.TabPageEditorDialog.Padding = new System.Windows.Forms.Padding(2);
-            this.TabPageEditorDialog.Size = new System.Drawing.Size(241, 289);
-            this.TabPageEditorDialog.TabIndex = 2;
-            this.TabPageEditorDialog.Text = "EditorDialog";
-            this.TabPageEditorDialog.UseVisualStyleBackColor = true;
+            this.tabPageEditorDialog.Controls.Add(this.propertyGridStimulusSequence);
+            this.tabPageEditorDialog.Location = new System.Drawing.Point(4, 29);
+            this.tabPageEditorDialog.Name = "tabPageEditorDialog";
+            this.tabPageEditorDialog.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageEditorDialog.Size = new System.Drawing.Size(366, 452);
+            this.tabPageEditorDialog.TabIndex = 2;
+            this.tabPageEditorDialog.Text = "EditorDialog";
+            this.tabPageEditorDialog.UseVisualStyleBackColor = true;
             // 
-            // PropertyGridStimulusSequence
+            // propertyGridStimulusSequence
             // 
-            this.PropertyGridStimulusSequence.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.PropertyGridStimulusSequence.Location = new System.Drawing.Point(2, 2);
-            this.PropertyGridStimulusSequence.Margin = new System.Windows.Forms.Padding(2);
-            this.PropertyGridStimulusSequence.Name = "PropertyGridStimulusSequence";
-            this.PropertyGridStimulusSequence.Size = new System.Drawing.Size(237, 285);
-            this.PropertyGridStimulusSequence.TabIndex = 4;
-            this.PropertyGridStimulusSequence.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.PropertyGridStimulusSequence_PropertyValueChanged);
+            this.propertyGridStimulusSequence.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.propertyGridStimulusSequence.Location = new System.Drawing.Point(3, 3);
+            this.propertyGridStimulusSequence.Name = "propertyGridStimulusSequence";
+            this.propertyGridStimulusSequence.Size = new System.Drawing.Size(360, 446);
+            this.propertyGridStimulusSequence.TabIndex = 4;
+            this.propertyGridStimulusSequence.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.PropertyGridStimulusSequence_PropertyValueChanged);
             // 
-            // TabControlVisualization
+            // tabControlVisualization
             // 
-            this.TabControlVisualization.Controls.Add(this.TabPageWaveform);
-            this.TabControlVisualization.Controls.Add(this.TabPageTable);
-            this.TabControlVisualization.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.TabControlVisualization.Location = new System.Drawing.Point(0, 0);
-            this.TabControlVisualization.Margin = new System.Windows.Forms.Padding(2);
-            this.TabControlVisualization.Name = "TabControlVisualization";
-            this.TabControlVisualization.SelectedIndex = 0;
-            this.TabControlVisualization.Size = new System.Drawing.Size(946, 551);
-            this.TabControlVisualization.TabIndex = 6;
+            this.tabControlVisualization.Controls.Add(this.tabPageWaveform);
+            this.tabControlVisualization.Controls.Add(this.tabPageTable);
+            this.tabControlVisualization.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tabControlVisualization.Location = new System.Drawing.Point(0, 0);
+            this.tabControlVisualization.Name = "tabControlVisualization";
+            this.tabControlVisualization.SelectedIndex = 0;
+            this.tabControlVisualization.Size = new System.Drawing.Size(1419, 850);
+            this.tabControlVisualization.TabIndex = 6;
             // 
-            // TabPageWaveform
+            // tabPageWaveform
             // 
-            this.TabPageWaveform.Controls.Add(this.ZedGraphWaveform);
-            this.TabPageWaveform.Location = new System.Drawing.Point(4, 22);
-            this.TabPageWaveform.Margin = new System.Windows.Forms.Padding(2);
-            this.TabPageWaveform.Name = "TabPageWaveform";
-            this.TabPageWaveform.Padding = new System.Windows.Forms.Padding(2);
-            this.TabPageWaveform.Size = new System.Drawing.Size(938, 525);
-            this.TabPageWaveform.TabIndex = 0;
-            this.TabPageWaveform.Text = "Stimulus Waveform";
-            this.TabPageWaveform.UseVisualStyleBackColor = true;
+            this.tabPageWaveform.Controls.Add(this.zedGraphWaveform);
+            this.tabPageWaveform.Location = new System.Drawing.Point(4, 29);
+            this.tabPageWaveform.Name = "tabPageWaveform";
+            this.tabPageWaveform.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageWaveform.Size = new System.Drawing.Size(1411, 817);
+            this.tabPageWaveform.TabIndex = 0;
+            this.tabPageWaveform.Text = "Stimulus Waveform";
+            this.tabPageWaveform.UseVisualStyleBackColor = true;
             // 
-            // TabPageTable
+            // tabPageTable
             // 
-            this.TabPageTable.Controls.Add(this.DataGridViewStimulusTable);
-            this.TabPageTable.Location = new System.Drawing.Point(4, 22);
-            this.TabPageTable.Margin = new System.Windows.Forms.Padding(2);
-            this.TabPageTable.Name = "TabPageTable";
-            this.TabPageTable.Padding = new System.Windows.Forms.Padding(2);
-            this.TabPageTable.Size = new System.Drawing.Size(938, 525);
-            this.TabPageTable.TabIndex = 1;
-            this.TabPageTable.Text = "Table";
-            this.TabPageTable.UseVisualStyleBackColor = true;
+            this.tabPageTable.Controls.Add(this.dataGridViewStimulusTable);
+            this.tabPageTable.Location = new System.Drawing.Point(4, 29);
+            this.tabPageTable.Name = "tabPageTable";
+            this.tabPageTable.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageTable.Size = new System.Drawing.Size(1411, 817);
+            this.tabPageTable.TabIndex = 1;
+            this.tabPageTable.Text = "Table";
+            this.tabPageTable.UseVisualStyleBackColor = true;
             // 
-            // DataGridViewStimulusTable
+            // dataGridViewStimulusTable
             // 
-            this.DataGridViewStimulusTable.AllowUserToAddRows = false;
-            this.DataGridViewStimulusTable.AllowUserToDeleteRows = false;
-            this.DataGridViewStimulusTable.AllowUserToOrderColumns = true;
-            this.DataGridViewStimulusTable.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
-            this.DataGridViewStimulusTable.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.DataGridViewStimulusTable.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.DataGridViewStimulusTable.Location = new System.Drawing.Point(2, 2);
-            this.DataGridViewStimulusTable.Margin = new System.Windows.Forms.Padding(2);
-            this.DataGridViewStimulusTable.Name = "DataGridViewStimulusTable";
-            this.DataGridViewStimulusTable.RowHeadersWidth = 62;
-            this.DataGridViewStimulusTable.RowTemplate.Height = 28;
-            this.DataGridViewStimulusTable.Size = new System.Drawing.Size(934, 521);
-            this.DataGridViewStimulusTable.TabIndex = 0;
-            this.DataGridViewStimulusTable.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridViewStimulusTable_CellEndEdit);
+            this.dataGridViewStimulusTable.AllowUserToAddRows = false;
+            this.dataGridViewStimulusTable.AllowUserToDeleteRows = false;
+            this.dataGridViewStimulusTable.AllowUserToOrderColumns = true;
+            this.dataGridViewStimulusTable.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
+            this.dataGridViewStimulusTable.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridViewStimulusTable.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridViewStimulusTable.Location = new System.Drawing.Point(3, 3);
+            this.dataGridViewStimulusTable.Name = "dataGridViewStimulusTable";
+            this.dataGridViewStimulusTable.RowHeadersWidth = 62;
+            this.dataGridViewStimulusTable.RowTemplate.Height = 28;
+            this.dataGridViewStimulusTable.Size = new System.Drawing.Size(1405, 811);
+            this.dataGridViewStimulusTable.TabIndex = 0;
+            this.dataGridViewStimulusTable.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridViewStimulusTable_CellEndEdit);
             // 
             // splitContainer1
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer1.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer1.Margin = new System.Windows.Forms.Padding(2);
             this.splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.TabControlVisualization);
+            this.splitContainer1.Panel1.Controls.Add(this.tabControlVisualization);
             // 
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
-            this.splitContainer1.Size = new System.Drawing.Size(1198, 551);
-            this.splitContainer1.SplitterDistance = 946;
-            this.splitContainer1.SplitterWidth = 3;
+            this.splitContainer1.Size = new System.Drawing.Size(1797, 850);
+            this.splitContainer1.SplitterDistance = 1419;
             this.splitContainer1.TabIndex = 6;
             // 
             // splitContainer2
@@ -769,7 +734,6 @@
             this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer2.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
             this.splitContainer2.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer2.Margin = new System.Windows.Forms.Padding(2);
             this.splitContainer2.Name = "splitContainer2";
             this.splitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
@@ -779,85 +743,84 @@
             // 
             // splitContainer2.Panel2
             // 
-            this.splitContainer2.Panel2.Controls.Add(this.PanelButtons);
-            this.splitContainer2.Size = new System.Drawing.Size(249, 551);
-            this.splitContainer2.SplitterDistance = 520;
-            this.splitContainer2.SplitterWidth = 3;
+            this.splitContainer2.Panel2.Controls.Add(this.panelButtons);
+            this.splitContainer2.Size = new System.Drawing.Size(374, 850);
+            this.splitContainer2.SplitterDistance = 790;
+            this.splitContainer2.SplitterWidth = 5;
             this.splitContainer2.TabIndex = 0;
             // 
             // splitContainer3
             // 
             this.splitContainer3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer3.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer3.Margin = new System.Windows.Forms.Padding(2);
             this.splitContainer3.Name = "splitContainer3";
             this.splitContainer3.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
             // splitContainer3.Panel1
             // 
-            this.splitContainer3.Panel1.Controls.Add(this.ZedGraphChannels);
+            this.splitContainer3.Panel1.Controls.Add(this.zedGraphChannels);
             // 
             // splitContainer3.Panel2
             // 
-            this.splitContainer3.Panel2.Controls.Add(this.TabControlParameters);
+            this.splitContainer3.Panel2.Controls.Add(this.tabControlParameters);
             this.splitContainer3.Panel2MinSize = 315;
-            this.splitContainer3.Size = new System.Drawing.Size(249, 520);
-            this.splitContainer3.SplitterDistance = 200;
-            this.splitContainer3.SplitterWidth = 5;
+            this.splitContainer3.Size = new System.Drawing.Size(374, 790);
+            this.splitContainer3.SplitterDistance = 302;
+            this.splitContainer3.SplitterWidth = 8;
             this.splitContainer3.TabIndex = 0;
             // 
-            // ZedGraphChannels
+            // zedGraphChannels
             // 
-            this.ZedGraphChannels.AutoSize = true;
-            this.ZedGraphChannels.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ZedGraphChannels.Location = new System.Drawing.Point(0, 0);
-            this.ZedGraphChannels.Name = "ZedGraphChannels";
-            this.ZedGraphChannels.ScrollGrace = 0D;
-            this.ZedGraphChannels.ScrollMaxX = 0D;
-            this.ZedGraphChannels.ScrollMaxY = 0D;
-            this.ZedGraphChannels.ScrollMaxY2 = 0D;
-            this.ZedGraphChannels.ScrollMinX = 0D;
-            this.ZedGraphChannels.ScrollMinY = 0D;
-            this.ZedGraphChannels.ScrollMinY2 = 0D;
-            this.ZedGraphChannels.Size = new System.Drawing.Size(249, 200);
-            this.ZedGraphChannels.TabIndex = 3;
-            this.ZedGraphChannels.UseExtendedPrintDialog = true;
-            this.ZedGraphChannels.MouseClick += new System.Windows.Forms.MouseEventHandler(this.ZedGraphChannels_MouseClick);
+            this.zedGraphChannels.AutoSize = true;
+            this.zedGraphChannels.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.zedGraphChannels.Location = new System.Drawing.Point(0, 0);
+            this.zedGraphChannels.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
+            this.zedGraphChannels.Name = "zedGraphChannels";
+            this.zedGraphChannels.ScrollGrace = 0D;
+            this.zedGraphChannels.ScrollMaxX = 0D;
+            this.zedGraphChannels.ScrollMaxY = 0D;
+            this.zedGraphChannels.ScrollMaxY2 = 0D;
+            this.zedGraphChannels.ScrollMinX = 0D;
+            this.zedGraphChannels.ScrollMinY = 0D;
+            this.zedGraphChannels.ScrollMinY2 = 0D;
+            this.zedGraphChannels.Size = new System.Drawing.Size(374, 302);
+            this.zedGraphChannels.TabIndex = 3;
+            this.zedGraphChannels.UseExtendedPrintDialog = true;
+            this.zedGraphChannels.MouseClick += new System.Windows.Forms.MouseEventHandler(this.ZedGraphChannels_MouseClick);
             // 
             // Rhs2116StimulusSequenceDialog
             // 
             this.AccessibleDescription = "";
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.CancelButton = this.ButtonCancel;
-            this.ClientSize = new System.Drawing.Size(1198, 573);
+            this.CancelButton = this.buttonCancel;
+            this.ClientSize = new System.Drawing.Size(1797, 882);
             this.Controls.Add(this.splitContainer1);
-            this.Controls.Add(this.LinkLabelDocumentation);
-            this.Controls.Add(this.StatusStrip);
-            this.Margin = new System.Windows.Forms.Padding(2);
-            this.MinimumSize = new System.Drawing.Size(105, 50);
+            this.Controls.Add(this.linkLabelDocumentation);
+            this.Controls.Add(this.statusStrip);
+            this.MinimumSize = new System.Drawing.Size(146, 56);
             this.Name = "Rhs2116StimulusSequenceDialog";
             this.Text = "Rhs2116StimulusSequenceDialog";
-            this.StatusStrip.ResumeLayout(false);
-            this.StatusStrip.PerformLayout();
-            this.PanelButtons.ResumeLayout(false);
-            this.TabControlParameters.ResumeLayout(false);
-            this.TabPageAddPulse.ResumeLayout(false);
-            this.TabPageAddPulse.PerformLayout();
-            this.PanelParameters.ResumeLayout(false);
-            this.PanelParameters.PerformLayout();
-            this.GroupBoxCathode.ResumeLayout(false);
-            this.GroupBoxCathode.PerformLayout();
-            this.GroupBoxAnode.ResumeLayout(false);
-            this.GroupBoxAnode.PerformLayout();
-            this.TabPageChannelLayout.ResumeLayout(false);
-            this.PanelChannelLayout.ResumeLayout(false);
-            this.PanelChannelLayout.PerformLayout();
-            this.TabPageEditorDialog.ResumeLayout(false);
-            this.TabControlVisualization.ResumeLayout(false);
-            this.TabPageWaveform.ResumeLayout(false);
-            this.TabPageTable.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.DataGridViewStimulusTable)).EndInit();
+            this.statusStrip.ResumeLayout(false);
+            this.statusStrip.PerformLayout();
+            this.panelButtons.ResumeLayout(false);
+            this.tabControlParameters.ResumeLayout(false);
+            this.tabPageAddPulse.ResumeLayout(false);
+            this.tabPageAddPulse.PerformLayout();
+            this.panelParameters.ResumeLayout(false);
+            this.panelParameters.PerformLayout();
+            this.groupBoxCathode.ResumeLayout(false);
+            this.groupBoxCathode.PerformLayout();
+            this.groupBoxAnode.ResumeLayout(false);
+            this.groupBoxAnode.PerformLayout();
+            this.tabPageChannelLayout.ResumeLayout(false);
+            this.panelChannelLayout.ResumeLayout(false);
+            this.panelChannelLayout.PerformLayout();
+            this.tabPageEditorDialog.ResumeLayout(false);
+            this.tabControlVisualization.ResumeLayout(false);
+            this.tabPageWaveform.ResumeLayout(false);
+            this.tabPageTable.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewStimulusTable)).EndInit();
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
@@ -878,63 +841,63 @@
         }
 
         #endregion
-        private System.Windows.Forms.StatusStrip StatusStrip;
-        private System.Windows.Forms.ToolStripStatusLabel ToolStripStatusIsValid;
-        private System.Windows.Forms.Button ButtonCancel;
-        private System.Windows.Forms.LinkLabel LinkLabelDocumentation;
-        private ZedGraph.ZedGraphControl ZedGraphWaveform;
-        private System.Windows.Forms.ToolStripStatusLabel ToolStripStatusSlotsUsed;
-        private System.Windows.Forms.Panel PanelButtons;
-        private System.Windows.Forms.Button ButtonOk;
-        private System.Windows.Forms.TabControl TabControlParameters;
-        private System.Windows.Forms.TabPage TabPageAddPulse;
-        private System.Windows.Forms.TabPage TabPageEditorDialog;
-        private System.Windows.Forms.PropertyGrid PropertyGridStimulusSequence;
-        private System.Windows.Forms.Label LabelAnplitudeAnodicText;
-        private System.Windows.Forms.Label DelayText;
-        private System.Windows.Forms.TextBox AmplitudeAnodic;
-        private System.Windows.Forms.TextBox DelaySamples;
-        private System.Windows.Forms.CheckBox CheckboxBiphasicSymmetrical;
-        private System.Windows.Forms.Button ButtonAddPulses;
-        private System.Windows.Forms.Label NumberOfPulsesText;
-        private System.Windows.Forms.TextBox NumberOfStimuli;
-        private System.Windows.Forms.Label InterStimulusIntervalText;
-        private System.Windows.Forms.TextBox InterStimulusInterval;
-        private System.Windows.Forms.Label LabelPulseWidthAnodicText;
-        private System.Windows.Forms.TextBox PulseWidthAnodic;
-        private System.Windows.Forms.TabControl TabControlVisualization;
-        private System.Windows.Forms.TabPage TabPageWaveform;
-        private System.Windows.Forms.TabPage TabPageTable;
+        private System.Windows.Forms.StatusStrip statusStrip;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusIsValid;
+        private System.Windows.Forms.Button buttonCancel;
+        private System.Windows.Forms.LinkLabel linkLabelDocumentation;
+        private ZedGraph.ZedGraphControl zedGraphWaveform;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusSlotsUsed;
+        private System.Windows.Forms.Panel panelButtons;
+        private System.Windows.Forms.Button buttonOk;
+        private System.Windows.Forms.TabControl tabControlParameters;
+        private System.Windows.Forms.TabPage tabPageAddPulse;
+        private System.Windows.Forms.TabPage tabPageEditorDialog;
+        private System.Windows.Forms.PropertyGrid propertyGridStimulusSequence;
+        private System.Windows.Forms.Label labelAnplitudeAnodicText;
+        private System.Windows.Forms.Label delayText;
+        private System.Windows.Forms.TextBox amplitudeAnodicSteps;
+        private System.Windows.Forms.TextBox delaySamples;
+        private System.Windows.Forms.CheckBox checkboxBiphasicSymmetrical;
+        private System.Windows.Forms.Button buttonAddPulses;
+        private System.Windows.Forms.Label numberOfPulsesText;
+        private System.Windows.Forms.TextBox numberOfStimuliText;
+        private System.Windows.Forms.Label interStimulusIntervalText;
+        private System.Windows.Forms.TextBox interStimulusIntervalSamples;
+        private System.Windows.Forms.Label labelPulseWidthAnodicText;
+        private System.Windows.Forms.TextBox pulseWidthAnodicSamples;
+        private System.Windows.Forms.TabControl tabControlVisualization;
+        private System.Windows.Forms.TabPage tabPageWaveform;
+        private System.Windows.Forms.TabPage tabPageTable;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.SplitContainer splitContainer2;
         private System.Windows.Forms.SplitContainer splitContainer3;
-        private ZedGraph.ZedGraphControl ZedGraphChannels;
-        private System.Windows.Forms.DataGridView DataGridViewStimulusTable;
-        private System.Windows.Forms.Panel PanelParameters;
-        private System.Windows.Forms.TextBox DelaySamplesConverted;
-        private System.Windows.Forms.Label LabelStepSize;
-        private System.Windows.Forms.CheckBox CheckBoxAnodicFirst;
-        private System.Windows.Forms.TextBox AmplitudeAnodicConverted;
-        private System.Windows.Forms.TextBox PulseWidthAnodicConverted;
-        private System.Windows.Forms.TextBox PulseWidthCathodicConverted;
-        private System.Windows.Forms.TextBox AmplitudeCathodicConverted;
-        private System.Windows.Forms.Label LabelAmplitudeCathodic;
-        private System.Windows.Forms.Label LabelPulseWidthCathodicText;
-        private System.Windows.Forms.TextBox PulseWidthCathodic;
-        private System.Windows.Forms.TextBox AmplitudeCathodic;
-        private System.Windows.Forms.TextBox InterPulseIntervalConverted;
-        private System.Windows.Forms.TextBox InterPulseInterval;
-        private System.Windows.Forms.Label InterPulseIntervalText;
-        private System.Windows.Forms.TextBox InterStimulusIntervalConverted;
+        private ZedGraph.ZedGraphControl zedGraphChannels;
+        private System.Windows.Forms.DataGridView dataGridViewStimulusTable;
+        private System.Windows.Forms.Panel panelParameters;
+        private System.Windows.Forms.TextBox delaySamplesConverted;
+        private System.Windows.Forms.Label labelStepSize;
+        private System.Windows.Forms.CheckBox checkBoxAnodicFirst;
+        private System.Windows.Forms.TextBox amplitudeAnodicConverted;
+        private System.Windows.Forms.TextBox pulseWidthAnodicConverted;
+        private System.Windows.Forms.TextBox pulseWidthCathodicConverted;
+        private System.Windows.Forms.TextBox amplitudeCathodicConverted;
+        private System.Windows.Forms.Label labelAmplitudeCathodic;
+        private System.Windows.Forms.Label labelPulseWidthCathodicText;
+        private System.Windows.Forms.TextBox pulseWidthCathodicSamples;
+        private System.Windows.Forms.TextBox amplitudeCathodicSteps;
+        private System.Windows.Forms.TextBox interPulseIntervalConverted;
+        private System.Windows.Forms.TextBox interPulseIntervalSamples;
+        private System.Windows.Forms.Label interPulseIntervalText;
+        private System.Windows.Forms.TextBox interStimulusIntervalConverted;
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.ComboBox ComboBoxStepSize;
-        private System.Windows.Forms.GroupBox GroupBoxCathode;
-        private System.Windows.Forms.GroupBox GroupBoxAnode;
-        private System.Windows.Forms.TabPage TabPageChannelLayout;
-        private System.Windows.Forms.Panel PanelChannelLayout;
-        private System.Windows.Forms.TextBox TextBoxChannelLayoutFilePath;
-        private System.Windows.Forms.Button CustomChannelLayout;
-        private System.Windows.Forms.Button DefaultChannelLayout;
+        private System.Windows.Forms.ComboBox comboBoxStepSize;
+        private System.Windows.Forms.GroupBox groupBoxCathode;
+        private System.Windows.Forms.GroupBox groupBoxAnode;
+        private System.Windows.Forms.TabPage tabPageChannelLayout;
+        private System.Windows.Forms.Panel panelChannelLayout;
+        private System.Windows.Forms.TextBox textBoxChannelLayoutFilePath;
+        private System.Windows.Forms.Button buttonCustomChannelLayout;
+        private System.Windows.Forms.Button buttonDefaultChannelLayout;
     }
 }
