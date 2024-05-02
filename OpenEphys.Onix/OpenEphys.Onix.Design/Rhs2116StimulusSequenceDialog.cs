@@ -309,6 +309,13 @@ namespace OpenEphys.Onix.Design
             var rangeX = maxX - minX;
             var rangeY = maxY - minY;
 
+            if (rangeY < rangeX / 2)
+            {
+                minY -= rangeX / 2 - rangeY;
+                maxY += rangeX / 2 - rangeY;
+                rangeY = maxY - minY;
+            }
+
             zedGraphChannels.GraphPane.XAxis.Scale.Min = minX - rangeX * 0.1; 
             zedGraphChannels.GraphPane.XAxis.Scale.Max = maxX + rangeX * 0.1; 
             zedGraphChannels.GraphPane.YAxis.Scale.Min = minY - rangeY * 0.1;
