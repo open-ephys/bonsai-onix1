@@ -13,7 +13,7 @@ namespace OpenEphys.Onix
     [DefaultProperty(nameof(StimulusSequence))]
     public class Rhs2116StimulusTrigger : Sink<bool>
     {
-        readonly BehaviorSubject<Rhs2116StimulusSequence> stimulusSequence = new(new Rhs2116StimulusSequence());
+        readonly BehaviorSubject<Rhs2116StimulusSequence> stimulusSequence = new(new Rhs2116StimulusSequence(true));
 
         [TypeConverter(typeof(Rhs2116Trigger.NameConverter))]
         public string DeviceName { get; set; }
@@ -55,31 +55,29 @@ namespace OpenEphys.Onix
                         return new CompositeDisposable(
                             stimulusSequence.Subscribe(value =>
                             {
-                                // Step size
                                 var reg = Rhs2116Config.StimulatorStepSizeToRegisters[value.CurrentStepSize];
                                 deviceRhsA.WriteRegister(Rhs2116.STEPSZ, reg[2] << 13 | reg[1] << 7 | reg[0]);
                                 deviceRhsB.WriteRegister(Rhs2116.STEPSZ, reg[2] << 13 | reg[1] << 7 | reg[0]);
 
-                                // Anodic amplitudes
                                 var a = value.AnodicAmplitudes;
-                                for (int i = 0; i < a.Count(); i++)
+                                for (int i = 0; i < Rhs2116StimulusSequence.NumStimuliPerDevice; i++)
                                 {
                                     deviceRhsA.WriteRegister(Rhs2116.POS00 + (uint)i, a.ElementAt(i));
-                                    deviceRhsB.WriteRegister(Rhs2116.POS00 + (uint)i, a.ElementAt(i));
+                                    deviceRhsB.WriteRegister(Rhs2116.POS00 + (uint)i, a.ElementAt(i + Rhs2116StimulusSequence.NumStimuliPerDevice));
                                 }
 
-                                // Cathodic amplitudes
                                 var c = value.CathodicAmplitudes;
-                                for (int i = 0; i < a.Count(); i++)
+                                for (int i = 0; i < Rhs2116StimulusSequence.NumStimuliPerDevice; i++)
                                 {
                                     deviceRhsA.WriteRegister(Rhs2116.NEG00 + (uint)i, c.ElementAt(i));
-                                    deviceRhsB.WriteRegister(Rhs2116.NEG00 + (uint)i, c.ElementAt(i));
+                                    deviceRhsB.WriteRegister(Rhs2116.NEG00 + (uint)i, c.ElementAt(i + Rhs2116StimulusSequence.NumStimuliPerDevice));
                                 }
 
-                                // Create delta table and set length
                                 var dt = value.DeltaTable;
+                                var dtB = value.DeltaTableB;
+
                                 deviceRhsA.WriteRegister(Rhs2116.NUMDELTAS, (uint)dt.Count);
-                                deviceRhsB.WriteRegister(Rhs2116.NUMDELTAS, (uint)dt.Count);
+                                deviceRhsB.WriteRegister(Rhs2116.NUMDELTAS, (uint)dtB.Count);
 
                                 uint j = 0;
                                 foreach (var d in dt)
@@ -88,6 +86,12 @@ namespace OpenEphys.Onix
 
                                     deviceRhsA.WriteRegister(Rhs2116.DELTAIDXTIME, indexAndTime);
                                     deviceRhsA.WriteRegister(Rhs2116.DELTAPOLEN, d.Value);
+                                }
+
+                                j = 0;
+                                foreach (var d in dtB)
+                                {
+                                    uint indexAndTime = j++ << 22 | (d.Key & 0x003FFFFF);
 
                                     deviceRhsB.WriteRegister(Rhs2116.DELTAIDXTIME, indexAndTime);
                                     deviceRhsB.WriteRegister(Rhs2116.DELTAPOLEN, d.Value);

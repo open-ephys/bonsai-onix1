@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -345,19 +345,50 @@ namespace OpenEphys.Onix
         }
     }
 
+    /// <summary>
+    /// Defines a class that holds the Stimulus Sequence for an Rhs2116 device.
+    /// Able to be expanded so that it contains two combined sequences for HeadstageRhs2116,
+    /// with an Rhs2116A and Rhs2116B.
+    /// </summary>
     public class Rhs2116StimulusSequence
     {
+        private readonly bool DualSequences;
+
+        public static readonly int NumStimuliPerDevice = 16;
+
         /// <summary>
-        /// Default constructor for Rhs2116StimulusSequence
+        /// Default constructor for Rhs2116StimulusSequence. Initializes with 16 stimuli
         /// </summary>
         public Rhs2116StimulusSequence()
         {
-            // TODO: is there a nicer way to initialize this array?
-            Stimuli = new Rhs2116Stimulus[16];
+            Stimuli = new Rhs2116Stimulus[NumStimuliPerDevice];
+
             for (var i = 0; i < Stimuli.Length; i++)
             {
                 Stimuli[i] = new Rhs2116Stimulus();
             }
+
+            DualSequences = false;
+        }
+
+        /// <summary>
+        /// Constructor for Rhs2116StimulusSequence that takes a boolean value; if true, 
+        /// construct the sequence with 32 channels of stimuli, and if false generates the same 
+        /// as the default constructor
+        /// </summary>
+        /// <param name="dualSequences">If true, create 32 channels of stimuli; if false, create 16 chanels of stimuli</param>
+        public Rhs2116StimulusSequence(bool dualSequences)
+        {
+            var numStimuli = dualSequences ? NumStimuliPerDevice * 2 : NumStimuliPerDevice;
+
+            Stimuli = new Rhs2116Stimulus[numStimuli];
+
+            for (var i = 0; i < Stimuli.Length; i++)
+            {
+                Stimuli[i] = new Rhs2116Stimulus();
+            }
+
+            DualSequences = dualSequences;
         }
 
         /// <summary>
@@ -366,8 +397,9 @@ namespace OpenEphys.Onix
         /// <param name="sequence"></param>
         public Rhs2116StimulusSequence(Rhs2116StimulusSequence sequence)
         {
-          Stimuli = Array.ConvertAll(sequence.Stimuli, stimulus => stimulus.Clone());
-          CurrentStepSize = sequence.CurrentStepSize;
+            Stimuli = Array.ConvertAll(sequence.Stimuli, stimulus => stimulus.Clone());
+            CurrentStepSize = sequence.CurrentStepSize;
+            DualSequences = sequence.DualSequences;
         }
 
         public Rhs2116Stimulus[] Stimuli { get; set; }
@@ -438,7 +470,7 @@ namespace OpenEphys.Onix
         /// Number of hardware memory slots required by the sequence
         /// </summary>
         [XmlIgnore]
-        public int StimulusSlotsRequired => DeltaTable.Count;
+        public int StimulusSlotsRequired => Math.Max(DeltaTable.Count, DeltaTableB.Count);
 
         [XmlIgnore]
         public double CurrentStepSizeuA
@@ -476,41 +508,64 @@ namespace OpenEphys.Onix
         [XmlIgnore]
         internal Dictionary<uint, uint> DeltaTable
         {
+            get => GetDeltaTable(true);
+        }
+
+        /// <summary>
+        /// Generate the delta-table representation of this stimulus sequence that can be uploaded to the RHS2116B device.
+        /// The resultant dictionary has a time, in samples, as the key and a combined [polarity, enable] bit field as the value.
+        /// This only returns a delta-table if the StimulusSequence was initialized using DualSequences = true, otherwise it returns
+        /// an empty Dictionary
+        /// </summary>
+        [XmlIgnore]
+        internal Dictionary<uint, uint> DeltaTableB
+        {
             get
             {
-                var table = new Dictionary<uint, BitArray>();
-
-                // Cycle through electrodes
-                for (int i = 0; i < Stimuli.Length; i++)
+                if (!DualSequences)
                 {
-                    var s = Stimuli[i];
-
-                    var e0 = s.AnodicFirst ? s.AnodicAmplitudeSteps > 0 : s.CathodicAmplitudeSteps > 0;
-                    var e1 = s.AnodicFirst ? s.CathodicAmplitudeSteps > 0 : s.AnodicAmplitudeSteps > 0;
-                    var d0 = s.AnodicFirst ? s.AnodicWidthSamples : s.CathodicWidthSamples;
-                    var d1 = d0 + s.DwellSamples;
-                    var d2 = d1 + (s.AnodicFirst ? s.CathodicWidthSamples : s.AnodicWidthSamples);
-
-                    var t0 = s.DelaySamples;
-
-                    for (int j = 0; j < s.NumberOfStimuli; j++)
-                    {
-                        AddOrInsert(ref table, i, t0, s.AnodicFirst, e0);
-                        AddOrInsert(ref table, i, t0 + d0, s.AnodicFirst, false);
-                        AddOrInsert(ref table, i, t0 + d1, !s.AnodicFirst, e1);
-                        AddOrInsert(ref table, i, t0 + d2, !s.AnodicFirst, false);
-
-                        t0 += d2 + s.InterStimulusIntervalSamples;
-                    }
+                    return new Dictionary<uint, uint>();
                 }
 
-                return table.ToDictionary(d => d.Key, d =>
-                {
-                    int[] i = new int[1];
-                    d.Value.CopyTo(i, 0);
-                    return (uint)i[0];
-                });
+                return GetDeltaTable(false);
             }
+        }
+
+        private Dictionary<uint, uint> GetDeltaTable(bool deltaTableA)
+        {
+            var table = new Dictionary<uint, BitArray>();
+
+            var offset = deltaTableA ? 0 : NumStimuliPerDevice;
+
+            for (int i = 0; i < NumStimuliPerDevice; i++)
+            {
+                var s = Stimuli[i + offset];
+
+                var e0 = s.AnodicFirst ? s.AnodicAmplitudeSteps > 0 : s.CathodicAmplitudeSteps > 0;
+                var e1 = s.AnodicFirst ? s.CathodicAmplitudeSteps > 0 : s.AnodicAmplitudeSteps > 0;
+                var d0 = s.AnodicFirst ? s.AnodicWidthSamples : s.CathodicWidthSamples;
+                var d1 = d0 + s.DwellSamples;
+                var d2 = d1 + (s.AnodicFirst ? s.CathodicWidthSamples : s.AnodicWidthSamples);
+
+                var t0 = s.DelaySamples;
+
+                for (int j = 0; j<s.NumberOfStimuli; j++)
+                {
+                    AddOrInsert(ref table, i, t0, s.AnodicFirst, e0);
+                    AddOrInsert(ref table, i, t0 + d0, s.AnodicFirst, false);
+                    AddOrInsert(ref table, i, t0 + d1, !s.AnodicFirst, e1);
+                    AddOrInsert(ref table, i, t0 + d2, !s.AnodicFirst, false);
+
+                    t0 += d2 + s.InterStimulusIntervalSamples;
+                }
+            }
+
+            return table.ToDictionary(d => d.Key, d =>
+            {
+                int[] i = new int[1];
+                d.Value.CopyTo(i, 0);
+                return (uint)i[0];
+            });
         }
 
         private static void AddOrInsert(ref Dictionary<uint, BitArray> table, int channel, uint key, bool polarity, bool enable)
