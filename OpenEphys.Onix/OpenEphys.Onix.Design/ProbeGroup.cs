@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -44,6 +44,39 @@ namespace OpenEphys.Onix.Design
             Device_Channel_Indices = device_channel_indices;
             Contact_Ids = contact_ids;
         }
+
+        /// <summary>
+        /// Returns a Contact object that contains the position, shape, shape params, and IDs (device / contact / shank)
+        /// </summary>
+        /// <param name="index">Relative index of the contact in this Probe</param>
+        /// <returns></returns>
+        public Contact GetContact(int index)
+        {
+            return new Contact(Contact_Positions[index][0], Contact_Positions[index][1], Contact_Shapes[index], Contact_Shape_Params[index],
+                Device_Channel_Indices[index], Contact_Ids[index], Shank_Ids[index]);
+        }
+    }
+    public struct Contact
+    {
+        public float PosX { get; set; }
+        public float PosY { get; set; }
+        public string Shape { get; set; }
+        public ContactShapeParam ShapeParams { get; set; }
+        public uint DeviceId { get; set; }
+        public string ContactId { get; set; }
+        public string ShankId { get; set; }
+
+        public Contact(float posX,  float posY, string shape, ContactShapeParam shapeParam, uint device_id,  string contact_id, string shank_id)
+        {
+            PosX = posX;
+            PosY = posY;
+            Shape = shape;
+            ShapeParams = shapeParam;
+            DeviceId = device_id;
+            ContactId = contact_id;
+            ShankId = shank_id;
+        }
+
     }
     public struct ContactShapeParam
     {
