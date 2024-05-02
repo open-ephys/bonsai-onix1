@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -21,6 +21,9 @@ namespace OpenEphys.Onix.Design
         private readonly bool[] SelectedChannels = null;
 
         private readonly string DefaultChannelLayoutFilePath = "../../Python/simple_rhs2116_headstage_probe_interface.json";
+
+        private const string ContactStringFormat = "Contact_{0}";
+        private const string TextStringFormat = "TextContact_{0}";
 
         private ProbeGroup probeGroup;
 
@@ -269,6 +272,38 @@ namespace OpenEphys.Onix.Design
 
                 tmp = planarContours.Max(p => p.Y);
                 maxY = tmp > maxY ? tmp : maxY; 
+
+                for (int j = 0; j < probeGroup.Probes[i].Contact_Positions.Length; j++)
+                {
+                    Contact contact = probeGroup.Probes[i].GetContact(j);
+
+                    if (contact.Shape.Equals("circle"))
+                    {
+                        EllipseObj contactObj = new(contact.PosX - contact.ShapeParams.Radius, contact.PosY + contact.ShapeParams.Radius,
+                            contact.ShapeParams.Radius * 2, contact.ShapeParams.Radius * 2, Color.DarkGray, Color.WhiteSmoke)
+                        {
+                            ZOrder=ZOrder.B_BehindLegend,
+                            Tag = string.Format(ContactStringFormat, contact.ContactId)
+                        };
+
+                        zedGraphChannels.GraphPane.GraphObjList.Add(contactObj);
+
+                        TextObj textObj = new(contact.ContactId, contact.PosX, contact.PosY)
+                        {
+                            ZOrder=ZOrder.A_InFront,
+                            Tag = string.Format(TextStringFormat, contact.ContactId)
+                        };
+                        textObj.FontSpec.Size = 22;
+                        textObj.FontSpec.Border.IsVisible = false;
+                        textObj.FontSpec.Fill.IsVisible = false;
+
+                        zedGraphChannels.GraphPane.GraphObjList.Add(textObj);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Contact shapes other than 'circle' not implemented yet.");
+                    }
+                }
             }
 
             var rangeX = maxX - minX;
@@ -365,7 +400,7 @@ namespace OpenEphys.Onix.Design
 
             for (int i = 0; i < SelectedChannels.Length; i++)
             {
-                EllipseObj circleObj = (EllipseObj)zedGraphChannels.GraphPane.GraphObjList[string.Format("Circle_{0}", i)];
+                EllipseObj circleObj = (EllipseObj)zedGraphChannels.GraphPane.GraphObjList[string.Format(ContactStringFormat, i)];
 
                 if (circleObj != null)
                 {
