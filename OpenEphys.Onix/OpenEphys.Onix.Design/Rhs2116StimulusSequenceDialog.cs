@@ -119,9 +119,9 @@ namespace OpenEphys.Onix.Design
             zedGraphWaveform.GraphPane.CurveList.Clear();
             zedGraphWaveform.ZoomOutAll(zedGraphWaveform.GraphPane);
 
-            double peakToPeak = Sequence.MaximumPeakToPeakAmplitudeSteps > 0 ? 
+            double peakToPeak = (Sequence.MaximumPeakToPeakAmplitudeSteps > 0 ? 
                 Sequence.CurrentStepSizeuA * Sequence.MaximumPeakToPeakAmplitudeSteps :
-                Sequence.CurrentStepSizeuA * 1;
+                Sequence.CurrentStepSizeuA * 1) * 1.1;
 
             var stimuli = Sequence.Stimuli;
 
@@ -129,7 +129,7 @@ namespace OpenEphys.Onix.Design
             {
                 if (SelectedChannels[i])
                 {
-                    PointPairList pointPairs = CreateStimulusWaveform(stimuli[i], -(peakToPeak * 1.1) * i);
+                    PointPairList pointPairs = CreateStimulusWaveform(stimuli[i], -peakToPeak * i);
                     var curve = zedGraphWaveform.GraphPane.AddCurve("Test", pointPairs, Color.CornflowerBlue, SymbolType.None);
 
                     curve.Label.IsVisible = false;
@@ -139,8 +139,8 @@ namespace OpenEphys.Onix.Design
 
             zedGraphWaveform.GraphPane.XAxis.Scale.Min = 0;
             zedGraphWaveform.GraphPane.XAxis.Scale.Max = (Sequence.SequenceLengthSamples > 0 ? Sequence.SequenceLengthSamples : 1) * SamplePeriodMicroSeconds;
-            zedGraphWaveform.GraphPane.YAxis.Scale.Min = -peakToPeak * (stimuli.Length + 0.5);
-            zedGraphWaveform.GraphPane.YAxis.Scale.Max = peakToPeak * 1.5;
+            zedGraphWaveform.GraphPane.YAxis.Scale.Min = -peakToPeak * stimuli.Length;
+            zedGraphWaveform.GraphPane.YAxis.Scale.Max = peakToPeak;
 
             zedGraphWaveform.GraphPane.YAxis.Scale.MinorStep = 0;
 
