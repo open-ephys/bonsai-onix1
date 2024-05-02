@@ -1,5 +1,4 @@
-using System.Collections.Generic;
-using System.Drawing;
+﻿using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -24,25 +23,29 @@ namespace OpenEphys.Onix.Design
         public uint Ndim { get; set; }
         public string Si_Units { get; set; }
         public float[][] Contact_Positions { get; set; }
+        public float[][][] Contact_Plane_Axes { get; set; }
         public string[] Contact_Shapes { get; set; }
         public ContactShapeParam[] Contact_Shape_Params { get; set; }
         public float[][] Probe_Planar_Contour { get; set; }
         public uint[] Device_Channel_Indices { get; set; }
-        public uint[] Contact_Ids { get; set; }
+        public string[] Contact_Ids { get; set; }
+        public string[] Shank_Ids { get; set; }
         [JsonExtensionData]
         public Dictionary<string, JsonElement> ExtensionData { get; set; }
 
-        public Probe(uint ndim, string si_units, float[][] contact_positions, string[] contact_shapes, 
-            ContactShapeParam[] contact_shape_params, float[][] probe_planar_contour, uint[] device_channel_indices, uint[] contact_ids)
+        public Probe(uint ndim, string si_units, float[][] contact_positions, float[][][] contact_plane_axes, string[] contact_shapes, 
+            ContactShapeParam[] contact_shape_params, float[][] probe_planar_contour, uint[] device_channel_indices, string[] contact_ids, string[] shank_Ids)
         {
             Ndim = ndim;
             Si_Units = si_units;
             Contact_Positions = contact_positions;
+            Contact_Plane_Axes = contact_plane_axes;
             Contact_Shapes = contact_shapes;
             Contact_Shape_Params = contact_shape_params;
             Probe_Planar_Contour = probe_planar_contour;
             Device_Channel_Indices = device_channel_indices;
             Contact_Ids = contact_ids;
+            Shank_Ids = shank_Ids;
         }
 
         /// <summary>
