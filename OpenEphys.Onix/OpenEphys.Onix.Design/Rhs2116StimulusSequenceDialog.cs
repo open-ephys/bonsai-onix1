@@ -42,7 +42,7 @@ namespace OpenEphys.Onix.Design
             dataGridViewStimulusTable.DataSource = Sequence.Stimuli;
             dataGridViewStimulusTable.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCellsExceptHeader);
 
-            SelectedChannels = new bool[16];
+            SelectedChannels = new bool[Sequence.Stimuli.Length];
             SetAllChannels(true);
 
             comboBoxStepSize.DataSource = Enum.GetValues(typeof(Rhs2116StepSize));
