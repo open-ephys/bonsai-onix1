@@ -17,7 +17,7 @@ namespace OpenEphys.Onix.Design
         {
             var editorService = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
 
-            if (editorService != null )
+            if (editorService != null)
             {
                 var editorDialog = new Rhs2116StimulusSequenceDialog(value as Rhs2116StimulusSequence);
                 

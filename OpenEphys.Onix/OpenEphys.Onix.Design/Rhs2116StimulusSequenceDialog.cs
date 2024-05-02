@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -260,7 +260,6 @@ namespace OpenEphys.Onix.Design
 
                 zedGraphChannels.GraphPane.GraphObjList.Add(contour);
 
-                // Update Max/Min values
                 var tmp = planarContours.Min(p => p.X);
                 minX = tmp < minX ? tmp : minX;
 

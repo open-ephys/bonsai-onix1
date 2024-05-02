@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -361,7 +361,7 @@ namespace OpenEphys.Onix
         }
 
         /// <summary>
-        /// Copy construct for Rhs2116StimulusSequence; performs a shallow copy using MemberwiseClonse()
+        /// Copy construct for Rhs2116StimulusSequence; performs a shallow copy using MemberwiseClone()
         /// </summary>
         /// <param name="sequence"></param>
         public Rhs2116StimulusSequence(Rhs2116StimulusSequence sequence)
@@ -372,7 +372,6 @@ namespace OpenEphys.Onix
 
         public Rhs2116Stimulus[] Stimuli { get; set; }
 
-        // TODO: Should be set automatically to fit the largest required stimulus applitude
         public Rhs2116StepSize CurrentStepSize { get; set; } = Rhs2116StepSize.Step5000nA;
 
         /// <summary>
