@@ -117,6 +117,7 @@ namespace OpenEphys.Onix.Design
         private void DrawStimulusWaveform()
         {
             zedGraphWaveform.GraphPane.CurveList.Clear();
+            zedGraphWaveform.GraphPane.GraphObjList.Clear();
             zedGraphWaveform.ZoomOutAll(zedGraphWaveform.GraphPane);
 
             double peakToPeak = (Sequence.MaximumPeakToPeakAmplitudeSteps > 0 ? 
