@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -130,7 +130,18 @@ namespace OpenEphys.Onix.Design
                 if (SelectedChannels[i])
                 {
                     PointPairList pointPairs = CreateStimulusWaveform(stimuli[i], -peakToPeak * i);
-                    var curve = zedGraphWaveform.GraphPane.AddCurve("Test", pointPairs, Color.CornflowerBlue, SymbolType.None);
+
+                    Color color;
+                    if (stimuli[i].IsValid())
+                    {
+                        color = Color.CornflowerBlue;
+                    }
+                    else
+                    {
+                        color = Color.Red;
+                    }
+
+                    var curve = zedGraphWaveform.GraphPane.AddCurve("Test", pointPairs, color, SymbolType.None);
 
                     curve.Label.IsVisible = false;
                     curve.Line.Width = 3;

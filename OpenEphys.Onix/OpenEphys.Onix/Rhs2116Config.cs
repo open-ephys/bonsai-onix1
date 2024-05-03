@@ -315,6 +315,11 @@ namespace OpenEphys.Onix
         [DisplayName("Inter Stimulus Interval (samples)")]
         public uint InterStimulusIntervalSamples { get; set; } = 0;
 
+        public bool IsValid()
+        {
+            return Valid;
+        }
+
         [XmlIgnore]
         internal bool Valid
         {
