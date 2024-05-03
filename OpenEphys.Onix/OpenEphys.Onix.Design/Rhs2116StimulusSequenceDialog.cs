@@ -120,7 +120,7 @@ namespace OpenEphys.Onix.Design
             zedGraphWaveform.GraphPane.GraphObjList.Clear();
             zedGraphWaveform.ZoomOutAll(zedGraphWaveform.GraphPane);
 
-            double peakToPeak = (Sequence.MaximumPeakToPeakAmplitudeSteps > 0 ? 
+            double peakToPeak = (Sequence.MaximumPeakToPeakAmplitudeSteps > 0 ?
                 Sequence.CurrentStepSizeuA * Sequence.MaximumPeakToPeakAmplitudeSteps :
                 Sequence.CurrentStepSizeuA * 1) * 1.1;
 
@@ -227,7 +227,7 @@ namespace OpenEphys.Onix.Design
 
             zedGraphWaveform.GraphPane.XAxis.Title.Text = "Time [μs]";
             zedGraphWaveform.GraphPane.YAxis.Title.Text = "Amplitude [μA]";
-            
+
             zedGraphWaveform.IsAutoScrollRange = true;
         }
 
@@ -297,7 +297,7 @@ namespace OpenEphys.Onix.Design
                 maxX = tmp > maxX ? tmp : maxX;
 
                 tmp = planarContours.Max(p => p.Y);
-                maxY = tmp > maxY ? tmp : maxY; 
+                maxY = tmp > maxY ? tmp : maxY;
 
                 for (int j = 0; j < probeGroup.Probes[i].Contact_Positions.Length; j++)
                 {
@@ -342,8 +342,8 @@ namespace OpenEphys.Onix.Design
                 rangeY = maxY - minY;
             }
 
-            zedGraphChannels.GraphPane.XAxis.Scale.Min = minX - rangeX * 0.02; 
-            zedGraphChannels.GraphPane.XAxis.Scale.Max = maxX + rangeX * 0.02; 
+            zedGraphChannels.GraphPane.XAxis.Scale.Min = minX - rangeX * 0.02;
+            zedGraphChannels.GraphPane.XAxis.Scale.Max = maxX + rangeX * 0.02;
             zedGraphChannels.GraphPane.YAxis.Scale.Min = minY - rangeY * 0.02;
             zedGraphChannels.GraphPane.YAxis.Scale.Max = maxY + rangeY * 0.02;
 
@@ -456,8 +456,8 @@ namespace OpenEphys.Onix.Design
 
         private void SetAllChannels(bool status)
         {
-            for (int i = 0; i < SelectedChannels.Length; i++) 
-            { 
+            for (int i = 0; i < SelectedChannels.Length; i++)
+            {
                 SelectedChannels[i] = status;
             }
         }
@@ -526,7 +526,7 @@ namespace OpenEphys.Onix.Design
 
                     Sequence.Stimuli[i].AnodicAmplitudeSteps = amplitudeAnodic;
                     Sequence.Stimuli[i].AnodicWidthSamples = pulseWidthAnodic;
-                    
+
                     if (!checkboxBiphasicSymmetrical.Checked)
                     {
                         Sequence.Stimuli[i].CathodicAmplitudeSteps = amplitudeCathodic;
@@ -539,7 +539,7 @@ namespace OpenEphys.Onix.Design
                     }
 
                     Sequence.Stimuli[i].DwellSamples = interPulseInterval;
-                    
+
                     Sequence.Stimuli[i].InterStimulusIntervalSamples = isi;
 
                     Sequence.Stimuli[i].NumberOfStimuli = numberOfStimuli;
@@ -583,7 +583,7 @@ namespace OpenEphys.Onix.Design
             {
                 double timeInMicroSeconds = result * SamplePeriodMicroSeconds;
                 bool isMicro = timeInMicroSeconds < 1e3;
-                
+
                 text = string.Format("{0:F2} {1}s",
                             isMicro ? timeInMicroSeconds : timeInMicroSeconds / 1e3,
                             isMicro ? "μ" : "m");
@@ -632,7 +632,7 @@ namespace OpenEphys.Onix.Design
                             isMicro ? "μ" : "m");
             }
 
-            switch(textBox.Name)
+            switch (textBox.Name)
             {
                 case nameof(amplitudeAnodicSteps):
                     amplitudeAnodicConverted.Text = text;
