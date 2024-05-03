@@ -275,6 +275,8 @@ namespace OpenEphys.Onix.Design
 
         private void DrawChannels()
         {
+            zedGraphChannels.GraphPane.GraphObjList.Clear();
+
             double minX = 1e3, minY = 1e3, maxX = -1e3, maxY = -1e3;
 
             for (int i = 0; i < probeGroup.Probes.Length; i++)
