@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -15,6 +15,36 @@ namespace OpenEphys.Onix.Design
             Specification = specification;
             Version = version;
             Probes = probes;
+        }
+
+        public int NumContacts
+        {
+            get
+            {
+                int numContacts = 0;
+
+                foreach (var probe in Probes)
+                {
+                    numContacts += probe.NumContacts;
+                }
+
+                return numContacts;
+            }
+        }
+
+        public string[] GetContactIds()
+        {
+            string[] contactIds = new string[NumContacts];
+
+            var length = 0;
+
+            foreach (var probe in Probes)
+            {
+                probe.Contact_Ids.CopyTo(contactIds, length);
+                length += probe.NumContacts;
+            }
+
+            return contactIds;
         }
     }
 
@@ -58,6 +88,8 @@ namespace OpenEphys.Onix.Design
             return new Contact(Contact_Positions[index][0], Contact_Positions[index][1], Contact_Shapes[index], Contact_Shape_Params[index],
                 Device_Channel_Indices[index], Contact_Ids[index], Shank_Ids[index]);
         }
+
+        public int NumContacts => Contact_Ids.Length;
     }
     public struct Contact
     {

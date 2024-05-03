@@ -704,7 +704,7 @@
             // 
             this.dataGridViewStimulusTable.AllowUserToAddRows = false;
             this.dataGridViewStimulusTable.AllowUserToDeleteRows = false;
-            this.dataGridViewStimulusTable.AllowUserToOrderColumns = true;
+            this.dataGridViewStimulusTable.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dataGridViewStimulusTable.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
             this.dataGridViewStimulusTable.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewStimulusTable.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -715,6 +715,7 @@
             this.dataGridViewStimulusTable.Size = new System.Drawing.Size(1405, 811);
             this.dataGridViewStimulusTable.TabIndex = 0;
             this.dataGridViewStimulusTable.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridViewStimulusTable_CellEndEdit);
+            this.dataGridViewStimulusTable.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.DataGridViewStimulusTable_DataBindingComplete);
             // 
             // splitContainer1
             // 

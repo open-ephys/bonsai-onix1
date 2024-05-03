@@ -564,7 +564,24 @@ namespace OpenEphys.Onix.Design
         private void DataGridViewStimulusTable_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             dataGridViewStimulusTable.BindingContext[dataGridViewStimulusTable.DataSource].EndCurrentEdit();
+            AddContactIdToGridRow();
             DrawStimulusWaveform();
+            VisualizeSelectedChannels();
+        }
+
+        private void DataGridViewStimulusTable_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
+        {
+            AddContactIdToGridRow();
+        }
+
+        private void AddContactIdToGridRow()
+        {
+            var contactIds = probeGroup.GetContactIds();
+
+            for (int i = 0; i < contactIds.Length; i++)
+            {
+                dataGridViewStimulusTable.Rows[i].HeaderCell.Value = contactIds[i];
+            }
         }
 
         private void ComboBoxStepSize_SelectedIndexChanged(object sender, EventArgs e)
