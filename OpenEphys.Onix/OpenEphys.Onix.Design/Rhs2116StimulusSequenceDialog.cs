@@ -39,9 +39,6 @@ namespace OpenEphys.Onix.Design
 
             propertyGridStimulusSequence.SelectedObject = Sequence;
 
-            dataGridViewStimulusTable.DataSource = Sequence.Stimuli;
-            dataGridViewStimulusTable.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCellsExceptHeader);
-
             SelectedChannels = new bool[Sequence.Stimuli.Length];
             SetAllChannels(true);
 
@@ -54,6 +51,8 @@ namespace OpenEphys.Onix.Design
 
             InitializeZedGraphWaveform();
             DrawStimulusWaveform();
+
+            dataGridViewStimulusTable.DataSource = Sequence.Stimuli;
         }
 
         private void LoadDefaultChannelLayout()
@@ -112,6 +111,7 @@ namespace OpenEphys.Onix.Design
         private void PropertyGridStimulusSequence_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
             DrawStimulusWaveform();
+            VisualizeSelectedChannels();
         }
 
         private void DrawStimulusWaveform()
@@ -140,9 +140,6 @@ namespace OpenEphys.Onix.Design
                     else
                     {
                         color = Color.Red;
-
-                        EllipseObj circleObj = (EllipseObj)zedGraphChannels.GraphPane.GraphObjList[string.Format(ContactStringFormat, i)];
-                        circleObj.Fill.Color = Color.Red;
                     }
 
                     var curve = zedGraphWaveform.GraphPane.AddCurve("Test", pointPairs, color, SymbolType.None);
@@ -407,10 +404,7 @@ namespace OpenEphys.Onix.Design
             }
 
             VisualizeSelectedChannels();
-
             DrawStimulusWaveform();
-
-            zedGraphChannels.Refresh();
         }
 
         private void ToggleSelectedChannel(string tag)
@@ -444,7 +438,11 @@ namespace OpenEphys.Onix.Design
 
                 if (circleObj != null)
                 {
-                    if (showAllChannels || !SelectedChannels[i])
+                    if (!Sequence.Stimuli[i].IsValid())
+                    {
+                        circleObj.Fill.Color = Color.Red;
+                    }
+                    else if (showAllChannels || !SelectedChannels[i])
                     {
                         circleObj.Fill.Color = Color.White;
                     }
@@ -454,6 +452,8 @@ namespace OpenEphys.Onix.Design
                     }
                 }
             }
+
+            zedGraphChannels.Refresh();
         }
 
         private void SetAllChannels(bool status)
