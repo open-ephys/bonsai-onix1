@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -341,10 +341,10 @@ namespace OpenEphys.Onix.Design
                 rangeY = maxY - minY;
             }
 
-            zedGraphChannels.GraphPane.XAxis.Scale.Min = minX - rangeX * 0.1; 
-            zedGraphChannels.GraphPane.XAxis.Scale.Max = maxX + rangeX * 0.1; 
-            zedGraphChannels.GraphPane.YAxis.Scale.Min = minY - rangeY * 0.1;
-            zedGraphChannels.GraphPane.YAxis.Scale.Max = maxY + rangeY * 0.1;
+            zedGraphChannels.GraphPane.XAxis.Scale.Min = minX - rangeX * 0.02; 
+            zedGraphChannels.GraphPane.XAxis.Scale.Max = maxX + rangeX * 0.02; 
+            zedGraphChannels.GraphPane.YAxis.Scale.Min = minY - rangeY * 0.02;
+            zedGraphChannels.GraphPane.YAxis.Scale.Max = maxY + rangeY * 0.02;
 
             zedGraphChannels.AxisChange();
             zedGraphChannels.Refresh();
