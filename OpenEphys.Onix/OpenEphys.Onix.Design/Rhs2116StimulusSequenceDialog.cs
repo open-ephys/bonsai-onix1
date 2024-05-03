@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -134,10 +134,20 @@ namespace OpenEphys.Onix.Design
 
                     curve.Label.IsVisible = false;
                     curve.Line.Width = 3;
+
+                    TextObj contactNumber = new(i.ToString(), curve.Points[0].X - 5, curve.Points[0].Y)
+                    {
+                        Tag = string.Format(TextStringFormat, i)
+                    };
+                    contactNumber.FontSpec.Size = 12;
+                    contactNumber.FontSpec.Border.IsVisible = false;
+                    contactNumber.FontSpec.Fill.IsVisible = false;
+
+                    zedGraphWaveform.GraphPane.GraphObjList.Add(contactNumber);
                 }
             }
 
-            zedGraphWaveform.GraphPane.XAxis.Scale.Min = 0;
+            zedGraphWaveform.GraphPane.XAxis.Scale.Min = -10;
             zedGraphWaveform.GraphPane.XAxis.Scale.Max = (Sequence.SequenceLengthSamples > 0 ? Sequence.SequenceLengthSamples : 1) * SamplePeriodMicroSeconds;
             zedGraphWaveform.GraphPane.YAxis.Scale.Min = -peakToPeak * stimuli.Length;
             zedGraphWaveform.GraphPane.YAxis.Scale.Max = peakToPeak;
@@ -192,6 +202,8 @@ namespace OpenEphys.Onix.Design
             zedGraphWaveform.GraphPane.TitleGap = 0;
             zedGraphWaveform.GraphPane.Border.IsVisible = false;
             zedGraphWaveform.GraphPane.IsFontsScaled = false;
+
+            zedGraphWaveform.GraphPane.YAxis.MajorGrid.IsZeroLine = false;
 
             zedGraphWaveform.GraphPane.XAxis.MajorTic.IsAllTics = false;
             zedGraphWaveform.GraphPane.XAxis.MinorTic.IsAllTics = false;
