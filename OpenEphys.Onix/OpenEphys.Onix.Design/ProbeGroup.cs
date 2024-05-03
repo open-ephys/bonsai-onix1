@@ -63,7 +63,7 @@ namespace OpenEphys.Onix.Design
         [JsonExtensionData]
         public Dictionary<string, JsonElement> ExtensionData { get; set; }
 
-        public Probe(uint ndim, string si_units, float[][] contact_positions, float[][][] contact_plane_axes, string[] contact_shapes, 
+        public Probe(uint ndim, string si_units, float[][] contact_positions, float[][][] contact_plane_axes, string[] contact_shapes,
             ContactShapeParam[] contact_shape_params, float[][] probe_planar_contour, uint[] device_channel_indices, string[] contact_ids, string[] shank_Ids)
         {
             Ndim = ndim;
@@ -80,6 +80,7 @@ namespace OpenEphys.Onix.Design
 
         /// <summary>
         /// Returns a Contact object that contains the position, shape, shape params, and IDs (device / contact / shank)
+        /// for a single contact at the given index
         /// </summary>
         /// <param name="index">Relative index of the contact in this Probe</param>
         /// <returns></returns>
@@ -91,6 +92,7 @@ namespace OpenEphys.Onix.Design
 
         public int NumContacts => Contact_Ids.Length;
     }
+
     public struct Contact
     {
         public float PosX { get; set; }
@@ -101,7 +103,7 @@ namespace OpenEphys.Onix.Design
         public string ContactId { get; set; }
         public string ShankId { get; set; }
 
-        public Contact(float posX,  float posY, string shape, ContactShapeParam shapeParam, uint device_id,  string contact_id, string shank_id)
+        public Contact(float posX, float posY, string shape, ContactShapeParam shapeParam, uint device_id, string contact_id, string shank_id)
         {
             PosX = posX;
             PosY = posY;
@@ -117,8 +119,8 @@ namespace OpenEphys.Onix.Design
     {
         public float Radius { get; set; }
 
-        public ContactShapeParam(float radius) 
-        { 
+        public ContactShapeParam(float radius)
+        {
             Radius = radius;
         }
     }
