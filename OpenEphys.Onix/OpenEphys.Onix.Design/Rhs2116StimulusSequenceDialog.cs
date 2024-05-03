@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -430,7 +430,7 @@ namespace OpenEphys.Onix.Design
                 SetAllChannels(true);
             }
 
-            bool plotAllChannels = SelectedChannels.All(x => x);
+            bool showAllChannels = SelectedChannels.All(x => x);
 
             for (int i = 0; i < SelectedChannels.Length; i++)
             {
@@ -438,7 +438,7 @@ namespace OpenEphys.Onix.Design
 
                 if (circleObj != null)
                 {
-                    if (plotAllChannels || !SelectedChannels[i])
+                    if (showAllChannels || !SelectedChannels[i])
                     {
                         circleObj.Fill.Color = Color.White;
                     }
