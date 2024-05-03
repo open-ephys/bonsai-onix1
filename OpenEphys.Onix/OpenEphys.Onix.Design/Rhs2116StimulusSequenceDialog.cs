@@ -694,5 +694,37 @@ namespace OpenEphys.Onix.Design
 
             DrawStimulusWaveform();
         }
+
+        private void ButtonDefaultChannelLayout_Click(object sender, EventArgs e)
+        {
+            SetAllChannels(true);
+            LoadDefaultChannelLayout();
+            DrawChannels();
+
+            DrawStimulusWaveform();
+        }
+
+        private void ButtonCustomChannelLayout_Click(object sender, EventArgs e)
+        {
+            using OpenFileDialog ofd = new();
+
+            ofd.InitialDirectory = Path.GetDirectoryName(Path.GetFullPath(DefaultChannelLayoutFilePath));
+            ofd.Filter = "Probe Interface Files (*.json)|*.json";
+            ofd.FilterIndex = 1;
+            ofd.Multiselect = false;
+            ofd.Title = "Choose custom Probe Interface file";
+
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                if (File.Exists(ofd.FileName))
+                {
+                    SetAllChannels(true);
+                    LoadChannelLayout(ofd.FileName);
+                    DrawChannels();
+
+                    DrawStimulusWaveform();
+                }
+            }
+        }
     }
 }

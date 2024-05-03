@@ -624,6 +624,7 @@
             this.buttonCustomChannelLayout.TabIndex = 2;
             this.buttonCustomChannelLayout.Text = "Custom Layout";
             this.buttonCustomChannelLayout.UseVisualStyleBackColor = true;
+            this.buttonCustomChannelLayout.Click += new System.EventHandler(this.ButtonCustomChannelLayout_Click);
             // 
             // buttonDefaultChannelLayout
             // 
@@ -634,6 +635,7 @@
             this.buttonDefaultChannelLayout.TabIndex = 1;
             this.buttonDefaultChannelLayout.Text = "Default Layout";
             this.buttonDefaultChannelLayout.UseVisualStyleBackColor = true;
+            this.buttonDefaultChannelLayout.Click += new System.EventHandler(this.ButtonDefaultChannelLayout_Click);
             // 
             // textBoxChannelLayoutFilePath
             // 
