@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -139,6 +139,9 @@ namespace OpenEphys.Onix.Design
                     else
                     {
                         color = Color.Red;
+
+                        EllipseObj circleObj = (EllipseObj)zedGraphChannels.GraphPane.GraphObjList[string.Format(ContactStringFormat, i)];
+                        circleObj.Fill.Color = Color.Red;
                     }
 
                     var curve = zedGraphWaveform.GraphPane.AddCurve("Test", pointPairs, color, SymbolType.None);
