@@ -320,6 +320,21 @@ namespace OpenEphys.Onix
             return Valid;
         }
 
+        public bool Clear()
+        {
+            NumberOfStimuli = 0;
+            AnodicFirst = true;
+            DelaySamples = 0;
+            DwellSamples = 0;
+            AnodicAmplitudeSteps = 0;
+            AnodicWidthSamples = 0;
+            CathodicAmplitudeSteps = 0;
+            CathodicWidthSamples = 0;
+            InterStimulusIntervalSamples = 0;
+
+            return true;
+        }
+
         [XmlIgnore]
         internal bool Valid
         {

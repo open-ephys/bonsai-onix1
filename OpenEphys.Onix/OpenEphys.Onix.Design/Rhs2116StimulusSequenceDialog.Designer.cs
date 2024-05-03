@@ -55,7 +55,7 @@
             this.pulseWidthAnodicSamples = new System.Windows.Forms.TextBox();
             this.amplitudeAnodicSteps = new System.Windows.Forms.TextBox();
             this.comboBoxStepSize = new System.Windows.Forms.ComboBox();
-            this.button2 = new System.Windows.Forms.Button();
+            this.buttonClearPulses = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
             this.interStimulusIntervalConverted = new System.Windows.Forms.TextBox();
             this.interPulseIntervalConverted = new System.Windows.Forms.TextBox();
@@ -238,7 +238,7 @@
             this.panelParameters.Controls.Add(this.groupBoxCathode);
             this.panelParameters.Controls.Add(this.groupBoxAnode);
             this.panelParameters.Controls.Add(this.comboBoxStepSize);
-            this.panelParameters.Controls.Add(this.button2);
+            this.panelParameters.Controls.Add(this.buttonClearPulses);
             this.panelParameters.Controls.Add(this.button1);
             this.panelParameters.Controls.Add(this.interStimulusIntervalConverted);
             this.panelParameters.Controls.Add(this.interPulseIntervalConverted);
@@ -419,15 +419,16 @@
             this.comboBoxStepSize.TabStop = false;
             this.comboBoxStepSize.SelectedIndexChanged += new System.EventHandler(this.ComboBoxStepSize_SelectedIndexChanged);
             // 
-            // button2
+            // buttonClearPulses
             // 
-            this.button2.Location = new System.Drawing.Point(242, 392);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(110, 42);
-            this.button2.TabIndex = 33;
-            this.button2.TabStop = false;
-            this.button2.Text = "Clear Pulses";
-            this.button2.UseVisualStyleBackColor = true;
+            this.buttonClearPulses.Location = new System.Drawing.Point(242, 392);
+            this.buttonClearPulses.Name = "buttonClearPulses";
+            this.buttonClearPulses.Size = new System.Drawing.Size(110, 42);
+            this.buttonClearPulses.TabIndex = 33;
+            this.buttonClearPulses.TabStop = false;
+            this.buttonClearPulses.Text = "Clear Pulses";
+            this.buttonClearPulses.UseVisualStyleBackColor = true;
+            this.buttonClearPulses.Click += new System.EventHandler(this.ButtonClearPulses_Click);
             // 
             // button1
             // 
@@ -890,7 +891,7 @@
         private System.Windows.Forms.TextBox interPulseIntervalSamples;
         private System.Windows.Forms.Label interPulseIntervalText;
         private System.Windows.Forms.TextBox interStimulusIntervalConverted;
-        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button buttonClearPulses;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.ComboBox comboBoxStepSize;
         private System.Windows.Forms.GroupBox groupBoxCathode;
