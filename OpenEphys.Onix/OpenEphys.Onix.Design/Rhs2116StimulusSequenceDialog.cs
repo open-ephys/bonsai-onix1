@@ -361,11 +361,11 @@ namespace OpenEphys.Onix.Design
             {
                 if (nearestObject is TextObj textObj)
                 {
-                    EnableSelectedChannel(textObj.Tag.ToString());
+                    ToggleSelectedChannel(textObj.Tag.ToString());
                 }
                 else if (nearestObject is EllipseObj circleObj)
                 {
-                    EnableSelectedChannel(circleObj.Tag.ToString());
+                    ToggleSelectedChannel(circleObj.Tag.ToString());
                 }
                 else
                 {
@@ -384,7 +384,7 @@ namespace OpenEphys.Onix.Design
             zedGraphChannels.Refresh();
         }
 
-        private void EnableSelectedChannel(string tag)
+        private void ToggleSelectedChannel(string tag)
         {
             if (SelectedChannels.All(x => x))
                 SetAllChannels(false);
@@ -392,7 +392,7 @@ namespace OpenEphys.Onix.Design
             string[] words = tag.Split('_');
             if (int.TryParse(words[1], out int num))
             {
-                SelectedChannels[num] = true;
+                SelectedChannels[num] = !SelectedChannels[num];
             }
             else
             {
@@ -402,6 +402,11 @@ namespace OpenEphys.Onix.Design
 
         private void VisualizeSelectedChannels()
         {
+            if (SelectedChannels.All(x => !x))
+            {
+                SetAllChannels(true);
+            }
+
             bool plotAllChannels = SelectedChannels.All(x => x);
 
             for (int i = 0; i < SelectedChannels.Length; i++)
