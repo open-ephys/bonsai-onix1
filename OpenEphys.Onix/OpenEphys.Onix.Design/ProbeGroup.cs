@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Windows.Forms;
 
 namespace OpenEphys.Onix.Design
 {
@@ -15,6 +16,10 @@ namespace OpenEphys.Onix.Design
             Specification = specification;
             Version = version;
             Probes = probes;
+
+            ValidateContactIds();
+            ValidateShankIds();
+            ValidateDeviceChannelIndices();
         }
 
         public int NumContacts
@@ -45,6 +50,60 @@ namespace OpenEphys.Onix.Design
             }
 
             return contactIds;
+        }
+
+        private void ValidateContactIds()
+        {
+            int contactNum = 0;
+
+            for (int i = 0; i < Probes.Length; i++)
+            {
+                if (Probes[i].Contact_Ids == null)
+                {
+                    MessageBox.Show(string.Format("Warning: Probe does not have contact IDs." +
+                        "Automatically assigning contact IDs based on numeric index ({0} to {1})", contactNum, contactNum + Probes[i].Contact_Positions.Length - 1));
+
+                    Probes[i].Contact_Ids = new string[Probes[i].Contact_Positions.Length];
+
+                    for (int j = 0; j < Probes[i].Contact_Ids.Length; j++)
+                    {
+                        Probes[i].Contact_Ids[j] = contactNum.ToString();
+                        contactNum++;
+                    }
+                }
+                else
+                    contactNum += Probes[i].Contact_Ids.Length;
+            }
+        }
+
+        private void ValidateShankIds()
+        {
+            for (int i = 0; i < Probes.Length; i++)
+            {
+                if (Probes[i].Shank_Ids == null)
+                {
+                    Probes[i].Shank_Ids = new string[Probes[i].Contact_Positions.Length];
+                }
+            }
+        }
+
+        private void ValidateDeviceChannelIndices()
+        {
+            for (int i = 0; i < Probes.Length; i++)
+            {
+                if (Probes[i].Device_Channel_Indices == null)
+                {
+                    Probes[i].Device_Channel_Indices = new uint[Probes[i].Contact_Ids.Length];
+
+                    for (int j = 0; j < Probes[i].Device_Channel_Indices.Length; j++)
+                    {
+                        if (uint.TryParse(Probes[i].Contact_Ids[j], out uint result))
+                        {
+                            Probes[i].Device_Channel_Indices[j] = result;
+                        }
+                    }
+                }
+            }
         }
     }
 
