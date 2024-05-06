@@ -780,6 +780,8 @@ namespace OpenEphys.Onix.Design
                     DrawChannels();
 
                     DrawStimulusWaveform();
+
+                    textBoxChannelLayoutFilePath.Text = Path.GetFullPath(ofd.FileName);
                 }
             }
         }
