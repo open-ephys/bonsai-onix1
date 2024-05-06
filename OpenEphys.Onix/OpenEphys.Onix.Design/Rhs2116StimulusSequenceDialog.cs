@@ -24,8 +24,12 @@ namespace OpenEphys.Onix.Design
 
         private const string ContactStringFormat = "Contact_{0}";
         private const string TextStringFormat = "TextContact_{0}";
+        private const string SelectionAreaTag = "Selection";
 
         private ProbeGroup probeGroup;
+
+        private PointD mouseLocation = new(0.0, 0.0);
+        private PointD clickStart = new(0.0, 0.0);
 
         /// <summary>
         /// Opens a dialog allowing for easy changing of stimulus sequence parameters
@@ -378,7 +382,7 @@ namespace OpenEphys.Onix.Design
 
         private void ZedGraphChannels_MouseClick(object sender, MouseEventArgs e)
         {
-            if (e.Button != MouseButtons.Left)
+            if (e.Button != MouseButtons.Left || zedGraphChannels.GraphPane.GraphObjList[SelectionAreaTag] is BoxObj)
                 return;
 
             PointF mouseClick = new(e.X, e.Y);
@@ -416,6 +420,21 @@ namespace OpenEphys.Onix.Design
             if (int.TryParse(words[1], out int num))
             {
                 SelectedChannels[num] = !SelectedChannels[num];
+            }
+            else
+            {
+                MessageBox.Show("Warning: Invalid channel tag detected.");
+            }
+        }
+        private void SetSelectedChannel(string tag, bool status)
+        {
+            if (SelectedChannels.All(x => x))
+                SetAllChannels(false);
+
+            string[] words = tag.Split('_');
+            if (int.TryParse(words[1], out int num))
+            {
+                SelectedChannels[num] = status;
             }
             else
             {
@@ -744,6 +763,115 @@ namespace OpenEphys.Onix.Design
                     DrawStimulusWaveform();
                 }
             }
+        }
+
+        private bool ZedGraphChannels_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                clickStart = TransformPixelsToCoordinates(e.Location);
+                mouseLocation = TransformPixelsToCoordinates(e.Location);
+            }
+
+            return false; // Return true if I do not want ZedGraph to perform any additional work on the mouse down event
+        }
+
+        private bool ZedGraphChannels_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                if (zedGraphChannels.Cursor != Cursors.Cross)
+                {
+                    zedGraphChannels.Cursor = Cursors.Cross;
+                }
+
+                mouseLocation = TransformPixelsToCoordinates(e.Location);
+
+                BoxObj selectionArea = new(
+                    mouseLocation.X < clickStart.X ? mouseLocation.X : clickStart.X,
+                    mouseLocation.Y > clickStart.Y ? mouseLocation.Y : clickStart.Y,
+                    Math.Abs(mouseLocation.X - clickStart.X), 
+                    Math.Abs(mouseLocation.Y - clickStart.Y));
+                selectionArea.Border.Color = Color.DarkSlateGray;
+                selectionArea.Fill.IsVisible = false;
+                selectionArea.ZOrder = ZOrder.A_InFront;
+                selectionArea.Tag = SelectionAreaTag;
+
+                BoxObj oldArea = (BoxObj)zedGraphChannels.GraphPane.GraphObjList[SelectionAreaTag];
+                if (oldArea != null)
+                {
+                    zedGraphChannels.GraphPane.GraphObjList.Remove(oldArea);
+                }
+
+                zedGraphChannels.GraphPane.GraphObjList.Add(selectionArea);
+                zedGraphChannels.Refresh();
+            }
+            else if (e.Button == MouseButtons.None) 
+            {
+                zedGraphChannels.Cursor = Cursors.Arrow;
+            }
+            else if (e.Button == MouseButtons.Middle)
+            {
+            }
+
+            return true;
+        }
+
+        private PointD TransformPixelsToCoordinates(Point pixels)
+        {
+            zedGraphChannels.GraphPane.ReverseTransform(pixels, out double x, out double y);
+
+            return new PointD(x, y);
+        }
+
+        private bool ZedGraphChannels_MouseUpEvent(ZedGraphControl sender, MouseEventArgs e)
+        {
+            if (zedGraphChannels.GraphPane.GraphObjList[SelectionAreaTag] is BoxObj selectionArea && selectionArea != null)
+            {
+                RectangleF rect = selectionArea.Location.Rect;
+
+                if (!rect.IsEmpty)
+                {
+                    string[] ids = probeGroup.GetContactIds();
+
+                    foreach (string id in ids)
+                    {
+                        if (zedGraphChannels.GraphPane.GraphObjList[string.Format(ContactStringFormat, id)] is EllipseObj contact && contact != null)
+                        {
+                            if (Contains(rect, contact.Location))
+                            {
+                                SetSelectedChannel(contact.Tag as string, true);
+                            }
+                        }
+                    }
+                }
+
+                zedGraphChannels.GraphPane.GraphObjList.Remove(selectionArea);
+
+                VisualizeSelectedChannels();
+                DrawStimulusWaveform();
+            }
+
+            return true;
+        }
+
+        private bool Contains(RectangleF rect, Location location)
+        {
+            if (!rect.IsEmpty)
+            {
+                if (location != null)
+                {
+                    var x = location.X + location.Width / 2;
+                    var y = location.Y - location.Height / 2;
+
+                    if (x >= rect.X && x <= rect.X + rect.Width && y <= rect.Y && y >= rect.Y - rect.Height)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
     }
 }
