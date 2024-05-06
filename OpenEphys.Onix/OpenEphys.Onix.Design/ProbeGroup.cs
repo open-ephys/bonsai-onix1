@@ -52,6 +52,8 @@ namespace OpenEphys.Onix.Design
     {
         public uint Ndim { get; set; }
         public string Si_Units { get; set; }
+        public ProbeAnnotations Annotations { get; set; }
+        public ContactAnnotations Contact_Annotations { get; set; }
         public float[][] Contact_Positions { get; set; }
         public float[][][] Contact_Plane_Axes { get; set; }
         public string[] Contact_Shapes { get; set; }
@@ -63,11 +65,13 @@ namespace OpenEphys.Onix.Design
         [JsonExtensionData]
         public Dictionary<string, JsonElement> ExtensionData { get; set; }
 
-        public Probe(uint ndim, string si_units, float[][] contact_positions, float[][][] contact_plane_axes, string[] contact_shapes,
+        public Probe(uint ndim, string si_units, ProbeAnnotations annotations, ContactAnnotations contact_annotations, float[][] contact_positions, float[][][] contact_plane_axes, string[] contact_shapes,
             ContactShapeParam[] contact_shape_params, float[][] probe_planar_contour, uint[] device_channel_indices, string[] contact_ids, string[] shank_Ids)
         {
             Ndim = ndim;
             Si_Units = si_units;
+            Annotations = annotations;
+            Contact_Annotations = contact_annotations;
             Contact_Positions = contact_positions;
             Contact_Plane_Axes = contact_plane_axes;
             Contact_Shapes = contact_shapes;
@@ -122,6 +126,34 @@ namespace OpenEphys.Onix.Design
         public ContactShapeParam(float radius)
         {
             Radius = radius;
+        }
+    }
+
+    public struct ProbeAnnotations
+    {
+        public string Name { get; set; }
+        public string Manufacturer { get; set; }
+
+        public ProbeAnnotations(string name, string manufacturer)
+        {
+            Name = name;
+            Manufacturer = manufacturer;
+        }
+
+        public ProbeAnnotations()
+        {
+            Name = "";
+            Manufacturer = "";
+        }
+    }
+
+    public struct ContactAnnotations
+    {
+        public string[] Annotations { get; set; }
+
+        public ContactAnnotations(string[] contact_annotations)
+        {
+            Annotations = contact_annotations;
         }
     }
 }
