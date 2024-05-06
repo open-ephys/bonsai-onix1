@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -791,7 +791,6 @@ namespace OpenEphys.Onix.Design
             if (e.Button == MouseButtons.Left)
             {
                 clickStart = TransformPixelsToCoordinates(e.Location);
-                mouseLocation = TransformPixelsToCoordinates(e.Location);
             }
 
             return false; // Return true if I do not want ZedGraph to perform any additional work on the mouse down event
@@ -826,16 +825,21 @@ namespace OpenEphys.Onix.Design
 
                 zedGraphChannels.GraphPane.GraphObjList.Add(selectionArea);
                 zedGraphChannels.Refresh();
+
+                return true;
             }
             else if (e.Button == MouseButtons.None) 
             {
                 zedGraphChannels.Cursor = Cursors.Arrow;
+
+                return true;
             }
             else if (e.Button == MouseButtons.Middle)
             {
+                return false;
             }
 
-            return true;
+            return false;
         }
 
         private PointD TransformPixelsToCoordinates(Point pixels)
