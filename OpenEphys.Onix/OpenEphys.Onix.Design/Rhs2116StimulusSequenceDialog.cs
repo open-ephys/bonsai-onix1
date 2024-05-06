@@ -26,7 +26,7 @@ namespace OpenEphys.Onix.Design
         private const string TextStringFormat = "TextContact_{0}";
         private const string SelectionAreaTag = "Selection";
 
-        private ProbeGroup probeGroup;
+        private ProbeGroup probeGroup = null;
 
         private PointD mouseLocation = new(0.0, 0.0);
         private PointD clickStart = new(0.0, 0.0);
@@ -80,6 +80,19 @@ namespace OpenEphys.Onix.Design
             };
 
             probeGroup = JsonSerializer.Deserialize<ProbeGroup>(channelLayoutString, options);
+
+            if (probeGroup == null)
+            {
+                MessageBox.Show("Error opening the JSON file.");
+                return;
+            }
+
+            if (probeGroup.NumContacts != 32)
+            {
+                MessageBox.Show("Warning: Wrong number of contacts found in the file. " +
+                    "Please confirm that there are 32 contacts across all probes.");
+                probeGroup = null;
+            }
         }
 
         private void ButtonOk_Click(object sender, EventArgs e)
@@ -276,6 +289,9 @@ namespace OpenEphys.Onix.Design
 
         private void DrawChannels()
         {
+            if (probeGroup == null)
+                return;
+
             zedGraphChannels.GraphPane.GraphObjList.Clear();
 
             double minX = 1e3, minY = 1e3, maxX = -1e3, maxY = -1e3;
@@ -595,6 +611,9 @@ namespace OpenEphys.Onix.Design
 
         private void AddContactIdToGridRow()
         {
+            if (probeGroup == null)
+                return;
+
             var contactIds = probeGroup.GetContactIds();
 
             for (int i = 0; i < contactIds.Length; i++)
@@ -826,7 +845,7 @@ namespace OpenEphys.Onix.Design
 
         private bool ZedGraphChannels_MouseUpEvent(ZedGraphControl sender, MouseEventArgs e)
         {
-            if (zedGraphChannels.GraphPane.GraphObjList[SelectionAreaTag] is BoxObj selectionArea && selectionArea != null)
+            if (zedGraphChannels.GraphPane.GraphObjList[SelectionAreaTag] is BoxObj selectionArea && selectionArea != null && probeGroup != null)
             {
                 RectangleF rect = selectionArea.Location.Rect;
 
