@@ -634,8 +634,15 @@ namespace OpenEphys.Onix.Design
             Sequence.CurrentStepSize = (Rhs2116StepSize)comboBoxStepSize.SelectedItem;
             DrawStimulusWaveform();
 
-            Amplitude_TextChanged(amplitudeAnodic, e);
-            Amplitude_TextChanged(amplitudeCathodic, e);
+            if (amplitudeAnodic.Tag != null)
+            {
+                amplitudeAnodic.Text = string.Format("{0:F2}", GetAmplitudeFromSample((byte)amplitudeAnodic.Tag));
+            }
+
+            if (amplitudeCathodic.Tag != null)
+            {
+                amplitudeCathodic.Text = string.Format("{0:F2}", GetAmplitudeFromSample((byte)amplitudeCathodic.Tag));
+            }
         }
 
         private void Samples_TextChanged(object sender, EventArgs e)
