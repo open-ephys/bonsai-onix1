@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -735,6 +735,17 @@ namespace OpenEphys.Onix.Design
                 textBox.Text = "";
                 textBox.Tag = null;
             }
+
+            if (groupBoxAnode.Visible && !groupBoxCathode.Visible)
+            {
+                pulseWidthCathodic.Text = textBox.Text;
+                pulseWidthCathodic.Tag = textBox.Tag;
+            }
+            else if (groupBoxCathode.Visible && !groupBoxAnode.Visible)
+            {
+                pulseWidthAnodic.Text = textBox.Text;
+                pulseWidthAnodic.Tag = textBox.Tag;
+            }
         }
 
         private bool GetSampleFromTime(double value, out uint samples)
@@ -782,9 +793,9 @@ namespace OpenEphys.Onix.Design
                         return;
                     }
                     else
-                {
-                    MessageBox.Show("Warning: Amplitude is too high for the given step-size. " +
-                        "Please increase the amplitude step-size and try again.");
+                    {
+                        MessageBox.Show("Warning: Amplitude is too high for the given step-size. " +
+                            "Please increase the amplitude step-size and try again.");
                         sampleAmplitude = byte.MaxValue;
                     }
                 }
@@ -797,6 +808,17 @@ namespace OpenEphys.Onix.Design
                 MessageBox.Show("Unable to parse text. Please enter a valid value in milliamps");
                 textBox.Text = "";
                 textBox.Tag = null;
+            }
+
+            if (groupBoxAnode.Visible && !groupBoxCathode.Visible)
+            {
+                amplitudeCathodic.Text = textBox.Text;
+                amplitudeCathodic.Tag = textBox.Tag;
+            }
+            else if (groupBoxCathode.Visible && !groupBoxAnode.Visible)
+            {
+                amplitudeAnodic.Text = textBox.Text;
+                amplitudeAnodic.Tag = textBox.Tag;
             }
         }
 
@@ -824,7 +846,7 @@ namespace OpenEphys.Onix.Design
 
         private void ButtonClearPulses_Click(object sender, EventArgs e)
         {
-            if (SelectedChannels.All(x => x))
+           if (SelectedChannels.All(x => x))
             {
                 DialogResult result = MessageBox.Show("Caution: All channels are currently selected, and all " +
                     "settings will be cleared if you continue. Press Okay to clear all pulse settings, or Cancel to keep them",
