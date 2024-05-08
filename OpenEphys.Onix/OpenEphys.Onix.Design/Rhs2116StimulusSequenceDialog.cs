@@ -633,15 +633,71 @@ namespace OpenEphys.Onix.Design
         {
             Sequence.CurrentStepSize = (Rhs2116StepSize)comboBoxStepSize.SelectedItem;
             DrawStimulusWaveform();
+            UpdateAmplitudeLabelUnits();
 
             if (amplitudeAnodic.Tag != null)
             {
-                amplitudeAnodic.Text = string.Format("{0:F2}", GetAmplitudeFromSample((byte)amplitudeAnodic.Tag));
+                amplitudeAnodic.Text = GetAmplitudeString((byte)amplitudeAnodic.Tag);
             }
 
             if (amplitudeCathodic.Tag != null)
             {
-                amplitudeCathodic.Text = string.Format("{0:F2}", GetAmplitudeFromSample((byte)amplitudeCathodic.Tag));
+                amplitudeCathodic.Text = GetAmplitudeString((byte)amplitudeCathodic.Tag);
+            }
+        }
+
+        private string GetAmplitudeString(byte amplitude)
+        {
+            string format = Sequence.CurrentStepSize switch
+            {
+                Rhs2116StepSize.Step10nA or Rhs2116StepSize.Step20nA or Rhs2116StepSize.Step50nA => "{0:F2}",
+                Rhs2116StepSize.Step100nA or Rhs2116StepSize.Step200nA or Rhs2116StepSize.Step500nA => "{0:F1}",
+                Rhs2116StepSize.Step1000nA or Rhs2116StepSize.Step2000nA => "{0:F0}",
+                Rhs2116StepSize.Step5000nA => "{0:F3}",
+                Rhs2116StepSize.Step10000nA => "{0:F2}",
+                _ => "{0:F3}",
+            };
+            return string.Format(format, GetAmplitudeFromSample(amplitude));
+        }
+
+        private double GetUnitConversion()
+        {
+            return Sequence.CurrentStepSize switch
+            {
+                Rhs2116StepSize.Step10nA or Rhs2116StepSize.Step20nA or Rhs2116StepSize.Step50nA or
+                Rhs2116StepSize.Step100nA or Rhs2116StepSize.Step200nA or Rhs2116StepSize.Step500nA or
+                Rhs2116StepSize.Step1000nA or Rhs2116StepSize.Step2000nA => 1,
+                Rhs2116StepSize.Step5000nA or Rhs2116StepSize.Step10000nA => 1e3,
+                _ => 1e6,
+            };
+        }
+
+        private void UpdateAmplitudeLabelUnits()
+        {
+            switch (Sequence.CurrentStepSize)
+            {
+                case Rhs2116StepSize.Step10nA:
+                case Rhs2116StepSize.Step20nA:
+                case Rhs2116StepSize.Step50nA:
+                case Rhs2116StepSize.Step100nA:
+                case Rhs2116StepSize.Step200nA:
+                case Rhs2116StepSize.Step500nA:
+                case Rhs2116StepSize.Step1000nA:
+                case Rhs2116StepSize.Step2000nA:
+                    labelAmplitudeAnodic.Text = "Amplitude [μA]";
+                    labelAmplitudeCathodic.Text = "Amplitude [μA]";
+                    break;
+
+                case Rhs2116StepSize.Step5000nA:
+                case Rhs2116StepSize.Step10000nA:
+                    labelAmplitudeAnodic.Text = "Amplitude [mA]";
+                    labelAmplitudeCathodic.Text = "Amplitude [mA]";
+                    break;
+
+                default:
+                    labelAmplitudeAnodic.Text = "Amplitude [μA]";
+                    labelAmplitudeCathodic.Text = "Amplitude [μA]";
+                    break;
             }
         }
 
@@ -679,7 +735,7 @@ namespace OpenEphys.Onix.Design
 
         private bool GetSampleFromAmplitude(double value, out byte samples)
         {
-            var ratio = value * 1e3 / Sequence.CurrentStepSizeuA;
+            var ratio = value * GetUnitConversion() / Sequence.CurrentStepSizeuA;
             samples = (byte)Math.Round(ratio);
 
             return !(ratio > byte.MaxValue || ratio < 0 || samples == 0);
@@ -692,7 +748,7 @@ namespace OpenEphys.Onix.Design
 
         private double GetAmplitudeFromSample(byte value)
         {
-            return value * Sequence.CurrentStepSizeuA / 1e3;
+            return value * Sequence.CurrentStepSizeuA / GetUnitConversion();
         }
 
         private void Amplitude_TextChanged(object sender, EventArgs e)
@@ -706,7 +762,7 @@ namespace OpenEphys.Onix.Design
             {
                 if (!GetSampleFromAmplitude(result, out byte sampleAmplitude))
                 {
-                    if (result == 0)
+                    if (sampleAmplitude == 0)
                     {
                         MessageBox.Show("Warning: amplitude is set to zero. Please increase the amplitude value and try again.");
                         textBox.Text = "";
@@ -717,11 +773,11 @@ namespace OpenEphys.Onix.Design
                 {
                     MessageBox.Show("Warning: Amplitude is too high for the given step-size. " +
                         "Please increase the amplitude step-size and try again.");
-                    sampleAmplitude = byte.MaxValue - 1;
+                        sampleAmplitude = byte.MaxValue;
                     }
                 }
 
-                textBox.Text = string.Format("{0:F2}", GetAmplitudeFromSample(sampleAmplitude));
+                textBox.Text = GetAmplitudeString(sampleAmplitude);
                 textBox.Tag = sampleAmplitude;
             }
             else
