@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -143,6 +143,13 @@ namespace OpenEphys.Onix.Design
 
             var stimuli = Sequence.Stimuli;
 
+            zedGraphWaveform.GraphPane.XAxis.Scale.Max = (Sequence.SequenceLengthSamples > 0 ? Sequence.SequenceLengthSamples : 1) * SamplePeriodMicroSeconds;
+            zedGraphWaveform.GraphPane.XAxis.Scale.Min = -zedGraphWaveform.GraphPane.XAxis.Scale.Max * 0.03;
+            zedGraphWaveform.GraphPane.YAxis.Scale.Min = -peakToPeak * stimuli.Length;
+            zedGraphWaveform.GraphPane.YAxis.Scale.Max = peakToPeak;
+
+            var contactTextLocation = zedGraphWaveform.GraphPane.XAxis.Scale.Min / 2;
+
             for (int i = 0; i < stimuli.Length; i++)
             {
                 if (SelectedChannels[i])
@@ -159,12 +166,12 @@ namespace OpenEphys.Onix.Design
                         color = Color.Red;
                     }
 
-                    var curve = zedGraphWaveform.GraphPane.AddCurve("Test", pointPairs, color, SymbolType.None);
+                    var curve = zedGraphWaveform.GraphPane.AddCurve("", pointPairs, color, SymbolType.None);
 
                     curve.Label.IsVisible = false;
                     curve.Line.Width = 3;
 
-                    TextObj contactNumber = new(i.ToString(), curve.Points[0].X - 5, curve.Points[0].Y)
+                    TextObj contactNumber = new(i.ToString(), contactTextLocation, curve.Points[0].Y)
                     {
                         Tag = string.Format(TextStringFormat, i)
                     };
@@ -175,11 +182,6 @@ namespace OpenEphys.Onix.Design
                     zedGraphWaveform.GraphPane.GraphObjList.Add(contactNumber);
                 }
             }
-
-            zedGraphWaveform.GraphPane.XAxis.Scale.Min = -10;
-            zedGraphWaveform.GraphPane.XAxis.Scale.Max = (Sequence.SequenceLengthSamples > 0 ? Sequence.SequenceLengthSamples : 1) * SamplePeriodMicroSeconds;
-            zedGraphWaveform.GraphPane.YAxis.Scale.Min = -peakToPeak * stimuli.Length;
-            zedGraphWaveform.GraphPane.YAxis.Scale.Max = peakToPeak;
 
             zedGraphWaveform.GraphPane.YAxis.Scale.MinorStep = 0;
 
