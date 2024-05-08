@@ -274,12 +274,12 @@ namespace OpenEphys.Onix.Design
                 if (!Sequence.FitsInHardware)
                 {
                     toolStripStatusIsValid.Image = Properties.Resources.StatusBlockedImage;
-                    toolStripStatusIsValid.Text = "Stimulus sequence is too complex";
+                    toolStripStatusIsValid.Text = "Stimulus sequence too complex";
                 }
                 else
                 {
                     toolStripStatusIsValid.Image = Properties.Resources.StatusCriticalImage;
-                    toolStripStatusIsValid.Text = "Stimulus sequence is not valid";
+                    toolStripStatusIsValid.Text = "Stimulus sequence not valid";
                 }
             }
         }
