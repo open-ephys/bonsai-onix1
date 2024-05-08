@@ -1057,5 +1057,58 @@ namespace OpenEphys.Onix.Design
             interStimulusInterval.Text = GetTimeString(Sequence.Stimuli[index].InterStimulusIntervalSamples); Samples_TextChanged(interStimulusInterval, e);
             numberOfStimuli.Text = Sequence.Stimuli[index].NumberOfStimuli.ToString();
         }
+
+        private void ButtonSave_Click(object sender, EventArgs e)
+        {
+            using SaveFileDialog sfd = new();
+            sfd.InitialDirectory = Path.GetDirectoryName(Path.GetFullPath(DefaultChannelLayoutFilePath));
+            sfd.Filter = "Stimulus Sequence Files (*.json)|*.json";
+            sfd.FilterIndex = 1;
+            sfd.Title = "Choose where to save the stimulus sequence file";
+            sfd.OverwritePrompt = true;
+            sfd.ValidateNames = true;
+
+            if (sfd.ShowDialog() == DialogResult.OK)
+            {
+                var fileJson = JsonSerializer.Serialize(Sequence);
+
+                File.WriteAllText(sfd.FileName, fileJson);
+            }
+        }
+
+        private void ButtonLoad_Click(object sender, EventArgs e)
+        {
+            using OpenFileDialog ofd = new();
+
+            ofd.InitialDirectory = Path.GetDirectoryName(Path.GetFullPath(DefaultChannelLayoutFilePath));
+            ofd.Filter = "Stimulus Sequence Files (*.json)|*.json";
+            ofd.FilterIndex = 1;
+            ofd.Multiselect = false;
+            ofd.Title = "Choose saved stimulus sequence file";
+
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    IncludeFields = true,
+                    AllowTrailingCommas = true,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+                    NumberHandling = JsonNumberHandling.AllowReadingFromString
+                };
+
+                if (!File.Exists(ofd.FileName))
+                {
+                    MessageBox.Show("File does not exist.");
+                    return;
+                }
+
+                var json = File.ReadAllText(ofd.FileName);
+
+                Sequence = JsonSerializer.Deserialize<Rhs2116StimulusSequence>(json, options);
+
+                DrawStimulusWaveform();
+            }
+        }
     }
 }

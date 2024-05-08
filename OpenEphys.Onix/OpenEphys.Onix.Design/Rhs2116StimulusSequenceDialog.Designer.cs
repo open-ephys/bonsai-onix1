@@ -36,6 +36,8 @@
             this.toolStripStatusIsValid = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusSlotsUsed = new System.Windows.Forms.ToolStripStatusLabel();
             this.panelButtons = new System.Windows.Forms.Panel();
+            this.buttonLoad = new System.Windows.Forms.Button();
+            this.buttonSave = new System.Windows.Forms.Button();
             this.buttonOk = new System.Windows.Forms.Button();
             this.tabControlParameters = new System.Windows.Forms.TabControl();
             this.tabPageAddPulse = new System.Windows.Forms.TabPage();
@@ -143,7 +145,7 @@
             this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.buttonCancel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonCancel.Location = new System.Drawing.Point(354, 12);
+            this.buttonCancel.Location = new System.Drawing.Point(352, 15);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(100, 40);
             this.buttonCancel.TabIndex = 0;
@@ -185,19 +187,45 @@
             // panelButtons
             // 
             this.panelButtons.AutoSize = true;
+            this.panelButtons.Controls.Add(this.buttonLoad);
+            this.panelButtons.Controls.Add(this.buttonSave);
             this.panelButtons.Controls.Add(this.buttonOk);
             this.panelButtons.Controls.Add(this.buttonCancel);
             this.panelButtons.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelButtons.Location = new System.Drawing.Point(0, 0);
             this.panelButtons.Name = "panelButtons";
-            this.panelButtons.Size = new System.Drawing.Size(469, 60);
+            this.panelButtons.Size = new System.Drawing.Size(469, 63);
             this.panelButtons.TabIndex = 0;
+            // 
+            // buttonLoad
+            // 
+            this.buttonLoad.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonLoad.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonLoad.Location = new System.Drawing.Point(25, 15);
+            this.buttonLoad.Name = "buttonLoad";
+            this.buttonLoad.Size = new System.Drawing.Size(100, 40);
+            this.buttonLoad.TabIndex = 6;
+            this.buttonLoad.Text = "Load";
+            this.buttonLoad.UseVisualStyleBackColor = true;
+            this.buttonLoad.Click += new System.EventHandler(this.ButtonLoad_Click);
+            // 
+            // buttonSave
+            // 
+            this.buttonSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonSave.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonSave.Location = new System.Drawing.Point(134, 15);
+            this.buttonSave.Name = "buttonSave";
+            this.buttonSave.Size = new System.Drawing.Size(100, 40);
+            this.buttonSave.TabIndex = 5;
+            this.buttonSave.Text = "Save";
+            this.buttonSave.UseVisualStyleBackColor = true;
+            this.buttonSave.Click += new System.EventHandler(this.ButtonSave_Click);
             // 
             // buttonOk
             // 
             this.buttonOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonOk.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonOk.Location = new System.Drawing.Point(249, 12);
+            this.buttonOk.Location = new System.Drawing.Point(243, 15);
             this.buttonOk.Name = "buttonOk";
             this.buttonOk.Size = new System.Drawing.Size(100, 40);
             this.buttonOk.TabIndex = 4;
@@ -437,7 +465,6 @@
             this.buttonAddPulses.Name = "buttonAddPulses";
             this.buttonAddPulses.Size = new System.Drawing.Size(112, 42);
             this.buttonAddPulses.TabIndex = 6;
-            this.buttonAddPulses.TabStop = false;
             this.buttonAddPulses.Text = "Add Pulse(s)";
             this.buttonAddPulses.UseVisualStyleBackColor = true;
             this.buttonAddPulses.Click += new System.EventHandler(this.ButtonAddPulses_Click);
@@ -668,7 +695,7 @@
             // 
             this.splitContainer2.Panel2.Controls.Add(this.panelButtons);
             this.splitContainer2.Size = new System.Drawing.Size(469, 860);
-            this.splitContainer2.SplitterDistance = 795;
+            this.splitContainer2.SplitterDistance = 792;
             this.splitContainer2.SplitterWidth = 5;
             this.splitContainer2.TabIndex = 0;
             // 
@@ -687,8 +714,8 @@
             // 
             this.splitContainer3.Panel2.Controls.Add(this.tabControlParameters);
             this.splitContainer3.Panel2MinSize = 315;
-            this.splitContainer3.Size = new System.Drawing.Size(469, 795);
-            this.splitContainer3.SplitterDistance = 451;
+            this.splitContainer3.Size = new System.Drawing.Size(469, 792);
+            this.splitContainer3.SplitterDistance = 448;
             this.splitContainer3.SplitterWidth = 8;
             this.splitContainer3.TabIndex = 0;
             // 
@@ -706,7 +733,7 @@
             this.zedGraphChannels.ScrollMinX = 0D;
             this.zedGraphChannels.ScrollMinY = 0D;
             this.zedGraphChannels.ScrollMinY2 = 0D;
-            this.zedGraphChannels.Size = new System.Drawing.Size(469, 451);
+            this.zedGraphChannels.Size = new System.Drawing.Size(469, 448);
             this.zedGraphChannels.TabIndex = 3;
             this.zedGraphChannels.UseExtendedPrintDialog = true;
             this.zedGraphChannels.MouseDownEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.ZedGraphChannels_MouseDownEvent);
@@ -817,5 +844,7 @@
         private System.Windows.Forms.TextBox textBoxChannelLayoutFilePath;
         private System.Windows.Forms.Button buttonCustomChannelLayout;
         private System.Windows.Forms.Button buttonDefaultChannelLayout;
+        private System.Windows.Forms.Button buttonLoad;
+        private System.Windows.Forms.Button buttonSave;
     }
 }
