@@ -699,9 +699,19 @@ namespace OpenEphys.Onix.Design
             {
                 if (!GetSampleFromAmplitude(result, out byte sampleAmplitude))
                 {
+                    if (result == 0)
+                    {
+                        MessageBox.Show("Warning: amplitude is set to zero. Please increase the amplitude value and try again.");
+                        textBox.Text = "";
+                        textBox.Tag = null;
+                        return;
+                    }
+                    else
+                {
                     MessageBox.Show("Warning: Amplitude is too high for the given step-size. " +
                         "Please increase the amplitude step-size and try again.");
                     sampleAmplitude = byte.MaxValue - 1;
+                    }
                 }
 
                 textBox.Text = string.Format("{0:F2}", GetAmplitudeFromSample(sampleAmplitude));
