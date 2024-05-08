@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -661,6 +661,11 @@ namespace OpenEphys.Onix.Design
             return string.Format(format, GetAmplitudeFromSample(amplitude));
         }
 
+        private string GetTimeString(uint time)
+        {
+            return string.Format("{0:F2}", GetTimeFromSample(time));
+        }
+
         private double GetUnitConversion()
         {
             return Sequence.CurrentStepSize switch
@@ -715,7 +720,7 @@ namespace OpenEphys.Onix.Design
                 {
                     MessageBox.Show("Warning: Value was too small. Time is now set to zero seconds. Please increase the value.");
                 }
-                textBox.Text = string.Format("{0:F2}", GetTimeFromSample(sampleTime));
+                textBox.Text = GetTimeString(sampleTime);
                 textBox.Tag = sampleTime;
             }
             else
