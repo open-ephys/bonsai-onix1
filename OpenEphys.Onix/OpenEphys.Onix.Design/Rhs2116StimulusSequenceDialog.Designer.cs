@@ -1,4 +1,4 @@
-namespace OpenEphys.Onix.Design
+﻿namespace OpenEphys.Onix.Design
 {
     partial class Rhs2116StimulusSequenceDialog
     {
@@ -41,36 +41,29 @@ namespace OpenEphys.Onix.Design
             this.tabPageAddPulse = new System.Windows.Forms.TabPage();
             this.panelParameters = new System.Windows.Forms.Panel();
             this.groupBoxCathode = new System.Windows.Forms.GroupBox();
-            this.pulseWidthCathodicConverted = new System.Windows.Forms.TextBox();
-            this.amplitudeCathodicConverted = new System.Windows.Forms.TextBox();
             this.labelAmplitudeCathodic = new System.Windows.Forms.Label();
             this.labelPulseWidthCathodicText = new System.Windows.Forms.Label();
-            this.pulseWidthCathodicSamples = new System.Windows.Forms.TextBox();
-            this.amplitudeCathodicSteps = new System.Windows.Forms.TextBox();
+            this.pulseWidthCathodic = new System.Windows.Forms.TextBox();
+            this.amplitudeCathodic = new System.Windows.Forms.TextBox();
             this.groupBoxAnode = new System.Windows.Forms.GroupBox();
-            this.pulseWidthAnodicConverted = new System.Windows.Forms.TextBox();
-            this.amplitudeAnodicConverted = new System.Windows.Forms.TextBox();
             this.labelAnplitudeAnodicText = new System.Windows.Forms.Label();
             this.labelPulseWidthAnodicText = new System.Windows.Forms.Label();
-            this.pulseWidthAnodicSamples = new System.Windows.Forms.TextBox();
-            this.amplitudeAnodicSteps = new System.Windows.Forms.TextBox();
+            this.pulseWidthAnodic = new System.Windows.Forms.TextBox();
+            this.amplitudeAnodic = new System.Windows.Forms.TextBox();
             this.comboBoxStepSize = new System.Windows.Forms.ComboBox();
             this.buttonClearPulses = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
-            this.interStimulusIntervalConverted = new System.Windows.Forms.TextBox();
-            this.interPulseIntervalConverted = new System.Windows.Forms.TextBox();
-            this.interPulseIntervalSamples = new System.Windows.Forms.TextBox();
+            this.interPulseInterval = new System.Windows.Forms.TextBox();
             this.interPulseIntervalText = new System.Windows.Forms.Label();
-            this.labelStepSize = new System.Windows.Forms.Label();
+            this.labelStepSizeAmplitude = new System.Windows.Forms.Label();
             this.checkBoxAnodicFirst = new System.Windows.Forms.CheckBox();
-            this.delaySamplesConverted = new System.Windows.Forms.TextBox();
             this.buttonAddPulses = new System.Windows.Forms.Button();
-            this.delaySamples = new System.Windows.Forms.TextBox();
+            this.delay = new System.Windows.Forms.TextBox();
             this.numberOfPulsesText = new System.Windows.Forms.Label();
             this.delayText = new System.Windows.Forms.Label();
-            this.numberOfStimuliText = new System.Windows.Forms.TextBox();
+            this.numberOfStimuli = new System.Windows.Forms.TextBox();
             this.checkboxBiphasicSymmetrical = new System.Windows.Forms.CheckBox();
-            this.interStimulusIntervalSamples = new System.Windows.Forms.TextBox();
+            this.interStimulusInterval = new System.Windows.Forms.TextBox();
             this.interStimulusIntervalText = new System.Windows.Forms.Label();
             this.tabPageChannelLayout = new System.Windows.Forms.TabPage();
             this.panelChannelLayout = new System.Windows.Forms.Panel();
@@ -129,7 +122,7 @@ namespace OpenEphys.Onix.Design
             this.zedGraphWaveform.ScrollMinX = 0D;
             this.zedGraphWaveform.ScrollMinY = 0D;
             this.zedGraphWaveform.ScrollMinY2 = 0D;
-            this.zedGraphWaveform.Size = new System.Drawing.Size(1405, 811);
+            this.zedGraphWaveform.Size = new System.Drawing.Size(1316, 821);
             this.zedGraphWaveform.TabIndex = 4;
             this.zedGraphWaveform.UseExtendedPrintDialog = true;
             // 
@@ -137,7 +130,7 @@ namespace OpenEphys.Onix.Design
             // 
             this.linkLabelDocumentation.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.linkLabelDocumentation.AutoSize = true;
-            this.linkLabelDocumentation.Location = new System.Drawing.Point(1671, 855);
+            this.linkLabelDocumentation.Location = new System.Drawing.Point(1677, 865);
             this.linkLabelDocumentation.Name = "linkLabelDocumentation";
             this.linkLabelDocumentation.Size = new System.Drawing.Size(118, 20);
             this.linkLabelDocumentation.TabIndex = 4;
@@ -150,7 +143,7 @@ namespace OpenEphys.Onix.Design
             this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.buttonCancel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonCancel.Location = new System.Drawing.Point(266, 15);
+            this.buttonCancel.Location = new System.Drawing.Point(354, 11);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(100, 40);
             this.buttonCancel.TabIndex = 0;
@@ -163,10 +156,10 @@ namespace OpenEphys.Onix.Design
             this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusIsValid,
             this.toolStripStatusSlotsUsed});
-            this.statusStrip.Location = new System.Drawing.Point(0, 850);
+            this.statusStrip.Location = new System.Drawing.Point(0, 860);
             this.statusStrip.Name = "statusStrip";
             this.statusStrip.Padding = new System.Windows.Forms.Padding(2, 0, 14, 0);
-            this.statusStrip.Size = new System.Drawing.Size(1797, 32);
+            this.statusStrip.Size = new System.Drawing.Size(1803, 32);
             this.statusStrip.SizingGrip = false;
             this.statusStrip.TabIndex = 1;
             this.statusStrip.Text = "statusStrip1";
@@ -197,14 +190,14 @@ namespace OpenEphys.Onix.Design
             this.panelButtons.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelButtons.Location = new System.Drawing.Point(0, 0);
             this.panelButtons.Name = "panelButtons";
-            this.panelButtons.Size = new System.Drawing.Size(374, 58);
+            this.panelButtons.Size = new System.Drawing.Size(469, 59);
             this.panelButtons.TabIndex = 0;
             // 
             // buttonOk
             // 
             this.buttonOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonOk.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonOk.Location = new System.Drawing.Point(159, 15);
+            this.buttonOk.Location = new System.Drawing.Point(249, 11);
             this.buttonOk.Name = "buttonOk";
             this.buttonOk.Size = new System.Drawing.Size(100, 40);
             this.buttonOk.TabIndex = 4;
@@ -219,10 +212,9 @@ namespace OpenEphys.Onix.Design
             this.tabControlParameters.Controls.Add(this.tabPageEditorDialog);
             this.tabControlParameters.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControlParameters.Location = new System.Drawing.Point(0, 0);
-            this.tabControlParameters.MinimumSize = new System.Drawing.Size(372, 485);
             this.tabControlParameters.Name = "tabControlParameters";
             this.tabControlParameters.SelectedIndex = 0;
-            this.tabControlParameters.Size = new System.Drawing.Size(374, 485);
+            this.tabControlParameters.Size = new System.Drawing.Size(469, 336);
             this.tabControlParameters.TabIndex = 1;
             // 
             // tabPageAddPulse
@@ -231,7 +223,7 @@ namespace OpenEphys.Onix.Design
             this.tabPageAddPulse.Location = new System.Drawing.Point(4, 29);
             this.tabPageAddPulse.Name = "tabPageAddPulse";
             this.tabPageAddPulse.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageAddPulse.Size = new System.Drawing.Size(366, 452);
+            this.tabPageAddPulse.Size = new System.Drawing.Size(461, 303);
             this.tabPageAddPulse.TabIndex = 0;
             this.tabPageAddPulse.Text = "Add Pulses";
             this.tabPageAddPulse.UseVisualStyleBackColor = true;
@@ -239,194 +231,145 @@ namespace OpenEphys.Onix.Design
             // panelParameters
             // 
             this.panelParameters.AutoScroll = true;
-            this.panelParameters.AutoSize = true;
             this.panelParameters.Controls.Add(this.groupBoxCathode);
             this.panelParameters.Controls.Add(this.groupBoxAnode);
             this.panelParameters.Controls.Add(this.comboBoxStepSize);
             this.panelParameters.Controls.Add(this.buttonClearPulses);
             this.panelParameters.Controls.Add(this.button1);
-            this.panelParameters.Controls.Add(this.interStimulusIntervalConverted);
-            this.panelParameters.Controls.Add(this.interPulseIntervalConverted);
-            this.panelParameters.Controls.Add(this.interPulseIntervalSamples);
+            this.panelParameters.Controls.Add(this.interPulseInterval);
             this.panelParameters.Controls.Add(this.interPulseIntervalText);
-            this.panelParameters.Controls.Add(this.labelStepSize);
+            this.panelParameters.Controls.Add(this.labelStepSizeAmplitude);
             this.panelParameters.Controls.Add(this.checkBoxAnodicFirst);
-            this.panelParameters.Controls.Add(this.delaySamplesConverted);
             this.panelParameters.Controls.Add(this.buttonAddPulses);
-            this.panelParameters.Controls.Add(this.delaySamples);
+            this.panelParameters.Controls.Add(this.delay);
             this.panelParameters.Controls.Add(this.numberOfPulsesText);
             this.panelParameters.Controls.Add(this.delayText);
-            this.panelParameters.Controls.Add(this.numberOfStimuliText);
+            this.panelParameters.Controls.Add(this.numberOfStimuli);
             this.panelParameters.Controls.Add(this.checkboxBiphasicSymmetrical);
-            this.panelParameters.Controls.Add(this.interStimulusIntervalSamples);
+            this.panelParameters.Controls.Add(this.interStimulusInterval);
             this.panelParameters.Controls.Add(this.interStimulusIntervalText);
             this.panelParameters.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelParameters.Location = new System.Drawing.Point(3, 3);
-            this.panelParameters.MinimumSize = new System.Drawing.Size(358, 437);
             this.panelParameters.Name = "panelParameters";
-            this.panelParameters.Size = new System.Drawing.Size(360, 446);
+            this.panelParameters.Size = new System.Drawing.Size(455, 297);
             this.panelParameters.TabIndex = 0;
             // 
             // groupBoxCathode
             // 
-            this.groupBoxCathode.Controls.Add(this.pulseWidthCathodicConverted);
-            this.groupBoxCathode.Controls.Add(this.amplitudeCathodicConverted);
             this.groupBoxCathode.Controls.Add(this.labelAmplitudeCathodic);
             this.groupBoxCathode.Controls.Add(this.labelPulseWidthCathodicText);
-            this.groupBoxCathode.Controls.Add(this.pulseWidthCathodicSamples);
-            this.groupBoxCathode.Controls.Add(this.amplitudeCathodicSteps);
-            this.groupBoxCathode.Location = new System.Drawing.Point(0, 229);
+            this.groupBoxCathode.Controls.Add(this.pulseWidthCathodic);
+            this.groupBoxCathode.Controls.Add(this.amplitudeCathodic);
+            this.groupBoxCathode.Location = new System.Drawing.Point(228, 118);
             this.groupBoxCathode.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBoxCathode.Name = "groupBoxCathode";
             this.groupBoxCathode.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.groupBoxCathode.Size = new System.Drawing.Size(358, 86);
-            this.groupBoxCathode.TabIndex = 4;
+            this.groupBoxCathode.Size = new System.Drawing.Size(219, 86);
+            this.groupBoxCathode.TabIndex = 3;
             this.groupBoxCathode.TabStop = false;
             this.groupBoxCathode.Text = "Cathode";
             this.groupBoxCathode.Visible = false;
             // 
-            // pulseWidthCathodicConverted
-            // 
-            this.pulseWidthCathodicConverted.Enabled = false;
-            this.pulseWidthCathodicConverted.Location = new System.Drawing.Point(249, 49);
-            this.pulseWidthCathodicConverted.Name = "pulseWidthCathodicConverted";
-            this.pulseWidthCathodicConverted.ReadOnly = true;
-            this.pulseWidthCathodicConverted.Size = new System.Drawing.Size(96, 26);
-            this.pulseWidthCathodicConverted.TabIndex = 27;
-            this.pulseWidthCathodicConverted.TabStop = false;
-            // 
-            // amplitudeCathodicConverted
-            // 
-            this.amplitudeCathodicConverted.Enabled = false;
-            this.amplitudeCathodicConverted.Location = new System.Drawing.Point(249, 18);
-            this.amplitudeCathodicConverted.Name = "amplitudeCathodicConverted";
-            this.amplitudeCathodicConverted.ReadOnly = true;
-            this.amplitudeCathodicConverted.Size = new System.Drawing.Size(96, 26);
-            this.amplitudeCathodicConverted.TabIndex = 26;
-            this.amplitudeCathodicConverted.TabStop = false;
-            // 
             // labelAmplitudeCathodic
             // 
             this.labelAmplitudeCathodic.AutoSize = true;
-            this.labelAmplitudeCathodic.Location = new System.Drawing.Point(58, 25);
+            this.labelAmplitudeCathodic.Location = new System.Drawing.Point(12, 24);
             this.labelAmplitudeCathodic.Name = "labelAmplitudeCathodic";
-            this.labelAmplitudeCathodic.Size = new System.Drawing.Size(126, 20);
+            this.labelAmplitudeCathodic.Size = new System.Drawing.Size(116, 20);
             this.labelAmplitudeCathodic.TabIndex = 23;
-            this.labelAmplitudeCathodic.Text = "Amplitude Steps";
+            this.labelAmplitudeCathodic.Text = "Amplitude [mA]";
             // 
             // labelPulseWidthCathodicText
             // 
             this.labelPulseWidthCathodicText.AutoSize = true;
-            this.labelPulseWidthCathodicText.Location = new System.Drawing.Point(22, 55);
+            this.labelPulseWidthCathodicText.Location = new System.Drawing.Point(12, 55);
             this.labelPulseWidthCathodicText.Name = "labelPulseWidthCathodicText";
-            this.labelPulseWidthCathodicText.Size = new System.Drawing.Size(159, 20);
+            this.labelPulseWidthCathodicText.Size = new System.Drawing.Size(126, 20);
             this.labelPulseWidthCathodicText.TabIndex = 24;
-            this.labelPulseWidthCathodicText.Text = "Pulse Width Samples";
+            this.labelPulseWidthCathodicText.Text = "Pulse Width [ms]";
             // 
-            // pulseWidthCathodicSamples
+            // pulseWidthCathodic
             // 
-            this.pulseWidthCathodicSamples.Location = new System.Drawing.Point(189, 49);
-            this.pulseWidthCathodicSamples.Name = "pulseWidthCathodicSamples";
-            this.pulseWidthCathodicSamples.Size = new System.Drawing.Size(43, 26);
-            this.pulseWidthCathodicSamples.TabIndex = 5;
-            this.pulseWidthCathodicSamples.TextChanged += new System.EventHandler(this.Samples_TextChanged);
-            this.pulseWidthCathodicSamples.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
+            this.pulseWidthCathodic.Location = new System.Drawing.Point(148, 49);
+            this.pulseWidthCathodic.Name = "pulseWidthCathodic";
+            this.pulseWidthCathodic.Size = new System.Drawing.Size(60, 26);
+            this.pulseWidthCathodic.TabIndex = 6;
+            this.pulseWidthCathodic.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress_Time);
+            this.pulseWidthCathodic.Leave += new System.EventHandler(this.Samples_TextChanged);
             // 
-            // amplitudeCathodicSteps
+            // amplitudeCathodic
             // 
-            this.amplitudeCathodicSteps.Location = new System.Drawing.Point(189, 18);
-            this.amplitudeCathodicSteps.Name = "amplitudeCathodicSteps";
-            this.amplitudeCathodicSteps.Size = new System.Drawing.Size(43, 26);
-            this.amplitudeCathodicSteps.TabIndex = 4;
-            this.amplitudeCathodicSteps.TextChanged += new System.EventHandler(this.Amplitude_TextChanged);
-            this.amplitudeCathodicSteps.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
+            this.amplitudeCathodic.Location = new System.Drawing.Point(148, 18);
+            this.amplitudeCathodic.Name = "amplitudeCathodic";
+            this.amplitudeCathodic.Size = new System.Drawing.Size(60, 26);
+            this.amplitudeCathodic.TabIndex = 5;
+            this.amplitudeCathodic.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress_Amplitude);
+            this.amplitudeCathodic.Leave += new System.EventHandler(this.Amplitude_TextChanged);
             // 
             // groupBoxAnode
             // 
-            this.groupBoxAnode.Controls.Add(this.pulseWidthAnodicConverted);
-            this.groupBoxAnode.Controls.Add(this.amplitudeAnodicConverted);
             this.groupBoxAnode.Controls.Add(this.labelAnplitudeAnodicText);
             this.groupBoxAnode.Controls.Add(this.labelPulseWidthAnodicText);
-            this.groupBoxAnode.Controls.Add(this.pulseWidthAnodicSamples);
-            this.groupBoxAnode.Controls.Add(this.amplitudeAnodicSteps);
-            this.groupBoxAnode.Location = new System.Drawing.Point(0, 108);
+            this.groupBoxAnode.Controls.Add(this.pulseWidthAnodic);
+            this.groupBoxAnode.Controls.Add(this.amplitudeAnodic);
+            this.groupBoxAnode.Location = new System.Drawing.Point(5, 118);
             this.groupBoxAnode.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBoxAnode.Name = "groupBoxAnode";
             this.groupBoxAnode.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.groupBoxAnode.Size = new System.Drawing.Size(358, 86);
-            this.groupBoxAnode.TabIndex = 1;
+            this.groupBoxAnode.Size = new System.Drawing.Size(219, 86);
+            this.groupBoxAnode.TabIndex = 2;
             this.groupBoxAnode.TabStop = false;
             this.groupBoxAnode.Text = "Anode";
-            // 
-            // pulseWidthAnodicConverted
-            // 
-            this.pulseWidthAnodicConverted.Enabled = false;
-            this.pulseWidthAnodicConverted.Location = new System.Drawing.Point(249, 49);
-            this.pulseWidthAnodicConverted.Name = "pulseWidthAnodicConverted";
-            this.pulseWidthAnodicConverted.ReadOnly = true;
-            this.pulseWidthAnodicConverted.Size = new System.Drawing.Size(96, 26);
-            this.pulseWidthAnodicConverted.TabIndex = 20;
-            this.pulseWidthAnodicConverted.TabStop = false;
-            // 
-            // amplitudeAnodicConverted
-            // 
-            this.amplitudeAnodicConverted.Enabled = false;
-            this.amplitudeAnodicConverted.Location = new System.Drawing.Point(249, 18);
-            this.amplitudeAnodicConverted.Name = "amplitudeAnodicConverted";
-            this.amplitudeAnodicConverted.ReadOnly = true;
-            this.amplitudeAnodicConverted.Size = new System.Drawing.Size(96, 26);
-            this.amplitudeAnodicConverted.TabIndex = 19;
-            this.amplitudeAnodicConverted.TabStop = false;
             // 
             // labelAnplitudeAnodicText
             // 
             this.labelAnplitudeAnodicText.AutoSize = true;
-            this.labelAnplitudeAnodicText.Location = new System.Drawing.Point(58, 25);
+            this.labelAnplitudeAnodicText.Location = new System.Drawing.Point(9, 24);
             this.labelAnplitudeAnodicText.Name = "labelAnplitudeAnodicText";
-            this.labelAnplitudeAnodicText.Size = new System.Drawing.Size(126, 20);
+            this.labelAnplitudeAnodicText.Size = new System.Drawing.Size(116, 20);
             this.labelAnplitudeAnodicText.TabIndex = 4;
-            this.labelAnplitudeAnodicText.Text = "Amplitude Steps";
+            this.labelAnplitudeAnodicText.Text = "Amplitude [mA]";
             // 
             // labelPulseWidthAnodicText
             // 
             this.labelPulseWidthAnodicText.AutoSize = true;
-            this.labelPulseWidthAnodicText.Location = new System.Drawing.Point(22, 55);
+            this.labelPulseWidthAnodicText.Location = new System.Drawing.Point(9, 55);
             this.labelPulseWidthAnodicText.Name = "labelPulseWidthAnodicText";
-            this.labelPulseWidthAnodicText.Size = new System.Drawing.Size(159, 20);
+            this.labelPulseWidthAnodicText.Size = new System.Drawing.Size(126, 20);
             this.labelPulseWidthAnodicText.TabIndex = 7;
-            this.labelPulseWidthAnodicText.Text = "Pulse Width Samples";
+            this.labelPulseWidthAnodicText.Text = "Pulse Width [ms]";
             // 
-            // pulseWidthAnodicSamples
+            // pulseWidthAnodic
             // 
-            this.pulseWidthAnodicSamples.Location = new System.Drawing.Point(189, 49);
-            this.pulseWidthAnodicSamples.Name = "pulseWidthAnodicSamples";
-            this.pulseWidthAnodicSamples.Size = new System.Drawing.Size(43, 26);
-            this.pulseWidthAnodicSamples.TabIndex = 2;
-            this.pulseWidthAnodicSamples.TextChanged += new System.EventHandler(this.Samples_TextChanged);
-            this.pulseWidthAnodicSamples.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
+            this.pulseWidthAnodic.Location = new System.Drawing.Point(145, 49);
+            this.pulseWidthAnodic.Name = "pulseWidthAnodic";
+            this.pulseWidthAnodic.Size = new System.Drawing.Size(60, 26);
+            this.pulseWidthAnodic.TabIndex = 4;
+            this.pulseWidthAnodic.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress_Time);
+            this.pulseWidthAnodic.Leave += new System.EventHandler(this.Samples_TextChanged);
             // 
-            // amplitudeAnodicSteps
+            // amplitudeAnodic
             // 
-            this.amplitudeAnodicSteps.Location = new System.Drawing.Point(189, 18);
-            this.amplitudeAnodicSteps.Name = "amplitudeAnodicSteps";
-            this.amplitudeAnodicSteps.Size = new System.Drawing.Size(43, 26);
-            this.amplitudeAnodicSteps.TabIndex = 1;
-            this.amplitudeAnodicSteps.TextChanged += new System.EventHandler(this.Amplitude_TextChanged);
-            this.amplitudeAnodicSteps.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
+            this.amplitudeAnodic.Location = new System.Drawing.Point(145, 18);
+            this.amplitudeAnodic.Name = "amplitudeAnodic";
+            this.amplitudeAnodic.Size = new System.Drawing.Size(60, 26);
+            this.amplitudeAnodic.TabIndex = 3;
+            this.amplitudeAnodic.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress_Amplitude);
+            this.amplitudeAnodic.Leave += new System.EventHandler(this.Amplitude_TextChanged);
             // 
             // comboBoxStepSize
             // 
             this.comboBoxStepSize.FormattingEnabled = true;
-            this.comboBoxStepSize.Location = new System.Drawing.Point(198, 71);
+            this.comboBoxStepSize.Location = new System.Drawing.Point(257, 38);
             this.comboBoxStepSize.Name = "comboBoxStepSize";
-            this.comboBoxStepSize.Size = new System.Drawing.Size(133, 28);
+            this.comboBoxStepSize.Size = new System.Drawing.Size(163, 28);
             this.comboBoxStepSize.TabIndex = 34;
             this.comboBoxStepSize.TabStop = false;
             this.comboBoxStepSize.SelectedIndexChanged += new System.EventHandler(this.ComboBoxStepSize_SelectedIndexChanged);
             // 
             // buttonClearPulses
             // 
-            this.buttonClearPulses.Location = new System.Drawing.Point(242, 392);
+            this.buttonClearPulses.Location = new System.Drawing.Point(310, 252);
             this.buttonClearPulses.Name = "buttonClearPulses";
             this.buttonClearPulses.Size = new System.Drawing.Size(110, 42);
             this.buttonClearPulses.TabIndex = 33;
@@ -437,7 +380,7 @@ namespace OpenEphys.Onix.Design
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(124, 392);
+            this.button1.Location = new System.Drawing.Point(175, 252);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(112, 42);
             this.button1.TabIndex = 32;
@@ -445,52 +388,32 @@ namespace OpenEphys.Onix.Design
             this.button1.Text = "Read Pulses";
             this.button1.UseVisualStyleBackColor = true;
             // 
-            // interStimulusIntervalConverted
+            // interPulseInterval
             // 
-            this.interStimulusIntervalConverted.Enabled = false;
-            this.interStimulusIntervalConverted.Location = new System.Drawing.Point(249, 318);
-            this.interStimulusIntervalConverted.Name = "interStimulusIntervalConverted";
-            this.interStimulusIntervalConverted.ReadOnly = true;
-            this.interStimulusIntervalConverted.Size = new System.Drawing.Size(96, 26);
-            this.interStimulusIntervalConverted.TabIndex = 31;
-            this.interStimulusIntervalConverted.TabStop = false;
-            // 
-            // interPulseIntervalConverted
-            // 
-            this.interPulseIntervalConverted.Enabled = false;
-            this.interPulseIntervalConverted.Location = new System.Drawing.Point(249, 198);
-            this.interPulseIntervalConverted.Name = "interPulseIntervalConverted";
-            this.interPulseIntervalConverted.ReadOnly = true;
-            this.interPulseIntervalConverted.Size = new System.Drawing.Size(96, 26);
-            this.interPulseIntervalConverted.TabIndex = 30;
-            this.interPulseIntervalConverted.TabStop = false;
-            // 
-            // interPulseIntervalSamples
-            // 
-            this.interPulseIntervalSamples.Location = new System.Drawing.Point(189, 198);
-            this.interPulseIntervalSamples.Name = "interPulseIntervalSamples";
-            this.interPulseIntervalSamples.Size = new System.Drawing.Size(43, 26);
-            this.interPulseIntervalSamples.TabIndex = 3;
-            this.interPulseIntervalSamples.TextChanged += new System.EventHandler(this.Samples_TextChanged);
-            this.interPulseIntervalSamples.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
+            this.interPulseInterval.Location = new System.Drawing.Point(376, 84);
+            this.interPulseInterval.Name = "interPulseInterval";
+            this.interPulseInterval.Size = new System.Drawing.Size(60, 26);
+            this.interPulseInterval.TabIndex = 1;
+            this.interPulseInterval.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress_Time);
+            this.interPulseInterval.Leave += new System.EventHandler(this.Samples_TextChanged);
             // 
             // interPulseIntervalText
             // 
             this.interPulseIntervalText.AutoSize = true;
-            this.interPulseIntervalText.Location = new System.Drawing.Point(33, 205);
+            this.interPulseIntervalText.Location = new System.Drawing.Point(251, 84);
             this.interPulseIntervalText.Name = "interPulseIntervalText";
-            this.interPulseIntervalText.Size = new System.Drawing.Size(152, 20);
+            this.interPulseIntervalText.Size = new System.Drawing.Size(119, 20);
             this.interPulseIntervalText.TabIndex = 29;
-            this.interPulseIntervalText.Text = "Inter-Pulse Samples";
+            this.interPulseIntervalText.Text = "Inter-Pulse [ms]";
             // 
-            // labelStepSize
+            // labelStepSizeAmplitude
             // 
-            this.labelStepSize.AutoSize = true;
-            this.labelStepSize.Location = new System.Drawing.Point(198, 48);
-            this.labelStepSize.Name = "labelStepSize";
-            this.labelStepSize.Size = new System.Drawing.Size(78, 20);
-            this.labelStepSize.TabIndex = 17;
-            this.labelStepSize.Text = "Step Size";
+            this.labelStepSizeAmplitude.AutoSize = true;
+            this.labelStepSizeAmplitude.Location = new System.Drawing.Point(257, 15);
+            this.labelStepSizeAmplitude.Name = "labelStepSizeAmplitude";
+            this.labelStepSizeAmplitude.Size = new System.Drawing.Size(163, 20);
+            this.labelStepSizeAmplitude.TabIndex = 17;
+            this.labelStepSizeAmplitude.Text = "Step Size (Amplitude)";
             // 
             // checkBoxAnodicFirst
             // 
@@ -498,7 +421,7 @@ namespace OpenEphys.Onix.Design
             this.checkBoxAnodicFirst.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.checkBoxAnodicFirst.Checked = true;
             this.checkBoxAnodicFirst.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxAnodicFirst.Location = new System.Drawing.Point(63, 75);
+            this.checkBoxAnodicFirst.Location = new System.Drawing.Point(91, 38);
             this.checkBoxAnodicFirst.Name = "checkBoxAnodicFirst";
             this.checkBoxAnodicFirst.Size = new System.Drawing.Size(119, 24);
             this.checkBoxAnodicFirst.TabIndex = 16;
@@ -507,40 +430,30 @@ namespace OpenEphys.Onix.Design
             this.checkBoxAnodicFirst.UseVisualStyleBackColor = true;
             this.checkBoxAnodicFirst.CheckedChanged += new System.EventHandler(this.Checkbox_CheckedChanged);
             // 
-            // delaySamplesConverted
-            // 
-            this.delaySamplesConverted.Enabled = false;
-            this.delaySamplesConverted.Location = new System.Drawing.Point(249, 11);
-            this.delaySamplesConverted.Name = "delaySamplesConverted";
-            this.delaySamplesConverted.ReadOnly = true;
-            this.delaySamplesConverted.Size = new System.Drawing.Size(96, 26);
-            this.delaySamplesConverted.TabIndex = 15;
-            this.delaySamplesConverted.TabStop = false;
-            // 
             // buttonAddPulses
             // 
-            this.buttonAddPulses.Location = new System.Drawing.Point(8, 392);
+            this.buttonAddPulses.Location = new System.Drawing.Point(40, 252);
             this.buttonAddPulses.Name = "buttonAddPulses";
             this.buttonAddPulses.Size = new System.Drawing.Size(112, 42);
-            this.buttonAddPulses.TabIndex = 14;
+            this.buttonAddPulses.TabIndex = 6;
             this.buttonAddPulses.TabStop = false;
             this.buttonAddPulses.Text = "Add Pulse(s)";
             this.buttonAddPulses.UseVisualStyleBackColor = true;
             this.buttonAddPulses.Click += new System.EventHandler(this.ButtonAddPulses_Click);
             // 
-            // delaySamples
+            // delay
             // 
-            this.delaySamples.Location = new System.Drawing.Point(189, 11);
-            this.delaySamples.Name = "delaySamples";
-            this.delaySamples.Size = new System.Drawing.Size(43, 26);
-            this.delaySamples.TabIndex = 0;
-            this.delaySamples.TextChanged += new System.EventHandler(this.Samples_TextChanged);
-            this.delaySamples.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
+            this.delay.Location = new System.Drawing.Point(150, 81);
+            this.delay.Name = "delay";
+            this.delay.Size = new System.Drawing.Size(60, 26);
+            this.delay.TabIndex = 0;
+            this.delay.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress_Time);
+            this.delay.Leave += new System.EventHandler(this.Samples_TextChanged);
             // 
             // numberOfPulsesText
             // 
             this.numberOfPulsesText.AutoSize = true;
-            this.numberOfPulsesText.Location = new System.Drawing.Point(48, 357);
+            this.numberOfPulsesText.Location = new System.Drawing.Point(235, 218);
             this.numberOfPulsesText.Name = "numberOfPulsesText";
             this.numberOfPulsesText.Size = new System.Drawing.Size(134, 20);
             this.numberOfPulsesText.TabIndex = 13;
@@ -549,19 +462,18 @@ namespace OpenEphys.Onix.Design
             // delayText
             // 
             this.delayText.AutoSize = true;
-            this.delayText.Location = new System.Drawing.Point(68, 17);
+            this.delayText.Location = new System.Drawing.Point(66, 87);
             this.delayText.Name = "delayText";
-            this.delayText.Size = new System.Drawing.Size(115, 20);
+            this.delayText.Size = new System.Drawing.Size(82, 20);
             this.delayText.TabIndex = 3;
-            this.delayText.Text = "Delay Samples";
+            this.delayText.Text = "Delay [ms]";
             // 
-            // numberOfStimuliText
+            // numberOfStimuli
             // 
-            this.numberOfStimuliText.Location = new System.Drawing.Point(189, 351);
-            this.numberOfStimuliText.Name = "numberOfStimuliText";
-            this.numberOfStimuliText.Size = new System.Drawing.Size(43, 26);
-            this.numberOfStimuliText.TabIndex = 7;
-            this.numberOfStimuliText.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
+            this.numberOfStimuli.Location = new System.Drawing.Point(376, 212);
+            this.numberOfStimuli.Name = "numberOfStimuli";
+            this.numberOfStimuli.Size = new System.Drawing.Size(60, 26);
+            this.numberOfStimuli.TabIndex = 5;
             // 
             // checkboxBiphasicSymmetrical
             // 
@@ -569,7 +481,7 @@ namespace OpenEphys.Onix.Design
             this.checkboxBiphasicSymmetrical.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.checkboxBiphasicSymmetrical.Checked = true;
             this.checkboxBiphasicSymmetrical.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkboxBiphasicSymmetrical.Location = new System.Drawing.Point(9, 52);
+            this.checkboxBiphasicSymmetrical.Location = new System.Drawing.Point(37, 15);
             this.checkboxBiphasicSymmetrical.Name = "checkboxBiphasicSymmetrical";
             this.checkboxBiphasicSymmetrical.Size = new System.Drawing.Size(173, 24);
             this.checkboxBiphasicSymmetrical.TabIndex = 5;
@@ -578,23 +490,23 @@ namespace OpenEphys.Onix.Design
             this.checkboxBiphasicSymmetrical.UseVisualStyleBackColor = true;
             this.checkboxBiphasicSymmetrical.CheckedChanged += new System.EventHandler(this.Checkbox_CheckedChanged);
             // 
-            // interStimulusIntervalSamples
+            // interStimulusInterval
             // 
-            this.interStimulusIntervalSamples.Location = new System.Drawing.Point(189, 318);
-            this.interStimulusIntervalSamples.Name = "interStimulusIntervalSamples";
-            this.interStimulusIntervalSamples.Size = new System.Drawing.Size(43, 26);
-            this.interStimulusIntervalSamples.TabIndex = 6;
-            this.interStimulusIntervalSamples.TextChanged += new System.EventHandler(this.Samples_TextChanged);
-            this.interStimulusIntervalSamples.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress);
+            this.interStimulusInterval.Location = new System.Drawing.Point(150, 212);
+            this.interStimulusInterval.Name = "interStimulusInterval";
+            this.interStimulusInterval.Size = new System.Drawing.Size(60, 26);
+            this.interStimulusInterval.TabIndex = 4;
+            this.interStimulusInterval.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress_Time);
+            this.interStimulusInterval.Leave += new System.EventHandler(this.Samples_TextChanged);
             // 
             // interStimulusIntervalText
             // 
             this.interStimulusIntervalText.AutoSize = true;
-            this.interStimulusIntervalText.Location = new System.Drawing.Point(14, 325);
+            this.interStimulusIntervalText.Location = new System.Drawing.Point(3, 215);
             this.interStimulusIntervalText.Name = "interStimulusIntervalText";
-            this.interStimulusIntervalText.Size = new System.Drawing.Size(174, 20);
+            this.interStimulusIntervalText.Size = new System.Drawing.Size(141, 20);
             this.interStimulusIntervalText.TabIndex = 9;
-            this.interStimulusIntervalText.Text = "Inter-Stimulus Samples";
+            this.interStimulusIntervalText.Text = "Inter-Stimulus [ms]";
             // 
             // tabPageChannelLayout
             // 
@@ -603,7 +515,7 @@ namespace OpenEphys.Onix.Design
             this.tabPageChannelLayout.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tabPageChannelLayout.Name = "tabPageChannelLayout";
             this.tabPageChannelLayout.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tabPageChannelLayout.Size = new System.Drawing.Size(366, 452);
+            this.tabPageChannelLayout.Size = new System.Drawing.Size(461, 303);
             this.tabPageChannelLayout.TabIndex = 3;
             this.tabPageChannelLayout.Text = "Channel Layout";
             this.tabPageChannelLayout.UseVisualStyleBackColor = true;
@@ -617,12 +529,12 @@ namespace OpenEphys.Onix.Design
             this.panelChannelLayout.Location = new System.Drawing.Point(4, 5);
             this.panelChannelLayout.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.panelChannelLayout.Name = "panelChannelLayout";
-            this.panelChannelLayout.Size = new System.Drawing.Size(358, 442);
+            this.panelChannelLayout.Size = new System.Drawing.Size(453, 293);
             this.panelChannelLayout.TabIndex = 0;
             // 
             // buttonCustomChannelLayout
             // 
-            this.buttonCustomChannelLayout.Location = new System.Drawing.Point(183, 131);
+            this.buttonCustomChannelLayout.Location = new System.Drawing.Point(261, 131);
             this.buttonCustomChannelLayout.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.buttonCustomChannelLayout.Name = "buttonCustomChannelLayout";
             this.buttonCustomChannelLayout.Size = new System.Drawing.Size(129, 40);
@@ -633,7 +545,7 @@ namespace OpenEphys.Onix.Design
             // 
             // buttonDefaultChannelLayout
             // 
-            this.buttonDefaultChannelLayout.Location = new System.Drawing.Point(28, 131);
+            this.buttonDefaultChannelLayout.Location = new System.Drawing.Point(80, 131);
             this.buttonDefaultChannelLayout.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.buttonDefaultChannelLayout.Name = "buttonDefaultChannelLayout";
             this.buttonDefaultChannelLayout.Size = new System.Drawing.Size(129, 40);
@@ -649,7 +561,7 @@ namespace OpenEphys.Onix.Design
             this.textBoxChannelLayoutFilePath.Multiline = true;
             this.textBoxChannelLayoutFilePath.Name = "textBoxChannelLayoutFilePath";
             this.textBoxChannelLayoutFilePath.ReadOnly = true;
-            this.textBoxChannelLayoutFilePath.Size = new System.Drawing.Size(302, 101);
+            this.textBoxChannelLayoutFilePath.Size = new System.Drawing.Size(406, 101);
             this.textBoxChannelLayoutFilePath.TabIndex = 0;
             // 
             // tabPageEditorDialog
@@ -658,7 +570,7 @@ namespace OpenEphys.Onix.Design
             this.tabPageEditorDialog.Location = new System.Drawing.Point(4, 29);
             this.tabPageEditorDialog.Name = "tabPageEditorDialog";
             this.tabPageEditorDialog.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageEditorDialog.Size = new System.Drawing.Size(366, 452);
+            this.tabPageEditorDialog.Size = new System.Drawing.Size(461, 303);
             this.tabPageEditorDialog.TabIndex = 2;
             this.tabPageEditorDialog.Text = "EditorDialog";
             this.tabPageEditorDialog.UseVisualStyleBackColor = true;
@@ -668,7 +580,7 @@ namespace OpenEphys.Onix.Design
             this.propertyGridStimulusSequence.Dock = System.Windows.Forms.DockStyle.Fill;
             this.propertyGridStimulusSequence.Location = new System.Drawing.Point(3, 3);
             this.propertyGridStimulusSequence.Name = "propertyGridStimulusSequence";
-            this.propertyGridStimulusSequence.Size = new System.Drawing.Size(360, 446);
+            this.propertyGridStimulusSequence.Size = new System.Drawing.Size(455, 297);
             this.propertyGridStimulusSequence.TabIndex = 4;
             this.propertyGridStimulusSequence.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.PropertyGridStimulusSequence_PropertyValueChanged);
             // 
@@ -680,7 +592,7 @@ namespace OpenEphys.Onix.Design
             this.tabControlVisualization.Location = new System.Drawing.Point(0, 0);
             this.tabControlVisualization.Name = "tabControlVisualization";
             this.tabControlVisualization.SelectedIndex = 0;
-            this.tabControlVisualization.Size = new System.Drawing.Size(1419, 850);
+            this.tabControlVisualization.Size = new System.Drawing.Size(1330, 860);
             this.tabControlVisualization.TabIndex = 6;
             // 
             // tabPageWaveform
@@ -689,7 +601,7 @@ namespace OpenEphys.Onix.Design
             this.tabPageWaveform.Location = new System.Drawing.Point(4, 29);
             this.tabPageWaveform.Name = "tabPageWaveform";
             this.tabPageWaveform.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageWaveform.Size = new System.Drawing.Size(1411, 817);
+            this.tabPageWaveform.Size = new System.Drawing.Size(1322, 827);
             this.tabPageWaveform.TabIndex = 0;
             this.tabPageWaveform.Text = "Stimulus Waveform";
             this.tabPageWaveform.UseVisualStyleBackColor = true;
@@ -700,7 +612,7 @@ namespace OpenEphys.Onix.Design
             this.tabPageTable.Location = new System.Drawing.Point(4, 29);
             this.tabPageTable.Name = "tabPageTable";
             this.tabPageTable.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageTable.Size = new System.Drawing.Size(1411, 817);
+            this.tabPageTable.Size = new System.Drawing.Size(1322, 827);
             this.tabPageTable.TabIndex = 1;
             this.tabPageTable.Text = "Table";
             this.tabPageTable.UseVisualStyleBackColor = true;
@@ -717,7 +629,7 @@ namespace OpenEphys.Onix.Design
             this.dataGridViewStimulusTable.Name = "dataGridViewStimulusTable";
             this.dataGridViewStimulusTable.RowHeadersWidth = 62;
             this.dataGridViewStimulusTable.RowTemplate.Height = 28;
-            this.dataGridViewStimulusTable.Size = new System.Drawing.Size(1405, 811);
+            this.dataGridViewStimulusTable.Size = new System.Drawing.Size(1316, 821);
             this.dataGridViewStimulusTable.TabIndex = 0;
             this.dataGridViewStimulusTable.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridViewStimulusTable_CellEndEdit);
             this.dataGridViewStimulusTable.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.DataGridViewStimulusTable_DataBindingComplete);
@@ -735,8 +647,8 @@ namespace OpenEphys.Onix.Design
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
-            this.splitContainer1.Size = new System.Drawing.Size(1797, 850);
-            this.splitContainer1.SplitterDistance = 1419;
+            this.splitContainer1.Size = new System.Drawing.Size(1803, 860);
+            this.splitContainer1.SplitterDistance = 1330;
             this.splitContainer1.TabIndex = 6;
             // 
             // splitContainer2
@@ -754,8 +666,8 @@ namespace OpenEphys.Onix.Design
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.panelButtons);
-            this.splitContainer2.Size = new System.Drawing.Size(374, 850);
-            this.splitContainer2.SplitterDistance = 787;
+            this.splitContainer2.Size = new System.Drawing.Size(469, 860);
+            this.splitContainer2.SplitterDistance = 796;
             this.splitContainer2.SplitterWidth = 5;
             this.splitContainer2.TabIndex = 0;
             // 
@@ -774,8 +686,8 @@ namespace OpenEphys.Onix.Design
             // 
             this.splitContainer3.Panel2.Controls.Add(this.tabControlParameters);
             this.splitContainer3.Panel2MinSize = 315;
-            this.splitContainer3.Size = new System.Drawing.Size(374, 787);
-            this.splitContainer3.SplitterDistance = 299;
+            this.splitContainer3.Size = new System.Drawing.Size(469, 796);
+            this.splitContainer3.SplitterDistance = 452;
             this.splitContainer3.SplitterWidth = 8;
             this.splitContainer3.TabIndex = 0;
             // 
@@ -793,9 +705,12 @@ namespace OpenEphys.Onix.Design
             this.zedGraphChannels.ScrollMinX = 0D;
             this.zedGraphChannels.ScrollMinY = 0D;
             this.zedGraphChannels.ScrollMinY2 = 0D;
-            this.zedGraphChannels.Size = new System.Drawing.Size(374, 299);
+            this.zedGraphChannels.Size = new System.Drawing.Size(469, 452);
             this.zedGraphChannels.TabIndex = 3;
             this.zedGraphChannels.UseExtendedPrintDialog = true;
+            this.zedGraphChannels.MouseDownEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.ZedGraphChannels_MouseDownEvent);
+            this.zedGraphChannels.MouseUpEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.ZedGraphChannels_MouseUpEvent);
+            this.zedGraphChannels.MouseMoveEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.ZedGraphChannels_MouseMoveEvent);
             this.zedGraphChannels.MouseClick += new System.Windows.Forms.MouseEventHandler(this.ZedGraphChannels_MouseClick);
             // 
             // Rhs2116StimulusSequenceDialog
@@ -804,7 +719,7 @@ namespace OpenEphys.Onix.Design
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.buttonCancel;
-            this.ClientSize = new System.Drawing.Size(1797, 882);
+            this.ClientSize = new System.Drawing.Size(1803, 892);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.linkLabelDocumentation);
             this.Controls.Add(this.statusStrip);
@@ -816,7 +731,6 @@ namespace OpenEphys.Onix.Design
             this.panelButtons.ResumeLayout(false);
             this.tabControlParameters.ResumeLayout(false);
             this.tabPageAddPulse.ResumeLayout(false);
-            this.tabPageAddPulse.PerformLayout();
             this.panelParameters.ResumeLayout(false);
             this.panelParameters.PerformLayout();
             this.groupBoxCathode.ResumeLayout(false);
@@ -865,16 +779,16 @@ namespace OpenEphys.Onix.Design
         private System.Windows.Forms.PropertyGrid propertyGridStimulusSequence;
         private System.Windows.Forms.Label labelAnplitudeAnodicText;
         private System.Windows.Forms.Label delayText;
-        private System.Windows.Forms.TextBox amplitudeAnodicSteps;
-        private System.Windows.Forms.TextBox delaySamples;
+        private System.Windows.Forms.TextBox amplitudeAnodic;
+        private System.Windows.Forms.TextBox delay;
         private System.Windows.Forms.CheckBox checkboxBiphasicSymmetrical;
         private System.Windows.Forms.Button buttonAddPulses;
         private System.Windows.Forms.Label numberOfPulsesText;
-        private System.Windows.Forms.TextBox numberOfStimuliText;
+        private System.Windows.Forms.TextBox numberOfStimuli;
         private System.Windows.Forms.Label interStimulusIntervalText;
-        private System.Windows.Forms.TextBox interStimulusIntervalSamples;
+        private System.Windows.Forms.TextBox interStimulusInterval;
         private System.Windows.Forms.Label labelPulseWidthAnodicText;
-        private System.Windows.Forms.TextBox pulseWidthAnodicSamples;
+        private System.Windows.Forms.TextBox pulseWidthAnodic;
         private System.Windows.Forms.TabControl tabControlVisualization;
         private System.Windows.Forms.TabPage tabPageWaveform;
         private System.Windows.Forms.TabPage tabPageTable;
@@ -884,21 +798,14 @@ namespace OpenEphys.Onix.Design
         private ZedGraph.ZedGraphControl zedGraphChannels;
         private System.Windows.Forms.DataGridView dataGridViewStimulusTable;
         private System.Windows.Forms.Panel panelParameters;
-        private System.Windows.Forms.TextBox delaySamplesConverted;
-        private System.Windows.Forms.Label labelStepSize;
+        private System.Windows.Forms.Label labelStepSizeAmplitude;
         private System.Windows.Forms.CheckBox checkBoxAnodicFirst;
-        private System.Windows.Forms.TextBox amplitudeAnodicConverted;
-        private System.Windows.Forms.TextBox pulseWidthAnodicConverted;
-        private System.Windows.Forms.TextBox pulseWidthCathodicConverted;
-        private System.Windows.Forms.TextBox amplitudeCathodicConverted;
         private System.Windows.Forms.Label labelAmplitudeCathodic;
         private System.Windows.Forms.Label labelPulseWidthCathodicText;
-        private System.Windows.Forms.TextBox pulseWidthCathodicSamples;
-        private System.Windows.Forms.TextBox amplitudeCathodicSteps;
-        private System.Windows.Forms.TextBox interPulseIntervalConverted;
-        private System.Windows.Forms.TextBox interPulseIntervalSamples;
+        private System.Windows.Forms.TextBox pulseWidthCathodic;
+        private System.Windows.Forms.TextBox amplitudeCathodic;
+        private System.Windows.Forms.TextBox interPulseInterval;
         private System.Windows.Forms.Label interPulseIntervalText;
-        private System.Windows.Forms.TextBox interStimulusIntervalConverted;
         private System.Windows.Forms.Button buttonClearPulses;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.ComboBox comboBoxStepSize;

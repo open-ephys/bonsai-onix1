@@ -507,81 +507,78 @@ namespace OpenEphys.Onix.Design
             {
                 if (SelectedChannels[i])
                 {
-                    if (!uint.TryParse(delaySamples.Text, out uint delay))
+                    if (delay.Tag == null)
                     {
-                        MessageBox.Show("Unable to parse Delay.");
+                        MessageBox.Show("Unable to parse delay.");
                         return;
                     }
 
-                    if (!byte.TryParse(amplitudeAnodicSteps.Text, out byte amplitudeAnodic))
+                    if (amplitudeAnodic.Tag == null)
                     {
-                        MessageBox.Show("Unable to parse anodic Amplitude.");
+                        MessageBox.Show("Unable to parse anodic amplitude.");
                         return;
                     }
 
-                    if (!uint.TryParse(pulseWidthAnodicSamples.Text, out uint pulseWidthAnodic))
+                    if (pulseWidthAnodic.Tag == null)
                     {
-                        MessageBox.Show("Unable to parse anodic Pulse Width.");
+                        MessageBox.Show("Unable to parse anodic pulse width.");
                         return;
                     }
 
-                    if (!uint.TryParse(interPulseIntervalSamples.Text, out uint interPulseInterval))
+                    if (interPulseInterval.Tag == null)
                     {
-                        MessageBox.Show("Unable to parse Inter-Pulse Interval.");
+                        MessageBox.Show("Unable to parse inter-pulse interval.");
                         return;
                     }
-
-                    byte amplitudeCathodic = 0;
-                    uint pulseWidthCathodic = 0;
 
                     if (!checkboxBiphasicSymmetrical.Checked)
                     {
-                        if (!byte.TryParse(this.amplitudeCathodicSteps.Text, out amplitudeCathodic))
+                        if (amplitudeCathodic.Tag == null)
                         {
-                            MessageBox.Show("Unable to parse cathodic Amplitude.");
+                            MessageBox.Show("Unable to parse cathodic amplitude.");
                             return;
                         }
 
-                        if (!uint.TryParse(this.pulseWidthCathodicSamples.Text, out pulseWidthCathodic))
+                        if (pulseWidthCathodic.Tag == null)
                         {
-                            MessageBox.Show("Unable to parse cathodic Pulse Width.");
+                            MessageBox.Show("Unable to parse cathodic pulse width.");
                             return;
                         }
                     }
 
-                    if (!uint.TryParse(interStimulusIntervalSamples.Text, out uint isi))
+                    if (interStimulusInterval.Tag == null)
                     {
-                        MessageBox.Show("Unable to parse ISI.");
+                        MessageBox.Show("Unable to parse inter-stimulus interval.");
                         return;
                     }
 
-                    if (!uint.TryParse(numberOfStimuliText.Text, out uint numberOfStimuli))
+                    if (!uint.TryParse(numberOfStimuli.Text, out uint numberOfStimuliValue))
                     {
-                        MessageBox.Show("Unable to parse Number of Stimuli.");
+                        MessageBox.Show("Unable to parse number of stimuli.");
                         return;
                     }
 
-                    Sequence.Stimuli[i].DelaySamples = delay;
+                    Sequence.Stimuli[i].DelaySamples = (uint)delay.Tag;
 
-                    Sequence.Stimuli[i].AnodicAmplitudeSteps = amplitudeAnodic;
-                    Sequence.Stimuli[i].AnodicWidthSamples = pulseWidthAnodic;
+                    Sequence.Stimuli[i].AnodicAmplitudeSteps = (byte)amplitudeAnodic.Tag;
+                    Sequence.Stimuli[i].AnodicWidthSamples = (uint)pulseWidthAnodic.Tag;
 
                     if (!checkboxBiphasicSymmetrical.Checked)
                     {
-                        Sequence.Stimuli[i].CathodicAmplitudeSteps = amplitudeCathodic;
-                        Sequence.Stimuli[i].CathodicWidthSamples = pulseWidthCathodic;
+                        Sequence.Stimuli[i].CathodicAmplitudeSteps = (byte)amplitudeCathodic.Tag;
+                        Sequence.Stimuli[i].CathodicWidthSamples = (uint)pulseWidthCathodic.Tag;
                     }
                     else
                     {
-                        Sequence.Stimuli[i].CathodicAmplitudeSteps = amplitudeAnodic;
-                        Sequence.Stimuli[i].CathodicWidthSamples = pulseWidthAnodic;
+                        Sequence.Stimuli[i].CathodicAmplitudeSteps = (byte)amplitudeAnodic.Tag;
+                        Sequence.Stimuli[i].CathodicWidthSamples = (uint)pulseWidthAnodic.Tag;
                     }
 
-                    Sequence.Stimuli[i].DwellSamples = interPulseInterval;
+                    Sequence.Stimuli[i].DwellSamples = (uint)interPulseInterval.Tag;
 
-                    Sequence.Stimuli[i].InterStimulusIntervalSamples = isi;
+                    Sequence.Stimuli[i].InterStimulusIntervalSamples = (uint)interStimulusInterval.Tag;
 
-                    Sequence.Stimuli[i].NumberOfStimuli = numberOfStimuli;
+                    Sequence.Stimuli[i].NumberOfStimuli = numberOfStimuliValue;
 
                     Sequence.Stimuli[i].AnodicFirst = checkBoxAnodicFirst.Checked;
                 }
@@ -590,11 +587,19 @@ namespace OpenEphys.Onix.Design
             DrawStimulusWaveform();
         }
 
-        private void ParameterKeyPress(object sender, KeyPressEventArgs e)
+        private void ParameterKeyPress_Time(object sender, KeyPressEventArgs e)
         {
             if (e.KeyChar == '\r')
             {
-                ButtonAddPulses_Click(sender, e);
+                Samples_TextChanged(sender, e);
+            }
+        }
+
+        private void ParameterKeyPress_Amplitude(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == '\r')
+            {
+                Amplitude_TextChanged(sender, e);
             }
         }
 
@@ -629,81 +634,84 @@ namespace OpenEphys.Onix.Design
             Sequence.CurrentStepSize = (Rhs2116StepSize)comboBoxStepSize.SelectedItem;
             DrawStimulusWaveform();
 
-            Amplitude_TextChanged(amplitudeAnodicSteps, e);
-            Amplitude_TextChanged(amplitudeCathodicSteps, e);
+            Amplitude_TextChanged(amplitudeAnodic, e);
+            Amplitude_TextChanged(amplitudeCathodic, e);
         }
 
         private void Samples_TextChanged(object sender, EventArgs e)
         {
             TextBox textBox = (TextBox)sender;
-            string text = "";
 
-            if (uint.TryParse(textBox.Text, out uint result))
+            if (textBox.Text == "")
+                return;
+
+            if (double.TryParse(textBox.Text, out double result))
             {
-                double timeInMicroSeconds = result * SamplePeriodMicroSeconds;
-                bool isMicro = timeInMicroSeconds < 1e3;
-
-                text = string.Format("{0:F2} {1}s",
-                            isMicro ? timeInMicroSeconds : timeInMicroSeconds / 1e3,
-                            isMicro ? "μ" : "m");
+                if (!GetSampleFromTime(result, out uint sampleTime))
+                {
+                    MessageBox.Show("Warning: Value was too small. Time is now set to zero seconds. Please increase the value.");
+                }
+                textBox.Text = string.Format("{0:F2}", GetTimeFromSample(sampleTime));
+                textBox.Tag = sampleTime;
             }
-
-            switch (textBox.Name)
+            else
             {
-                case nameof(delaySamples):
-                    delaySamplesConverted.Text = text;
-                    break;
-
-                case nameof(pulseWidthAnodicSamples):
-                    pulseWidthAnodicConverted.Text = text;
-                    break;
-
-                case nameof(interPulseIntervalSamples):
-                    interPulseIntervalConverted.Text = text;
-                    break;
-
-                case nameof(pulseWidthCathodicSamples):
-                    pulseWidthCathodicConverted.Text = text;
-                    break;
-
-                case nameof(interStimulusIntervalSamples):
-                    interStimulusIntervalConverted.Text = text;
-                    break;
-
-                default:
-                    MessageBox.Show("Unknown text box.");
-                    break;
+                MessageBox.Show("Unable to parse text. Please enter a valid value in milliseconds");
+                textBox.Text = "";
+                textBox.Tag = null;
             }
+        }
+
+        private bool GetSampleFromTime(double value, out uint samples)
+        {
+            var ratio = value * 1e3 / SamplePeriodMicroSeconds;
+            samples = (uint)Math.Round(ratio);
+
+            return !(ratio > uint.MaxValue || ratio < uint.MinValue || samples == 0);
+        }
+
+        private bool GetSampleFromAmplitude(double value, out byte samples)
+        {
+            var ratio = value * 1e3 / Sequence.CurrentStepSizeuA;
+            samples = (byte)Math.Round(ratio);
+
+            return !(ratio > byte.MaxValue || ratio < 0 || samples == 0);
+        }
+
+        private double GetTimeFromSample(uint value)
+        {
+            return value * SamplePeriodMicroSeconds / 1e3;
+        }
+
+        private double GetAmplitudeFromSample(byte value)
+        {
+            return value * Sequence.CurrentStepSizeuA / 1e3;
         }
 
         private void Amplitude_TextChanged(object sender, EventArgs e)
         {
             TextBox textBox = (TextBox)sender;
-            string text = "";
 
-            if (byte.TryParse(textBox.Text, out byte result))
+            if (textBox.Text == "")
+                return;
+
+            if (double.TryParse(textBox.Text, out double result))
             {
-                double amplitudeInMicroAmps = result * Sequence.CurrentStepSizeuA;
-                bool isMicro = amplitudeInMicroAmps < 1e3;
+                if (!GetSampleFromAmplitude(result, out byte sampleAmplitude))
+                {
+                    MessageBox.Show("Warning: Amplitude is too high for the given step-size. " +
+                        "Please increase the amplitude step-size and try again.");
+                    sampleAmplitude = byte.MaxValue - 1;
+                }
 
-                text = string.Format("{0:F2} {1}A",
-                            isMicro ? amplitudeInMicroAmps : amplitudeInMicroAmps / 1e3,
-                            isMicro ? "μ" : "m");
+                textBox.Text = string.Format("{0:F2}", GetAmplitudeFromSample(sampleAmplitude));
+                textBox.Tag = sampleAmplitude;
             }
-
-            switch (textBox.Name)
+            else
             {
-                case nameof(amplitudeAnodicSteps):
-                    amplitudeAnodicConverted.Text = text;
-                    break;
-
-                case nameof(amplitudeCathodicSteps):
-                    amplitudeCathodicConverted.Text = text;
-                    break;
-
-                default:
-                    MessageBox.Show("Unknown text box.");
-                    break;
+                MessageBox.Show("Unable to parse text. Please enter a valid value in milliamps");
+                textBox.Text = "";
+                textBox.Tag = null;
             }
         }
 
