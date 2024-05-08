@@ -840,7 +840,7 @@ namespace OpenEphys.Onix.Design
 
         private void ButtonClearPulses_Click(object sender, EventArgs e)
         {
-           if (SelectedChannels.All(x => x))
+            if (SelectedChannels.All(x => x))
             {
                 DialogResult result = MessageBox.Show("Caution: All channels are currently selected, and all " +
                     "settings will be cleared if you continue. Press Okay to clear all pulse settings, or Cancel to keep them",
@@ -921,7 +921,7 @@ namespace OpenEphys.Onix.Design
                 BoxObj selectionArea = new(
                     mouseLocation.X < clickStart.X ? mouseLocation.X : clickStart.X,
                     mouseLocation.Y > clickStart.Y ? mouseLocation.Y : clickStart.Y,
-                    Math.Abs(mouseLocation.X - clickStart.X), 
+                    Math.Abs(mouseLocation.X - clickStart.X),
                     Math.Abs(mouseLocation.Y - clickStart.Y));
                 selectionArea.Border.Color = Color.DarkSlateGray;
                 selectionArea.Fill.IsVisible = false;
@@ -939,7 +939,7 @@ namespace OpenEphys.Onix.Design
 
                 return true;
             }
-            else if (e.Button == MouseButtons.None) 
+            else if (e.Button == MouseButtons.None)
             {
                 zedGraphChannels.Cursor = Cursors.Arrow;
 
