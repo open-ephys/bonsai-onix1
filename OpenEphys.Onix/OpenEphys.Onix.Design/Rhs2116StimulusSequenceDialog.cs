@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -711,7 +711,7 @@ namespace OpenEphys.Onix.Design
         {
             TextBox textBox = (TextBox)sender;
 
-            if (textBox.Text == "")
+            if (textBox.Text == "" || textBox.Text == "0" || textBox.Text == "0.0" || textBox.Text == "0.00" || textBox.Text == "0.000")
                 return;
 
             if (double.TryParse(textBox.Text, out double result))
@@ -772,7 +772,7 @@ namespace OpenEphys.Onix.Design
         {
             TextBox textBox = (TextBox)sender;
 
-            if (textBox.Text == "")
+            if (textBox.Text == "" || textBox.Text == "0" || textBox.Text == "0.0" || textBox.Text == "0.00" || textBox.Text == "0.000")
                 return;
 
             if (double.TryParse(textBox.Text, out double result))
@@ -1008,6 +1008,54 @@ namespace OpenEphys.Onix.Design
             }
 
             return false;
+        }
+
+        private void ButtonReadPulses_Click(object sender, EventArgs e)
+        {
+            if (SelectedChannels.Count(x => x) > 1)
+            {
+                MessageBox.Show("Too many contacts selected. Please choose a single channel to read from.");
+                return;
+            }
+
+            int index = -1;
+
+            for (int i = 0; i < SelectedChannels.Length; i++)
+            {
+                if (SelectedChannels[i])
+                {
+                    index = i; break;
+                }
+            }
+
+            if (index < 0)
+            {
+                MessageBox.Show("Warning: No contact selected. Please choose a contact before continuing.");
+                return;
+            }
+
+            if (Sequence.Stimuli[index].AnodicAmplitudeSteps == Sequence.Stimuli[index].CathodicAmplitudeSteps &&
+                Sequence.Stimuli[index].AnodicWidthSamples == Sequence.Stimuli[index].CathodicWidthSamples)
+            {
+                checkboxBiphasicSymmetrical.Checked = true;
+            }
+            else
+            {
+                checkboxBiphasicSymmetrical.Checked = false;
+            }
+
+            checkBoxAnodicFirst.Checked = Sequence.Stimuli[index].AnodicFirst;
+
+            Checkbox_CheckedChanged(checkboxBiphasicSymmetrical, e);
+
+            delay.Text = GetTimeString(Sequence.Stimuli[index].DelaySamples); Samples_TextChanged(delay, e);
+            amplitudeAnodic.Text = GetAmplitudeString(Sequence.Stimuli[index].AnodicAmplitudeSteps); Amplitude_TextChanged(amplitudeAnodic, e);
+            pulseWidthAnodic.Text = GetTimeString(Sequence.Stimuli[index].AnodicWidthSamples); Samples_TextChanged(pulseWidthAnodic, e);
+            amplitudeCathodic.Text = GetAmplitudeString(Sequence.Stimuli[index].CathodicAmplitudeSteps); Amplitude_TextChanged(amplitudeCathodic, e);
+            pulseWidthCathodic.Text = GetTimeString(Sequence.Stimuli[index].CathodicWidthSamples); Samples_TextChanged(pulseWidthCathodic, e);
+            interPulseInterval.Text = GetTimeString(Sequence.Stimuli[index].DwellSamples); Samples_TextChanged(interPulseInterval, e);
+            interStimulusInterval.Text = GetTimeString(Sequence.Stimuli[index].InterStimulusIntervalSamples); Samples_TextChanged(interStimulusInterval, e);
+            numberOfStimuli.Text = Sequence.Stimuli[index].NumberOfStimuli.ToString();
         }
     }
 }
