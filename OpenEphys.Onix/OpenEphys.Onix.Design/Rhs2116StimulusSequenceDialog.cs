@@ -543,19 +543,16 @@ namespace OpenEphys.Onix.Design
                         return;
                     }
 
-                    if (!checkboxBiphasicSymmetrical.Checked)
+                    if (amplitudeCathodic.Tag == null)
                     {
-                        if (amplitudeCathodic.Tag == null)
-                        {
-                            MessageBox.Show("Unable to parse cathodic amplitude.");
-                            return;
-                        }
+                        MessageBox.Show("Unable to parse cathodic amplitude.");
+                        return;
+                    }
 
-                        if (pulseWidthCathodic.Tag == null)
-                        {
-                            MessageBox.Show("Unable to parse cathodic pulse width.");
-                            return;
-                        }
+                    if (pulseWidthCathodic.Tag == null)
+                    {
+                        MessageBox.Show("Unable to parse cathodic pulse width.");
+                        return;
                     }
 
                     if (interStimulusInterval.Tag == null)
@@ -575,16 +572,8 @@ namespace OpenEphys.Onix.Design
                     Sequence.Stimuli[i].AnodicAmplitudeSteps = (byte)amplitudeAnodic.Tag;
                     Sequence.Stimuli[i].AnodicWidthSamples = (uint)pulseWidthAnodic.Tag;
 
-                    if (!checkboxBiphasicSymmetrical.Checked)
-                    {
-                        Sequence.Stimuli[i].CathodicAmplitudeSteps = (byte)amplitudeCathodic.Tag;
-                        Sequence.Stimuli[i].CathodicWidthSamples = (uint)pulseWidthCathodic.Tag;
-                    }
-                    else
-                    {
-                        Sequence.Stimuli[i].CathodicAmplitudeSteps = (byte)amplitudeAnodic.Tag;
-                        Sequence.Stimuli[i].CathodicWidthSamples = (uint)pulseWidthAnodic.Tag;
-                    }
+                    Sequence.Stimuli[i].CathodicAmplitudeSteps = (byte)amplitudeCathodic.Tag;
+                    Sequence.Stimuli[i].CathodicWidthSamples = (uint)pulseWidthCathodic.Tag;
 
                     Sequence.Stimuli[i].DwellSamples = (uint)interPulseInterval.Tag;
 
