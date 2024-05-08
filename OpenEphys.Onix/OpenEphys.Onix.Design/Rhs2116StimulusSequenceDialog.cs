@@ -503,6 +503,18 @@ namespace OpenEphys.Onix.Design
 
         private void ButtonAddPulses_Click(object sender, EventArgs e)
         {
+            if (SelectedChannels.All(x => x))
+            {
+                DialogResult result = MessageBox.Show("Caution: All channels are currently selected, and all " +
+                    "settings will be applied to all channels if you continue. Press Okay to add pulse settings to all channels, or Cancel to keep them as is",
+                    "Set all channel settings?", MessageBoxButtons.OKCancel);
+
+                if (result == DialogResult.Cancel)
+                {
+                    return;
+                }
+            }
+
             for (int i = 0; i < SelectedChannels.Length; i++)
             {
                 if (SelectedChannels[i])
