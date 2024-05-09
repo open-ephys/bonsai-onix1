@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Windows.Forms;
 
-namespace OpenEphys.Onix.Design
+namespace OpenEphys.Onix
 {
     public class ProbeGroup
     {
@@ -60,9 +59,6 @@ namespace OpenEphys.Onix.Design
             {
                 if (Probes[i].Contact_Ids == null)
                 {
-                    MessageBox.Show(string.Format("Warning: Probe does not have contact IDs." +
-                        "Automatically assigning contact IDs based on numeric index ({0} to {1})", contactNum, contactNum + Probes[i].Contact_Positions.Length - 1));
-
                     Probes[i].Contact_Ids = new string[Probes[i].Contact_Positions.Length];
 
                     for (int j = 0; j < Probes[i].Contact_Ids.Length; j++)
