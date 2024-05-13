@@ -429,7 +429,7 @@ namespace OpenEphys.Onix
 
         public Rhs2116StepSize CurrentStepSize { get; set; } = Rhs2116StepSize.Step5000nA;
 
-        public ProbeGroup ChannelConfiguration { get; set; } = new();
+        public ProbeGroup ChannelConfiguration { get; set; }
 
         /// <summary>
         /// Maximum length of the sequence across all channels

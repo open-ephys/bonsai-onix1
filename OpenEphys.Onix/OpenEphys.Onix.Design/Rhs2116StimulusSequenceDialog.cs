@@ -20,13 +20,7 @@ namespace OpenEphys.Onix.Design
 
         private readonly bool[] SelectedChannels = null;
 
-        private readonly string DefaultChannelLayoutFilePath = "../../Python/simple_rhs2116_headstage_probe_interface.json";
-
-        private const string ContactStringFormat = "Contact_{0}";
-        private const string TextStringFormat = "TextContact_{0}";
         private const string SelectionAreaTag = "Selection";
-
-        private ProbeGroup probeGroup = new();
 
         private PointD mouseLocation = new(0.0, 0.0);
         private PointD clickStart = new(0.0, 0.0);
@@ -49,50 +43,21 @@ namespace OpenEphys.Onix.Design
             comboBoxStepSize.DataSource = Enum.GetValues(typeof(Rhs2116StepSize));
             comboBoxStepSize.SelectedIndex = (int)Sequence.CurrentStepSize;
 
+            if (Sequence.ChannelConfiguration == null || !Sequence.ChannelConfiguration.IsValid || Sequence.ChannelConfiguration.NumContacts != 32)
+            {
+                MessageBox.Show("Error: Something is wrong with the channel configuration." +
+                    "Please open the ConfigureHeadstageRhs2116 node and choose the correct" +
+                    "Probe Interface file to open.");
+                return;
+            }
+
             InitializeZedGraphChannels();
-            LoadDefaultChannelLayout();
             DrawChannels();
 
             InitializeZedGraphWaveform();
             DrawStimulusWaveform();
 
             dataGridViewStimulusTable.DataSource = Sequence.Stimuli;
-        }
-
-        private void LoadDefaultChannelLayout()
-        {
-            textBoxChannelLayoutFilePath.Text = Path.GetFullPath(DefaultChannelLayoutFilePath);
-
-            LoadChannelLayout(DefaultChannelLayoutFilePath);
-        }
-
-        private void LoadChannelLayout(string channelLayoutFilePath)
-        {
-            string channelLayoutString = File.ReadAllText(channelLayoutFilePath);
-
-            var options = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-                IncludeFields = true,
-                AllowTrailingCommas = true,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
-                NumberHandling = JsonNumberHandling.AllowReadingFromString
-            };
-
-            probeGroup = JsonSerializer.Deserialize<ProbeGroup>(channelLayoutString, options);
-
-            if (probeGroup == null)
-            {
-                MessageBox.Show("Error opening the JSON file.");
-                return;
-            }
-
-            if (probeGroup.NumContacts != 32)
-            {
-                MessageBox.Show("Warning: Wrong number of contacts found in the file. " +
-                    "Please confirm that there are 32 contacts across all probes.");
-                probeGroup = null;
-            }
         }
 
         private void ButtonOk_Click(object sender, EventArgs e)
@@ -173,7 +138,7 @@ namespace OpenEphys.Onix.Design
 
                     TextObj contactNumber = new(i.ToString(), contactTextLocation, curve.Points[0].Y)
                     {
-                        Tag = string.Format(TextStringFormat, i)
+                        Tag = string.Format(ChannelConfigurationDialog.TextStringFormat, i)
                     };
                     contactNumber.FontSpec.Size = 12;
                     contactNumber.FontSpec.Border.IsVisible = false;
@@ -291,97 +256,7 @@ namespace OpenEphys.Onix.Design
 
         private void DrawChannels()
         {
-            if (probeGroup == null || !probeGroup.IsValid)
-                return;
-
-            zedGraphChannels.GraphPane.GraphObjList.Clear();
-
-            double minX = 1e3, minY = 1e3, maxX = -1e3, maxY = -1e3;
-
-            for (int i = 0; i < probeGroup.Probes.Length; i++)
-            {
-                PointD[] planarContours = ConvertFloatArrayToPointD(probeGroup.Probes[i].Probe_Planar_Contour);
-                PolyObj contour = new(planarContours, Color.LightGreen, Color.LightGreen)
-                {
-                    ZOrder = ZOrder.E_BehindCurves
-                };
-
-                zedGraphChannels.GraphPane.GraphObjList.Add(contour);
-
-                var tmp = planarContours.Min(p => p.X);
-                minX = tmp < minX ? tmp : minX;
-
-                tmp = planarContours.Min(p => p.Y);
-                minY = tmp < minY ? tmp : minY;
-
-                tmp = planarContours.Max(p => p.X);
-                maxX = tmp > maxX ? tmp : maxX;
-
-                tmp = planarContours.Max(p => p.Y);
-                maxY = tmp > maxY ? tmp : maxY;
-
-                for (int j = 0; j < probeGroup.Probes[i].Contact_Positions.Length; j++)
-                {
-                    Contact contact = probeGroup.Probes[i].GetContact(j);
-
-                    if (contact.Shape.Equals("circle"))
-                    {
-                        EllipseObj contactObj = new(contact.PosX - contact.ShapeParams.Radius, contact.PosY + contact.ShapeParams.Radius,
-                            contact.ShapeParams.Radius * 2, contact.ShapeParams.Radius * 2, Color.DarkGray, Color.WhiteSmoke)
-                        {
-                            ZOrder=ZOrder.B_BehindLegend,
-                            Tag = string.Format(ContactStringFormat, contact.ContactId)
-                        };
-
-                        zedGraphChannels.GraphPane.GraphObjList.Add(contactObj);
-
-                        TextObj textObj = new(contact.ContactId, contact.PosX, contact.PosY)
-                        {
-                            ZOrder=ZOrder.A_InFront,
-                            Tag = string.Format(TextStringFormat, contact.ContactId)
-                        };
-                        textObj.FontSpec.Size = 22;
-                        textObj.FontSpec.Border.IsVisible = false;
-                        textObj.FontSpec.Fill.IsVisible = false;
-
-                        zedGraphChannels.GraphPane.GraphObjList.Add(textObj);
-                    }
-                    else
-                    {
-                        MessageBox.Show("Contact shapes other than 'circle' not implemented yet.");
-                    }
-                }
-            }
-
-            var rangeX = maxX - minX;
-            var rangeY = maxY - minY;
-
-            if (rangeY < rangeX / 2)
-            {
-                minY -= rangeX / 2 - rangeY;
-                maxY += rangeX / 2 - rangeY;
-                rangeY = maxY - minY;
-            }
-
-            zedGraphChannels.GraphPane.XAxis.Scale.Min = minX - rangeX * 0.02;
-            zedGraphChannels.GraphPane.XAxis.Scale.Max = maxX + rangeX * 0.02;
-            zedGraphChannels.GraphPane.YAxis.Scale.Min = minY - rangeY * 0.02;
-            zedGraphChannels.GraphPane.YAxis.Scale.Max = maxY + rangeY * 0.02;
-
-            zedGraphChannels.AxisChange();
-            zedGraphChannels.Refresh();
-        }
-
-        private PointD[] ConvertFloatArrayToPointD(float[][] floats)
-        {
-            PointD[] pointD = new PointD[floats.Length];
-
-            for (int i = 0; i < floats.Length; i++)
-            {
-                pointD[i] = new PointD(floats[i][0], floats[i][1]);
-            }
-
-            return pointD;
+            ChannelConfigurationDialog.DrawChannels(zedGraphChannels, Sequence.ChannelConfiguration);
         }
 
         private void LinkLabelDocumentation_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -471,7 +346,7 @@ namespace OpenEphys.Onix.Design
 
             for (int i = 0; i < SelectedChannels.Length; i++)
             {
-                EllipseObj circleObj = (EllipseObj)zedGraphChannels.GraphPane.GraphObjList[string.Format(ContactStringFormat, i)];
+                EllipseObj circleObj = (EllipseObj)zedGraphChannels.GraphPane.GraphObjList[string.Format(ChannelConfigurationDialog.ContactStringFormat, i)];
 
                 if (circleObj != null)
                 {
@@ -619,10 +494,10 @@ namespace OpenEphys.Onix.Design
 
         private void AddContactIdToGridRow()
         {
-            if (probeGroup == null || !probeGroup.IsValid)
+            if (Sequence.ChannelConfiguration == null || !Sequence.ChannelConfiguration.IsValid || Sequence.ChannelConfiguration.NumContacts != 32)
                 return;
 
-            var contactIds = probeGroup.GetContactIds();
+            var contactIds = Sequence.ChannelConfiguration.GetContactIds();
 
             for (int i = 0; i < contactIds.Length; i++)
             {
@@ -863,40 +738,6 @@ namespace OpenEphys.Onix.Design
             DrawStimulusWaveform();
         }
 
-        private void ButtonDefaultChannelLayout_Click(object sender, EventArgs e)
-        {
-            SetAllChannels(true);
-            LoadDefaultChannelLayout();
-            DrawChannels();
-
-            DrawStimulusWaveform();
-        }
-
-        private void ButtonCustomChannelLayout_Click(object sender, EventArgs e)
-        {
-            using OpenFileDialog ofd = new();
-
-            ofd.InitialDirectory = Path.GetDirectoryName(Path.GetFullPath(DefaultChannelLayoutFilePath));
-            ofd.Filter = "Probe Interface Files (*.json)|*.json";
-            ofd.FilterIndex = 1;
-            ofd.Multiselect = false;
-            ofd.Title = "Choose custom Probe Interface file";
-
-            if (ofd.ShowDialog() == DialogResult.OK)
-            {
-                if (File.Exists(ofd.FileName))
-                {
-                    SetAllChannels(true);
-                    LoadChannelLayout(ofd.FileName);
-                    DrawChannels();
-
-                    DrawStimulusWaveform();
-
-                    textBoxChannelLayoutFilePath.Text = Path.GetFullPath(ofd.FileName);
-                }
-            }
-        }
-
         private bool ZedGraphChannels_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
@@ -904,7 +745,7 @@ namespace OpenEphys.Onix.Design
                 clickStart = TransformPixelsToCoordinates(e.Location);
             }
 
-            return false; // Return true if I do not want ZedGraph to perform any additional work on the mouse down event
+            return false;
         }
 
         private bool ZedGraphChannels_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
@@ -962,17 +803,19 @@ namespace OpenEphys.Onix.Design
 
         private bool ZedGraphChannels_MouseUpEvent(ZedGraphControl sender, MouseEventArgs e)
         {
-            if (zedGraphChannels.GraphPane.GraphObjList[SelectionAreaTag] is BoxObj selectionArea && selectionArea != null && probeGroup != null && probeGroup.IsValid)
+            if (zedGraphChannels.GraphPane.GraphObjList[SelectionAreaTag] is BoxObj selectionArea && selectionArea != null &&
+                Sequence.ChannelConfiguration != null && Sequence.ChannelConfiguration.IsValid && Sequence.ChannelConfiguration.NumContacts == 32)
             {
                 RectangleF rect = selectionArea.Location.Rect;
 
                 if (!rect.IsEmpty)
                 {
-                    string[] ids = probeGroup.GetContactIds();
+                    string[] ids = Sequence.ChannelConfiguration.GetContactIds();
 
                     foreach (string id in ids)
                     {
-                        if (zedGraphChannels.GraphPane.GraphObjList[string.Format(ContactStringFormat, id)] is EllipseObj contact && contact != null)
+                        if (zedGraphChannels.GraphPane.GraphObjList[string.Format(ChannelConfigurationDialog.ContactStringFormat, id)]
+                            is EllipseObj contact && contact != null)
                         {
                             if (Contains(rect, contact.Location))
                             {
@@ -1061,7 +904,6 @@ namespace OpenEphys.Onix.Design
         private void ButtonSave_Click(object sender, EventArgs e)
         {
             using SaveFileDialog sfd = new();
-            sfd.InitialDirectory = Path.GetDirectoryName(Path.GetFullPath(DefaultChannelLayoutFilePath));
             sfd.Filter = "Stimulus Sequence Files (*.json)|*.json";
             sfd.FilterIndex = 1;
             sfd.Title = "Choose where to save the stimulus sequence file";
@@ -1080,7 +922,6 @@ namespace OpenEphys.Onix.Design
         {
             using OpenFileDialog ofd = new();
 
-            ofd.InitialDirectory = Path.GetDirectoryName(Path.GetFullPath(DefaultChannelLayoutFilePath));
             ofd.Filter = "Stimulus Sequence Files (*.json)|*.json";
             ofd.FilterIndex = 1;
             ofd.Multiselect = false;

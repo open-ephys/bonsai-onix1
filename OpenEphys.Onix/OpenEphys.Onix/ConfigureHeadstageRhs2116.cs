@@ -1,12 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
+using System.Drawing.Design;
 
 namespace OpenEphys.Onix
 {
+    [DefaultProperty(nameof(ChannelConfiguration))]
     public class ConfigureHeadstageRhs2116 : HubDeviceFactory
     {
         PortName port;
+        ProbeGroup probeGroup = new();
         readonly ConfigureHeadstageRhs2116LinkController LinkController = new();
 
         public ConfigureHeadstageRhs2116()
@@ -16,6 +19,7 @@ namespace OpenEphys.Onix
             // Whats worse: the port voltage can only go down to 3.3V, which means that its very hard to find the true lowest voltage
             // for a lock and then add a large offset to that.
             Port = PortName.PortA;
+            ChannelConfiguration = probeGroup;
             LinkController.HubConfiguration = HubConfiguration.Standard;
         }
 
@@ -50,6 +54,17 @@ namespace OpenEphys.Onix
                 Rhs2116A.DeviceAddress = HeadstageRhs2116.GetRhs2116ADeviceAddress(offset);
                 Rhs2116B.DeviceAddress = HeadstageRhs2116.GetRhs2116BDeviceAddress(offset);
                 StimulusTrigger.DeviceAddress = HeadstageRhs2116.GetRhs2116StimulusTriggerDeviceAddress(offset);
+            }
+        }
+
+        [Editor("OpenEphys.Onix.Design.ChannelConfigurationEditor, OpenEphys.Onix.Design", typeof(UITypeEditor))]
+        public ProbeGroup ChannelConfiguration
+        {
+            get { return probeGroup; }
+            set
+            {
+                probeGroup = value;
+                StimulusTrigger.ChannelConfiguration = value;
             }
         }
 

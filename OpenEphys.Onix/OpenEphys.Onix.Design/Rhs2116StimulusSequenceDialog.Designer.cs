@@ -67,11 +67,6 @@
             this.checkboxBiphasicSymmetrical = new System.Windows.Forms.CheckBox();
             this.interStimulusInterval = new System.Windows.Forms.TextBox();
             this.labelInterStimulusInterval = new System.Windows.Forms.Label();
-            this.tabPageChannelLayout = new System.Windows.Forms.TabPage();
-            this.panelChannelLayout = new System.Windows.Forms.Panel();
-            this.buttonCustomChannelLayout = new System.Windows.Forms.Button();
-            this.buttonDefaultChannelLayout = new System.Windows.Forms.Button();
-            this.textBoxChannelLayoutFilePath = new System.Windows.Forms.TextBox();
             this.tabPageEditorDialog = new System.Windows.Forms.TabPage();
             this.propertyGridStimulusSequence = new System.Windows.Forms.PropertyGrid();
             this.tabControlVisualization = new System.Windows.Forms.TabControl();
@@ -89,8 +84,6 @@
             this.panelParameters.SuspendLayout();
             this.groupBoxCathode.SuspendLayout();
             this.groupBoxAnode.SuspendLayout();
-            this.tabPageChannelLayout.SuspendLayout();
-            this.panelChannelLayout.SuspendLayout();
             this.tabPageEditorDialog.SuspendLayout();
             this.tabControlVisualization.SuspendLayout();
             this.tabPageWaveform.SuspendLayout();
@@ -145,7 +138,7 @@
             this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.buttonCancel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonCancel.Location = new System.Drawing.Point(352, 15);
+            this.buttonCancel.Location = new System.Drawing.Point(352, 17);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(100, 40);
             this.buttonCancel.TabIndex = 0;
@@ -194,14 +187,14 @@
             this.panelButtons.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelButtons.Location = new System.Drawing.Point(0, 0);
             this.panelButtons.Name = "panelButtons";
-            this.panelButtons.Size = new System.Drawing.Size(469, 63);
+            this.panelButtons.Size = new System.Drawing.Size(469, 65);
             this.panelButtons.TabIndex = 0;
             // 
             // buttonLoad
             // 
             this.buttonLoad.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonLoad.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonLoad.Location = new System.Drawing.Point(25, 15);
+            this.buttonLoad.Location = new System.Drawing.Point(25, 17);
             this.buttonLoad.Name = "buttonLoad";
             this.buttonLoad.Size = new System.Drawing.Size(100, 40);
             this.buttonLoad.TabIndex = 6;
@@ -213,7 +206,7 @@
             // 
             this.buttonSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonSave.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonSave.Location = new System.Drawing.Point(134, 15);
+            this.buttonSave.Location = new System.Drawing.Point(134, 17);
             this.buttonSave.Name = "buttonSave";
             this.buttonSave.Size = new System.Drawing.Size(100, 40);
             this.buttonSave.TabIndex = 5;
@@ -225,7 +218,7 @@
             // 
             this.buttonOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonOk.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonOk.Location = new System.Drawing.Point(243, 15);
+            this.buttonOk.Location = new System.Drawing.Point(243, 17);
             this.buttonOk.Name = "buttonOk";
             this.buttonOk.Size = new System.Drawing.Size(100, 40);
             this.buttonOk.TabIndex = 4;
@@ -236,7 +229,6 @@
             // tabControlParameters
             // 
             this.tabControlParameters.Controls.Add(this.tabPageAddPulse);
-            this.tabControlParameters.Controls.Add(this.tabPageChannelLayout);
             this.tabControlParameters.Controls.Add(this.tabPageEditorDialog);
             this.tabControlParameters.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControlParameters.Location = new System.Drawing.Point(0, 0);
@@ -536,62 +528,6 @@
             this.labelInterStimulusInterval.TabIndex = 9;
             this.labelInterStimulusInterval.Text = "Inter-Stimulus [ms]";
             // 
-            // tabPageChannelLayout
-            // 
-            this.tabPageChannelLayout.Controls.Add(this.panelChannelLayout);
-            this.tabPageChannelLayout.Location = new System.Drawing.Point(4, 29);
-            this.tabPageChannelLayout.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tabPageChannelLayout.Name = "tabPageChannelLayout";
-            this.tabPageChannelLayout.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tabPageChannelLayout.Size = new System.Drawing.Size(461, 303);
-            this.tabPageChannelLayout.TabIndex = 3;
-            this.tabPageChannelLayout.Text = "Channel Layout";
-            this.tabPageChannelLayout.UseVisualStyleBackColor = true;
-            // 
-            // panelChannelLayout
-            // 
-            this.panelChannelLayout.Controls.Add(this.buttonCustomChannelLayout);
-            this.panelChannelLayout.Controls.Add(this.buttonDefaultChannelLayout);
-            this.panelChannelLayout.Controls.Add(this.textBoxChannelLayoutFilePath);
-            this.panelChannelLayout.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelChannelLayout.Location = new System.Drawing.Point(4, 5);
-            this.panelChannelLayout.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.panelChannelLayout.Name = "panelChannelLayout";
-            this.panelChannelLayout.Size = new System.Drawing.Size(453, 293);
-            this.panelChannelLayout.TabIndex = 0;
-            // 
-            // buttonCustomChannelLayout
-            // 
-            this.buttonCustomChannelLayout.Location = new System.Drawing.Point(261, 131);
-            this.buttonCustomChannelLayout.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.buttonCustomChannelLayout.Name = "buttonCustomChannelLayout";
-            this.buttonCustomChannelLayout.Size = new System.Drawing.Size(129, 40);
-            this.buttonCustomChannelLayout.TabIndex = 2;
-            this.buttonCustomChannelLayout.Text = "Custom Layout";
-            this.buttonCustomChannelLayout.UseVisualStyleBackColor = true;
-            this.buttonCustomChannelLayout.Click += new System.EventHandler(this.ButtonCustomChannelLayout_Click);
-            // 
-            // buttonDefaultChannelLayout
-            // 
-            this.buttonDefaultChannelLayout.Location = new System.Drawing.Point(80, 131);
-            this.buttonDefaultChannelLayout.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.buttonDefaultChannelLayout.Name = "buttonDefaultChannelLayout";
-            this.buttonDefaultChannelLayout.Size = new System.Drawing.Size(129, 40);
-            this.buttonDefaultChannelLayout.TabIndex = 1;
-            this.buttonDefaultChannelLayout.Text = "Default Layout";
-            this.buttonDefaultChannelLayout.UseVisualStyleBackColor = true;
-            this.buttonDefaultChannelLayout.Click += new System.EventHandler(this.ButtonDefaultChannelLayout_Click);
-            // 
-            // textBoxChannelLayoutFilePath
-            // 
-            this.textBoxChannelLayoutFilePath.Location = new System.Drawing.Point(24, 14);
-            this.textBoxChannelLayoutFilePath.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.textBoxChannelLayoutFilePath.Multiline = true;
-            this.textBoxChannelLayoutFilePath.Name = "textBoxChannelLayoutFilePath";
-            this.textBoxChannelLayoutFilePath.ReadOnly = true;
-            this.textBoxChannelLayoutFilePath.Size = new System.Drawing.Size(406, 101);
-            this.textBoxChannelLayoutFilePath.TabIndex = 0;
-            // 
             // tabPageEditorDialog
             // 
             this.tabPageEditorDialog.Controls.Add(this.propertyGridStimulusSequence);
@@ -695,7 +631,7 @@
             // 
             this.splitContainer2.Panel2.Controls.Add(this.panelButtons);
             this.splitContainer2.Size = new System.Drawing.Size(469, 860);
-            this.splitContainer2.SplitterDistance = 792;
+            this.splitContainer2.SplitterDistance = 790;
             this.splitContainer2.SplitterWidth = 5;
             this.splitContainer2.TabIndex = 0;
             // 
@@ -714,8 +650,8 @@
             // 
             this.splitContainer3.Panel2.Controls.Add(this.tabControlParameters);
             this.splitContainer3.Panel2MinSize = 315;
-            this.splitContainer3.Size = new System.Drawing.Size(469, 792);
-            this.splitContainer3.SplitterDistance = 448;
+            this.splitContainer3.Size = new System.Drawing.Size(469, 790);
+            this.splitContainer3.SplitterDistance = 446;
             this.splitContainer3.SplitterWidth = 8;
             this.splitContainer3.TabIndex = 0;
             // 
@@ -733,7 +669,7 @@
             this.zedGraphChannels.ScrollMinX = 0D;
             this.zedGraphChannels.ScrollMinY = 0D;
             this.zedGraphChannels.ScrollMinY2 = 0D;
-            this.zedGraphChannels.Size = new System.Drawing.Size(469, 448);
+            this.zedGraphChannels.Size = new System.Drawing.Size(469, 446);
             this.zedGraphChannels.TabIndex = 3;
             this.zedGraphChannels.UseExtendedPrintDialog = true;
             this.zedGraphChannels.MouseDownEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.ZedGraphChannels_MouseDownEvent);
@@ -765,9 +701,6 @@
             this.groupBoxCathode.PerformLayout();
             this.groupBoxAnode.ResumeLayout(false);
             this.groupBoxAnode.PerformLayout();
-            this.tabPageChannelLayout.ResumeLayout(false);
-            this.panelChannelLayout.ResumeLayout(false);
-            this.panelChannelLayout.PerformLayout();
             this.tabPageEditorDialog.ResumeLayout(false);
             this.tabControlVisualization.ResumeLayout(false);
             this.tabPageWaveform.ResumeLayout(false);
@@ -839,11 +772,6 @@
         private System.Windows.Forms.ComboBox comboBoxStepSize;
         private System.Windows.Forms.GroupBox groupBoxCathode;
         private System.Windows.Forms.GroupBox groupBoxAnode;
-        private System.Windows.Forms.TabPage tabPageChannelLayout;
-        private System.Windows.Forms.Panel panelChannelLayout;
-        private System.Windows.Forms.TextBox textBoxChannelLayoutFilePath;
-        private System.Windows.Forms.Button buttonCustomChannelLayout;
-        private System.Windows.Forms.Button buttonDefaultChannelLayout;
         private System.Windows.Forms.Button buttonLoad;
         private System.Windows.Forms.Button buttonSave;
     }
