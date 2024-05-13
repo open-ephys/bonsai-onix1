@@ -26,7 +26,7 @@ namespace OpenEphys.Onix.Design
         private const string TextStringFormat = "TextContact_{0}";
         private const string SelectionAreaTag = "Selection";
 
-        private ProbeGroup probeGroup = null;
+        private ProbeGroup probeGroup = new();
 
         private PointD mouseLocation = new(0.0, 0.0);
         private PointD clickStart = new(0.0, 0.0);
@@ -291,7 +291,7 @@ namespace OpenEphys.Onix.Design
 
         private void DrawChannels()
         {
-            if (probeGroup == null)
+            if (probeGroup == null || !probeGroup.IsValid)
                 return;
 
             zedGraphChannels.GraphPane.GraphObjList.Clear();
@@ -619,7 +619,7 @@ namespace OpenEphys.Onix.Design
 
         private void AddContactIdToGridRow()
         {
-            if (probeGroup == null)
+            if (probeGroup == null || !probeGroup.IsValid)
                 return;
 
             var contactIds = probeGroup.GetContactIds();
@@ -962,7 +962,7 @@ namespace OpenEphys.Onix.Design
 
         private bool ZedGraphChannels_MouseUpEvent(ZedGraphControl sender, MouseEventArgs e)
         {
-            if (zedGraphChannels.GraphPane.GraphObjList[SelectionAreaTag] is BoxObj selectionArea && selectionArea != null && probeGroup != null)
+            if (zedGraphChannels.GraphPane.GraphObjList[SelectionAreaTag] is BoxObj selectionArea && selectionArea != null && probeGroup != null && probeGroup.IsValid)
             {
                 RectangleF rect = selectionArea.Location.Rect;
 

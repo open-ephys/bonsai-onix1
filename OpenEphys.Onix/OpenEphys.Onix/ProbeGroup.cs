@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Xml.Serialization;
 
 namespace OpenEphys.Onix
 {
@@ -9,6 +10,13 @@ namespace OpenEphys.Onix
         public string Specification { get; set; }
         public string Version { get; set; }
         public Probe[] Probes { get; set; }
+
+        public ProbeGroup()
+        {
+            Specification = string.Empty;
+            Version = string.Empty;
+            Probes = new Probe[0];
+        }
 
         public ProbeGroup(string specification, string version, Probe[] probes)
         {
@@ -20,6 +28,8 @@ namespace OpenEphys.Onix
             ValidateShankIds();
             ValidateDeviceChannelIndices();
         }
+
+        public bool IsValid => Specification != string.Empty && Version != string.Empty && Probes.Length > 0;
 
         public int NumContacts
         {
@@ -117,11 +127,27 @@ namespace OpenEphys.Onix
         public uint[] Device_Channel_Indices { get; set; }
         public string[] Contact_Ids { get; set; }
         public string[] Shank_Ids { get; set; }
-        [JsonExtensionData]
-        public Dictionary<string, JsonElement> ExtensionData { get; set; }
 
-        public Probe(uint ndim, string si_units, ProbeAnnotations annotations, ContactAnnotations contact_annotations, float[][] contact_positions, float[][][] contact_plane_axes, string[] contact_shapes,
-            ContactShapeParam[] contact_shape_params, float[][] probe_planar_contour, uint[] device_channel_indices, string[] contact_ids, string[] shank_Ids)
+        public Probe()
+        {
+            Ndim = 0;
+            Si_Units = string.Empty;
+            Annotations = new ProbeAnnotations();
+            Contact_Annotations = new ContactAnnotations();
+            Contact_Positions = new float[0][];
+            Contact_Plane_Axes = new float[0][][];
+            Contact_Shapes = new string[0];
+            Contact_Shape_Params = new ContactShapeParam[0];
+            Probe_Planar_Contour = new float[0][];
+            Device_Channel_Indices = new uint[0];
+            Contact_Ids = new string[0];
+            Shank_Ids = new string[0];
+        }
+
+        public Probe(uint ndim, string si_units, ProbeAnnotations annotations, ContactAnnotations contact_annotations, 
+            float[][] contact_positions, float[][][] contact_plane_axes, string[] contact_shapes, 
+            ContactShapeParam[] contact_shape_params, float[][] probe_planar_contour, uint[] device_channel_indices, 
+            string[] contact_ids, string[] shank_Ids)
         {
             Ndim = ndim;
             Si_Units = si_units;
@@ -178,6 +204,11 @@ namespace OpenEphys.Onix
     {
         public float Radius { get; set; }
 
+        public ContactShapeParam()
+        {
+            Radius = 0;
+        }
+
         public ContactShapeParam(float radius)
         {
             Radius = radius;
@@ -205,6 +236,11 @@ namespace OpenEphys.Onix
     public struct ContactAnnotations
     {
         public string[] Annotations { get; set; }
+
+        public ContactAnnotations()
+        {
+            Annotations = new string[0];
+        }
 
         public ContactAnnotations(string[] contact_annotations)
         {
