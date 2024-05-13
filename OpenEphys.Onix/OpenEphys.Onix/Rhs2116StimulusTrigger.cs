@@ -34,7 +34,11 @@ namespace OpenEphys.Onix
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
                     Observable.Create<bool>(observer =>
                     {
-                        var device = deviceInfo.GetDeviceContext(typeof(Rhs2116Trigger));
+                        var info = (Rhs2116TriggerDeviceInfo)deviceInfo;
+
+                        StimulusSequence.ChannelConfiguration = info.ChannelConfiguration;
+
+                        var device = info.GetDeviceContext(typeof(Rhs2116Trigger));
                         var triggerObserver = Observer.Create<bool>(
                             value =>
                             {
@@ -44,13 +48,13 @@ namespace OpenEphys.Onix
                             observer.OnError,
                             observer.OnCompleted);
 
-                        var hubAddress = GenericHelper.GetHubAddressFromDeviceAddress(deviceInfo.DeviceAddress);
+                        var hubAddress = GenericHelper.GetHubAddressFromDeviceAddress(info.DeviceAddress);
 
                         var rhsADeviceAddress = HeadstageRhs2116.GetRhs2116ADeviceAddress(hubAddress);
                         var rhsBDeviceAddress = HeadstageRhs2116.GetRhs2116BDeviceAddress(hubAddress);
 
-                        var deviceRhsA = deviceInfo.Context.GetDeviceContext(rhsADeviceAddress, Rhs2116.ID);
-                        var deviceRhsB = deviceInfo.Context.GetDeviceContext(rhsBDeviceAddress, Rhs2116.ID);
+                        var deviceRhsA = info.Context.GetDeviceContext(rhsADeviceAddress, Rhs2116.ID);
+                        var deviceRhsB = info.Context.GetDeviceContext(rhsBDeviceAddress, Rhs2116.ID);
                       
                         return new CompositeDisposable(
                             stimulusSequence.Subscribe(value =>
