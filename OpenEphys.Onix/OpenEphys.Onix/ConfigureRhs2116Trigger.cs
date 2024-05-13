@@ -37,7 +37,7 @@ namespace OpenEphys.Onix
         }
     }
 
-    class Rhs2116DeviceInfo : DeviceInfo
+    class Rhs2116TriggerDeviceInfo : DeviceInfo
     {
         public ProbeGroup ChannelConfiguration { get; }
 
