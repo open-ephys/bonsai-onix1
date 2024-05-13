@@ -29,6 +29,13 @@ namespace OpenEphys.Onix
             ValidateDeviceChannelIndices();
         }
 
+        public ProbeGroup(ProbeGroup probeGroup)
+        {
+            Specification = probeGroup.Specification;
+            Version = probeGroup.Version;
+            Probes = probeGroup.Probes;
+        }
+
         public bool IsValid => Specification != string.Empty && Version != string.Empty && Probes.Length > 0;
 
         public int NumContacts
