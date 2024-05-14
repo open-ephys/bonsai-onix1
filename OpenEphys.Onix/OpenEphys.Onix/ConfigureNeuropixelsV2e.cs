@@ -40,14 +40,14 @@ namespace OpenEphys.Onix
                 var probeControl = new I2CRegisterContext(device, NeuropixelsV2e.ProbeAddress);
 
                 // configure probe A streaming
-                if (probeAMetadata.ProbeSN != null)
+                if (probeAMetadata.ProbeSerialNumber != null)
                 {
                     SelectProbe(serializer, NeuropixelsV2e.ProbeASelected);
                     ConfigureProbeStreaming(probeControl);
                 }
 
                 // configure probe B streaming
-                if (probeBMetadata.ProbeSN != null)
+                if (probeBMetadata.ProbeSerialNumber != null)
                 {
                     SelectProbe(serializer, NeuropixelsV2e.ProbeBSelected);
                     ConfigureProbeStreaming(probeControl);

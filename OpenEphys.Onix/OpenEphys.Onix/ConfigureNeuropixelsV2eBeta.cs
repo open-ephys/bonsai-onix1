@@ -62,7 +62,7 @@ namespace OpenEphys.Onix
                 var probeControl = new NeuropixelsV2BetaRegisterContext(device, NeuropixelsV2eBeta.ProbeAddress);
 
                 // configure probe A streaming
-                if (probeAMetadata.Version != byte.MaxValue)
+                if (probeAMetadata.ProbeSerialNumber != null)
                 {
                     SelectProbe(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeA);
                     probeControl.WriteConfiguration(Reference);
@@ -70,7 +70,7 @@ namespace OpenEphys.Onix
                 }
 
                 // configure probe B streaming
-                if (probeBMetadata.Version != byte.MaxValue)
+                if (probeAMetadata.ProbeSerialNumber != null)
                 {
                     SelectProbe(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeB);
                     probeControl.WriteConfiguration(Reference);
@@ -128,10 +128,10 @@ namespace OpenEphys.Onix
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias2, alias);
         }
 
-        NeuropixelsV2eMetadata ReadProbeMetadata(I2CRegisterContext serializer, ref uint gpo32Config, byte probeSelect)
+        NeuropixelsV2eBetaMetadata ReadProbeMetadata(I2CRegisterContext serializer, ref uint gpo32Config, byte probeSelect)
         {
             SelectProbe(serializer, ref gpo32Config, probeSelect);
-            return new NeuropixelsV2eMetadata(serializer);
+            return new NeuropixelsV2eBetaMetadata(serializer);
         }
 
         static void SelectProbe(I2CRegisterContext serializer, ref uint gpo32Config, byte probeSelect)
