@@ -21,17 +21,20 @@ namespace OpenEphys.Onix
             set
             {
                 _name = value;
-                UpdateDeviceNames(_name);
+                UpdateDeviceNames();
             }
         }
 
-        internal virtual void UpdateDeviceNames(string hubName)
+        protected string GetFullDeviceName(string deviceName)
+        {
+            return !string.IsNullOrEmpty(_name) ? $"{_name}/{deviceName}" : string.Empty;
+        }
+
+        internal virtual void UpdateDeviceNames()
         {
             foreach (var device in GetDevices())
             {
-                device.DeviceName = !string.IsNullOrEmpty(hubName)
-                    ? $"{hubName}.{device.DeviceType.Name}"
-                    : string.Empty;
+                device.DeviceName = GetFullDeviceName(device.DeviceType.Name);
             }
         }
 
