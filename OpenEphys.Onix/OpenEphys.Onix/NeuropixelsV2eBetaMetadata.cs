@@ -2,15 +2,15 @@
 
 namespace OpenEphys.Onix
 {
-    class NeuropixelsV2eMetadata
+    class NeuropixelsV2eBetaMetadata
     {
-        const uint OFFSET_PROBE_SN = 0x00;
-        const uint OFFSET_FLEX_VERSION = 0x10;
-        const uint OFFSET_FLEX_REVISION = 0x11;
-        const uint OFFSET_FLEX_PN = 0x20;
-        const uint OFFSET_PROBE_PN = 0x40;
+        const uint OFFSET_FLEX_VERSION = 0x00;
+        const uint OFFSET_FLEX_REVISION = 0x01;
+        const uint OFFSET_FLEX_PN = 0x0a;
+        const uint OFFSET_PROBE_SN = 0x42;
+        const uint OFFSET_PROBE_PN = 0x4a;
 
-        public NeuropixelsV2eMetadata(I2CRegisterContext serializer)
+        public NeuropixelsV2eBetaMetadata(I2CRegisterContext serializer)
         {
             var flexI2C = new I2CRegisterContext(serializer, NeuropixelsV2e.FlexEEPROMAddress);
             try
