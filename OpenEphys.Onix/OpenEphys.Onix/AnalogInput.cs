@@ -16,9 +16,15 @@ namespace OpenEphys.Onix
 
         public int BufferSize { get; set; } = 100;
 
+        public AnalogIODataType DataType { get; set; } = AnalogIODataType.S16;
+
         public unsafe override IObservable<AnalogInputDataFrame> Generate()
         {
             var bufferSize = BufferSize;
+            var dataType = DataType;
+            var depth = dataType == AnalogIODataType.Volts ? Depth.F32 : Depth.S16;
+            var scale = dataType == AnalogIODataType.Volts ? AnalogIO.VoltsPerDivision : 1;
+            var shift = 0.0;
             return Observable.Using(
                 () => DeviceManager.ReserveDevice(DeviceName),
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
@@ -39,7 +45,13 @@ namespace OpenEphys.Onix
                                 clockBuffer[sampleIndex] = frame.Clock;
                                 if (++sampleIndex >= bufferSize)
                                 {
-                                    var analogData = BufferHelper.CopyBuffer(analogDataBuffer, bufferSize, AnalogIO.ChannelCount, Depth.S16);
+                                    var analogData = BufferHelper.CopyConvertBuffer(
+                                        analogDataBuffer,
+                                        bufferSize,
+                                        AnalogIO.ChannelCount,
+                                        depth,
+                                        scale,
+                                        shift);
                                     observer.OnNext(new AnalogInputDataFrame(clockBuffer, hubSyncCounterBuffer, analogData));
                                     hubSyncCounterBuffer = new ulong[bufferSize];
                                     clockBuffer = new ulong[bufferSize];

@@ -162,6 +162,7 @@ namespace OpenEphys.Onix
 
         // constants
         public const int ChannelCount = 12;
+        public const double VoltsPerDivision = 0.00030517578125;
 
         // managed registers
         public const uint ENABLE = 0;
@@ -202,5 +203,11 @@ namespace OpenEphys.Onix
     {
         Input = 0,
         Output = 1
+    }
+
+    public enum AnalogIODataType
+    {
+        S16,
+        Volts
     }
 }
