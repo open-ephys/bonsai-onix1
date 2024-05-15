@@ -56,20 +56,20 @@ namespace OpenEphys.Onix
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
         }
+    }
 
-        internal static class FmcLinkController
-        {
-            public const int ID = 23;
+    static class FmcLinkController
+    {
+        public const int ID = 23;
 
-            public const uint ENABLE = 0; // The LSB is used to enable or disable the device data stream
-            public const uint GPOSTATE = 1; // GPO output state (bits 31 downto 3: ignore. bits 2 downto 0: ‘1’ = high, ‘0’ = low)
-            public const uint DESPWR = 2; // Set link deserializer PDB state, 0 = deserializer power off else on. Does not affect port voltage.
-            public const uint PORTVOLTAGE = 3; // 10 * link voltage
-            public const uint SAVEVOLTAGE = 4; // Save link voltage to non-volatile EEPROM if greater than 0. This voltage will be applied after POR.
-            public const uint LINKSTATE = 5; // bit 1 pass; bit 0 lock
+        public const uint ENABLE = 0; // The LSB is used to enable or disable the device data stream
+        public const uint GPOSTATE = 1; // GPO output state (bits 31 downto 3: ignore. bits 2 downto 0: ‘1’ = high, ‘0’ = low)
+        public const uint DESPWR = 2; // Set link deserializer PDB state, 0 = deserializer power off else on. Does not affect port voltage.
+        public const uint PORTVOLTAGE = 3; // 10 * link voltage
+        public const uint SAVEVOLTAGE = 4; // Save link voltage to non-volatile EEPROM if greater than 0. This voltage will be applied after POR.
+        public const uint LINKSTATE = 5; // bit 1 pass; bit 0 lock
 
-            public const uint LINKSTATE_PP = 0x2; // parity check pass bit
-            public const uint LINKSTATE_SL = 0x1; // SERDES lock bit
-        }
+        public const uint LINKSTATE_PP = 0x2; // parity check pass bit
+        public const uint LINKSTATE_SL = 0x1; // SERDES lock bit
     }
 }

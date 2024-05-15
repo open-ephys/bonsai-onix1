@@ -377,7 +377,7 @@ namespace OpenEphys.Onix
 
         public virtual uint GetPassthroughDeviceAddress(uint deviceAddress)
         {
-            var hubAddress = (deviceAddress & 0xFF00u) >> 8;
+            var hubAddress = GenericHelper.GetHubAddressFromDeviceAddress(deviceAddress);
             if (hubAddress == 0)
             {
                 throw new ArgumentException(

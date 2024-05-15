@@ -5,53 +5,45 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using Bonsai;
-using Bonsai.Reactive;
 using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
-    public class Test0Data : Source<Test0DataFrame>
+    public class Rhs2116Data : Source<Rhs2116DataFrame>
     {
-        [TypeConverter(typeof(Test0.NameConverter))]
+        [TypeConverter(typeof(Rhs2116.NameConverter))]
         public string DeviceName { get; set; }
 
-        [Category(DeviceFactory.ConfigurationCategory)]
-        [Range(1, 1000000)]
-        [Description("The number of frames making up a single data block that is propagated in the observable sequence.")]
-        public int BufferSize { get; set; } = 100;
+        public int BufferSize { get; set; } = 30;
 
-        public unsafe override IObservable<Test0DataFrame> Generate()
+        public unsafe override IObservable<Rhs2116DataFrame> Generate()
         {
-            var bufferSize = BufferSize; // TODO: Branch for bufferSize = 1?
-
+            var bufferSize = BufferSize;
             return Observable.Using(
                 () => DeviceManager.ReserveDevice(DeviceName),
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
-                    Observable.Create<Test0DataFrame>(observer =>
+                    Observable.Create<Rhs2116DataFrame>(observer =>
                     {
-                        // Find number of dummy words in the frame
-                        var device = deviceInfo.GetDeviceContext(typeof(Test0));
-                        var dummyWords = (int)device.ReadRegister(Test0.NUMTESTWORDS);
-
                         var sampleIndex = 0;
-                        var dummyBuffer = new short[dummyWords * bufferSize];
-                        var messageBuffer = new short[bufferSize];
+                        var device = deviceInfo.GetDeviceContext(typeof(Rhs2116));
+                        var amplifierBuffer = new short[Rhs2116.AmplifierChannelCount * bufferSize];
+                        var dcBuffer = new short[Rhs2116.AmplifierChannelCount * bufferSize];
                         var hubClockBuffer = new ulong[bufferSize];
                         var clockBuffer = new ulong[bufferSize];
 
                         var frameObserver = Observer.Create<oni.Frame>(
                             frame =>
                             {
-                                var payload = (Test0PayloadHeader*)frame.Data.ToPointer();
-                                Marshal.Copy(new IntPtr(payload + 1), dummyBuffer, sampleIndex * dummyWords, dummyWords);
-                                messageBuffer[sampleIndex] = payload->Message;
+                                var payload = (Rhs2116Payload*)frame.Data.ToPointer();
+                                Marshal.Copy(new IntPtr(payload->AmplifierData), amplifierBuffer, sampleIndex * Rhs2116.AmplifierChannelCount, Rhs2116.AmplifierChannelCount);
+                                Marshal.Copy(new IntPtr(payload->DCData), dcBuffer, sampleIndex * Rhs2116.AmplifierChannelCount, Rhs2116.AmplifierChannelCount);
                                 hubClockBuffer[sampleIndex] = payload->HubClock;
                                 clockBuffer[sampleIndex] = frame.Clock;
                                 if (++sampleIndex >= bufferSize)
                                 {
-                                    var dummy = BufferHelper.CopyBuffer(dummyBuffer, bufferSize, dummyWords, Depth.S16);
-                                    var message = BufferHelper.CopyBuffer(messageBuffer, bufferSize, 1, Depth.S16);
-                                    observer.OnNext(new Test0DataFrame(clockBuffer, hubClockBuffer, message, dummy));
+                                    var amplifierData = BufferHelper.CopyBuffer(amplifierBuffer, bufferSize, Rhs2116.AmplifierChannelCount, Depth.U16);
+                                    var dcData = BufferHelper.CopyBuffer(dcBuffer, bufferSize, Rhs2116.AmplifierChannelCount, Depth.U16);
+                                    observer.OnNext(new Rhs2116DataFrame(clockBuffer, hubClockBuffer, amplifierData, dcData));
                                     hubClockBuffer = new ulong[bufferSize];
                                     clockBuffer = new ulong[bufferSize];
                                     sampleIndex = 0;
@@ -59,7 +51,6 @@ namespace OpenEphys.Onix
                             },
                             observer.OnError,
                             observer.OnCompleted);
-
                         return deviceInfo.Context.FrameReceived
                             .Where(frame => frame.DeviceAddress == device.Address)
                             .SubscribeSafe(frameObserver);
