@@ -93,23 +93,23 @@ namespace OpenEphys.Onix
 
         // NB: This is where actions that reconfigure the hub state, or otherwise
         // change the device table should be executed
-        internal void ConfigureHost(Func<ContextTask, IDisposable> action)
+        internal void ConfigureHost(Func<ContextTask, IDisposable> configure)
         {
-            configureHost += action;
+            configureHost += configure;
         }
 
         // NB: This is where actions that calibrate port voltage or otherwise
         // check link lock state should be executed
-        internal void ConfigureLink(Func<ContextTask, IDisposable> action)
+        internal void ConfigureLink(Func<ContextTask, IDisposable> configure)
         {
-            configureLink += action;
+            configureLink += configure;
         }
 
         // NB: Actions queued using this method should assume that the device table
         // is finalized and cannot be changed
-        internal void ConfigureDevice(Func<ContextTask, IDisposable> selector)
+        internal void ConfigureDevice(Func<ContextTask, IDisposable> configure)
         {
-            configureDevice += selector;
+            configureDevice += configure;
         }
 
         private IDisposable ConfigureContext()
@@ -145,7 +145,7 @@ namespace OpenEphys.Onix
             }
         }
 
-        internal void Start()
+        internal void Start(int blockReadSize, int blockWriteSize)
         {
             lock (regLock)
             {
@@ -153,6 +153,8 @@ namespace OpenEphys.Onix
 
                 // NB: Configure context before starting acquisition
                 ContextConfiguration = ConfigureContext();
+                ctx.BlockReadSize = blockReadSize;
+                ctx.BlockWriteSize = blockWriteSize;
 
                 // NB: Stuff related to sync mode is 100% ONIX, not ONI, so long term another place
                 // to do this separation might be needed
@@ -289,10 +291,6 @@ namespace OpenEphys.Onix
             {
                 return ctx.BlockReadSize;
             }
-            set
-            {
-                ctx.BlockReadSize = value;
-            }
         }
 
         public int BlockWriteSize
@@ -300,10 +298,6 @@ namespace OpenEphys.Onix
             get
             {
                 return ctx.BlockWriteSize;
-            }
-            set
-            {
-                ctx.BlockWriteSize = value;
             }
         }
 
