@@ -106,7 +106,6 @@ namespace OpenEphys.Onix
                 };
             }
 
-
             switch (refSource)
             {
                 case ReferenceSource.Ext:
@@ -247,6 +246,10 @@ namespace OpenEphys.Onix
             }
         }
 
+        // TODO: There is an issue getting these SR write sequences to complete correctly.
+        // We have a suspicion it is due to the nature of the MCLK signal and that this
+        // headstage needs either a different oscillator with even more drive strength or
+        // a clock buffer (second might be easiest).
         internal void WriteShiftRegisters(I2CRegisterContext i2cNpx)
         {
             // shank
@@ -268,6 +271,16 @@ namespace OpenEphys.Onix
 
                 for (int j = 0; j < 2; j++)
                 {
+                    // TODO: HACK HACK HACK
+                    // If we do not do this, the ShiftRegisterSuccess check below will always fail
+                    // on whatever the second shift register write sequnece regardless of order or
+                    // contents. Could be increased current draw during internal process causes MCLK
+                    // to droop and mess up internal state. Or that MCLK is just not good enough to
+                    // prevent metastability in some logic in the ASIC that is only entered in between
+                    // SR accesses.
+                    i2cNpx.WriteByte(NeuropixelsV1e.SOFT_RESET, 0xFF);
+                    i2cNpx.WriteByte(NeuropixelsV1e.SOFT_RESET, 0x00);
+
                     var baseBytes = BitArrayToBytes(BaseConfigs[i]);
 
                     i2cNpx.WriteByte(NeuropixelsV1e.SR_LENGTH1, (uint)baseBytes.Length % 0x100);
@@ -281,17 +294,8 @@ namespace OpenEphys.Onix
 
                 if (i2cNpx.ReadByte(NeuropixelsV1e.STATUS) != ShiftRegisterSuccess)
                 {
-                    
-                    Console.WriteLine($"SR status check failed for SR {srAddress}");
-
-                    // TODO: Always hits on whatever the second shift register is
-                    // regardless of order or contents. Could be increased current draw
-                    // during internal process causes MCLK to droop and mess up internal state
-                    //throw new WorkflowException("Shift register programming check failed.");
+                    throw new WorkflowException($"Shift register {srAddress} status check failed.");
                 }
-
-                // TODO: Hack to let internal SR interpretation occur before any other i2c interactions
-                Thread.Sleep(500);
             }
         }
 

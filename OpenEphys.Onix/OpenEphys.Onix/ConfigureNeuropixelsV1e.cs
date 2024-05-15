@@ -48,7 +48,6 @@ namespace OpenEphys.Onix
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string AdcCalibrationFile { get; set; }
 
-
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;
@@ -83,15 +82,22 @@ namespace OpenEphys.Onix
 
                 // get probe set up to receive configuration
                 i2cNpx.WriteByte(NeuropixelsV1e.CAL_MOD, (uint)NeuropixelsV1e.CalibrationRegisterValues.CAL_OFF);
+                i2cNpx.WriteByte(NeuropixelsV1e.TEST_CONFIG1, 0);
+                i2cNpx.WriteByte(NeuropixelsV1e.TEST_CONFIG2, 0);
+                i2cNpx.WriteByte(NeuropixelsV1e.TEST_CONFIG3, 0);
+                i2cNpx.WriteByte(NeuropixelsV1e.TEST_CONFIG4, 0);
+                i2cNpx.WriteByte(NeuropixelsV1e.TEST_CONFIG5, 0);
                 i2cNpx.WriteByte(NeuropixelsV1e.SYNC, 0);
-                i2cNpx.WriteByte(NeuropixelsV1e.REC_MOD, (uint)NeuropixelsV1e.RecordRegisterValues.RESET_ALL);
+                i2cNpx.WriteByte(NeuropixelsV1e.REC_MOD, (uint)NeuropixelsV1e.RecordRegisterValues.ACTIVE);
                 i2cNpx.WriteByte(NeuropixelsV1e.OP_MODE, (uint)NeuropixelsV1e.OperationRegisterValues.RECORD);
 
                 // program shift registers
                 var settings = new NeuropixelsV1eSettings(SpikeAmplifierGain, LfpAmplifierGain, Reference, SpikeFilter, GainCalibrationFile, AdcCalibrationFile);
                 settings.WriteShiftRegisters(i2cNpx);
 
-                // Start acquisition
+                // TODO: Hack inside settings.WriteShiftRegisters() above puts probe in reset set that needs to be
+                // undone here
+                i2cNpx.WriteByte(NeuropixelsV1e.OP_MODE, (uint)NeuropixelsV1e.OperationRegisterValues.RECORD);
                 i2cNpx.WriteByte(NeuropixelsV1e.REC_MOD, (uint)NeuropixelsV1e.RecordRegisterValues.ACTIVE);
 
                 // turn on LED
@@ -210,6 +216,11 @@ namespace OpenEphys.Onix
         public const uint OP_MODE = 0X00;
         public const uint REC_MOD = 0X01;
         public const uint CAL_MOD = 0X02;
+        public const uint TEST_CONFIG1 = 0x03;
+        public const uint TEST_CONFIG2 = 0x04;
+        public const uint TEST_CONFIG3 = 0x05;
+        public const uint TEST_CONFIG4 = 0x06;
+        public const uint TEST_CONFIG5 = 0x07;
         public const uint STATUS = 0X08;
         public const uint SYNC = 0X09;
         public const uint SR_CHAIN1 = 0X0E; // Shank configuration
