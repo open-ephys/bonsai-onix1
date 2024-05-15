@@ -37,10 +37,10 @@ namespace OpenEphys.Onix
 
         internal override void UpdateDeviceNames()
         {
-            LinkController.DeviceName = $"{Name}/{nameof(LinkController)}";
-            Rhs2116A.DeviceName = $"{Name}/{nameof(Rhs2116A)}";
-            Rhs2116B.DeviceName = $"{Name}/{nameof(Rhs2116B)}";
-            StimulusTrigger.DeviceName = $"{Name}/{nameof(StimulusTrigger)}";
+            LinkController.DeviceName = GetFullDeviceName(nameof(LinkController));
+            Rhs2116A.DeviceName = GetFullDeviceName(nameof(Rhs2116A));
+            Rhs2116B.DeviceName = GetFullDeviceName(nameof(Rhs2116B));
+            StimulusTrigger.DeviceName = GetFullDeviceName(nameof(StimulusTrigger));
         }
 
         public PortName Port
