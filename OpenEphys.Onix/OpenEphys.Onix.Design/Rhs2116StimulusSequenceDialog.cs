@@ -944,5 +944,11 @@ namespace OpenEphys.Onix.Design
                 DrawStimulusWaveform();
             }
         }
+
+        private void ZedGraphChannels_Resize(object sender, EventArgs e)
+        {
+            ChannelConfigurationDialog.ResizeAxes(zedGraphChannels);
+            zedGraphChannels.Refresh();
+        }
     }
 }

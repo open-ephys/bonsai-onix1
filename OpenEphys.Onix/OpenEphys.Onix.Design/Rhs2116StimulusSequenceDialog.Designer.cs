@@ -1,4 +1,4 @@
-﻿namespace OpenEphys.Onix.Design
+namespace OpenEphys.Onix.Design
 {
     partial class Rhs2116StimulusSequenceDialog
     {
@@ -676,6 +676,7 @@
             this.zedGraphChannels.MouseUpEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.ZedGraphChannels_MouseUpEvent);
             this.zedGraphChannels.MouseMoveEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.ZedGraphChannels_MouseMoveEvent);
             this.zedGraphChannels.MouseClick += new System.Windows.Forms.MouseEventHandler(this.ZedGraphChannels_MouseClick);
+            this.zedGraphChannels.Resize += new System.EventHandler(this.ZedGraphChannels_Resize);
             // 
             // Rhs2116StimulusSequenceDialog
             // 

@@ -128,7 +128,7 @@ namespace OpenEphys.Onix.Design
             zedGraph.Refresh();
         }
 
-        private static void ResizeAxes(ZedGraphControl zedGraph)
+        public static void ResizeAxes(ZedGraphControl zedGraph)
         {
             var minX = zedGraph.GraphPane.GraphObjList.Min<GraphObj, double>(obj =>
             {
@@ -267,6 +267,12 @@ namespace OpenEphys.Onix.Design
 
                 File.WriteAllText(sfd.FileName, fileJson);
             }
+        }
+
+        private void ZedGraphChannels_Resize(object sender, EventArgs e)
+        {
+            ResizeAxes(zedGraphChannels);
+            zedGraphChannels.Refresh();
         }
     }
 }

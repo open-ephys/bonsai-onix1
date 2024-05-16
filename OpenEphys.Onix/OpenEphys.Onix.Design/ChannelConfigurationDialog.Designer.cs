@@ -79,6 +79,7 @@
             this.zedGraphChannels.Size = new System.Drawing.Size(714, 517);
             this.zedGraphChannels.TabIndex = 4;
             this.zedGraphChannels.UseExtendedPrintDialog = true;
+            this.zedGraphChannels.Resize += new System.EventHandler(this.ZedGraphChannels_Resize);
             // 
             // buttonSaveChannelConfiguration
             // 
