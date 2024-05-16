@@ -939,7 +939,17 @@ namespace OpenEphys.Onix.Design
 
                 var json = File.ReadAllText(ofd.FileName);
 
-                Sequence = JsonSerializer.Deserialize<Rhs2116StimulusSequence>(json, options);
+                var sequence = JsonSerializer.Deserialize<Rhs2116StimulusSequence>(json, options);
+
+                if (sequence != null && sequence.Valid && sequence.Stimuli.Length == 32)
+                {
+                    sequence.ChannelConfiguration = Sequence.ChannelConfiguration;
+                    Sequence = sequence;
+                }
+                else
+                {
+                    MessageBox.Show("Incoming sequence is not valid. Check file for validity.");
+                }
 
                 DrawStimulusWaveform();
             }
