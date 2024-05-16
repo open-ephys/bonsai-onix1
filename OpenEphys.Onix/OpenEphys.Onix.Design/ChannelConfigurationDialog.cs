@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -24,11 +24,16 @@ namespace OpenEphys.Onix.Design
 
             if (ChannelConfiguration != null && !ChannelConfiguration.IsValid)
             {
-                LoadChannelLayout();
+                LoadDefaultChannelLayout();
             }
 
             InitializeZedGraphChannels();
             DrawChannels(zedGraphChannels, ChannelConfiguration);
+        }
+
+        private void LoadDefaultChannelLayout()
+        {
+            ChannelConfiguration = DeserializeString(Properties.Resources.simple_rhs2116_headstage_probe_interface);
         }
 
         private void LoadChannelLayout()
