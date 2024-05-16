@@ -27,7 +27,7 @@ namespace OpenEphys.Onix.Design
                 LoadDefaultChannelLayout();
             }
 
-            InitializeZedGraphChannels();
+            InitializeZedGraphChannels(zedGraphChannels);
             DrawChannels(zedGraphChannels, ChannelConfiguration);
         }
 
@@ -171,16 +171,25 @@ namespace OpenEphys.Onix.Design
             return pointD;
         }
 
-        private void InitializeZedGraphChannels()
+        public static void InitializeZedGraphChannels(ZedGraphControl zedGraph)
         {
-            zedGraphChannels.GraphPane.Title.IsVisible = false;
-            zedGraphChannels.GraphPane.TitleGap = 0;
-            zedGraphChannels.GraphPane.Border.IsVisible = false;
-            zedGraphChannels.GraphPane.Chart.Border.IsVisible = false;
-            zedGraphChannels.GraphPane.IsFontsScaled = true;
+            zedGraph.GraphPane.Title.IsVisible = false;
+            zedGraph.GraphPane.TitleGap = 0;
+            zedGraph.GraphPane.Border.IsVisible = false;
+            zedGraph.GraphPane.Chart.Border.IsVisible = false;
+            zedGraph.GraphPane.IsFontsScaled = true;
 
-            zedGraphChannels.GraphPane.XAxis.IsVisible = false;
-            zedGraphChannels.GraphPane.YAxis.IsVisible = false;
+            zedGraph.IsAutoScrollRange = true;
+
+            zedGraph.GraphPane.XAxis.IsVisible = false;
+            zedGraph.GraphPane.XAxis.IsAxisSegmentVisible = false;
+            zedGraph.GraphPane.XAxis.Scale.MaxAuto = true;
+            zedGraph.GraphPane.XAxis.Scale.MinAuto = true;
+
+            zedGraph.GraphPane.YAxis.IsVisible = false;
+            zedGraph.GraphPane.YAxis.IsAxisSegmentVisible = false;
+            zedGraph.GraphPane.YAxis.Scale.MaxAuto = true;
+            zedGraph.GraphPane.YAxis.Scale.MinAuto = true;
         }
 
         private void ButtonNewChannelConfiguration_Click(object sender, System.EventArgs e)

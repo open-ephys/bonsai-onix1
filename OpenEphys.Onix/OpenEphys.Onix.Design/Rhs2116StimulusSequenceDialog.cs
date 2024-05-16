@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -214,14 +214,7 @@ namespace OpenEphys.Onix.Design
 
         private void InitializeZedGraphChannels()
         {
-            zedGraphChannels.GraphPane.Title.IsVisible = false;
-            zedGraphChannels.GraphPane.TitleGap = 0;
-            zedGraphChannels.GraphPane.Border.IsVisible = false;
-            zedGraphChannels.GraphPane.Chart.Border.IsVisible = false;
-            zedGraphChannels.GraphPane.IsFontsScaled = true;
-
-            zedGraphChannels.GraphPane.XAxis.IsVisible = false;
-            zedGraphChannels.GraphPane.YAxis.IsVisible = false;
+            ChannelConfigurationDialog.InitializeZedGraphChannels(zedGraphChannels);
 
             zedGraphChannels.ZoomButtons = MouseButtons.None;
             zedGraphChannels.ZoomButtons2 = MouseButtons.None;
