@@ -47,27 +47,28 @@ namespace OpenEphys.Onix.Design
 
             if (ofd.ShowDialog() == DialogResult.OK && File.Exists(ofd.FileName))
             {
-                textBoxFilePath.Text = ofd.FileName;
-
-                string channelLayoutString = File.ReadAllText(ofd.FileName);
-
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true,
-                    IncludeFields = true,
-                    AllowTrailingCommas = true,
-                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
-                    NumberHandling = JsonNumberHandling.AllowReadingFromString
-                };
-
-                ChannelConfiguration = JsonSerializer.Deserialize<ProbeGroup>(channelLayoutString, options);
-
-                if (ChannelConfiguration == null)
+                ChannelConfiguration = DeserializeString(File.ReadAllText(ofd.FileName));
+                
+                if (ChannelConfiguration == null || !ChannelConfiguration.IsValid)
                 {
                     MessageBox.Show("Error opening the JSON file.");
                     return;
                 }
             }
+        }
+
+        private static ProbeGroup DeserializeString(string channelLayout)
+        {
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                IncludeFields = true,
+                AllowTrailingCommas = true,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+                NumberHandling = JsonNumberHandling.AllowReadingFromString
+            };
+
+            return JsonSerializer.Deserialize<ProbeGroup>(channelLayout, options);
         }
 
         public static void DrawChannels(ZedGraphControl zedGraph, ProbeGroup probeGroup)
