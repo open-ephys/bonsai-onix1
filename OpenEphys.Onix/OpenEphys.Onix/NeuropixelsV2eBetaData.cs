@@ -24,11 +24,20 @@ namespace OpenEphys.Onix
                 () => DeviceManager.ReserveDevice(DeviceName),
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
                 {
-                    var device = deviceInfo.GetDeviceContext(typeof(NeuropixelsV2eBeta));
+                    var info = (NeuropixesV2eBetaDeviceInfo)deviceInfo;
+                    var device = info.GetDeviceContext(typeof(NeuropixelsV2eBeta));
                     var passthrough = device.GetPassthroughDeviceContext(DS90UB9x.ID);
                     var probeData = device.Context.FrameReceived.Where(frame =>
                         frame.DeviceAddress == passthrough.Address &&
                         NeuropixelsV2eBetaDataFrame.GetProbeIndex(frame) == (int)ProbeIndex);
+
+                    var gainCorrection = ProbeIndex switch
+                    {
+                        NeuropixelsV2Probe.ProbeA => (ushort)info.GainCorrectionA,
+                        NeuropixelsV2Probe.ProbeB => (ushort)info.GainCorrectionB,
+                        _ => throw new ArgumentOutOfRangeException(nameof(ProbeIndex), $"Unexpected ProbeIndex value: {ProbeIndex}"),
+                    };
+
                     return Observable.Create<NeuropixelsV2eBetaDataFrame>(observer =>
                     {
                         var sampleIndex = 0;
@@ -41,7 +50,7 @@ namespace OpenEphys.Onix
                             frame =>
                             {
                                 var payload = (NeuropixelsV2BetaPayload*)frame.Data.ToPointer();
-                                NeuropixelsV2eBetaDataFrame.CopyAmplifierBuffer(payload->SuperFrame, amplifierBuffer, frameCounter, sampleIndex);
+                                NeuropixelsV2eBetaDataFrame.CopyAmplifierBuffer(payload->SuperFrame, amplifierBuffer, frameCounter, sampleIndex, gainCorrection);
                                 hubClockBuffer[sampleIndex] = payload->HubClock;
                                 clockBuffer[sampleIndex] = frame.Clock;
                                 if (++sampleIndex >= bufferSize)

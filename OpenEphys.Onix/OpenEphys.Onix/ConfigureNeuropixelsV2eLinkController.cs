@@ -4,33 +4,56 @@ namespace OpenEphys.Onix
 {
     class ConfigureNeuropixelsV2eLinkController : ConfigureFmcLinkController
     {
+        public double? PortVoltage { get; set; } = null;
+
+        // TODO: Needs more testing
         protected override bool ConfigurePortVoltage(DeviceContext device)
         {
-            const uint MinVoltage = 50;
-            const uint MaxVoltage = 70;
-            const uint VoltageOffset = 02;
-            const uint VoltageIncrement = 02;
-
-            for (uint voltage = MinVoltage; voltage <= MaxVoltage; voltage += VoltageIncrement)
+            if (PortVoltage == null)
             {
-                SetPortVoltage(device, voltage);
-                if (CheckLinkState(device))
+                const double MinVoltage = 3.3;
+                const double MaxVoltage = 5.5;
+                const double VoltageOffset = 1.0;
+                const double VoltageIncrement = 0.2;
+
+                for (double voltage = MinVoltage; voltage <= MaxVoltage; voltage += VoltageIncrement)
                 {
-                    SetPortVoltage(device, voltage + VoltageOffset);
-                    return CheckLinkState(device);
+                    SetVoltage(device, voltage);
+                    if (CheckLinkState(device))
+                    {
+                        SetVoltage(device, voltage + VoltageOffset);
+                        return CheckLinkState(device);
+                    }
                 }
+                return false;
+            }
+            else
+            {
+                SetVoltage(device, (double)PortVoltage);
+            }
+
+            // NB: The headstage needs an additional reset after power on
+            // to provide its device table
+            device.Context.Reset();
+            Thread.Sleep(200);
+
+            if (CheckLinkState(device))
+            {
+                device.Context.Reset();
+                Thread.Sleep(200);
+                return true;
             }
 
             return false;
         }
 
-        private void SetPortVoltage(DeviceContext device, uint voltage)
+        void SetVoltage(DeviceContext device, double voltage)
         {
-            const int WaitUntilVoltageSettles = 200;
             device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
-            Thread.Sleep(WaitUntilVoltageSettles);
-            device.WriteRegister(FmcLinkController.PORTVOLTAGE, voltage);
-            Thread.Sleep(WaitUntilVoltageSettles);
+            Thread.Sleep(300);
+            device.WriteRegister(FmcLinkController.PORTVOLTAGE, (uint)(10 * voltage));
+            Thread.Sleep(500);
         }
+
     }
 }
