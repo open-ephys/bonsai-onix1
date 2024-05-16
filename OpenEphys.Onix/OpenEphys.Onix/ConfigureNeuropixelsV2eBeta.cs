@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Reactive.Disposables;
+using Bonsai;
 
 namespace OpenEphys.Onix
 {
@@ -22,6 +23,16 @@ namespace OpenEphys.Onix
         [Category(ConfigurationCategory)]
         [Description("Specifies which reference to use for all probe electrodes.")]
         public NeuropixelsV2eBetaChannelReference Reference { get; set; }
+
+        [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
+        [Description("Path to the Neuropixels 2.0β gain calibraiton file for probe A.")]
+        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
+        public string GainCalibrationFileA { get; set; }
+
+        [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
+        [Description("Path to the Neuropixels 2.0β gain calibraiton file for probe B.")]
+        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
+        public string GainCalibrationFileB { get; set; }
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
@@ -48,9 +59,10 @@ namespace OpenEphys.Onix
                 var probeAMetadata = ReadProbeMetadata(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeA);
                 var probeBMetadata = ReadProbeMetadata(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeB);
 
-                // toggle probe LED
-                gpo32Config = (gpo32Config & ~NeuropixelsV2eBeta.GPO32LedMask) | (EnableLed ? 0 : NeuropixelsV2eBeta.GPO32LedMask);
-                serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO32, gpo32Config);
+                if (probeAMetadata.ProbeSerialNumber == null && probeBMetadata.ProbeSerialNumber == null)
+                {
+                    throw new WorkflowRuntimeException("No Neuropixels 2.0β probes were detected.");
+                }
 
                 // REC_NRESET and NRESET go high on both probes to take the ASIC out of reset
                 // TODO: not sure if REC_NRESET and NRESET are tied together on flex
@@ -61,9 +73,14 @@ namespace OpenEphys.Onix
                 // configure probe streaming
                 var probeControl = new NeuropixelsV2BetaRegisterContext(device, NeuropixelsV2eBeta.ProbeAddress);
 
+                ushort? gainCorrectionA = null;
+                ushort? gainCorrectionB = null;
+
                 // configure probe A streaming
                 if (probeAMetadata.ProbeSerialNumber != null)
                 {
+                    // read gain correction
+                    gainCorrectionA = ReadGainCorrection(GainCalibrationFileA, (ulong)probeAMetadata.ProbeSerialNumber);
                     SelectProbe(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeA);
                     probeControl.WriteConfiguration(Reference);
                     ConfigureProbeStreaming(probeControl);
@@ -72,10 +89,15 @@ namespace OpenEphys.Onix
                 // configure probe B streaming
                 if (probeAMetadata.ProbeSerialNumber != null)
                 {
+                    gainCorrectionB = ReadGainCorrection(GainCalibrationFileB, (ulong)probeBMetadata.ProbeSerialNumber);
                     SelectProbe(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeB);
                     probeControl.WriteConfiguration(Reference);
                     ConfigureProbeStreaming(probeControl);
                 }
+
+                // toggle probe LED
+                gpo32Config = (gpo32Config & ~NeuropixelsV2eBeta.GPO32LedMask) | (EnableLed ? 0 : NeuropixelsV2eBeta.GPO32LedMask);
+                serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO32, gpo32Config);
 
                 // Both probes are now streaming, hit them with a mux reset to (roughly) sync.
                 // NB: We have found that this gives PCLK-level synchronization MOST of the time.
@@ -83,7 +105,7 @@ namespace OpenEphys.Onix
                 // Still its good to get them roughly (i.e. within 10 PCLKs) started at the same time.
                 SyncProbes(serializer, gpo10Config);
 
-                var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
+                var deviceInfo = new NeuropixesV2eBetaDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB);
                 var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
                 var shutdown = Disposable.Create(() =>
                 {
@@ -128,10 +150,29 @@ namespace OpenEphys.Onix
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias2, alias);
         }
 
-        NeuropixelsV2eBetaMetadata ReadProbeMetadata(I2CRegisterContext serializer, ref uint gpo32Config, byte probeSelect)
+        static NeuropixelsV2eBetaMetadata ReadProbeMetadata(I2CRegisterContext serializer, ref uint gpo32Config, byte probeSelect)
         {
             SelectProbe(serializer, ref gpo32Config, probeSelect);
             return new NeuropixelsV2eBetaMetadata(serializer);
+        }
+
+        static ushort ReadGainCorrection(string gainCalibrationFile, ulong probeSerialNumber)
+        {
+            if (gainCalibrationFile == null)
+            {
+                throw new ArgumentException("Calibraiton file must be specified.");
+            }
+
+            System.IO.StreamReader gainFile = new(gainCalibrationFile);
+            var sn = ulong.Parse(gainFile.ReadLine());
+
+            if (probeSerialNumber != sn)
+            {
+                throw new ArgumentException($"Probe serial number {probeSerialNumber} does not match calibraiton file serial number {sn}.");
+            }
+
+            // Q1.14 fixed point conversion
+            return (ushort)(double.Parse(gainFile.ReadLine()) * (1 << 14));
         }
 
         static void SelectProbe(I2CRegisterContext serializer, ref uint gpo32Config, byte probeSelect)
@@ -164,6 +205,20 @@ namespace OpenEphys.Onix
             i2cNP.WriteByte(3, 0b0000_1000);
         }
     }
+
+    class NeuropixesV2eBetaDeviceInfo : DeviceInfo
+    {
+        public NeuropixesV2eBetaDeviceInfo(ContextTask context, Type deviceType, uint deviceAddress, double? gainCorrectionA, double? gainCorrectionB)
+            : base(context, deviceType, deviceAddress)
+        {
+            GainCorrectionA = gainCorrectionA != null ? (ushort)(gainCorrectionA * (1 << 14)) : null;
+            GainCorrectionB = gainCorrectionB != null ? (ushort)(gainCorrectionB * (1 << 14)) : null;
+        }
+
+        public ushort? GainCorrectionA { get; }
+        public ushort? GainCorrectionB { get; }
+    }
+
 
     static class NeuropixelsV2eBeta
     {
@@ -222,6 +277,6 @@ namespace OpenEphys.Onix
     {
         External,
         Tip,
-        Internal
+        Ground
     }
 }
