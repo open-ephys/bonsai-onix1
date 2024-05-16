@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -78,8 +78,6 @@ namespace OpenEphys.Onix.Design
 
             zedGraph.GraphPane.GraphObjList.Clear();
 
-            double minX = 1e3, minY = 1e3, maxX = -1e3, maxY = -1e3;
-
             for (int i = 0; i < probeGroup.Probes.Length; i++)
             {
                 PointD[] planarContours = ConvertFloatArrayToPointD(probeGroup.Probes[i].Probe_Planar_Contour);
@@ -89,18 +87,6 @@ namespace OpenEphys.Onix.Design
                 };
 
                 zedGraph.GraphPane.GraphObjList.Add(contour);
-
-                var tmp = planarContours.Min(p => p.X);
-                minX = tmp < minX ? tmp : minX;
-
-                tmp = planarContours.Min(p => p.Y);
-                minY = tmp < minY ? tmp : minY;
-
-                tmp = planarContours.Max(p => p.X);
-                maxX = tmp > maxX ? tmp : maxX;
-
-                tmp = planarContours.Max(p => p.Y);
-                maxY = tmp > maxY ? tmp : maxY;
 
                 for (int j = 0; j < probeGroup.Probes[i].Contact_Positions.Length; j++)
                 {
@@ -115,6 +101,7 @@ namespace OpenEphys.Onix.Design
                             Tag = string.Format(ContactStringFormat, contact.ContactId)
                         };
 
+
                         zedGraph.GraphPane.GraphObjList.Add(contactObj);
 
                         TextObj textObj = new(contact.ContactId, contact.PosX, contact.PosY)
@@ -122,6 +109,7 @@ namespace OpenEphys.Onix.Design
                             ZOrder = ZOrder.A_InFront,
                             Tag = string.Format(TextStringFormat, contact.ContactId)
                         };
+
                         textObj.FontSpec.Size = 22;
                         textObj.FontSpec.Border.IsVisible = false;
                         textObj.FontSpec.Fill.IsVisible = false;
@@ -135,29 +123,94 @@ namespace OpenEphys.Onix.Design
                 }
             }
 
+            ResizeAxes(zedGraph);
+          
+            zedGraph.Refresh();
+        }
+
+        private static void ResizeAxes(ZedGraphControl zedGraph)
+        {
+            var minX = zedGraph.GraphPane.GraphObjList.Min<GraphObj, double>(obj =>
+            {
+                if (obj is PolyObj polyObj)
+                {
+                    return polyObj.Points.Min(p => p.X);
+                }
+
+                return double.MaxValue;
+            });
+
+            var minY = zedGraph.GraphPane.GraphObjList.Min<GraphObj, double>(obj =>
+            {
+                if (obj is PolyObj polyObj)
+                {
+                    return polyObj.Points.Min(p => p.Y);
+                }
+
+                return double.MaxValue;
+            });
+
+            var maxX = zedGraph.GraphPane.GraphObjList.Max<GraphObj, double>(obj =>
+            {
+                if (obj is PolyObj polyObj)
+                {
+                    return polyObj.Points.Max(p => p.X);
+                }
+
+                return double.MinValue;
+            });
+
+            var maxY = zedGraph.GraphPane.GraphObjList.Max<GraphObj, double>(obj =>
+            {
+                if (obj is PolyObj polyObj)
+                {
+                    return polyObj.Points.Max(p => p.Y);
+                }
+
+                return double.MinValue;
+            });
+
+            var min = Math.Min(minX, minY);
+            var max = Math.Max(maxX, maxY);
+
+            var margin = (max - min) * 0.05;
+
             var rangeX = maxX - minX;
             var rangeY = maxY - minY;
 
-            //if (rangeY < rangeX / 2.68)
-            //{
-            //    minY -= rangeX / (2.68 * 2) - rangeY;
-            //    maxY += rangeX / (2.68 * 2) - rangeY;
-            //    rangeY = maxY - minY;
-            //}
+            if (rangeY < rangeX)
+            {
+                var diff = (rangeX - rangeY) / 2;
+                minY -= diff;
+                maxY += diff;
+            }
+            else
+            {
+                var diff = (rangeY - rangeX) / 2;
+                minX -= diff;
+                maxX += diff;
+            }
 
-            var margin = Math.Min(rangeX, rangeY) * 0.1;
+            zedGraph.GraphPane.XAxis.Scale.Min = minX;
+            zedGraph.GraphPane.XAxis.Scale.Max = maxX;
 
-            zedGraph.GraphPane.XAxis.Scale.Min = minX - margin;
-            zedGraph.GraphPane.XAxis.Scale.Max = maxX + margin;
-            zedGraph.GraphPane.YAxis.Scale.Min = minY - margin;
-            zedGraph.GraphPane.YAxis.Scale.Max = maxY + margin;
-            //zedGraph.GraphPane.XAxis.Scale.Min = minX - rangeX * 0.02;
-            //zedGraph.GraphPane.XAxis.Scale.Max = maxX + rangeX * 0.02;
-            //zedGraph.GraphPane.YAxis.Scale.Min = minY - rangeY * 0.02;
-            //zedGraph.GraphPane.YAxis.Scale.Max = maxY + rangeY * 0.02;
+            zedGraph.GraphPane.YAxis.Scale.Min = minY;
+            zedGraph.GraphPane.YAxis.Scale.Max = maxY;
 
-            zedGraph.AxisChange();
-            zedGraph.Refresh();
+            RectangleF axisRect = zedGraph.GraphPane.Rect;
+
+            if (axisRect.Width > axisRect.Height)
+            {
+                axisRect.X += (axisRect.Width - axisRect.Height) / 2;
+                axisRect.Width = axisRect.Height;
+            }
+            else if (axisRect.Height > axisRect.Width)
+            {
+                axisRect.Y += (axisRect.Height - axisRect.Width) / 2;
+                axisRect.Height = axisRect.Width;
+            }
+
+            zedGraph.GraphPane.Rect = axisRect;
         }
 
         public static PointD[] ConvertFloatArrayToPointD(float[][] floats)
