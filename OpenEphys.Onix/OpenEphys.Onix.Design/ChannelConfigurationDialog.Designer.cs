@@ -31,11 +31,10 @@
             this.components = new System.ComponentModel.Container();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.zedGraphChannels = new ZedGraph.ZedGraphControl();
-            this.textBoxFilePath = new System.Windows.Forms.TextBox();
-            this.buttonOK = new System.Windows.Forms.Button();
+            this.buttonSaveChannelConfiguration = new System.Windows.Forms.Button();
+            this.buttonLoadChannelConfiguration = new System.Windows.Forms.Button();
             this.buttonCancel = new System.Windows.Forms.Button();
-            this.buttonNewChannelConfiguration = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
+            this.buttonOK = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -55,13 +54,12 @@
             // 
             // splitContainer1.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.label1);
-            this.splitContainer1.Panel2.Controls.Add(this.buttonNewChannelConfiguration);
+            this.splitContainer1.Panel2.Controls.Add(this.buttonSaveChannelConfiguration);
+            this.splitContainer1.Panel2.Controls.Add(this.buttonLoadChannelConfiguration);
             this.splitContainer1.Panel2.Controls.Add(this.buttonCancel);
             this.splitContainer1.Panel2.Controls.Add(this.buttonOK);
-            this.splitContainer1.Panel2.Controls.Add(this.textBoxFilePath);
-            this.splitContainer1.Size = new System.Drawing.Size(789, 499);
-            this.splitContainer1.SplitterDistance = 294;
+            this.splitContainer1.Size = new System.Drawing.Size(714, 610);
+            this.splitContainer1.SplitterDistance = 517;
             this.splitContainer1.TabIndex = 0;
             // 
             // zedGraphChannels
@@ -78,69 +76,61 @@
             this.zedGraphChannels.ScrollMinX = 0D;
             this.zedGraphChannels.ScrollMinY = 0D;
             this.zedGraphChannels.ScrollMinY2 = 0D;
-            this.zedGraphChannels.Size = new System.Drawing.Size(789, 294);
+            this.zedGraphChannels.Size = new System.Drawing.Size(714, 517);
             this.zedGraphChannels.TabIndex = 4;
             this.zedGraphChannels.UseExtendedPrintDialog = true;
             // 
-            // textBoxFilePath
+            // buttonSaveChannelConfiguration
             // 
-            this.textBoxFilePath.Location = new System.Drawing.Point(24, 57);
-            this.textBoxFilePath.Multiline = true;
-            this.textBoxFilePath.Name = "textBoxFilePath";
-            this.textBoxFilePath.Size = new System.Drawing.Size(549, 96);
-            this.textBoxFilePath.TabIndex = 0;
+            this.buttonSaveChannelConfiguration.Location = new System.Drawing.Point(188, 19);
+            this.buttonSaveChannelConfiguration.Name = "buttonSaveChannelConfiguration";
+            this.buttonSaveChannelConfiguration.Size = new System.Drawing.Size(162, 49);
+            this.buttonSaveChannelConfiguration.TabIndex = 7;
+            this.buttonSaveChannelConfiguration.Text = "Save Channel Configuration";
+            this.buttonSaveChannelConfiguration.UseVisualStyleBackColor = true;
+            this.buttonSaveChannelConfiguration.Click += new System.EventHandler(this.ButtonSaveChannelConfiguration_Click);
             // 
-            // buttonOK
+            // buttonLoadChannelConfiguration
             // 
-            this.buttonOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.buttonOK.Location = new System.Drawing.Point(608, 75);
-            this.buttonOK.Name = "buttonOK";
-            this.buttonOK.Size = new System.Drawing.Size(162, 49);
-            this.buttonOK.TabIndex = 3;
-            this.buttonOK.Text = "OK";
-            this.buttonOK.UseVisualStyleBackColor = true;
+            this.buttonLoadChannelConfiguration.Location = new System.Drawing.Point(12, 19);
+            this.buttonLoadChannelConfiguration.Name = "buttonLoadChannelConfiguration";
+            this.buttonLoadChannelConfiguration.Size = new System.Drawing.Size(162, 49);
+            this.buttonLoadChannelConfiguration.TabIndex = 5;
+            this.buttonLoadChannelConfiguration.Text = "Load Channel Configuration";
+            this.buttonLoadChannelConfiguration.UseVisualStyleBackColor = true;
+            this.buttonLoadChannelConfiguration.Click += new System.EventHandler(this.ButtonNewChannelConfiguration_Click);
             // 
             // buttonCancel
             // 
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.buttonCancel.Location = new System.Drawing.Point(608, 130);
+            this.buttonCancel.Location = new System.Drawing.Point(540, 19);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(162, 49);
             this.buttonCancel.TabIndex = 4;
             this.buttonCancel.Text = "Cancel";
             this.buttonCancel.UseVisualStyleBackColor = true;
             // 
-            // buttonNewChannelConfiguration
+            // buttonOK
             // 
-            this.buttonNewChannelConfiguration.Location = new System.Drawing.Point(608, 20);
-            this.buttonNewChannelConfiguration.Name = "buttonNewChannelConfiguration";
-            this.buttonNewChannelConfiguration.Size = new System.Drawing.Size(162, 49);
-            this.buttonNewChannelConfiguration.TabIndex = 5;
-            this.buttonNewChannelConfiguration.Text = "New Channel Configuration";
-            this.buttonNewChannelConfiguration.UseVisualStyleBackColor = true;
-            this.buttonNewChannelConfiguration.Click += new System.EventHandler(this.ButtonNewChannelConfiguration_Click);
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(20, 34);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(220, 20);
-            this.label1.TabIndex = 6;
-            this.label1.Text = "Channel configuration filepath";
+            this.buttonOK.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.buttonOK.Location = new System.Drawing.Point(364, 19);
+            this.buttonOK.Name = "buttonOK";
+            this.buttonOK.Size = new System.Drawing.Size(162, 49);
+            this.buttonOK.TabIndex = 3;
+            this.buttonOK.Text = "OK";
+            this.buttonOK.UseVisualStyleBackColor = true;
             // 
             // ChannelConfigurationDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(789, 499);
+            this.ClientSize = new System.Drawing.Size(714, 610);
             this.Controls.Add(this.splitContainer1);
             this.Name = "ChannelConfigurationDialog";
             this.Text = "ChannelConfigurationDialog";
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();
             this.splitContainer1.Panel2.ResumeLayout(false);
-            this.splitContainer1.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -151,10 +141,9 @@
 
         private System.Windows.Forms.SplitContainer splitContainer1;
         private ZedGraph.ZedGraphControl zedGraphChannels;
-        private System.Windows.Forms.TextBox textBoxFilePath;
         private System.Windows.Forms.Button buttonCancel;
         private System.Windows.Forms.Button buttonOK;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Button buttonNewChannelConfiguration;
+        private System.Windows.Forms.Button buttonLoadChannelConfiguration;
+        private System.Windows.Forms.Button buttonSaveChannelConfiguration;
     }
 }

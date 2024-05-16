@@ -198,5 +198,22 @@ namespace OpenEphys.Onix.Design
             LoadChannelLayout();
             DrawChannels(zedGraphChannels, ChannelConfiguration);
         }
+
+        private void ButtonSaveChannelConfiguration_Click(object sender, EventArgs e)
+        {
+            using SaveFileDialog sfd = new();
+            sfd.Filter = "Probe Interface Files (*.json)|*.json";
+            sfd.FilterIndex = 1;
+            sfd.Title = "Choose where to save the probe interface file";
+            sfd.OverwritePrompt = true;
+            sfd.ValidateNames = true;
+
+            if (sfd.ShowDialog() == DialogResult.OK)
+            {
+                var fileJson = JsonSerializer.Serialize(ChannelConfiguration);
+
+                File.WriteAllText(sfd.FileName, fileJson);
+            }
+        }
     }
 }
