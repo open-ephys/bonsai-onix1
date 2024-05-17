@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -48,6 +48,7 @@ namespace OpenEphys.Onix.Design
                 MessageBox.Show("Error: Something is wrong with the channel configuration." +
                     "Please open the ConfigureHeadstageRhs2116 node and choose the correct" +
                     "Probe Interface file to open.");
+                Close();
                 return;
             }
 
