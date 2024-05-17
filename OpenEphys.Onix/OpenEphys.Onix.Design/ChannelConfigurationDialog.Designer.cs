@@ -31,14 +31,17 @@
             this.components = new System.ComponentModel.Container();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.zedGraphChannels = new ZedGraph.ZedGraphControl();
-            this.buttonSaveChannelConfiguration = new System.Windows.Forms.Button();
-            this.buttonLoadChannelConfiguration = new System.Windows.Forms.Button();
+            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuItemOpenFile = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuItemSaveFile = new System.Windows.Forms.ToolStripMenuItem();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonOK = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
+            this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // splitContainer1
@@ -51,11 +54,10 @@
             // splitContainer1.Panel1
             // 
             this.splitContainer1.Panel1.Controls.Add(this.zedGraphChannels);
+            this.splitContainer1.Panel1.Controls.Add(this.menuStrip1);
             // 
             // splitContainer1.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.buttonSaveChannelConfiguration);
-            this.splitContainer1.Panel2.Controls.Add(this.buttonLoadChannelConfiguration);
             this.splitContainer1.Panel2.Controls.Add(this.buttonCancel);
             this.splitContainer1.Panel2.Controls.Add(this.buttonOK);
             this.splitContainer1.Size = new System.Drawing.Size(714, 610);
@@ -66,7 +68,7 @@
             // 
             this.zedGraphChannels.AutoSize = true;
             this.zedGraphChannels.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.zedGraphChannels.Location = new System.Drawing.Point(0, 0);
+            this.zedGraphChannels.Location = new System.Drawing.Point(0, 33);
             this.zedGraphChannels.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this.zedGraphChannels.Name = "zedGraphChannels";
             this.zedGraphChannels.ScrollGrace = 0D;
@@ -76,35 +78,55 @@
             this.zedGraphChannels.ScrollMinX = 0D;
             this.zedGraphChannels.ScrollMinY = 0D;
             this.zedGraphChannels.ScrollMinY2 = 0D;
-            this.zedGraphChannels.Size = new System.Drawing.Size(714, 517);
+            this.zedGraphChannels.Size = new System.Drawing.Size(714, 484);
             this.zedGraphChannels.TabIndex = 4;
             this.zedGraphChannels.UseExtendedPrintDialog = true;
             this.zedGraphChannels.Resize += new System.EventHandler(this.ZedGraphChannels_Resize);
             // 
-            // buttonSaveChannelConfiguration
+            // menuStrip1
             // 
-            this.buttonSaveChannelConfiguration.Location = new System.Drawing.Point(188, 19);
-            this.buttonSaveChannelConfiguration.Name = "buttonSaveChannelConfiguration";
-            this.buttonSaveChannelConfiguration.Size = new System.Drawing.Size(162, 49);
-            this.buttonSaveChannelConfiguration.TabIndex = 7;
-            this.buttonSaveChannelConfiguration.Text = "Save Channel Configuration";
-            this.buttonSaveChannelConfiguration.UseVisualStyleBackColor = true;
-            this.buttonSaveChannelConfiguration.Click += new System.EventHandler(this.ButtonSaveChannelConfiguration_Click);
+            this.menuStrip1.GripMargin = new System.Windows.Forms.Padding(2, 2, 0, 2);
+            this.menuStrip1.ImageScalingSize = new System.Drawing.Size(24, 24);
+            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.fileToolStripMenuItem});
+            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
+            this.menuStrip1.Name = "menuStrip1";
+            this.menuStrip1.Size = new System.Drawing.Size(714, 33);
+            this.menuStrip1.TabIndex = 5;
+            this.menuStrip1.Text = "menuStrip1";
             // 
-            // buttonLoadChannelConfiguration
+            // fileToolStripMenuItem
             // 
-            this.buttonLoadChannelConfiguration.Location = new System.Drawing.Point(12, 19);
-            this.buttonLoadChannelConfiguration.Name = "buttonLoadChannelConfiguration";
-            this.buttonLoadChannelConfiguration.Size = new System.Drawing.Size(162, 49);
-            this.buttonLoadChannelConfiguration.TabIndex = 5;
-            this.buttonLoadChannelConfiguration.Text = "Load Channel Configuration";
-            this.buttonLoadChannelConfiguration.UseVisualStyleBackColor = true;
-            this.buttonLoadChannelConfiguration.Click += new System.EventHandler(this.ButtonNewChannelConfiguration_Click);
+            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuItemOpenFile,
+            this.menuItemSaveFile});
+            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(54, 29);
+            this.fileToolStripMenuItem.Text = "File";
+            // 
+            // menuItemOpenFile
+            // 
+            this.menuItemOpenFile.Name = "menuItemOpenFile";
+            this.menuItemOpenFile.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
+            this.menuItemOpenFile.Size = new System.Drawing.Size(270, 34);
+            this.menuItemOpenFile.Text = "Open File";
+            this.menuItemOpenFile.Click += new System.EventHandler(this.MenuItemOpenFile_Click);
+            // 
+            // menuItemSaveFile
+            // 
+            this.menuItemSaveFile.Name = "menuItemSaveFile";
+            this.menuItemSaveFile.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
+            this.menuItemSaveFile.Size = new System.Drawing.Size(270, 34);
+            this.menuItemSaveFile.Text = "Save File";
+            this.menuItemSaveFile.Click += new System.EventHandler(this.MenuItemSaveFile_Click);
             // 
             // buttonCancel
             // 
+            this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.buttonCancel.Location = new System.Drawing.Point(540, 19);
+            this.buttonCancel.Location = new System.Drawing.Point(378, 19);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(162, 49);
             this.buttonCancel.TabIndex = 4;
@@ -113,8 +135,11 @@
             // 
             // buttonOK
             // 
+            this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.buttonOK.Location = new System.Drawing.Point(364, 19);
+            this.buttonOK.Location = new System.Drawing.Point(195, 19);
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(162, 49);
             this.buttonOK.TabIndex = 3;
@@ -127,6 +152,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(714, 610);
             this.Controls.Add(this.splitContainer1);
+            this.MainMenuStrip = this.menuStrip1;
             this.Name = "ChannelConfigurationDialog";
             this.Text = "ChannelConfigurationDialog";
             this.splitContainer1.Panel1.ResumeLayout(false);
@@ -134,6 +160,8 @@
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
+            this.menuStrip1.ResumeLayout(false);
+            this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -144,7 +172,9 @@
         private ZedGraph.ZedGraphControl zedGraphChannels;
         private System.Windows.Forms.Button buttonCancel;
         private System.Windows.Forms.Button buttonOK;
-        private System.Windows.Forms.Button buttonLoadChannelConfiguration;
-        private System.Windows.Forms.Button buttonSaveChannelConfiguration;
+        private System.Windows.Forms.MenuStrip menuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem menuItemOpenFile;
+        private System.Windows.Forms.ToolStripMenuItem menuItemSaveFile;
     }
 }

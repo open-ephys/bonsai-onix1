@@ -894,7 +894,7 @@ namespace OpenEphys.Onix.Design
             numberOfStimuli.Text = Sequence.Stimuli[index].NumberOfStimuli.ToString();
         }
 
-        private void ButtonSave_Click(object sender, EventArgs e)
+        private void MenuItemSaveFile_Click(object sender, EventArgs e)
         {
             using SaveFileDialog sfd = new();
             sfd.Filter = "Stimulus Sequence Files (*.json)|*.json";
@@ -911,7 +911,7 @@ namespace OpenEphys.Onix.Design
             }
         }
 
-        private void ButtonLoad_Click(object sender, EventArgs e)
+        private void MenuItemLoadFile_Click(object sender, EventArgs e)
         {
             using OpenFileDialog ofd = new();
 

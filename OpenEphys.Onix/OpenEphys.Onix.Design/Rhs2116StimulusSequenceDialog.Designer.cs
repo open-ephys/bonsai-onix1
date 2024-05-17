@@ -1,4 +1,4 @@
-namespace OpenEphys.Onix.Design
+﻿namespace OpenEphys.Onix.Design
 {
     partial class Rhs2116StimulusSequenceDialog
     {
@@ -36,8 +36,6 @@ namespace OpenEphys.Onix.Design
             this.toolStripStatusIsValid = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusSlotsUsed = new System.Windows.Forms.ToolStripStatusLabel();
             this.panelButtons = new System.Windows.Forms.Panel();
-            this.buttonLoad = new System.Windows.Forms.Button();
-            this.buttonSave = new System.Windows.Forms.Button();
             this.buttonOk = new System.Windows.Forms.Button();
             this.tabControlParameters = new System.Windows.Forms.TabControl();
             this.tabPageAddPulse = new System.Windows.Forms.TabPage();
@@ -74,6 +72,10 @@ namespace OpenEphys.Onix.Design
             this.tabPageTable = new System.Windows.Forms.TabPage();
             this.dataGridViewStimulusTable = new System.Windows.Forms.DataGridView();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.splitContainer3 = new System.Windows.Forms.SplitContainer();
             this.zedGraphChannels = new ZedGraph.ZedGraphControl();
@@ -93,6 +95,7 @@ namespace OpenEphys.Onix.Design
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
+            this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
             this.splitContainer2.Panel1.SuspendLayout();
             this.splitContainer2.Panel2.SuspendLayout();
@@ -117,7 +120,7 @@ namespace OpenEphys.Onix.Design
             this.zedGraphWaveform.ScrollMinX = 0D;
             this.zedGraphWaveform.ScrollMinY = 0D;
             this.zedGraphWaveform.ScrollMinY2 = 0D;
-            this.zedGraphWaveform.Size = new System.Drawing.Size(1316, 821);
+            this.zedGraphWaveform.Size = new System.Drawing.Size(1316, 788);
             this.zedGraphWaveform.TabIndex = 4;
             this.zedGraphWaveform.UseExtendedPrintDialog = true;
             // 
@@ -135,12 +138,14 @@ namespace OpenEphys.Onix.Design
             // 
             // buttonCancel
             // 
-            this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.buttonCancel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonCancel.Location = new System.Drawing.Point(352, 17);
+            this.buttonCancel.Location = new System.Drawing.Point(239, 13);
             this.buttonCancel.Name = "buttonCancel";
-            this.buttonCancel.Size = new System.Drawing.Size(100, 40);
+            this.buttonCancel.Size = new System.Drawing.Size(140, 42);
             this.buttonCancel.TabIndex = 0;
             this.buttonCancel.Text = "Cancel";
             this.buttonCancel.UseVisualStyleBackColor = true;
@@ -180,47 +185,23 @@ namespace OpenEphys.Onix.Design
             // panelButtons
             // 
             this.panelButtons.AutoSize = true;
-            this.panelButtons.Controls.Add(this.buttonLoad);
-            this.panelButtons.Controls.Add(this.buttonSave);
             this.panelButtons.Controls.Add(this.buttonOk);
             this.panelButtons.Controls.Add(this.buttonCancel);
             this.panelButtons.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelButtons.Location = new System.Drawing.Point(0, 0);
             this.panelButtons.Name = "panelButtons";
-            this.panelButtons.Size = new System.Drawing.Size(469, 65);
+            this.panelButtons.Size = new System.Drawing.Size(469, 68);
             this.panelButtons.TabIndex = 0;
-            // 
-            // buttonLoad
-            // 
-            this.buttonLoad.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonLoad.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonLoad.Location = new System.Drawing.Point(25, 17);
-            this.buttonLoad.Name = "buttonLoad";
-            this.buttonLoad.Size = new System.Drawing.Size(100, 40);
-            this.buttonLoad.TabIndex = 6;
-            this.buttonLoad.Text = "Load";
-            this.buttonLoad.UseVisualStyleBackColor = true;
-            this.buttonLoad.Click += new System.EventHandler(this.ButtonLoad_Click);
-            // 
-            // buttonSave
-            // 
-            this.buttonSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonSave.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonSave.Location = new System.Drawing.Point(134, 17);
-            this.buttonSave.Name = "buttonSave";
-            this.buttonSave.Size = new System.Drawing.Size(100, 40);
-            this.buttonSave.TabIndex = 5;
-            this.buttonSave.Text = "Save";
-            this.buttonSave.UseVisualStyleBackColor = true;
-            this.buttonSave.Click += new System.EventHandler(this.ButtonSave_Click);
             // 
             // buttonOk
             // 
-            this.buttonOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonOk.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonOk.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonOk.Location = new System.Drawing.Point(243, 17);
+            this.buttonOk.Location = new System.Drawing.Point(81, 13);
             this.buttonOk.Name = "buttonOk";
-            this.buttonOk.Size = new System.Drawing.Size(100, 40);
+            this.buttonOk.Size = new System.Drawing.Size(140, 42);
             this.buttonOk.TabIndex = 4;
             this.buttonOk.Text = "OK";
             this.buttonOk.UseVisualStyleBackColor = true;
@@ -553,10 +534,10 @@ namespace OpenEphys.Onix.Design
             this.tabControlVisualization.Controls.Add(this.tabPageWaveform);
             this.tabControlVisualization.Controls.Add(this.tabPageTable);
             this.tabControlVisualization.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabControlVisualization.Location = new System.Drawing.Point(0, 0);
+            this.tabControlVisualization.Location = new System.Drawing.Point(0, 33);
             this.tabControlVisualization.Name = "tabControlVisualization";
             this.tabControlVisualization.SelectedIndex = 0;
-            this.tabControlVisualization.Size = new System.Drawing.Size(1330, 860);
+            this.tabControlVisualization.Size = new System.Drawing.Size(1330, 827);
             this.tabControlVisualization.TabIndex = 6;
             // 
             // tabPageWaveform
@@ -565,7 +546,7 @@ namespace OpenEphys.Onix.Design
             this.tabPageWaveform.Location = new System.Drawing.Point(4, 29);
             this.tabPageWaveform.Name = "tabPageWaveform";
             this.tabPageWaveform.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageWaveform.Size = new System.Drawing.Size(1322, 827);
+            this.tabPageWaveform.Size = new System.Drawing.Size(1322, 794);
             this.tabPageWaveform.TabIndex = 0;
             this.tabPageWaveform.Text = "Stimulus Waveform";
             this.tabPageWaveform.UseVisualStyleBackColor = true;
@@ -576,7 +557,7 @@ namespace OpenEphys.Onix.Design
             this.tabPageTable.Location = new System.Drawing.Point(4, 29);
             this.tabPageTable.Name = "tabPageTable";
             this.tabPageTable.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageTable.Size = new System.Drawing.Size(1322, 827);
+            this.tabPageTable.Size = new System.Drawing.Size(1322, 794);
             this.tabPageTable.TabIndex = 1;
             this.tabPageTable.Text = "Table";
             this.tabPageTable.UseVisualStyleBackColor = true;
@@ -593,7 +574,7 @@ namespace OpenEphys.Onix.Design
             this.dataGridViewStimulusTable.Name = "dataGridViewStimulusTable";
             this.dataGridViewStimulusTable.RowHeadersWidth = 62;
             this.dataGridViewStimulusTable.RowTemplate.Height = 28;
-            this.dataGridViewStimulusTable.Size = new System.Drawing.Size(1316, 821);
+            this.dataGridViewStimulusTable.Size = new System.Drawing.Size(1316, 788);
             this.dataGridViewStimulusTable.TabIndex = 0;
             this.dataGridViewStimulusTable.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridViewStimulusTable_CellEndEdit);
             this.dataGridViewStimulusTable.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.DataGridViewStimulusTable_DataBindingComplete);
@@ -607,6 +588,7 @@ namespace OpenEphys.Onix.Design
             // splitContainer1.Panel1
             // 
             this.splitContainer1.Panel1.Controls.Add(this.tabControlVisualization);
+            this.splitContainer1.Panel1.Controls.Add(this.menuStrip1);
             // 
             // splitContainer1.Panel2
             // 
@@ -614,6 +596,43 @@ namespace OpenEphys.Onix.Design
             this.splitContainer1.Size = new System.Drawing.Size(1803, 860);
             this.splitContainer1.SplitterDistance = 1330;
             this.splitContainer1.TabIndex = 6;
+            // 
+            // menuStrip1
+            // 
+            this.menuStrip1.GripMargin = new System.Windows.Forms.Padding(2, 2, 0, 2);
+            this.menuStrip1.ImageScalingSize = new System.Drawing.Size(24, 24);
+            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.fileToolStripMenuItem});
+            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
+            this.menuStrip1.Name = "menuStrip1";
+            this.menuStrip1.Size = new System.Drawing.Size(1330, 33);
+            this.menuStrip1.TabIndex = 7;
+            this.menuStrip1.Text = "menuStrip1";
+            // 
+            // fileToolStripMenuItem
+            // 
+            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.openFileToolStripMenuItem,
+            this.saveFileToolStripMenuItem});
+            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(54, 29);
+            this.fileToolStripMenuItem.Text = "File";
+            // 
+            // openFileToolStripMenuItem
+            // 
+            this.openFileToolStripMenuItem.Name = "openFileToolStripMenuItem";
+            this.openFileToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
+            this.openFileToolStripMenuItem.Size = new System.Drawing.Size(270, 34);
+            this.openFileToolStripMenuItem.Text = "Open File";
+            this.openFileToolStripMenuItem.Click += new System.EventHandler(this.MenuItemLoadFile_Click);
+            // 
+            // saveFileToolStripMenuItem
+            // 
+            this.saveFileToolStripMenuItem.Name = "saveFileToolStripMenuItem";
+            this.saveFileToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
+            this.saveFileToolStripMenuItem.Size = new System.Drawing.Size(270, 34);
+            this.saveFileToolStripMenuItem.Text = "Save File";
+            this.saveFileToolStripMenuItem.Click += new System.EventHandler(this.MenuItemSaveFile_Click);
             // 
             // splitContainer2
             // 
@@ -631,7 +650,7 @@ namespace OpenEphys.Onix.Design
             // 
             this.splitContainer2.Panel2.Controls.Add(this.panelButtons);
             this.splitContainer2.Size = new System.Drawing.Size(469, 860);
-            this.splitContainer2.SplitterDistance = 790;
+            this.splitContainer2.SplitterDistance = 787;
             this.splitContainer2.SplitterWidth = 5;
             this.splitContainer2.TabIndex = 0;
             // 
@@ -650,8 +669,8 @@ namespace OpenEphys.Onix.Design
             // 
             this.splitContainer3.Panel2.Controls.Add(this.tabControlParameters);
             this.splitContainer3.Panel2MinSize = 315;
-            this.splitContainer3.Size = new System.Drawing.Size(469, 790);
-            this.splitContainer3.SplitterDistance = 446;
+            this.splitContainer3.Size = new System.Drawing.Size(469, 787);
+            this.splitContainer3.SplitterDistance = 443;
             this.splitContainer3.SplitterWidth = 8;
             this.splitContainer3.TabIndex = 0;
             // 
@@ -669,7 +688,7 @@ namespace OpenEphys.Onix.Design
             this.zedGraphChannels.ScrollMinX = 0D;
             this.zedGraphChannels.ScrollMinY = 0D;
             this.zedGraphChannels.ScrollMinY2 = 0D;
-            this.zedGraphChannels.Size = new System.Drawing.Size(469, 446);
+            this.zedGraphChannels.Size = new System.Drawing.Size(469, 443);
             this.zedGraphChannels.TabIndex = 3;
             this.zedGraphChannels.UseExtendedPrintDialog = true;
             this.zedGraphChannels.MouseDownEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.ZedGraphChannels_MouseDownEvent);
@@ -688,6 +707,7 @@ namespace OpenEphys.Onix.Design
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.linkLabelDocumentation);
             this.Controls.Add(this.statusStrip);
+            this.MainMenuStrip = this.menuStrip1;
             this.MinimumSize = new System.Drawing.Size(146, 56);
             this.Name = "Rhs2116StimulusSequenceDialog";
             this.Text = "Rhs2116StimulusSequenceDialog";
@@ -708,9 +728,12 @@ namespace OpenEphys.Onix.Design
             this.tabPageTable.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewStimulusTable)).EndInit();
             this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel1.PerformLayout();
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
+            this.menuStrip1.ResumeLayout(false);
+            this.menuStrip1.PerformLayout();
             this.splitContainer2.Panel1.ResumeLayout(false);
             this.splitContainer2.Panel2.ResumeLayout(false);
             this.splitContainer2.Panel2.PerformLayout();
@@ -773,7 +796,9 @@ namespace OpenEphys.Onix.Design
         private System.Windows.Forms.ComboBox comboBoxStepSize;
         private System.Windows.Forms.GroupBox groupBoxCathode;
         private System.Windows.Forms.GroupBox groupBoxAnode;
-        private System.Windows.Forms.Button buttonLoad;
-        private System.Windows.Forms.Button buttonSave;
+        private System.Windows.Forms.MenuStrip menuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem openFileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem saveFileToolStripMenuItem;
     }
 }

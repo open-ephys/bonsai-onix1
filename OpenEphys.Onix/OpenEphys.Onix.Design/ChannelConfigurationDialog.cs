@@ -36,7 +36,7 @@ namespace OpenEphys.Onix.Design
             ChannelConfiguration = DeserializeString(Properties.Resources.simple_rhs2116_headstage_probe_interface);
         }
 
-        private void LoadChannelLayout()
+        private void OpenFile()
         {
             using OpenFileDialog ofd = new();
 
@@ -246,13 +246,7 @@ namespace OpenEphys.Onix.Design
             zedGraph.GraphPane.YAxis.Scale.MinAuto = true;
         }
 
-        private void ButtonNewChannelConfiguration_Click(object sender, System.EventArgs e)
-        {
-            LoadChannelLayout();
-            DrawChannels(zedGraphChannels, ChannelConfiguration);
-        }
-
-        private void ButtonSaveChannelConfiguration_Click(object sender, EventArgs e)
+        private void MenuItemSaveFile_Click(object sender, EventArgs e)
         {
             using SaveFileDialog sfd = new();
             sfd.Filter = "Probe Interface Files (*.json)|*.json";
@@ -273,6 +267,12 @@ namespace OpenEphys.Onix.Design
         {
             ResizeAxes(zedGraphChannels);
             zedGraphChannels.Refresh();
+        }
+
+        private void MenuItemOpenFile_Click(object sender, EventArgs e)
+        {
+            OpenFile();
+            DrawChannels(zedGraphChannels, ChannelConfiguration);
         }
     }
 }
