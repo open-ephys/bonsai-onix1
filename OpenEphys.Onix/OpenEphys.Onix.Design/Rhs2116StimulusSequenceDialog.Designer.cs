@@ -138,12 +138,10 @@
             // 
             // buttonCancel
             // 
-            this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.buttonCancel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonCancel.Location = new System.Drawing.Point(239, 13);
+            this.buttonCancel.Location = new System.Drawing.Point(322, 9);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(140, 42);
             this.buttonCancel.TabIndex = 0;
@@ -190,16 +188,14 @@
             this.panelButtons.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelButtons.Location = new System.Drawing.Point(0, 0);
             this.panelButtons.Name = "panelButtons";
-            this.panelButtons.Size = new System.Drawing.Size(469, 68);
+            this.panelButtons.Size = new System.Drawing.Size(469, 60);
             this.panelButtons.TabIndex = 0;
             // 
             // buttonOk
             // 
-            this.buttonOk.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonOk.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonOk.Location = new System.Drawing.Point(81, 13);
+            this.buttonOk.Location = new System.Drawing.Point(173, 9);
             this.buttonOk.Name = "buttonOk";
             this.buttonOk.Size = new System.Drawing.Size(140, 42);
             this.buttonOk.TabIndex = 4;
@@ -215,7 +211,7 @@
             this.tabControlParameters.Location = new System.Drawing.Point(0, 0);
             this.tabControlParameters.Name = "tabControlParameters";
             this.tabControlParameters.SelectedIndex = 0;
-            this.tabControlParameters.Size = new System.Drawing.Size(469, 336);
+            this.tabControlParameters.Size = new System.Drawing.Size(469, 340);
             this.tabControlParameters.TabIndex = 1;
             // 
             // tabPageAddPulse
@@ -224,7 +220,7 @@
             this.tabPageAddPulse.Location = new System.Drawing.Point(4, 29);
             this.tabPageAddPulse.Name = "tabPageAddPulse";
             this.tabPageAddPulse.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageAddPulse.Size = new System.Drawing.Size(461, 303);
+            this.tabPageAddPulse.Size = new System.Drawing.Size(461, 307);
             this.tabPageAddPulse.TabIndex = 0;
             this.tabPageAddPulse.Text = "Add Pulses";
             this.tabPageAddPulse.UseVisualStyleBackColor = true;
@@ -252,7 +248,7 @@
             this.panelParameters.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelParameters.Location = new System.Drawing.Point(3, 3);
             this.panelParameters.Name = "panelParameters";
-            this.panelParameters.Size = new System.Drawing.Size(455, 297);
+            this.panelParameters.Size = new System.Drawing.Size(455, 301);
             this.panelParameters.TabIndex = 0;
             // 
             // groupBoxCathode
@@ -615,7 +611,7 @@
             this.openFileToolStripMenuItem,
             this.saveFileToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(54, 29);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(54, 32);
             this.fileToolStripMenuItem.Text = "File";
             // 
             // openFileToolStripMenuItem
@@ -650,7 +646,7 @@
             // 
             this.splitContainer2.Panel2.Controls.Add(this.panelButtons);
             this.splitContainer2.Size = new System.Drawing.Size(469, 860);
-            this.splitContainer2.SplitterDistance = 787;
+            this.splitContainer2.SplitterDistance = 795;
             this.splitContainer2.SplitterWidth = 5;
             this.splitContainer2.TabIndex = 0;
             // 
@@ -669,8 +665,8 @@
             // 
             this.splitContainer3.Panel2.Controls.Add(this.tabControlParameters);
             this.splitContainer3.Panel2MinSize = 315;
-            this.splitContainer3.Size = new System.Drawing.Size(469, 787);
-            this.splitContainer3.SplitterDistance = 443;
+            this.splitContainer3.Size = new System.Drawing.Size(469, 795);
+            this.splitContainer3.SplitterDistance = 447;
             this.splitContainer3.SplitterWidth = 8;
             this.splitContainer3.TabIndex = 0;
             // 
@@ -688,7 +684,7 @@
             this.zedGraphChannels.ScrollMinX = 0D;
             this.zedGraphChannels.ScrollMinY = 0D;
             this.zedGraphChannels.ScrollMinY2 = 0D;
-            this.zedGraphChannels.Size = new System.Drawing.Size(469, 443);
+            this.zedGraphChannels.Size = new System.Drawing.Size(469, 447);
             this.zedGraphChannels.TabIndex = 3;
             this.zedGraphChannels.UseExtendedPrintDialog = true;
             this.zedGraphChannels.MouseDownEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.ZedGraphChannels_MouseDownEvent);
