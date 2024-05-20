@@ -14,14 +14,14 @@ namespace OpenEphys.Onix
         {
             var flexI2C = new I2CRegisterContext(serializer, NeuropixelsV2e.FlexEEPROMAddress);
             var sn = flexI2C.ReadBytes(OFFSET_ID, 8);
-            ProbeSN = BitConverter.ToUInt64(sn, 0);
+            ProbeSerialNumber = BitConverter.ToUInt64(sn, 0);
             Version = flexI2C.ReadByte(OFFSET_VERSION);
             Revision = flexI2C.ReadByte(OFFSET_REVISION);
             PartNumber = flexI2C.ReadString(OFFSET_FLEXPN, 20);
             ProbePartNumber = flexI2C.ReadString(OFFSET_PROBEPN, 20);
         }
 
-        public ulong ProbeSN { get; }
+        public ulong ProbeSerialNumber { get; }
 
         public byte Version { get; }
 

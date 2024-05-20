@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Linq;
 using System.Reactive.Disposables;
 using System.Threading;
 using Bonsai;
@@ -20,31 +19,31 @@ namespace OpenEphys.Onix
 
         [Category(ConfigurationCategory)]
         [Description("If true, the headstage LED will illuminate during acquisition. Otherwise it will remain off.")]
-        public bool LedEnabled { get; set; } = true;
+        public bool EnableLed { get; set; } = true;
 
         [Category(ConfigurationCategory)]
         [Description("Amplifier gain for spike-band.")]
-        public NeuropixelsV1eSettings.Gain SpikeAmplifierGain { get; set; } = NeuropixelsV1eSettings.Gain.x1000;
+        public NeuropixelsV1Gain SpikeAmplifierGain { get; set; } = NeuropixelsV1Gain.x1000;
 
         [Category(ConfigurationCategory)]
         [Description("Amplifier gain for LFP-band.")]
-        public NeuropixelsV1eSettings.Gain LfpAmplifierGain { get; set; } = NeuropixelsV1eSettings.Gain.x50;
+        public NeuropixelsV1Gain LfpAmplifierGain { get; set; } = NeuropixelsV1Gain.x50;
 
         [Category(ConfigurationCategory)]
         [Description("Reference selection.")]
-        public NeuropixelsV1eSettings.ReferenceSource Reference { get; set; } = NeuropixelsV1eSettings.ReferenceSource.Ext;
+        public NeuropixelsV1ReferenceSource Reference { get; set; } = NeuropixelsV1ReferenceSource.Ext;
 
         [Category(ConfigurationCategory)]
-        [Description("If true, activates a 300 Hz high-pass in the spike-band data stream.")]
+        [Description("If true, activates a 300 Hz high-pass filter in the spike-band data stream.")]
         public bool SpikeFilter { get; set; } = true;
 
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
-        [Description("Path to the NRIC1384 gain calibraiton file.")]
+        [Description("Path to the NRIC1384 gain calibration file.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string GainCalibrationFile { get; set; }
 
         [FileNameFilter("ADC calibration files (*_ADCCalibration.csv)|*_ADCCalibration.csv")]
-        [Description("Path to the NRIC1384 ADC calibraiton file.")]
+        [Description("Path to the NRIC1384 ADC calibration file.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string AdcCalibrationFile { get; set; }
 
@@ -53,7 +52,7 @@ namespace OpenEphys.Onix
             var enable = Enable;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
-            var ledEnabled = LedEnabled;
+            var ledEnabled = EnableLed;
             return source.ConfigureDevice(context =>
             {
                 // configure device via the DS90UB9x deserializer device
@@ -74,31 +73,16 @@ namespace OpenEphys.Onix
                 // issue full mux reset to the probe
                 var gpo10Config = NeuropixelsV1e.DefaultGPO10Config;
                 ResetProbe(serializer, gpo10Config);
-                var i2cNpx = new I2CRegisterContext(device, NeuropixelsV1e.ProbeAddress);
 
                 // configure probe streaming
-                if (probeMetadata.ProbeSN == null)
-                    throw new WorkflowException("Probe serial number could not be read.");
-
-                // get probe set up to receive configuration
-                i2cNpx.WriteByte(NeuropixelsV1e.CAL_MOD, (uint)NeuropixelsV1e.CalibrationRegisterValues.CAL_OFF);
-                i2cNpx.WriteByte(NeuropixelsV1e.TEST_CONFIG1, 0);
-                i2cNpx.WriteByte(NeuropixelsV1e.TEST_CONFIG2, 0);
-                i2cNpx.WriteByte(NeuropixelsV1e.TEST_CONFIG3, 0);
-                i2cNpx.WriteByte(NeuropixelsV1e.TEST_CONFIG4, 0);
-                i2cNpx.WriteByte(NeuropixelsV1e.TEST_CONFIG5, 0);
-                i2cNpx.WriteByte(NeuropixelsV1e.SYNC, 0);
-                i2cNpx.WriteByte(NeuropixelsV1e.REC_MOD, (uint)NeuropixelsV1e.RecordRegisterValues.ACTIVE);
-                i2cNpx.WriteByte(NeuropixelsV1e.OP_MODE, (uint)NeuropixelsV1e.OperationRegisterValues.RECORD);
+                if (probeMetadata.ProbeSerialNumber == null)
+                    throw new InvalidOperationException("Probe serial number could not be read.");
 
                 // program shift registers
-                var settings = new NeuropixelsV1eSettings(SpikeAmplifierGain, LfpAmplifierGain, Reference, SpikeFilter, GainCalibrationFile, AdcCalibrationFile);
-                settings.WriteShiftRegisters(i2cNpx);
-
-                // TODO: Hack inside settings.WriteShiftRegisters() above puts probe in reset set that needs to be
-                // undone here
-                i2cNpx.WriteByte(NeuropixelsV1e.OP_MODE, (uint)NeuropixelsV1e.OperationRegisterValues.RECORD);
-                i2cNpx.WriteByte(NeuropixelsV1e.REC_MOD, (uint)NeuropixelsV1e.RecordRegisterValues.ACTIVE);
+                var probeControl = new NeuropixelsV1eRegisterContext(device, NeuropixelsV1e.ProbeAddress, SpikeAmplifierGain, LfpAmplifierGain, Reference, SpikeFilter, GainCalibrationFile, AdcCalibrationFile);
+                probeControl.InitializeProbe();
+                probeControl.WriteConfiguration();
+                probeControl.StartAcquisition();
 
                 // turn on LED
                 if (ledEnabled)
@@ -106,9 +90,7 @@ namespace OpenEphys.Onix
                     TurnOnLed(serializer, NeuropixelsV1e.DefaultGPO32Config);
                 }
 
-                var adcThresholds = settings.Adcs.ToList().Select(a => (ushort)a.Threshold).ToArray();
-                var adcOffsets = settings.Adcs.ToList().Select(a => (ushort)a.Offset).ToArray();
-                var deviceInfo = new NeuropixesV1eDeviceInfo(context, DeviceType, deviceAddress, settings.ApGainCorrection, settings.LfpGainCorrection, adcThresholds, adcOffsets);
+                var deviceInfo = new NeuropixesV1eDeviceInfo(context, DeviceType, deviceAddress, probeControl);
                 var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
                 var shutdown = Disposable.Create(() =>
                 {
@@ -176,24 +158,6 @@ namespace OpenEphys.Onix
         }
     }
 
-    class NeuropixesV1eDeviceInfo : DeviceInfo
-    {
-        public NeuropixesV1eDeviceInfo(ContextTask context, Type deviceType, uint deviceAddress,
-            double apGainCorrection, double lfpGainCorrection, ushort[] thresholds, ushort[] offsets)
-            : base(context, deviceType, deviceAddress)
-        {
-            ApGainCorrection = apGainCorrection;
-            LfpGainCorrection = lfpGainCorrection;
-            AdcThresholds = thresholds;
-            AdcOffsets = offsets;
-        }
-
-        public double ApGainCorrection { get; }
-        public double LfpGainCorrection { get; }
-        public ushort[] AdcThresholds { get; }
-        public ushort[] AdcOffsets { get; }
-    }
-
     static class NeuropixelsV1e
     {
         public const int ProbeAddress = 0x70;
@@ -230,49 +194,6 @@ namespace OpenEphys.Onix
         public const uint SR_LENGTH1 = 0X10;
         public const uint SOFT_RESET = 0X11;
 
-        [Flags]
-        public enum CalibrationRegisterValues : uint
-        {
-            CAL_OFF = 0,
-            OSC_ACTIVE = 1 << 4, // 0 = external osc inactive, 1 = activate the external calibration oscillator
-            ADC_CAL = 1 << 5, // Enable ADC calibration
-            CH_CAL = 1 << 6, // Enable channel gain calibration
-            PIX_CAL = 1 << 7, // Enable pixel + channel gain calibration
-
-            // Useful combinations
-            OSC_ACTIVE_AND_ADC_CAL = OSC_ACTIVE | ADC_CAL,
-            OSC_ACTIVE_AND_CH_CAL = OSC_ACTIVE | CH_CAL,
-            OSC_ACTIVE_AND_PIX_CAL = OSC_ACTIVE | PIX_CAL,
-
-        };
-
-        [Flags]
-        public enum RecordRegisterValues : uint
-        {
-            RESET_ALL = 1 << 5, // 1 = Set analog SR chains to default values
-            DIG_ENABLE = 1 << 6, // 0 = Reset the MUX, ADC, and PSB counter, 1 = Disable reset
-            CH_ENABLE = 1 << 7, // 0 = Reset channel pseudo-registers, 1 = Disable reset
-
-            // Useful combinations
-            SR_RESET = RESET_ALL | CH_ENABLE | DIG_ENABLE,
-            DIG_CH_RESET = 0,  // Yes, this is actually correct
-            ACTIVE = DIG_ENABLE | CH_ENABLE,
-        };
-
-        [Flags]
-        public enum OperationRegisterValues : uint
-        {
-            TEST = 1 << 3, // Enable Test mode
-            DIG_TEST = 1 << 4, // Enable Digital Test mode
-            CALIBRATE = 1 << 5, // Enable calibration mode
-            RECORD = 1 << 6, // Enable recording mode
-            POWER_DOWN = 1 << 7, // Enable power down mode
-
-            // Useful combinations
-            RECORD_AND_DIG_TEST = RECORD | DIG_TEST,
-            RECORD_AND_CALIBRATE = RECORD | CALIBRATE,
-        };
-
         internal class NameConverter : DeviceNameConverter
         {
             public NameConverter()
@@ -280,5 +201,66 @@ namespace OpenEphys.Onix
             {
             }
         }
+    }
+
+    [Flags]
+    public enum NeuropixelsV1CalibrationRegisterValues : uint
+    {
+        CAL_OFF = 0,
+        OSC_ACTIVE = 1 << 4, // 0 = external osc inactive, 1 = activate the external calibration oscillator
+        ADC_CAL = 1 << 5, // Enable ADC calibration
+        CH_CAL = 1 << 6, // Enable channel gain calibration
+        PIX_CAL = 1 << 7, // Enable pixel + channel gain calibration
+
+        // Useful combinations
+        OSC_ACTIVE_AND_ADC_CAL = OSC_ACTIVE | ADC_CAL,
+        OSC_ACTIVE_AND_CH_CAL = OSC_ACTIVE | CH_CAL,
+        OSC_ACTIVE_AND_PIX_CAL = OSC_ACTIVE | PIX_CAL,
+
+    };
+
+    [Flags]
+    public enum NeuropixelsV1RecordRegisterValues : uint
+    {
+        RESET_ALL = 1 << 5, // 1 = Set analog SR chains to default values
+        DIG_ENABLE = 1 << 6, // 0 = Reset the MUX, ADC, and PSB counter, 1 = Disable reset
+        CH_ENABLE = 1 << 7, // 0 = Reset channel pseudo-registers, 1 = Disable reset
+
+        // Useful combinations
+        SR_RESET = RESET_ALL | CH_ENABLE | DIG_ENABLE,
+        DIG_CH_RESET = 0,  // Yes, this is actually correct
+        ACTIVE = DIG_ENABLE | CH_ENABLE,
+    };
+
+    [Flags]
+    public enum NeuropixelsV1OperationRegisterValues : uint
+    {
+        TEST = 1 << 3, // Enable Test mode
+        DIG_TEST = 1 << 4, // Enable Digital Test mode
+        CALIBRATE = 1 << 5, // Enable calibration mode
+        RECORD = 1 << 6, // Enable recording mode
+        POWER_DOWN = 1 << 7, // Enable power down mode
+
+        // Useful combinations
+        RECORD_AND_DIG_TEST = RECORD | DIG_TEST,
+        RECORD_AND_CALIBRATE = RECORD | CALIBRATE,
+    };
+
+    public enum NeuropixelsV1ReferenceSource : byte
+    {
+        Ext = 0b001,
+        Tip = 0b010
+    }
+
+    public enum NeuropixelsV1Gain : byte
+    {
+        x50 = 0b000,
+        x125 = 0b001,
+        x250 = 0b010,
+        x500 = 0b011,
+        x1000 = 0b100,
+        x1500 = 0b101,
+        x2000 = 0b110,
+        x3000 = 0b111
     }
 }
