@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -389,7 +389,6 @@ namespace OpenEphys.Onix
             }
 
             DualSequences = false;
-            ChannelConfiguration = new();
         }
 
         /// <summary>
@@ -410,7 +409,6 @@ namespace OpenEphys.Onix
             }
 
             DualSequences = dualSequences;
-            ChannelConfiguration = new();
         }
 
         /// <summary>
@@ -422,14 +420,11 @@ namespace OpenEphys.Onix
             Stimuli = Array.ConvertAll(sequence.Stimuli, stimulus => stimulus.Clone());
             CurrentStepSize = sequence.CurrentStepSize;
             DualSequences = sequence.DualSequences;
-            ChannelConfiguration = sequence.ChannelConfiguration;
         }
 
         public Rhs2116Stimulus[] Stimuli { get; set; }
 
         public Rhs2116StepSize CurrentStepSize { get; set; } = Rhs2116StepSize.Step5000nA;
-
-        public ProbeGroup ChannelConfiguration { get; set; }
 
         /// <summary>
         /// Maximum length of the sequence across all channels

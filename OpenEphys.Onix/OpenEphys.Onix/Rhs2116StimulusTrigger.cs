@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Reactive;
 using System.Reactive.Subjects;
@@ -35,8 +35,6 @@ namespace OpenEphys.Onix
                     Observable.Create<bool>(observer =>
                     {
                         var info = (Rhs2116TriggerDeviceInfo)deviceInfo;
-
-                        StimulusSequence.ChannelConfiguration = info.ChannelConfiguration;
 
                         var device = info.GetDeviceContext(typeof(Rhs2116Trigger));
                         var triggerObserver = Observer.Create<bool>(
