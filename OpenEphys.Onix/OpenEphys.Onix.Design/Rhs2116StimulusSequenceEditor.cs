@@ -19,7 +19,7 @@ namespace OpenEphys.Onix.Design
 
             if (editorService != null)
             {
-                var editorDialog = new Rhs2116StimulusSequenceDialog(value as Rhs2116StimulusSequence);
+                var editorDialog = new Rhs2116StimulusSequenceDialog(value as Rhs2116StimulusSequence, null);
                 
                 if (editorDialog.ShowDialog() == DialogResult.OK)
                 {

@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Threading;
 using System.Drawing.Design;
+using OpenEphys.ProbeInterface;
 
 namespace OpenEphys.Onix
 {
@@ -9,7 +10,7 @@ namespace OpenEphys.Onix
     public class ConfigureHeadstageRhs2116 : HubDeviceFactory
     {
         PortName port;
-        ProbeGroup probeGroup = new();
+        ProbeGroup probeGroup = null;
         readonly ConfigureHeadstageRhs2116LinkController LinkController = new();
 
         public ConfigureHeadstageRhs2116()

@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing.Design;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
+using OpenEphys.ProbeInterface;
 
 namespace OpenEphys.Onix.Design
 {
@@ -23,7 +24,7 @@ namespace OpenEphys.Onix.Design
 
                 if (editorDialog.ShowDialog() == DialogResult.OK)
                 {
-                    if (editorDialog.ChannelConfiguration.IsValid)
+                    if (editorDialog.ChannelConfiguration != null)
                         return editorDialog.ChannelConfiguration;
 
                     MessageBox.Show("Warning: Channel configuration was not valid; all settings were discarded.");

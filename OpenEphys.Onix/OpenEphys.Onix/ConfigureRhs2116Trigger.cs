@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using OpenEphys.ProbeInterface;
 
 namespace OpenEphys.Onix
 {
@@ -16,7 +17,7 @@ namespace OpenEphys.Onix
 
         [Category(ConfigurationCategory)]
         [Description("Probe Interface group to define channel mapping")]
-        public ProbeGroup ChannelConfiguration { get; set; } = new();
+        public ProbeGroup ChannelConfiguration { get; set; }
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {

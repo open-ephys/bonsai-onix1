@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Windows.Forms;
 using ZedGraph;
 using System;
+using OpenEphys.ProbeInterface;
 
 namespace OpenEphys.Onix.Design
 {
@@ -20,11 +21,13 @@ namespace OpenEphys.Onix.Design
         {
             InitializeComponent();
 
-            ChannelConfiguration = new(probeGroup);
-
-            if (ChannelConfiguration != null && !ChannelConfiguration.IsValid)
+            if (probeGroup == null)
             {
                 LoadDefaultChannelLayout();
+            }
+            else
+            {
+                ChannelConfiguration = new(probeGroup);
             }
 
             InitializeZedGraphChannels(zedGraphChannels);
@@ -49,7 +52,7 @@ namespace OpenEphys.Onix.Design
             {
                 ChannelConfiguration = DeserializeString(File.ReadAllText(ofd.FileName));
                 
-                if (ChannelConfiguration == null || !ChannelConfiguration.IsValid)
+                if (ChannelConfiguration == null)
                 {
                     MessageBox.Show("Error opening the JSON file.");
                     return;

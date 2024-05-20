@@ -6,6 +6,7 @@ using ZedGraph;
 using System.Text.Json;
 using System.IO;
 using System.Text.Json.Serialization;
+using OpenEphys.ProbeInterface;
 
 namespace OpenEphys.Onix.Design
 {
@@ -15,6 +16,8 @@ namespace OpenEphys.Onix.Design
         /// Holds a local copy of the Rhs2116StimulusSequence until the user presses Okay
         /// </summary>
         public Rhs2116StimulusSequence Sequence;
+
+        private ProbeGroup ChannelConfiguration;
 
         private const double SamplePeriodMicroSeconds = 1e6 / 30.1932367151e3;
 
@@ -29,7 +32,7 @@ namespace OpenEphys.Onix.Design
         /// Opens a dialog allowing for easy changing of stimulus sequence parameters
         /// </summary>
         /// <param name="sequence"></param>
-        public Rhs2116StimulusSequenceDialog(Rhs2116StimulusSequence sequence)
+        public Rhs2116StimulusSequenceDialog(Rhs2116StimulusSequence sequence, ProbeGroup channelConfiguration)
         {
             InitializeComponent();
 
@@ -43,7 +46,7 @@ namespace OpenEphys.Onix.Design
             comboBoxStepSize.DataSource = Enum.GetValues(typeof(Rhs2116StepSize));
             comboBoxStepSize.SelectedIndex = (int)Sequence.CurrentStepSize;
 
-            if (Sequence.ChannelConfiguration == null || !Sequence.ChannelConfiguration.IsValid || Sequence.ChannelConfiguration.NumContacts != 32)
+            if (channelConfiguration == null || channelConfiguration.NumContacts != 32)
             {
                 MessageBox.Show("Error: Something is wrong with the channel configuration." +
                     "Please open the ConfigureHeadstageRhs2116 node and choose the correct" +
@@ -51,6 +54,8 @@ namespace OpenEphys.Onix.Design
                 Close();
                 return;
             }
+
+            ChannelConfiguration = channelConfiguration;
 
             InitializeZedGraphChannels();
             DrawChannels();
@@ -250,7 +255,7 @@ namespace OpenEphys.Onix.Design
 
         private void DrawChannels()
         {
-            ChannelConfigurationDialog.DrawChannels(zedGraphChannels, Sequence.ChannelConfiguration);
+            ChannelConfigurationDialog.DrawChannels(zedGraphChannels, ChannelConfiguration);
         }
 
         private void LinkLabelDocumentation_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -488,10 +493,10 @@ namespace OpenEphys.Onix.Design
 
         private void AddContactIdToGridRow()
         {
-            if (Sequence.ChannelConfiguration == null || !Sequence.ChannelConfiguration.IsValid || Sequence.ChannelConfiguration.NumContacts != 32)
+            if (ChannelConfiguration == null || ChannelConfiguration.NumContacts != 32)
                 return;
 
-            var contactIds = Sequence.ChannelConfiguration.GetContactIds();
+            var contactIds = ChannelConfiguration.GetContactIds();
 
             for (int i = 0; i < contactIds.Length; i++)
             {
@@ -798,13 +803,13 @@ namespace OpenEphys.Onix.Design
         private bool ZedGraphChannels_MouseUpEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             if (zedGraphChannels.GraphPane.GraphObjList[SelectionAreaTag] is BoxObj selectionArea && selectionArea != null &&
-                Sequence.ChannelConfiguration != null && Sequence.ChannelConfiguration.IsValid && Sequence.ChannelConfiguration.NumContacts == 32)
+                ChannelConfiguration != null && ChannelConfiguration.NumContacts == 32)
             {
                 RectangleF rect = selectionArea.Location.Rect;
 
                 if (!rect.IsEmpty)
                 {
-                    string[] ids = Sequence.ChannelConfiguration.GetContactIds();
+                    string[] ids = ChannelConfiguration.GetContactIds();
 
                     foreach (string id in ids)
                     {
@@ -944,7 +949,6 @@ namespace OpenEphys.Onix.Design
 
                 if (sequence != null && sequence.Valid && sequence.Stimuli.Length == 32)
                 {
-                    sequence.ChannelConfiguration = Sequence.ChannelConfiguration;
                     Sequence = sequence;
                 }
                 else
