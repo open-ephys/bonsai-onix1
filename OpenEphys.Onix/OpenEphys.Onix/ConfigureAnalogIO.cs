@@ -132,25 +132,25 @@ namespace OpenEphys.Onix
                 device.WriteRegister(AnalogIO.CH10INRANGE, (uint)InputRange10);
                 device.WriteRegister(AnalogIO.CH11INRANGE, (uint)InputRange11);
 
-                var io_reg = 0u;
-                void SetIO(int channel, AnalogIODirection direction)
-                {
-                    io_reg = (io_reg & ~((uint)1 << channel)) | ((uint)(direction) << channel);
-                    device.WriteRegister(AnalogIO.CHDIR, io_reg);
-                }
+                // Build the whole value for CHDIR and write it once
+                static uint SetIO(uint io_reg, int channel, AnalogIODirection direction) =>
+                    (io_reg & ~((uint)1 << channel)) | ((uint)(direction) << channel);
 
-                SetIO(0, Direction00);
-                SetIO(1, Direction01);
-                SetIO(2, Direction02);
-                SetIO(3, Direction03);
-                SetIO(4, Direction04);
-                SetIO(5, Direction05);
-                SetIO(6, Direction06);
-                SetIO(7, Direction07);
-                SetIO(8, Direction08);
-                SetIO(9, Direction09);
-                SetIO(10, Direction10);
-                SetIO(11, Direction11);
+                var io_reg = 0u;
+                io_reg = SetIO(io_reg, 0, Direction00);
+                io_reg = SetIO(io_reg, 1, Direction01);
+                io_reg = SetIO(io_reg, 2, Direction02);
+                io_reg = SetIO(io_reg, 3, Direction03);
+                io_reg = SetIO(io_reg, 4, Direction04);
+                io_reg = SetIO(io_reg, 5, Direction05);
+                io_reg = SetIO(io_reg, 6, Direction06);
+                io_reg = SetIO(io_reg, 7, Direction07);
+                io_reg = SetIO(io_reg, 8, Direction08);
+                io_reg = SetIO(io_reg, 9, Direction09);
+                io_reg = SetIO(io_reg, 10, Direction10);
+                io_reg = SetIO(io_reg, 11, Direction11);
+                device.WriteRegister(AnalogIO.CHDIR, io_reg);
+
                 return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
             });
         }
