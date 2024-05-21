@@ -61,36 +61,6 @@ namespace OpenEphys.Onix.Design.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {
-        ///    &quot;specification&quot;: &quot;probeinterface&quot;,
-        ///    &quot;version&quot;: &quot;0.2.21&quot;,
-        ///    &quot;probes&quot;: [
-        ///        {
-        ///            &quot;ndim&quot;: 2,
-        ///            &quot;si_units&quot;: &quot;mm&quot;,
-        ///            &quot;annotations&quot;: {},
-        ///            &quot;contact_annotations&quot;: {},
-        ///            &quot;contact_positions&quot;: [
-        ///                [
-        ///                    1.0,
-        ///                    3.0
-        ///                ],
-        ///                [
-        ///                    2.0,
-        ///                    3.0
-        ///                ],
-        ///                [
-        ///                    3.0,
-        ///                    3.0
-        ///   [rest of string was truncated]&quot;;.
-        /// </summary>
-        internal static string simple_rhs2116_headstage_probe_interface {
-            get {
-                return ResourceManager.GetString("simple_rhs2116_headstage_probe_interface", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap StatusBlockedImage {

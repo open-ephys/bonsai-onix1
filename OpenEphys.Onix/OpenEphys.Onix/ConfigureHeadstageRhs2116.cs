@@ -10,7 +10,7 @@ namespace OpenEphys.Onix
     public class ConfigureHeadstageRhs2116 : HubDeviceFactory
     {
         PortName port;
-        ProbeGroup probeGroup = null;
+        Rhs2116ProbeGroup probeGroup = new();
         readonly ConfigureHeadstageRhs2116LinkController LinkController = new();
 
         public ConfigureHeadstageRhs2116()
@@ -59,7 +59,7 @@ namespace OpenEphys.Onix
         }
 
         [Editor("OpenEphys.Onix.Design.ChannelConfigurationEditor, OpenEphys.Onix.Design", typeof(UITypeEditor))]
-        public ProbeGroup ChannelConfiguration
+        public Rhs2116ProbeGroup ChannelConfiguration
         {
             get { return probeGroup; }
             set

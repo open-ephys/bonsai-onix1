@@ -20,7 +20,7 @@ namespace OpenEphys.Onix.Design
 
             if (editorService != null)
             {
-                var editorDialog = new ChannelConfigurationDialog(value as ProbeGroup);
+                var editorDialog = new ChannelConfigurationDialog(value as Rhs2116ProbeGroup);
 
                 if (editorDialog.ShowDialog() == DialogResult.OK)
                 {

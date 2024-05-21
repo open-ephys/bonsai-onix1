@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -15,9 +15,9 @@ namespace OpenEphys.Onix.Design
         public static readonly string ContactStringFormat = "Contact_{0}";
         public static readonly string TextStringFormat = "TextContact_{0}";
 
-        public ProbeGroup ChannelConfiguration;
+        public Rhs2116ProbeGroup ChannelConfiguration;
 
-        public ChannelConfigurationDialog(ProbeGroup probeGroup)
+        public ChannelConfigurationDialog(Rhs2116ProbeGroup probeGroup)
         {
             InitializeComponent();
 
@@ -36,7 +36,7 @@ namespace OpenEphys.Onix.Design
 
         private void LoadDefaultChannelLayout()
         {
-            ChannelConfiguration = DeserializeString(Properties.Resources.simple_rhs2116_headstage_probe_interface);
+            ChannelConfiguration = new();
         }
 
         private void OpenFile()
@@ -60,7 +60,7 @@ namespace OpenEphys.Onix.Design
             }
         }
 
-        private static ProbeGroup DeserializeString(string channelLayout)
+        private static Rhs2116ProbeGroup DeserializeString(string channelLayout)
         {
             var options = new JsonSerializerOptions
             {
@@ -71,7 +71,7 @@ namespace OpenEphys.Onix.Design
                 NumberHandling = JsonNumberHandling.AllowReadingFromString
             };
 
-            return JsonSerializer.Deserialize<ProbeGroup>(channelLayout, options);
+            return JsonSerializer.Deserialize<Rhs2116ProbeGroup>(channelLayout, options);
         }
 
         public static void DrawChannels(ZedGraphControl zedGraph, ProbeGroup probeGroup)
