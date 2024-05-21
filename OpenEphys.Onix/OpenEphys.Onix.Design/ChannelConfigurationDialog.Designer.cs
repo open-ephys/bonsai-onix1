@@ -37,6 +37,7 @@
             this.menuItemSaveFile = new System.Windows.Forms.ToolStripMenuItem();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonOK = new System.Windows.Forms.Button();
+            this.loadDefaultToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -100,7 +101,8 @@
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuItemOpenFile,
-            this.menuItemSaveFile});
+            this.menuItemSaveFile,
+            this.loadDefaultToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(54, 29);
             this.fileToolStripMenuItem.Text = "File";
@@ -143,6 +145,13 @@
             this.buttonOK.Text = "OK";
             this.buttonOK.UseVisualStyleBackColor = true;
             // 
+            // loadDefaultToolStripMenuItem
+            // 
+            this.loadDefaultToolStripMenuItem.Name = "loadDefaultToolStripMenuItem";
+            this.loadDefaultToolStripMenuItem.Size = new System.Drawing.Size(270, 34);
+            this.loadDefaultToolStripMenuItem.Text = "Load Default";
+            this.loadDefaultToolStripMenuItem.Click += new System.EventHandler(this.LoadDefaultToolStripMenuItem_Click);
+            // 
             // ChannelConfigurationDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
@@ -173,5 +182,6 @@
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem menuItemOpenFile;
         private System.Windows.Forms.ToolStripMenuItem menuItemSaveFile;
+        private System.Windows.Forms.ToolStripMenuItem loadDefaultToolStripMenuItem;
     }
 }

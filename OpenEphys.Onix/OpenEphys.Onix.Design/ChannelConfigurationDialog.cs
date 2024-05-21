@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -275,6 +275,12 @@ namespace OpenEphys.Onix.Design
         private void MenuItemOpenFile_Click(object sender, EventArgs e)
         {
             OpenFile();
+            DrawChannels(zedGraphChannels, ChannelConfiguration);
+        }
+
+        private void LoadDefaultToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            LoadDefaultChannelLayout();
             DrawChannels(zedGraphChannels, ChannelConfiguration);
         }
     }
