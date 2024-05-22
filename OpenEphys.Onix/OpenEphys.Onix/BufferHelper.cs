@@ -42,7 +42,7 @@ namespace OpenEphys.Onix
             return data;
         }
 
-        public static Mat CopyConvertBuffer<TBuffer>(
+        public static Mat CopyTransposeBuffer<TBuffer>(
             TBuffer[] buffer,
             int sampleCount,
             int channelCount,
@@ -50,7 +50,14 @@ namespace OpenEphys.Onix
             Mat scale)
             where TBuffer : unmanaged
         {
-            var data = CopyConvertBuffer(buffer, sampleCount, channelCount, depth);
+            using var bufferHeader = Mat.CreateMatHeader(
+                buffer,
+                sampleCount,
+                channelCount,
+                depth,
+                channels: 1);
+            var data = new Mat(bufferHeader.Cols, bufferHeader.Rows, bufferHeader.Depth, 1);
+            CV.Transpose(bufferHeader, data);
             if (scale != null)
             {
                 CV.Mul(data, scale, data);
