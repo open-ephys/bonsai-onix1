@@ -14,6 +14,12 @@ namespace OpenEphys.Onix
 
         public AnalogIODataType DataType { get; set; } = AnalogIODataType.S16;
 
+        static float[] GetDivisionsPerVolt(DeviceInfo deviceInfo)
+        {
+            var ioDeviceInfo = (AnalogIODeviceInfo)deviceInfo;
+            return Array.ConvertAll(ioDeviceInfo.VoltsPerDivision, value => 1 / value);
+        }
+
         static Mat CreateSampleScale(int bufferSize, float[] divisionsPerVolt)
         {
             using var scaleHeader = Mat.CreateMatHeader(divisionsPerVolt);
@@ -34,25 +40,16 @@ namespace OpenEphys.Onix
                     var sampleScale = default(Mat);
                     var inputBuffer = default(Mat);
                     var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));
-                    var ioDeviceInfo = (AnalogIODeviceInfo)deviceInfo;
-                    var divisionsPerVolt = Array.ConvertAll(ioDeviceInfo.VoltsPerDivision, value => 1 / value);
+                    var divisionsPerVolt = GetDivisionsPerVolt(deviceInfo);
                     return source.Do(data =>
                     {
-                        if (data.Rows != AnalogIO.ChannelCount)
-                        {
-                            throw new InvalidOperationException(
-                                $"The input data matrix must have exactly {AnalogIO.ChannelCount} channels."
-                            );
-                        }
-
                         if (dataType == AnalogIODataType.S16 && data.Depth != Depth.S16 ||
                             dataType == AnalogIODataType.Volts && data.Depth != Depth.F32)
                         {
-                            throw new InvalidOperationException(
-                                $"Invalid input data type '{data.Depth}' for the specified analog IO configuration."
-                            );
+                            ThrowDataTypeException(data.Depth);
                         }
 
+                        AssertChannelCount(data.Rows);
                         if (bufferSize != data.Cols)
                         {
                             bufferSize = data.Cols;
@@ -80,13 +77,62 @@ namespace OpenEphys.Onix
 
         public IObservable<short[]> Process(IObservable<short[]> source)
         {
+            if (DataType != AnalogIODataType.S16)
+                ThrowDataTypeException(Depth.S16);
+
             return Observable.Using(
                 () => DeviceManager.ReserveDevice(DeviceName),
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
                 {
                     var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));
-                    return source.Do(device.Write);
+                    return source.Do(data =>
+                    {
+                        AssertChannelCount(data.Length);
+                        device.Write(data);
+                    });
                 }));
+        }
+
+        public IObservable<float[]> Process(IObservable<float[]> source)
+        {
+            if (DataType != AnalogIODataType.Volts)
+                ThrowDataTypeException(Depth.F32);
+
+            return Observable.Using(
+                () => DeviceManager.ReserveDevice(DeviceName),
+                disposable => disposable.Subject.SelectMany(deviceInfo =>
+                {
+                    var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));
+                    var divisionsPerVolt = GetDivisionsPerVolt(deviceInfo);
+                    return source.Do(data =>
+                    {
+                        AssertChannelCount(data.Length);
+                        var samples = new short[data.Length];
+                        for (int i = 0; i < samples.Length; i++)
+                        {
+                            samples[i] = (short)(data[i] * divisionsPerVolt[i]);
+                        }
+
+                        device.Write(samples);
+                    });
+                }));
+        }
+
+        static void AssertChannelCount(int channels)
+        {
+            if (channels != AnalogIO.ChannelCount)
+            {
+                throw new InvalidOperationException(
+                    $"The input data must have exactly {AnalogIO.ChannelCount} channels."
+                );
+            }
+        }
+
+        static void ThrowDataTypeException(Depth depth)
+        {
+            throw new InvalidOperationException(
+                $"Invalid input data type '{depth}' for the specified analog IO configuration."
+            );
         }
     }
 }
