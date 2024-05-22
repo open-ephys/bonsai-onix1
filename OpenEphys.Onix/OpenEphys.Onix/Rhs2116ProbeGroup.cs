@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using OpenEphys.ProbeInterface;
+using Newtonsoft.Json;
 
 namespace OpenEphys.Onix
 {
@@ -39,6 +40,12 @@ namespace OpenEphys.Onix
                             DefaultDeviceChannelIndices(1),
                             DefaultContactIds(),
                             DefaultShankIds());
+        }
+
+        [JsonConstructor]
+        public Rhs2116ProbeGroup(string specification, string version, Probe[] probes)
+            : base(specification, version, probes)
+        {
         }
 
         public Rhs2116ProbeGroup(Rhs2116ProbeGroup probeGroup)
