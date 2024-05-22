@@ -1,8 +1,6 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text.Json.Serialization;
-using System.Text.Json;
 using System.Windows.Forms;
 using ZedGraph;
 using System;
@@ -50,28 +48,18 @@ namespace OpenEphys.Onix.Design
 
             if (ofd.ShowDialog() == DialogResult.OK && File.Exists(ofd.FileName))
             {
-                ChannelConfiguration = DeserializeString(File.ReadAllText(ofd.FileName));
+                var channelConfiguration = DesignHelper.DeserializeString<Rhs2116ProbeGroup>(File.ReadAllText(ofd.FileName));
                 
-                if (ChannelConfiguration == null)
+                if (channelConfiguration == null || channelConfiguration.NumContacts != 32)
                 {
-                    MessageBox.Show("Error opening the JSON file.");
+                    MessageBox.Show("Error opening the JSON file. Incorrect number of contacts.");
                     return;
                 }
+                else
+                {
+                    ChannelConfiguration = channelConfiguration;
+                }
             }
-        }
-
-        private static Rhs2116ProbeGroup DeserializeString(string channelLayout)
-        {
-            var options = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-                IncludeFields = true,
-                AllowTrailingCommas = true,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
-                NumberHandling = JsonNumberHandling.AllowReadingFromString
-            };
-
-            return JsonSerializer.Deserialize<Rhs2116ProbeGroup>(channelLayout, options);
         }
 
         public static void DrawChannels(ZedGraphControl zedGraph, ProbeGroup probeGroup)
@@ -260,9 +248,7 @@ namespace OpenEphys.Onix.Design
 
             if (sfd.ShowDialog() == DialogResult.OK)
             {
-                var fileJson = JsonSerializer.Serialize(ChannelConfiguration);
-
-                File.WriteAllText(sfd.FileName, fileJson);
+                DesignHelper.SerializeObject(ChannelConfiguration, sfd.FileName);
             }
         }
 

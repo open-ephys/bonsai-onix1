@@ -1,11 +1,9 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using ZedGraph;
-using System.Text.Json;
 using System.IO;
-using System.Text.Json.Serialization;
 using OpenEphys.ProbeInterface;
 
 namespace OpenEphys.Onix.Design
@@ -17,7 +15,7 @@ namespace OpenEphys.Onix.Design
         /// </summary>
         public Rhs2116StimulusSequence Sequence;
 
-        private ProbeGroup ChannelConfiguration;
+        private readonly Rhs2116ProbeGroup ChannelConfiguration;
 
         private const double SamplePeriodMicroSeconds = 1e6 / 30.1932367151e3;
 
@@ -911,9 +909,7 @@ namespace OpenEphys.Onix.Design
 
             if (sfd.ShowDialog() == DialogResult.OK)
             {
-                var fileJson = JsonSerializer.Serialize(Sequence);
-
-                File.WriteAllText(sfd.FileName, fileJson);
+                DesignHelper.SerializeObject(Sequence, sfd.FileName);
             }
         }
 
@@ -928,26 +924,15 @@ namespace OpenEphys.Onix.Design
 
             if (ofd.ShowDialog() == DialogResult.OK)
             {
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true,
-                    IncludeFields = true,
-                    AllowTrailingCommas = true,
-                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
-                    NumberHandling = JsonNumberHandling.AllowReadingFromString
-                };
-
                 if (!File.Exists(ofd.FileName))
                 {
                     MessageBox.Show("File does not exist.");
                     return;
                 }
 
-                var json = File.ReadAllText(ofd.FileName);
+                var sequence = DesignHelper.DeserializeString<Rhs2116StimulusSequence>(File.ReadAllText(ofd.FileName));
 
-                var sequence = JsonSerializer.Deserialize<Rhs2116StimulusSequence>(json, options);
-
-                if (sequence != null && sequence.Valid && sequence.Stimuli.Length == 32)
+                if (sequence != null && sequence.Stimuli.Length == 32)
                 {
                     Sequence = sequence;
                 }

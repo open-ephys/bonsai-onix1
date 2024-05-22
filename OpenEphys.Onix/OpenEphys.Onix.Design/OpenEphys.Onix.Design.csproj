@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
 
   <PropertyGroup>
     <Title>OpenEphys.Onix.Design</Title>
@@ -11,8 +11,8 @@
 
   <ItemGroup>
     <PackageReference Include="Bonsai.Core" Version="2.8.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="OpenEphys.ProbeInterface" Version="0.1.0" />
-    <PackageReference Include="System.Text.Json" Version="8.0.3" />
     <PackageReference Include="ZedGraph" Version="5.1.7" />
   </ItemGroup>
 
