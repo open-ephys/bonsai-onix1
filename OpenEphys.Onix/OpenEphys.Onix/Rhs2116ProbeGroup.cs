@@ -136,22 +136,22 @@ namespace OpenEphys.Onix
             return probePlanarContour;
         }
 
-        private uint[] DefaultDeviceChannelIndices(int probeIndex)
+        private int[] DefaultDeviceChannelIndices(int probeIndex)
         {
-            uint[] deviceChannelIndices = new uint[NumChannelsPerProbe];
+            int[] deviceChannelIndices = new int[NumChannelsPerProbe];
 
             if (probeIndex == 0)
             {
                 for (int i = 0; i < NumChannelsPerProbe; i++)
                 {
-                    deviceChannelIndices[i] = (uint)i;
+                    deviceChannelIndices[i] = i;
                 }
             }
             else if (probeIndex == 1)
             {
                 for (int i = 0; i < NumChannelsPerProbe; i++)
                 {
-                    deviceChannelIndices[i] = (uint)i + NumChannelsPerProbe;
+                    deviceChannelIndices[i] = i + NumChannelsPerProbe;
                 }
             }
             else

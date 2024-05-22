@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using ZedGraph;
 using System.IO;
 using OpenEphys.ProbeInterface;
+using System.Collections.Generic;
 
 namespace OpenEphys.Onix.Design
 {
@@ -479,26 +480,26 @@ namespace OpenEphys.Onix.Design
         private void DataGridViewStimulusTable_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             dataGridViewStimulusTable.BindingContext[dataGridViewStimulusTable.DataSource].EndCurrentEdit();
-            AddContactIdToGridRow();
+            AddDeviceChannelIndexToGridRow();
             DrawStimulusWaveform();
             VisualizeSelectedChannels();
         }
 
         private void DataGridViewStimulusTable_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
         {
-            AddContactIdToGridRow();
+            AddDeviceChannelIndexToGridRow();
         }
 
-        private void AddContactIdToGridRow()
+        private void AddDeviceChannelIndexToGridRow()
         {
             if (ChannelConfiguration == null || ChannelConfiguration.NumContacts != 32)
                 return;
 
-            var contactIds = ChannelConfiguration.GetContactIds();
+            var deviceChannelIndices = ChannelConfiguration.GetDeviceChannelIndices();
 
-            for (int i = 0; i < contactIds.Length; i++)
+            for (int i = 0; i < deviceChannelIndices.Count; i++)
             {
-                dataGridViewStimulusTable.Rows[i].HeaderCell.Value = contactIds[i];
+                dataGridViewStimulusTable.Rows[i].HeaderCell.Value = deviceChannelIndices[i];
             }
         }
 
@@ -807,9 +808,9 @@ namespace OpenEphys.Onix.Design
 
                 if (!rect.IsEmpty)
                 {
-                    string[] ids = ChannelConfiguration.GetContactIds();
+                    List<int> deviceChannelIndices = ChannelConfiguration.GetDeviceChannelIndices();
 
-                    foreach (string id in ids)
+                    foreach (int id in deviceChannelIndices)
                     {
                         if (zedGraphChannels.GraphPane.GraphObjList[string.Format(ChannelConfigurationDialog.ContactStringFormat, id)]
                             is EllipseObj contact && contact != null)

@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -89,16 +89,16 @@ namespace OpenEphys.Onix.Design
                             contact.ShapeParams.Radius * 2, contact.ShapeParams.Radius * 2, Color.DarkGray, Color.WhiteSmoke)
                         {
                             ZOrder = ZOrder.B_BehindLegend,
-                            Tag = string.Format(ContactStringFormat, contact.ContactId)
+                            Tag = string.Format(ContactStringFormat, contact.DeviceId)
                         };
 
 
                         zedGraph.GraphPane.GraphObjList.Add(contactObj);
 
-                        TextObj textObj = new(contact.ContactId, contact.PosX, contact.PosY)
+                        TextObj textObj = new(contact.DeviceId.ToString(), contact.PosX, contact.PosY)
                         {
                             ZOrder = ZOrder.A_InFront,
-                            Tag = string.Format(TextStringFormat, contact.ContactId)
+                            Tag = string.Format(TextStringFormat, contact.DeviceId)
                         };
 
                         textObj.FontSpec.Size = 22;
