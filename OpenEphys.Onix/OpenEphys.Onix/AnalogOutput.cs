@@ -56,17 +56,25 @@ namespace OpenEphys.Onix
                             sampleScale = dataType == AnalogIODataType.Volts
                                 ? CreateSampleScale(bufferSize, divisionsPerVolt)
                                 : null;
-                            inputBuffer = new Mat(data.Cols, data.Rows, data.Depth, 1);
-                            tempBuffer = sampleScale != null ? new Mat(data.Cols, data.Rows, Depth.S16, 1) : null;
+                            if (bufferSize > 1 || sampleScale != null)
+                            {
+                                inputBuffer = new Mat(data.Cols, data.Rows, data.Depth, 1);
+                                tempBuffer = sampleScale != null ? new Mat(data.Cols, data.Rows, Depth.S16, 1) : null;
+                            }
+                            else inputBuffer = tempBuffer = null;
                         }
 
                         var outputBuffer = inputBuffer;
-                        CV.Transpose(data, inputBuffer);
-                        if (sampleScale != null)
+                        if (inputBuffer == null) outputBuffer = data;
+                        else
                         {
-                            CV.Mul(inputBuffer, sampleScale, inputBuffer);
-                            CV.Convert(inputBuffer, tempBuffer);
-                            outputBuffer = tempBuffer;
+                            CV.Transpose(data, inputBuffer);
+                            if (sampleScale != null)
+                            {
+                                CV.Mul(inputBuffer, sampleScale, inputBuffer);
+                                CV.Convert(inputBuffer, tempBuffer);
+                                outputBuffer = tempBuffer;
+                            }
                         }
 
                         var dataSize = outputBuffer.Step * outputBuffer.Rows;
