@@ -61,7 +61,7 @@ namespace OpenEphys.Onix
                                 clockBuffer[sampleIndex] = frame.Clock;
                                 if (++sampleIndex >= bufferSize)
                                 {
-                                    var analogData = BufferHelper.CopyTransposeBuffer(
+                                    var analogData = BufferHelper.CopyBuffer(
                                         analogDataBuffer,
                                         bufferSize,
                                         AnalogIO.ChannelCount,
