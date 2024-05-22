@@ -19,7 +19,18 @@ namespace OpenEphys.Onix.Design
 
             if (editorService != null)
             {
-                var editorDialog = new Rhs2116StimulusSequenceDialog(value as Rhs2116StimulusSequence, null);
+                Rhs2116ProbeGroup probeGroup = null;
+
+                if (context.Instance is ConfigureRhs2116Trigger configureRhs2116Trigger)
+                {
+                    probeGroup = configureRhs2116Trigger.ChannelConfiguration;
+                }
+                else if (context.Instance is ConfigureHeadstageRhs2116 configureHeadstageRhs2116)
+                {
+                    probeGroup = configureHeadstageRhs2116.ChannelConfiguration;
+                }
+
+                var editorDialog = new Rhs2116StimulusSequenceDialog(value as Rhs2116StimulusSequence, probeGroup);
                 
                 if (editorDialog.ShowDialog() == DialogResult.OK)
                 {

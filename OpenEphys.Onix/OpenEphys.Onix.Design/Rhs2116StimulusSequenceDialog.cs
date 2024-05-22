@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -31,7 +31,7 @@ namespace OpenEphys.Onix.Design
         /// Opens a dialog allowing for easy changing of stimulus sequence parameters
         /// </summary>
         /// <param name="sequence"></param>
-        public Rhs2116StimulusSequenceDialog(Rhs2116StimulusSequence sequence, ProbeGroup channelConfiguration)
+        public Rhs2116StimulusSequenceDialog(Rhs2116StimulusSequence sequence, Rhs2116ProbeGroup channelConfiguration)
         {
             InitializeComponent();
 
@@ -48,10 +48,8 @@ namespace OpenEphys.Onix.Design
             if (channelConfiguration == null || channelConfiguration.NumContacts != 32)
             {
                 MessageBox.Show("Error: Something is wrong with the channel configuration." +
-                    "Please open the ConfigureHeadstageRhs2116 node and choose the correct" +
-                    "Probe Interface file to open.");
-                Close();
-                return;
+                    "Using the default channel configuration for now.");
+                channelConfiguration = new();
             }
 
             ChannelConfiguration = channelConfiguration;
