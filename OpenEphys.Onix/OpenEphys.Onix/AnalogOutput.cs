@@ -61,7 +61,7 @@ namespace OpenEphys.Onix
                         }
 
                         var outputBuffer = inputBuffer;
-                        CV.Transpose(data, outputBuffer);
+                        CV.Transpose(data, inputBuffer);
                         if (sampleScale != null)
                         {
                             CV.Mul(inputBuffer, sampleScale, inputBuffer);
@@ -69,8 +69,8 @@ namespace OpenEphys.Onix
                             outputBuffer = tempBuffer;
                         }
 
-                        var dataSize = inputBuffer.Step * inputBuffer.Rows;
-                        device.Write(inputBuffer.Data, dataSize);
+                        var dataSize = outputBuffer.Step * outputBuffer.Rows;
+                        device.Write(outputBuffer.Data, dataSize);
                     });
                 }));
         }
