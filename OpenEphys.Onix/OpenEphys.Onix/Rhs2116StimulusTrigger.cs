@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Reactive;
 using System.Reactive.Subjects;
@@ -10,7 +10,6 @@ using Bonsai;
 
 namespace OpenEphys.Onix
 {
-    [DefaultProperty(nameof(StimulusSequence))]
     public class Rhs2116StimulusTrigger : Sink<bool>
     {
         readonly BehaviorSubject<Rhs2116StimulusSequence> stimulusSequence = new(new Rhs2116StimulusSequence(true));
@@ -20,7 +19,6 @@ namespace OpenEphys.Onix
 
         [Category("Acquisition")]
         [Description("Stimulus sequence.")]
-        [Editor("OpenEphys.Onix.Design.Rhs2116StimulusSequenceEditor, OpenEphys.Onix.Design", typeof(UITypeEditor))]
         public Rhs2116StimulusSequence StimulusSequence
         {
             get => stimulusSequence.Value;

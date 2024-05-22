@@ -1,11 +1,16 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Drawing.Design;
+using System.Reactive.Subjects;
 using OpenEphys.ProbeInterface;
 
 namespace OpenEphys.Onix
 {
+    [DefaultProperty(nameof(StimulusSequence))]
     public class ConfigureRhs2116Trigger : SingleDeviceFactory
     {
+        readonly BehaviorSubject<Rhs2116StimulusSequence> stimulusSequence = new(new Rhs2116StimulusSequence(true));
+
         public ConfigureRhs2116Trigger()
             : base(typeof(Rhs2116Trigger))
         {
@@ -17,7 +22,16 @@ namespace OpenEphys.Onix
 
         [Category(ConfigurationCategory)]
         [Description("Probe Interface group to define channel mapping")]
-        public ProbeGroup ChannelConfiguration { get; set; }
+        public Rhs2116ProbeGroup ChannelConfiguration { get; set; }
+
+        [Category("Acquisition")]
+        [Description("Stimulus sequence.")]
+        [Editor("OpenEphys.Onix.Design.Rhs2116StimulusSequenceEditor, OpenEphys.Onix.Design", typeof(UITypeEditor))]
+        public Rhs2116StimulusSequence StimulusSequence
+        {
+            get => stimulusSequence.Value;
+            set => stimulusSequence.OnNext(value);
+        }
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
