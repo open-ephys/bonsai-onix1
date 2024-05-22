@@ -1,8 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Linq;
 
 namespace OpenEphys.Onix
 {
+    [TypeConverter(typeof(SortedPropertyConverter))]
     public class ConfigureAnalogIO : SingleDeviceFactory
     {
         public ConfigureAnalogIO()
@@ -17,43 +19,43 @@ namespace OpenEphys.Onix
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 0.")]
-        public AnalogIOVoltageRange InputRange00 { get; set; }
+        public AnalogIOVoltageRange InputRange0 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 1.")]
-        public AnalogIOVoltageRange InputRange01 { get; set; }
+        public AnalogIOVoltageRange InputRange1 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 2.")]
-        public AnalogIOVoltageRange InputRange02 { get; set; }
+        public AnalogIOVoltageRange InputRange2 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 3.")]
-        public AnalogIOVoltageRange InputRange03 { get; set; }
+        public AnalogIOVoltageRange InputRange3 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 4.")]
-        public AnalogIOVoltageRange InputRange04 { get; set; }
+        public AnalogIOVoltageRange InputRange4 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 5.")]
-        public AnalogIOVoltageRange InputRange05 { get; set; }
+        public AnalogIOVoltageRange InputRange5 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 6.")]
-        public AnalogIOVoltageRange InputRange06 { get; set; }
+        public AnalogIOVoltageRange InputRange6 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 7.")]
-        public AnalogIOVoltageRange InputRange07 { get; set; }
+        public AnalogIOVoltageRange InputRange7 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 8.")]
-        public AnalogIOVoltageRange InputRange08 { get; set; }
+        public AnalogIOVoltageRange InputRange8 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 9.")]
-        public AnalogIOVoltageRange InputRange09 { get; set; }
+        public AnalogIOVoltageRange InputRange9 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 10.")]
@@ -65,43 +67,43 @@ namespace OpenEphys.Onix
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 0.")]
-        public AnalogIODirection Direction00 { get; set; }
+        public AnalogIODirection Direction0 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 1.")]
-        public AnalogIODirection Direction01 { get; set; }
+        public AnalogIODirection Direction1 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 2.")]
-        public AnalogIODirection Direction02 { get; set; }
+        public AnalogIODirection Direction2 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 3.")]
-        public AnalogIODirection Direction03 { get; set; }
+        public AnalogIODirection Direction3 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 4.")]
-        public AnalogIODirection Direction04 { get; set; }
+        public AnalogIODirection Direction4 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 5.")]
-        public AnalogIODirection Direction05 { get; set; }
+        public AnalogIODirection Direction5 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 6.")]
-        public AnalogIODirection Direction06 { get; set; }
+        public AnalogIODirection Direction6 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 7.")]
-        public AnalogIODirection Direction07 { get; set; }
+        public AnalogIODirection Direction7 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 8.")]
-        public AnalogIODirection Direction08 { get; set; }
+        public AnalogIODirection Direction8 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 9.")]
-        public AnalogIODirection Direction09 { get; set; }
+        public AnalogIODirection Direction9 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 10.")]
@@ -119,16 +121,16 @@ namespace OpenEphys.Onix
             {
                 var device = context.GetDeviceContext(deviceAddress, AnalogIO.ID);
                 device.WriteRegister(AnalogIO.ENABLE, Enable ? 1u : 0u);
-                device.WriteRegister(AnalogIO.CH00INRANGE, (uint)InputRange00);
-                device.WriteRegister(AnalogIO.CH01INRANGE, (uint)InputRange01);
-                device.WriteRegister(AnalogIO.CH02INRANGE, (uint)InputRange02);
-                device.WriteRegister(AnalogIO.CH03INRANGE, (uint)InputRange03);
-                device.WriteRegister(AnalogIO.CH04INRANGE, (uint)InputRange04);
-                device.WriteRegister(AnalogIO.CH05INRANGE, (uint)InputRange05);
-                device.WriteRegister(AnalogIO.CH06INRANGE, (uint)InputRange06);
-                device.WriteRegister(AnalogIO.CH07INRANGE, (uint)InputRange07);
-                device.WriteRegister(AnalogIO.CH08INRANGE, (uint)InputRange08);
-                device.WriteRegister(AnalogIO.CH09INRANGE, (uint)InputRange09);
+                device.WriteRegister(AnalogIO.CH00INRANGE, (uint)InputRange0);
+                device.WriteRegister(AnalogIO.CH01INRANGE, (uint)InputRange1);
+                device.WriteRegister(AnalogIO.CH02INRANGE, (uint)InputRange2);
+                device.WriteRegister(AnalogIO.CH03INRANGE, (uint)InputRange3);
+                device.WriteRegister(AnalogIO.CH04INRANGE, (uint)InputRange4);
+                device.WriteRegister(AnalogIO.CH05INRANGE, (uint)InputRange5);
+                device.WriteRegister(AnalogIO.CH06INRANGE, (uint)InputRange6);
+                device.WriteRegister(AnalogIO.CH07INRANGE, (uint)InputRange7);
+                device.WriteRegister(AnalogIO.CH08INRANGE, (uint)InputRange8);
+                device.WriteRegister(AnalogIO.CH09INRANGE, (uint)InputRange9);
                 device.WriteRegister(AnalogIO.CH10INRANGE, (uint)InputRange10);
                 device.WriteRegister(AnalogIO.CH11INRANGE, (uint)InputRange11);
 
@@ -137,16 +139,16 @@ namespace OpenEphys.Onix
                     (io_reg & ~((uint)1 << channel)) | ((uint)(direction) << channel);
 
                 var io_reg = 0u;
-                io_reg = SetIO(io_reg, 0, Direction00);
-                io_reg = SetIO(io_reg, 1, Direction01);
-                io_reg = SetIO(io_reg, 2, Direction02);
-                io_reg = SetIO(io_reg, 3, Direction03);
-                io_reg = SetIO(io_reg, 4, Direction04);
-                io_reg = SetIO(io_reg, 5, Direction05);
-                io_reg = SetIO(io_reg, 6, Direction06);
-                io_reg = SetIO(io_reg, 7, Direction07);
-                io_reg = SetIO(io_reg, 8, Direction08);
-                io_reg = SetIO(io_reg, 9, Direction09);
+                io_reg = SetIO(io_reg, 0, Direction0);
+                io_reg = SetIO(io_reg, 1, Direction1);
+                io_reg = SetIO(io_reg, 2, Direction2);
+                io_reg = SetIO(io_reg, 3, Direction3);
+                io_reg = SetIO(io_reg, 4, Direction4);
+                io_reg = SetIO(io_reg, 5, Direction5);
+                io_reg = SetIO(io_reg, 6, Direction6);
+                io_reg = SetIO(io_reg, 7, Direction7);
+                io_reg = SetIO(io_reg, 8, Direction8);
+                io_reg = SetIO(io_reg, 9, Direction9);
                 io_reg = SetIO(io_reg, 10, Direction10);
                 io_reg = SetIO(io_reg, 11, Direction11);
                 device.WriteRegister(AnalogIO.CHDIR, io_reg);
@@ -154,6 +156,22 @@ namespace OpenEphys.Onix
                 var deviceInfo = new AnalogIODeviceInfo(device, this);
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
+        }
+
+        class SortedPropertyConverter : ExpandableObjectConverter
+        {
+            public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext context, object value, Attribute[] attributes)
+            {
+                var properties = base.GetProperties(context, value, attributes);
+                var sortedOrder = properties.Cast<PropertyDescriptor>()
+                                            .Where(p => p.PropertyType == typeof(AnalogIOVoltageRange)
+                                                     || p.PropertyType == typeof(AnalogIODirection))
+                                            .OrderBy(p => p.PropertyType.MetadataToken)
+                                            .Select(p => p.Name)
+                                            .Prepend(nameof(Enable))
+                                            .ToArray();
+                return properties.Sort(sortedOrder);
+            }
         }
     }
 
@@ -197,16 +215,16 @@ namespace OpenEphys.Onix
         {
             VoltsPerDivision = new[]
             {
-                GetVoltsPerDivision(deviceFactory.InputRange00),
-                GetVoltsPerDivision(deviceFactory.InputRange01),
-                GetVoltsPerDivision(deviceFactory.InputRange02),
-                GetVoltsPerDivision(deviceFactory.InputRange03),
-                GetVoltsPerDivision(deviceFactory.InputRange04),
-                GetVoltsPerDivision(deviceFactory.InputRange05),
-                GetVoltsPerDivision(deviceFactory.InputRange06),
-                GetVoltsPerDivision(deviceFactory.InputRange07),
-                GetVoltsPerDivision(deviceFactory.InputRange08),
-                GetVoltsPerDivision(deviceFactory.InputRange09),
+                GetVoltsPerDivision(deviceFactory.InputRange0),
+                GetVoltsPerDivision(deviceFactory.InputRange1),
+                GetVoltsPerDivision(deviceFactory.InputRange2),
+                GetVoltsPerDivision(deviceFactory.InputRange3),
+                GetVoltsPerDivision(deviceFactory.InputRange4),
+                GetVoltsPerDivision(deviceFactory.InputRange5),
+                GetVoltsPerDivision(deviceFactory.InputRange6),
+                GetVoltsPerDivision(deviceFactory.InputRange7),
+                GetVoltsPerDivision(deviceFactory.InputRange8),
+                GetVoltsPerDivision(deviceFactory.InputRange9),
                 GetVoltsPerDivision(deviceFactory.InputRange10),
                 GetVoltsPerDivision(deviceFactory.InputRange11)
             };
