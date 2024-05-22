@@ -18,13 +18,13 @@ namespace OpenEphys.Onix
 
         public AnalogIODataType DataType { get; set; } = AnalogIODataType.S16;
 
-        static Mat CreateVoltageScale(int bufferSize, double[] voltsPerDivision)
+        static Mat CreateVoltageScale(int bufferSize, float[] voltsPerDivision)
         {
             using var scaleHeader = Mat.CreateMatHeader(
                 voltsPerDivision,
                 rows: voltsPerDivision.Length,
                 cols: 1,
-                depth: Depth.F64,
+                depth: Depth.F32,
                 channels: 1);
             var voltageScale = new Mat(scaleHeader.Rows, bufferSize, scaleHeader.Depth, scaleHeader.Channels);
             CV.Repeat(scaleHeader, voltageScale);
@@ -35,7 +35,7 @@ namespace OpenEphys.Onix
         {
             var bufferSize = BufferSize;
             var dataType = DataType;
-            var depth = dataType == AnalogIODataType.Volts ? Depth.F64 : Depth.S16;
+            var depth = dataType == AnalogIODataType.Volts ? Depth.F32 : Depth.S16;
             return Observable.Using(
                 () => DeviceManager.ReserveDevice(DeviceName),
                 disposable => disposable.Subject.SelectMany(deviceInfo =>

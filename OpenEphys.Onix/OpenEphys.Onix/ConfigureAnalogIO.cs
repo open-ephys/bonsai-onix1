@@ -230,18 +230,18 @@ namespace OpenEphys.Onix
             };
         }
 
-        static double GetVoltsPerDivision(AnalogIOVoltageRange voltageRange)
+        static float GetVoltsPerDivision(AnalogIOVoltageRange voltageRange)
         {
             return voltageRange switch
             {
-                AnalogIOVoltageRange.TenVolts => 20.0 / AnalogIO.NumberOfDivisions,
-                AnalogIOVoltageRange.TwoPointFiveVolts => 5.0 / AnalogIO.NumberOfDivisions,
-                AnalogIOVoltageRange.FiveVolts => 10.0 / AnalogIO.NumberOfDivisions,
+                AnalogIOVoltageRange.TenVolts => 20.0f / AnalogIO.NumberOfDivisions,
+                AnalogIOVoltageRange.TwoPointFiveVolts => 5.0f / AnalogIO.NumberOfDivisions,
+                AnalogIOVoltageRange.FiveVolts => 10.0f / AnalogIO.NumberOfDivisions,
                 _ => throw new ArgumentOutOfRangeException(nameof(voltageRange)),
             };
         }
 
-        public double[] VoltsPerDivision { get; }
+        public float[] VoltsPerDivision { get; }
     }
 
     public enum AnalogIOVoltageRange
