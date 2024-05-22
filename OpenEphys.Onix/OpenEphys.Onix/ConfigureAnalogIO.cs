@@ -151,7 +151,8 @@ namespace OpenEphys.Onix
                 io_reg = SetIO(io_reg, 11, Direction11);
                 device.WriteRegister(AnalogIO.CHDIR, io_reg);
 
-                return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
+                var deviceInfo = new AnalogIODeviceInfo(device, this);
+                return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
         }
     }
@@ -162,7 +163,7 @@ namespace OpenEphys.Onix
 
         // constants
         public const int ChannelCount = 12;
-        public const double VoltsPerDivision = 0.00030517578125;
+        public const int NumberOfDivisions = 1 << 16;
 
         // managed registers
         public const uint ENABLE = 0;
@@ -187,6 +188,42 @@ namespace OpenEphys.Onix
             {
             }
         }
+    }
+
+    class AnalogIODeviceInfo : DeviceInfo
+    {
+        public AnalogIODeviceInfo(DeviceContext device, ConfigureAnalogIO deviceFactory)
+            : base(device, deviceFactory.DeviceType)
+        {
+            VoltsPerDivision = new[]
+            {
+                GetVoltsPerDivision(deviceFactory.InputRange00),
+                GetVoltsPerDivision(deviceFactory.InputRange01),
+                GetVoltsPerDivision(deviceFactory.InputRange02),
+                GetVoltsPerDivision(deviceFactory.InputRange03),
+                GetVoltsPerDivision(deviceFactory.InputRange04),
+                GetVoltsPerDivision(deviceFactory.InputRange05),
+                GetVoltsPerDivision(deviceFactory.InputRange06),
+                GetVoltsPerDivision(deviceFactory.InputRange07),
+                GetVoltsPerDivision(deviceFactory.InputRange08),
+                GetVoltsPerDivision(deviceFactory.InputRange09),
+                GetVoltsPerDivision(deviceFactory.InputRange10),
+                GetVoltsPerDivision(deviceFactory.InputRange11)
+            };
+        }
+
+        static double GetVoltsPerDivision(AnalogIOVoltageRange voltageRange)
+        {
+            return voltageRange switch
+            {
+                AnalogIOVoltageRange.TenVolts => 20.0 / AnalogIO.NumberOfDivisions,
+                AnalogIOVoltageRange.TwoPointFiveVolts => 5.0 / AnalogIO.NumberOfDivisions,
+                AnalogIOVoltageRange.FiveVolts => 10.0 / AnalogIO.NumberOfDivisions,
+                _ => throw new ArgumentOutOfRangeException(nameof(voltageRange)),
+            };
+        }
+
+        public double[] VoltsPerDivision { get; }
     }
 
     public enum AnalogIOVoltageRange

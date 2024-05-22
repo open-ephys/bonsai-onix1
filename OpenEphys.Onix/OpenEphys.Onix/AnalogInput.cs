@@ -18,20 +18,36 @@ namespace OpenEphys.Onix
 
         public AnalogIODataType DataType { get; set; } = AnalogIODataType.S16;
 
+        static Mat CreateVoltageScale(int bufferSize, double[] voltsPerDivision)
+        {
+            using var scaleHeader = Mat.CreateMatHeader(
+                voltsPerDivision,
+                rows: voltsPerDivision.Length,
+                cols: 1,
+                depth: Depth.F64,
+                channels: 1);
+            var voltageScale = new Mat(scaleHeader.Rows, bufferSize, scaleHeader.Depth, scaleHeader.Channels);
+            CV.Repeat(scaleHeader, voltageScale);
+            return voltageScale;
+        }
+
         public unsafe override IObservable<AnalogInputDataFrame> Generate()
         {
             var bufferSize = BufferSize;
             var dataType = DataType;
-            var depth = dataType == AnalogIODataType.Volts ? Depth.F32 : Depth.S16;
-            var scale = dataType == AnalogIODataType.Volts ? AnalogIO.VoltsPerDivision : 1;
-            var shift = 0.0;
+            var depth = dataType == AnalogIODataType.Volts ? Depth.F64 : Depth.S16;
             return Observable.Using(
                 () => DeviceManager.ReserveDevice(DeviceName),
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
                     Observable.Create<AnalogInputDataFrame>(observer =>
                     {
-                        var sampleIndex = 0;
                         var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));
+                        var ioDeviceInfo = (AnalogIODeviceInfo)deviceInfo;
+
+                        var sampleIndex = 0;
+                        var voltageScale = dataType == AnalogIODataType.Volts
+                            ? CreateVoltageScale(bufferSize, ioDeviceInfo.VoltsPerDivision)
+                            : null;
                         var analogDataBuffer = new short[AnalogIO.ChannelCount * bufferSize];
                         var hubSyncCounterBuffer = new ulong[bufferSize];
                         var clockBuffer = new ulong[bufferSize];
@@ -50,8 +66,7 @@ namespace OpenEphys.Onix
                                         bufferSize,
                                         AnalogIO.ChannelCount,
                                         depth,
-                                        scale,
-                                        shift);
+                                        voltageScale);
                                     observer.OnNext(new AnalogInputDataFrame(clockBuffer, hubSyncCounterBuffer, analogData));
                                     hubSyncCounterBuffer = new ulong[bufferSize];
                                     clockBuffer = new ulong[bufferSize];

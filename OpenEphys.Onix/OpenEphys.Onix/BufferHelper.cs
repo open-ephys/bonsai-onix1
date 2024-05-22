@@ -41,5 +41,21 @@ namespace OpenEphys.Onix
             CV.ConvertScale(bufferHeader, data, scale, shift);
             return data;
         }
+
+        public static Mat CopyConvertBuffer<TBuffer>(
+            TBuffer[] buffer,
+            int sampleCount,
+            int channelCount,
+            Depth depth,
+            Mat scale)
+            where TBuffer : unmanaged
+        {
+            var data = CopyConvertBuffer(buffer, sampleCount, channelCount, depth);
+            if (scale != null)
+            {
+                CV.Mul(data, scale, data);
+            }
+            return data;
+        }
     }
 }
