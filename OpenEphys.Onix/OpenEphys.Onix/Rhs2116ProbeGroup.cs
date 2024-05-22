@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using OpenEphys.ProbeInterface;
 using Newtonsoft.Json;
 
@@ -158,7 +158,7 @@ namespace OpenEphys.Onix
             {
                 for (int i = 0; i < NumChannelsPerProbe; i++)
                 {
-                    deviceChannelIndices[i] = i + NumChannelsPerProbe;
+                    deviceChannelIndices[i] = NumChannelsPerProbe * 2 - 1 - i;
                 }
             }
             else
