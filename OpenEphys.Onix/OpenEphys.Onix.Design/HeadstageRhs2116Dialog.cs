@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows.Forms;
 
 namespace OpenEphys.Onix.Design
@@ -41,7 +41,14 @@ namespace OpenEphys.Onix.Design
 
         private void OnClickOK(object sender, EventArgs e)
         {
-            var stimSequenceDialog = (Rhs2116StimulusSequenceDialog)tabPageStimulusSequence.Controls[nameof(Rhs2116StimulusSequenceDialog)];
+            var stimSequenceDialog = this.GetAllChildren()
+                                         .OfType<Rhs2116StimulusSequenceDialog>()
+                                         .First();
+
+            ChannelConfiguration = this.GetAllChildren()
+                                       .OfType<ChannelConfigurationDialog>()
+                                       .Select(dialog => dialog.ChannelConfiguration)
+                                       .First();
 
             if (Rhs2116StimulusSequenceDialog.CanCloseForm(stimSequenceDialog.Sequence, out DialogResult result))
             {
