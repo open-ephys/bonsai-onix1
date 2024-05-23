@@ -31,9 +31,11 @@ namespace OpenEphys.Onix.Design
         /// Opens a dialog allowing for easy changing of stimulus sequence parameters
         /// </summary>
         /// <param name="sequence"></param>
+        /// <param name="channelConfiguration"></param>
         public Rhs2116StimulusSequenceDialog(Rhs2116StimulusSequence sequence, Rhs2116ProbeGroup channelConfiguration)
         {
             InitializeComponent();
+            Shown += FormShown;
 
             Sequence = new Rhs2116StimulusSequence(sequence);
 
@@ -63,33 +65,65 @@ namespace OpenEphys.Onix.Design
             dataGridViewStimulusTable.DataSource = Sequence.Stimuli;
         }
 
+        private void FormShown(object sender, EventArgs e)
+        {
+            if (!TopLevel)
+            {
+                splitContainer2.Panel2Collapsed = true;
+                splitContainer2.Panel2.Hide();
+            }
+        }
+
         private void ButtonOk_Click(object sender, EventArgs e)
         {
-            if (Sequence != null)
+            if (TopLevel)
             {
-                if (!Sequence.Valid)
+                if (CanCloseForm(Sequence, out DialogResult result))
                 {
-                    DialogResult result = MessageBox.Show("Warning: Stimulus sequence is not valid. " +
+                    DialogResult = result; 
+                    Close();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks the given stimulus sequence for validity, and confirms if the user wants to close the form
+        /// </summary>
+        /// <param name="sequence">Rhs2116 Stimulus Sequence</param>
+        /// <param name="result">DialogResult, used to set the DialogResult of the form before closing</param>
+        /// <returns></returns>
+        public static bool CanCloseForm(Rhs2116StimulusSequence sequence, out DialogResult result)
+        {
+            if (sequence != null)
+            {
+                if (!sequence.Valid)
+                {
+                    DialogResult resultContinue = MessageBox.Show("Warning: Stimulus sequence is not valid. " +
                         "If you continue, the current settings will be discarded. " +
                         "Press OK to discard changes, or press Cancel to continue editing the sequence.", "Invalid Sequence",
                         MessageBoxButtons.OKCancel);
 
-                    if (result == DialogResult.OK)
+                    if (resultContinue == DialogResult.OK)
                     {
-                        DialogResult = DialogResult.Cancel;
-                        Close();
+                        result = DialogResult.Cancel;
+                        return true;
+                    }
+                    else
+                    {
+                        result = DialogResult.OK;
+                        return false;
                     }
                 }
                 else
                 {
-                    DialogResult = DialogResult.OK;
-                    Close();
+                    result = DialogResult.OK;
+                    return true;
                 }
             }
             else
             {
-                DialogResult = DialogResult.Cancel;
-                Close();
+                result = DialogResult.Cancel;
+                return true;
             }
         }
 

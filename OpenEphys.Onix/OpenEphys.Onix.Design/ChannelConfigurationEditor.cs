@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.Drawing.Design;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
-using OpenEphys.ProbeInterface;
 
 namespace OpenEphys.Onix.Design
 {

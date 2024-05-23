@@ -18,6 +18,7 @@ namespace OpenEphys.Onix.Design
         public ChannelConfigurationDialog(Rhs2116ProbeGroup probeGroup)
         {
             InitializeComponent();
+            Shown += FormShown;
 
             if (probeGroup == null)
             {
@@ -30,6 +31,15 @@ namespace OpenEphys.Onix.Design
 
             InitializeZedGraphChannels(zedGraphChannels);
             DrawChannels(zedGraphChannels, ChannelConfiguration);
+        }
+
+        private void FormShown(object sender, EventArgs e)
+        {
+            if (!TopLevel)
+            {
+                splitContainer1.Panel2Collapsed = true;
+                splitContainer1.Panel2.Hide();
+            }
         }
 
         private void LoadDefaultChannelLayout()
@@ -268,6 +278,15 @@ namespace OpenEphys.Onix.Design
         {
             LoadDefaultChannelLayout();
             DrawChannels(zedGraphChannels, ChannelConfiguration);
+        }
+
+        private void ButtonOK_Click(object sender, EventArgs e)
+        {
+            if (TopLevel)
+            {
+                DialogResult = DialogResult.OK;
+                Close();
+            }
         }
     }
 }
