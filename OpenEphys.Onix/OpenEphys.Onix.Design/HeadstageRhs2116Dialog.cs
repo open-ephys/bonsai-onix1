@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace OpenEphys.Onix.Design
@@ -61,6 +62,25 @@ namespace OpenEphys.Onix.Design
         {
             DialogResult = DialogResult.Cancel;
             Close();
+        }
+
+        private void TabPage_Selected(object sender, TabControlEventArgs e)
+        {
+            if (e.TabPage == tabPageStimulusSequence)
+            {
+                var stimSequenceDialog = this.GetAllChildren()
+                                             .OfType<Rhs2116StimulusSequenceDialog>()
+                                             .First();
+
+                var channelConfigurationDialog = this.GetAllChildren()
+                                                     .OfType<ChannelConfigurationDialog>()
+                                                     .First();
+
+                if (!stimSequenceDialog.UpdateChannelConfiguration(channelConfigurationDialog.ChannelConfiguration))
+                {
+                    MessageBox.Show("Warning: Channel configuration was not updated for the stimulus sequence tab.");
+                }
+            }
         }
     }
 }

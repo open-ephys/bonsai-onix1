@@ -34,7 +34,7 @@ namespace OpenEphys.Onix.Design
                     instance.StimulusTrigger.StimulusSequence = DesignHelper.GetAllChildren(headstageEditorDialog)
                                                                             .OfType<Rhs2116StimulusSequenceDialog>()
                                                                             .Select(dialog => dialog.Sequence)
-                                                                            .FirstOrDefault();
+                                                                            .First();
 
                     return headstageEditorDialog.ChannelConfiguration;
                 }

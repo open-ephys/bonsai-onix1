@@ -55,6 +55,7 @@
             this.tabControl.SelectedIndex = 0;
             this.tabControl.Size = new System.Drawing.Size(1420, 657);
             this.tabControl.TabIndex = 0;
+            this.tabControl.Selected += new System.Windows.Forms.TabControlEventHandler(this.TabPage_Selected);
             // 
             // tabPageChannelConfiguration
             // 
@@ -71,7 +72,7 @@
             this.tabPageStimulusSequence.Location = new System.Drawing.Point(4, 29);
             this.tabPageStimulusSequence.Name = "tabPageStimulusSequence";
             this.tabPageStimulusSequence.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageStimulusSequence.Size = new System.Drawing.Size(1412, 699);
+            this.tabPageStimulusSequence.Size = new System.Drawing.Size(1412, 624);
             this.tabPageStimulusSequence.TabIndex = 1;
             this.tabPageStimulusSequence.Text = "Stimulus Sequence";
             this.tabPageStimulusSequence.UseVisualStyleBackColor = true;
@@ -80,7 +81,7 @@
             // 
             this.tabPageRhs2116A.Location = new System.Drawing.Point(4, 29);
             this.tabPageRhs2116A.Name = "tabPageRhs2116A";
-            this.tabPageRhs2116A.Size = new System.Drawing.Size(1412, 699);
+            this.tabPageRhs2116A.Size = new System.Drawing.Size(1412, 624);
             this.tabPageRhs2116A.TabIndex = 2;
             this.tabPageRhs2116A.Text = "Rhs2116A";
             this.tabPageRhs2116A.UseVisualStyleBackColor = true;
@@ -89,7 +90,7 @@
             // 
             this.tabPageRhs2116B.Location = new System.Drawing.Point(4, 29);
             this.tabPageRhs2116B.Name = "tabPageRhs2116B";
-            this.tabPageRhs2116B.Size = new System.Drawing.Size(1412, 699);
+            this.tabPageRhs2116B.Size = new System.Drawing.Size(1412, 624);
             this.tabPageRhs2116B.TabIndex = 3;
             this.tabPageRhs2116B.Text = "Rhs2116B";
             this.tabPageRhs2116B.UseVisualStyleBackColor = true;
