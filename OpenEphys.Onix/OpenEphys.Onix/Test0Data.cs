@@ -49,8 +49,8 @@ namespace OpenEphys.Onix
                             clockBuffer[sampleIndex] = frame.Clock;
                             if (++sampleIndex >= bufferSize)
                             {
-                                var dummy = BufferHelper.CopyBuffer(dummyBuffer, bufferSize, dummyWords, Depth.S16);
-                                var message = BufferHelper.CopyBuffer(messageBuffer, bufferSize, 1, Depth.S16);
+                                var dummy = BufferHelper.CopyTranspose(dummyBuffer, bufferSize, dummyWords, Depth.S16);
+                                var message = BufferHelper.CopyTranspose(messageBuffer, bufferSize, 1, Depth.S16);
                                 observer.OnNext(new Test0DataFrame(clockBuffer, hubClockBuffer, message, dummy));
                                 hubClockBuffer = new ulong[bufferSize];
                                 clockBuffer = new ulong[bufferSize];

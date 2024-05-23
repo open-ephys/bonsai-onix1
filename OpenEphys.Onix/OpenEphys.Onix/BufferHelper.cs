@@ -4,7 +4,7 @@ namespace OpenEphys.Onix
 {
     static class BufferHelper
     {
-        public static Mat CopyBuffer<TBuffer>(
+        public static Mat CopyTranspose<TBuffer>(
             TBuffer[] buffer,
             int sampleCount,
             int channelCount,
