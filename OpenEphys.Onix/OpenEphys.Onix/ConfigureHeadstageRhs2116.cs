@@ -58,7 +58,7 @@ namespace OpenEphys.Onix
             }
         }
 
-        [Editor("OpenEphys.Onix.Design.ChannelConfigurationEditor, OpenEphys.Onix.Design", typeof(UITypeEditor))]
+        [Editor("OpenEphys.Onix.Design.HeadstageRhs2116Editor, OpenEphys.Onix.Design", typeof(UITypeEditor))]
         public Rhs2116ProbeGroup ChannelConfiguration
         {
             get { return probeGroup; }
