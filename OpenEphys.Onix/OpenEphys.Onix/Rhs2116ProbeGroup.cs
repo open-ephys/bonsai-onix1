@@ -1,6 +1,8 @@
 ﻿using System;
 using OpenEphys.ProbeInterface;
 using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace OpenEphys.Onix
 {
@@ -13,33 +15,38 @@ namespace OpenEphys.Onix
             Specification = "probeinterface";
             Version = "0.2.21";
 
-            Probes = new Probe[2];
+            Probes = new List<Probe>()
+            {
+                new(
+                    2,
+                    "mm",
+                    new ProbeAnnotations(),
+                    new ContactAnnotations(),
+                    DefaultContactPositions(0),
+                    DefaultContactPlaneAxes(),
+                    DefaultContactShapes(),
+                    DefaultContactShapeParams(),
+                    DefaultProbePlanarContour(0),
+                    DefaultDeviceChannelIndices(0),
+                    DefaultContactIds(),
+                    DefaultShankIds()),
+                new(
+                    2,
+                    "mm",
+                    new ProbeAnnotations(),
+                    new ContactAnnotations(),
+                    DefaultContactPositions(1),
+                    DefaultContactPlaneAxes(),
+                    DefaultContactShapes(),
+                    DefaultContactShapeParams(),
+                    DefaultProbePlanarContour(1),
+                    DefaultDeviceChannelIndices(1),
+                    DefaultContactIds(),
+                    DefaultShankIds()
+                    )
+            }.ToList();
 
-            Probes[0] = new(2,
-                            "mm",
-                            new ProbeAnnotations(),
-                            new ContactAnnotations(),
-                            DefaultContactPositions(0),
-                            DefaultContactPlaneAxes(),
-                            DefaultContactShapes(),
-                            DefaultContactShapeParams(),
-                            DefaultProbePlanarContour(0),
-                            DefaultDeviceChannelIndices(0),
-                            DefaultContactIds(),
-                            DefaultShankIds());
 
-            Probes[1] = new(2,
-                            "mm",
-                            new ProbeAnnotations(),
-                            new ContactAnnotations(),
-                            DefaultContactPositions(1),
-                            DefaultContactPlaneAxes(),
-                            DefaultContactShapes(),
-                            DefaultContactShapeParams(),
-                            DefaultProbePlanarContour(1),
-                            DefaultDeviceChannelIndices(1),
-                            DefaultContactIds(),
-                            DefaultShankIds());
         }
 
         [JsonConstructor]

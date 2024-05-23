@@ -495,9 +495,9 @@ namespace OpenEphys.Onix.Design
 
             var deviceChannelIndices = ChannelConfiguration.GetDeviceChannelIndices();
 
-            for (int i = 0; i < deviceChannelIndices.Count; i++)
+            for (int i = 0; i < deviceChannelIndices.Count(); i++)
             {
-                dataGridViewStimulusTable.Rows[i].HeaderCell.Value = deviceChannelIndices[i];
+                dataGridViewStimulusTable.Rows[i].HeaderCell.Value = deviceChannelIndices.ElementAt(i);
             }
         }
 
@@ -806,7 +806,7 @@ namespace OpenEphys.Onix.Design
 
                 if (!rect.IsEmpty)
                 {
-                    List<int> deviceChannelIndices = ChannelConfiguration.GetDeviceChannelIndices();
+                    var deviceChannelIndices = ChannelConfiguration.GetDeviceChannelIndices();
 
                     foreach (int id in deviceChannelIndices)
                     {

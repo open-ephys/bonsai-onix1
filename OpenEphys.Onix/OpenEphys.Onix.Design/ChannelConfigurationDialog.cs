@@ -69,9 +69,9 @@ namespace OpenEphys.Onix.Design
 
             zedGraph.GraphPane.GraphObjList.Clear();
 
-            for (int i = 0; i < probeGroup.Probes.Length; i++)
+            for (int i = 0; i < probeGroup.Probes.Count(); i++)
             {
-                PointD[] planarContours = ConvertFloatArrayToPointD(probeGroup.Probes[i].Probe_Planar_Contour);
+                PointD[] planarContours = ConvertFloatArrayToPointD(probeGroup.Probes.ElementAt(i).ProbePlanarContour);
                 PolyObj contour = new(planarContours, Color.LightGreen, Color.LightGreen)
                 {
                     ZOrder = ZOrder.E_BehindCurves
@@ -79,9 +79,9 @@ namespace OpenEphys.Onix.Design
 
                 zedGraph.GraphPane.GraphObjList.Add(contour);
 
-                for (int j = 0; j < probeGroup.Probes[i].Contact_Positions.Length; j++)
+                for (int j = 0; j < probeGroup.Probes.ElementAt(i).ContactPositions.Length; j++)
                 {
-                    Contact contact = probeGroup.Probes[i].GetContact(j);
+                    Contact contact = probeGroup.Probes.ElementAt(i).GetContact(j);
 
                     if (contact.Shape.Equals("circle"))
                     {
