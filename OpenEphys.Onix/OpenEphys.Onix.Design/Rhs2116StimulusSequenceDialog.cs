@@ -4,8 +4,6 @@ using System.Linq;
 using System.Windows.Forms;
 using ZedGraph;
 using System.IO;
-using OpenEphys.ProbeInterface;
-using System.Collections.Generic;
 
 namespace OpenEphys.Onix.Design
 {
@@ -16,7 +14,7 @@ namespace OpenEphys.Onix.Design
         /// </summary>
         public Rhs2116StimulusSequence Sequence;
 
-        private readonly Rhs2116ProbeGroup ChannelConfiguration;
+        private Rhs2116ProbeGroup ChannelConfiguration;
 
         private const double SamplePeriodMicroSeconds = 1e6 / 30.1932367151e3;
 
@@ -982,6 +980,28 @@ namespace OpenEphys.Onix.Design
         {
             ChannelConfigurationDialog.ResizeAxes(zedGraphChannels);
             zedGraphChannels.Refresh();
+        }
+
+        /// <summary>
+        /// Used to update the internal Rhs2116ProbeGroup while the form is active
+        /// </summary>
+        /// <param name="channelConfiguration"></param>
+        /// <returns>True if the ChannelConfiguration was added, false if the incoming channel configuration is invalid for some reason</returns>
+        public bool UpdateChannelConfiguration(Rhs2116ProbeGroup channelConfiguration)
+        {
+            if (channelConfiguration == null || ChannelConfiguration.NumContacts != 32)
+            {
+                return false;
+            }
+
+            ChannelConfiguration = channelConfiguration;
+
+            DrawChannels();
+
+            VisualizeSelectedChannels();
+            DrawStimulusWaveform();
+
+            return true;
         }
     }
 }
