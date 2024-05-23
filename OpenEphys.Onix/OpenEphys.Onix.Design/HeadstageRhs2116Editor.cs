@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing.Design;
 using System.Windows.Forms.Design;
 using System.Windows.Forms;
+using System.Linq;
 
 namespace OpenEphys.Onix.Design
 {
@@ -30,9 +31,10 @@ namespace OpenEphys.Onix.Design
 
                 if (headstageEditorDialog.ShowDialog() == DialogResult.OK)
                 {
-                    var stimulusSequenceDialog = (Rhs2116StimulusSequenceDialog)headstageEditorDialog.Controls["tabPageStimulusSequence"]
-                                                                                                     .Controls[nameof(Rhs2116StimulusSequenceDialog)];
-                    instance.StimulusTrigger.StimulusSequence = stimulusSequenceDialog.Sequence;
+                    instance.StimulusTrigger.StimulusSequence = DesignHelper.GetAllChildren(headstageEditorDialog)
+                                                                            .OfType<Rhs2116StimulusSequenceDialog>()
+                                                                            .Select(dialog => dialog.Sequence)
+                                                                            .FirstOrDefault();
 
                     return headstageEditorDialog.ChannelConfiguration;
                 }
