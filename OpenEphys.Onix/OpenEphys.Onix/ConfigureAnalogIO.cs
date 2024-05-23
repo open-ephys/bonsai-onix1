@@ -230,7 +230,7 @@ namespace OpenEphys.Onix
             };
         }
 
-        static float GetVoltsPerDivision(AnalogIOVoltageRange voltageRange)
+        public static float GetVoltsPerDivision(AnalogIOVoltageRange voltageRange)
         {
             return voltageRange switch
             {

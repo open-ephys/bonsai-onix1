@@ -9,24 +9,12 @@ namespace OpenEphys.Onix
 {
     public class AnalogOutput : Sink<Mat>
     {
+        const AnalogIOVoltageRange OutputRange = AnalogIOVoltageRange.TenVolts;
+
         [TypeConverter(typeof(AnalogIO.NameConverter))]
         public string DeviceName { get; set; }
 
         public AnalogIODataType DataType { get; set; } = AnalogIODataType.S16;
-
-        static float[] GetDivisionsPerVolt(DeviceInfo deviceInfo)
-        {
-            var ioDeviceInfo = (AnalogIODeviceInfo)deviceInfo;
-            return Array.ConvertAll(ioDeviceInfo.VoltsPerDivision, value => 1 / value);
-        }
-
-        static Mat CreateSampleScale(int bufferSize, float[] divisionsPerVolt)
-        {
-            using var scaleHeader = Mat.CreateMatHeader(divisionsPerVolt);
-            var voltageScale = new Mat(bufferSize, scaleHeader.Cols, scaleHeader.Depth, scaleHeader.Channels);
-            CV.Repeat(scaleHeader, voltageScale);
-            return voltageScale;
-        }
 
         public override IObservable<Mat> Process(IObservable<Mat> source)
         {
@@ -36,11 +24,12 @@ namespace OpenEphys.Onix
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
                 {
                     var bufferSize = 0;
-                    var tempBuffer = default(Mat);
-                    var sampleScale = default(Mat);
-                    var inputBuffer = default(Mat);
+                    var scaleBuffer = default(Mat);
+                    var transposeBuffer = default(Mat);
+                    var sampleScale = dataType == AnalogIODataType.Volts
+                        ? 1 / AnalogIODeviceInfo.GetVoltsPerDivision(OutputRange)
+                        : 1;
                     var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));
-                    var divisionsPerVolt = GetDivisionsPerVolt(deviceInfo);
                     return source.Do(data =>
                     {
                         if (dataType == AnalogIODataType.S16 && data.Depth != Depth.S16 ||
@@ -53,28 +42,29 @@ namespace OpenEphys.Onix
                         if (bufferSize != data.Cols)
                         {
                             bufferSize = data.Cols;
-                            sampleScale = dataType == AnalogIODataType.Volts
-                                ? CreateSampleScale(bufferSize, divisionsPerVolt)
+                            transposeBuffer = bufferSize > 1
+                                ? new Mat(data.Cols, data.Rows, data.Depth, 1)
                                 : null;
-                            if (bufferSize > 1 || sampleScale != null)
+                            if (sampleScale != 1)
                             {
-                                inputBuffer = new Mat(data.Cols, data.Rows, data.Depth, 1);
-                                tempBuffer = sampleScale != null ? new Mat(data.Cols, data.Rows, Depth.S16, 1) : null;
+                                scaleBuffer = transposeBuffer != null
+                                    ? new Mat(data.Cols, data.Rows, Depth.S16, 1)
+                                    : new Mat(data.Rows, data.Cols, Depth.S16, 1);
                             }
-                            else inputBuffer = tempBuffer = null;
+                            else scaleBuffer = null;
                         }
 
-                        var outputBuffer = inputBuffer;
-                        if (inputBuffer == null) outputBuffer = data;
-                        else
+                        var outputBuffer = data;
+                        if (transposeBuffer != null)
                         {
-                            CV.Transpose(data, inputBuffer);
-                            if (sampleScale != null)
-                            {
-                                CV.Mul(inputBuffer, sampleScale, inputBuffer);
-                                CV.Convert(inputBuffer, tempBuffer);
-                                outputBuffer = tempBuffer;
-                            }
+                            CV.Transpose(outputBuffer, transposeBuffer);
+                            outputBuffer = transposeBuffer;
+                        }
+
+                        if (scaleBuffer != null)
+                        {
+                            CV.ConvertScale(outputBuffer, scaleBuffer, sampleScale);
+                            outputBuffer = scaleBuffer;
                         }
 
                         var dataSize = outputBuffer.Step * outputBuffer.Rows;
@@ -111,14 +101,14 @@ namespace OpenEphys.Onix
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
                 {
                     var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));
-                    var divisionsPerVolt = GetDivisionsPerVolt(deviceInfo);
+                    var divisionsPerVolt = 1 / AnalogIODeviceInfo.GetVoltsPerDivision(OutputRange);
                     return source.Do(data =>
                     {
                         AssertChannelCount(data.Length);
                         var samples = new short[data.Length];
                         for (int i = 0; i < samples.Length; i++)
                         {
-                            samples[i] = (short)(data[i] * divisionsPerVolt[i]);
+                            samples[i] = (short)(data[i] * divisionsPerVolt);
                         }
 
                         device.Write(samples);
