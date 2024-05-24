@@ -93,7 +93,7 @@ namespace OpenEphys.Onix.Design
                 {
                     Contact contact = probeGroup.Probes.ElementAt(i).GetContact(j);
 
-                    if (contact.Shape.Equals("circle"))
+                    if (contact.Shape.Equals(ContactShape.Circle))
                     {
                         EllipseObj contactObj = new(contact.PosX - contact.ShapeParams.Radius, contact.PosY + contact.ShapeParams.Radius,
                             contact.ShapeParams.Radius * 2, contact.ShapeParams.Radius * 2, Color.DarkGray, Color.WhiteSmoke)
