@@ -45,7 +45,6 @@ namespace OpenEphys.Onix
             set => LinkController.PortVoltage = value;
         }
 
-
         internal override IEnumerable<IDeviceConfiguration> GetDevices()
         {
             yield return LinkController;
@@ -55,13 +54,11 @@ namespace OpenEphys.Onix
 
         class ConfigureHeadstageNric1384LinkController : ConfigureFmcLinkController
         {
-
             public double? PortVoltage { get; set; } = null;
 
             // TODO: Needs more testing
             protected override bool ConfigurePortVoltage(DeviceContext device)
             {
-
                 if (PortVoltage == null)
                 {
                     const double MinVoltage = 3.3;
@@ -77,7 +74,7 @@ namespace OpenEphys.Onix
                         if (CheckLinkState(device))
                         {
                             SetVoltage(device, voltage + VoltageOffset);
-                            break;
+                            return ResetPort(device);
                         }
                     }
 
@@ -86,8 +83,12 @@ namespace OpenEphys.Onix
                 else
                 {
                     SetVoltage(device, (double)PortVoltage);
+                    return ResetPort(device);
                 }
+            }
 
+            bool ResetPort(DeviceContext device)
+            {
                 // NB: The headstage needs an additional reset after power on
                 // to provide its device table
                 device.Context.Reset();
@@ -99,7 +100,6 @@ namespace OpenEphys.Onix
                     Thread.Sleep(200);
                     return true;
                 }
-
 
                 return false;
             }

@@ -1,56 +1,30 @@
 ﻿using System;
 using System.Collections;
 using System.Linq;
-using Bonsai;
 
 namespace OpenEphys.Onix
 {
-    public class Nric1384Settings
+    class Nric1384RegisterContext : I2CRegisterContext
     {
         readonly double ApGainCorrection;
         readonly double LfpGainCorrection;
-        readonly Nric1384Adc[] Adcs = new Nric1384Adc[Nric1384.AdcCount];
+        readonly NeuropixelsV1Adc[] Adcs = new NeuropixelsV1Adc[NeuropixelsV1.AdcCount];
 
+        const byte ReferenceSource = 0b001; // All, hardcoded
         const int BaseConfigurationBitCount = 2448;
         const int BaseConfigurationConfigOffset = 576;
         const int NumberOfGains = 8;
+        const uint ShiftRegisterSuccess = 1 << 7;
+
+        readonly DeviceContext device;
 
         readonly BitArray[] BaseConfigs = { new BitArray(BaseConfigurationBitCount, false),   // Ch 0, 2, 4, ...
                                             new BitArray(BaseConfigurationBitCount, false) }; // Ch 1, 3, 5, ...
 
-        public enum ReferenceSource : byte
+        public Nric1384RegisterContext(DeviceContext deviceContext, NeuropixelsV1Gain apGain, NeuropixelsV1Gain lfpGain, bool apFilter, string gainCalibrationFile, string adcCalibrationFile)
+            : base(deviceContext, Nric1384.I2cAddress)
         {
-            All = 0b001,
-            Par = 0b010
-        }
-
-        public enum Gain : byte
-        {
-            x50 = 0b000,
-            x125 = 0b001,
-            x250 = 0b010,
-            x500 = 0b011,
-            x1000 = 0b100,
-            x1500 = 0b101,
-            x2000 = 0b110,
-            x3000 = 0b111
-        }
-
-        public static float GainToFloat(Gain gain) => gain switch
-        {
-            Gain.x50 => 50f,
-            Gain.x125 => 125f,
-            Gain.x250 => 250f,
-            Gain.x500 => 500f,
-            Gain.x1000 => 1000f,
-            Gain.x1500 => 1500f,
-            Gain.x2000 => 2000f,
-            Gain.x3000 => 3000f,
-            _ => throw new ArgumentOutOfRangeException(nameof(gain), $"Unexpected gain value: {gain}"),
-        };
-
-        public Nric1384Settings(Gain apGain, Gain lfpGain, ReferenceSource refSource, bool apFilter, string gainCalibrationFile, string adcCalibrationFile)
-        {
+            device = deviceContext;
 
             if (gainCalibrationFile == null || adcCalibrationFile == null)
             {
@@ -70,11 +44,11 @@ namespace OpenEphys.Onix
             if (gainCorrections.Count() != 2 * NumberOfGains)
                 throw new ArgumentException("Incorrectly formmatted gain correction calibration file.");
 
-            ApGainCorrection = double.Parse(gainCorrections.ElementAt(Array.IndexOf(Enum.GetValues(typeof(Gain)), apGain)));
-            LfpGainCorrection = double.Parse(gainCorrections.ElementAt(Array.IndexOf(Enum.GetValues(typeof(Gain)), lfpGain) + 8));
+            ApGainCorrection = double.Parse(gainCorrections.ElementAt(Array.IndexOf(Enum.GetValues(typeof(NeuropixelsV1Gain)), apGain)));
+            LfpGainCorrection = double.Parse(gainCorrections.ElementAt(Array.IndexOf(Enum.GetValues(typeof(NeuropixelsV1Gain)), lfpGain) + 8));
 
             // parse ADC calibration file
-            for (var i = 0; i < Nric1384.AdcCount; i++)
+            for (var i = 0; i < NeuropixelsV1.AdcCount; i++)
             {
                 var adcCal = adcFile.ReadLine().Split(',').Skip(1);
                 if (adcCal.Count() != NumberOfGains)
@@ -82,7 +56,7 @@ namespace OpenEphys.Onix
                     throw new ArgumentException("Incorrectly formmatted ADC calibration file.");
                 }
 
-                Adcs[i] = new Nric1384Adc
+                Adcs[i] = new NeuropixelsV1Adc
                 {
                     CompP = int.Parse(adcCal.ElementAt(0)),
                     CompN = int.Parse(adcCal.ElementAt(1)),
@@ -96,7 +70,7 @@ namespace OpenEphys.Onix
             }
 
             // create shift-register bit arrays
-            for (int i = 0; i < Nric1384.ChannelCount; i++)
+            for (int i = 0; i < NeuropixelsV1.ChannelCount; i++)
             {
                 var configIdx = i % 2;
 
@@ -105,9 +79,9 @@ namespace OpenEphys.Onix
                     (382 - i) / 2 * 3 :
                     (383 - i) / 2 * 3;
 
-                BaseConfigs[configIdx][refIdx + 0] = ((byte)refSource >> 0 & 0x1) == 1;
-                BaseConfigs[configIdx][refIdx + 1] = ((byte)refSource >> 1 & 0x1) == 1;
-                BaseConfigs[configIdx][refIdx + 2] = ((byte)refSource >> 2 & 0x1) == 1;
+                BaseConfigs[configIdx][refIdx + 0] = (ReferenceSource >> 0 & 0x1) == 1;
+                BaseConfigs[configIdx][refIdx + 1] = (ReferenceSource >> 1 & 0x1) == 1;
+                BaseConfigs[configIdx][refIdx + 2] = (ReferenceSource >> 2 & 0x1) == 1;
 
                 var chanOptsIdx = BaseConfigurationConfigOffset + ((i - configIdx) * 4);
 
@@ -202,69 +176,50 @@ namespace OpenEphys.Onix
             }
         }
 
-        public void WriteShiftRegisters(DeviceContext device)
+        internal void InitializeChip()
         {
+            // turn off calibration mode
+            WriteByte(Nric1384.CAL_MOD, (uint)NeuropixelsV1CalibrationRegisterValues.CAL_OFF);
+            WriteByte(Nric1384.SYNC, 0);
 
-            var i2cNric1384 = new I2CRegisterContext(device, Nric1384.I2cAddress);
+            // perform digital and channel reset
+            WriteByte(Nric1384.REC_MOD, (uint)NeuropixelsV1RecordRegisterValues.DIG_CH_RESET);
 
-            // Even channels
-            var bytes = BitArrayToBytes(BaseConfigs[0]);
+            // change operation state to Recording
+            WriteByte(Nric1384.OP_MODE, (uint)NeuropixelsV1OperationRegisterValues.RECORD);
 
-            i2cNric1384.WriteByte(Nric1384.SR_LENGTH1, (uint)bytes.Length % 0x100);
-            i2cNric1384.WriteByte(Nric1384.SR_LENGTH2, (uint)bytes.Length / 0x100);
+            // start acquisition
+            WriteByte(Nric1384.REC_MOD, (uint)NeuropixelsV1RecordRegisterValues.ACTIVE);
+        }
 
-            // First time to program
-            foreach (var b in bytes)
+        public void WriteShiftRegisters()
+        {
+            // base
+            for (int i = 0; i < BaseConfigs.Length; i++)
             {
-                i2cNric1384.WriteByte(Nric1384.SR_CHAIN2, b);
+                var srAddress = i == 0 ? Nric1384.SR_CHAIN2 : Nric1384.SR_CHAIN3;
+
+                for (int j = 0; j < 2; j++)
+                {
+
+                    var baseBytes = BitArrayToBytes(BaseConfigs[i]);
+
+                    WriteByte(Nric1384.SR_LENGTH1, (uint)baseBytes.Length % 0x100);
+                    WriteByte(Nric1384.SR_LENGTH2, (uint)baseBytes.Length / 0x100);
+
+                    foreach (var b in baseBytes)
+                    {
+                        WriteByte(srAddress, b);
+                    }
+                }
+
+                if (ReadByte(Nric1384.STATUS) != ShiftRegisterSuccess)
+                {
+                    throw new InvalidOperationException($"Shift register {srAddress} status check failed.");
+                }
             }
 
-            // Second time for parity check
-            i2cNric1384.WriteByte(Nric1384.SR_LENGTH1, (uint)bytes.Length % 0x100);
-            i2cNric1384.WriteByte(Nric1384.SR_LENGTH2, (uint)bytes.Length / 0x100);
-
-            foreach (var b in bytes)
-            {
-                i2cNric1384.WriteByte(Nric1384.SR_CHAIN2, b);
-            }
-
-            if (i2cNric1384.ReadByte(Nric1384.STATUS) != 1 << 7)
-            {
-                throw new WorkflowException("Shift register programming check failed.");
-            }
-
-            // Odd channels
-            bytes = BitArrayToBytes(BaseConfigs[1]);
-
-            i2cNric1384.WriteByte(Nric1384.SR_LENGTH1, (uint)bytes.Length % 0x100);
-            i2cNric1384.WriteByte(Nric1384.SR_LENGTH2, (uint)bytes.Length / 0x100);
-
-            // First time to program
-            foreach (var b in bytes)
-            {
-                i2cNric1384.WriteByte(Nric1384.SR_CHAIN3, b);
-            }
-
-            // Second time for parity check
-            i2cNric1384.WriteByte(Nric1384.SR_LENGTH1, (uint)bytes.Length % 0x100);
-            i2cNric1384.WriteByte(Nric1384.SR_LENGTH2, (uint)bytes.Length / 0x100);
-
-            foreach (var b in bytes)
-            {
-                i2cNric1384.WriteByte(Nric1384.SR_CHAIN3, b);
-            }
-
-            if (i2cNric1384.ReadByte(Nric1384.STATUS) != 1 << 7)
-            {
-                throw new WorkflowException("Shift register programming check failed.");
-            }
-
-            // Adc correction parameters
-            for (uint i = 0; i < Adcs.Length; i++)
-            {
-                device.WriteRegister(Nric1384.ADC00_OFF_THRESH + i, (uint)(Adcs[i].Offset << 10 | Adcs[i].Threshold));
-            }
-
+            // gain corrections
             device.WriteRegister(Nric1384.LFP_GAIN, (uint)(LfpGainCorrection * (1 << 14)));
             device.WriteRegister(Nric1384.AP_GAIN, (uint)(ApGainCorrection * (1 << 14)));
 
