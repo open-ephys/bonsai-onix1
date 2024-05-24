@@ -29,8 +29,8 @@ namespace OpenEphys.Onix
     unsafe struct Nric1384Payload
     {
         public ulong HubClock;
-        public fixed ushort LfpData[Nric1384.AdcCount];
-        public fixed ushort ApData[Nric1384.ChannelCount];
+        public fixed ushort LfpData[NeuropixelsV1.AdcCount];
+        public fixed ushort ApData[NeuropixelsV1.ChannelCount];
         public uint FrameCount;
     }
 }
