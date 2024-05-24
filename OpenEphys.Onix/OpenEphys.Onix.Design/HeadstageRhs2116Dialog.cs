@@ -8,7 +8,8 @@ namespace OpenEphys.Onix.Design
     {
         public Rhs2116ProbeGroup ChannelConfiguration;
 
-        public HeadstageRhs2116Dialog(Rhs2116ProbeGroup channelConfiguration, Rhs2116StimulusSequence sequence)
+        public HeadstageRhs2116Dialog(Rhs2116ProbeGroup channelConfiguration, Rhs2116StimulusSequence sequence,
+            ConfigureRhs2116 rhs2116A)
         {
             InitializeComponent();
 
@@ -38,6 +39,18 @@ namespace OpenEphys.Onix.Design
             tabPageStimulusSequence.Controls.Add(stimulusSequenceDialog);
 
             stimulusSequenceDialog.Show();
+
+            var rhs2116ADialog = new Rhs2116Dialog(rhs2116A)
+            {
+                TopLevel = false,
+                FormBorderStyle = FormBorderStyle.None,
+                Dock = DockStyle.Fill,
+                Parent = this,
+                Tag = nameof(Rhs2116Dialog) + "A"
+            };
+
+            tabPageRhs2116A.Controls.Add(rhs2116ADialog);
+            rhs2116ADialog.Show();
         }
 
         private void OnClickOK(object sender, EventArgs e)

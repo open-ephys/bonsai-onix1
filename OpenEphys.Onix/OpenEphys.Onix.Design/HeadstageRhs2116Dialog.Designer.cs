@@ -53,7 +53,7 @@
             this.tabControl.Location = new System.Drawing.Point(0, 0);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
-            this.tabControl.Size = new System.Drawing.Size(1420, 657);
+            this.tabControl.Size = new System.Drawing.Size(1828, 884);
             this.tabControl.TabIndex = 0;
             this.tabControl.Selected += new System.Windows.Forms.TabControlEventHandler(this.TabPage_Selected);
             // 
@@ -62,7 +62,7 @@
             this.tabPageChannelConfiguration.Location = new System.Drawing.Point(4, 29);
             this.tabPageChannelConfiguration.Name = "tabPageChannelConfiguration";
             this.tabPageChannelConfiguration.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageChannelConfiguration.Size = new System.Drawing.Size(1412, 624);
+            this.tabPageChannelConfiguration.Size = new System.Drawing.Size(1820, 851);
             this.tabPageChannelConfiguration.TabIndex = 0;
             this.tabPageChannelConfiguration.Text = "Channel Configuration";
             this.tabPageChannelConfiguration.UseVisualStyleBackColor = true;
@@ -99,9 +99,9 @@
             // 
             this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.buttonCancel.Location = new System.Drawing.Point(1246, 10);
+            this.buttonCancel.Location = new System.Drawing.Point(1654, 10);
             this.buttonCancel.Name = "buttonCancel";
-            this.buttonCancel.Size = new System.Drawing.Size(162, 49);
+            this.buttonCancel.Size = new System.Drawing.Size(162, 38);
             this.buttonCancel.TabIndex = 6;
             this.buttonCancel.Text = "Cancel";
             this.buttonCancel.UseVisualStyleBackColor = true;
@@ -110,9 +110,9 @@
             // buttonOK
             // 
             this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOK.Location = new System.Drawing.Point(1066, 10);
+            this.buttonOK.Location = new System.Drawing.Point(1474, 10);
             this.buttonOK.Name = "buttonOK";
-            this.buttonOK.Size = new System.Drawing.Size(162, 49);
+            this.buttonOK.Size = new System.Drawing.Size(162, 38);
             this.buttonOK.TabIndex = 5;
             this.buttonOK.Text = "OK";
             this.buttonOK.UseVisualStyleBackColor = true;
@@ -134,15 +134,15 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.buttonOK);
             this.splitContainer1.Panel2.Controls.Add(this.buttonCancel);
-            this.splitContainer1.Size = new System.Drawing.Size(1420, 732);
-            this.splitContainer1.SplitterDistance = 657;
+            this.splitContainer1.Size = new System.Drawing.Size(1828, 944);
+            this.splitContainer1.SplitterDistance = 884;
             this.splitContainer1.TabIndex = 2;
             // 
             // HeadstageRhs2116Dialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1420, 732);
+            this.ClientSize = new System.Drawing.Size(1828, 944);
             this.Controls.Add(this.splitContainer1);
             this.Name = "HeadstageRhs2116Dialog";
             this.Text = "HeadstageRhs2116Dialog";

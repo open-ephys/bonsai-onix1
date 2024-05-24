@@ -27,7 +27,9 @@ namespace OpenEphys.Onix.Design
                     return base.EditValue(context, provider, value);
                 }
 
-                var headstageEditorDialog = new HeadstageRhs2116Dialog(instance.ChannelConfiguration, instance.StimulusTrigger.StimulusSequence);
+                var headstageEditorDialog = new HeadstageRhs2116Dialog(instance.ChannelConfiguration,
+                                                                       instance.StimulusTrigger.StimulusSequence,
+                                                                       instance.Rhs2116A);
 
                 if (headstageEditorDialog.ShowDialog() == DialogResult.OK)
                 {
@@ -35,6 +37,12 @@ namespace OpenEphys.Onix.Design
                                                                             .OfType<Rhs2116StimulusSequenceDialog>()
                                                                             .Select(dialog => dialog.Sequence)
                                                                             .First();
+
+                    instance.Rhs2116A = DesignHelper.GetAllChildren(headstageEditorDialog)
+                                                    .OfType<Rhs2116Dialog>()
+                                                    .Where(dialog => dialog.Rhs2116.DeviceName.Contains(nameof(instance.Rhs2116A)))
+                                                    .Select(dialog => dialog.Rhs2116)
+                                                    .First();
 
                     return headstageEditorDialog.ChannelConfiguration;
                 }
