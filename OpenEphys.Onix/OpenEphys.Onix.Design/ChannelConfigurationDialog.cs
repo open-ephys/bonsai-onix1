@@ -124,13 +124,14 @@ namespace OpenEphys.Onix.Design
                 }
             }
 
-            ResizeAxes(zedGraph);
-          
             zedGraph.Refresh();
         }
 
         public static void ResizeAxes(ZedGraphControl zedGraph)
         {
+            if (zedGraph.GraphPane.GraphObjList.Count == 0)
+                return;
+
             var minX = zedGraph.GraphPane.GraphObjList.Min<GraphObj, double>(obj =>
             {
                 if (obj is PolyObj polyObj)
