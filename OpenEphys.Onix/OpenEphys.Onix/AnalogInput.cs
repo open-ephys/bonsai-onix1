@@ -35,7 +35,6 @@ namespace OpenEphys.Onix
         {
             var bufferSize = BufferSize;
             var dataType = DataType;
-            var depth = dataType == AnalogIODataType.Volts ? Depth.F32 : Depth.S16;
             return Observable.Using(
                 () => DeviceManager.ReserveDevice(DeviceName),
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
@@ -47,6 +46,9 @@ namespace OpenEphys.Onix
                         var sampleIndex = 0;
                         var voltageScale = dataType == AnalogIODataType.Volts
                             ? CreateVoltageScale(bufferSize, ioDeviceInfo.VoltsPerDivision)
+                            : null;
+                        var transposeBuffer = voltageScale != null
+                            ? new Mat(AnalogIO.ChannelCount, bufferSize, Depth.S16, 1)
                             : null;
                         var analogDataBuffer = new short[AnalogIO.ChannelCount * bufferSize];
                         var hubSyncCounterBuffer = new ulong[bufferSize];
@@ -65,8 +67,9 @@ namespace OpenEphys.Onix
                                         analogDataBuffer,
                                         bufferSize,
                                         AnalogIO.ChannelCount,
-                                        depth,
-                                        voltageScale);
+                                        Depth.S16,
+                                        voltageScale,
+                                        transposeBuffer);
                                     observer.OnNext(new AnalogInputDataFrame(clockBuffer, hubSyncCounterBuffer, analogData));
                                     hubSyncCounterBuffer = new ulong[bufferSize];
                                     clockBuffer = new ulong[bufferSize];
