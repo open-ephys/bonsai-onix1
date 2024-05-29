@@ -60,17 +60,17 @@ namespace OpenEphys.Onix
                                 deviceRhsB.WriteRegister(Rhs2116.STEPSZ, reg[2] << 13 | reg[1] << 7 | reg[0]);
 
                                 var a = value.AnodicAmplitudes;
-                                for (int i = 0; i < Rhs2116StimulusSequence.NumStimuliPerDevice; i++)
+                                for (int i = 0; i < Rhs2116StimulusSequence.NumberOfChannelsPerDevice; i++)
                                 {
                                     deviceRhsA.WriteRegister(Rhs2116.POS00 + (uint)i, a.ElementAt(i));
-                                    deviceRhsB.WriteRegister(Rhs2116.POS00 + (uint)i, a.ElementAt(i + Rhs2116StimulusSequence.NumStimuliPerDevice));
+                                    deviceRhsB.WriteRegister(Rhs2116.POS00 + (uint)i, a.ElementAt(i + Rhs2116StimulusSequence.NumberOfChannelsPerDevice));
                                 }
 
                                 var c = value.CathodicAmplitudes;
-                                for (int i = 0; i < Rhs2116StimulusSequence.NumStimuliPerDevice; i++)
+                                for (int i = 0; i < Rhs2116StimulusSequence.NumberOfChannelsPerDevice; i++)
                                 {
                                     deviceRhsA.WriteRegister(Rhs2116.NEG00 + (uint)i, c.ElementAt(i));
-                                    deviceRhsB.WriteRegister(Rhs2116.NEG00 + (uint)i, c.ElementAt(i + Rhs2116StimulusSequence.NumStimuliPerDevice));
+                                    deviceRhsB.WriteRegister(Rhs2116.NEG00 + (uint)i, c.ElementAt(i + Rhs2116StimulusSequence.NumberOfChannelsPerDevice));
                                 }
 
                                 var dt = value.DeltaTable;

@@ -15,14 +15,14 @@ namespace OpenEphys.Onix
     {
         private readonly bool DualSequences;
 
-        public static readonly int NumStimuliPerDevice = 16;
+        public const int NumberOfChannelsPerDevice = 16;
 
         /// <summary>
         /// Default constructor for Rhs2116StimulusSequence. Initializes with 16 stimuli
         /// </summary>
         public Rhs2116StimulusSequence()
         {
-            Stimuli = new Rhs2116Stimulus[NumStimuliPerDevice];
+            Stimuli = new Rhs2116Stimulus[NumberOfChannelsPerDevice];
 
             for (var i = 0; i < Stimuli.Length; i++)
             {
@@ -40,7 +40,7 @@ namespace OpenEphys.Onix
         /// <param name="dualSequences">If true, create 32 channels of stimuli; if false, create 16 chanels of stimuli</param>
         public Rhs2116StimulusSequence(bool dualSequences)
         {
-            var numStimuli = dualSequences ? NumStimuliPerDevice * 2 : NumStimuliPerDevice;
+            var numStimuli = dualSequences ? NumberOfChannelsPerDevice * 2 : NumberOfChannelsPerDevice;
 
             Stimuli = new Rhs2116Stimulus[numStimuli];
 
@@ -196,9 +196,9 @@ namespace OpenEphys.Onix
         {
             var table = new Dictionary<uint, BitArray>();
 
-            var offset = deltaTableA ? 0 : NumStimuliPerDevice;
+            var offset = deltaTableA ? 0 : NumberOfChannelsPerDevice;
 
-            for (int i = 0; i < NumStimuliPerDevice; i++)
+            for (int i = 0; i < NumberOfChannelsPerDevice; i++)
             {
                 var s = Stimuli[i + offset];
 
