@@ -1,8 +1,13 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
 using System.Drawing.Design;
-using OpenEphys.ProbeInterface;
+using System.Xml.Serialization;
+using Newtonsoft.Json;
+using Bonsai;
+using System.Xml;
+using System.Text;
+using System;
 
 namespace OpenEphys.Onix
 {
@@ -58,14 +63,28 @@ namespace OpenEphys.Onix
             }
         }
 
+        [XmlIgnore]
         [Editor("OpenEphys.Onix.Design.HeadstageRhs2116Editor, OpenEphys.Onix.Design", typeof(UITypeEditor))]
         public Rhs2116ProbeGroup ChannelConfiguration
         {
             get { return probeGroup; }
+            set { probeGroup = value; }
+        }
+
+        [Browsable(false)]
+        [Externalizable(false)]
+        [XmlElement(nameof(ChannelConfiguration))]
+        public string ChannelConfigurationString
+        {
+            get
+            {
+                var jsonString = JsonConvert.SerializeObject(ChannelConfiguration);
+                return Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonString));
+            }
             set
             {
-                probeGroup = value;
-                StimulusTrigger.ChannelConfiguration = value;
+                var jsonString = Encoding.UTF8.GetString(Convert.FromBase64String(value));
+                ChannelConfiguration = JsonConvert.DeserializeObject<Rhs2116ProbeGroup>(jsonString);
             }
         }
 
