@@ -16,7 +16,6 @@
     <VersionSuffix></VersionSuffix>
     <LangVersion>10.0</LangVersion>
     <Features>strict</Features>
-    <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
