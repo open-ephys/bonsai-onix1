@@ -16,6 +16,7 @@
     <VersionSuffix></VersionSuffix>
     <LangVersion>10.0</LangVersion>
     <Features>strict</Features>
+    <Platforms>x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
