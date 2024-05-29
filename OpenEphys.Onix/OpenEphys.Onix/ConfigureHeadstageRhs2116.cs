@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
 using System.Drawing.Design;
@@ -121,8 +121,8 @@ namespace OpenEphys.Onix
 
     internal static class HeadstageRhs2116
     {
-      public static uint GetRhs2116ADeviceAddress(uint baseaddress) => baseaddress + 0;
-      public static uint GetRhs2116BDeviceAddress(uint baseaddress) => baseaddress + 1;
-      public static uint GetRhs2116StimulusTriggerDeviceAddress(uint baseaddress) => baseaddress + 2;
+        public static uint GetRhs2116ADeviceAddress(uint baseaddress) => baseaddress + 0;
+        public static uint GetRhs2116BDeviceAddress(uint baseaddress) => baseaddress + 1;
+        public static uint GetRhs2116StimulusTriggerDeviceAddress(uint baseaddress) => baseaddress + 2;
     }
 }
