@@ -530,7 +530,12 @@ namespace OpenEphys.Onix.Design
 
             for (int i = 0; i < deviceChannelIndices.Count(); i++)
             {
-                dataGridViewStimulusTable.Rows[i].HeaderCell.Value = deviceChannelIndices.ElementAt(i);
+                var index = deviceChannelIndices.ElementAt(i);
+
+                if (index != -1)
+                {
+                    dataGridViewStimulusTable.Rows[index].HeaderCell.Value = index.ToString();
+                }
             }
         }
 
