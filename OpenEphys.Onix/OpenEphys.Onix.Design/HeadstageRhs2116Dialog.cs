@@ -24,6 +24,7 @@ namespace OpenEphys.Onix.Design
             };
 
             tabPageChannelConfiguration.Controls.Add(channelConfigurationDialog);
+            AddMenuItemsFromDialog(channelConfigurationDialog, "Channel Configuration");
 
             channelConfigurationDialog.Show();
 
@@ -37,6 +38,7 @@ namespace OpenEphys.Onix.Design
             };
 
             tabPageStimulusSequence.Controls.Add(stimulusSequenceDialog);
+            AddMenuItemsFromDialog(stimulusSequenceDialog, "Stimulus Sequence");
 
             stimulusSequenceDialog.Show();
 
@@ -92,6 +94,28 @@ namespace OpenEphys.Onix.Design
                 if (!stimSequenceDialog.UpdateChannelConfiguration(channelConfigurationDialog.ChannelConfiguration))
                 {
                     MessageBox.Show("Warning: Channel configuration was not updated for the stimulus sequence tab.");
+                }
+            }
+        }
+
+        private void AddMenuItemsFromDialog(Form form, string menuName)
+        {
+            if (form != null)
+            {
+                var menuStrips = DesignHelper.GetAllChildren(form)
+                                       .OfType<MenuStrip>()
+                                       .ToList();
+
+                if (menuStrips != null && menuStrips.Count > 0)
+                {
+                    foreach (var menuStrip in menuStrips)
+                    {
+                        var toolStripMenuItem = new ToolStripMenuItem(menuName);
+
+                        toolStripMenuItem.DropDownItems.AddRange(menuStrip.Items);
+
+                        this.menuStrip.Items.AddRange(new ToolStripItem[] { toolStripMenuItem });
+                    }
                 }
             }
         }

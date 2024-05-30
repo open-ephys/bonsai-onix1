@@ -69,6 +69,8 @@ namespace OpenEphys.Onix.Design
             {
                 splitContainer2.Panel2Collapsed = true;
                 splitContainer2.Panel2.Hide();
+
+                menuStrip.Visible = false;
             }
         }
 
