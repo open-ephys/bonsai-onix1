@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OpenEphys.ONIX\OpenEphys.ONIX.csproj" />
+    <ProjectReference Include="..\OpenEphys.ProbeInterface\OpenEphys.ProbeInterface\OpenEphys.ProbeInterface\OpenEphys.ProbeInterface.csproj" />
   </ItemGroup>
 
   <ItemGroup>
