@@ -21,9 +21,9 @@ namespace OpenEphys.Onix.Design
             {
                 Rhs2116ProbeGroup probeGroup = null;
 
-                if (context.Instance is ConfigureRhs2116Trigger configureRhs2116Trigger)
+                if (context.Instance is ConfigureRhs2116Trigger)
                 {
-                    probeGroup = configureRhs2116Trigger.ChannelConfiguration;
+                    probeGroup = new Rhs2116ProbeGroup();
                 }
                 else if (context.Instance is ConfigureHeadstageRhs2116 configureHeadstageRhs2116)
                 {

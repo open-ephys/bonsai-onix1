@@ -20,10 +20,6 @@ namespace OpenEphys.Onix
         [Description("Specifies whether the RHS2116 device is enabled.")]
         public Rhs2116TriggerSource TriggerSource { get; set; } = Rhs2116TriggerSource.Local;
 
-        [Category(ConfigurationCategory)]
-        [Description("Probe Interface group to define channel mapping")]
-        public Rhs2116ProbeGroup ChannelConfiguration { get; set; }
-
         [Category("Acquisition")]
         [Description("Stimulus sequence.")]
         [Editor("OpenEphys.Onix.Design.Rhs2116StimulusSequenceEditor, OpenEphys.Onix.Design", typeof(UITypeEditor))]
@@ -45,7 +41,7 @@ namespace OpenEphys.Onix
 
                 device.WriteRegister(Rhs2116Trigger.TRIGGERSOURCE, (uint)triggerSource);
 
-                var deviceInfo = new Rhs2116TriggerDeviceInfo(context, DeviceType, deviceAddress, ChannelConfiguration);
+                var deviceInfo = new Rhs2116TriggerDeviceInfo(context, DeviceType, deviceAddress, new Rhs2116ProbeGroup());
 
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
