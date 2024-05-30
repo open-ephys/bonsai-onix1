@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -489,6 +489,7 @@ namespace OpenEphys.Onix.Design
             }
 
             DrawStimulusWaveform();
+            VisualizeSelectedChannels();
         }
 
         private void ParameterKeyPress_Time(object sender, KeyPressEventArgs e)
