@@ -41,8 +41,8 @@ namespace OpenEphys.Onix
                                 clockBuffer[sampleIndex] = frame.Clock;
                                 if (++sampleIndex >= bufferSize)
                                 {
-                                    var amplifierData = BufferHelper.CopyBuffer(amplifierBuffer, bufferSize, Rhd2164.AmplifierChannelCount, Depth.U16);
-                                    var auxData = BufferHelper.CopyBuffer(auxBuffer, bufferSize, Rhd2164.AuxChannelCount, Depth.U16);
+                                    var amplifierData = BufferHelper.CopyTranspose(amplifierBuffer, bufferSize, Rhd2164.AmplifierChannelCount, Depth.U16);
+                                    var auxData = BufferHelper.CopyTranspose(auxBuffer, bufferSize, Rhd2164.AuxChannelCount, Depth.U16);
                                     observer.OnNext(new Rhd2164DataFrame(clockBuffer, hubClockBuffer, amplifierData, auxData));
                                     hubClockBuffer = new ulong[bufferSize];
                                     clockBuffer = new ulong[bufferSize];

@@ -4,6 +4,11 @@ namespace OpenEphys.Onix
 {
     internal class DeviceInfo
     {
+        public DeviceInfo(DeviceContext device, Type deviceType)
+            : this(device.Context, deviceType, device.Address)
+        {
+        }
+
         public DeviceInfo(ContextTask context, Type deviceType, uint deviceAddress)
         {
             Context = context ?? throw new ArgumentNullException(nameof(context));

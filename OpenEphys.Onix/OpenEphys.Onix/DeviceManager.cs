@@ -12,7 +12,7 @@ namespace OpenEphys.Onix
 
         internal static IDisposable RegisterDevice(string name, DeviceContext device, Type deviceType)
         {
-            var deviceInfo = new DeviceInfo(device.Context, deviceType, device.Address);
+            var deviceInfo = new DeviceInfo(device, deviceType);
             return RegisterDevice(name, deviceInfo);
         }
 
