@@ -35,6 +35,15 @@ namespace OpenEphys.Onix
             }
         }
 
+        [Description("If defined, it will override automated voltage discovery and apply the specified voltage" +
+                     "to the headstage. Warning: this device requires 5.0V to 7.0V for proper operation." +
+                     "Supplying higher voltages may result in damage to the headstage.")]
+        public double? PortVoltage
+        {
+            get => LinkController.PortVoltage;
+            set => LinkController.PortVoltage = value;
+        }
+
         internal override IEnumerable<IDeviceConfiguration> GetDevices()
         {
             yield return LinkController;
