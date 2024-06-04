@@ -91,25 +91,45 @@ namespace OpenEphys.Onix
         public uint MaxWriteFrameSize { get; private set; }
         public Dictionary<uint, oni.Device> DeviceTable { get; private set; }
 
+        void AssertConfigurationContext()
+        {
+            if (running)
+            {
+                throw new InvalidOperationException("Configuration cannot be changed while acquisition context is running.");
+            }
+        }
+
         // NB: This is where actions that reconfigure the hub state, or otherwise
         // change the device table should be executed
         internal void ConfigureHost(Func<ContextTask, IDisposable> configure)
         {
-            configureHost += configure;
+            lock (regLock)
+            {
+                AssertConfigurationContext();
+                configureHost += configure;
+            }
         }
 
         // NB: This is where actions that calibrate port voltage or otherwise
         // check link lock state should be executed
         internal void ConfigureLink(Func<ContextTask, IDisposable> configure)
         {
-            configureLink += configure;
+            lock (regLock)
+            {
+                AssertConfigurationContext();
+                configureLink += configure;
+            }
         }
 
         // NB: Actions queued using this method should assume that the device table
         // is finalized and cannot be changed
         internal void ConfigureDevice(Func<ContextTask, IDisposable> configure)
         {
-            configureDevice += configure;
+            lock (regLock)
+            {
+                AssertConfigurationContext();
+                configureDevice += configure;
+            }
         }
 
         private IDisposable ConfigureContext()
@@ -227,9 +247,9 @@ namespace OpenEphys.Onix
                 CollectFramesToken,
                 TaskCreationOptions.LongRunning,
                 TaskScheduler.Default);
-            }
 
-            running = true;
+                running = true;
+            }
         }
 
         internal void Stop()
