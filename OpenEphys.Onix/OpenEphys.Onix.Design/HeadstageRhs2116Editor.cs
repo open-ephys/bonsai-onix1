@@ -27,24 +27,40 @@ namespace OpenEphys.Onix.Design
                     return base.EditValue(context, provider, value);
                 }
 
-                var headstageEditorDialog = new HeadstageRhs2116Dialog(instance.ChannelConfiguration,
-                                                                       instance.StimulusTrigger.StimulusSequence,
-                                                                       instance.Rhs2116A);
+                var headstageDialog = new HeadstageRhs2116Dialog(instance.ChannelConfiguration,
+                                                                 instance.StimulusTrigger.StimulusSequence,
+                                                                 instance.Rhs2116A);
 
-                if (headstageEditorDialog.ShowDialog() == DialogResult.OK)
+                if (headstageDialog.ShowDialog() == DialogResult.OK)
                 {
-                    instance.StimulusTrigger.StimulusSequence = DesignHelper.GetAllChildren(headstageEditorDialog)
-                                                                            .OfType<Rhs2116StimulusSequenceDialog>()
-                                                                            .Select(dialog => dialog.Sequence)
-                                                                            .First();
+                    var stimulusSequence = headstageDialog.GetAllChildren()
+                                                          .OfType<Rhs2116StimulusSequenceDialog>()
+                                                          .Select(dialog => dialog.Sequence)
+                                                          .First();
 
-                    instance.Rhs2116A = DesignHelper.GetAllChildren(headstageEditorDialog)
-                                                    .OfType<Rhs2116Dialog>()
-                                                    .Where(dialog => dialog.Rhs2116.DeviceName.Contains(nameof(instance.Rhs2116A)))
-                                                    .Select(dialog => dialog.Rhs2116)
-                                                    .First();
+                    if (stimulusSequence != null && stimulusSequence.Valid)
+                    {
+                        instance.StimulusTrigger.StimulusSequence = stimulusSequence;
+                    }
 
-                    return headstageEditorDialog.ChannelConfiguration;
+                    var rhs2116 = headstageDialog.GetAllChildren()
+                                                 .OfType<Rhs2116Dialog>()
+                                                 .Select(dialog => dialog.Rhs2116)
+                                                 .First();
+
+                    if (rhs2116 != null)
+                    {
+                        instance.Rhs2116A = rhs2116;
+
+                        instance.Rhs2116B.AnalogHighCutoff = rhs2116.AnalogHighCutoff;
+                        instance.Rhs2116B.AnalogLowCutoff = rhs2116.AnalogLowCutoff;
+                        instance.Rhs2116B.AnalogLowCutoffRecovery = rhs2116.AnalogLowCutoffRecovery;
+                        instance.Rhs2116B.DspCutoff = rhs2116.DspCutoff;
+                        instance.Rhs2116B.Enable = rhs2116.Enable;
+                        instance.Rhs2116B.RespectExternalActiveStim = rhs2116.RespectExternalActiveStim;
+                    }
+
+                    return headstageDialog.ChannelConfiguration;
                 }
             }
 

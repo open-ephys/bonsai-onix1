@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -6,16 +6,20 @@ namespace OpenEphys.Onix.Design
 {
     public partial class HeadstageRhs2116Dialog : Form
     {
+        readonly ChannelConfigurationDialog ChannelConfigurationDialog;
+        readonly Rhs2116StimulusSequenceDialog StimulusSequenceDialog;
+        readonly Rhs2116Dialog Rhs2116Dialog;
+
         public Rhs2116ProbeGroup ChannelConfiguration;
 
         public HeadstageRhs2116Dialog(Rhs2116ProbeGroup channelConfiguration, Rhs2116StimulusSequenceDual sequence,
-            ConfigureRhs2116 rhs2116A)
+            ConfigureRhs2116 rhs2116)
         {
             InitializeComponent();
 
-            ChannelConfiguration = channelConfiguration;
+            ChannelConfiguration = new Rhs2116ProbeGroup(channelConfiguration);
 
-            var channelConfigurationDialog = new ChannelConfigurationDialog(ChannelConfiguration)
+            ChannelConfigurationDialog = new ChannelConfigurationDialog(ChannelConfiguration)
             {
                 TopLevel = false,
                 FormBorderStyle = FormBorderStyle.None,
@@ -23,50 +27,41 @@ namespace OpenEphys.Onix.Design
                 Parent = this,
             };
 
-            tabPageChannelConfiguration.Controls.Add(channelConfigurationDialog);
-            AddMenuItemsFromDialog(channelConfigurationDialog, "Channel Configuration");
+            tabPageChannelConfiguration.Controls.Add(ChannelConfigurationDialog);
+            AddMenuItemsFromDialog(ChannelConfigurationDialog, "Channel Configuration");
 
-            channelConfigurationDialog.Show();
+            ChannelConfigurationDialog.Show();
 
-            var stimulusSequenceDialog = new Rhs2116StimulusSequenceDialog(sequence, channelConfiguration)
+            StimulusSequenceDialog = new Rhs2116StimulusSequenceDialog(sequence, channelConfiguration)
             {
                 TopLevel = false,
                 FormBorderStyle = FormBorderStyle.None,
                 Dock = DockStyle.Fill,
                 Parent = this,
-                Tag = nameof(Rhs2116StimulusSequenceDialog)
             };
 
-            tabPageStimulusSequence.Controls.Add(stimulusSequenceDialog);
-            AddMenuItemsFromDialog(stimulusSequenceDialog, "Stimulus Sequence");
+            tabPageStimulusSequence.Controls.Add(StimulusSequenceDialog);
+            AddMenuItemsFromDialog(StimulusSequenceDialog, "Stimulus Sequence");
 
-            stimulusSequenceDialog.Show();
+            StimulusSequenceDialog.Show();
 
-            var rhs2116ADialog = new Rhs2116Dialog(rhs2116A)
+            Rhs2116Dialog = new Rhs2116Dialog(rhs2116)
             {
                 TopLevel = false,
                 FormBorderStyle = FormBorderStyle.None,
                 Dock = DockStyle.Fill,
                 Parent = this,
-                Tag = nameof(Rhs2116Dialog) + "A"
             };
 
-            tabPageRhs2116A.Controls.Add(rhs2116ADialog);
-            rhs2116ADialog.Show();
+            tabPageRhs2116A.Controls.Add(Rhs2116Dialog);
+            Rhs2116Dialog.Show();
         }
 
         private void OnClickOK(object sender, EventArgs e)
         {
-            var stimSequenceDialog = this.GetAllChildren()
-                                         .OfType<Rhs2116StimulusSequenceDialog>()
-                                         .First();
+            ChannelConfiguration = ChannelConfigurationDialog.ChannelConfiguration;
 
-            ChannelConfiguration = this.GetAllChildren()
-                                       .OfType<ChannelConfigurationDialog>()
-                                       .Select(dialog => dialog.ChannelConfiguration)
-                                       .First();
-
-            if (Rhs2116StimulusSequenceDialog.CanCloseForm(stimSequenceDialog.Sequence, out DialogResult result))
+            if (Rhs2116StimulusSequenceDialog.CanCloseForm(StimulusSequenceDialog.Sequence, out DialogResult result))
             {
                 DialogResult = result;
                 Close();
@@ -83,18 +78,7 @@ namespace OpenEphys.Onix.Design
         {
             if (e.TabPage == tabPageStimulusSequence)
             {
-                var stimSequenceDialog = this.GetAllChildren()
-                                             .OfType<Rhs2116StimulusSequenceDialog>()
-                                             .First();
-
-                var channelConfigurationDialog = this.GetAllChildren()
-                                                     .OfType<ChannelConfigurationDialog>()
-                                                     .First();
-
-                if (!stimSequenceDialog.UpdateChannelConfiguration(channelConfigurationDialog.ChannelConfiguration))
-                {
-                    MessageBox.Show("Warning: Channel configuration was not updated for the stimulus sequence tab.");
-                }
+                UpdateChannelConfiguration(sender, e);
             }
         }
 
@@ -102,9 +86,9 @@ namespace OpenEphys.Onix.Design
         {
             if (form != null)
             {
-                var menuStrips = DesignHelper.GetAllChildren(form)
-                                       .OfType<MenuStrip>()
-                                       .ToList();
+                var menuStrips = form.GetAllChildren()
+                                     .OfType<MenuStrip>()
+                                     .ToList();
 
                 if (menuStrips != null && menuStrips.Count > 0)
                 {
@@ -117,6 +101,19 @@ namespace OpenEphys.Onix.Design
                         this.menuStrip.Items.AddRange(new ToolStripItem[] { toolStripMenuItem });
                     }
                 }
+            }
+        }
+
+        private void UpdateChannelConfiguration(object sender, EventArgs e)
+        {
+            if (tabControl.SelectedTab != tabPageStimulusSequence)
+            {
+                return;
+            }
+
+            if (!StimulusSequenceDialog.UpdateChannelConfiguration(ChannelConfigurationDialog.ChannelConfiguration))
+            {
+                MessageBox.Show("Warning: Channel configuration was not updated for the stimulus sequence tab.");
             }
         }
     }

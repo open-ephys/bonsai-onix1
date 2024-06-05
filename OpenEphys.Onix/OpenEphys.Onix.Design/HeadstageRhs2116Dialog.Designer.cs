@@ -32,7 +32,6 @@
             this.tabPageChannelConfiguration = new System.Windows.Forms.TabPage();
             this.tabPageStimulusSequence = new System.Windows.Forms.TabPage();
             this.tabPageRhs2116A = new System.Windows.Forms.TabPage();
-            this.tabPageRhs2116B = new System.Windows.Forms.TabPage();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonOK = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
@@ -49,12 +48,11 @@
             this.tabControl.Controls.Add(this.tabPageChannelConfiguration);
             this.tabControl.Controls.Add(this.tabPageStimulusSequence);
             this.tabControl.Controls.Add(this.tabPageRhs2116A);
-            this.tabControl.Controls.Add(this.tabPageRhs2116B);
             this.tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl.Location = new System.Drawing.Point(0, 0);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
-            this.tabControl.Size = new System.Drawing.Size(1894, 869);
+            this.tabControl.Size = new System.Drawing.Size(1894, 877);
             this.tabControl.TabIndex = 0;
             this.tabControl.Selected += new System.Windows.Forms.TabControlEventHandler(this.TabPage_Selected);
             // 
@@ -63,7 +61,7 @@
             this.tabPageChannelConfiguration.Location = new System.Drawing.Point(4, 29);
             this.tabPageChannelConfiguration.Name = "tabPageChannelConfiguration";
             this.tabPageChannelConfiguration.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageChannelConfiguration.Size = new System.Drawing.Size(1886, 836);
+            this.tabPageChannelConfiguration.Size = new System.Drawing.Size(1886, 844);
             this.tabPageChannelConfiguration.TabIndex = 0;
             this.tabPageChannelConfiguration.Text = "Channel Configuration";
             this.tabPageChannelConfiguration.UseVisualStyleBackColor = true;
@@ -84,17 +82,8 @@
             this.tabPageRhs2116A.Name = "tabPageRhs2116A";
             this.tabPageRhs2116A.Size = new System.Drawing.Size(1886, 844);
             this.tabPageRhs2116A.TabIndex = 2;
-            this.tabPageRhs2116A.Text = "Rhs2116A";
+            this.tabPageRhs2116A.Text = "Rhs2116";
             this.tabPageRhs2116A.UseVisualStyleBackColor = true;
-            // 
-            // tabPageRhs2116B
-            // 
-            this.tabPageRhs2116B.Location = new System.Drawing.Point(4, 29);
-            this.tabPageRhs2116B.Name = "tabPageRhs2116B";
-            this.tabPageRhs2116B.Size = new System.Drawing.Size(1886, 844);
-            this.tabPageRhs2116B.TabIndex = 3;
-            this.tabPageRhs2116B.Text = "Rhs2116B";
-            this.tabPageRhs2116B.UseVisualStyleBackColor = true;
             // 
             // buttonCancel
             // 
@@ -123,7 +112,7 @@
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
-            this.splitContainer1.Location = new System.Drawing.Point(0, 32);
+            this.splitContainer1.Location = new System.Drawing.Point(0, 24);
             this.splitContainer1.Name = "splitContainer1";
             this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
@@ -135,8 +124,8 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.buttonOK);
             this.splitContainer1.Panel2.Controls.Add(this.buttonCancel);
-            this.splitContainer1.Size = new System.Drawing.Size(1894, 922);
-            this.splitContainer1.SplitterDistance = 869;
+            this.splitContainer1.Size = new System.Drawing.Size(1894, 930);
+            this.splitContainer1.SplitterDistance = 877;
             this.splitContainer1.TabIndex = 2;
             // 
             // menuStrip
@@ -145,7 +134,7 @@
             this.menuStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
-            this.menuStrip.Size = new System.Drawing.Size(1894, 32);
+            this.menuStrip.Size = new System.Drawing.Size(1894, 24);
             this.menuStrip.TabIndex = 3;
             this.menuStrip.Text = "menuStrip1";
             // 
@@ -175,7 +164,6 @@
         private System.Windows.Forms.TabPage tabPageChannelConfiguration;
         private System.Windows.Forms.TabPage tabPageStimulusSequence;
         private System.Windows.Forms.TabPage tabPageRhs2116A;
-        private System.Windows.Forms.TabPage tabPageRhs2116B;
         private System.Windows.Forms.Button buttonCancel;
         private System.Windows.Forms.Button buttonOK;
         private System.Windows.Forms.SplitContainer splitContainer1;
