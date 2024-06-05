@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -8,7 +8,7 @@ namespace OpenEphys.Onix.Design
     {
         public Rhs2116ProbeGroup ChannelConfiguration;
 
-        public HeadstageRhs2116Dialog(Rhs2116ProbeGroup channelConfiguration, Rhs2116StimulusSequence sequence,
+        public HeadstageRhs2116Dialog(Rhs2116ProbeGroup channelConfiguration, Rhs2116StimulusSequenceDual sequence,
             ConfigureRhs2116 rhs2116A)
         {
             InitializeComponent();

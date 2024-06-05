@@ -30,7 +30,7 @@ namespace OpenEphys.Onix.Design
                     probeGroup = configureHeadstageRhs2116.ChannelConfiguration;
                 }
 
-                var editorDialog = new Rhs2116StimulusSequenceDialog(value as Rhs2116StimulusSequence, probeGroup);
+                var editorDialog = new Rhs2116StimulusSequenceDialog(value as Rhs2116StimulusSequenceDual, probeGroup);
                 
                 if (editorDialog.ShowDialog() == DialogResult.OK)
                 {

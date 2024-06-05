@@ -12,7 +12,7 @@ namespace OpenEphys.Onix.Design
         /// <summary>
         /// Holds a local copy of the Rhs2116StimulusSequence until the user presses Okay
         /// </summary>
-        public Rhs2116StimulusSequence Sequence;
+        public Rhs2116StimulusSequenceDual Sequence;
 
         private Rhs2116ProbeGroup ChannelConfiguration;
 
@@ -30,12 +30,12 @@ namespace OpenEphys.Onix.Design
         /// </summary>
         /// <param name="sequence"></param>
         /// <param name="channelConfiguration"></param>
-        public Rhs2116StimulusSequenceDialog(Rhs2116StimulusSequence sequence, Rhs2116ProbeGroup channelConfiguration)
+        public Rhs2116StimulusSequenceDialog(Rhs2116StimulusSequenceDual sequence, Rhs2116ProbeGroup channelConfiguration)
         {
             InitializeComponent();
             Shown += FormShown;
 
-            Sequence = new Rhs2116StimulusSequence(sequence);
+            Sequence = new Rhs2116StimulusSequenceDual(sequence);
 
             propertyGridStimulusSequence.SelectedObject = Sequence;
 
@@ -92,7 +92,7 @@ namespace OpenEphys.Onix.Design
         /// <param name="sequence">Rhs2116 Stimulus Sequence</param>
         /// <param name="result">DialogResult, used to set the DialogResult of the form before closing</param>
         /// <returns></returns>
-        public static bool CanCloseForm(Rhs2116StimulusSequence sequence, out DialogResult result)
+        public static bool CanCloseForm(Rhs2116StimulusSequenceDual sequence, out DialogResult result)
         {
             if (sequence != null)
             {
@@ -969,7 +969,7 @@ namespace OpenEphys.Onix.Design
                     return;
                 }
 
-                var sequence = DesignHelper.DeserializeString<Rhs2116StimulusSequence>(File.ReadAllText(ofd.FileName));
+                var sequence = DesignHelper.DeserializeString<Rhs2116StimulusSequenceDual>(File.ReadAllText(ofd.FileName));
 
                 if (sequence != null && sequence.Stimuli.Length == 32)
                 {
@@ -1001,6 +1001,11 @@ namespace OpenEphys.Onix.Design
             if (channelConfiguration == null || ChannelConfiguration.NumContacts != 32)
             {
                 return false;
+            }
+
+            if (ChannelConfiguration == channelConfiguration)
+            {
+                return true;
             }
 
             ChannelConfiguration = channelConfiguration;

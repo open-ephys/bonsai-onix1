@@ -2,14 +2,13 @@
 using System.ComponentModel;
 using System.Drawing.Design;
 using System.Reactive.Subjects;
-using OpenEphys.ProbeInterface;
 
 namespace OpenEphys.Onix
 {
     [DefaultProperty(nameof(StimulusSequence))]
     public class ConfigureRhs2116Trigger : SingleDeviceFactory
     {
-        readonly BehaviorSubject<Rhs2116StimulusSequence> stimulusSequence = new(new Rhs2116StimulusSequence(true));
+        readonly BehaviorSubject<Rhs2116StimulusSequenceDual> stimulusSequence = new(new Rhs2116StimulusSequenceDual());
 
         public ConfigureRhs2116Trigger()
             : base(typeof(Rhs2116Trigger))
@@ -23,7 +22,7 @@ namespace OpenEphys.Onix
         [Category("Acquisition")]
         [Description("Stimulus sequence.")]
         [Editor("OpenEphys.Onix.Design.Rhs2116StimulusSequenceEditor, OpenEphys.Onix.Design", typeof(UITypeEditor))]
-        public Rhs2116StimulusSequence StimulusSequence
+        public Rhs2116StimulusSequenceDual StimulusSequence
         {
             get => stimulusSequence.Value;
             set => stimulusSequence.OnNext(value);
@@ -34,6 +33,7 @@ namespace OpenEphys.Onix
             var triggerSource = TriggerSource;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
+            var channelConfiguration = new Rhs2116ProbeGroup();
 
             return source.ConfigureDevice(context =>
             {
@@ -41,7 +41,7 @@ namespace OpenEphys.Onix
 
                 device.WriteRegister(Rhs2116Trigger.TRIGGERSOURCE, (uint)triggerSource);
 
-                var deviceInfo = new Rhs2116TriggerDeviceInfo(context, DeviceType, deviceAddress, new Rhs2116ProbeGroup());
+                var deviceInfo = new Rhs2116TriggerDeviceInfo(context, DeviceType, deviceAddress, channelConfiguration, stimulusSequence.Value);
 
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
@@ -50,12 +50,15 @@ namespace OpenEphys.Onix
 
     class Rhs2116TriggerDeviceInfo : DeviceInfo
     {
-        public ProbeGroup ChannelConfiguration { get; }
+        public Rhs2116ProbeGroup ChannelConfiguration { get; }
+        public Rhs2116StimulusSequenceDual StimulusSequence { get; }
 
-        public Rhs2116TriggerDeviceInfo(ContextTask context, Type deviceType, uint deviceAddress, ProbeGroup channelConfiguration)
+        public Rhs2116TriggerDeviceInfo(ContextTask context, Type deviceType, uint deviceAddress,
+                                        Rhs2116ProbeGroup channelConfiguration, Rhs2116StimulusSequenceDual stimulusSequence)
             : base(context, deviceType, deviceAddress)
         {
             ChannelConfiguration = channelConfiguration;
+            StimulusSequence = stimulusSequence;
         }
     }
 

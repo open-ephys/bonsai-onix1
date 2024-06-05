@@ -8,13 +8,9 @@ namespace OpenEphys.Onix
 {
     /// <summary>
     /// Defines a class that holds the Stimulus Sequence for an Rhs2116 device.
-    /// Able to be expanded so that it contains two combined sequences for HeadstageRhs2116,
-    /// with an Rhs2116A and Rhs2116B.
     /// </summary>
     public class Rhs2116StimulusSequence
     {
-        private readonly bool DualSequences;
-
         public const int NumberOfChannelsPerDevice = 16;
 
         /// <summary>
@@ -28,39 +24,16 @@ namespace OpenEphys.Onix
             {
                 Stimuli[i] = new Rhs2116Stimulus();
             }
-
-            DualSequences = false;
-        }
-
-        /// <summary>
-        /// Constructor for Rhs2116StimulusSequence that takes a boolean value; if true, 
-        /// construct the sequence with 32 channels of stimuli, and if false generates the same 
-        /// as the default constructor
-        /// </summary>
-        /// <param name="dualSequences">If true, create 32 channels of stimuli; if false, create 16 chanels of stimuli</param>
-        public Rhs2116StimulusSequence(bool dualSequences)
-        {
-            var numStimuli = dualSequences ? NumberOfChannelsPerDevice * 2 : NumberOfChannelsPerDevice;
-
-            Stimuli = new Rhs2116Stimulus[numStimuli];
-
-            for (var i = 0; i < Stimuli.Length; i++)
-            {
-                Stimuli[i] = new Rhs2116Stimulus();
-            }
-
-            DualSequences = dualSequences;
         }
 
         /// <summary>
         /// Copy construct for Rhs2116StimulusSequence; performs a shallow copy using MemberwiseClone()
         /// </summary>
-        /// <param name="sequence"></param>
+        /// <param name="sequence">Existing Stimulus Sequence</param>
         public Rhs2116StimulusSequence(Rhs2116StimulusSequence sequence)
         {
             Stimuli = Array.ConvertAll(sequence.Stimuli, stimulus => stimulus.Clone());
             CurrentStepSize = sequence.CurrentStepSize;
-            DualSequences = sequence.DualSequences;
         }
 
         public Rhs2116Stimulus[] Stimuli { get; set; }
@@ -131,7 +104,7 @@ namespace OpenEphys.Onix
         /// Number of hardware memory slots required by the sequence
         /// </summary>
         [XmlIgnore]
-        public int StimulusSlotsRequired => Math.Max(DeltaTable.Count, DeltaTableB.Count);
+        public int StimulusSlotsRequired => DeltaTable.Count;
 
         [XmlIgnore]
         public double CurrentStepSizeuA
@@ -169,38 +142,16 @@ namespace OpenEphys.Onix
         [XmlIgnore]
         internal Dictionary<uint, uint> DeltaTable
         {
-            get => GetDeltaTable(true);
+            get => GetDeltaTable();
         }
 
-        /// <summary>
-        /// Generate the delta-table representation of this stimulus sequence that can be uploaded to the RHS2116B device.
-        /// The resultant dictionary has a time, in samples, as the key and a combined [polarity, enable] bit field as the value.
-        /// This only returns a delta-table if the StimulusSequence was initialized using DualSequences = true, otherwise it returns
-        /// an empty Dictionary
-        /// </summary>
-        [XmlIgnore]
-        internal Dictionary<uint, uint> DeltaTableB
-        {
-            get
-            {
-                if (!DualSequences)
-                {
-                    return new Dictionary<uint, uint>();
-                }
-
-                return GetDeltaTable(false);
-            }
-        }
-
-        private Dictionary<uint, uint> GetDeltaTable(bool deltaTableA)
+        private Dictionary<uint, uint> GetDeltaTable()
         {
             var table = new Dictionary<uint, BitArray>();
 
-            var offset = deltaTableA ? 0 : NumberOfChannelsPerDevice;
-
             for (int i = 0; i < NumberOfChannelsPerDevice; i++)
             {
-                var s = Stimuli[i + offset];
+                var s = Stimuli[i];
 
                 var e0 = s.AnodicFirst ? s.AnodicAmplitudeSteps > 0 : s.CathodicAmplitudeSteps > 0;
                 var e1 = s.AnodicFirst ? s.CathodicAmplitudeSteps > 0 : s.AnodicAmplitudeSteps > 0;

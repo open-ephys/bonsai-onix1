@@ -5,21 +5,20 @@ using System.Reactive.Subjects;
 using System.Reactive.Disposables;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Drawing.Design;
 using Bonsai;
 
 namespace OpenEphys.Onix
 {
     public class Rhs2116StimulusTrigger : Sink<bool>
     {
-        readonly BehaviorSubject<Rhs2116StimulusSequence> stimulusSequence = new(new Rhs2116StimulusSequence(true));
+        readonly BehaviorSubject<Rhs2116StimulusSequenceDual> stimulusSequence = new(new Rhs2116StimulusSequenceDual());
 
         [TypeConverter(typeof(Rhs2116Trigger.NameConverter))]
         public string DeviceName { get; set; }
 
         [Category("Acquisition")]
         [Description("Stimulus sequence.")]
-        public Rhs2116StimulusSequence StimulusSequence
+        public Rhs2116StimulusSequenceDual StimulusSequence
         {
             get => stimulusSequence.Value;
             set => stimulusSequence.OnNext(value);
@@ -33,6 +32,8 @@ namespace OpenEphys.Onix
                     Observable.Create<bool>(observer =>
                     {
                         var info = (Rhs2116TriggerDeviceInfo)deviceInfo;
+
+                        StimulusSequence = info.StimulusSequence;
 
                         var device = info.GetDeviceContext(typeof(Rhs2116Trigger));
                         var triggerObserver = Observer.Create<bool>(
