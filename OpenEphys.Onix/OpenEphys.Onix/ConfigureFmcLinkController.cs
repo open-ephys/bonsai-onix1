@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Reactive.Disposables;
+using System.Threading;
 
 namespace OpenEphys.Onix
 {
@@ -15,6 +16,11 @@ namespace OpenEphys.Onix
         [Description("Specifies whether the hub device should be configured in standard or passthrough mode.")]
         public HubConfiguration HubConfiguration { get; set; }
 
+        [Description("Specifies the supplied port voltage. If this value is specified, it will override automated" +
+                     "voltage discovery. Warning: Supplying excessive voltage may result in damage to devices. " +
+                     "Consult the device datasheet and documentation for allowable voltage ranges.")]
+        public double? PortVoltage { get; set; } = null;
+
         protected bool CheckLinkState(DeviceContext device)
         {
             var linkState = device.ReadRegister(FmcLinkController.LINKSTATE);
@@ -23,11 +29,19 @@ namespace OpenEphys.Onix
 
         protected abstract bool ConfigurePortVoltage(DeviceContext device);
 
+        private bool ConfigurePortVoltageOverride(DeviceContext device, double voltage)
+        {
+            device.WriteRegister(FmcLinkController.PORTVOLTAGE, (uint)(voltage * 10));
+            Thread.Sleep(500);
+            return CheckLinkState(device);
+        }
+
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
             var hubConfiguration = HubConfiguration;
+            var portVoltage = PortVoltage;
             return source.ConfigureHost(context =>
             {
                 // configure passthrough mode on the FMC link controller
@@ -43,7 +57,10 @@ namespace OpenEphys.Onix
                 void dispose() => device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
                 device.WriteRegister(FmcLinkController.ENABLE, 1);
 
-                if (!ConfigurePortVoltage(device))
+                var serdesLock = portVoltage.HasValue
+                    ? ConfigurePortVoltageOverride(device, portVoltage.GetValueOrDefault())
+                    : ConfigurePortVoltage(device);
+                if (!serdesLock)
                 {
                     dispose();
                     throw new InvalidOperationException("Unable to get SERDES lock on FMC link controller.");
