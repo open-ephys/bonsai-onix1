@@ -27,60 +27,6 @@ namespace OpenEphys.Onix
             targetType = deviceType;
         }
 
-        static bool IsGroup(IWorkflowExpressionBuilder builder)
-        {
-            return builder is IncludeWorkflowBuilder || builder is GroupWorkflowBuilder;
-        }
-
-        static IEnumerable<ExpressionBuilder> SelectContextElements(ExpressionBuilderGraph source)
-        {
-            foreach (var node in source)
-            {
-                var element = ExpressionBuilder.Unwrap(node.Value);
-                yield return element;
-
-                var workflowBuilder = element as IWorkflowExpressionBuilder;
-                if (IsGroup(workflowBuilder))
-                {
-                    var workflow = workflowBuilder.Workflow;
-                    if (workflow == null) continue;
-                    foreach (var groupElement in SelectContextElements(workflow))
-                    {
-                        yield return groupElement;
-                    }
-                }
-            }
-        }
-
-        static bool GetCallContext(ExpressionBuilderGraph source, ExpressionBuilderGraph target, Stack<ExpressionBuilderGraph> context)
-        {
-            context.Push(source);
-            if (source == target)
-            {
-                return true;
-            }
-
-            foreach (var element in SelectContextElements(source))
-            {
-                var groupBuilder = element as IWorkflowExpressionBuilder;
-                if (IsGroup(groupBuilder) && groupBuilder.Workflow == target)
-                {
-                    return true;
-                }
-
-                if (element is WorkflowExpressionBuilder workflowBuilder)
-                {
-                    if (GetCallContext(workflowBuilder.Workflow, target, context))
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            context.Pop();
-            return false;
-        }
-
         /// <inheritdoc/>
         public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
         {
@@ -104,20 +50,9 @@ namespace OpenEphys.Onix
                 var nodeBuilderGraph = (ExpressionBuilderGraph)context.GetService(typeof(ExpressionBuilderGraph));
                 if (workflowBuilder != null && nodeBuilderGraph != null)
                 {
-                    var callContext = new Stack<ExpressionBuilderGraph>();
-                    if (GetCallContext(workflowBuilder.Workflow, nodeBuilderGraph, callContext))
-                    {
-                        var names = (from level in callContext
-                                     from element in SelectContextElements(level)
-                                     let factory = ExpressionBuilder.GetWorkflowElement(element) as DeviceFactory
-                                     where factory != null
-                                     from device in factory.GetDevices()
-                                     where device.DeviceType == targetType
-                                     select device.DeviceName)
-                                     .Distinct()
-                                     .ToList();
-                        return new StandardValuesCollection(names);
-                    }
+                    var devices = DeviceHelper.FindDevices(workflowBuilder, nodeBuilderGraph, targetType);
+                    var deviceNames = devices.Select(device => device.DeviceName).Distinct().ToList();
+                    return new StandardValuesCollection(deviceNames);
                 }
             }
 
