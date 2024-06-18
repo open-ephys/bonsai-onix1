@@ -18,7 +18,7 @@ namespace OpenEphys.Onix
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
                 {
                     var device = deviceInfo.GetDeviceContext(typeof(DigitalIO));
-                    return source.Do(device.Write);
+                    return source.Do(value => device.Write((uint)value));
                 }));
         }
     }
