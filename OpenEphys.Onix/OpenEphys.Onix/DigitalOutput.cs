@@ -6,12 +6,12 @@ using Bonsai;
 
 namespace OpenEphys.Onix
 {
-    public class DigitalOutput : Sink<PortState>
+    public class DigitalOutput : Sink<DigitalPortState>
     {
         [TypeConverter(typeof(DigitalIO.NameConverter))]
         public string DeviceName { get; set; }
 
-        public override IObservable<PortState> Process(IObservable<PortState> source)
+        public override IObservable<DigitalPortState> Process(IObservable<DigitalPortState> source)
         {
             return Observable.Using(
                 () => DeviceManager.ReserveDevice(DeviceName),

@@ -9,8 +9,8 @@ namespace OpenEphys.Onix
             Clock = frame.Clock;
             var payload = (DigitalInputPayload*)frame.Data.ToPointer();
             HubClock = payload->HubClock;
-            Port = payload->PortInputs;
-            Links = payload->Links;
+            DigitalInputs = payload->DigitalInputs;
+            LinkPower = payload->LinkPower;
             Buttons = payload->Buttons;
         }
 
@@ -18,11 +18,11 @@ namespace OpenEphys.Onix
 
         public ulong HubClock { get; }
 
-        public PortState Port { get; }
+        public DigitalPortState DigitalInputs { get; }
 
-        public LinkState Links { get; }
+        public BreakoutLinkPowerState LinkPower { get; }
 
-        public ButtonState Buttons { get; }
+        public BreakoutButtonState Buttons { get; }
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -30,8 +30,8 @@ namespace OpenEphys.Onix
     {
         public ulong HubClock;
         public byte Reserved0;
-        public PortState PortInputs;
-        public LinkState Links;
-        public ButtonState Buttons;
+        public DigitalPortState DigitalInputs;
+        public BreakoutLinkPowerState LinkPower;
+        public BreakoutButtonState Buttons;
     }
 }

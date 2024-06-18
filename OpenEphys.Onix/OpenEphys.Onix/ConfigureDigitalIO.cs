@@ -45,20 +45,20 @@ namespace OpenEphys.Onix
     }
 
     [Flags]
-    public enum PortState : byte
+    public enum DigitalPortState : byte
     {
-        Input0 = 0x1,
-        Input1 = 0x2,
-        Input2 = 0x4,
-        Input3 = 0x8,
-        Input4 = 0x10,
-        Input5 = 0x20,
-        Input6 = 0x40,
-        Input7 = 0x80,
+        Pin0 = 0x1,
+        Pin1 = 0x2,
+        Pin2 = 0x4,
+        Pin3 = 0x8,
+        Pin4 = 0x10,
+        Pin5 = 0x20,
+        Pin6 = 0x40,
+        Pin7 = 0x80,
     }
 
     [Flags]
-    public enum LinkState : byte
+    public enum BreakoutLinkPowerState : byte
     {
         PortA = 0x1,
         PortB = 0x2,
@@ -67,13 +67,13 @@ namespace OpenEphys.Onix
     }
 
     [Flags]
-    public enum ButtonState : byte
+    public enum BreakoutButtonState : byte
     {
-        Button0 = 0x1,
-        Button1 = 0x2,
-        Button2 = 0x4,
-        Button3 = 0x8,
-        Button4 = 0x10,
-        Button5 = 0x20
+        Moon = 0x1,
+        Triangle = 0x2,
+        X = 0x4,
+        Check = 0x8,
+        Circle = 0x10,
+        Square = 0x20
     }
 }
