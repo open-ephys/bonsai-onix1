@@ -45,7 +45,7 @@ namespace OpenEphys.Onix
     }
 
     [Flags]
-    public enum DigitalPortState : byte
+    public enum DigitalPortState : ushort
     {
         Pin0 = 0x1,
         Pin1 = 0x2,
@@ -58,22 +58,19 @@ namespace OpenEphys.Onix
     }
 
     [Flags]
-    public enum BreakoutLinkPowerState : byte
-    {
-        PortA = 0x1,
-        PortB = 0x2,
-        PortC = 0x4,
-        PortD = 0x8
-    }
-
-    [Flags]
-    public enum BreakoutButtonState : byte
+    public enum ButtonState : ushort
     {
         Moon = 0x1,
         Triangle = 0x2,
         X = 0x4,
         Check = 0x8,
         Circle = 0x10,
-        Square = 0x20
+        Square = 0x20,
+        Reserved0 = 0x40,
+        Reserved1 = 0x80,
+        PortDOn = 0x100,
+        PortCOn = 0x200,
+        PortBOn = 0x400,
+        PortAOn = 0x800,
     }
 }
