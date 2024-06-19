@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Linq;
 using Bonsai;
 
@@ -17,17 +16,12 @@ namespace OpenEphys.Onix
             return Observable.Using(
                 () => DeviceManager.ReserveDevice(DeviceName),
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
-                    Observable.Create<DigitalInputDataFrame>(observer =>
-                    {
-                        var device = deviceInfo.GetDeviceContext(typeof(DigitalIO));
-                        var frameObserver = Observer.Create<oni.Frame>(
-                            frame => new DigitalInputDataFrame(frame),
-                            observer.OnError,
-                            observer.OnCompleted);
-                        return deviceInfo.Context.FrameReceived
-                            .Where(frame => frame.DeviceAddress == device.Address)
-                            .SubscribeSafe(frameObserver);
-                    })));
+                {
+                    var device = deviceInfo.GetDeviceContext(typeof(DigitalIO));
+                    return deviceInfo.Context.FrameReceived
+                        .Where(frame => frame.DeviceAddress == device.Address)
+                        .Select(frame => new DigitalInputDataFrame(frame));
+                }));
         }
     }
 }
