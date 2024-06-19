@@ -19,7 +19,6 @@ namespace OpenEphys.Onix
         [TypeConverter(typeof(HubDeviceConverter))]
         public ConfigureNeuropixelsV1e NeuropixelsV1 { get; set; } = new();
 
-        // TODO: There may be an interaction with Neuropixels I2C here that prevents proper configuration if this is started too soon after config takes place
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
         public ConfigureNeuropixelsV1eBno055 Bno055 { get; set; } = new();
@@ -38,7 +37,7 @@ namespace OpenEphys.Onix
         }
 
         [Description("If defined, overrides automated voltage discovery and applies " +
-            "the specified voltage to the headstage. Warning: this device requires 3.8V to 5.5V " +
+            "the specified voltage to the headstage. Warning: this device requires 3.8V to 5.0V " +
             "for proper operation. Higher voltages can damage the headstage.")]
         public double? PortVoltage
         {
@@ -55,48 +54,23 @@ namespace OpenEphys.Onix
 
         class ConfigureNeuropixelsV1LinkController : ConfigureFmcLinkController
         {
-
-            public double? PortVoltage { get; set; } = null;
-
-            // TODO: Needs more testing
             protected override bool ConfigurePortVoltage(DeviceContext device)
             {
+                const double MinVoltage = 3.3;
+                const double MaxVoltage = 5.5;
+                const double VoltageOffset = 1.0;
+                const double VoltageIncrement = 0.2;
 
-                if (PortVoltage == null)
+                for (double voltage = MinVoltage; voltage <= MaxVoltage; voltage += VoltageIncrement)
                 {
-                    const double MinVoltage = 3.3;
-                    const double MaxVoltage = 5.5;
-                    const double VoltageOffset = 1.0;
-                    const double VoltageIncrement = 0.2;
+                    SetVoltage(device, voltage);
 
-                    for (double voltage = MinVoltage; voltage <= MaxVoltage; voltage += VoltageIncrement)
+                    if (CheckLinkState(device))
                     {
-                        SetVoltage(device, voltage);
-                        if (CheckLinkState(device))
-                        {
-                            SetVoltage(device, voltage + VoltageOffset);
-                            return CheckLinkState(device);
-                        }
+                        SetVoltage(device, voltage + VoltageOffset);
+                        return CheckLinkState(device);
                     }
-                    return false;
                 }
-                else
-                {
-                    SetVoltage(device, (double)PortVoltage);
-                }
-
-                // NB: The headstage needs an additional reset after power on
-                // to provide its device table
-                device.Context.Reset();
-                Thread.Sleep(200);
-
-                if (CheckLinkState(device))
-                {
-                    device.Context.Reset();
-                    Thread.Sleep(200);
-                    return true;
-                }
-
 
                 return false;
             }
@@ -104,9 +78,9 @@ namespace OpenEphys.Onix
             void SetVoltage(DeviceContext device, double voltage)
             {
                 device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
-                Thread.Sleep(300);
+                Thread.Sleep(200);
                 device.WriteRegister(FmcLinkController.PORTVOLTAGE, (uint)(10 * voltage));
-                Thread.Sleep(500);
+                Thread.Sleep(200);
             }
         }
     }

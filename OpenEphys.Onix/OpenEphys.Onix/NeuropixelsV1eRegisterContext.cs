@@ -29,22 +29,27 @@ namespace OpenEphys.Onix
                                             new(BaseConfigurationBitCount, false) }; // Ch 1, 3, 5, ...
 
         // TODO: accept and apply channel config type
-        public NeuropixelsV1eRegisterContext(DeviceContext deviceContext, uint i2cAddress, 
+        public NeuropixelsV1eRegisterContext(DeviceContext deviceContext, uint i2cAddress, ulong probeSerialNumber,
             NeuropixelsV1Gain apGain, NeuropixelsV1Gain lfpGain, NeuropixelsV1ReferenceSource refSource, 
             bool apFilter, string gainCalibrationFile, string adcCalibrationFile)
             : base(deviceContext, i2cAddress)
         {
             if (gainCalibrationFile == null || adcCalibrationFile == null)
             {
-                throw new ArgumentException("Calibraiton files must be specified.");
+                throw new ArgumentException("Calibration files must be specified.");
             }
 
             System.IO.StreamReader gainFile = new(gainCalibrationFile);
-            var sn = ulong.Parse(gainFile.ReadLine());
+            var calSerialNumber = ulong.Parse(gainFile.ReadLine());
+
+            if (calSerialNumber != probeSerialNumber)
+                throw new ArgumentException("Gain calibration file serial number does not match probe serial number.");
 
             System.IO.StreamReader adcFile = new(adcCalibrationFile);
-            if (sn != ulong.Parse(adcFile.ReadLine()))
-                throw new ArgumentException("Calibraiton file serial numbers do not match.");
+            var adcSerialNumber = ulong.Parse(adcFile.ReadLine());
+
+            if (adcSerialNumber != probeSerialNumber)
+                throw new ArgumentException("ADC calibration file serial number does not match probe serial number.");
 
             // parse gain correction file
             var gainCorrections = gainFile.ReadLine().Split(',').Skip(1);
@@ -282,7 +287,7 @@ namespace OpenEphys.Onix
 
                 if (ReadByte(NeuropixelsV1e.STATUS) != ShiftRegisterSuccess)
                 {
-                    throw new WorkflowException($"Shift register {srAddress} status check failed.");
+                    throw new InvalidOperationException($"Shift register {srAddress} status check failed.");
                 }
             }
         }

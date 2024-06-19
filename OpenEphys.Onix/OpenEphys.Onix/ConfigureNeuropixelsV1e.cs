@@ -23,11 +23,11 @@ namespace OpenEphys.Onix
 
         [Category(ConfigurationCategory)]
         [Description("Amplifier gain for spike-band.")]
-        public NeuropixelsV1Gain SpikeAmplifierGain { get; set; } = NeuropixelsV1Gain.x1000;
+        public NeuropixelsV1Gain SpikeAmplifierGain { get; set; } = NeuropixelsV1Gain.Gain1000;
 
         [Category(ConfigurationCategory)]
         [Description("Amplifier gain for LFP-band.")]
-        public NeuropixelsV1Gain LfpAmplifierGain { get; set; } = NeuropixelsV1Gain.x50;
+        public NeuropixelsV1Gain LfpAmplifierGain { get; set; } = NeuropixelsV1Gain.Gain50;
 
         [Category(ConfigurationCategory)]
         [Description("Reference selection.")]
@@ -38,12 +38,12 @@ namespace OpenEphys.Onix
         public bool SpikeFilter { get; set; } = true;
 
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
-        [Description("Path to the NRIC1384 gain calibration file.")]
+        [Description("Path to the Neuropixels 1.0 gain calibration file.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string GainCalibrationFile { get; set; }
 
         [FileNameFilter("ADC calibration files (*_ADCCalibration.csv)|*_ADCCalibration.csv")]
-        [Description("Path to the NRIC1384 ADC calibration file.")]
+        [Description("Path to the Neuropixels 1.0 ADC calibration file.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string AdcCalibrationFile { get; set; }
 
@@ -74,12 +74,8 @@ namespace OpenEphys.Onix
                 var gpo10Config = NeuropixelsV1e.DefaultGPO10Config;
                 ResetProbe(serializer, gpo10Config);
 
-                // configure probe streaming
-                if (probeMetadata.ProbeSerialNumber == null)
-                    throw new InvalidOperationException("Probe serial number could not be read.");
-
                 // program shift registers
-                var probeControl = new NeuropixelsV1eRegisterContext(device, NeuropixelsV1e.ProbeAddress, SpikeAmplifierGain, LfpAmplifierGain, Reference, SpikeFilter, GainCalibrationFile, AdcCalibrationFile);
+                var probeControl = new NeuropixelsV1eRegisterContext(device, NeuropixelsV1e.ProbeAddress, probeMetadata.ProbeSerialNumber, SpikeAmplifierGain, LfpAmplifierGain, Reference, SpikeFilter, GainCalibrationFile, AdcCalibrationFile);
                 probeControl.InitializeProbe();
                 probeControl.WriteConfiguration();
                 probeControl.StartAcquisition();
@@ -90,7 +86,7 @@ namespace OpenEphys.Onix
                     TurnOnLed(serializer, NeuropixelsV1e.DefaultGPO32Config);
                 }
 
-                var deviceInfo = new NeuropixesV1eDeviceInfo(context, DeviceType, deviceAddress, probeControl);
+                var deviceInfo = new NeuropixelsV1eDeviceInfo(context, DeviceType, deviceAddress, probeControl);
                 var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
                 var shutdown = Disposable.Create(() =>
                 {
@@ -137,7 +133,13 @@ namespace OpenEphys.Onix
 
         static NeuropixelsV1eMetadata ReadProbeMetadata(I2CRegisterContext serializer)
         {
-            return new NeuropixelsV1eMetadata(serializer);
+            try
+            {
+                return new NeuropixelsV1eMetadata(serializer);
+            } catch (Exception ex) {
+                throw new InvalidOperationException("Could not communicate with probe. Ensure that the " +
+                    "flex connection is properly seated.", ex);
+            }
         }
 
         static void ResetProbe(I2CRegisterContext serializer, uint gpo10Config)
@@ -162,7 +164,7 @@ namespace OpenEphys.Onix
     {
         public const int ProbeAddress = 0x70;
         public const int FlexEEPROMAddress = 0x50;
-        // TODO: Who's business is this?
+        // TODO: Who's business is this? Feels like it should be headstage.
         // public const int HeadstageEEPROMAddress = 0x51;
 
         public const byte DefaultGPO10Config = 0b0001_0001; // GPIO0 Low, NP in MUX reset
@@ -254,13 +256,13 @@ namespace OpenEphys.Onix
 
     public enum NeuropixelsV1Gain : byte
     {
-        x50 = 0b000,
-        x125 = 0b001,
-        x250 = 0b010,
-        x500 = 0b011,
-        x1000 = 0b100,
-        x1500 = 0b101,
-        x2000 = 0b110,
-        x3000 = 0b111
+        Gain50 = 0b000,
+        Gain125 = 0b001,
+        Gain250 = 0b010,
+        Gain500 = 0b011,
+        Gain1000 = 0b100,
+        Gain1500 = 0b101,
+        Gain2000 = 0b110,
+        Gain3000 = 0b111
     }
 }
