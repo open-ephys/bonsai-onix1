@@ -24,7 +24,7 @@ namespace OpenEphys.Onix
                 () => DeviceManager.ReserveDevice(DeviceName),
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
                 {
-                    var info = (NeuropixesV2eBetaDeviceInfo)deviceInfo;
+                    var info = (NeuropixesV2eDeviceInfo)deviceInfo;
                     var device = info.GetDeviceContext(typeof(NeuropixelsV2e));
                     var passthrough = device.GetPassthroughDeviceContext(DS90UB9x.ID);
                     var probeData = device.Context.FrameReceived.Where(frame =>

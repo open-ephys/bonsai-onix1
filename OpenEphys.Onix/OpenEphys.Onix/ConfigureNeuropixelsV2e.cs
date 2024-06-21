@@ -17,16 +17,20 @@ namespace OpenEphys.Onix
         public bool Enable { get; set; } = true;
 
         [Category(ConfigurationCategory)]
-        [Description("Specifies which reference to use for all probe electrodes.")]
-        public NeuropixelsV2eBetaChannelReference Reference { get; set; }
+        [Description("Probe A electrode configuration.")]
+        public NeuropixelsV2QuadShankProbe ProbeConfigurationA { get; set; }
 
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
-        [Description("Path to the Neuropixels 2.0 gain calibraiton file for probe A.")]
+        [Description("Path to the gain calibration file for probe A.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string GainCalibrationFileA { get; set; }
 
+        [Category(ConfigurationCategory)]
+        [Description("Probe B electrode configuration.")]
+        public NeuropixelsV2QuadShankProbe ProbeConfigurationB { get; set; }
+
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
-        [Description("Path to the Neuropixels 2.0 gain calibraiton file for probe B.")]
+        [Description("Path to the gain calibration file for probe B.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string GainCalibrationFileB { get; set; }
 
@@ -52,24 +56,24 @@ namespace OpenEphys.Onix
 
                 if (probeAMetadata.ProbeSerialNumber == null && probeBMetadata.ProbeSerialNumber == null)
                 {
-                    throw new WorkflowRuntimeException("No Neuropixels 2.0 probes were detected.");
+                    throw new InvalidOperationException("No probes were detected. Ensure that the " +
+                        "flex connection is properly seated.");
                 }
 
                 // issue full reset to both probes
                 ResetProbes(serializer, gpo10Config);
 
                 // configure probe streaming
-                var probeControl = new NeuropixelsV2BetaRegisterContext(device, NeuropixelsV2e.ProbeAddress);
-
                 ushort? gainCorrectionA = null;
                 ushort? gainCorrectionB = null;
+                var probeControl = new NeuropixelsV2RegisterContext(device, NeuropixelsV2e.ProbeAddress);
 
                 // configure probe A streaming
                 if (probeAMetadata.ProbeSerialNumber != null)
                 {
                     gainCorrectionA = ReadGainCorrection(GainCalibrationFileA, (ulong)probeAMetadata.ProbeSerialNumber);
                     SelectProbe(serializer, NeuropixelsV2e.ProbeASelected);
-                    probeControl.WriteConfiguration(Reference);
+                    probeControl.WriteConfiguration(ProbeConfigurationA);
                     ConfigureProbeStreaming(probeControl);
                 }
 
@@ -78,11 +82,11 @@ namespace OpenEphys.Onix
                 {
                     gainCorrectionB = ReadGainCorrection(GainCalibrationFileB, (ulong)probeBMetadata.ProbeSerialNumber);
                     SelectProbe(serializer, NeuropixelsV2e.ProbeBSelected);
-                    probeControl.WriteConfiguration(Reference);
+                    probeControl.WriteConfiguration(ProbeConfigurationB);
                     ConfigureProbeStreaming(probeControl);
                 }
 
-                var deviceInfo = new NeuropixesV2eBetaDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB);
+                var deviceInfo = new NeuropixesV2eDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB);
                 var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
                 var shutdown = Disposable.Create(() =>
                 {

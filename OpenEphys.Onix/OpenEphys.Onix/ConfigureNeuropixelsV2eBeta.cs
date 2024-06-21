@@ -21,16 +21,20 @@ namespace OpenEphys.Onix
         public bool EnableLed { get; set; } = true;
 
         [Category(ConfigurationCategory)]
-        [Description("Specifies which reference to use for all probe electrodes.")]
-        public NeuropixelsV2eBetaChannelReference Reference { get; set; }
+        [Description("Probe A electrode configuration.")]
+        public NeuropixelsV2QuadShankProbe ProbeConfigurationA { get; set; } = new NeuropixelsV2QuadShankProbe();
 
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
-        [Description("Path to the Neuropixels 2.0β gain calibraiton file for probe A.")]
+        [Description("Path to the gain calibraiton file for probe A.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string GainCalibrationFileA { get; set; }
 
+        [Category(ConfigurationCategory)]
+        [Description("Probe B electrode configuration.")]
+        public NeuropixelsV2QuadShankProbe ProbeConfigurationB { get; set; } = new NeuropixelsV2QuadShankProbe();
+
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
-        [Description("Path to the Neuropixels 2.0β gain calibraiton file for probe B.")]
+        [Description("Path to the gain calibraiton file for probe B.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string GainCalibrationFileB { get; set; }
 
@@ -55,13 +59,18 @@ namespace OpenEphys.Onix
                 serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO10, gpo10Config);
                 serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO32, gpo32Config);
 
+                // set I2C clock rate to ~400 kHz
+                serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.SCLHIGH, 20);
+                serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.SCLLOW, 20);
+
                 // read probe metadata
                 var probeAMetadata = ReadProbeMetadata(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeA);
                 var probeBMetadata = ReadProbeMetadata(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeB);
 
                 if (probeAMetadata.ProbeSerialNumber == null && probeBMetadata.ProbeSerialNumber == null)
                 {
-                    throw new WorkflowRuntimeException("No Neuropixels 2.0β probes were detected.");
+                    throw new InvalidOperationException("No probes were detected. Ensure that the " +
+                        "flex connection is properly seated.");
                 }
 
                 // REC_NRESET and NRESET go high on both probes to take the ASIC out of reset
@@ -71,7 +80,7 @@ namespace OpenEphys.Onix
                 System.Threading.Thread.Sleep(20);
 
                 // configure probe streaming
-                var probeControl = new NeuropixelsV2BetaRegisterContext(device, NeuropixelsV2eBeta.ProbeAddress);
+                var probeControl = new NeuropixelsV2RegisterContext(device, NeuropixelsV2eBeta.ProbeAddress);
 
                 ushort? gainCorrectionA = null;
                 ushort? gainCorrectionB = null;
@@ -82,7 +91,7 @@ namespace OpenEphys.Onix
                     // read gain correction
                     gainCorrectionA = ReadGainCorrection(GainCalibrationFileA, (ulong)probeAMetadata.ProbeSerialNumber);
                     SelectProbe(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeA);
-                    probeControl.WriteConfiguration(Reference);
+                    probeControl.WriteConfiguration(ProbeConfigurationA);
                     ConfigureProbeStreaming(probeControl);
                 }
 
@@ -91,7 +100,7 @@ namespace OpenEphys.Onix
                 {
                     gainCorrectionB = ReadGainCorrection(GainCalibrationFileB, (ulong)probeBMetadata.ProbeSerialNumber);
                     SelectProbe(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeB);
-                    probeControl.WriteConfiguration(Reference);
+                    probeControl.WriteConfiguration(ProbeConfigurationB);
                     ConfigureProbeStreaming(probeControl);
                 }
 
@@ -105,7 +114,7 @@ namespace OpenEphys.Onix
                 // Still its good to get them roughly (i.e. within 10 PCLKs) started at the same time.
                 SyncProbes(serializer, gpo10Config);
 
-                var deviceInfo = new NeuropixesV2eBetaDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB);
+                var deviceInfo = new NeuropixesV2eDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB);
                 var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
                 var shutdown = Disposable.Create(() =>
                 {
@@ -206,20 +215,6 @@ namespace OpenEphys.Onix
         }
     }
 
-    class NeuropixesV2eBetaDeviceInfo : DeviceInfo
-    {
-        public NeuropixesV2eBetaDeviceInfo(ContextTask context, Type deviceType, uint deviceAddress, double? gainCorrectionA, double? gainCorrectionB)
-            : base(context, deviceType, deviceAddress)
-        {
-            GainCorrectionA = gainCorrectionA != null ? (ushort)(gainCorrectionA * (1 << 14)) : null;
-            GainCorrectionB = gainCorrectionB != null ? (ushort)(gainCorrectionB * (1 << 14)) : null;
-        }
-
-        public ushort? GainCorrectionA { get; }
-        public ushort? GainCorrectionB { get; }
-    }
-
-
     static class NeuropixelsV2eBeta
     {
         public const int ProbeAddress = 0x70;
@@ -238,25 +233,10 @@ namespace OpenEphys.Onix
         public const int ADCsPerProbe = 24;
         public const int SyncsPerFrame = 2;
         public const int CountersPerFrame = 2;
-        public const int ChannelCount = 384;
         public const int FrameWords = 28;
 
-        public const int PixelCount = 1280;
-        public const int ReferencePixelCount = 4;
-        public const int DummyRegisterCount = 4;
-        public const int RegistersPerShank = PixelCount + ReferencePixelCount + DummyRegisterCount;
-        public const int BaseBitsPerChannel = 4;
 
-        // memory map
-        public const int STATUS = 0x09;
-        public const int SR_CHAIN6 = 0x0C;
-        public const int SR_CHAIN5 = 0x0D;
-        public const int SR_CHAIN4 = 0x0E;
-        public const int SR_CHAIN3 = 0x0F;
-        public const int SR_CHAIN2 = 0x10;
-        public const int SR_CHAIN1 = 0x11;
-        public const int SR_LENGTH2 = 0x12;
-        public const int SR_LENGTH1 = 0x13;
+
 
         internal class NameConverter : DeviceNameConverter
         {
@@ -265,18 +245,5 @@ namespace OpenEphys.Onix
             {
             }
         }
-    }
-
-    [Flags]
-    enum NeuropixelsV2eBetaStatus : uint
-    {
-        SR_OK = 1 << 7 // Indicates the SR chain comparison is OK
-    }
-
-    public enum NeuropixelsV2eBetaChannelReference : uint
-    {
-        External,
-        Tip,
-        Ground
     }
 }

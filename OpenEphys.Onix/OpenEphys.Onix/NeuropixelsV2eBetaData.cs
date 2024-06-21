@@ -24,7 +24,7 @@ namespace OpenEphys.Onix
                 () => DeviceManager.ReserveDevice(DeviceName),
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
                 {
-                    var info = (NeuropixesV2eBetaDeviceInfo)deviceInfo;
+                    var info = (NeuropixesV2eDeviceInfo)deviceInfo;
                     var device = info.GetDeviceContext(typeof(NeuropixelsV2eBeta));
                     var passthrough = device.GetPassthroughDeviceContext(DS90UB9x.ID);
                     var probeData = device.Context.FrameReceived.Where(frame =>
@@ -41,7 +41,7 @@ namespace OpenEphys.Onix
                     return Observable.Create<NeuropixelsV2eBetaDataFrame>(observer =>
                     {
                         var sampleIndex = 0;
-                        var amplifierBuffer = new ushort[NeuropixelsV2eBeta.ChannelCount, bufferSize];
+                        var amplifierBuffer = new ushort[NeuropixelsV2Definitions.ChannelCount, bufferSize];
                         var frameCounter = new int[NeuropixelsV2eBeta.FramesPerSuperFrame * bufferSize];
                         var hubClockBuffer = new ulong[bufferSize];
                         var clockBuffer = new ulong[bufferSize];
