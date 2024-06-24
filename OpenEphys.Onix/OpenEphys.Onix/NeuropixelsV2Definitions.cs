@@ -8,7 +8,6 @@ namespace OpenEphys.Onix
         ProbeB = 1
     }
 
-
     [Flags]
     enum NeuropixelsV2Status : uint
     {

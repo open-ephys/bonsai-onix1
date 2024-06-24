@@ -121,7 +121,7 @@ namespace OpenEphys.Onix
                     (3, 6) => blockIndex + 48 * 4,
                     (3, 7) => blockIndex + 48 * 6,
 
-                    _ => throw new ArgumentOutOfRangeException($"Invalid shank and/or block value: {(Shank, block)}"),
+                    _ => throw new ArgumentOutOfRangeException($"Invalid shank and/or electrode value: {(Shank, IntraShankElectrodeIndex)}"),
                 };
             }
         }
