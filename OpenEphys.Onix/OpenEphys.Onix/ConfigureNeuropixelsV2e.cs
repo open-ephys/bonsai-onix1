@@ -18,7 +18,7 @@ namespace OpenEphys.Onix
 
         [Category(ConfigurationCategory)]
         [Description("Probe A electrode configuration.")]
-        public NeuropixelsV2QuadShankProbe ProbeConfigurationA { get; set; }
+        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; }
 
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the gain calibration file for probe A.")]
@@ -27,7 +27,7 @@ namespace OpenEphys.Onix
 
         [Category(ConfigurationCategory)]
         [Description("Probe B electrode configuration.")]
-        public NeuropixelsV2QuadShankProbe ProbeConfigurationB { get; set; }
+        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; }
 
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the gain calibration file for probe B.")]
@@ -86,7 +86,7 @@ namespace OpenEphys.Onix
                     ConfigureProbeStreaming(probeControl);
                 }
 
-                var deviceInfo = new NeuropixesV2eDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB);
+                var deviceInfo = new NeuropixelsV2eDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB);
                 var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
                 var shutdown = Disposable.Create(() =>
                 {
@@ -152,7 +152,7 @@ namespace OpenEphys.Onix
         {
             if (gainCalibrationFile == null)
             {
-                throw new ArgumentException("Calibraiton file must be specified.");
+                throw new ArgumentException("Calibration file must be specified.");
             }
 
             System.IO.StreamReader gainFile = new(gainCalibrationFile);
@@ -160,7 +160,7 @@ namespace OpenEphys.Onix
 
             if (probeSerialNumber != sn)
             {
-                throw new ArgumentException($"Probe serial number {probeSerialNumber} does not match calibraiton file serial number {sn}.");
+                throw new ArgumentException($"Probe serial number {probeSerialNumber} does not match calibration file serial number {sn}.");
             }
 
             // Q1.14 fixed point conversion

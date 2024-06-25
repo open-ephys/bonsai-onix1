@@ -15,17 +15,17 @@ namespace OpenEphys.Onix
         {
         }
 
-        public void WriteConfiguration(NeuropixelsV2QuadShankProbe probe)
+        public void WriteConfiguration(NeuropixelsV2QuadShankProbeConfiguration probe)
         {
             var baseBits = GenerateBaseBits(probe);
-            WriteShiftRegister(NeuropixelsV2Definitions.SR_CHAIN5, baseBits[0]);
-            WriteShiftRegister(NeuropixelsV2Definitions.SR_CHAIN6, baseBits[1]);
+            WriteShiftRegister(NeuropixelsV2.SR_CHAIN5, baseBits[0]);
+            WriteShiftRegister(NeuropixelsV2.SR_CHAIN6, baseBits[1]);
 
             var shankBits = GenerateShankBits(probe);
-            WriteShiftRegister(NeuropixelsV2Definitions.SR_CHAIN1, shankBits[0]);
-            WriteShiftRegister(NeuropixelsV2Definitions.SR_CHAIN2, shankBits[1]);
-            WriteShiftRegister(NeuropixelsV2Definitions.SR_CHAIN3, shankBits[2]);
-            WriteShiftRegister(NeuropixelsV2Definitions.SR_CHAIN4, shankBits[3]);
+            WriteShiftRegister(NeuropixelsV2.SR_CHAIN1, shankBits[0]);
+            WriteShiftRegister(NeuropixelsV2.SR_CHAIN2, shankBits[1]);
+            WriteShiftRegister(NeuropixelsV2.SR_CHAIN3, shankBits[2]);
+            WriteShiftRegister(NeuropixelsV2.SR_CHAIN4, shankBits[3]);
 
         }
 
@@ -50,7 +50,7 @@ namespace OpenEphys.Onix
             return bytes;
         }
 
-        // TODO: NeuropixelsV2Definitions.STATUS always fails.
+        // TODO: NeuropixelsV2.STATUS always fails.
         private void WriteShiftRegister(uint srAddress, BitArray data)
         {
             var bytes = BitArrayToBytes(data);
@@ -59,11 +59,11 @@ namespace OpenEphys.Onix
             //while (count-- > 0)
             //{
                 // This allows Base shift registers to get a good STATUS, but does not help shank registers.
-                //WriteByte(NeuropixelsV2Definitions.SOFT_RESET, 0xFF);
-                //WriteByte(NeuropixelsV2Definitions.SOFT_RESET, 0x00);
+                //WriteByte(NeuropixelsV2.SOFT_RESET, 0xFF);
+                //WriteByte(NeuropixelsV2.SOFT_RESET, 0x00);
 
-                WriteByte(NeuropixelsV2Definitions.SR_LENGTH1, (uint)bytes.Length % 0x100);
-                WriteByte(NeuropixelsV2Definitions.SR_LENGTH2, (uint)bytes.Length / 0x100);
+                WriteByte(NeuropixelsV2.SR_LENGTH1, (uint)bytes.Length % 0x100);
+                WriteByte(NeuropixelsV2.SR_LENGTH2, (uint)bytes.Length / 0x100);
 
                 foreach (var b in bytes)
                 {
@@ -71,21 +71,21 @@ namespace OpenEphys.Onix
                 }
             //}
 
-            //if (ReadByte(NeuropixelsV2Definitions.STATUS) != (uint)NeuropixelsV2Status.SR_OK)
+            //if (ReadByte(NeuropixelsV2.STATUS) != (uint)NeuropixelsV2Status.SR_OK)
             //{
             //    // TODO: This check always fails
             //    throw new InvalidOperationException($"Shift register {srAddress} status check failed.");
             //}
         }
 
-        public static BitArray[] GenerateShankBits(NeuropixelsV2QuadShankProbe probe)
+        public static BitArray[] GenerateShankBits(NeuropixelsV2QuadShankProbeConfiguration probe)
         {
             BitArray[] shankBits =
             {
-                new(NeuropixelsV2Definitions.RegistersPerShank, false),
-                new(NeuropixelsV2Definitions.RegistersPerShank, false),
-                new(NeuropixelsV2Definitions.RegistersPerShank, false),
-                new(NeuropixelsV2Definitions.RegistersPerShank, false)
+                new(NeuropixelsV2.RegistersPerShank, false),
+                new(NeuropixelsV2.RegistersPerShank, false),
+                new(NeuropixelsV2.RegistersPerShank, false),
+                new(NeuropixelsV2.RegistersPerShank, false)
             };
 
             // If tip reference is used, activate the tip electrodes
@@ -95,7 +95,7 @@ namespace OpenEphys.Onix
                 shankBits[(int)probe.Reference - 1][644] = true;
             }
 
-            const int PixelOffset = (NeuropixelsV2Definitions.ElectrodePerShank - 1) / 2;
+            const int PixelOffset = (NeuropixelsV2.ElectrodePerShank - 1) / 2;
             const int ReferencePixelOffset = 3;
             foreach (var c in probe.ChannelMap)
             { 
@@ -111,12 +111,12 @@ namespace OpenEphys.Onix
             return shankBits;
         }
 
-        public static BitArray[] GenerateBaseBits(NeuropixelsV2QuadShankProbe probe)
+        public static BitArray[] GenerateBaseBits(NeuropixelsV2QuadShankProbeConfiguration probe)
         {
             BitArray[] baseBits =
             {
-                new(NeuropixelsV2Definitions.ChannelCount * NeuropixelsV2Definitions.BaseBitsPerChannel / 2, false),
-                new(NeuropixelsV2Definitions.ChannelCount * NeuropixelsV2Definitions.BaseBitsPerChannel / 2, false)
+                new(NeuropixelsV2.ChannelCount * NeuropixelsV2.BaseBitsPerChannel / 2, false),
+                new(NeuropixelsV2.ChannelCount * NeuropixelsV2.BaseBitsPerChannel / 2, false)
             };
 
             var referenceBit = probe.Reference switch
@@ -129,10 +129,10 @@ namespace OpenEphys.Onix
                 _ => throw new InvalidOperationException("Invalid reference selection."),
             };
 
-            for (int i = 0; i < NeuropixelsV2Definitions.ChannelCount; i++)
+            for (int i = 0; i < NeuropixelsV2.ChannelCount; i++)
             {
                 var configIndex = i % 2;
-                var bitOffset = (382 - i + configIndex) / 2 * NeuropixelsV2Definitions.BaseBitsPerChannel;
+                var bitOffset = (382 - i + configIndex) / 2 * NeuropixelsV2.BaseBitsPerChannel;
                 baseBits[configIndex][bitOffset + 0] = false; // standby bit
                 baseBits[configIndex][bitOffset + referenceBit ] = true;
             }

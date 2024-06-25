@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace OpenEphys.Onix
@@ -21,29 +22,32 @@ namespace OpenEphys.Onix
         D,
     }
 
-    public class NeuropixelsV2QuadShankProbe
+    public class NeuropixelsV2QuadShankProbeConfiguration
     {
-        [XmlIgnore]
-        public readonly List<NeuropixelsV2QuadShankElectrode> Electrodes;
+        public static readonly IReadOnlyList<NeuropixelsV2QuadShankElectrode> ProbeModel = CreateProbeModel();
 
-        public NeuropixelsV2QuadShankProbe()
+        public NeuropixelsV2QuadShankProbeConfiguration()
         {
-            Electrodes = new List<NeuropixelsV2QuadShankElectrode>(NeuropixelsV2Definitions.ElectrodePerShank * 4);
-            for (int i = 0; i < NeuropixelsV2Definitions.ElectrodePerShank * 4; i++)
+            ChannelMap = new List<NeuropixelsV2QuadShankElectrode>(NeuropixelsV2.ChannelCount);
+            for (int i = 0; i < NeuropixelsV2.ChannelCount; i++)
             {
-                Electrodes.Add(new NeuropixelsV2QuadShankElectrode() { ElectrodeNumber = i });  
+                ChannelMap.Add(ProbeModel.FirstOrDefault(e => e.Channel == i));
             }
+        }
 
-            ChannelMap = new List<NeuropixelsV2QuadShankElectrode>(NeuropixelsV2Definitions.ChannelCount);
-            for (int i = 0; i < NeuropixelsV2Definitions.ChannelCount; i++)
+        private static List<NeuropixelsV2QuadShankElectrode> CreateProbeModel()
+        {
+            var electrodes = new List<NeuropixelsV2QuadShankElectrode>(NeuropixelsV2.ElectrodePerShank * 4);
+            for (int i = 0; i < NeuropixelsV2.ElectrodePerShank * 4; i++)
             {
-                ChannelMap.Add(Electrodes.Find(e => e.Channel == i));
+                electrodes.Add(new NeuropixelsV2QuadShankElectrode() { ElectrodeNumber = i });
             }
+            return electrodes;
         }
 
         public NeuropixelsV2QuadShankReference Reference { get; set; } = NeuropixelsV2QuadShankReference.External;
 
-        public List<NeuropixelsV2QuadShankElectrode> ChannelMap { get;  }
+        public List<NeuropixelsV2QuadShankElectrode> ChannelMap { get; }
 
         public void SelectElectrodes(List<NeuropixelsV2QuadShankElectrode> electrodes)
         {
@@ -57,17 +61,15 @@ namespace OpenEphys.Onix
     public class NeuropixelsV2QuadShankElectrode
     {
         private int electrodeNumber = 0;
+
         public int ElectrodeNumber
         {
-            get
-            {
-                return electrodeNumber;
-            }
+            get => electrodeNumber;
             set
             {
                 electrodeNumber = value;
-                Shank = electrodeNumber / NeuropixelsV2Definitions.ElectrodePerShank;
-                IntraShankElectrodeIndex = electrodeNumber % NeuropixelsV2Definitions.ElectrodePerShank;
+                Shank = electrodeNumber / NeuropixelsV2.ElectrodePerShank;
+                IntraShankElectrodeIndex = electrodeNumber % NeuropixelsV2.ElectrodePerShank;
 
                 Position = new PointF(x: electrodeNumber % 2 * 32.0f + 8.0f, y: (IntraShankElectrodeIndex - (IntraShankElectrodeIndex % 2)) * 7.5f);
 

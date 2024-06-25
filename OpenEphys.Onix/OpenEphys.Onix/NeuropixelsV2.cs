@@ -14,7 +14,7 @@ namespace OpenEphys.Onix
         SR_OK = 1 << 7 // Indicates the SR chain comparison is OK
     }
 
-    public static class NeuropixelsV2Definitions
+    static class NeuropixelsV2
     {
         public const int ChannelCount = 384;
         public const int BaseBitsPerChannel = 4;
