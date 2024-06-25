@@ -24,15 +24,24 @@ namespace OpenEphys.Onix
                 () => DeviceManager.ReserveDevice(DeviceName),
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
                 {
-                    var device = deviceInfo.GetDeviceContext(typeof(NeuropixelsV2eBeta));
+                    var info = (NeuropixelsV2eDeviceInfo)deviceInfo;
+                    var device = info.GetDeviceContext(typeof(NeuropixelsV2eBeta));
                     var passthrough = device.GetPassthroughDeviceContext(DS90UB9x.ID);
                     var probeData = device.Context.FrameReceived.Where(frame =>
                         frame.DeviceAddress == passthrough.Address &&
                         NeuropixelsV2eBetaDataFrame.GetProbeIndex(frame) == (int)ProbeIndex);
+
+                    var gainCorrection = ProbeIndex switch
+                    {
+                        NeuropixelsV2Probe.ProbeA => (ushort)info.GainCorrectionA,
+                        NeuropixelsV2Probe.ProbeB => (ushort)info.GainCorrectionB,
+                        _ => throw new ArgumentOutOfRangeException(nameof(ProbeIndex), $"Unexpected ProbeIndex value: {ProbeIndex}"),
+                    };
+
                     return Observable.Create<NeuropixelsV2eBetaDataFrame>(observer =>
                     {
                         var sampleIndex = 0;
-                        var amplifierBuffer = new ushort[NeuropixelsV2eBeta.ChannelCount, bufferSize];
+                        var amplifierBuffer = new ushort[NeuropixelsV2.ChannelCount, bufferSize];
                         var frameCounter = new int[NeuropixelsV2eBeta.FramesPerSuperFrame * bufferSize];
                         var hubClockBuffer = new ulong[bufferSize];
                         var clockBuffer = new ulong[bufferSize];
@@ -41,7 +50,7 @@ namespace OpenEphys.Onix
                             frame =>
                             {
                                 var payload = (NeuropixelsV2BetaPayload*)frame.Data.ToPointer();
-                                NeuropixelsV2eBetaDataFrame.CopyAmplifierBuffer(payload->SuperFrame, amplifierBuffer, frameCounter, sampleIndex);
+                                NeuropixelsV2eBetaDataFrame.CopyAmplifierBuffer(payload->SuperFrame, amplifierBuffer, frameCounter, sampleIndex, gainCorrection);
                                 hubClockBuffer[sampleIndex] = payload->HubClock;
                                 clockBuffer[sampleIndex] = frame.Clock;
                                 if (++sampleIndex >= bufferSize)

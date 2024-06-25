@@ -4,19 +4,21 @@ namespace OpenEphys.Onix
 {
     class ConfigureNeuropixelsV2eLinkController : ConfigureFmcLinkController
     {
+
         protected override bool ConfigurePortVoltage(DeviceContext device)
         {
-            const uint MinVoltage = 50;
-            const uint MaxVoltage = 70;
-            const uint VoltageOffset = 02;
-            const uint VoltageIncrement = 02;
+            const double MinVoltage = 3.3;
+            const double MaxVoltage = 5.5;
+            const double VoltageOffset = 1.0;
+            const double VoltageIncrement = 0.2;
 
-            for (uint voltage = MinVoltage; voltage <= MaxVoltage; voltage += VoltageIncrement)
+            for (double voltage = MinVoltage; voltage <= MaxVoltage; voltage += VoltageIncrement)
             {
-                SetPortVoltage(device, voltage);
+                SetVoltage(device, voltage);
+
                 if (CheckLinkState(device))
                 {
-                    SetPortVoltage(device, voltage + VoltageOffset);
+                    SetVoltage(device, voltage + VoltageOffset);
                     return CheckLinkState(device);
                 }
             }
@@ -24,13 +26,13 @@ namespace OpenEphys.Onix
             return false;
         }
 
-        private void SetPortVoltage(DeviceContext device, uint voltage)
+
+        void SetVoltage(DeviceContext device, double voltage)
         {
-            const int WaitUntilVoltageSettles = 200;
             device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
-            Thread.Sleep(WaitUntilVoltageSettles);
-            device.WriteRegister(FmcLinkController.PORTVOLTAGE, voltage);
-            Thread.Sleep(WaitUntilVoltageSettles);
+            Thread.Sleep(200);
+            device.WriteRegister(FmcLinkController.PORTVOLTAGE, (uint)(10 * voltage));
+            Thread.Sleep(200);
         }
     }
 }

@@ -46,8 +46,8 @@ namespace OpenEphys.Onix
             i2c.WriteByte(0x3E, 0x00); // Power mode normal
             i2c.WriteByte(0x07, 0x00); // Page ID address 0
             i2c.WriteByte(0x3F, 0x00); // Internal oscillator
-            i2c.WriteByte(0x41, 0b00000110);  // Axis map config (configured to match hs64; X => Z, Y => -Y, Z => X)
-            i2c.WriteByte(0x42, 0b000000010); // Axis sign (negate Y)
+            i2c.WriteByte(0x41, 0b00010010);  // Axis map config (configured to match headstage; X => Z, Y => X, Z => Y)
+            i2c.WriteByte(0x42, 0b00000000); // Axis sign set to default
             i2c.WriteByte(0x3D, 8); // Operation mode is NOF
         }
     }

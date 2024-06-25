@@ -115,6 +115,8 @@ namespace OpenEphys.Onix
     {
         GPIO10 = 0x0D,
         GPIO32 = 0x0E,
+        SCLHIGH = 0x0A,
+        SCLLOW = 0x0B
     }
 
     enum DS90UB9xMode

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Reactive.Disposables;
+using Bonsai;
 
 namespace OpenEphys.Onix
 {
@@ -14,6 +15,24 @@ namespace OpenEphys.Onix
         [Category(ConfigurationCategory)]
         [Description("Specifies whether the NeuropixelsV2 device is enabled.")]
         public bool Enable { get; set; } = true;
+
+        [Category(ConfigurationCategory)]
+        [Description("Probe A electrode configuration.")]
+        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; }
+
+        [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
+        [Description("Path to the gain calibration file for probe A.")]
+        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
+        public string GainCalibrationFileA { get; set; }
+
+        [Category(ConfigurationCategory)]
+        [Description("Probe B electrode configuration.")]
+        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; }
+
+        [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
+        [Description("Path to the gain calibration file for probe B.")]
+        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
+        public string GainCalibrationFileB { get; set; }
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
@@ -35,25 +54,39 @@ namespace OpenEphys.Onix
                 var probeAMetadata = ReadProbeMetadata(serializer, NeuropixelsV2e.ProbeASelected);
                 var probeBMetadata = ReadProbeMetadata(serializer, NeuropixelsV2e.ProbeBSelected);
 
+                if (probeAMetadata.ProbeSerialNumber == null && probeBMetadata.ProbeSerialNumber == null)
+                {
+                    throw new InvalidOperationException("No probes were detected. Ensure that the " +
+                        "flex connection is properly seated.");
+                }
+
                 // issue full reset to both probes
                 ResetProbes(serializer, gpo10Config);
-                var probeControl = new I2CRegisterContext(device, NeuropixelsV2e.ProbeAddress);
+
+                // configure probe streaming
+                ushort? gainCorrectionA = null;
+                ushort? gainCorrectionB = null;
+                var probeControl = new NeuropixelsV2RegisterContext(device, NeuropixelsV2e.ProbeAddress);
 
                 // configure probe A streaming
-                if (probeAMetadata.ProbeSN != null)
+                if (probeAMetadata.ProbeSerialNumber != null)
                 {
+                    gainCorrectionA = ReadGainCorrection(GainCalibrationFileA, (ulong)probeAMetadata.ProbeSerialNumber);
                     SelectProbe(serializer, NeuropixelsV2e.ProbeASelected);
+                    probeControl.WriteConfiguration(ProbeConfigurationA);
                     ConfigureProbeStreaming(probeControl);
                 }
 
                 // configure probe B streaming
-                if (probeBMetadata.ProbeSN != null)
+                if (probeBMetadata.ProbeSerialNumber != null)
                 {
+                    gainCorrectionB = ReadGainCorrection(GainCalibrationFileB, (ulong)probeBMetadata.ProbeSerialNumber);
                     SelectProbe(serializer, NeuropixelsV2e.ProbeBSelected);
+                    probeControl.WriteConfiguration(ProbeConfigurationB);
                     ConfigureProbeStreaming(probeControl);
                 }
 
-                var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
+                var deviceInfo = new NeuropixelsV2eDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB);
                 var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
                 var shutdown = Disposable.Create(() =>
                 {
@@ -109,10 +142,29 @@ namespace OpenEphys.Onix
             return gpo10Config;
         }
 
-        NeuropixelsV2eMetadata ReadProbeMetadata(I2CRegisterContext serializer, byte probeSelect)
+        static NeuropixelsV2eMetadata ReadProbeMetadata(I2CRegisterContext serializer, byte probeSelect)
         {
             SelectProbe(serializer, probeSelect);
             return new NeuropixelsV2eMetadata(serializer);
+        }
+
+        static ushort ReadGainCorrection(string gainCalibrationFile, ulong probeSerialNumber)
+        {
+            if (gainCalibrationFile == null)
+            {
+                throw new ArgumentException("Calibration file must be specified.");
+            }
+
+            System.IO.StreamReader gainFile = new(gainCalibrationFile);
+            var sn = ulong.Parse(gainFile.ReadLine());
+
+            if (probeSerialNumber != sn)
+            {
+                throw new ArgumentException($"Probe serial number {probeSerialNumber} does not match calibration file serial number {sn}.");
+            }
+
+            // Q1.14 fixed point conversion
+            return (ushort)(double.Parse(gainFile.ReadLine()) * (1 << 14));
         }
 
         static void SelectProbe(I2CRegisterContext serializer, byte probeSelect)
@@ -147,6 +199,10 @@ namespace OpenEphys.Onix
 
             // Activate recording mode on NP
             i2cNP.WriteByte(0, 0b0100_0000);
+
+            // Set global ADC settings
+            // TODO: Undocumented
+            i2cNP.WriteByte(3, 0b0000_1000);
         }
     }
 
@@ -175,4 +231,6 @@ namespace OpenEphys.Onix
             }
         }
     }
+
+
 }
