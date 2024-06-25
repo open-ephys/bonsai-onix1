@@ -87,7 +87,7 @@ namespace OpenEphys.Onix
 
             switch (refSource)
             {
-                case NeuropixelsV1ReferenceSource.Ext:
+                case NeuropixelsV1ReferenceSource.External:
                     {
                         ShankConfig[ShankBitExt1] = true;
                         ShankConfig[ShankBitExt2] = true;

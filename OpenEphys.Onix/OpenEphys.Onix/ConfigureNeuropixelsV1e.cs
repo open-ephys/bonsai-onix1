@@ -31,7 +31,7 @@ namespace OpenEphys.Onix
 
         [Category(ConfigurationCategory)]
         [Description("Reference selection.")]
-        public NeuropixelsV1ReferenceSource Reference { get; set; } = NeuropixelsV1ReferenceSource.Ext;
+        public NeuropixelsV1ReferenceSource Reference { get; set; } = NeuropixelsV1ReferenceSource.External;
 
         [Category(ConfigurationCategory)]
         [Description("If true, activates a 300 Hz high-pass filter in the spike-band data stream.")]
@@ -68,7 +68,7 @@ namespace OpenEphys.Onix
                 serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.SCLLOW, 20);
 
                 // read probe metadata
-                var probeMetadata = ReadProbeMetadata(serializer);
+                var probeMetadata = new NeuropixelsV1eMetadata(serializer);
 
                 // issue full mux reset to the probe
                 var gpo10Config = NeuropixelsV1e.DefaultGPO10Config;
@@ -131,17 +131,6 @@ namespace OpenEphys.Onix
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias2, alias);
         }
 
-        static NeuropixelsV1eMetadata ReadProbeMetadata(I2CRegisterContext serializer)
-        {
-            try
-            {
-                return new NeuropixelsV1eMetadata(serializer);
-            } catch (Exception ex) {
-                throw new InvalidOperationException("Could not communicate with probe. Ensure that the " +
-                    "flex connection is properly seated.", ex);
-            }
-        }
-
         static void ResetProbe(I2CRegisterContext serializer, uint gpo10Config)
         {
             gpo10Config &= ~NeuropixelsV1e.Gpo10ResetMask;
@@ -164,8 +153,6 @@ namespace OpenEphys.Onix
     {
         public const int ProbeAddress = 0x70;
         public const int FlexEEPROMAddress = 0x50;
-        // TODO: Who's business is this? Feels like it should be headstage.
-        // public const int HeadstageEEPROMAddress = 0x51;
 
         public const byte DefaultGPO10Config = 0b0001_0001; // GPIO0 Low, NP in MUX reset
         public const byte DefaultGPO32Config = 0b1001_0001; // LED off, GPIO1 Low
@@ -206,7 +193,7 @@ namespace OpenEphys.Onix
     }
 
     [Flags]
-    public enum NeuropixelsV1CalibrationRegisterValues : uint
+    enum NeuropixelsV1CalibrationRegisterValues : uint
     {
         CAL_OFF = 0,
         OSC_ACTIVE = 1 << 4, // 0 = external osc inactive, 1 = activate the external calibration oscillator
@@ -222,7 +209,7 @@ namespace OpenEphys.Onix
     };
 
     [Flags]
-    public enum NeuropixelsV1RecordRegisterValues : uint
+    enum NeuropixelsV1RecordRegisterValues : uint
     {
         RESET_ALL = 1 << 5, // 1 = Set analog SR chains to default values
         DIG_ENABLE = 1 << 6, // 0 = Reset the MUX, ADC, and PSB counter, 1 = Disable reset
@@ -235,7 +222,7 @@ namespace OpenEphys.Onix
     };
 
     [Flags]
-    public enum NeuropixelsV1OperationRegisterValues : uint
+    enum NeuropixelsV1OperationRegisterValues : uint
     {
         TEST = 1 << 3, // Enable Test mode
         DIG_TEST = 1 << 4, // Enable Digital Test mode
@@ -250,7 +237,7 @@ namespace OpenEphys.Onix
 
     public enum NeuropixelsV1ReferenceSource : byte
     {
-        Ext = 0b001,
+        External = 0b001,
         Tip = 0b010
     }
 
