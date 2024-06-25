@@ -19,7 +19,7 @@ namespace OpenEphys.Onix
 
         public DigitalPortState DigitalInputs { get; }
 
-        public ButtonState Buttons { get; }
+        public BreakoutButtonState Buttons { get; }
 
     }
 
@@ -28,6 +28,6 @@ namespace OpenEphys.Onix
     {
         public ulong HubClock;
         public DigitalPortState DigitalInputs;
-        public ButtonState Buttons;
+        public BreakoutButtonState Buttons;
     }
 }

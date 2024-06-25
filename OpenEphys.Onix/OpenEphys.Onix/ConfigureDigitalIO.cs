@@ -58,7 +58,7 @@ namespace OpenEphys.Onix
     }
 
     [Flags]
-    public enum ButtonState : ushort
+    public enum BreakoutButtonState : ushort
     {
         Moon = 0x1,
         Triangle = 0x2,
