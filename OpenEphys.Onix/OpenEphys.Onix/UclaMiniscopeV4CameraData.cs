@@ -12,7 +12,7 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
-    public class UclaMiniscopeV4ImageData : Source<UclaMiniscopeV4DataFrame>
+    public class UclaMiniscopeV4CameraData : Source<UclaMiniscopeV4DataFrame>
     {
         readonly BehaviorSubject<double> ledBrightness = new(0);
         readonly BehaviorSubject<UclaMiniscopeV4SensorGain> sensorGain = new(UclaMiniscopeV4SensorGain.Low);

@@ -28,6 +28,17 @@ namespace OpenEphys.Onix
             var enable = Enable;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
+            uint shutterWidth = FrameRate switch
+            {
+                UclaMiniscopeV4FramesPerSecond.Fps10Hz => 10000,
+                UclaMiniscopeV4FramesPerSecond.Fps15Hz => 6667,
+                UclaMiniscopeV4FramesPerSecond.Fps20Hz => 5000,
+                UclaMiniscopeV4FramesPerSecond.Fps25Hz => 4000,
+                UclaMiniscopeV4FramesPerSecond.Fps30Hz => 3300,
+                _ => 3300
+            };
+            var interleaveLED = InterleaveLed;
+
             return source.ConfigureDevice(context =>
             {
                 // configure device via the DS90UB9x deserializer device
@@ -39,18 +50,7 @@ namespace OpenEphys.Onix
 
                 // configuration properties
                 var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
-                atMega.WriteByte(0x04, (uint)(InterleaveLed ? 0x00 : 0x03));
-
-                uint shutterWidth = FrameRate switch
-                {
-                    UclaMiniscopeV4FramesPerSecond.Fps10Hz => 10000,
-                    UclaMiniscopeV4FramesPerSecond.Fps15Hz => 6667,
-                    UclaMiniscopeV4FramesPerSecond.Fps20Hz => 5000,
-                    UclaMiniscopeV4FramesPerSecond.Fps25Hz => 4000,
-                    UclaMiniscopeV4FramesPerSecond.Fps30Hz => 3300,
-                    _ => 3300
-                };
-
+                atMega.WriteByte(0x04, (uint)(interleaveLED ? 0x00 : 0x03));
                 WriteCameraRegister(atMega, 200, shutterWidth);
 
                 var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
@@ -79,7 +79,7 @@ namespace OpenEphys.Onix
             device.WriteRegister(DS90UB9x.TRIGGER, (uint)DS90UB9xTriggerMode.HsyncEdgePositive);
             device.WriteRegister(DS90UB9x.SYNCBITS, 0);
             device.WriteRegister(DS90UB9x.DATAGATE, (uint)DS90UB9xDataGate.VsyncPositive);
-            device.WriteRegister(DS90UB9x.MARK,0);
+            //device.WriteRegister(DS90UB9x.MARK, (uint)DS90UB9xMarkMode.VsyncRising); // TODO: Not sure why this is required given that data is gated by VSYNC HIGH
 
             // configure deserializer I2C aliases
             var deserializer = new I2CRegisterContext(device, DS90UB9x.DES_ADDR);
