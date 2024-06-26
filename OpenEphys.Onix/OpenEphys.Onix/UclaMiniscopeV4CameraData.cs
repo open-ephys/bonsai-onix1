@@ -51,7 +51,6 @@ namespace OpenEphys.Onix
 
         public unsafe override IObservable<UclaMiniscopeV4DataFrame> Generate()
         {
-
             return Observable.Using(
                 () => DeviceManager.ReserveDevice(DeviceName),
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
@@ -65,21 +64,30 @@ namespace OpenEphys.Onix
                         var imageBuffer = new short[UclaMiniscopeV4.SensorRows * UclaMiniscopeV4.SensorColumns];
                         var hubClockBuffer = new ulong[UclaMiniscopeV4.SensorRows];
                         var clockBuffer = new ulong[UclaMiniscopeV4.SensorRows];
+                        var awaitingFrameStart = true;
 
                         var frameObserver = Observer.Create<oni.Frame>(
                             frame =>
                             {
                                 var payload = (UclaMiniscopeV4ImagerPayload*)frame.Data.ToPointer();
+
+                                // Await for first row
+                                if (awaitingFrameStart && (payload->ImageRow[0] & 0x8000) == 0)
+                                    return;
+
+                                awaitingFrameStart = false;
                                 Marshal.Copy(new IntPtr(payload->ImageRow), imageBuffer, sampleIndex * UclaMiniscopeV4.SensorColumns, UclaMiniscopeV4.SensorColumns);
                                 hubClockBuffer[sampleIndex] = payload->HubClock;
                                 clockBuffer[sampleIndex] = frame.Clock;
                                 if (++sampleIndex >= UclaMiniscopeV4.SensorRows)
                                 {
-                                    var imageData = BufferHelper.CopyTranspose(imageBuffer, UclaMiniscopeV4.SensorRows, UclaMiniscopeV4.SensorColumns, Depth.U16);
+                                    var imageData = Mat.FromArray(imageBuffer, UclaMiniscopeV4.SensorRows, UclaMiniscopeV4.SensorColumns,  Depth.U16, 1);
+                                    CV.ConvertScale(imageData.GetRow(0), imageData.GetRow(0), 1.0f, -32768.0f); // Get rid first row's mark bit
                                     observer.OnNext(new UclaMiniscopeV4DataFrame(clockBuffer, hubClockBuffer, imageData.GetImage()));
                                     hubClockBuffer = new ulong[UclaMiniscopeV4.SensorRows];
                                     clockBuffer = new ulong[UclaMiniscopeV4.SensorRows];
                                     sampleIndex = 0;
+                                    awaitingFrameStart = true;
                                 }
                             },
                             observer.OnError,

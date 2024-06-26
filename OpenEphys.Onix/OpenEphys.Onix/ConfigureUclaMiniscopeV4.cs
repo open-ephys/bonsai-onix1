@@ -16,7 +16,7 @@ namespace OpenEphys.Onix
 
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
-        public ConfigureUclaMiniscopeV4Camera Imager { get; set; } = new();
+        public ConfigureUclaMiniscopeV4Camera Camera { get; set; } = new();
 
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
@@ -30,7 +30,7 @@ namespace OpenEphys.Onix
                 port = value;
                 var offset = (uint)port << 8;
                 LinkController.DeviceAddress = (uint)port;
-                Imager.DeviceAddress = offset + 0;
+                Camera.DeviceAddress = offset + 0;
                 Bno055.DeviceAddress = offset + 1;
             }
         }
@@ -47,7 +47,7 @@ namespace OpenEphys.Onix
         internal override IEnumerable<IDeviceConfiguration> GetDevices()
         {
             yield return LinkController;
-            yield return Imager;
+            yield return Camera;
             yield return Bno055;
         }
     }

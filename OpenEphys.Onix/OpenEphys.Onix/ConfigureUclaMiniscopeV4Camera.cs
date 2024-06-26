@@ -79,24 +79,27 @@ namespace OpenEphys.Onix
             device.WriteRegister(DS90UB9x.TRIGGER, (uint)DS90UB9xTriggerMode.HsyncEdgePositive);
             device.WriteRegister(DS90UB9x.SYNCBITS, 0);
             device.WriteRegister(DS90UB9x.DATAGATE, (uint)DS90UB9xDataGate.VsyncPositive);
-            //device.WriteRegister(DS90UB9x.MARK, (uint)DS90UB9xMarkMode.VsyncRising); // TODO: Not sure why this is required given that data is gated by VSYNC HIGH
+
+            // NB: This is required because Bonsai is not garuenteed to capure every frame at the start of acqusition.
+            // For this reason, the frame start needs to be marked.
+            device.WriteRegister(DS90UB9x.MARK, (uint)DS90UB9xMarkMode.VsyncRising);
 
             // configure deserializer I2C aliases
             var deserializer = new I2CRegisterContext(device, DS90UB9x.DES_ADDR);
             uint coaxMode = 0x4 + (uint)DS90UB9xMode.Raw12BitLowFrequency; // 0x4 maintains coax mode
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.PortMode, coaxMode);
 
-            uint alias = UclaMiniscopeV4.AtMegaAddress << 1;
-            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID1, alias);
-            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias1, alias);
+            uint i2cAlias = UclaMiniscopeV4.AtMegaAddress << 1;
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID1, i2cAlias);
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias1, i2cAlias);
 
-            alias = UclaMiniscopeV4.Tpl0102Address << 1;
-            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID2, alias);
-            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias2, alias);
+            i2cAlias = UclaMiniscopeV4.Tpl0102Address << 1;
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID2, i2cAlias);
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias2, i2cAlias);
 
-            alias = UclaMiniscopeV4.Max14574Address << 1;
-            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID3, alias);
-            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias3, alias);
+            i2cAlias = UclaMiniscopeV4.Max14574Address << 1;
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID3, i2cAlias);
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias3, i2cAlias);
 
             // set up potentiometer
             var tpl0102 = new I2CRegisterContext(device, UclaMiniscopeV4.Tpl0102Address);
@@ -193,5 +196,4 @@ namespace OpenEphys.Onix
         Fps25Hz,
         Fps30Hz,
     }
-
 }
