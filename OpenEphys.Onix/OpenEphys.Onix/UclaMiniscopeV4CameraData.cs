@@ -16,7 +16,7 @@ namespace OpenEphys.Onix
     {
         readonly BehaviorSubject<double> ledBrightness = new(0);
         readonly BehaviorSubject<UclaMiniscopeV4SensorGain> sensorGain = new(UclaMiniscopeV4SensorGain.Low);
-        readonly BehaviorSubject<double> liquidLensVoltage = new(0);
+        readonly BehaviorSubject<double> liquidLensVoltage = new(47); // NB: middle of range
 
         [TypeConverter(typeof(UclaMiniscopeV4.NameConverter))]
         public string DeviceName { get; set; }
@@ -39,7 +39,7 @@ namespace OpenEphys.Onix
             set => sensorGain.OnNext(value);
         }
 
-        [Description("Liquid lens voltage(Volts RMS).")]
+        [Description("Liquid lens voltage (Volts RMS).")]
         [Range(24.4, 69.7)]
         [Precision(1, 1)]
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
@@ -71,7 +71,7 @@ namespace OpenEphys.Onix
                             {
                                 var payload = (UclaMiniscopeV4ImagerPayload*)frame.Data.ToPointer();
 
-                                // Await for first row
+                                // Wait for first row
                                 if (awaitingFrameStart && (payload->ImageRow[0] & 0x8000) == 0)
                                     return;
 
