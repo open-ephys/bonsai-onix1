@@ -43,8 +43,8 @@ namespace OpenEphys.Onix
                                 clockBuffer[sampleIndex] = frame.Clock;
                                 if (++sampleIndex >= bufferSize * NeuropixelsV1.SuperframesPerUltraframe)
                                 {
-                                    var lfpData = BufferHelper.CopyBuffer(lfpBuffer, bufferSize, NeuropixelsV1.ChannelCount, Depth.U16);
-                                    var apData = BufferHelper.CopyBuffer(apBuffer, bufferSize * NeuropixelsV1.SuperframesPerUltraframe, NeuropixelsV1.ChannelCount, Depth.U16);
+                                    var lfpData = BufferHelper.CopyTranspose(lfpBuffer, bufferSize, NeuropixelsV1.ChannelCount, Depth.U16);
+                                    var apData = BufferHelper.CopyTranspose(apBuffer, bufferSize * NeuropixelsV1.SuperframesPerUltraframe, NeuropixelsV1.ChannelCount, Depth.U16);
                                     observer.OnNext(new Nric1384DataFrame(clockBuffer, hubClockBuffer, frameCountBuffer, apData, lfpData));
                                     frameCountBuffer = new uint[bufferSize * NeuropixelsV1.SuperframesPerUltraframe];
                                     hubClockBuffer = new ulong[bufferSize * NeuropixelsV1.SuperframesPerUltraframe];

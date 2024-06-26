@@ -54,51 +54,24 @@ namespace OpenEphys.Onix
 
         class ConfigureHeadstageNric1384LinkController : ConfigureFmcLinkController
         {
-            public double? PortVoltage { get; set; } = null;
-
             // TODO: Needs more testing
+            // TODO: Really needs the ability to completely discharge headstage between tries.
             protected override bool ConfigurePortVoltage(DeviceContext device)
             {
-                if (PortVoltage == null)
-                {
-                    const double MinVoltage = 3.3;
-                    const double MaxVoltage = 5.5;
-                    const double VoltageOffset = 0.3;
-                    const double VoltageIncrement = 0.2;
+                const double MinVoltage = 3.8;
+                const double MaxVoltage = 5.5;
+                const double VoltageOffset = 0.7;
+                const double VoltageIncrement = 0.2;
 
-                    for (var voltage = MinVoltage; voltage <= MaxVoltage; voltage += VoltageIncrement)
+                for (var voltage = MinVoltage; voltage <= MaxVoltage; voltage += VoltageIncrement)
+                {
+                    SetVoltage(device, voltage);
+
+                    if (CheckLinkState(device))
                     {
-
-                        SetVoltage(device, voltage);
-
-                        if (CheckLinkState(device))
-                        {
-                            SetVoltage(device, voltage + VoltageOffset);
-                            return ResetPort(device);
-                        }
+                        SetVoltage(device, voltage + VoltageOffset);
+                        return CheckLinkState(device);
                     }
-
-                    return false;
-                }
-                else
-                {
-                    SetVoltage(device, (double)PortVoltage);
-                    return ResetPort(device);
-                }
-            }
-
-            bool ResetPort(DeviceContext device)
-            {
-                // NB: The headstage needs an additional reset after power on
-                // to provide its device table
-                device.Context.Reset();
-                Thread.Sleep(200);
-
-                if (CheckLinkState(device))
-                {
-                    device.Context.Reset();
-                    Thread.Sleep(200);
-                    return true;
                 }
 
                 return false;
@@ -108,9 +81,9 @@ namespace OpenEphys.Onix
             {
                 //device.WriteRegister(FmcLinkController.PORTVOLTAGE, 33);
                 //device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
-                //Thread.Sleep(500);
+                //Thread.Sleep(200);
                 device.WriteRegister(FmcLinkController.PORTVOLTAGE, (uint)(10 * voltage));
-                Thread.Sleep(500);
+                Thread.Sleep(200);
             }
         }
     }
