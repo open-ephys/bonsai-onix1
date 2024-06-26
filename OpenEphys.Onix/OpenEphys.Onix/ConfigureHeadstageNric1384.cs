@@ -65,6 +65,7 @@ namespace OpenEphys.Onix
 
                 for (var voltage = MinVoltage; voltage <= MaxVoltage; voltage += VoltageIncrement)
                 {
+
                     SetVoltage(device, voltage);
 
                     if (CheckLinkState(device))
