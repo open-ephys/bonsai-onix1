@@ -172,6 +172,7 @@ namespace OpenEphys.Onix
         // constants
         public const int AmplifierChannelCount = 16;
         public const int StimMemorySlotsAvailable = 1024;
+        public const double SampleFrequencyHz = 30.1932367151e3;
 
         // managed registers
         public const uint ENABLE = 0x8000; // Enable or disable the data output stream (32767)
