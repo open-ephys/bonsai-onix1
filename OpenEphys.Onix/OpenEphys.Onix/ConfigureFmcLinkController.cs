@@ -53,7 +53,7 @@ namespace OpenEphys.Onix
             })
             .ConfigureLink(context =>
             {
-                var device = context.GetDeviceContext(deviceAddress, FmcLinkController.ID);
+                var device = context.GetDeviceContext(deviceAddress, DeviceType);
                 void dispose() => device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
                 device.WriteRegister(FmcLinkController.ENABLE, 1);
 

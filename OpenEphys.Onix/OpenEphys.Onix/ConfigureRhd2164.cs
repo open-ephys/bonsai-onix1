@@ -39,7 +39,7 @@ namespace OpenEphys.Onix
             {
                 // config register format following RHD2164 datasheet
                 // https://intantech.com/files/Intan_RHD2000_series_datasheet.pdf
-                var device = context.GetDeviceContext(deviceAddress, Rhd2164.ID);
+                var device = context.GetDeviceContext(deviceAddress, DeviceType);
 
                 var format = device.ReadRegister(Rhd2164.FORMAT);
                 var amplifierDataFormat = AmplifierDataFormat;

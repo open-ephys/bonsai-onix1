@@ -25,7 +25,7 @@ namespace OpenEphys.Onix
             var deviceAddress = DeviceAddress;
             return source.ConfigureDevice(context =>
             {
-                var device = context.GetDeviceContext(deviceAddress, HarpSyncInput.ID);
+                var device = context.GetDeviceContext(deviceAddress, DeviceType);
                 device.WriteRegister(HarpSyncInput.ENABLE, Enable ? 1u : 0);
                 device.WriteRegister(HarpSyncInput.SOURCE, (uint)Source);
                 return DeviceManager.RegisterDevice(deviceName, device, DeviceType);

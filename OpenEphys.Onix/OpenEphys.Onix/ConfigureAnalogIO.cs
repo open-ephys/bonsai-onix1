@@ -119,7 +119,7 @@ namespace OpenEphys.Onix
             var deviceAddress = DeviceAddress;
             return source.ConfigureDevice(context =>
             {
-                var device = context.GetDeviceContext(deviceAddress, AnalogIO.ID);
+                var device = context.GetDeviceContext(deviceAddress, DeviceType);
                 device.WriteRegister(AnalogIO.ENABLE, Enable ? 1u : 0u);
                 device.WriteRegister(AnalogIO.CH00INRANGE, (uint)InputRange0);
                 device.WriteRegister(AnalogIO.CH01INRANGE, (uint)InputRange1);

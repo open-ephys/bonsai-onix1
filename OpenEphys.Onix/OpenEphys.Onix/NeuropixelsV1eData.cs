@@ -33,7 +33,7 @@ namespace OpenEphys.Onix
                 {
                     var info = (NeuropixelsV1eDeviceInfo)deviceInfo;
                     var device = info.GetDeviceContext(typeof(NeuropixelsV1e));
-                    var passthrough = device.GetPassthroughDeviceContext(DS90UB9x.ID);
+                    var passthrough = device.GetPassthroughDeviceContext(typeof(DS90UB9x));
                     var probeData = device.Context.FrameReceived.Where(frame => frame.DeviceAddress == passthrough.Address);
 
                     return Observable.Create<NeuropixelsV1eDataFrame>(observer =>
