@@ -59,5 +59,24 @@ namespace OpenEphys.Onix
                 return source.SubscribeSafe(contextObserver);
             });
         }
+
+        public static IDisposable SubscribeSafe<TSource, TResult>(
+            this IObservable<TSource> source,
+            IObserver<TResult> observer,
+            Action<TSource> onNext)
+        {
+            var sourceObserver = Observer.Create<TSource>(
+                value =>
+                {
+                    try { onNext(value); }
+                    catch (Exception ex)
+                    {
+                        observer.OnError(ex);
+                    }
+                },
+                observer.OnError,
+                observer.OnCompleted);
+            return source.SubscribeSafe(sourceObserver);
+        }
     }
 }
