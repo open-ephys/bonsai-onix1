@@ -72,6 +72,7 @@ namespace OpenEphys.Onix
                     catch (Exception ex)
                     {
                         observer.OnError(ex);
+                        throw;
                     }
                 },
                 observer.OnError,
