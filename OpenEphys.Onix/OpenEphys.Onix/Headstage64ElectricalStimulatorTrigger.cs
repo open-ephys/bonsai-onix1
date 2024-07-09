@@ -161,19 +161,19 @@ namespace OpenEphys.Onix
                         }
 
                         return new CompositeDisposable(
-                            enable.Subscribe(value => device.WriteRegister(Headstage64ElectricalStimulator.ENABLE, value ? 1u : 0u)),
-                            phaseOneCurrent.Subscribe(value => device.WriteRegister(Headstage64ElectricalStimulator.CURRENT1, uAToCode(value))),
-                            interPhaseCurrent.Subscribe(value => device.WriteRegister(Headstage64ElectricalStimulator.RESTCURR, uAToCode(value))),
-                            phaseTwoCurrent.Subscribe(value => device.WriteRegister(Headstage64ElectricalStimulator.CURRENT2, uAToCode(value))),
-                            trainDelay.Subscribe(value => device.WriteRegister(Headstage64ElectricalStimulator.TRAINDELAY, value)),
-                            phaseOneDuration.Subscribe(value => device.WriteRegister(Headstage64ElectricalStimulator.PULSEDUR1, value)),
-                            interPhaseInterval.Subscribe(value => device.WriteRegister(Headstage64ElectricalStimulator.INTERPHASEINTERVAL, value)),
-                            phaseTwoDuration.Subscribe(value => device.WriteRegister(Headstage64ElectricalStimulator.PULSEDUR2, value)),
-                            interPulseInterval.Subscribe(value => device.WriteRegister(Headstage64ElectricalStimulator.INTERPULSEINTERVAL, value)),
-                            interBurstInterval.Subscribe(value => device.WriteRegister(Headstage64ElectricalStimulator.INTERBURSTINTERVAL, value)),
-                            burstPulseCount.Subscribe(value => device.WriteRegister(Headstage64ElectricalStimulator.BURSTCOUNT, value)),
-                            trainBurstCount.Subscribe(value => device.WriteRegister(Headstage64ElectricalStimulator.TRAINCOUNT, value)),
-                            powerEnable.Subscribe(value => device.WriteRegister(Headstage64ElectricalStimulator.POWERON, value ? 1u : 0u)),
+                            enable.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.ENABLE, value ? 1u : 0u)),
+                            phaseOneCurrent.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.CURRENT1, uAToCode(value))),
+                            interPhaseCurrent.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.RESTCURR, uAToCode(value))),
+                            phaseTwoCurrent.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.CURRENT2, uAToCode(value))),
+                            trainDelay.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.TRAINDELAY, value)),
+                            phaseOneDuration.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.PULSEDUR1, value)),
+                            interPhaseInterval.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.INTERPHASEINTERVAL, value)),
+                            phaseTwoDuration.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.PULSEDUR2, value)),
+                            interPulseInterval.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.INTERPULSEINTERVAL, value)),
+                            interBurstInterval.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.INTERBURSTINTERVAL, value)),
+                            burstPulseCount.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.BURSTCOUNT, value)),
+                            trainBurstCount.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.TRAINCOUNT, value)),
+                            powerEnable.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.POWERON, value ? 1u : 0u)),
                             source.SubscribeSafe(triggerObserver)
                         );
                     })));

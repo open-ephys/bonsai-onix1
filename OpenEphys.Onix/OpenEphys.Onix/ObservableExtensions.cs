@@ -22,6 +22,13 @@ namespace OpenEphys.Onix
             return source.ConfigureContext((context, action) => context.ConfigureDevice(action), configure);
         }
 
+        public static IObservable<ContextTask> ConfigureDevice(this IObservable<ContextTask> source, Func<ContextTask, IObserver<ContextTask>, IDisposable> configure)
+        {
+            return Observable.Create<ContextTask>(observer => source
+                .ConfigureDevice(context => configure(context, observer))
+                .SubscribeSafe(observer));
+        }
+
         static IObservable<ContextTask> ConfigureContext(
             this IObservable<ContextTask> source,
             Action<ContextTask, Func<ContextTask, IDisposable>> configureContext,
