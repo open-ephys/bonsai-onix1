@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,22 +25,24 @@ namespace OpenEphys.Onix
         /// </summary>
         private const int QueueTimeoutMilliseconds = 200;
 
+        /// <summary>
+        /// In this package most operators are tied in to the RIFFA PCIe backend used by the FMC host.
+        /// </summary>
+        internal const string DefaultDriver = "riffa";
+        internal const int DefaultIndex = 0;
+
         // NB: Decouple OnNext() form hadware reads
         private Task readFrames;
         private Task distributeFrames;
         private BlockingCollection<oni.Frame> FrameQueue;
         private CancellationTokenSource CollectFramesTokenSource;
-        private CancellationToken CollectFramesToken;
         private IDisposable ContextConfiguration;
         event Func<ContextTask, IDisposable> configureHost;
         event Func<ContextTask, IDisposable> configureLink;
         event Func<ContextTask, IDisposable> configureDevice;
 
-        // NOTE: There was a GC memory leak around here
+        // FrameReceived observable sequence
         internal Subject<oni.Frame> FrameReceived = new();
-
-        public static readonly string DefaultDriver = "riffa";
-        public static readonly int DefaultIndex = 0;
 
         // TODO: These work for RIFFA implementation, but potentially not others!!
         private readonly object readLock = new();
@@ -86,9 +87,13 @@ namespace OpenEphys.Onix
         }
 
         public uint SystemClockHz { get; private set; }
+
         public uint AcquisitionClockHz { get; private set; }
+
         public uint MaxReadFrameSize { get; private set; }
+
         public uint MaxWriteFrameSize { get; private set; }
+
         public Dictionary<uint, oni.Device> DeviceTable { get; private set; }
 
         void AssertConfigurationContext()
@@ -191,7 +196,7 @@ namespace OpenEphys.Onix
                 }
 
                 CollectFramesTokenSource = new CancellationTokenSource();
-                CollectFramesToken = CollectFramesTokenSource.Token;
+                var collectFramesToken = CollectFramesTokenSource.Token;
 
                 FrameQueue = new BlockingCollection<oni.Frame>(MaxQueuedFrames);
 
@@ -199,14 +204,14 @@ namespace OpenEphys.Onix
                 {
                     try
                     {
-                        while (!CollectFramesToken.IsCancellationRequested)
+                        while (!collectFramesToken.IsCancellationRequested)
                         {
                             // NB: This is a blocking call and there is no safe way to terminate it
                             // other than ending the process. For this reason, it is the job of the 
                             // hardware to provide enough data (e.g. through a HeartbeatDevice") for
                             // this call to return.
                             oni.Frame frame = ReadFrame();
-                            FrameQueue.Add(frame, CollectFramesToken);
+                            FrameQueue.Add(frame, collectFramesToken);
 
                         }
                     }
@@ -219,7 +224,7 @@ namespace OpenEphys.Onix
 #endif
                     };
                 },
-                CollectFramesToken,
+                collectFramesToken,
                 TaskCreationOptions.LongRunning,
                 TaskScheduler.Default);
 
@@ -227,9 +232,9 @@ namespace OpenEphys.Onix
                 {
                     try
                     {
-                        while (!CollectFramesToken.IsCancellationRequested)
+                        while (!collectFramesToken.IsCancellationRequested)
                         {
-                            if (FrameQueue.TryTake(out oni.Frame frame, QueueTimeoutMilliseconds, CollectFramesToken))
+                            if (FrameQueue.TryTake(out oni.Frame frame, QueueTimeoutMilliseconds, collectFramesToken))
                             {
                                 FrameReceived.OnNext(frame);
                                 frame.Dispose();
@@ -244,7 +249,7 @@ namespace OpenEphys.Onix
 #endif
                     }
                 },
-                CollectFramesToken,
+                collectFramesToken,
                 TaskCreationOptions.LongRunning,
                 TaskScheduler.Default);
 
@@ -280,58 +285,25 @@ namespace OpenEphys.Onix
             }
         }
 
-        #region oni.Context delegates
-        internal Action<int, int> SetCustomOption => ctx.SetCustomOption;
-        internal Func<int, int> GetCustomOption => ctx.GetCustomOption;
-        internal Action ResetFrameClock => ctx.ResetFrameClock;
+        #region oni.Context Properties
 
-        internal bool Running
-        {
-            get
-            {
-                return ctx.Running;
-            }
-        }
+        internal bool Running => ctx.Running;
 
         public int HardwareAddress
         {
-            get
-            {
-                return ctx.HardwareAddress;
-            }
-            set
-            {
-                ctx.HardwareAddress = value;
-            }
+            get => ctx.HardwareAddress;
+            set => ctx.HardwareAddress = value;
         }
 
-        public int BlockReadSize
-        {
-            get
-            {
-                return ctx.BlockReadSize;
-            }
-        }
+        public int BlockReadSize => ctx.BlockReadSize;
 
-        public int BlockWriteSize
-        {
-            get
-            {
-                return ctx.BlockWriteSize;
-            }
-        }
+        public int BlockWriteSize => ctx.BlockWriteSize;
 
+        // PortA and PortB each have a bit in portfunc
         public PassthroughState HubState
         {
-            get
-            {
-                return (PassthroughState)ctx.GetCustomOption((int)oni.ONIXOption.PORTFUNC);
-            }
-            set
-            {
-                // PortA and PortB each have a bit in portfunc
-                ctx.SetCustomOption((int)oni.ONIXOption.PORTFUNC, (int)value);
-            }
+            get => (PassthroughState)ctx.GetCustomOption((int)oni.ONIXOption.PORTFUNC);
+            set => ctx.SetCustomOption((int)oni.ONIXOption.PORTFUNC, (int)value);
         }
 
         // NB: This is for actions that require synchronized register access and might

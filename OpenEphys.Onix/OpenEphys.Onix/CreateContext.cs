@@ -10,9 +10,9 @@ namespace OpenEphys.Onix
     [WorkflowElementCategory(ElementCategory.Source)]
     public class CreateContext
     {
-        public string Driver { get; set; } = "riffa";
+        public string Driver { get; set; } = ContextTask.DefaultDriver;
 
-        public int Index { get; set; }
+        public int Index { get; set; } = ContextTask.DefaultIndex;
 
         public IObservable<ContextTask> Generate()
         {
