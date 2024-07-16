@@ -27,7 +27,7 @@ namespace OpenEphys.Onix
             if (DeviceType != expectedType)
             {
                 throw new InvalidOperationException(
-                    $"Expected device with register type {expectedType}. Actual type is {DeviceType}."
+                    $"Expected device of type {expectedType.Name}. Actual type is {DeviceType.Name}."
                 );
             }
         }

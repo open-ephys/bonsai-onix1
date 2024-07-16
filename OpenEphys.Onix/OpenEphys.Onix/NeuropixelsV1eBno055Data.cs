@@ -27,7 +27,7 @@ namespace OpenEphys.Onix
                     deviceInfo => Observable.Create<Bno055DataFrame>(observer =>
                     {
                         var device = deviceInfo.GetDeviceContext(typeof(NeuropixelsV1eBno055));
-                        var passthrough = device.GetPassthroughDeviceContext(DS90UB9x.ID);
+                        var passthrough = device.GetPassthroughDeviceContext(typeof(DS90UB9x));
                         var i2c = new I2CRegisterContext(passthrough, NeuropixelsV1eBno055.BNO055Address);
 
                         var pollingObserver = Observer.Create<TSource>(

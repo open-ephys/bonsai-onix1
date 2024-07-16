@@ -42,7 +42,7 @@ namespace OpenEphys.Onix
             var transmittedWords = TransmittedWords;
             return source.ConfigureDevice(context =>
             {
-                var device = context.GetDeviceContext(deviceAddress, LoadTester.ID);
+                var device = context.GetDeviceContext(deviceAddress, DeviceType);
                 device.WriteRegister(LoadTester.ENABLE, 1);
 
                 var clk_hz = device.ReadRegister(LoadTester.CLK_HZ);

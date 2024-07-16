@@ -42,7 +42,7 @@ namespace OpenEphys.Onix
             var deviceAddress = DeviceAddress;
             return source.ConfigureDevice(context =>
             {
-                var device = context.GetDeviceContext(deviceAddress, Test0.ID);
+                var device = context.GetDeviceContext(deviceAddress, DeviceType);
                 device.WriteRegister(Test0.ENABLE, Enable ? 1u : 0);
                 FramesPerSecond = device.ReadRegister(Test0.FRAMERATE);
                 DummyCount = device.ReadRegister(Test0.NUMTESTWORDS);

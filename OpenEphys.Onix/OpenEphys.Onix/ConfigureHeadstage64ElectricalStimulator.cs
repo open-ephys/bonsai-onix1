@@ -15,7 +15,7 @@ namespace OpenEphys.Onix
             var deviceAddress = DeviceAddress;
             return source.ConfigureDevice(context =>
             {
-                var device = context.GetDeviceContext(deviceAddress, Headstage64ElectricalStimulator.ID);
+                var device = context.GetDeviceContext(deviceAddress, DeviceType);
                 device.WriteRegister(Headstage64ElectricalStimulator.ENABLE, 0);
                 return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
             });

@@ -35,7 +35,7 @@ namespace OpenEphys.Onix
             var deviceAddress = DeviceAddress;
             return source.ConfigureDevice(context =>
             {
-                var device = context.GetDeviceContext(deviceAddress, Heartbeat.ID);
+                var device = context.GetDeviceContext(deviceAddress, DeviceType);
                 device.WriteRegister(Heartbeat.ENABLE, 1);
                 var subscription = beatsPerSecond.Subscribe(newValue =>
                 {
