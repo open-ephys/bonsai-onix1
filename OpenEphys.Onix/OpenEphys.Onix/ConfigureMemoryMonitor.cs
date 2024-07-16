@@ -6,7 +6,6 @@ namespace OpenEphys.Onix
 {
     public class ConfigureMemoryMonitor : SingleDeviceFactory
     {
-
         public ConfigureMemoryMonitor()
             : base(typeof(MemoryMonitor))
         {
@@ -19,8 +18,8 @@ namespace OpenEphys.Onix
 
         [Range(1, 1000)]
         [Category(ConfigurationCategory)]
-        [Description("Frequency at which memory usage is recorded (Hz).")]
-        public uint SampleFrequency { get; set; } = 10;
+        [Description("Frequency at which hardware memory use is recorded (Hz).")]
+        public uint SamplesPerSecond { get; set; } = 10;
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
@@ -30,7 +29,7 @@ namespace OpenEphys.Onix
             {
                 var device = context.GetDeviceContext(deviceAddress, MemoryMonitor.ID);
                 device.WriteRegister(MemoryMonitor.ENABLE, 1);
-                device.WriteRegister(MemoryMonitor.CLK_DIV, device.ReadRegister(MemoryMonitor.CLK_HZ) / SampleFrequency);
+                device.WriteRegister(MemoryMonitor.CLK_DIV, device.ReadRegister(MemoryMonitor.CLK_HZ) / SamplesPerSecond);
 
                 return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
             });

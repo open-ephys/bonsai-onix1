@@ -27,8 +27,8 @@ namespace OpenEphys.Onix
         public uint TransmittedWords { get; set; }
 
         [Category(AcquisitionCategory)]
-        [Description("Specifies the rate at which frames are produced.")]
-        public uint FrameHz
+        [Description("Specifies the rate at which frames are produced (Hz).")]
+        public uint FramesPerSecond
         {
             get { return frameHz.Value; }
             set { frameHz.OnNext(value); }

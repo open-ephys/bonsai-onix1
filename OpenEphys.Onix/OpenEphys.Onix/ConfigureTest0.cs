@@ -33,8 +33,8 @@ namespace OpenEphys.Onix
 
         [XmlIgnore]
         [Category(ConfigurationCategory)]
-        [Description("Indicates the rate at which frames are produced. 0 indicates that the frame rate is unspecified (variable or upstream controlled).")]
-        public uint FrameRateHz { get; private set; }
+        [Description("Indicates the rate at which frames are produced in Hz. 0 indicates that the frame rate is unspecified (variable or upstream controlled).")]
+        public uint FramesPerSecond { get; private set; }
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
@@ -44,7 +44,7 @@ namespace OpenEphys.Onix
             {
                 var device = context.GetDeviceContext(deviceAddress, Test0.ID);
                 device.WriteRegister(Test0.ENABLE, Enable ? 1u : 0);
-                FrameRateHz = device.ReadRegister(Test0.FRAMERATE);
+                FramesPerSecond = device.ReadRegister(Test0.FRAMERATE);
                 DummyCount = device.ReadRegister(Test0.NUMTESTWORDS);
                 return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
             });
