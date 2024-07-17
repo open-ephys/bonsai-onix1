@@ -26,6 +26,10 @@ namespace OpenEphys.Onix
     {
         public const int ID = 4;
 
+        // NB: could be read from REZ but these are costant
+        public const double DacBitDepth = 16;
+        public const double AbsMaxMicroAmps = 2500;
+
         // managed registers
         public const uint NULLPARM = 0; // No command
         public const uint BIPHASIC = 1; // Biphasic pulse (0 = monophasic, 1 = biphasic; NB: currently ignored)
