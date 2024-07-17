@@ -250,7 +250,7 @@ namespace OpenEphys.Onix.Design
             {
                 var probe = ChannelConfiguration.Probes.ElementAt(probeNumber);
 
-                const int borderWidth = 4;
+                const int borderWidth = 3;
 
                 for (int j = 0; j < probe.ContactPositions.Length; j++)
                 {
@@ -260,13 +260,14 @@ namespace OpenEphys.Onix.Design
                     {
                         var size = contact.ShapeParams.Radius.Value * 2;
 
-                        EllipseObj contactObj = new(contact.PosX - size / 2, contact.PosY + size / 2, size, size)
+                        EllipseObj contactObj = new(contact.PosX - size / 2, contact.PosY + size / 2, size, size, SelectedContactBorder, DisabledContactFill)
                         {
                             ZOrder = ZOrder.B_BehindLegend,
-                            Tag = ContactTag.GetContactString(probeNumber, contact.Index)
+                            Tag = new ContactTag(probeNumber, contact.Index)
                         };
 
                         contactObj.Border.Width = borderWidth;
+                        contactObj.Border.IsVisible = false;
 
                         zedGraphChannels.GraphPane.GraphObjList.Add(contactObj);
                     }
@@ -274,13 +275,14 @@ namespace OpenEphys.Onix.Design
                     {
                         var size = contact.ShapeParams.Width.Value;
 
-                        BoxObj contactObj = new(contact.PosX - size / 2, contact.PosY + size / 2, size, size)
+                        BoxObj contactObj = new(contact.PosX - size / 2, contact.PosY + size / 2, size, size, SelectedContactBorder, DisabledContactFill)
                         {
                             ZOrder = ZOrder.B_BehindLegend,
-                            Tag = ContactTag.GetContactString(probeNumber, contact.Index)
+                            Tag = new ContactTag(probeNumber, contact.Index)
                         };
 
                         contactObj.Border.Width = borderWidth;
+                        contactObj.Border.IsVisible = false;
 
                         zedGraphChannels.GraphPane.GraphObjList.Add(contactObj);
                     }
@@ -294,7 +296,7 @@ namespace OpenEphys.Onix.Design
         }
 
         internal readonly Color DisabledContactFill = Color.DarkGray;
-        internal readonly Color EnabledContactFill = Color.LightYellow;
+        internal readonly Color EnabledContactFill = Color.SteelBlue; // Color.LightYellow
         internal readonly Color ReferenceContactFill = Color.Black;
 
         internal virtual void HighlightEnabledContacts()
@@ -302,26 +304,27 @@ namespace OpenEphys.Onix.Design
             if (ChannelConfiguration == null)
                 return;
 
-            for (int probeNumber = 0; probeNumber < ChannelConfiguration.Probes.Count(); probeNumber++)
+            var contactObjects = zedGraphChannels.GraphPane.GraphObjList.OfType<BoxObj>()
+                                                                        .Where(c => c is not PolyObj);
+
+            var enabledContacts = contactObjects.Where(c => c.Fill.Color == EnabledContactFill);
+
+            foreach (var contact in enabledContacts)
             {
-                var probe = ChannelConfiguration.Probes.ElementAt(probeNumber);
+                contact.Fill.Color = DisabledContactFill;
+            }
 
-                for (int j = 0; j < probe.ContactPositions.Length; j++)
+            foreach (var probe in ChannelConfiguration.Probes)
+            {
+                var indices = probe.DeviceChannelIndices;
+
+                var contactsToEnable = contactObjects.Where((c, ind) => indices[ind] != -1);
+
+                foreach (var contact in contactsToEnable)
                 {
-                    Contact contact = probe.GetContact(j);
+                    var tag = (ContactTag)contact.Tag;
 
-                    var tag = ContactTag.GetContactString(probeNumber, contact.Index);
-
-                    if (zedGraphChannels.GraphPane.GraphObjList[tag] is BoxObj graphObj)
-                    {
-                        graphObj.Fill.Color = contact.DeviceId == -1 ?
-                                              DisabledContactFill :
-                                              (ReferenceContacts.Any(x => x == contact.Index) ? ReferenceContactFill : EnabledContactFill);
-                    }
-                    else
-                    {
-                        throw new NullReferenceException($"Tag {tag} is not found in the graph object list");
-                    }
+                    contact.Fill.Color = ReferenceContacts.Any(x => x == tag.ContactNumber) ? ReferenceContactFill : EnabledContactFill;
                 }
             }
         }
@@ -334,27 +337,54 @@ namespace OpenEphys.Onix.Design
             if (ChannelConfiguration == null)
                 return;
 
-            for (int probeNumber = 0; probeNumber < ChannelConfiguration.Probes.Count(); probeNumber++)
+            var contactObjects = zedGraphChannels.GraphPane.GraphObjList.OfType<BoxObj>()
+                                                                        .Where(c => c is not PolyObj);
+
+            var selectedContacts = contactObjects.Where(c => c.Border.IsVisible);
+
+            foreach (var contact in selectedContacts)
             {
-                var probe = ChannelConfiguration.Probes.ElementAt(probeNumber);
-                var probeOffset = GetProbeIndexOffset(probeNumber);
-
-                for (int j = 0; j < probe.ContactPositions.Length; j++)
-                {
-                    var tag = ContactTag.GetContactString(probeNumber, probe.GetContact(j).Index);
-
-                    if (zedGraphChannels.GraphPane.GraphObjList[tag] is BoxObj graphObj)
-                    {
-                        graphObj.Border.Color = SelectedContacts[probeOffset + j] ?
-                                                SelectedContactBorder :
-                                                DeselectedContactBorder; ;
-                    }
-                    else
-                    {
-                        throw new NullReferenceException($"Tag {tag} is not found in the graph object list");
-                    }
-                }
+                contact.Border.IsVisible = false;
             }
+
+            var contactsToSelect = contactObjects.Where((c, ind) => SelectedContacts[ind]);
+
+            if (!contactsToSelect.Any())
+            {
+                return;
+            }
+
+            foreach (var contact in contactsToSelect)
+            {
+                contact.Border.IsVisible = true;
+            }
+        }
+
+        internal virtual void UpdateContactLabels()
+        {
+            if (ChannelConfiguration == null)
+                return;
+
+            var indices = ChannelConfiguration.GetDeviceChannelIndices()
+                                              .Select(ind => ind == -1).ToArray();
+
+            var textObjs = zedGraphChannels.GraphPane.GraphObjList.OfType<TextObj>();
+
+            textObjs.Where(t => t.Text != "-1")
+                    .Select(t => t.Text = "-1");
+
+            if (indices.Count() != textObjs.Count())
+            {
+                throw new InvalidOperationException($"Incorrect number of text objects found. Expected {indices.Count()}, but found {textObjs.Count()}");
+            }
+
+            textObjs.Where((t, ind) => indices[ind])
+                    .Select(t =>
+                    {
+                        var tag = t.Tag as ContactTag;
+                        t.Text = tag.ContactNumber.ToString();
+                        return false;
+                    });
         }
 
         internal virtual void DrawContactLabels()
@@ -362,23 +392,23 @@ namespace OpenEphys.Onix.Design
             if (ChannelConfiguration == null)
                 return;
 
+            zedGraphChannels.GraphPane.GraphObjList.RemoveAll(obj => obj is TextObj);
+
             var fontSize = CalculateFontSize();
 
-            for (int probeNumber = 0; probeNumber < ChannelConfiguration.Probes.Count(); probeNumber++)
+            int probeNumber = 0;
+
+            foreach (var probe in ChannelConfiguration.Probes)
             {
-                var probe = ChannelConfiguration.Probes.ElementAt(probeNumber);
+                var indices = probe.DeviceChannelIndices;
+                var positions = probe.ContactPositions;
 
-                for (int j = 0; j < probe.ContactPositions.Length; j++)
+                for (int i = 0; i < indices.Length; i++)
                 {
-                    Contact contact = probe.GetContact(j);
-                    bool inactiveContact = contact.DeviceId == -1;
-
-                    string id = inactiveContact ? "Off" : ContactString(contact);
-
-                    TextObj textObj = new(id, contact.PosX, contact.PosY)
+                    TextObj textObj = new(ContactString(indices[i], i), positions[i][0], positions[i][1])
                     {
                         ZOrder = ZOrder.A_InFront,
-                        Tag = ContactTag.GetTextString(probeNumber, contact.Index)
+                        Tag = new ContactTag(probeNumber++, i)
                     };
 
                     SetTextObj(textObj, fontSize);
@@ -396,9 +426,9 @@ namespace OpenEphys.Onix.Design
             textObj.FontSpec.Size = fontSize;
         }
 
-        internal virtual string ContactString(Contact contact)
+        internal virtual string ContactString(int deviceChannelIndex, int index)
         {
-            return contact.Index.ToString();
+            return deviceChannelIndex == -1 ? "Off" : index.ToString();
         }
 
         internal virtual void DrawScale()
@@ -428,7 +458,7 @@ namespace OpenEphys.Onix.Design
 
             var fontSize = 300f * contactSize / rangeY;
 
-            fontSize = fontSize < 1f ? 1f : fontSize;
+            fontSize = fontSize < 5f ? 0.001f : fontSize;
             fontSize = fontSize > 100f ? 100f : fontSize;
 
             return fontSize;
@@ -757,26 +787,29 @@ namespace OpenEphys.Onix.Design
                 {
                     RectangleF rect = selectionArea.Location.Rect;
 
+                    sender.GraphPane.GraphObjList.Remove(selectionArea);
+
                     if (!rect.IsEmpty)
                     {
-                        for (int i = 0; i < ChannelConfiguration.Probes.Count(); i++)
-                        {
-                            var probe = ChannelConfiguration.Probes.ElementAt(i);
+                        var selectedContacts = sender.GraphPane.GraphObjList.OfType<BoxObj>()
+                                                                            .Where(c =>
+                                                                            {
+                                                                                var x = c.Location.X + c.Location.Width / 2;
+                                                                                var y = c.Location.Y - c.Location.Height / 2;
 
-                            for (int j = 0; j < probe.NumberOfContacts; j++)
-                            {
-                                if (sender.GraphPane.GraphObjList[ContactTag.GetContactString(i, j)] is BoxObj contact && contact != null)
-                                {
-                                    if (Contains(rect, contact.Location))
-                                    {
-                                        SetSelectedContact(contact.Tag as string, true);
-                                    }
-                                }
-                            }
+                                                                                return c is not PolyObj &&
+                                                                                        x >= rect.X &&
+                                                                                        x <= rect.X + rect.Width &&
+                                                                                        y <= rect.Y &&
+                                                                                        y >= rect.Y - rect.Height;
+                                                                            });
+
+                        foreach (var contact in selectedContacts)
+                        {
+                            SetSelectedContact((ContactTag)contact.Tag, true);
                         }
                     }
 
-                    sender.GraphPane.GraphObjList.Remove(selectionArea);
                     clickStart.X = default;
                     clickStart.Y = default;
                 }
@@ -788,11 +821,11 @@ namespace OpenEphys.Onix.Design
                     {
                         if (nearestObject is TextObj textObj)
                         {
-                            ToggleSelectedContact(textObj.Tag as string);
+                            ToggleSelectedContact(textObj.Tag as ContactTag);
                         }
                         else if (nearestObject is BoxObj boxObj)
                         {
-                            ToggleSelectedContact(boxObj.Tag as string);
+                            ToggleSelectedContact(boxObj.Tag as ContactTag);
                         }
                     }
                     else
@@ -811,18 +844,14 @@ namespace OpenEphys.Onix.Design
             return false;
         }
 
-        private void ToggleSelectedContact(string tag)
+        private void ToggleSelectedContact(ContactTag tag)
         {
             SetSelectedContact(tag, !GetContactStatus(tag));
         }
 
-        private void SetSelectedContact(string tag, bool status)
+        private void SetSelectedContact(ContactTag contactTag, bool status)
         {
-            ContactTag parsedTag = new(tag);
-
-            var index = GetProbeIndexOffset(parsedTag.ProbeNumber) + parsedTag.ContactNumber;
-
-            SetSelectedContact(index, status);
+            SetSelectedContact(contactTag.ContactNumber, status);
         }
 
         private void SetSelectedContact(int index, bool status)
@@ -842,13 +871,9 @@ namespace OpenEphys.Onix.Design
             }
         }
 
-        private bool GetContactStatus(string tag)
+        private bool GetContactStatus(ContactTag tag)
         {
-            ContactTag parsedTag = new(tag);
-
-            var index = GetProbeIndexOffset(parsedTag.ProbeNumber) + parsedTag.ContactNumber;
-
-            return SelectedContacts[index];
+            return SelectedContacts[tag.ContactNumber];
         }
 
         private static PointD TransformPixelsToCoordinates(Point pixels, GraphPane graphPane)
@@ -856,37 +881,6 @@ namespace OpenEphys.Onix.Design
             graphPane.ReverseTransform(pixels, out double x, out double y);
 
             return new PointD(x, y);
-        }
-
-        private bool Contains(RectangleF rect, Location location)
-        {
-            if (!rect.IsEmpty)
-            {
-                if (location != null)
-                {
-                    var x = location.X + location.Width / 2;
-                    var y = location.Y - location.Height / 2;
-
-                    if (x >= rect.X && x <= rect.X + rect.Width && y <= rect.Y && y >= rect.Y - rect.Height)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        internal int GetProbeIndexOffset(int currentProbeIndex)
-        {
-            int offset = 0;
-
-            for (int i = currentProbeIndex - 1; i >= 0; i--)
-            {
-                offset += ChannelConfiguration.Probes.ElementAt(i).NumberOfContacts;
-            }
-
-            return offset;
         }
     }
 }

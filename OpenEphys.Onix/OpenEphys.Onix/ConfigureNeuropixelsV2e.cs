@@ -5,11 +5,24 @@ using Bonsai;
 
 namespace OpenEphys.Onix
 {
+    [Editor("OpenEphys.Onix.Design.NeuropixelsV2eEditor, OpenEphys.Onix.Design", typeof(ComponentEditor))]
     public class ConfigureNeuropixelsV2e : SingleDeviceFactory
     {
         public ConfigureNeuropixelsV2e()
             : base(typeof(NeuropixelsV2e))
         {
+        }
+
+        public ConfigureNeuropixelsV2e(ConfigureNeuropixelsV2e configureNode)
+            : base(typeof(NeuropixelsV2e))
+        {
+            Enable = configureNode.Enable;
+            ProbeConfigurationA = configureNode.ProbeConfigurationA;
+            ProbeConfigurationB = configureNode.ProbeConfigurationB;
+            GainCalibrationFileA = configureNode.GainCalibrationFileA;
+            GainCalibrationFileB = configureNode.GainCalibrationFileB;
+            DeviceName = configureNode.DeviceName;
+            DeviceAddress = configureNode.DeviceAddress;
         }
 
         [Category(ConfigurationCategory)]
@@ -18,7 +31,7 @@ namespace OpenEphys.Onix
 
         [Category(ConfigurationCategory)]
         [Description("Probe A electrode configuration.")]
-        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; }
+        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new();
 
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the gain calibration file for probe A.")]
@@ -27,7 +40,7 @@ namespace OpenEphys.Onix
 
         [Category(ConfigurationCategory)]
         [Description("Probe B electrode configuration.")]
-        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; }
+        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new();
 
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the gain calibration file for probe B.")]

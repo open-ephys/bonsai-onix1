@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Linq;
 
 namespace OpenEphys.Onix
 {
@@ -58,17 +59,17 @@ namespace OpenEphys.Onix
             //var count = 2;
             //while (count-- > 0)
             //{
-                // This allows Base shift registers to get a good STATUS, but does not help shank registers.
-                //WriteByte(NeuropixelsV2.SOFT_RESET, 0xFF);
-                //WriteByte(NeuropixelsV2.SOFT_RESET, 0x00);
+            // This allows Base shift registers to get a good STATUS, but does not help shank registers.
+            //WriteByte(NeuropixelsV2.SOFT_RESET, 0xFF);
+            //WriteByte(NeuropixelsV2.SOFT_RESET, 0x00);
 
-                WriteByte(NeuropixelsV2.SR_LENGTH1, (uint)bytes.Length % 0x100);
-                WriteByte(NeuropixelsV2.SR_LENGTH2, (uint)bytes.Length / 0x100);
+            WriteByte(NeuropixelsV2.SR_LENGTH1, (uint)bytes.Length % 0x100);
+            WriteByte(NeuropixelsV2.SR_LENGTH2, (uint)bytes.Length / 0x100);
 
-                foreach (var b in bytes)
-                {
-                    WriteByte(srAddress, b);
-                }
+            foreach (var b in bytes)
+            {
+                WriteByte(srAddress, b);
+            }
             //}
 
             //if (ReadByte(NeuropixelsV2.STATUS) != (uint)NeuropixelsV2Status.SR_OK)
@@ -97,10 +98,10 @@ namespace OpenEphys.Onix
 
             const int PixelOffset = (NeuropixelsV2.ElectrodePerShank - 1) / 2;
             const int ReferencePixelOffset = 3;
-            foreach (var c in probe.ChannelMap)
-            { 
-                var baseIndex = c.IntraShankElectrodeIndex % 2;
-                var pixelIndex = c.IntraShankElectrodeIndex / 2;
+            foreach (var c in NeuropixelsV2eProbeGroup.ToChannelMap(probe.ChannelConfiguration))
+            {
+                var baseIndex = c.ShankIndex % 2;
+                var pixelIndex = c.ShankIndex / 2;
                 pixelIndex = baseIndex == 0
                     ? pixelIndex + PixelOffset + 2 * ReferencePixelOffset
                     : PixelOffset - pixelIndex + ReferencePixelOffset;
@@ -134,7 +135,7 @@ namespace OpenEphys.Onix
                 var configIndex = i % 2;
                 var bitOffset = (382 - i + configIndex) / 2 * NeuropixelsV2.BaseBitsPerChannel;
                 baseBits[configIndex][bitOffset + 0] = false; // standby bit
-                baseBits[configIndex][bitOffset + referenceBit ] = true;
+                baseBits[configIndex][bitOffset + referenceBit] = true;
             }
 
             return baseBits;

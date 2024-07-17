@@ -19,6 +19,7 @@ namespace OpenEphys.Onix
         public const int ChannelCount = 384;
         public const int BaseBitsPerChannel = 4;
         public const int ElectrodePerShank = 1280;
+        public const int ElectrodePerBlock = 48;
         public const int ReferencePixelCount = 4;
         public const int DummyRegisterCount = 4;
         public const int RegistersPerShank = ElectrodePerShank + ReferencePixelCount + DummyRegisterCount;
