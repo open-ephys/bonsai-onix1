@@ -26,6 +26,10 @@ namespace OpenEphys.Onix.Design
 
             ChannelMap = NeuropixelsV2eProbeGroup.ToChannelMap((NeuropixelsV2eProbeGroup)ChannelConfiguration);
             Electrodes = NeuropixelsV2eProbeGroup.ToElectrodes((NeuropixelsV2eProbeGroup)ChannelConfiguration);
+
+            HighlightEnabledContacts();
+            UpdateContactLabels();
+            RefreshZedGraph();
         }
 
         internal override ProbeGroup DefaultChannelLayout()

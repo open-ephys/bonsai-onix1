@@ -81,6 +81,8 @@
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonOkay = new System.Windows.Forms.Button();
             this.linkLabelDocumentation = new System.Windows.Forms.LinkLabel();
+            this.buttonClearCalibrationFileA = new System.Windows.Forms.Button();
+            this.buttonClearCalibrationFileB = new System.Windows.Forms.Button();
             label1 = new System.Windows.Forms.Label();
             label2 = new System.Windows.Forms.Label();
             labelSelection = new System.Windows.Forms.Label();
@@ -408,6 +410,8 @@
             // 
             // panelOptions
             // 
+            this.panelOptions.Controls.Add(this.buttonClearCalibrationFileB);
+            this.panelOptions.Controls.Add(this.buttonClearCalibrationFileA);
             this.panelOptions.Controls.Add(this.comboBoxReferenceB);
             this.panelOptions.Controls.Add(label3);
             this.panelOptions.Controls.Add(this.buttonGainCalibrationFileB);
@@ -649,6 +653,26 @@
             this.linkLabelDocumentation.TabStop = true;
             this.linkLabelDocumentation.Text = "Documentation";
             // 
+            // buttonClearCalibrationFileA
+            // 
+            this.buttonClearCalibrationFileA.Location = new System.Drawing.Point(43, 368);
+            this.buttonClearCalibrationFileA.Name = "buttonClearCalibrationFileA";
+            this.buttonClearCalibrationFileA.Size = new System.Drawing.Size(141, 32);
+            this.buttonClearCalibrationFileA.TabIndex = 16;
+            this.buttonClearCalibrationFileA.Text = "Clear";
+            this.buttonClearCalibrationFileA.UseVisualStyleBackColor = true;
+            this.buttonClearCalibrationFileA.Click += new System.EventHandler(this.ButtonClick);
+            // 
+            // buttonClearCalibrationFileB
+            // 
+            this.buttonClearCalibrationFileB.Location = new System.Drawing.Point(43, 553);
+            this.buttonClearCalibrationFileB.Name = "buttonClearCalibrationFileB";
+            this.buttonClearCalibrationFileB.Size = new System.Drawing.Size(141, 32);
+            this.buttonClearCalibrationFileB.TabIndex = 17;
+            this.buttonClearCalibrationFileB.Text = "Clear";
+            this.buttonClearCalibrationFileB.UseVisualStyleBackColor = true;
+            this.buttonClearCalibrationFileB.Click += new System.EventHandler(this.ButtonClick);
+            // 
             // NeuropixelsV2eDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
@@ -733,5 +757,7 @@
         private System.Windows.Forms.ToolStripStatusLabel gainA;
         private System.Windows.Forms.ToolStripStatusLabel gainB;
         private System.Windows.Forms.ComboBox comboBoxChannelPresetsB;
+        private System.Windows.Forms.Button buttonClearCalibrationFileB;
+        private System.Windows.Forms.Button buttonClearCalibrationFileA;
     }
 }

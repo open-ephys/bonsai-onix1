@@ -161,6 +161,16 @@ namespace OpenEphys.Onix.Design
 
                         gainCalibrationFile.Close();
                     }
+                    else
+                    {
+                        probeSnA.Text = "";
+                        gainA.Text = "";
+                    }
+                }
+                else
+                {
+                    probeSnA.Text = "";
+                    gainA.Text = "";
                 }
             }
             else if (probe == "B")
@@ -177,6 +187,16 @@ namespace OpenEphys.Onix.Design
 
                         gainCalibrationFile.Close();
                     }
+                    else
+                    {
+                        probeSnB.Text = "";
+                        gainB.Text = "";
+                    }
+                }
+                else
+                {
+                    probeSnB.Text = "";
+                    gainB.Text = "";
                 }
             }
         }
@@ -605,7 +625,7 @@ namespace OpenEphys.Onix.Design
             }
         }
 
-        private void ButtonClick(object sender, EventArgs e)
+        internal void ButtonClick(object sender, EventArgs e)
         {
             const float zoomFactor = 8f;
 
@@ -613,8 +633,7 @@ namespace OpenEphys.Onix.Design
             {
                 if (button.Name == nameof(buttonOkay))
                 {
-                    NeuropixelsV2eProbeGroup.UpdateProbeGroup(ChannelConfigurationA.ChannelMap, ConfigureNode.ProbeConfigurationA.ChannelConfiguration);
-                    NeuropixelsV2eProbeGroup.UpdateProbeGroup(ChannelConfigurationB.ChannelMap, ConfigureNode.ProbeConfigurationB.ChannelConfiguration);
+                    UpdateProbeGroups();
 
                     DialogResult = DialogResult.OK;
                 }
@@ -700,7 +719,23 @@ namespace OpenEphys.Onix.Design
                     channelConfiguration.UpdateContactLabels();
                     channelConfiguration.RefreshZedGraph();
                 }
+                else if (button.Name == nameof(buttonClearCalibrationFileA))
+                {
+                    textBoxProbeCalibrationFileA.Text = "";
+                    panelProbeA.Visible = false;
+                }
+                else if (button.Name == nameof(buttonClearCalibrationFileB))
+                {
+                    textBoxProbeCalibrationFileB.Text = "";
+                    panelProbeB.Visible = false;
+                }
             }
+        }
+
+        internal void UpdateProbeGroups()
+        {
+            NeuropixelsV2eProbeGroup.UpdateProbeGroup(ChannelConfigurationA.ChannelMap, ConfigureNode.ProbeConfigurationA.ChannelConfiguration);
+            NeuropixelsV2eProbeGroup.UpdateProbeGroup(ChannelConfigurationB.ChannelMap, ConfigureNode.ProbeConfigurationB.ChannelConfiguration);
         }
 
         private void EnableSelectedContacts(NeuropixelsV2Probe probeSelected)

@@ -3,6 +3,7 @@ using System.ComponentModel;
 
 namespace OpenEphys.Onix
 {
+    [Editor("OpenEphys.Onix.Design.NeuropixelsV2eHeadstageEditor, OpenEphys.Onix.Design", typeof(ComponentEditor))]
     public class ConfigureNeuropixelsV2eHeadstage : HubDeviceFactory
     {
         PortName port;
