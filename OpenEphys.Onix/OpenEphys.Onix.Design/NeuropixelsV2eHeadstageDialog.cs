@@ -5,7 +5,7 @@ namespace OpenEphys.Onix.Design
     public partial class NeuropixelsV2eHeadstageDialog : Form
     {
         public readonly NeuropixelsV2eDialog ConfigureNeuropixelsV2e;
-        //public readonly NeuropixelsV2eBno055Dialog ConfigureBno055;
+        public readonly NeuropixelsV2eBno055Dialog ConfigureBno055;
 
         public NeuropixelsV2eHeadstageDialog(ConfigureNeuropixelsV2e configureNeuropixelsV2e, ConfigureNeuropixelsV2eBno055 configureBno055)
         {
@@ -23,17 +23,17 @@ namespace OpenEphys.Onix.Design
             this.AddMenuItemsFromDialogToFileOption(ConfigureNeuropixelsV2e, "NeuropixelsV2e");
             ConfigureNeuropixelsV2e.Show();
 
-            //ConfigureBno055 = new(configureBno055)
-            //{
-            //    TopLevel = false,
-            //    FormBorderStyle = FormBorderStyle.None,
-            //    Dock = DockStyle.Fill,
-            //    Parent = this
-            //};
+            ConfigureBno055 = new(configureBno055)
+            {
+                TopLevel = false,
+                FormBorderStyle = FormBorderStyle.None,
+                Dock = DockStyle.Fill,
+                Parent = this
+            };
 
-            //panelBno055.Controls.Add(ConfigureBno055);
-            //ConfigureBno055.Show();
-            //ConfigureBno055.Invalidate();
+            panelBno055.Controls.Add(ConfigureBno055);
+            ConfigureBno055.Show();
+            ConfigureBno055.Invalidate();
         }
 
         private void ButtonClick(object sender, System.EventArgs e)

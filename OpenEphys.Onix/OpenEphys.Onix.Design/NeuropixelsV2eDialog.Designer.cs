@@ -61,6 +61,8 @@
             this.tabControlOptions = new System.Windows.Forms.TabControl();
             this.tabPageOptions = new System.Windows.Forms.TabPage();
             this.panelOptions = new System.Windows.Forms.Panel();
+            this.buttonClearCalibrationFileB = new System.Windows.Forms.Button();
+            this.buttonClearCalibrationFileA = new System.Windows.Forms.Button();
             this.comboBoxReferenceB = new System.Windows.Forms.ComboBox();
             this.buttonGainCalibrationFileB = new System.Windows.Forms.Button();
             this.textBoxProbeCalibrationFileB = new System.Windows.Forms.TextBox();
@@ -81,8 +83,6 @@
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonOkay = new System.Windows.Forms.Button();
             this.linkLabelDocumentation = new System.Windows.Forms.LinkLabel();
-            this.buttonClearCalibrationFileA = new System.Windows.Forms.Button();
-            this.buttonClearCalibrationFileB = new System.Windows.Forms.Button();
             label1 = new System.Windows.Forms.Label();
             label2 = new System.Windows.Forms.Label();
             labelSelection = new System.Windows.Forms.Label();
@@ -197,18 +197,6 @@
             label5.TabIndex = 27;
             label5.Text = "Probe B";
             // 
-            // toolStripStatusLabelProbeA
-            // 
-            this.toolStripStatusLabelProbeA.Name = "toolStripStatusLabelProbeA";
-            this.toolStripStatusLabelProbeA.Size = new System.Drawing.Size(44, 25);
-            this.toolStripStatusLabelProbeA.Text = "SN: ";
-            // 
-            // toolStripStatusLabelProbeB
-            // 
-            this.toolStripStatusLabelProbeB.Name = "toolStripStatusLabelProbeB";
-            this.toolStripStatusLabelProbeB.Size = new System.Drawing.Size(44, 25);
-            this.toolStripStatusLabelProbeB.Text = "SN: ";
-            // 
             // Reference
             // 
             Reference.AutoSize = true;
@@ -237,6 +225,27 @@
             probeCalibrationFileB.Size = new System.Drawing.Size(174, 20);
             probeCalibrationFileB.TabIndex = 11;
             probeCalibrationFileB.Text = "Probe B Calibration File";
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Location = new System.Drawing.Point(14, 147);
+            label3.Name = "label3";
+            label3.Size = new System.Drawing.Size(95, 20);
+            label3.TabIndex = 14;
+            label3.Text = "ReferenceB";
+            // 
+            // toolStripStatusLabelProbeA
+            // 
+            this.toolStripStatusLabelProbeA.Name = "toolStripStatusLabelProbeA";
+            this.toolStripStatusLabelProbeA.Size = new System.Drawing.Size(44, 25);
+            this.toolStripStatusLabelProbeA.Text = "SN: ";
+            // 
+            // toolStripStatusLabelProbeB
+            // 
+            this.toolStripStatusLabelProbeB.Name = "toolStripStatusLabelProbeB";
+            this.toolStripStatusLabelProbeB.Size = new System.Drawing.Size(44, 25);
+            this.toolStripStatusLabelProbeB.Text = "SN: ";
             // 
             // menuStrip
             // 
@@ -428,6 +437,26 @@
             this.panelOptions.Size = new System.Drawing.Size(256, 660);
             this.panelOptions.TabIndex = 0;
             // 
+            // buttonClearCalibrationFileB
+            // 
+            this.buttonClearCalibrationFileB.Location = new System.Drawing.Point(43, 553);
+            this.buttonClearCalibrationFileB.Name = "buttonClearCalibrationFileB";
+            this.buttonClearCalibrationFileB.Size = new System.Drawing.Size(141, 32);
+            this.buttonClearCalibrationFileB.TabIndex = 17;
+            this.buttonClearCalibrationFileB.Text = "Clear";
+            this.buttonClearCalibrationFileB.UseVisualStyleBackColor = true;
+            this.buttonClearCalibrationFileB.Click += new System.EventHandler(this.ButtonClick);
+            // 
+            // buttonClearCalibrationFileA
+            // 
+            this.buttonClearCalibrationFileA.Location = new System.Drawing.Point(43, 368);
+            this.buttonClearCalibrationFileA.Name = "buttonClearCalibrationFileA";
+            this.buttonClearCalibrationFileA.Size = new System.Drawing.Size(141, 32);
+            this.buttonClearCalibrationFileA.TabIndex = 16;
+            this.buttonClearCalibrationFileA.Text = "Clear";
+            this.buttonClearCalibrationFileA.UseVisualStyleBackColor = true;
+            this.buttonClearCalibrationFileA.Click += new System.EventHandler(this.ButtonClick);
+            // 
             // comboBoxReferenceB
             // 
             this.comboBoxReferenceB.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -437,15 +466,6 @@
             this.comboBoxReferenceB.Size = new System.Drawing.Size(121, 28);
             this.comboBoxReferenceB.TabIndex = 15;
             this.comboBoxReferenceB.SelectedIndexChanged += new System.EventHandler(this.SelectedIndexChanged);
-            // 
-            // label3
-            // 
-            label3.AutoSize = true;
-            label3.Location = new System.Drawing.Point(14, 147);
-            label3.Name = "label3";
-            label3.Size = new System.Drawing.Size(95, 20);
-            label3.TabIndex = 14;
-            label3.Text = "ReferenceB";
             // 
             // buttonGainCalibrationFileB
             // 
@@ -652,26 +672,7 @@
             this.linkLabelDocumentation.TabIndex = 3;
             this.linkLabelDocumentation.TabStop = true;
             this.linkLabelDocumentation.Text = "Documentation";
-            // 
-            // buttonClearCalibrationFileA
-            // 
-            this.buttonClearCalibrationFileA.Location = new System.Drawing.Point(43, 368);
-            this.buttonClearCalibrationFileA.Name = "buttonClearCalibrationFileA";
-            this.buttonClearCalibrationFileA.Size = new System.Drawing.Size(141, 32);
-            this.buttonClearCalibrationFileA.TabIndex = 16;
-            this.buttonClearCalibrationFileA.Text = "Clear";
-            this.buttonClearCalibrationFileA.UseVisualStyleBackColor = true;
-            this.buttonClearCalibrationFileA.Click += new System.EventHandler(this.ButtonClick);
-            // 
-            // buttonClearCalibrationFileB
-            // 
-            this.buttonClearCalibrationFileB.Location = new System.Drawing.Point(43, 553);
-            this.buttonClearCalibrationFileB.Name = "buttonClearCalibrationFileB";
-            this.buttonClearCalibrationFileB.Size = new System.Drawing.Size(141, 32);
-            this.buttonClearCalibrationFileB.TabIndex = 17;
-            this.buttonClearCalibrationFileB.Text = "Clear";
-            this.buttonClearCalibrationFileB.UseVisualStyleBackColor = true;
-            this.buttonClearCalibrationFileB.Click += new System.EventHandler(this.ButtonClick);
+            this.linkLabelDocumentation.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkClicked);
             // 
             // NeuropixelsV2eDialog
             // 

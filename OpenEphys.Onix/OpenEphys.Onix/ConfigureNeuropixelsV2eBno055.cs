@@ -3,11 +3,18 @@ using System.ComponentModel;
 
 namespace OpenEphys.Onix
 {
+    [Editor("OpenEphys.Onix.Design.NeuropixelsV2eBno055Editor, OpenEphys.Onix.Design", typeof(ComponentEditor))]
     public class ConfigureNeuropixelsV2eBno055 : SingleDeviceFactory
     {
         public ConfigureNeuropixelsV2eBno055()
             : base(typeof(NeuropixelsV2eBno055))
         {
+        }
+
+        public ConfigureNeuropixelsV2eBno055(ConfigureNeuropixelsV2eBno055 configureNeuropixelsV2eBno055)
+            : base(typeof(NeuropixelsV2eBno055))
+        {
+            Enable = configureNeuropixelsV2eBno055.Enable;
         }
 
         [Category(ConfigurationCategory)]

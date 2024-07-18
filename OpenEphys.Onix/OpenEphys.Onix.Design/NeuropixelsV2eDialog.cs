@@ -617,7 +617,7 @@ namespace OpenEphys.Onix.Design
         {
             try
             {
-                System.Diagnostics.Process.Start("https://open-ephys.github.io/onix-docs/Software%20Guide/Bonsai.ONIX/Nodes/NeuropixelsV1eDevice.html");
+                System.Diagnostics.Process.Start("https://open-ephys.github.io/onix-docs/Software%20Guide/Bonsai.ONIX/Nodes/NeuropixelsV2eDevice.html");
             }
             catch (Exception)
             {
