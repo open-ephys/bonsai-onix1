@@ -95,12 +95,14 @@ namespace OpenEphys.Onix.Design
 
             comboBoxReferenceA.DataSource = Enum.GetValues(typeof(NeuropixelsV2QuadShankReference));
             comboBoxReferenceA.SelectedItem = ConfigureNode.ProbeConfigurationA.Reference;
+            comboBoxReferenceA.SelectedIndexChanged += SelectedIndexChanged;
 
             ChannelConfigurationB.OnZoom += UpdateTrackBarLocation;
             ChannelConfigurationB.OnFileLoad += UpdateChannelPresetIndex;
 
             comboBoxReferenceB.DataSource = Enum.GetValues(typeof(NeuropixelsV2QuadShankReference));
             comboBoxReferenceB.SelectedItem = ConfigureNode.ProbeConfigurationB.Reference;
+            comboBoxReferenceB.SelectedIndexChanged += SelectedIndexChanged;
 
             comboBoxChannelPresetsA.DataSource = Enum.GetValues(typeof(ChannelPreset));
             comboBoxChannelPresetsA.SelectedIndexChanged += SelectedIndexChanged;
@@ -149,55 +151,36 @@ namespace OpenEphys.Onix.Design
         {
             if (probe == "A")
             {
-                if (ConfigureNode.GainCalibrationFileA != null && ConfigureNode.GainCalibrationFileA != "")
-                {
-                    if (File.Exists(ConfigureNode.GainCalibrationFileA))
-                    {
-                        StreamReader gainCalibrationFile = new(ConfigureNode.GainCalibrationFileA);
-
-                        probeSnA.Text = ulong.Parse(gainCalibrationFile.ReadLine()).ToString();
-
-                        gainA.Text = NeuropixelsV2Helper.ParseGainCalibrationFile(gainCalibrationFile).ToString();
-
-                        gainCalibrationFile.Close();
-                    }
-                    else
-                    {
-                        probeSnA.Text = "";
-                        gainA.Text = "";
-                    }
-                }
-                else
-                {
-                    probeSnA.Text = "";
-                    gainA.Text = "";
-                }
+                ParseGainCalibrationFile(ConfigureNode.GainCalibrationFileA, probeSnA, gainA);
             }
             else if (probe == "B")
             {
-                if (ConfigureNode.GainCalibrationFileB != null && ConfigureNode.GainCalibrationFileB != "")
+                ParseGainCalibrationFile(ConfigureNode.GainCalibrationFileB, probeSnB, gainB);
+            }
+        }
+
+        private void ParseGainCalibrationFile(string filename, ToolStripStatusLabel probeSN, ToolStripStatusLabel gainLabel)
+        {
+            if (filename != null && filename != "")
+            {
+                if (File.Exists(filename))
                 {
-                    if (File.Exists(ConfigureNode.GainCalibrationFileB))
-                    {
-                        StreamReader gainCalibrationFile = new(ConfigureNode.GainCalibrationFileB);
+                    using StreamReader gainCalibrationFile = new(filename);
 
-                        probeSnB.Text = ulong.Parse(gainCalibrationFile.ReadLine()).ToString();
-
-                        gainB.Text = NeuropixelsV2Helper.ParseGainCalibrationFile(gainCalibrationFile).ToString();
-
-                        gainCalibrationFile.Close();
-                    }
-                    else
-                    {
-                        probeSnB.Text = "";
-                        gainB.Text = "";
-                    }
+                    probeSN.Text = ulong.Parse(gainCalibrationFile.ReadLine()).ToString();
+                    gainLabel.Text = double.Parse(gainCalibrationFile.ReadLine()).ToString();
                 }
                 else
                 {
-                    probeSnB.Text = "";
-                    gainB.Text = "";
+                    probeSN.Text = "";
+                    gainLabel.Text = "";
                 }
+            }
+
+            else
+            {
+                probeSN.Text = "";
+                gainLabel.Text = "";
             }
         }
 
@@ -610,7 +593,6 @@ namespace OpenEphys.Onix.Design
                     CheckForExistingChannelPreset(probe);
                 }
             }
-            
         }
 
         private void LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

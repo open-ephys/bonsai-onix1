@@ -465,7 +465,6 @@
             this.comboBoxReferenceB.Name = "comboBoxReferenceB";
             this.comboBoxReferenceB.Size = new System.Drawing.Size(121, 28);
             this.comboBoxReferenceB.TabIndex = 15;
-            this.comboBoxReferenceB.SelectedIndexChanged += new System.EventHandler(this.SelectedIndexChanged);
             // 
             // buttonGainCalibrationFileB
             // 
@@ -515,7 +514,6 @@
             this.comboBoxReferenceA.Name = "comboBoxReferenceA";
             this.comboBoxReferenceA.Size = new System.Drawing.Size(121, 28);
             this.comboBoxReferenceA.TabIndex = 5;
-            this.comboBoxReferenceA.SelectedIndexChanged += new System.EventHandler(this.SelectedIndexChanged);
             // 
             // tabPageContactsOptions
             // 

@@ -15,6 +15,8 @@ namespace OpenEphys.Onix
             : base(typeof(NeuropixelsV2eBno055))
         {
             Enable = configureNeuropixelsV2eBno055.Enable;
+            DeviceName = configureNeuropixelsV2eBno055.DeviceName;
+            DeviceAddress = configureNeuropixelsV2eBno055.DeviceAddress;
         }
 
         [Category(ConfigurationCategory)]

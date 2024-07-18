@@ -195,7 +195,7 @@ namespace OpenEphys.Onix.Design
             foreach (var probe in ChannelConfiguration.Probes)
             {
                 PointD[] planarContours = ConvertFloatArrayToPointD(probe.ProbePlanarContour);
-                PolyObj contour = new(planarContours, Color.Black, Color.White)
+                PolyObj contour = new(planarContours, Color.DarkGray, Color.Black)
                 {
                     ZOrder = ZOrder.C_BehindChartBorder
                 };
@@ -295,8 +295,8 @@ namespace OpenEphys.Onix.Design
             }
         }
 
-        internal readonly Color DisabledContactFill = Color.DarkGray;
-        internal readonly Color EnabledContactFill = Color.SteelBlue; // Color.LightYellow
+        internal readonly Color DisabledContactFill = Color.White;
+        internal readonly Color EnabledContactFill = Color.LightGreen;
         internal readonly Color ReferenceContactFill = Color.Black;
 
         internal virtual void HighlightEnabledContacts()
@@ -456,7 +456,7 @@ namespace OpenEphys.Onix.Design
 
             float contactSize = ContactSize();
 
-            var fontSize = 300f * contactSize / rangeY;
+            var fontSize = 250f * contactSize / rangeY;
 
             fontSize = fontSize < 5f ? 0.001f : fontSize;
             fontSize = fontSize > 100f ? 100f : fontSize;

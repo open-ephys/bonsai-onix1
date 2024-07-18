@@ -165,7 +165,7 @@ namespace OpenEphys.Onix
         {
             if (gainCalibrationFile == null)
             {
-                throw new ArgumentException("Calibration file must be specified.");
+                throw new ArgumentException($"Calibration file must be specified for probe {probeSerialNumber}.");
             }
 
             System.IO.StreamReader gainFile = new(gainCalibrationFile);

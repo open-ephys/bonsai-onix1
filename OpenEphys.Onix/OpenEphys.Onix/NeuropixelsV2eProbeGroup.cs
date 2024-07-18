@@ -17,8 +17,8 @@ namespace OpenEphys.Onix
             : base("probeinterface", "0.2.21",
                   new List<Probe>()
                   {
-                      new(ProbeNdim._2,
-                          ProbeSiUnits.Um,
+                      new(ProbeNdim.Two,
+                          ProbeSiUnits.um,
                           new ProbeAnnotations("Neuropixels 2.0e", "IMEC"),
                           new ContactAnnotations(new string[0]),
                           DefaultContactPositions(NeuropixelsV2.ElectrodePerShank * numberOfShanks),
@@ -222,7 +222,16 @@ namespace OpenEphys.Onix
         {
             List<NeuropixelsV2QuadShankElectrode> channelMap = new();
 
-            foreach (var c in channelConfiguration.GetContacts().Where(c => c.DeviceId != -1))
+            var enabledContacts = channelConfiguration.GetContacts().Where(c => c.DeviceId != -1);
+
+            if (enabledContacts.Count() != NeuropixelsV2.ChannelCount)
+            {
+                throw new InvalidOperationException($"Channel configuration must have {NeuropixelsV2.ChannelCount} contacts enabled." +
+                    $"Instead there are {enabledContacts.Count()} contacts enabled. Enabled contacts are designated by a device channel" +
+                    $"index >= 0.");
+            }
+
+            foreach (var c in enabledContacts)
             {
                 channelMap.Add(new NeuropixelsV2QuadShankElectrode(c));
             }

@@ -51,6 +51,7 @@ namespace OpenEphys.Onix.Design
         {
             base.OpenFile<NeuropixelsV2eProbeGroup>();
 
+            NeuropixelsV2eProbeGroup.UpdateElectrodes(Electrodes, (NeuropixelsV2eProbeGroup)ChannelConfiguration);
             NeuropixelsV2eProbeGroup.UpdateChannelMap(ChannelMap, (NeuropixelsV2eProbeGroup)ChannelConfiguration);
 
             OnFileOpenHandler();
@@ -83,7 +84,7 @@ namespace OpenEphys.Onix.Design
             const int MinorTickIncrement = 10;
             const int MinorTickLength = 5;
 
-            if (ChannelConfiguration.Probes.ElementAt(0).SiUnits != ProbeSiUnits.Um)
+            if (ChannelConfiguration.Probes.ElementAt(0).SiUnits != ProbeSiUnits.um)
             {
                 MessageBox.Show("Warning: Expected ProbeGroup units to be in microns, but it is in millimeters. Scale might not be accurate.");
             }

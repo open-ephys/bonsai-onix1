@@ -31,7 +31,7 @@ namespace OpenEphys.Onix
         public NeuropixelsV2QuadShankElectrode(Contact contact)
         {
             ElectrodeNumber = contact.Index;
-            Shank = int.TryParse(contact.ShankId, out int result) ? result : ElectrodeNumber / NeuropixelsV2.ElectrodePerShank;
+            Shank = ElectrodeNumber / NeuropixelsV2.ElectrodePerShank;
             ShankIndex = ElectrodeNumber % NeuropixelsV2.ElectrodePerShank;
             Bank = (NeuropixelsV2QuadShankBank)(ShankIndex / NeuropixelsV2.ChannelCount);
             Block = ShankIndex % NeuropixelsV2.ChannelCount / NeuropixelsV2.ElectrodePerBlock;
