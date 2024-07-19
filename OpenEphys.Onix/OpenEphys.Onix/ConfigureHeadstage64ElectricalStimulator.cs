@@ -26,7 +26,7 @@ namespace OpenEphys.Onix
     {
         public const int ID = 4;
 
-        // NB: could be read from REZ but these are costant
+        // NB: could be read from REZ but these are constant
         public const double DacBitDepth = 16;
         public const double AbsMaxMicroAmps = 2500;
 

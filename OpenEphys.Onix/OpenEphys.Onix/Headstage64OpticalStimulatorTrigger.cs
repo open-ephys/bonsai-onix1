@@ -67,7 +67,7 @@ namespace OpenEphys.Onix
 
         [Description("Pulse duration (msec).")]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
-        [Range(0.0, 100.0)]
+        [Range(0.001, 1000.0)]
         [Precision(3, 1)]
         public double PulseDuration
         {
@@ -77,7 +77,7 @@ namespace OpenEphys.Onix
 
         [Description("Pulse period (msec).")]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
-        [Range(0.0, 1000.0)]
+        [Range(0.01, 10000.0)]
         [Precision(3, 1)]
         public double PulsesPerSecond
         {
@@ -87,7 +87,7 @@ namespace OpenEphys.Onix
 
         [Description("Number of pulses to deliver in a burst.")]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
-        [Range(0, int.MaxValue)]
+        [Range(1, int.MaxValue)]
         [Precision(0, 1)]
         public uint PulsesPerBurst
         {
@@ -108,7 +108,7 @@ namespace OpenEphys.Onix
 
         [Description("Number of bursts to deliver in a train.")]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
-        [Range(0, int.MaxValue)]
+        [Range(1, int.MaxValue)]
         [Precision(0, 1)]
         public uint BurstsPerTrain
         {
@@ -158,18 +158,7 @@ namespace OpenEphys.Onix
                         {
                             double R = Math.Pow(currentMa / 3.833e+05, 1 / -0.9632);
                             double s = 256 * (R - Headstage64OpticalStimulator.MinRheostatResistanceOhms) / Headstage64OpticalStimulator.PotResistanceOhms;
-                            if (s > 255)
-                            {
-                                return 255;
-                            }
-                            else if (s < 0)
-                            {
-                                return 0;
-                            }
-                            else
-                            {
-                                return (uint)s;
-                            }
+                            return s > 255 ? 255 : s < 0 ? 0 : (uint)s;
                         }
 
                         uint currentSourceMask = 0;
@@ -213,7 +202,7 @@ namespace OpenEphys.Onix
                             }),
                             pulseDuration.Subscribe(value => device.WriteRegister(Headstage64OpticalStimulator.PULSEDUR, pulseDurationToRegister(value, PulsesPerSecond))),
                             pulsesPerSecond.Subscribe(value => device.WriteRegister(Headstage64OpticalStimulator.PULSEPERIOD, pulseFrequencyToRegister(value, PulseDuration))),
-                            pulsesPerBurst.Subscribe(value => device.WriteRegister(Headstage64OpticalStimulator.BURSTCOUNT, value)),
+                            pulsesPerBurst.Subscribe(value =>device.WriteRegister(Headstage64OpticalStimulator.BURSTCOUNT, value)),
                             interBurstInterval.Subscribe(value => device.WriteRegister(Headstage64OpticalStimulator.IBI, (uint)(1000 * value))),
                             burstsPerTrain.Subscribe(value => device.WriteRegister(Headstage64OpticalStimulator.TRAINCOUNT, value)),
                             delay.Subscribe(value => device.WriteRegister(Headstage64OpticalStimulator.TRAINDELAY, (uint)(1000 * value))),
