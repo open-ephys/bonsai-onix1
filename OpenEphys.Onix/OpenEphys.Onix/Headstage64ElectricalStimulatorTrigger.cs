@@ -26,8 +26,6 @@ namespace OpenEphys.Onix
         readonly BehaviorSubject<uint> trainDelay = new(0);
         readonly BehaviorSubject<bool> powerEnable = new(false);
 
-        const double DacBitDepth = 16;
-        const double AbsMaxMicroAmps = 2500;
 
         [TypeConverter(typeof(Headstage64ElectricalStimulator.NameConverter))]
         public string DeviceName { get; set; }
@@ -40,7 +38,7 @@ namespace OpenEphys.Onix
         }
 
         [Description("Phase 1 pulse current (uA).")]
-        [Range(-AbsMaxMicroAmps, AbsMaxMicroAmps)]
+        [Range(-Headstage64ElectricalStimulator.AbsMaxMicroAmps, Headstage64ElectricalStimulator.AbsMaxMicroAmps)]
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
         [Precision(3, 1)]
         public double PhaseOneCurrent
@@ -50,7 +48,7 @@ namespace OpenEphys.Onix
         }
 
         [Description("Interphase rest current (uA).")]
-        [Range(-AbsMaxMicroAmps, AbsMaxMicroAmps)]
+        [Range(-Headstage64ElectricalStimulator.AbsMaxMicroAmps, Headstage64ElectricalStimulator.AbsMaxMicroAmps)]
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
         [Precision(3, 1)]
         public double InterPhaseCurrent
@@ -60,7 +58,7 @@ namespace OpenEphys.Onix
         }
 
         [Description("Phase 2 pulse current (uA).")]
-        [Range(-AbsMaxMicroAmps, AbsMaxMicroAmps)]
+        [Range(-Headstage64ElectricalStimulator.AbsMaxMicroAmps, Headstage64ElectricalStimulator.AbsMaxMicroAmps)]
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
         [Precision(3, 1)]
         public double PhaseTwoCurrent
@@ -156,8 +154,8 @@ namespace OpenEphys.Onix
 
                         static uint uAToCode(double currentuA)
                         {
-                            var k = 1 / (2 * AbsMaxMicroAmps / (Math.Pow(2, DacBitDepth) - 1)); // static
-                            return (uint)(k * (currentuA + AbsMaxMicroAmps));
+                            var k = 1 / (2 * Headstage64ElectricalStimulator.AbsMaxMicroAmps / (Math.Pow(2, Headstage64ElectricalStimulator.DacBitDepth) - 1)); // static
+                            return (uint)(k * (currentuA + Headstage64ElectricalStimulator.AbsMaxMicroAmps));
                         }
 
                         return new CompositeDisposable(
