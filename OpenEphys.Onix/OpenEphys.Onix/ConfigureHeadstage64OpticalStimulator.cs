@@ -36,14 +36,14 @@ namespace OpenEphys.Onix
         public const uint PULSEMASK = 2; // Bitmask determining which of the(up to 32) channels is affected by trigger
         public const uint PULSEDUR = 3; // Pulse duration, microseconds
         public const uint PULSEPERIOD = 4; // Inter-pulse interval, microseconds
-        public const uint BURSTCOUNT = 5; // Burst duration, number of pulses in burst
+        public const uint BURSTCOUNT = 5; // Number of pulses in burst
         public const uint IBI = 6; // Inter-burst interval, microseconds
-        public const uint TRAINCOUNT = 7; // Pulse train duration, number of bursts in train, 0 = continuous
-        public const uint TRAINDELAY = 8; // Pulse train delay, microseconds
+        public const uint TRAINCOUNT = 7; // Number of bursts in train
+        public const uint TRAINDELAY = 8; // Stimulus start delay, microseconds
         public const uint TRIGGER = 9; // Trigger stimulation (0 = off, 1 = deliver)
-        public const uint ENABLE = 10; // Default 1: enables the stimulator, 0: stimulator ignores triggers (so that a common trigger can be used)
-        public const uint RESTMASK = 11; // Bitmask determining the "off" state of the up to 32 channels
-        public const uint RESET = 12; // None If 1, Reset all parameters to default
+        public const uint ENABLE = 10; // 1: enables the stimulator, 0: stimulator ignores triggers (so that a common trigger can be used)
+        public const uint RESTMASK = 11; // Bitmask determining the off state of the up to 32 current channels
+        public const uint RESET = 12; // None If 1, Reset all parameters to default (not implemented)
         public const uint MINRHEOR = 13; // The series resistor between the potentiometer (rheostat) and RSET bin on the CAT4016
         public const uint POTRES = 14; // The resistance value of the potentiometer connected in rheostat config to RSET on CAT4016
 
