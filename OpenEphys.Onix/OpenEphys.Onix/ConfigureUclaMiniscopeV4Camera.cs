@@ -23,8 +23,16 @@ namespace OpenEphys.Onix
         public bool Enable { get; set; } = true;
 
         [Category(ConfigurationCategory)]
-        [Description("Only turn on excitation LED during camera exposures.")]
+        [Description("Camera video rate in frames per second.")]
         public UclaMiniscopeV4FramesPerSecond FrameRate { get; set; } = UclaMiniscopeV4FramesPerSecond.Fps30Hz;
+
+        [Description("Camera sensor analog gain.")]
+        [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
+        public UclaMiniscopeV4SensorGain SensorGain
+        {
+            get => sensorGain.Value;
+            set => sensorGain.OnNext(value);
+        }
 
         [Category(ConfigurationCategory)]
         [Description("Only turn on excitation LED during camera exposures.")]
@@ -38,14 +46,6 @@ namespace OpenEphys.Onix
         {
             get => ledBrightness.Value;
             set => ledBrightness.OnNext(value);
-        }
-
-        [Description("Camera sensor analog gain.")]
-        [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
-        public UclaMiniscopeV4SensorGain SensorGain
-        {
-            get => sensorGain.Value;
-            set => sensorGain.OnNext(value);
         }
 
         [Description("Liquid lens voltage (Volts RMS).")]
