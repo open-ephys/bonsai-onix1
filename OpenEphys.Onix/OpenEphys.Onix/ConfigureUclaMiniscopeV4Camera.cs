@@ -1,11 +1,18 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Drawing.Design;
 using System.Reactive.Disposables;
+using System.Reactive.Subjects;
+using Bonsai;
 
 namespace OpenEphys.Onix
 {
     public class ConfigureUclaMiniscopeV4Camera : SingleDeviceFactory
     {
+        readonly BehaviorSubject<double> ledBrightness = new(0);
+        readonly BehaviorSubject<UclaMiniscopeV4SensorGain> sensorGain = new(UclaMiniscopeV4SensorGain.Low);
+        readonly BehaviorSubject<double> liquidLensVoltage = new(47); // NB: middle of range
+
         public ConfigureUclaMiniscopeV4Camera()
             : base(typeof(UclaMiniscopeV4))
         {
@@ -17,11 +24,39 @@ namespace OpenEphys.Onix
 
         [Category(ConfigurationCategory)]
         [Description("Only turn on excitation LED during camera exposures.")]
-        public bool InterleaveLed { get; set; } = false;
+        public UclaMiniscopeV4FramesPerSecond FrameRate { get; set; } = UclaMiniscopeV4FramesPerSecond.Fps30Hz;
 
         [Category(ConfigurationCategory)]
         [Description("Only turn on excitation LED during camera exposures.")]
-        public UclaMiniscopeV4FramesPerSecond FrameRate { get; set; } = UclaMiniscopeV4FramesPerSecond.Fps30Hz;
+        public bool InterleaveLed { get; set; } = false;
+
+        [Description("Excitation LED brightness (0-100%).")]
+        [Range(0, 100)]
+        [Precision(1, 1)]
+        [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
+        public double LedBrightness
+        {
+            get => ledBrightness.Value;
+            set => ledBrightness.OnNext(value);
+        }
+
+        [Description("Camera sensor analog gain.")]
+        [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
+        public UclaMiniscopeV4SensorGain SensorGain
+        {
+            get => sensorGain.Value;
+            set => sensorGain.OnNext(value);
+        }
+
+        [Description("Liquid lens voltage (Volts RMS).")]
+        [Range(24.4, 69.7)]
+        [Precision(1, 1)]
+        [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
+        public double LiquidLensVoltage
+        {
+            get => liquidLensVoltage.Value;
+            set => liquidLensVoltage.OnNext(value);
+        }
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
@@ -66,6 +101,9 @@ namespace OpenEphys.Onix
                     atMega.WriteByte(1, 0xFF);
                 });
                 return new CompositeDisposable(
+                    ledBrightness.Subscribe(value => SetLedBrightness(device, value)),
+                    sensorGain.Subscribe(value => SetSensorGain(device, value)),
+                    liquidLensVoltage.Subscribe(value => SetLiquidLensVoltage(device, value)),
                     shutdown,
                     disposable);
             });
@@ -160,7 +198,6 @@ namespace OpenEphys.Onix
             max14574.WriteByte(0x08, (uint)((voltage - 24.4) / 0.0445) >> 2);
             max14574.WriteByte(0x09, 0x02);
         }
-
     }
 
     static class UclaMiniscopeV4

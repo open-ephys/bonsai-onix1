@@ -3,9 +3,9 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
-    public class UclaMiniscopeV4DataFrame
+    public class UclaMiniscopeV4Image
     {
-        public UclaMiniscopeV4DataFrame(ulong[] clock, ulong[] hubClock, IplImage image)
+        public UclaMiniscopeV4Image(ulong[] clock, ulong[] hubClock, IplImage image)
         {
             Clock = clock;
             HubClock = hubClock;

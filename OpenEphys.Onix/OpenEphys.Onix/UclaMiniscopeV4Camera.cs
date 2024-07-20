@@ -1,55 +1,20 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Drawing.Design;
 using System.Linq;
 using System.Reactive;
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using Bonsai;
 using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
-    public class UclaMiniscopeV4CameraData : Source<UclaMiniscopeV4DataFrame>
+    public class UclaMiniscopeV4Camera : Source<UclaMiniscopeV4Image>
     {
-        readonly BehaviorSubject<double> ledBrightness = new(0);
-        readonly BehaviorSubject<UclaMiniscopeV4SensorGain> sensorGain = new(UclaMiniscopeV4SensorGain.Low);
-        readonly BehaviorSubject<double> liquidLensVoltage = new(47); // NB: middle of range
-
         [TypeConverter(typeof(UclaMiniscopeV4.NameConverter))]
         public string DeviceName { get; set; }
 
-        [Description("Excitation LED brightness (0-100%).")]
-        [Range(0, 100)]
-        [Precision(1, 1)]
-        [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
-        public double LedBrightness
-        {
-            get => ledBrightness.Value;
-            set => ledBrightness.OnNext(value);
-        }
-
-        [Description("Camera sensor analog gain.")]
-        [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
-        public UclaMiniscopeV4SensorGain SensorGain
-        {
-            get => sensorGain.Value;
-            set => sensorGain.OnNext(value);
-        }
-
-        [Description("Liquid lens voltage (Volts RMS).")]
-        [Range(24.4, 69.7)]
-        [Precision(1, 1)]
-        [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
-        public double LiquidLensVoltage
-        {
-            get => liquidLensVoltage.Value;
-            set => liquidLensVoltage.OnNext(value);
-        }
-
-        public unsafe override IObservable<UclaMiniscopeV4DataFrame> Generate()
+        public unsafe override IObservable<UclaMiniscopeV4Image> Generate()
         {
             return Observable.Using(
                 () => DeviceManager.ReserveDevice(DeviceName),
@@ -58,7 +23,7 @@ namespace OpenEphys.Onix
                     var device = deviceInfo.GetDeviceContext(typeof(UclaMiniscopeV4));
                     var passthrough = device.GetPassthroughDeviceContext(DS90UB9x.ID);
                     var scopeData = device.Context.FrameReceived.Where(frame => frame.DeviceAddress == passthrough.Address);
-                    return Observable.Create<UclaMiniscopeV4DataFrame>(observer =>
+                    return Observable.Create<UclaMiniscopeV4Image>(observer =>
                     {
                         var sampleIndex = 0;
                         var imageBuffer = new short[UclaMiniscopeV4.SensorRows * UclaMiniscopeV4.SensorColumns];
@@ -83,7 +48,7 @@ namespace OpenEphys.Onix
                                 {
                                     var imageData = Mat.FromArray(imageBuffer, UclaMiniscopeV4.SensorRows, UclaMiniscopeV4.SensorColumns,  Depth.U16, 1);
                                     CV.ConvertScale(imageData.GetRow(0), imageData.GetRow(0), 1.0f, -32768.0f); // Get rid first row's mark bit
-                                    observer.OnNext(new UclaMiniscopeV4DataFrame(clockBuffer, hubClockBuffer, imageData.GetImage()));
+                                    observer.OnNext(new UclaMiniscopeV4Image(clockBuffer, hubClockBuffer, imageData.GetImage()));
                                     hubClockBuffer = new ulong[UclaMiniscopeV4.SensorRows];
                                     clockBuffer = new ulong[UclaMiniscopeV4.SensorRows];
                                     sampleIndex = 0;
@@ -93,12 +58,7 @@ namespace OpenEphys.Onix
                             observer.OnError,
                             observer.OnCompleted);
 
-                        return new CompositeDisposable(
-                           ledBrightness.Subscribe(value => ConfigureUclaMiniscopeV4Camera.SetLedBrightness(device, value)),
-                           sensorGain.Subscribe(value => ConfigureUclaMiniscopeV4Camera.SetSensorGain(device, value)),
-                           liquidLensVoltage.Subscribe(value => ConfigureUclaMiniscopeV4Camera.SetLiquidLensVoltage(device, value)),
-                           scopeData.SubscribeSafe(frameObserver)
-                       ); ;
+                        return scopeData.SubscribeSafe(frameObserver);
                     });
                 }));
         }
