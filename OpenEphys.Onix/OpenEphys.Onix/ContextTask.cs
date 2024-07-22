@@ -220,7 +220,13 @@ namespace OpenEphys.Onix
                                 // other than ending the process. For this reason, it is the job of the 
                                 // hardware to provide enough data (e.g. through a HeartbeatDevice") for
                                 // this call to return.
-                                oni.Frame frame = ReadFrame();
+                                oni.Frame frame;
+                                try { frame = ReadFrame(); }
+                                catch (Exception)
+                                {
+                                    collectFramesCancellation.Cancel();
+                                    throw;
+                                }
                                 frameQueue.Add(frame, collectFramesToken);
 
                             }
@@ -265,6 +271,12 @@ namespace OpenEphys.Onix
 
                     return acquisition = Task.WhenAll(distributeFrames, readFrames).ContinueWith(task =>
                     {
+                        if (readFrames.IsFaulted && readFrames.Exception is AggregateException ex)
+                        {
+                            var error = ex.InnerExceptions.Count == 1 ? ex.InnerExceptions[0] : ex;
+                            FrameReceived.OnError(error);
+                        }
+
                         lock (regLock)
                         {
                             collectFramesCancellation?.Dispose();
