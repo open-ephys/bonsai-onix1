@@ -20,10 +20,26 @@ namespace OpenEphys.Onix
             DeviceType = deviceType ?? throw new ArgumentNullException(nameof(deviceType));
         }
 
+        /// <summary>
+        /// Gets or sets a unique ONI device name.
+        /// </summary>
+        /// <remarks>
+        /// The device name provides a unique, human-readable identifier that is used to link software
+        /// elements for configuration, control, and data streaming to ONI devices.
+        /// </remarks>
         public string DeviceName { get; set; }
 
+        /// <summary>
+        /// Gets or sets the ONI device address.
+        /// </summary>
+        /// <remarks>
+        /// This address provides a fully-qualified location of an ONI device within the device table.
+        /// </remarks>
         public uint DeviceAddress { get; set; }
 
+        /// <summary>
+        /// Gets or sets the ONI device identity.
+        /// </summary>
         [Browsable(false)]
         public Type DeviceType { get; }
 

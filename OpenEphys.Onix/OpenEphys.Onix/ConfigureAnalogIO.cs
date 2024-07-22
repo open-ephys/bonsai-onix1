@@ -4,115 +4,204 @@ using System.Linq;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// A class for configuring the ONIX breakout board's analog inputs and outputs.
+    /// </summary>
     [TypeConverter(typeof(SortedPropertyConverter))]
     public class ConfigureAnalogIO : SingleDeviceFactory
     {
+        /// <summary>
+        /// Initialize a new instance of ConfigureAnalogIO.
+        /// </summary>
         public ConfigureAnalogIO()
             : base(typeof(AnalogIO))
         {
             DeviceAddress = 6;
         }
 
+        /// <summary>
+        /// Get or set the device enable state.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, <see cref="AnalogInput"/> will produce data. If set to false, <see cref="AnalogInput"/> will not produce data.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Specifies whether the analog IO device is enabled.")]
         public bool Enable { get; set; } = true;
 
+        /// <summary>
+        /// Get or set the input voltage range of channel 0.
+        /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 0.")]
         public AnalogIOVoltageRange InputRange0 { get; set; }
 
+        /// <summary>
+        /// Get or set the input voltage range of channel 1.
+        /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 1.")]
         public AnalogIOVoltageRange InputRange1 { get; set; }
 
+        /// <summary>
+        /// Get or set the input voltage range of channel 2.
+        /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 2.")]
         public AnalogIOVoltageRange InputRange2 { get; set; }
 
+        /// <summary>
+        /// Get or set the input voltage range of channel 3.
+        /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 3.")]
         public AnalogIOVoltageRange InputRange3 { get; set; }
 
+        /// <summary>
+        /// Get or set the input voltage range of channel 4.
+        /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 4.")]
         public AnalogIOVoltageRange InputRange4 { get; set; }
 
+        /// <summary>
+        /// Get or set the input voltage range of channel 5.
+        /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 5.")]
         public AnalogIOVoltageRange InputRange5 { get; set; }
 
+        /// <summary>
+        /// Get or set the input voltage range of channel 6.
+        /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 6.")]
         public AnalogIOVoltageRange InputRange6 { get; set; }
 
+        /// <summary>
+        /// Get or set the input voltage range of channel 7.
+        /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 7.")]
         public AnalogIOVoltageRange InputRange7 { get; set; }
 
+        /// <summary>
+        /// Get or set the input voltage range of channel 8.
+        /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 8.")]
         public AnalogIOVoltageRange InputRange8 { get; set; }
 
+        /// <summary>
+        /// Get or set the input voltage range of channel 9.
+        /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 9.")]
         public AnalogIOVoltageRange InputRange9 { get; set; }
 
+        /// <summary>
+        /// Get or set the input voltage range of channel 10.
+        /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 10.")]
         public AnalogIOVoltageRange InputRange10 { get; set; }
 
+        /// <summary>
+        /// Get or set the input voltage range of channel 11.
+        /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 11.")]
         public AnalogIOVoltageRange InputRange11 { get; set; }
 
+        /// <summary>
+        /// Get or set the direction of channel 0.
+        /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 0.")]
         public AnalogIODirection Direction0 { get; set; }
 
+        /// <summary>
+        /// Get or set the direction of channel 1.
+        /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 1.")]
         public AnalogIODirection Direction1 { get; set; }
 
+        /// <summary>
+        /// Get or set the direction of channel 2.
+        /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 2.")]
         public AnalogIODirection Direction2 { get; set; }
 
+        /// <summary>
+        /// Get or set the direction of channel 3.
+        /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 3.")]
         public AnalogIODirection Direction3 { get; set; }
 
+        /// <summary>
+        /// Get or set the direction of channel 4.
+        /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 4.")]
         public AnalogIODirection Direction4 { get; set; }
 
+        /// <summary>
+        /// Get or set the direction of channel 5.
+        /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 5.")]
         public AnalogIODirection Direction5 { get; set; }
 
+        /// <summary>
+        /// Get or set the direction of channel 6.
+        /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 6.")]
         public AnalogIODirection Direction6 { get; set; }
 
+        /// <summary>
+        /// Get or set the direction of channel 7.
+        /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 7.")]
         public AnalogIODirection Direction7 { get; set; }
 
+        /// <summary>
+        /// Get or set the direction of channel 8.
+        /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 8.")]
         public AnalogIODirection Direction8 { get; set; }
 
+        /// <summary>
+        /// Get or set the direction of channel 9.
+        /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 9.")]
         public AnalogIODirection Direction9 { get; set; }
 
+        /// <summary>
+        /// Get or set the direction of channel 10.
+        /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 10.")]
         public AnalogIODirection Direction10 { get; set; }
 
+        /// <summary>
+        /// Get or set the direction of channel 11.
+        /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 11.")]
         public AnalogIODirection Direction11 { get; set; }
 
+        /// <summary>
+        /// Configure analog input/output configuration within a provided ONI context.
+        /// </summary>
+        /// <param name="source">Sequence of <see cref="ContextTask"/> on which to apply the analog input/output configuration.</param>
+        /// <returns>Sequence of <see cref="ContextTask"/> on which the analog input/output task has been applied.</returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var deviceName = DeviceName;
@@ -244,25 +333,55 @@ namespace OpenEphys.Onix
         public float[] VoltsPerDivision { get; }
     }
 
+    /// <summary>
+    /// Analog input ADC voltage range.
+    /// </summary>
     public enum AnalogIOVoltageRange
     {
-        [Description("+/-10.0 V")]
+        /// <summary>
+        /// +/-10.0 volts.
+        /// </summary>
+        [Description("+/-10.0 volts")]
         TenVolts = 0,
-        [Description("+/-2.5 V")]
+        /// <summary>
+        /// +/-2.5 volts.
+        /// </summary>
+        [Description("+/-2.5 volts")]
         TwoPointFiveVolts = 1,
-        [Description("+/-5.0 V")]
+        /// <summary>
+        /// +/-5.0 volts.
+        /// </summary>
+        [Description("+/-5.0 volts")]
         FiveVolts,
     }
 
+    /// <summary>
+    /// Analog channel direction.
+    /// </summary>
     public enum AnalogIODirection
     {
+        /// <summary>
+        /// Input to breakout board
+        /// </summary>
         Input = 0,
+        /// <summary>
+        /// Output from breakout board with loopback.
+        /// </summary>
         Output = 1
     }
 
+    /// <summary>
+    /// Analog sample representations.
+    /// </summary>
     public enum AnalogIODataType
     {
+        /// <summary>
+        /// Twos-complement encoded, signed 16-bit integer
+        /// </summary>
         S16,
+        /// <summary>
+        /// 32-bit, floating point voltage.
+        /// </summary>
         Volts
     }
 }

@@ -13,10 +13,19 @@
             DeviceAddress = frame.DeviceAddress;
         }
 
+        /// <summary>
+        /// Get the data pointed at by <see cref="oni.Frame.Data"/>.
+        /// </summary>
         public readonly T[] Sample;
 
+        /// <summary>
+        /// Get the <see cref="oni.Frame.Clock"/> of the underlying frame.
+        /// </summary>
         public ulong FrameClock { get; private set; }
 
+        /// <summary>
+        /// Get the <see cref="oni.Frame.DeviceAddress"/> of the underlying frame.
+        /// </summary>
         public uint DeviceAddress { get; private set; }
     }
 }

@@ -7,15 +7,33 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// Sends analog output data to an ONIX breakout board.
+    /// </summary>
     public class AnalogOutput : Sink<Mat>
     {
         const AnalogIOVoltageRange OutputRange = AnalogIOVoltageRange.TenVolts;
 
+        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(AnalogIO.NameConverter))]
         public string DeviceName { get; set; }
 
+        /// <summary>
+        /// Gets or sets the data type used to represent analog samples.
+        /// </summary>
+        /// <remarks>
+        /// If <see cref="AnalogIODataType.S16"/> is selected, each DAC value is represented by a signed, twos-complement encoded
+        /// 16-bit integer. In this case, the output voltage always corresponds to <see cref="AnalogIOVoltageRange.TenVolts"/>.
+        /// When <see cref="AnalogIODataType.Volts"/> is selected, 32-bit floating point voltages between -10 and 10 volts are sent
+        /// directly to the DACs.
+        /// </remarks>
         public AnalogIODataType DataType { get; set; } = AnalogIODataType.S16;
 
+        /// <summary>
+        /// Send samples to analog outputs.
+        /// </summary>
+        /// <param name="source"> A sequence of 12xN sample matrices containing the analog data to write to channels 0 to 11.</param>
+        /// <returns> A sequence of 12xN sample matrices containing the analog data that were written to channels 0 to 11.</returns>
         public override IObservable<Mat> Process(IObservable<Mat> source)
         {
             var dataType = DataType;
@@ -73,6 +91,11 @@ namespace OpenEphys.Onix
                 }));
         }
 
+        /// <summary>
+        /// Send samples to analog outputs.
+        /// </summary>
+        /// <param name="source"> A sequence of 12x1 element arrays each containing the analog data to write to channels 0 to 11.</param>
+        /// <returns> A sequence of 12x1 element arrays each containing the analog data to write to channels 0 to 11.</returns>
         public IObservable<short[]> Process(IObservable<short[]> source)
         {
             if (DataType != AnalogIODataType.S16)
@@ -91,6 +114,11 @@ namespace OpenEphys.Onix
                 }));
         }
 
+        /// <summary>
+        /// Send samples to analog outputs.
+        /// </summary>
+        /// <param name="source"> A sequence of 12x1 element arrays each containing the analog data to write to channels 0 to 11.</param>
+        /// <returns> A sequence of 12x1 element arrays each containing the analog data to write to channels 0 to 11.</returns>
         public IObservable<float[]> Process(IObservable<float[]> source)
         {
             if (DataType != AnalogIODataType.Volts)
