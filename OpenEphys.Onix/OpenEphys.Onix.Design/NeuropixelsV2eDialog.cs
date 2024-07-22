@@ -767,6 +767,7 @@ namespace OpenEphys.Onix.Design
             var channelConfiguration = probeSelected == NeuropixelsV2Probe.ProbeA ? ChannelConfigurationA : ChannelConfigurationB;
 
             channelConfiguration.ResetZoom();
+            channelConfiguration.DrawScale();
             channelConfiguration.RefreshZedGraph();
         }
 

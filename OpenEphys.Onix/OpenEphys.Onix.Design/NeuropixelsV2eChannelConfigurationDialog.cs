@@ -67,6 +67,7 @@ namespace OpenEphys.Onix.Design
             base.ZoomEvent(sender, oldState, newState);
 
             UpdateFontSize();
+            DrawScale();
             RefreshZedGraph();
 
             OnZoomHandler();
@@ -79,6 +80,12 @@ namespace OpenEphys.Onix.Design
 
         internal override void DrawScale()
         {
+            const string ScalePointsTag = "scale_points";
+            const string ScaleTextTag = "scale_text";
+
+            zedGraphChannels.GraphPane.GraphObjList.RemoveAll(obj => obj is TextObj && obj.Tag is string tag && tag == ScaleTextTag);
+            zedGraphChannels.GraphPane.CurveList.RemoveAll(curve => curve.Tag is string tag && tag == ScalePointsTag);
+
             const int MajorTickIncrement = 100;
             const int MajorTickLength = 10;
             const int MinorTickIncrement = 10;
@@ -91,7 +98,13 @@ namespace OpenEphys.Onix.Design
 
             var fontSize = CalculateFontSize();
 
-            var x = MaxX(zedGraphChannels.GraphPane.GraphObjList) + 10;
+            var zoomedOut = fontSize <= 2;
+
+            fontSize = zoomedOut ? 8 : fontSize * 4;
+            var majorTickOffset = MajorTickLength + GetXRange(zedGraphChannels) * 0.015;
+            majorTickOffset = majorTickOffset > 50 ? 50 : majorTickOffset;
+
+            var x = MaxX(zedGraphChannels.GraphPane.GraphObjList) + 100;
             var minY = MinY(zedGraphChannels.GraphPane.GraphObjList);
             var maxY = MaxY(zedGraphChannels.GraphPane.GraphObjList);
 
@@ -103,38 +116,50 @@ namespace OpenEphys.Onix.Design
 
             for (int i = (int)minY; i < maxY; i += MajorTickIncrement)
             {
+                PointPair majorTickLocation = new(x + majorTickOffset, minY + MajorTickIncrement * countMajorTicks);
+
                 pointList.Add(new PointPair(x, minY + MajorTickIncrement * countMajorTicks));
-                PointPair majorTickLocation = new(x + MajorTickLength, minY + MajorTickIncrement * countMajorTicks);
                 pointList.Add(majorTickLocation);
                 pointList.Add(new PointPair(x, minY + MajorTickIncrement * countMajorTicks));
 
-                TextObj textObj = new($"{i} µm", majorTickLocation.X + 10, majorTickLocation.Y)
+                if (!zoomedOut || i % (5 * MajorTickIncrement) == 0)
                 {
-                    Tag = "scale"
-                };
-                textObj.FontSpec.Border.IsVisible = false;
-                textObj.FontSpec.Size = fontSize;
-                zedGraphChannels.GraphPane.GraphObjList.Add(textObj);
+                    TextObj textObj = new($"{i} µm\n", majorTickLocation.X + 5, majorTickLocation.Y, CoordType.AxisXYScale, AlignH.Left, AlignV.Center)
+                    {
+                        Tag = ScaleTextTag,
+                    };
+                    textObj.FontSpec.Border.IsVisible = false;
+                    textObj.FontSpec.Size = fontSize;
+                    zedGraphChannels.GraphPane.GraphObjList.Add(textObj);
+                }
 
-                var countMinorTicks = 1;
-
-                for (int j = i + MinorTickIncrement; j < i + MajorTickIncrement && i + MinorTickIncrement * countMinorTicks < maxY; j += MinorTickIncrement)
+                if (!zoomedOut)
                 {
-                    pointList.Add(new PointPair(x, minY + MajorTickIncrement * countMajorTicks + MinorTickIncrement * countMinorTicks));
-                    pointList.Add(new PointPair(x + MinorTickLength, minY + MajorTickIncrement * countMajorTicks + MinorTickIncrement * countMinorTicks));
-                    pointList.Add(new PointPair(x, minY + MajorTickIncrement * countMajorTicks + MinorTickIncrement * countMinorTicks));
+                    var countMinorTicks = 1;
 
-                    countMinorTicks++;
+                    for (int j = i + MinorTickIncrement; j < i + MajorTickIncrement && i + MinorTickIncrement * countMinorTicks < maxY; j += MinorTickIncrement)
+                    {
+                        pointList.Add(new PointPair(x, minY + MajorTickIncrement * countMajorTicks + MinorTickIncrement * countMinorTicks));
+                        pointList.Add(new PointPair(x + MinorTickLength, minY + MajorTickIncrement * countMajorTicks + MinorTickIncrement * countMinorTicks));
+                        pointList.Add(new PointPair(x, minY + MajorTickIncrement * countMajorTicks + MinorTickIncrement * countMinorTicks));
+
+                        countMinorTicks++;
+                    }
                 }
 
                 countMajorTicks++;
             }
 
-            var curve = zedGraphChannels.GraphPane.AddCurve("", pointList, Color.Black, SymbolType.None);
+            var curve = zedGraphChannels.GraphPane.AddCurve(ScalePointsTag, pointList, Color.Black, SymbolType.None);
 
             curve.Line.Width = 4;
             curve.Label.IsVisible = false;
             curve.Symbol.IsVisible = false;
+        }
+
+        private static double GetXRange(ZedGraphControl zedGraph)
+        {
+            return zedGraph.GraphPane.XAxis.Scale.Max - zedGraph.GraphPane.XAxis.Scale.Min;
         }
 
         internal override void HighlightEnabledContacts()
@@ -176,32 +201,31 @@ namespace OpenEphys.Onix.Design
                                               .Select(ind => ind == -1).ToArray();
 
             var textObjs = zedGraphChannels.GraphPane.GraphObjList.OfType<TextObj>()
-                                                                  .Where(t => t.Tag is not string);
+                                                                  .Where(t => t.Tag is ContactTag);
 
-            textObjs.Where(t => t.Text != "Off");
+            var textObjsToUpdate = textObjs.Where(t => t.FontSpec.FontColor != DisabledContactTextColor);
 
-            foreach (var textObj in textObjs)
+            foreach (var textObj in textObjsToUpdate)
             {
-                textObj.Text = "Off";
+                textObj.FontSpec.FontColor = DisabledContactTextColor;
             }
 
-            if (indices.Count() != textObjs.Count())
-            {
-                throw new InvalidOperationException($"Incorrect number of text objects found. Expected {indices.Count()}, but found {textObjs.Count()}");
-            }
-
-            var textObjsToUpdate = textObjs.Where(c =>
+            textObjsToUpdate = textObjs.Where(c =>
                                            {
                                                var tag = c.Tag as ContactTag;
                                                var channel = NeuropixelsV2QuadShankElectrode.GetChannelNumber(tag.ContactNumber);
                                                return ChannelMap[channel].ElectrodeNumber == tag.ContactNumber;
                                            });
-            
+
             foreach (var textObj in textObjsToUpdate)
             {
-                var tag = textObj.Tag as ContactTag;
-                textObj.Text = tag.ContactNumber.ToString();
+                textObj.FontSpec.FontColor = EnabledContactTextColor;
             }
+        }
+
+        internal override string ContactString(int deviceChannelIndex, int index)
+        {
+            return index.ToString();
         }
 
         internal void EnableElectrodes(List<NeuropixelsV2QuadShankElectrode> electrodes)

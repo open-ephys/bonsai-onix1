@@ -195,7 +195,7 @@ namespace OpenEphys.Onix.Design
             foreach (var probe in ChannelConfiguration.Probes)
             {
                 PointD[] planarContours = ConvertFloatArrayToPointD(probe.ProbePlanarContour);
-                PolyObj contour = new(planarContours, Color.DarkGray, Color.Black)
+                PolyObj contour = new(planarContours, Color.LightGray, Color.White)
                 {
                     ZOrder = ZOrder.C_BehindChartBorder
                 };
@@ -232,7 +232,7 @@ namespace OpenEphys.Onix.Design
                 maxX += diff;
             }
 
-            var margin = Math.Max(rangeX, rangeY) * 0.05;
+            var margin = Math.Max(rangeX, rangeY) * 0.02;
 
             zedGraphChannels.GraphPane.XAxis.Scale.Min = minX - margin;
             zedGraphChannels.GraphPane.XAxis.Scale.Max = maxX + margin;
@@ -295,8 +295,8 @@ namespace OpenEphys.Onix.Design
             }
         }
 
-        internal readonly Color DisabledContactFill = Color.White;
-        internal readonly Color EnabledContactFill = Color.LightGreen;
+        internal readonly Color DisabledContactFill = Color.LightGray;
+        internal readonly Color EnabledContactFill = Color.DarkBlue;
         internal readonly Color ReferenceContactFill = Color.Black;
 
         internal virtual void HighlightEnabledContacts()
@@ -360,31 +360,12 @@ namespace OpenEphys.Onix.Design
             }
         }
 
+        internal readonly Color DisabledContactTextColor = Color.Black;
+        internal readonly Color EnabledContactTextColor = Color.White;
+
         internal virtual void UpdateContactLabels()
         {
-            if (ChannelConfiguration == null)
-                return;
-
-            var indices = ChannelConfiguration.GetDeviceChannelIndices()
-                                              .Select(ind => ind == -1).ToArray();
-
-            var textObjs = zedGraphChannels.GraphPane.GraphObjList.OfType<TextObj>();
-
-            textObjs.Where(t => t.Text != "-1")
-                    .Select(t => t.Text = "-1");
-
-            if (indices.Count() != textObjs.Count())
-            {
-                throw new InvalidOperationException($"Incorrect number of text objects found. Expected {indices.Count()}, but found {textObjs.Count()}");
-            }
-
-            textObjs.Where((t, ind) => indices[ind])
-                    .Select(t =>
-                    {
-                        var tag = t.Tag as ContactTag;
-                        t.Text = tag.ContactNumber.ToString();
-                        return false;
-                    });
+            DrawContactLabels();
         }
 
         internal virtual void DrawContactLabels()
@@ -392,7 +373,7 @@ namespace OpenEphys.Onix.Design
             if (ChannelConfiguration == null)
                 return;
 
-            zedGraphChannels.GraphPane.GraphObjList.RemoveAll(obj => obj is TextObj);
+            zedGraphChannels.GraphPane.GraphObjList.RemoveAll(obj => obj is TextObj && obj.Tag is ContactTag);
 
             var fontSize = CalculateFontSize();
 
@@ -413,6 +394,15 @@ namespace OpenEphys.Onix.Design
 
                     SetTextObj(textObj, fontSize);
 
+                    if (indices[i] == -1)
+                    {
+                        textObj.FontSpec.FontColor = DisabledContactTextColor;
+                    }
+                    else
+                    {
+                        textObj.FontSpec.FontColor = EnabledContactTextColor;
+                    }
+
                     zedGraphChannels.GraphPane.GraphObjList.Add(textObj);
                 }
             }
@@ -426,9 +416,11 @@ namespace OpenEphys.Onix.Design
             textObj.FontSpec.Size = fontSize;
         }
 
+        const string DisabledContactString = "Off";
+
         internal virtual string ContactString(int deviceChannelIndex, int index)
         {
-            return deviceChannelIndex == -1 ? "Off" : index.ToString();
+            return deviceChannelIndex == -1 ? DisabledContactString : index.ToString();
         }
 
         internal virtual void DrawScale()
@@ -439,14 +431,12 @@ namespace OpenEphys.Onix.Design
         {
             var fontSize = CalculateFontSize();
 
-            foreach (var obj in zedGraphChannels.GraphPane.GraphObjList)
-            {
-                if (obj == null) continue;
+            var textObjsToUpdate = zedGraphChannels.GraphPane.GraphObjList.OfType<TextObj>()
+                                                                          .Where(t => t.Tag is ContactTag);
 
-                if (obj is TextObj textObj)
-                {
-                    textObj.FontSpec.Size = fontSize;
-                }
+            foreach (var obj in textObjsToUpdate)
+            {
+                obj.FontSpec.Size = fontSize;
             }
         }
 
@@ -458,7 +448,7 @@ namespace OpenEphys.Onix.Design
 
             var fontSize = 250f * contactSize / rangeY;
 
-            fontSize = fontSize < 5f ? 0.001f : fontSize;
+            fontSize = fontSize < 1f ? 0.001f : fontSize;
             fontSize = fontSize > 100f ? 100f : fontSize;
 
             return fontSize;
@@ -528,6 +518,8 @@ namespace OpenEphys.Onix.Design
         /// </summary>
         public void InitializeZedGraphChannels()
         {
+            zedGraphChannels.IsZoomOnMouseCenter = true;
+
             zedGraphChannels.GraphPane.Title.IsVisible = false;
             zedGraphChannels.GraphPane.TitleGap = 0;
             zedGraphChannels.GraphPane.Border.IsVisible = false;
@@ -591,6 +583,7 @@ namespace OpenEphys.Onix.Design
             ResizeAxes();
             UpdateControlSizeBasedOnAxisSize();
             UpdateFontSize();
+            DrawScale();
             zedGraphChannels.AxisChange();
             zedGraphChannels.Refresh();
         }

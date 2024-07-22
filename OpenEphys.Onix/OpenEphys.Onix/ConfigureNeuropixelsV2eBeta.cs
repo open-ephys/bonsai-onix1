@@ -25,7 +25,7 @@ namespace OpenEphys.Onix
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration();
 
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
-        [Description("Path to the gain calibraiton file for probe A.")]
+        [Description("Path to the gain calibration file for probe A.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string GainCalibrationFileA { get; set; }
 
@@ -34,7 +34,7 @@ namespace OpenEphys.Onix
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration();
 
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
-        [Description("Path to the gain calibraiton file for probe B.")]
+        [Description("Path to the gain calibration file for probe B.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string GainCalibrationFileB { get; set; }
 
@@ -169,7 +169,7 @@ namespace OpenEphys.Onix
         {
             if (gainCalibrationFile == null)
             {
-                throw new ArgumentException("Calibraiton file must be specified.");
+                throw new ArgumentException("Calibration file must be specified.");
             }
 
             System.IO.StreamReader gainFile = new(gainCalibrationFile);
@@ -177,7 +177,7 @@ namespace OpenEphys.Onix
 
             if (probeSerialNumber != sn)
             {
-                throw new ArgumentException($"Probe serial number {probeSerialNumber} does not match calibraiton file serial number {sn}.");
+                throw new ArgumentException($"Probe serial number {probeSerialNumber} does not match calibration file serial number {sn}.");
             }
 
             // Q1.14 fixed point conversion

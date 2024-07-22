@@ -42,6 +42,8 @@
             System.Windows.Forms.Label probeCalibrationFileA;
             System.Windows.Forms.Label probeCalibrationFileB;
             System.Windows.Forms.Label label3;
+            System.Windows.Forms.Label label6;
+            System.Windows.Forms.Label label7;
             this.toolStripStatusLabelProbeA = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabelProbeB = new System.Windows.Forms.ToolStripStatusLabel();
             this.menuStrip = new System.Windows.Forms.MenuStrip();
@@ -69,7 +71,7 @@
             this.buttonGainCalibrationFileA = new System.Windows.Forms.Button();
             this.textBoxProbeCalibrationFileA = new System.Windows.Forms.TextBox();
             this.comboBoxReferenceA = new System.Windows.Forms.ComboBox();
-            this.tabPageContactsOptions = new System.Windows.Forms.TabPage();
+            this.tabPageElectrodes = new System.Windows.Forms.TabPage();
             this.panelChannelOptions = new System.Windows.Forms.Panel();
             this.comboBoxChannelPresetsB = new System.Windows.Forms.ComboBox();
             this.comboBoxChannelPresetsA = new System.Windows.Forms.ComboBox();
@@ -97,6 +99,8 @@
             probeCalibrationFileA = new System.Windows.Forms.Label();
             probeCalibrationFileB = new System.Windows.Forms.Label();
             label3 = new System.Windows.Forms.Label();
+            label6 = new System.Windows.Forms.Label();
+            label7 = new System.Windows.Forms.Label();
             this.menuStrip.SuspendLayout();
             this.statusStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -113,7 +117,7 @@
             this.tabControlOptions.SuspendLayout();
             this.tabPageOptions.SuspendLayout();
             this.panelOptions.SuspendLayout();
-            this.tabPageContactsOptions.SuspendLayout();
+            this.tabPageElectrodes.SuspendLayout();
             this.panelChannelOptions.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarProbePosition)).BeginInit();
             this.panel1.SuspendLayout();
@@ -131,7 +135,7 @@
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new System.Drawing.Point(151, 18);
+            label2.Location = new System.Drawing.Point(202, 19);
             label2.Name = "label2";
             label2.Size = new System.Drawing.Size(50, 20);
             label2.TabIndex = 6;
@@ -140,7 +144,7 @@
             // labelSelection
             // 
             labelSelection.AutoSize = true;
-            labelSelection.Location = new System.Drawing.Point(139, 193);
+            labelSelection.Location = new System.Drawing.Point(190, 194);
             labelSelection.Name = "labelSelection";
             labelSelection.Size = new System.Drawing.Size(75, 20);
             labelSelection.TabIndex = 18;
@@ -149,7 +153,7 @@
             // labelPresets
             // 
             labelPresets.AutoSize = true;
-            labelPresets.Location = new System.Drawing.Point(139, 386);
+            labelPresets.Location = new System.Drawing.Point(190, 387);
             labelPresets.Name = "labelPresets";
             labelPresets.Size = new System.Drawing.Size(63, 20);
             labelPresets.TabIndex = 23;
@@ -182,7 +186,7 @@
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new System.Drawing.Point(138, 421);
+            label4.Location = new System.Drawing.Point(189, 422);
             label4.Name = "label4";
             label4.Size = new System.Drawing.Size(66, 20);
             label4.TabIndex = 25;
@@ -191,7 +195,7 @@
             // label5
             // 
             label5.AutoSize = true;
-            label5.Location = new System.Drawing.Point(138, 498);
+            label5.Location = new System.Drawing.Point(189, 499);
             label5.Name = "label5";
             label5.Size = new System.Drawing.Size(66, 20);
             label5.TabIndex = 27;
@@ -255,14 +259,14 @@
             this.fileToolStripMenuItem});
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
-            this.menuStrip.Size = new System.Drawing.Size(1265, 33);
+            this.menuStrip.Size = new System.Drawing.Size(1265, 36);
             this.menuStrip.TabIndex = 0;
             this.menuStrip.Text = "menuStrip1";
             // 
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(54, 29);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(54, 30);
             this.fileToolStripMenuItem.Text = "File";
             // 
             // statusStrip
@@ -315,7 +319,7 @@
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
-            this.splitContainer1.Location = new System.Drawing.Point(0, 33);
+            this.splitContainer1.Location = new System.Drawing.Point(0, 36);
             this.splitContainer1.Name = "splitContainer1";
             this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
@@ -326,8 +330,8 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.panel1);
-            this.splitContainer1.Size = new System.Drawing.Size(1265, 751);
-            this.splitContainer1.SplitterDistance = 699;
+            this.splitContainer1.Size = new System.Drawing.Size(1265, 748);
+            this.splitContainer1.SplitterDistance = 696;
             this.splitContainer1.TabIndex = 2;
             // 
             // splitContainer2
@@ -344,8 +348,8 @@
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.tabControlOptions);
-            this.splitContainer2.Size = new System.Drawing.Size(1265, 699);
-            this.splitContainer2.SplitterDistance = 991;
+            this.splitContainer2.Size = new System.Drawing.Size(1265, 696);
+            this.splitContainer2.SplitterDistance = 940;
             this.splitContainer2.TabIndex = 1;
             // 
             // tabControlProbe
@@ -356,7 +360,7 @@
             this.tabControlProbe.Location = new System.Drawing.Point(0, 0);
             this.tabControlProbe.Name = "tabControlProbe";
             this.tabControlProbe.SelectedIndex = 0;
-            this.tabControlProbe.Size = new System.Drawing.Size(991, 699);
+            this.tabControlProbe.Size = new System.Drawing.Size(940, 696);
             this.tabControlProbe.TabIndex = 0;
             // 
             // tabPageProbeA
@@ -364,7 +368,7 @@
             this.tabPageProbeA.Controls.Add(this.panelProbeA);
             this.tabPageProbeA.Location = new System.Drawing.Point(4, 29);
             this.tabPageProbeA.Name = "tabPageProbeA";
-            this.tabPageProbeA.Size = new System.Drawing.Size(983, 666);
+            this.tabPageProbeA.Size = new System.Drawing.Size(932, 663);
             this.tabPageProbeA.TabIndex = 0;
             this.tabPageProbeA.Text = "Probe A";
             this.tabPageProbeA.UseVisualStyleBackColor = true;
@@ -374,7 +378,7 @@
             this.panelProbeA.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelProbeA.Location = new System.Drawing.Point(0, 0);
             this.panelProbeA.Name = "panelProbeA";
-            this.panelProbeA.Size = new System.Drawing.Size(983, 666);
+            this.panelProbeA.Size = new System.Drawing.Size(932, 663);
             this.panelProbeA.TabIndex = 0;
             // 
             // tabPageProbeB
@@ -398,12 +402,12 @@
             // tabControlOptions
             // 
             this.tabControlOptions.Controls.Add(this.tabPageOptions);
-            this.tabControlOptions.Controls.Add(this.tabPageContactsOptions);
+            this.tabControlOptions.Controls.Add(this.tabPageElectrodes);
             this.tabControlOptions.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControlOptions.Location = new System.Drawing.Point(0, 0);
             this.tabControlOptions.Name = "tabControlOptions";
             this.tabControlOptions.SelectedIndex = 0;
-            this.tabControlOptions.Size = new System.Drawing.Size(270, 699);
+            this.tabControlOptions.Size = new System.Drawing.Size(321, 696);
             this.tabControlOptions.TabIndex = 0;
             // 
             // tabPageOptions
@@ -412,7 +416,7 @@
             this.tabPageOptions.Location = new System.Drawing.Point(4, 29);
             this.tabPageOptions.Name = "tabPageOptions";
             this.tabPageOptions.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageOptions.Size = new System.Drawing.Size(262, 666);
+            this.tabPageOptions.Size = new System.Drawing.Size(262, 663);
             this.tabPageOptions.TabIndex = 0;
             this.tabPageOptions.Text = "Options";
             this.tabPageOptions.UseVisualStyleBackColor = true;
@@ -434,7 +438,7 @@
             this.panelOptions.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelOptions.Location = new System.Drawing.Point(3, 3);
             this.panelOptions.Name = "panelOptions";
-            this.panelOptions.Size = new System.Drawing.Size(256, 660);
+            this.panelOptions.Size = new System.Drawing.Size(256, 657);
             this.panelOptions.TabIndex = 0;
             // 
             // buttonClearCalibrationFileB
@@ -515,18 +519,20 @@
             this.comboBoxReferenceA.Size = new System.Drawing.Size(121, 28);
             this.comboBoxReferenceA.TabIndex = 5;
             // 
-            // tabPageContactsOptions
+            // tabPageElectrodes
             // 
-            this.tabPageContactsOptions.Controls.Add(this.panelChannelOptions);
-            this.tabPageContactsOptions.Location = new System.Drawing.Point(4, 29);
-            this.tabPageContactsOptions.Name = "tabPageContactsOptions";
-            this.tabPageContactsOptions.Size = new System.Drawing.Size(262, 666);
-            this.tabPageContactsOptions.TabIndex = 2;
-            this.tabPageContactsOptions.Text = "Contacts";
-            this.tabPageContactsOptions.UseVisualStyleBackColor = true;
+            this.tabPageElectrodes.Controls.Add(this.panelChannelOptions);
+            this.tabPageElectrodes.Location = new System.Drawing.Point(4, 29);
+            this.tabPageElectrodes.Name = "tabPageElectrodes";
+            this.tabPageElectrodes.Size = new System.Drawing.Size(313, 663);
+            this.tabPageElectrodes.TabIndex = 2;
+            this.tabPageElectrodes.Text = "Electrodes";
+            this.tabPageElectrodes.UseVisualStyleBackColor = true;
             // 
             // panelChannelOptions
             // 
+            this.panelChannelOptions.Controls.Add(label7);
+            this.panelChannelOptions.Controls.Add(label6);
             this.panelChannelOptions.Controls.Add(label5);
             this.panelChannelOptions.Controls.Add(this.comboBoxChannelPresetsB);
             this.panelChannelOptions.Controls.Add(label4);
@@ -544,14 +550,14 @@
             this.panelChannelOptions.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelChannelOptions.Location = new System.Drawing.Point(0, 0);
             this.panelChannelOptions.Name = "panelChannelOptions";
-            this.panelChannelOptions.Size = new System.Drawing.Size(262, 666);
+            this.panelChannelOptions.Size = new System.Drawing.Size(313, 663);
             this.panelChannelOptions.TabIndex = 0;
             // 
             // comboBoxChannelPresetsB
             // 
             this.comboBoxChannelPresetsB.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxChannelPresetsB.FormattingEnabled = true;
-            this.comboBoxChannelPresetsB.Location = new System.Drawing.Point(92, 519);
+            this.comboBoxChannelPresetsB.Location = new System.Drawing.Point(143, 520);
             this.comboBoxChannelPresetsB.Name = "comboBoxChannelPresetsB";
             this.comboBoxChannelPresetsB.Size = new System.Drawing.Size(162, 28);
             this.comboBoxChannelPresetsB.TabIndex = 26;
@@ -560,7 +566,7 @@
             // 
             this.comboBoxChannelPresetsA.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxChannelPresetsA.FormattingEnabled = true;
-            this.comboBoxChannelPresetsA.Location = new System.Drawing.Point(92, 442);
+            this.comboBoxChannelPresetsA.Location = new System.Drawing.Point(143, 443);
             this.comboBoxChannelPresetsA.Name = "comboBoxChannelPresetsA";
             this.comboBoxChannelPresetsA.Size = new System.Drawing.Size(162, 28);
             this.comboBoxChannelPresetsA.TabIndex = 24;
@@ -569,17 +575,21 @@
             // 
             this.trackBarProbePosition.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
+            this.trackBarProbePosition.AutoSize = false;
             this.trackBarProbePosition.Location = new System.Drawing.Point(17, 39);
             this.trackBarProbePosition.Maximum = 100;
             this.trackBarProbePosition.Name = "trackBarProbePosition";
             this.trackBarProbePosition.Orientation = System.Windows.Forms.Orientation.Vertical;
-            this.trackBarProbePosition.Size = new System.Drawing.Size(69, 603);
+            this.trackBarProbePosition.Size = new System.Drawing.Size(56, 600);
             this.trackBarProbePosition.TabIndex = 22;
+            this.trackBarProbePosition.TickFrequency = 2;
+            this.trackBarProbePosition.TickStyle = System.Windows.Forms.TickStyle.Both;
+            this.trackBarProbePosition.Value = 50;
             this.trackBarProbePosition.Scroll += new System.EventHandler(this.TrackBarScroll);
             // 
             // buttonEnableContacts
             // 
-            this.buttonEnableContacts.Location = new System.Drawing.Point(130, 231);
+            this.buttonEnableContacts.Location = new System.Drawing.Point(181, 232);
             this.buttonEnableContacts.Name = "buttonEnableContacts";
             this.buttonEnableContacts.Size = new System.Drawing.Size(96, 56);
             this.buttonEnableContacts.TabIndex = 20;
@@ -589,7 +599,7 @@
             // 
             // buttonClearSelections
             // 
-            this.buttonClearSelections.Location = new System.Drawing.Point(130, 293);
+            this.buttonClearSelections.Location = new System.Drawing.Point(181, 294);
             this.buttonClearSelections.Name = "buttonClearSelections";
             this.buttonClearSelections.Size = new System.Drawing.Size(96, 59);
             this.buttonClearSelections.TabIndex = 19;
@@ -599,7 +609,7 @@
             // 
             // buttonResetZoom
             // 
-            this.buttonResetZoom.Location = new System.Drawing.Point(130, 131);
+            this.buttonResetZoom.Location = new System.Drawing.Point(181, 132);
             this.buttonResetZoom.Name = "buttonResetZoom";
             this.buttonResetZoom.Size = new System.Drawing.Size(96, 34);
             this.buttonResetZoom.TabIndex = 4;
@@ -609,7 +619,7 @@
             // 
             // buttonZoomOut
             // 
-            this.buttonZoomOut.Location = new System.Drawing.Point(130, 91);
+            this.buttonZoomOut.Location = new System.Drawing.Point(181, 92);
             this.buttonZoomOut.Name = "buttonZoomOut";
             this.buttonZoomOut.Size = new System.Drawing.Size(96, 34);
             this.buttonZoomOut.TabIndex = 3;
@@ -619,7 +629,7 @@
             // 
             // buttonZoomIn
             // 
-            this.buttonZoomIn.Location = new System.Drawing.Point(130, 51);
+            this.buttonZoomIn.Location = new System.Drawing.Point(181, 52);
             this.buttonZoomIn.Name = "buttonZoomIn";
             this.buttonZoomIn.Size = new System.Drawing.Size(96, 34);
             this.buttonZoomIn.TabIndex = 2;
@@ -672,6 +682,25 @@
             this.linkLabelDocumentation.Text = "Documentation";
             this.linkLabelDocumentation.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkClicked);
             // 
+            // label6
+            // 
+            label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            label6.AutoSize = true;
+            label6.Location = new System.Drawing.Point(72, 610);
+            label6.Name = "label6";
+            label6.Size = new System.Drawing.Size(48, 20);
+            label6.TabIndex = 28;
+            label6.Text = "0 mm";
+            // 
+            // label7
+            // 
+            label7.AutoSize = true;
+            label7.Location = new System.Drawing.Point(72, 48);
+            label7.Name = "label7";
+            label7.Size = new System.Drawing.Size(57, 20);
+            label7.TabIndex = 29;
+            label7.Text = "10 mm";
+            // 
             // NeuropixelsV2eDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
@@ -705,7 +734,7 @@
             this.tabPageOptions.ResumeLayout(false);
             this.panelOptions.ResumeLayout(false);
             this.panelOptions.PerformLayout();
-            this.tabPageContactsOptions.ResumeLayout(false);
+            this.tabPageElectrodes.ResumeLayout(false);
             this.panelChannelOptions.ResumeLayout(false);
             this.panelChannelOptions.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarProbePosition)).EndInit();
@@ -738,7 +767,7 @@
         private System.Windows.Forms.Button buttonGainCalibrationFileA;
         private System.Windows.Forms.Button buttonGainCalibrationFileB;
         private System.Windows.Forms.TextBox textBoxProbeCalibrationFileB;
-        private System.Windows.Forms.TabPage tabPageContactsOptions;
+        private System.Windows.Forms.TabPage tabPageElectrodes;
         private System.Windows.Forms.Panel panelChannelOptions;
         private System.Windows.Forms.Button buttonZoomIn;
         private System.Windows.Forms.Button buttonResetZoom;
