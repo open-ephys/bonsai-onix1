@@ -8,20 +8,37 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// Produces a sequence of NeuropixelsV1e frames from a NeuropixelsV1e headstage.
+    /// </summary>
     public class NeuropixelsV1eData : Source<NeuropixelsV1eDataFrame>
     {
+        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(NeuropixelsV1e.NameConverter))]
         public string DeviceName { get; set; }
 
         int bufferSize = 36;
+
+        /// <summary>
+        /// Get or set the buffer size.
+        /// </summary>
+        /// <remarks>
+        /// Buffer size sets the number of super frames that are buffered before propagating data.
+        /// A super frame consists of 384 channels from the spike-band and 32 channels from the LFP band.
+        /// The buffer size must be a multiple of 12.
+        /// </remarks>
         [Description("Number of super-frames (384 channels from spike band and 32 channels from " +
-            "LFP band) to buffer before propogating data. Must be a mulitple of 12.")]
+            "LFP band) to buffer before propagating data. Must be a multiple of 12.")]
         public int BufferSize
         {
             get => bufferSize;
             set => bufferSize = (int)(Math.Ceiling((double)value / NeuropixelsV1e.FramesPerRoundRobin) * NeuropixelsV1e.FramesPerRoundRobin);
         }
 
+        /// <summary>
+        /// Generates a sequence of <see cref="NeuropixelsV1eDataFrame"/> objects.
+        /// </summary>
+        /// <returns>A sequence of <see cref="NeuropixelsV1eDataFrame"/> objects.</returns>
         public unsafe override IObservable<NeuropixelsV1eDataFrame> Generate()
         {
             var spikeBufferSize = BufferSize;

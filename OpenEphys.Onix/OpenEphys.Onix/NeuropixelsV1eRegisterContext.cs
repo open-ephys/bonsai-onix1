@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Linq;
-using Bonsai;
 
 namespace OpenEphys.Onix
 {
@@ -55,7 +54,7 @@ namespace OpenEphys.Onix
             var gainCorrections = gainFile.ReadLine().Split(',').Skip(1);
 
             if (gainCorrections.Count() != 2 * NumberOfGains)
-                throw new ArgumentException("Incorrectly formmatted gain correction calibration file.");
+                throw new ArgumentException("Incorrectly formatted gain correction calibration file.");
 
             ApGainCorrection = double.Parse(gainCorrections.ElementAt(Array.IndexOf(Enum.GetValues(typeof(NeuropixelsV1Gain)), apGain)));
             LfpGainCorrection = double.Parse(gainCorrections.ElementAt(Array.IndexOf(Enum.GetValues(typeof(NeuropixelsV1Gain)), lfpGain) + 8));
@@ -66,7 +65,7 @@ namespace OpenEphys.Onix
                 var adcCal = adcFile.ReadLine().Split(',').Skip(1);
                 if (adcCal.Count() != NumberOfGains)
                 {
-                    throw new ArgumentException("Incorrectly formmatted ADC calibration file.");
+                    throw new ArgumentException("Incorrectly formatted ADC calibration file.");
                 }
 
                 Adcs[i] = new NeuropixelsV1eAdc
@@ -134,7 +133,7 @@ namespace OpenEphys.Onix
 
                 var chanOptsIdx = BaseConfigurationConfigOffset + ((i - configIdx) * 4);
 
-                // MSB [Full, standby, LFPGain(3 downto 0), APGain(3 downto0)] LSB
+                // MSB [Full, standby, LFPGain(3 down to 0), APGain(3 down to 0)] LSB
 
                 BaseConfigs[configIdx][chanOptsIdx + 0] = ((byte)apGain >> 0 & 0x1) == 1;
                 BaseConfigs[configIdx][chanOptsIdx + 1] = ((byte)apGain >> 1 & 0x1) == 1;
@@ -266,7 +265,7 @@ namespace OpenEphys.Onix
                 {
                     // TODO: HACK HACK HACK
                     // If we do not do this, the ShiftRegisterSuccess check below will always fail
-                    // on whatever the second shift register write sequnece regardless of order or
+                    // on whatever the second shift register write sequence regardless of order or
                     // contents. Could be increased current draw during internal process causes MCLK
                     // to droop and mess up internal state. Or that MCLK is just not good enough to
                     // prevent metastability in some logic in the ASIC that is only entered in between

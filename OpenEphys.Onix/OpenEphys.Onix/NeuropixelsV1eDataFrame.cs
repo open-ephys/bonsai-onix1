@@ -3,8 +3,19 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// Buffered data from a NeuropixelsV1e device.
+    /// </summary>
     public class NeuropixelsV1eDataFrame
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NeuropixelsV1eDataFrame"/> class.
+        /// </summary>
+        /// <param name="clock"></param>
+        /// <param name="hubClock"></param>
+        /// <param name="frameCount"></param>
+        /// <param name="spikeData"></param>
+        /// <param name="lfpData"></param>
         public NeuropixelsV1eDataFrame(ulong[] clock, ulong[] hubClock, int[] frameCount, Mat spikeData, Mat lfpData)
         {
             Clock = clock;
@@ -14,14 +25,27 @@ namespace OpenEphys.Onix
             LfpData = lfpData;
         }
 
+        /// <inheritdoc cref="ManagedFrame{T}.FrameClock"/>
         public ulong[] Clock { get; }
 
+        /// <summary>
+        /// Get the possibly asynchronous local clock counter.
+        /// </summary>
         public ulong[] HubClock { get; }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public int[] FrameCount { get; }
 
+        /// <summary>
+        /// Get the spike-band data as a <see cref="Mat"/> object.
+        /// </summary>
         public Mat SpikeData { get; }
 
+        /// <summary>
+        /// Get the LFP band data as a <see cref="Mat"/> object.
+        /// </summary>
         public Mat LfpData { get; }
 
         internal static unsafe void CopyAmplifierBuffer(ushort* amplifierData, int[] frameCountBuffer, ushort[,] spikeBuffer, ushort[,] lfpBuffer, int index, double apGainCorrection, double lfpGainCorrection, ushort[] thresholds, ushort[] offsets)

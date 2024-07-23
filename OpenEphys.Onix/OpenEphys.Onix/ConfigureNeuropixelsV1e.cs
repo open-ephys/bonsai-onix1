@@ -6,47 +6,111 @@ using Bonsai;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// A class that configures a NeuropixelsV1e device
+    /// </summary>
     public class ConfigureNeuropixelsV1e : SingleDeviceFactory
     {
+        /// <summary>
+        /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV1e"/> object.
+        /// </summary>
         public ConfigureNeuropixelsV1e()
             : base(typeof(NeuropixelsV1e))
         {
         }
 
+        /// <summary>
+        /// Get or set the device enable state
+        /// </summary>
+        /// <remarks>
+        /// If set to true, <see cref="NeuropixelsV1eData"/> will produce data. If set to false, 
+        /// <see cref="NeuropixelsV1eData"/> will not produce data.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Specifies whether the Neuropixels data stream is enabled.")]
         public bool Enable { get; set; } = true;
 
+        /// <summary>
+        /// Get or set the LED enable state
+        /// </summary>
+        /// <remarks>
+        /// If true, the headstage LED will turn on during data acquisition. If false, the LED will not turn on.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("If true, the headstage LED will illuminate during acquisition. Otherwise it will remain off.")]
         public bool EnableLed { get; set; } = true;
 
+        /// <summary>
+        /// Get or set the amplifier gain for the spike-band.
+        /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Amplifier gain for spike-band.")]
         public NeuropixelsV1Gain SpikeAmplifierGain { get; set; } = NeuropixelsV1Gain.Gain1000;
 
+        /// <summary>
+        /// Get or set the amplifier gain for the LFP-band.
+        /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Amplifier gain for LFP-band.")]
         public NeuropixelsV1Gain LfpAmplifierGain { get; set; } = NeuropixelsV1Gain.Gain50;
 
+        /// <summary>
+        /// Get or set the reference for all electrodes.
+        /// </summary>
+        /// <remarks>
+        /// All electrodes are set to the same reference, which can be either 
+        /// <see cref="NeuropixelsV1ReferenceSource.External"/> or <see cref="NeuropixelsV1ReferenceSource.Tip"/>. 
+        /// Setting to <see cref="NeuropixelsV1ReferenceSource.External"/> will use the external reference, while 
+        /// <see cref="NeuropixelsV1ReferenceSource.Tip"/> sets the reference as the electrode at the tip of the probe.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Reference selection.")]
         public NeuropixelsV1ReferenceSource Reference { get; set; } = NeuropixelsV1ReferenceSource.External;
 
+        /// <summary>
+        /// Get or set the state of the spike-band filter.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, the spike-band has a 300 Hz high-pass filter which will be activated. If set to
+        /// false, the high-pass filter will not to be activated.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("If true, activates a 300 Hz high-pass filter in the spike-band data stream.")]
         public bool SpikeFilter { get; set; } = true;
 
+        /// <summary>
+        /// Get or set the path to the gain calibration file.
+        /// </summary>
+        /// <remarks>
+        /// Each probe must be provided with a gain calibration file that contains calibration data
+        /// specific to each probe.
+        /// </remarks>
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the Neuropixels 1.0 gain calibration file.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string GainCalibrationFile { get; set; }
 
+        /// <summary>
+        /// Get or set the path to the ADC calibration file.
+        /// </summary>
+        /// <remarks>
+        /// Each probe must be provided with an ADC calibration file that contains calibration data
+        /// specific to each probe.
+        /// </remarks>
         [FileNameFilter("ADC calibration files (*_ADCCalibration.csv)|*_ADCCalibration.csv")]
         [Description("Path to the Neuropixels 1.0 ADC calibration file.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string AdcCalibrationFile { get; set; }
 
+        /// <summary>
+        /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
+        /// prior to data acquisition.
+        /// </summary>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> that holds all configuration actions.</param>
+        /// <returns>
+        /// The original sequence with the side effect of an additional configuration action to configure
+        /// a NeuropixelsV1e device.
+        /// </returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;
@@ -235,21 +299,57 @@ namespace OpenEphys.Onix
         RECORD_AND_CALIBRATE = RECORD | CALIBRATE,
     };
 
+    /// <summary>
+    /// Specifies the reference source for all electrodes.
+    /// </summary>
     public enum NeuropixelsV1ReferenceSource : byte
     {
+        /// <summary>
+        /// Specifies that the reference should be External.
+        /// </summary>
         External = 0b001,
+        /// <summary>
+        /// Specifies that the reference should be the Tip.
+        /// </summary>
         Tip = 0b010
     }
 
+    /// <summary>
+    /// Specifies the gain for all electrodes
+    /// </summary>
     public enum NeuropixelsV1Gain : byte
     {
+        /// <summary>
+        /// Specifies that the gain should be x50.
+        /// </summary>
         Gain50 = 0b000,
+        /// <summary>
+        /// Specifies that the gain should be x125.
+        /// </summary>
         Gain125 = 0b001,
+        /// <summary>
+        /// Specifies that the gain should be x250.
+        /// </summary>
         Gain250 = 0b010,
+        /// <summary>
+        /// Specifies that the gain should be x500.
+        /// </summary>
         Gain500 = 0b011,
+        /// <summary>
+        /// Specifies that the gain should be x1000.
+        /// </summary>
         Gain1000 = 0b100,
+        /// <summary>
+        /// Specifies that the gain should be x1500.
+        /// </summary>
         Gain1500 = 0b101,
+        /// <summary>
+        /// Specifies that the gain should be x2000.
+        /// </summary>
         Gain2000 = 0b110,
+        /// <summary>
+        /// Specifies that the gain should be x3000.
+        /// </summary>
         Gain3000 = 0b111
     }
 }
