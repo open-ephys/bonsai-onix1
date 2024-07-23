@@ -198,10 +198,18 @@ namespace OpenEphys.Onix
         public AnalogIODirection Direction11 { get; set; }
 
         /// <summary>
-        /// Configure analog input/output configuration within a provided ONI context.
+        /// Configure analog inputs and outputs within an ONI context.
         /// </summary>
-        /// <param name="source">Sequence of <see cref="ContextTask"/> on which to apply the analog input/output configuration.</param>
-        /// <returns>Sequence of <see cref="ContextTask"/> on which the analog input/output task has been applied.</returns>
+        /// <remarks>
+        /// This will schedule analog IO hardware configuration actions that can be applied by a <see cref="StartAcquisition"/> object prior to data collection.
+        /// </remarks>
+        /// <param name="source">
+        /// The sequence of <see cref="ContextTask"/> objects on which to apply the analog IO configuration.
+        /// </param>
+        /// <returns>
+        /// A sequence of <see cref="ContextTask"/> objects that is identical to <paramref name="source"/> in which each <see cref="ContextTask"/> has been instructed
+        /// to apply the analog IO configuration.
+        /// </returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var deviceName = DeviceName;
@@ -334,34 +342,34 @@ namespace OpenEphys.Onix
     }
 
     /// <summary>
-    /// Analog input ADC voltage range.
+    /// Specifies the analog input ADC voltage range.
     /// </summary>
     public enum AnalogIOVoltageRange
     {
         /// <summary>
-        /// +/-10.0 volts.
+        /// ±10.0 volts.
         /// </summary>
         [Description("+/-10.0 volts")]
         TenVolts = 0,
         /// <summary>
-        /// +/-2.5 volts.
+        /// ±2.5 volts.
         /// </summary>
         [Description("+/-2.5 volts")]
         TwoPointFiveVolts = 1,
         /// <summary>
-        /// +/-5.0 volts.
+        /// ±5.0 volts.
         /// </summary>
         [Description("+/-5.0 volts")]
         FiveVolts,
     }
 
     /// <summary>
-    /// Analog channel direction.
+    /// Specifies analog channel direction.
     /// </summary>
     public enum AnalogIODirection
     {
         /// <summary>
-        /// Input to breakout board
+        /// Input to breakout board.
         /// </summary>
         Input = 0,
         /// <summary>
@@ -371,16 +379,16 @@ namespace OpenEphys.Onix
     }
 
     /// <summary>
-    /// Analog sample representations.
+    /// Specifies the analog sample representation.
     /// </summary>
     public enum AnalogIODataType
     {
         /// <summary>
-        /// Twos-complement encoded, signed 16-bit integer
+        /// Twos-complement encoded signed 16-bit integer
         /// </summary>
         S16,
         /// <summary>
-        /// 32-bit, floating point voltage.
+        /// 32-bit floating point voltage.
         /// </summary>
         Volts
     }
