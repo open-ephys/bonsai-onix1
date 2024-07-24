@@ -15,10 +15,6 @@ namespace OpenEphys.Onix
         public bool Enable { get; set; } = true;
 
         [Category(ConfigurationCategory)]
-        [Description("Specifies the raw ADC output format used for amplifier conversions.")]
-        public Rhd2164AmplifierDataFormat AmplifierDataFormat { get; set; }
-
-        [Category(ConfigurationCategory)]
         [Description("Specifies the cutoff frequency for the DSP high-pass filter used for amplifier offset removal.")]
         public Rhd2164DspCutoff DspCutoff { get; set; } = Rhd2164DspCutoff.Dsp146mHz;
 
@@ -42,9 +38,7 @@ namespace OpenEphys.Onix
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
 
                 var format = device.ReadRegister(Rhd2164.FORMAT);
-                var amplifierDataFormat = AmplifierDataFormat;
-                format &= ~(1u << 6);
-                format |= (uint)amplifierDataFormat << 6;
+                format &= ~(1u << 6); // hard-code amplifier data format to offset binary
 
                 var dspCutoff = DspCutoff;
                 if (dspCutoff == Rhd2164DspCutoff.Off)
