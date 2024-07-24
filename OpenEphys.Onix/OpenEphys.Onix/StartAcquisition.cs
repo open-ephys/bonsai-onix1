@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using Bonsai;
 
@@ -16,23 +15,19 @@ namespace OpenEphys.Onix
         {
             return source.SelectMany(context =>
             {
-                return Observable.Create<oni.Frame>(observer =>
+                return Observable.Create<oni.Frame>((observer, cancellationToken) =>
                 {
-                    var disposable = context.FrameReceived.SubscribeSafe(observer);
+                    var frameSubscription = context.FrameReceived.SubscribeSafe(observer);
                     try
                     {
-                        context.Start(ReadSize, WriteSize);
+                        return context.StartAsync(ReadSize, WriteSize, cancellationToken)
+                                      .ContinueWith(_ => frameSubscription.Dispose());
                     }
                     catch
                     {
-                        disposable.Dispose();
+                        frameSubscription.Dispose();
                         throw;
                     }
-                    return Disposable.Create(() =>
-                    {
-                        context.Stop();
-                        disposable.Dispose();
-                    });
                 });
             });
         }
