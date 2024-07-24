@@ -133,7 +133,7 @@ namespace OpenEphys.Onix
 
                 var chanOptsIdx = BaseConfigurationConfigOffset + ((i - configIdx) * 4);
 
-                // MSB [Full, standby, LFPGain(3 down to 0), APGain(3 down to 0)] LSB
+                // MSB [Full, standby, LFPGain(3 downto 0), APGain(3 downto 0)] LSB
 
                 BaseConfigs[configIdx][chanOptsIdx + 0] = ((byte)apGain >> 0 & 0x1) == 1;
                 BaseConfigs[configIdx][chanOptsIdx + 1] = ((byte)apGain >> 1 & 0x1) == 1;

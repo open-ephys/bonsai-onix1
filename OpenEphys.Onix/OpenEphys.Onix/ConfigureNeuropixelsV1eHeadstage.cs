@@ -5,7 +5,7 @@ using System.Threading;
 namespace OpenEphys.Onix
 {
     /// <summary>
-    /// A class that configures a NeuropixelsV1e headstage
+    /// A class that configures a NeuropixelsV1e headstage.
     /// </summary>
     public class ConfigureNeuropixelsV1eHeadstage : HubDeviceFactory
     {
@@ -26,6 +26,7 @@ namespace OpenEphys.Onix
         /// </summary>
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
+        [Description("Configure a NeuropixelsV1e device.")]
         public ConfigureNeuropixelsV1e NeuropixelsV1 { get; set; } = new();
 
         /// <summary>
@@ -33,11 +34,15 @@ namespace OpenEphys.Onix
         /// </summary>
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
+        [Description("Configure a NeuropixelsV1eBno055 device.")]
         public ConfigureNeuropixelsV1eBno055 Bno055 { get; set; } = new();
 
         /// <summary>
         /// Get or set the <see cref="PortName"/>.
         /// </summary>
+        /// <remarks>
+        /// The port is the physical connection on the breakout board.
+        /// </remarks>
         public PortName Port
         {
             get { return port; }

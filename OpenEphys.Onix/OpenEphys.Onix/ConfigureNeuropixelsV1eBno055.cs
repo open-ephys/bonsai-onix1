@@ -4,7 +4,7 @@ using System.ComponentModel;
 namespace OpenEphys.Onix
 {
     /// <summary>
-    /// A class that configures a NeuropixelsV1eBno055 device
+    /// A class that configures a NeuropixelsV1eBno055 device.
     /// </summary>
     public class ConfigureNeuropixelsV1eBno055 : SingleDeviceFactory
     {
@@ -17,7 +17,7 @@ namespace OpenEphys.Onix
         }
 
         /// <summary>
-        /// Get or set the device enable state
+        /// Get or set the device enable state.
         /// </summary>
         /// <remarks>
         /// If set to true, <see cref="NeuropixelsV1eBno055Data"/> will produce data. If set to false, 

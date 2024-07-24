@@ -7,7 +7,7 @@ using Bonsai;
 namespace OpenEphys.Onix
 {
     /// <summary>
-    /// A class that configures a NeuropixelsV1e device
+    /// A class that configures a NeuropixelsV1e device.
     /// </summary>
     public class ConfigureNeuropixelsV1e : SingleDeviceFactory
     {
@@ -20,7 +20,7 @@ namespace OpenEphys.Onix
         }
 
         /// <summary>
-        /// Get or set the device enable state
+        /// Get or set the device enable state.
         /// </summary>
         /// <remarks>
         /// If set to true, <see cref="NeuropixelsV1eData"/> will produce data. If set to false, 
@@ -31,18 +31,22 @@ namespace OpenEphys.Onix
         public bool Enable { get; set; } = true;
 
         /// <summary>
-        /// Get or set the LED enable state
+        /// Get or set the LED enable state.
         /// </summary>
         /// <remarks>
         /// If true, the headstage LED will turn on during data acquisition. If false, the LED will not turn on.
         /// </remarks>
         [Category(ConfigurationCategory)]
-        [Description("If true, the headstage LED will illuminate during acquisition. Otherwise it will remain off.")]
+        [Description("If true, the headstage LED will turn on during data acquisition. If false, the LED will not turn on.")]
         public bool EnableLed { get; set; } = true;
 
         /// <summary>
         /// Get or set the amplifier gain for the spike-band.
         /// </summary>
+        /// <remarks>
+        /// The spike-band is from DC to 10 kHz if <see cref="SpikeFilter"/> is set to false, while the 
+        /// spike-band is from 300 Hz to 10 kHz if <see cref="SpikeFilter"/> is set to true.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Amplifier gain for spike-band.")]
         public NeuropixelsV1Gain SpikeAmplifierGain { get; set; } = NeuropixelsV1Gain.Gain1000;
@@ -50,6 +54,9 @@ namespace OpenEphys.Onix
         /// <summary>
         /// Get or set the amplifier gain for the LFP-band.
         /// </summary>
+        /// <remarks>
+        /// The LFP band is from 0.5 to 500 Hz.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Amplifier gain for LFP-band.")]
         public NeuropixelsV1Gain LfpAmplifierGain { get; set; } = NeuropixelsV1Gain.Gain50;
@@ -61,7 +68,7 @@ namespace OpenEphys.Onix
         /// All electrodes are set to the same reference, which can be either 
         /// <see cref="NeuropixelsV1ReferenceSource.External"/> or <see cref="NeuropixelsV1ReferenceSource.Tip"/>. 
         /// Setting to <see cref="NeuropixelsV1ReferenceSource.External"/> will use the external reference, while 
-        /// <see cref="NeuropixelsV1ReferenceSource.Tip"/> sets the reference as the electrode at the tip of the probe.
+        /// <see cref="NeuropixelsV1ReferenceSource.Tip"/> sets the reference to the electrode at the tip of the probe.
         /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Reference selection.")]
@@ -83,7 +90,7 @@ namespace OpenEphys.Onix
         /// </summary>
         /// <remarks>
         /// Each probe must be provided with a gain calibration file that contains calibration data
-        /// specific to each probe.
+        /// specific to each probe. This file is mandatory for accurate recordings.
         /// </remarks>
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the Neuropixels 1.0 gain calibration file.")]
@@ -95,7 +102,7 @@ namespace OpenEphys.Onix
         /// </summary>
         /// <remarks>
         /// Each probe must be provided with an ADC calibration file that contains calibration data
-        /// specific to each probe.
+        /// specific to each probe. This file is mandatory for accurate recordings.
         /// </remarks>
         [FileNameFilter("ADC calibration files (*_ADCCalibration.csv)|*_ADCCalibration.csv")]
         [Description("Path to the Neuropixels 1.0 ADC calibration file.")]
@@ -229,7 +236,7 @@ namespace OpenEphys.Onix
         public const int ChannelCount = 384;
         public const int FrameWords = 40;
 
-        // unmanaged regiseters
+        // unmanaged registers
         public const uint OP_MODE = 0X00;
         public const uint REC_MOD = 0X01;
         public const uint CAL_MOD = 0X02;
@@ -320,35 +327,35 @@ namespace OpenEphys.Onix
     public enum NeuropixelsV1Gain : byte
     {
         /// <summary>
-        /// Specifies that the gain should be x50.
+        /// Specifies that the gain should be 50x.
         /// </summary>
         Gain50 = 0b000,
         /// <summary>
-        /// Specifies that the gain should be x125.
+        /// Specifies that the gain should be 125x.
         /// </summary>
         Gain125 = 0b001,
         /// <summary>
-        /// Specifies that the gain should be x250.
+        /// Specifies that the gain should be 250x.
         /// </summary>
         Gain250 = 0b010,
         /// <summary>
-        /// Specifies that the gain should be x500.
+        /// Specifies that the gain should be 500x.
         /// </summary>
         Gain500 = 0b011,
         /// <summary>
-        /// Specifies that the gain should be x1000.
+        /// Specifies that the gain should be 1000x.
         /// </summary>
         Gain1000 = 0b100,
         /// <summary>
-        /// Specifies that the gain should be x1500.
+        /// Specifies that the gain should be 1500x.
         /// </summary>
         Gain1500 = 0b101,
         /// <summary>
-        /// Specifies that the gain should be x2000.
+        /// Specifies that the gain should be 2000x.
         /// </summary>
         Gain2000 = 0b110,
         /// <summary>
-        /// Specifies that the gain should be x3000.
+        /// Specifies that the gain should be 3000x.
         /// </summary>
         Gain3000 = 0b111
     }

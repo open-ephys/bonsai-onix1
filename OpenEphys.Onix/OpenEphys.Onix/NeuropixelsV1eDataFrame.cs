@@ -11,11 +11,11 @@ namespace OpenEphys.Onix
         /// <summary>
         /// Initializes a new instance of the <see cref="NeuropixelsV1eDataFrame"/> class.
         /// </summary>
-        /// <param name="clock"></param>
-        /// <param name="hubClock"></param>
-        /// <param name="frameCount"></param>
-        /// <param name="spikeData"></param>
-        /// <param name="lfpData"></param>
+        /// <param name="clock">A buffered array of <see cref="ManagedFrame{T}.FrameClock"/> values.</param>
+        /// <param name="hubClock">A buffered array of hub clock counter values.</param>
+        /// <param name="frameCount">A buffered array of frame count values.</param>
+        /// <param name="spikeData">A buffered array of multi-channel spike data as a <see cref="Mat"/> object.</param>
+        /// <param name="lfpData">A buffered array of multi-channel LFP data as a <see cref="Mat"/> object.</param>
         public NeuropixelsV1eDataFrame(ulong[] clock, ulong[] hubClock, int[] frameCount, Mat spikeData, Mat lfpData)
         {
             Clock = clock;
@@ -34,8 +34,13 @@ namespace OpenEphys.Onix
         public ulong[] HubClock { get; }
 
         /// <summary>
-        /// 
+        /// Get buffered frame count values.
         /// </summary>
+        /// <remarks>
+        /// Frame count is a 20-bit counter on the probe that increments its value for every frame produced.
+        /// The value ranges from 0 to 1048575 (2^20-1), and should always increment by 1 until it wraps around back to 0.
+        /// This can be used to detect dropped frames.
+        /// </remarks>
         public int[] FrameCount { get; }
 
         /// <summary>
