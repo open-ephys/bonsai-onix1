@@ -2,9 +2,9 @@
 
 namespace OpenEphys.Onix
 {
-    public class MemoryUsageDataFrame : DataFrame
+    public class MemoryMonitorDataFrame : DataFrame
     {
-        public unsafe MemoryUsageDataFrame(oni.Frame frame, uint totalMemory)
+        public unsafe MemoryMonitorDataFrame(oni.Frame frame, uint totalMemory)
             : base(frame.Clock)
         {
             var payload = (MemoryUsagePayload*)frame.Data.ToPointer();

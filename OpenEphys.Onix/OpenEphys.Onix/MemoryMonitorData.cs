@@ -6,12 +6,12 @@ using Bonsai;
 
 namespace OpenEphys.Onix
 {
-    public class MemoryUsage : Source<MemoryUsageDataFrame>
+    public class MemoryMonitorData : Source<MemoryMonitorDataFrame>
     {
         [TypeConverter(typeof(MemoryMonitor.NameConverter))]
         public string DeviceName { get; set; }
 
-        public override IObservable<MemoryUsageDataFrame> Generate()
+        public override IObservable<MemoryMonitorDataFrame> Generate()
         {
             return Observable.Using(
                 () => DeviceManager.ReserveDevice(DeviceName),
@@ -22,7 +22,7 @@ namespace OpenEphys.Onix
 
                     return deviceInfo.Context.FrameReceived
                         .Where(frame => frame.DeviceAddress == device.Address)
-                        .Select(frame => new MemoryUsageDataFrame(frame, totalMemory));
+                        .Select(frame => new MemoryMonitorDataFrame(frame, totalMemory));
                 }));
         }
     }
