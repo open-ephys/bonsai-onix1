@@ -3,17 +3,42 @@ using System.ComponentModel;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// A class for configuring an array of Triad Semiconductor TS4231 light-house receivers for 3D position tracking.
+    /// <remarks>
+    /// This configuration class can be linked to a <see cref="TS4231Data"/> instance to stream 3D position data from
+    /// light-house receivers when two HTC Vive base stations have been installed above the arena.
+    /// </remarks>
+    /// </summary>
     public class ConfigureTS4231 : SingleDeviceFactory
     {
+        /// <summary>
+        /// Initializes and new instance of the <see cref="ConfigureTS4231"/> class.
+        /// </summary>
         public ConfigureTS4231()
             : base(typeof(TS4231))
         {
         }
 
+        /// <summary>
+        /// Get or set the device enable state.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, a <see cref="TS4231Data"/> instance that is linked to this configuration will produce data. If set to false,
+        /// it will not produce data.
         [Category(ConfigurationCategory)]
         [Description("Specifies whether the TS4231 device is enabled.")]
         public bool Enable { get; set; } = true;
 
+        /// <summary>
+        /// Configure a TS4231 receiver array.
+        /// </summary>
+        /// <remarks>
+        /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance
+        /// prior to data acquisition.
+        /// </remarks>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that holds configuration actions.</param>
+        /// <returns>The original sequence modified by adding additional configuration actions required to configure a TS4231 array./></returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var deviceName = DeviceName;

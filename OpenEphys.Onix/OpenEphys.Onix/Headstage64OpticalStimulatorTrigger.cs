@@ -10,6 +10,13 @@ using Bonsai;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// A class that controls a headstage-64 onboard optical stimulus sequencer.
+    /// <remarks>
+    /// This class must be linked to an appropriate configuration, such as a <see cref="ConfigureHeadstage64OpticalStimulator"/>,
+    /// in order to define and deliver optical stimulation sequences.
+    /// </remarks>
+    /// </summary>
     public class Headstage64OpticalStimulatorTrigger : Sink<bool>
     {
         readonly BehaviorSubject<bool> enable = new(true);
@@ -23,19 +30,47 @@ namespace OpenEphys.Onix
         readonly BehaviorSubject<uint> burstsPerTrain = new(1);
         readonly BehaviorSubject<double> delay = new(0);
 
+        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(Headstage64OpticalStimulator.NameConverter))]
         public string DeviceName { get; set; }
 
-        [Description("Specifies whether the optical stimulation subcircuit will respect triggers.")]
+        /// <summary>
+        /// Gets or sets the device enable state.
+        /// <remarks>
+        /// If set to true, then the optical stimulator circuit will respect triggers. If set to false, it they will be ignored.
+        /// </remarks>
+        /// </summary>
+        [Description("Specifies whether the optical stimulator will respect triggers.")]
         public bool Enable
         {
             get => enable.Value;
             set => enable.OnNext(value);
         }
 
+        /// <summary>
+        /// Gets or sets a delay from receiving a trigger to the start of stimulus sequence application in msec.
+        /// </summary>
+        [Description("A delay from receiving a trigger to the start of stimulus sequence application (msec).")]
+        [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
+        [Range(0.0, 1000.0)]
+        [Precision(3, 1)]
+        public double Delay
+        {
+            get => delay.Value;
+            set => delay.OnNext(value);
+        }
+
+        /// <summary>
+        /// Gets or sets the Maximum current per channel per pulse in mA.
+        /// </summary>
+        /// <remarks>
+        /// This value defines the maximal possible current that can be delivered to each channel.
+        /// To get different amplitudes for each channel use the <see cref="ChannelOneCurrent"/> and
+        /// <see cref="ChannelTwoCurrent"/> properties.
+        /// </remarks>
         [Description("Maximum current per channel per pulse (mA). " +
             "This value is used by both channels. To get different amplitudes " +
-            "for each channel use the Channel0Level and Channel1Level parameters.")]
+            "for each channel use the ChannelOneCurrent and ChannelTwoCurrent properties.")]
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
         [Range(0, 300)]
         [Precision(3, 0)]
@@ -45,6 +80,9 @@ namespace OpenEphys.Onix
             set => maxCurrent.OnNext(value);
         }
 
+        /// <summary>
+        /// Gets or sets the percent of <see cref="MaxCurrent"/> that will delivered to channel 1 in each pulse.
+        /// </summary>
         [Description("Channel 1 percent of MaxCurrent. If greater than 0, channel 1 will respond to triggers.")]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
         [Range(0, 100)]
@@ -55,6 +93,9 @@ namespace OpenEphys.Onix
             set => channelOneCurrent.OnNext(value);
         }
 
+        /// <summary>
+        /// Gets or sets the percent of <see cref="MaxCurrent"/> that will delivered to channel 2 in each pulse.
+        /// </summary>
         [Description("Channel 2 percent of MaxCurrent. If greater than 0, channel 2 will respond to triggers.")]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
         [Range(0, 100)]
@@ -65,7 +106,10 @@ namespace OpenEphys.Onix
             set => channelTwoCurrent.OnNext(value);
         }
 
-        [Description("Pulse duration (msec).")]
+        /// <summary>
+        /// Gets or sets the duration of each pulse in msec.
+        /// </summary>
+        [Description("The duration of each pulse (msec).")]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
         [Range(0.001, 1000.0)]
         [Precision(3, 1)]
@@ -75,7 +119,10 @@ namespace OpenEphys.Onix
             set => pulseDuration.OnNext(value);
         }
 
-        [Description("Pulse period (msec).")]
+        /// <summary>
+        /// Gets or sets the pulse period within a burst in msec.
+        /// </summary>
+        [Description("The pulse period within a burst (msec).")]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
         [Range(0.01, 10000.0)]
         [Precision(3, 1)]
@@ -85,6 +132,9 @@ namespace OpenEphys.Onix
             set => pulsesPerSecond.OnNext(value);
         }
 
+        /// <summary>
+        /// Gets or sets the number of pulses per burst.
+        /// </summary>
         [Description("Number of pulses to deliver in a burst.")]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
         [Range(1, int.MaxValue)]
@@ -95,7 +145,10 @@ namespace OpenEphys.Onix
             set => pulsesPerBurst.OnNext(value);
         }
 
-        [Description("Inter-burst interval (msec).")]
+        /// <summary>
+        /// Gets or sets the duration of the inter-burst interval within a stimulus train in msec.
+        /// </summary>
+        [Description("The duration of the inter-burst interval within a stimulus train (msec).")]
         [Editor(DesignTypes.SliderEditor, DesignTypes.UITypeEditor)]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
         [Range(0.0, 10000.0)]
@@ -106,6 +159,9 @@ namespace OpenEphys.Onix
             set => interBurstInterval.OnNext(value);
         }
 
+        /// <summary>
+        /// Gets or sets the number of bursts in a stimulus train.
+        /// </summary>
         [Description("Number of bursts to deliver in a train.")]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
         [Range(1, int.MaxValue)]
@@ -116,19 +172,15 @@ namespace OpenEphys.Onix
             set => burstsPerTrain.OnNext(value);
         }
 
-        [Description("Delay between issue of trigger and start of train (msec).")]
-        [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
-        [Range(0.0, 1000.0)]
-        [Precision(3, 1)]
-        public double Delay
-        {
-            get => delay.Value;
-            set => delay.OnNext(value);
-        }
-
         // TODO: Should this be checked before TRIGGER is written to below and an error thrown if
         // DC current is too high? Or, should settings be forced too keep DC current under some value?
-        [Description("Direct current required during burst (mA). Should be less than 50 mA.")]
+        /// <summary>
+        /// Gets total direct current required during the application of a burst.
+        /// </summary>
+        /// <remarks>
+        /// This value should be kept below 50 mA to prevent excess head accumulation on the headstage.
+        /// </remarks>
+        [Description("The total direct current required during the application of a burst (mA). Should be less than 50 mA.")]
         public double BurstCurrent
         {
             get
@@ -137,6 +189,11 @@ namespace OpenEphys.Onix
             }
         }
 
+        /// <summary>
+        /// Start an optical stimulus sequence.
+        /// </summary>
+        /// <param name="source">A sequence of boolean values indicating the start of a stimulus sequence when true.</param>
+        /// <returns>A sequence of boolean values that is identical to <paramref name="source"/></returns>
         public override IObservable<bool> Process(IObservable<bool> source)
         {
             return Observable.Using(
