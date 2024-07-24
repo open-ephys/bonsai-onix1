@@ -115,15 +115,14 @@ namespace OpenEphys.Onix
                 SyncProbes(serializer, gpo10Config);
 
                 var deviceInfo = new NeuropixelsV2eDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB);
-                var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
                 var shutdown = Disposable.Create(() =>
                 {
                     serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO10, NeuropixelsV2eBeta.DefaultGPO10Config);
                     serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO32, NeuropixelsV2eBeta.DefaultGPO32Config);
                 });
                 return new CompositeDisposable(
-                    shutdown,
-                    disposable);
+                    DeviceManager.RegisterDevice(deviceName, deviceInfo),
+                    shutdown);
             });
         }
 

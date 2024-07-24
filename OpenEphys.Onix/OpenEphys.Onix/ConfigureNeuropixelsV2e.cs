@@ -87,15 +87,14 @@ namespace OpenEphys.Onix
                 }
 
                 var deviceInfo = new NeuropixelsV2eDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB);
-                var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
                 var shutdown = Disposable.Create(() =>
                 {
                     serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO10, NeuropixelsV2e.DefaultGPO10Config);
                     SelectProbe(serializer, NeuropixelsV2e.NoProbeSelected);
                 });
                 return new CompositeDisposable(
-                    shutdown,
-                    disposable);
+                    DeviceManager.RegisterDevice(deviceName, deviceInfo),
+                    shutdown);
             });
         }
 

@@ -40,7 +40,7 @@ namespace OpenEphys.Onix
             var deviceAddress = DeviceAddress;
             var receivedWords = ReceivedWords;
             var transmittedWords = TransmittedWords;
-            return source.ConfigureDevice(context =>
+            return source.ConfigureDevice((context, observer) =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
                 device.WriteRegister(LoadTester.ENABLE, 1);
@@ -59,7 +59,7 @@ namespace OpenEphys.Onix
 
                 var writeArray = Enumerable.Repeat((uint)42, (int)(transmittedWords + 2)).ToArray();
                 device.WriteRegister(LoadTester.HTOD32_WORDS, transmittedWords);
-                var frameHzSubscription = frameHz.Subscribe(newValue =>
+                var frameHzSubscription = frameHz.SubscribeSafe(observer, newValue =>
                 {
                     device.WriteRegister(LoadTester.CLK_DIV, clk_hz / newValue);
                     var max_size = ValidSize();
