@@ -2,9 +2,18 @@
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// Specifies the probe as A or B.
+    /// </summary>
     public enum NeuropixelsV2Probe
     {
+        /// <summary>
+        /// Specifies that this is Probe A.
+        /// </summary>
         ProbeA = 0,
+        /// <summary>
+        /// Specifies that this is Probe B.
+        /// </summary>
         ProbeB = 1
     }
 

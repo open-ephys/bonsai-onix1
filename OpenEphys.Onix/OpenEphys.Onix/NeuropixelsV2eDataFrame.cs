@@ -3,8 +3,17 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// Buffered data from a NeuropixelsV2e device.
+    /// </summary>
     public class NeuropixelsV2eDataFrame
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NeuropixelsV2eDataFrame"/> class.
+        /// </summary>
+        /// <param name="clock">A buffered array of <see cref="ManagedFrame{T}.FrameClock"/> values.</param>
+        /// <param name="hubClock">A buffered array of hub clock counter values.</param>
+        /// <param name="amplifierData">A buffered array of multi-channel amplifier data.</param>
         public NeuropixelsV2eDataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData)
         {
             Clock = clock;
@@ -12,10 +21,17 @@ namespace OpenEphys.Onix
             AmplifierData = amplifierData;
         }
 
+        /// <inheritdoc cref="ManagedFrame{T}.FrameClock"/>
         public ulong[] Clock { get; }
 
+        /// <summary>
+        /// Get the possibly asynchronous local clock counter.
+        /// </summary>
         public ulong[] HubClock { get; }
 
+        /// <summary>
+        /// Get the buffered amplifier data as a <see cref="Mat"/> object.
+        /// </summary>
         public Mat AmplifierData { get; }
 
         internal static unsafe ushort GetProbeIndex(oni.Frame frame)

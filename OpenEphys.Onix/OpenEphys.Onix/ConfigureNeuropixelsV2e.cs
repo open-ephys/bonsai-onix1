@@ -5,35 +5,77 @@ using Bonsai;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// A class that configures a NeuropixelsV2e device.
+    /// </summary>
     public class ConfigureNeuropixelsV2e : SingleDeviceFactory
     {
+        /// <summary>
+        /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV2e"/> object.
+        /// </summary>
         public ConfigureNeuropixelsV2e()
             : base(typeof(NeuropixelsV2e))
         {
         }
 
+        /// <summary>
+        /// Get or set the device enable state.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, <see cref="NeuropixelsV2eData"/> will produce data. If set to false, 
+        /// <see cref="NeuropixelsV2eData"/> will not produce data.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Specifies whether the NeuropixelsV2 device is enabled.")]
         public bool Enable { get; set; } = true;
 
+        /// <summary>
+        /// Get or set the electrode configuration for Probe A.
+        /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Probe A electrode configuration.")]
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; }
 
+        /// <summary>
+        /// Get or set the path to the gain calibration file for Probe A.
+        /// </summary>
+        /// <remarks>
+        /// Each probe must be provided with a gain calibration file that contains calibration data
+        /// specific to each probe. This file is mandatory for accurate recordings.
+        /// </remarks>
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the gain calibration file for probe A.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string GainCalibrationFileA { get; set; }
 
+        /// <summary>
+        /// Get or set the electrode configuration for Probe B.
+        /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Probe B electrode configuration.")]
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; }
 
+        /// <summary>
+        /// Get or set the path to the gain calibration file for Probe B.
+        /// </summary>
+        /// <remarks>
+        /// Each probe must be provided with a gain calibration file that contains calibration data
+        /// specific to each probe. This file is mandatory for accurate recordings.
+        /// </remarks>
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the gain calibration file for probe B.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string GainCalibrationFileB { get; set; }
 
+        /// <summary>
+        /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
+        /// prior to data acquisition.
+        /// </summary>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> that holds all configuration actions.</param>
+        /// <returns>
+        /// The original sequence with the side effect of an additional configuration action to configure
+        /// a NeuropixelsV2e device.
+        /// </returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;

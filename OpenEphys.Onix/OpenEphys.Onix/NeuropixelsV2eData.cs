@@ -8,15 +8,32 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// Produces a sequence of <see cref="NeuropixelsV2eDataFrame"/> from a NeuropixelsV2e headstage.
+    /// </summary>
     public class NeuropixelsV2eData : Source<NeuropixelsV2eDataFrame>
     {
+        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(NeuropixelsV2e.NameConverter))]
         public string DeviceName { get; set; }
 
+        /// <summary>
+        /// Get or set the buffer size.
+        /// </summary>
+        /// <remarks>
+        /// Buffer size sets the number of frames that are buffered before propagating data.
+        /// </remarks>
         public int BufferSize { get; set; } = 30;
 
+        /// <summary>
+        /// Get or set the probe index.
+        /// </summary>
         public NeuropixelsV2Probe ProbeIndex { get; set; }
 
+        /// <summary>
+        /// Generates a sequence of <see cref="NeuropixelsV2eDataFrame"/> objects.
+        /// </summary>
+        /// <returns>A sequence of <see cref="NeuropixelsV2eDataFrame"/> objects.</returns>
         public unsafe override IObservable<NeuropixelsV2eDataFrame> Generate()
         {
             var bufferSize = BufferSize;
