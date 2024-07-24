@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
@@ -9,15 +8,14 @@ namespace OpenEphys.Onix
         {
             var payload = (MemoryUsagePayload*)frame.Data.ToPointer();
 
-            FrameClock = frame.Clock;
+            Clock = frame.Clock;
             DeviceAddress = frame.DeviceAddress;
             HubClock = payload->HubClock;
             PercentUsed = 100.0 * payload->Usage / totalMemory;
             BytesUsed = payload->Usage * 4;
-
         }
 
-        public ulong FrameClock { get; private set; }
+        public ulong Clock { get; private set; }
 
         public uint DeviceAddress { get; private set; }
 
