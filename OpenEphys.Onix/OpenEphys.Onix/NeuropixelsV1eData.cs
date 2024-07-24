@@ -27,47 +27,45 @@ namespace OpenEphys.Onix
             var spikeBufferSize = BufferSize;
             var lfpBufferSize = spikeBufferSize / NeuropixelsV1e.FramesPerRoundRobin;
 
-            return Observable.Using(
-                () => DeviceManager.ReserveDevice(DeviceName),
-                disposable => disposable.Subject.SelectMany(deviceInfo =>
+            return DeviceManager.ReserveDevice(DeviceName).SelectMany(deviceInfo =>
+            {
+                var info = (NeuropixelsV1eDeviceInfo)deviceInfo;
+                var device = info.GetDeviceContext(typeof(NeuropixelsV1e));
+                var passthrough = device.GetPassthroughDeviceContext(typeof(DS90UB9x));
+                var probeData = device.Context.FrameReceived.Where(frame => frame.DeviceAddress == passthrough.Address);
+
+                return Observable.Create<NeuropixelsV1eDataFrame>(observer =>
                 {
-                    var info = (NeuropixelsV1eDeviceInfo)deviceInfo;
-                    var device = info.GetDeviceContext(typeof(NeuropixelsV1e));
-                    var passthrough = device.GetPassthroughDeviceContext(typeof(DS90UB9x));
-                    var probeData = device.Context.FrameReceived.Where(frame => frame.DeviceAddress == passthrough.Address);
+                    var sampleIndex = 0;
+                    var spikeBuffer = new ushort[NeuropixelsV1e.ChannelCount, spikeBufferSize];
+                    var lfpBuffer = new ushort[NeuropixelsV1e.ChannelCount, lfpBufferSize];
+                    var frameCountBuffer = new int[spikeBufferSize * NeuropixelsV1e.FramesPerSuperFrame];
+                    var hubClockBuffer = new ulong[spikeBufferSize];
+                    var clockBuffer = new ulong[spikeBufferSize];
 
-                    return Observable.Create<NeuropixelsV1eDataFrame>(observer =>
-                    {
-                        var sampleIndex = 0;
-                        var spikeBuffer = new ushort[NeuropixelsV1e.ChannelCount, spikeBufferSize];
-                        var lfpBuffer = new ushort[NeuropixelsV1e.ChannelCount, lfpBufferSize];
-                        var frameCountBuffer = new int[spikeBufferSize * NeuropixelsV1e.FramesPerSuperFrame];
-                        var hubClockBuffer = new ulong[spikeBufferSize];
-                        var clockBuffer = new ulong[spikeBufferSize];
-
-                        var frameObserver = Observer.Create<oni.Frame>(
-                            frame =>
+                    var frameObserver = Observer.Create<oni.Frame>(
+                        frame =>
+                        {
+                            var payload = (NeuropixelsV1ePayload*)frame.Data.ToPointer();
+                            NeuropixelsV1eDataFrame.CopyAmplifierBuffer(payload->AmplifierData, frameCountBuffer, spikeBuffer, lfpBuffer, sampleIndex, info.ApGainCorrection, info.LfpGainCorrection, info.AdcThresholds, info.AdcOffsets);
+                            hubClockBuffer[sampleIndex] = payload->HubClock;
+                            clockBuffer[sampleIndex] = frame.Clock;
+                            if (++sampleIndex >= spikeBufferSize)
                             {
-                                var payload = (NeuropixelsV1ePayload*)frame.Data.ToPointer();
-                                NeuropixelsV1eDataFrame.CopyAmplifierBuffer(payload->AmplifierData, frameCountBuffer, spikeBuffer, lfpBuffer, sampleIndex, info.ApGainCorrection, info.LfpGainCorrection, info.AdcThresholds, info.AdcOffsets);
-                                hubClockBuffer[sampleIndex] = payload->HubClock;
-                                clockBuffer[sampleIndex] = frame.Clock;
-                                if (++sampleIndex >= spikeBufferSize)
-                                {
-                                    var spikeData = Mat.FromArray(spikeBuffer);
-                                    var lfpData = Mat.FromArray(lfpBuffer);
-                                    observer.OnNext(new NeuropixelsV1eDataFrame(clockBuffer, hubClockBuffer, frameCountBuffer, spikeData, lfpData));
-                                    frameCountBuffer = new int[spikeBufferSize * NeuropixelsV1e.FramesPerSuperFrame];
-                                    hubClockBuffer = new ulong[spikeBufferSize];
-                                    clockBuffer = new ulong[spikeBufferSize];
-                                    sampleIndex = 0;
-                                }
-                            },
-                            observer.OnError,
-                            observer.OnCompleted);
-                        return probeData.SubscribeSafe(frameObserver);
-                    });
-                }));
+                                var spikeData = Mat.FromArray(spikeBuffer);
+                                var lfpData = Mat.FromArray(lfpBuffer);
+                                observer.OnNext(new NeuropixelsV1eDataFrame(clockBuffer, hubClockBuffer, frameCountBuffer, spikeData, lfpData));
+                                frameCountBuffer = new int[spikeBufferSize * NeuropixelsV1e.FramesPerSuperFrame];
+                                hubClockBuffer = new ulong[spikeBufferSize];
+                                clockBuffer = new ulong[spikeBufferSize];
+                                sampleIndex = 0;
+                            }
+                        },
+                        observer.OnError,
+                        observer.OnCompleted);
+                    return probeData.SubscribeSafe(frameObserver);
+                });
+            });
         }
     }
 }

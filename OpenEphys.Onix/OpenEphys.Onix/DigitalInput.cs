@@ -13,15 +13,13 @@ namespace OpenEphys.Onix
 
         public unsafe override IObservable<DigitalInputDataFrame> Generate()
         {
-            return Observable.Using(
-                () => DeviceManager.ReserveDevice(DeviceName),
-                disposable => disposable.Subject.SelectMany(deviceInfo =>
-                {
-                    var device = deviceInfo.GetDeviceContext(typeof(DigitalIO));
-                    return deviceInfo.Context.FrameReceived
-                        .Where(frame => frame.DeviceAddress == device.Address)
-                        .Select(frame => new DigitalInputDataFrame(frame));
-                }));
+            return DeviceManager.ReserveDevice(DeviceName).SelectMany(deviceInfo =>
+            {
+                var device = deviceInfo.GetDeviceContext(typeof(DigitalIO));
+                return deviceInfo.Context.FrameReceived
+                    .Where(frame => frame.DeviceAddress == device.Address)
+                    .Select(frame => new DigitalInputDataFrame(frame));
+            });
         }
     }
 }

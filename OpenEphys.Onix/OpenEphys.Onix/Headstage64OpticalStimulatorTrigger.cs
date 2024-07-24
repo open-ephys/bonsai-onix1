@@ -139,76 +139,74 @@ namespace OpenEphys.Onix
 
         public override IObservable<bool> Process(IObservable<bool> source)
         {
-            return Observable.Using(
-                () => DeviceManager.ReserveDevice(DeviceName),
-                disposable => disposable.Subject.SelectMany(deviceInfo =>
-                    Observable.Create<bool>(observer =>
+            return DeviceManager.ReserveDevice(DeviceName).SelectMany(
+                deviceInfo => Observable.Create<bool>(observer =>
+                {
+                    var device = deviceInfo.GetDeviceContext(typeof(Headstage64OpticalStimulator));
+                    var triggerObserver = Observer.Create<bool>(
+                        value => device.WriteRegister(Headstage64OpticalStimulator.TRIGGER, value ? 1u : 0u),
+                        observer.OnError,
+                        observer.OnCompleted);
+
+                    // NB: fit from Fig. 10 of CAT4016 datasheet
+                    // x = (y/a)^(1/b)
+                    // a = 3.833e+05
+                    // b = -0.9632
+                    static uint mAToPotSetting(double currentMa)
                     {
-                        var device = deviceInfo.GetDeviceContext(typeof(Headstage64OpticalStimulator));
-                        var triggerObserver = Observer.Create<bool>(
-                            value => device.WriteRegister(Headstage64OpticalStimulator.TRIGGER, value ? 1u : 0u),
-                            observer.OnError,
-                            observer.OnCompleted);
+                        double R = Math.Pow(currentMa / 3.833e+05, 1 / -0.9632);
+                        double s = 256 * (R - Headstage64OpticalStimulator.MinRheostatResistanceOhms) / Headstage64OpticalStimulator.PotResistanceOhms;
+                        return s > 255 ? 255 : s < 0 ? 0 : (uint)s;
+                    }
 
-                        // NB: fit from Fig. 10 of CAT4016 datasheet
-                        // x = (y/a)^(1/b)
-                        // a = 3.833e+05
-                        // b = -0.9632
-                        static uint mAToPotSetting(double currentMa)
+                    uint currentSourceMask = 0;
+                    static uint percentToPulseMask(int channel, double percent, uint oldMask)
+                    {
+                        uint mask = 0x00000000;
+                        var p = 0.0;
+                        while (p < percent)
                         {
-                            double R = Math.Pow(currentMa / 3.833e+05, 1 / -0.9632);
-                            double s = 256 * (R - Headstage64OpticalStimulator.MinRheostatResistanceOhms) / Headstage64OpticalStimulator.PotResistanceOhms;
-                            return s > 255 ? 255 : s < 0 ? 0 : (uint)s;
+                            mask = (mask << 1) | 1;
+                            p += 12.5;
                         }
 
-                        uint currentSourceMask = 0;
-                        static uint percentToPulseMask(int channel, double percent, uint oldMask)
+                        return channel == 0 ? (oldMask & 0x0000FF00) | mask : (mask << 8) | (oldMask & 0x000000FF);
+                    }
+
+                    static uint pulseDurationToRegister(double pulseDuration, double pulseHz)
+                    {
+                        var pulsePeriod = 1000.0 / pulseHz;
+                        return pulseDuration > pulsePeriod ? (uint)(1000 * pulsePeriod - 1): (uint)(1000 * pulseDuration);
+                    }
+
+                    static uint pulseFrequencyToRegister(double pulseHz, double pulseDuration)
+                    {
+                        var pulsePeriod = 1000.0 / pulseHz;
+                        return pulsePeriod > pulseDuration ? (uint)(1000 * pulsePeriod) : (uint)(1000 * pulseDuration + 1);
+                    }
+
+                    return new CompositeDisposable(
+                        enable.Subscribe(value => device.WriteRegister(Headstage64OpticalStimulator.ENABLE, value ? 1u : 0u)),
+                        maxCurrent.Subscribe(value => device.WriteRegister(Headstage64OpticalStimulator.MAXCURRENT, mAToPotSetting(value))),
+                        channelOneCurrent.Subscribe(value =>
                         {
-                            uint mask = 0x00000000;
-                            var p = 0.0;
-                            while (p < percent)
-                            {
-                                mask = (mask << 1) | 1;
-                                p += 12.5;
-                            }
-
-                            return channel == 0 ? (oldMask & 0x0000FF00) | mask : (mask << 8) | (oldMask & 0x000000FF);
-                        }
-
-                        static uint pulseDurationToRegister(double pulseDuration, double pulseHz)
+                            currentSourceMask = percentToPulseMask(0, value, currentSourceMask);
+                            device.WriteRegister(Headstage64OpticalStimulator.PULSEMASK, currentSourceMask);
+                        }),
+                        channelTwoCurrent.Subscribe(value =>
                         {
-                            var pulsePeriod = 1000.0 / pulseHz;
-                            return pulseDuration > pulsePeriod ? (uint)(1000 * pulsePeriod - 1): (uint)(1000 * pulseDuration);
-                        }
-
-                        static uint pulseFrequencyToRegister(double pulseHz, double pulseDuration)
-                        {
-                            var pulsePeriod = 1000.0 / pulseHz;
-                            return pulsePeriod > pulseDuration ? (uint)(1000 * pulsePeriod) : (uint)(1000 * pulseDuration + 1);
-                        }
-
-                        return new CompositeDisposable(
-                            enable.Subscribe(value => device.WriteRegister(Headstage64OpticalStimulator.ENABLE, value ? 1u : 0u)),
-                            maxCurrent.Subscribe(value => device.WriteRegister(Headstage64OpticalStimulator.MAXCURRENT, mAToPotSetting(value))),
-                            channelOneCurrent.Subscribe(value =>
-                            {
-                                currentSourceMask = percentToPulseMask(0, value, currentSourceMask);
-                                device.WriteRegister(Headstage64OpticalStimulator.PULSEMASK, currentSourceMask);
-                            }),
-                            channelTwoCurrent.Subscribe(value =>
-                            {
-                                currentSourceMask = percentToPulseMask(1, value, currentSourceMask);
-                                device.WriteRegister(Headstage64OpticalStimulator.PULSEMASK, currentSourceMask);
-                            }),
-                            pulseDuration.Subscribe(value => device.WriteRegister(Headstage64OpticalStimulator.PULSEDUR, pulseDurationToRegister(value, PulsesPerSecond))),
-                            pulsesPerSecond.Subscribe(value => device.WriteRegister(Headstage64OpticalStimulator.PULSEPERIOD, pulseFrequencyToRegister(value, PulseDuration))),
-                            pulsesPerBurst.Subscribe(value =>device.WriteRegister(Headstage64OpticalStimulator.BURSTCOUNT, value)),
-                            interBurstInterval.Subscribe(value => device.WriteRegister(Headstage64OpticalStimulator.IBI, (uint)(1000 * value))),
-                            burstsPerTrain.Subscribe(value => device.WriteRegister(Headstage64OpticalStimulator.TRAINCOUNT, value)),
-                            delay.Subscribe(value => device.WriteRegister(Headstage64OpticalStimulator.TRAINDELAY, (uint)(1000 * value))),
-                            source.SubscribeSafe(triggerObserver)
-                        );
-                    })));
+                            currentSourceMask = percentToPulseMask(1, value, currentSourceMask);
+                            device.WriteRegister(Headstage64OpticalStimulator.PULSEMASK, currentSourceMask);
+                        }),
+                        pulseDuration.Subscribe(value => device.WriteRegister(Headstage64OpticalStimulator.PULSEDUR, pulseDurationToRegister(value, PulsesPerSecond))),
+                        pulsesPerSecond.Subscribe(value => device.WriteRegister(Headstage64OpticalStimulator.PULSEPERIOD, pulseFrequencyToRegister(value, PulseDuration))),
+                        pulsesPerBurst.Subscribe(value =>device.WriteRegister(Headstage64OpticalStimulator.BURSTCOUNT, value)),
+                        interBurstInterval.Subscribe(value => device.WriteRegister(Headstage64OpticalStimulator.IBI, (uint)(1000 * value))),
+                        burstsPerTrain.Subscribe(value => device.WriteRegister(Headstage64OpticalStimulator.TRAINCOUNT, value)),
+                        delay.Subscribe(value => device.WriteRegister(Headstage64OpticalStimulator.TRAINDELAY, (uint)(1000 * value))),
+                        source.SubscribeSafe(triggerObserver)
+                    );
+                }));
         }
     }
 }
