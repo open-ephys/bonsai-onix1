@@ -196,10 +196,4 @@ namespace OpenEphys.Onix
         /// </summary>
         Off
     }
-
-    public enum Rhd2164AmplifierDataFormat
-    {
-        Unsigned,
-        TwosComplement
-    }
 }
