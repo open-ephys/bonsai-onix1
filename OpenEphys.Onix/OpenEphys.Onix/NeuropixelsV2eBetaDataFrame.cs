@@ -3,23 +3,48 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// Buffered data from a NeuropixelsV2e device.
+    /// </summary>
     public class NeuropixelsV2eBetaDataFrame
     {
-        public NeuropixelsV2eBetaDataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData, int[] frameCounter)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NeuropixelsV2eDataFrame"/> class.
+        /// </summary>
+        /// <param name="clock">A buffered array of <see cref="ManagedFrame{T}.FrameClock"/> values.</param>
+        /// <param name="hubClock">A buffered array of hub clock counter values.</param>
+        /// <param name="amplifierData">A buffered array of multi-channel amplifier data.</param>
+        /// <param name="frameCount">A buffered array of frame count values.</param>
+        public NeuropixelsV2eBetaDataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData, int[] frameCount)
         {
             Clock = clock;
             HubClock = hubClock;
             AmplifierData = amplifierData;
-            FrameCounter = frameCounter;
+            FrameCount = frameCount;
         }
 
+        /// <inheritdoc cref="ManagedFrame{T}.FrameClock"/>
         public ulong[] Clock { get; }
 
+        /// <summary>
+        /// Get the possibly asynchronous local clock counter.
+        /// </summary>
         public ulong[] HubClock { get; }
 
+        /// <summary>
+        /// Get the buffered amplifier data as a <see cref="Mat"/> object.
+        /// </summary>
         public Mat AmplifierData { get; }
 
-        public int[] FrameCounter { get; }
+        /// <summary>
+        /// Get buffered frame count values.
+        /// </summary>
+        /// <remarks>
+        /// Frame count is a 20-bit counter on the probe that increments its value for every frame produced.
+        /// The value ranges from 0 to 1048575 (2^20-1), and should always increment by 1 until it wraps around back to 0.
+        /// This can be used to detect dropped frames.
+        /// </remarks>
+        public int[] FrameCount { get; }
 
         internal static unsafe ushort GetProbeIndex(oni.Frame frame)
         {
