@@ -27,7 +27,7 @@ namespace OpenEphys.Onix
             var spikeBufferSize = BufferSize;
             var lfpBufferSize = spikeBufferSize / NeuropixelsV1e.FramesPerRoundRobin;
 
-            return DeviceManager.ReserveDevice(DeviceName).SelectMany(deviceInfo =>
+            return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
                 var info = (NeuropixelsV1eDeviceInfo)deviceInfo;
                 var device = info.GetDeviceContext(typeof(NeuropixelsV1e));

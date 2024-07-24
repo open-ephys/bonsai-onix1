@@ -19,7 +19,7 @@ namespace OpenEphys.Onix
         public unsafe override IObservable<Rhd2164DataFrame> Generate()
         {
             var bufferSize = BufferSize;
-            return DeviceManager.ReserveDevice(DeviceName).SelectMany(
+            return DeviceManager.GetDevice(DeviceName).SelectMany(
                 deviceInfo => Observable.Create<Rhd2164DataFrame>(observer =>
                 {
                     var sampleIndex = 0;

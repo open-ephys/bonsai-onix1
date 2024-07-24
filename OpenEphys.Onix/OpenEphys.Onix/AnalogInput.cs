@@ -35,7 +35,7 @@ namespace OpenEphys.Onix
         {
             var bufferSize = BufferSize;
             var dataType = DataType;
-            return DeviceManager.ReserveDevice(DeviceName).SelectMany(
+            return DeviceManager.GetDevice(DeviceName).SelectMany(
                 deviceInfo => Observable.Create<AnalogInputDataFrame>(observer =>
                 {
                     var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));

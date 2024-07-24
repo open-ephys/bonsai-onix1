@@ -139,7 +139,7 @@ namespace OpenEphys.Onix
 
         public override IObservable<bool> Process(IObservable<bool> source)
         {
-            return DeviceManager.ReserveDevice(DeviceName).SelectMany(
+            return DeviceManager.GetDevice(DeviceName).SelectMany(
                 deviceInfo => Observable.Create<bool>(observer =>
                 {
                     var device = deviceInfo.GetDeviceContext(typeof(Headstage64OpticalStimulator));

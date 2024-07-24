@@ -13,7 +13,7 @@ namespace OpenEphys.Onix
 
         public override IObservable<Bno055DataFrame> Generate()
         {
-            return DeviceManager.ReserveDevice(DeviceName).SelectMany(deviceInfo =>
+            return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
                 var device = deviceInfo.GetDeviceContext(typeof(Bno055));
                 return deviceInfo.Context.FrameReceived

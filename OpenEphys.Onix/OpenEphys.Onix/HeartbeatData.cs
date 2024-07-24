@@ -13,7 +13,7 @@ namespace OpenEphys.Onix
 
         public override IObservable<HeartbeatDataFrame> Generate()
         {
-            return DeviceManager.ReserveDevice(DeviceName).SelectMany(deviceInfo =>
+            return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
                 var device = deviceInfo.GetDeviceContext(typeof(Heartbeat));
                 return deviceInfo.Context.FrameReceived

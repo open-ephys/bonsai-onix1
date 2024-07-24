@@ -19,7 +19,7 @@ namespace OpenEphys.Onix
         public override IObservable<Mat> Process(IObservable<Mat> source)
         {
             var dataType = DataType;
-            return DeviceManager.ReserveDevice(DeviceName).SelectMany(deviceInfo =>
+            return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
                 var bufferSize = 0;
                 var scaleBuffer = default(Mat);
@@ -76,7 +76,7 @@ namespace OpenEphys.Onix
             if (DataType != AnalogIODataType.S16)
                 ThrowDataTypeException(Depth.S16);
 
-            return DeviceManager.ReserveDevice(DeviceName).SelectMany(deviceInfo =>
+            return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
                 var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));
                 return source.Do(data =>
@@ -92,7 +92,7 @@ namespace OpenEphys.Onix
             if (DataType != AnalogIODataType.Volts)
                 ThrowDataTypeException(Depth.F32);
 
-            return DeviceManager.ReserveDevice(DeviceName).SelectMany(deviceInfo =>
+            return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
                 var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));
                 var divisionsPerVolt = 1 / AnalogIODeviceInfo.GetVoltsPerDivision(OutputRange);

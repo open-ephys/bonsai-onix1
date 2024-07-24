@@ -24,7 +24,7 @@ namespace OpenEphys.Onix
         {
             var bufferSize = BufferSize; // TODO: Branch for bufferSize = 1?
 
-            return DeviceManager.ReserveDevice(DeviceName).SelectMany(
+            return DeviceManager.GetDevice(DeviceName).SelectMany(
                 deviceInfo => Observable.Create<Test0DataFrame>(observer =>
                 {
                     // Find number of dummy words in the frame

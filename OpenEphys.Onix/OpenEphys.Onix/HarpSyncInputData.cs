@@ -13,7 +13,7 @@ namespace OpenEphys.Onix
 
         public override IObservable<HarpSyncInputDataFrame> Generate()
         {
-            return DeviceManager.ReserveDevice(DeviceName).SelectMany(deviceInfo =>
+            return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
                 var device = deviceInfo.GetDeviceContext(typeof(HarpSyncInput));
                 return deviceInfo.Context.FrameReceived

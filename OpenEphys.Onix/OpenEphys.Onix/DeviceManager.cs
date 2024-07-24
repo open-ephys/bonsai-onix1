@@ -74,7 +74,7 @@ namespace OpenEphys.Onix
             }
         }
 
-        internal static IObservable<DeviceInfo> ReserveDevice(string name)
+        internal static IObservable<DeviceInfo> GetDevice(string name)
         {
             return Observable.Create<DeviceInfo>(observer =>
             {

@@ -13,7 +13,7 @@ namespace OpenEphys.Onix
 
         public override IObservable<TS4231DataFrame> Generate()
         {
-            return DeviceManager.ReserveDevice(DeviceName).SelectMany(deviceInfo =>
+            return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
                 var device = deviceInfo.GetDeviceContext(typeof(TS4231));
                 return deviceInfo.Context.FrameReceived

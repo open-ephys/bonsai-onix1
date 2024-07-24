@@ -13,7 +13,7 @@ namespace OpenEphys.Onix
 
         public override IObservable<DigitalPortState> Process(IObservable<DigitalPortState> source)
         {
-            return DeviceManager.ReserveDevice(DeviceName).SelectMany(deviceInfo =>
+            return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
                 var device = deviceInfo.GetDeviceContext(typeof(DigitalIO));
                 return source.Do(value => device.Write((uint)value));

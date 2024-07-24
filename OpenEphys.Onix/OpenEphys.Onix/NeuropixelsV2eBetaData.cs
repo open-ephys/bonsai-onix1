@@ -20,7 +20,7 @@ namespace OpenEphys.Onix
         public unsafe override IObservable<NeuropixelsV2eBetaDataFrame> Generate()
         {
             var bufferSize = BufferSize;
-            return DeviceManager.ReserveDevice(DeviceName).SelectMany(deviceInfo =>
+            return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
                 var info = (NeuropixelsV2eDeviceInfo)deviceInfo;
                 var device = info.GetDeviceContext(typeof(NeuropixelsV2eBeta));

@@ -20,7 +20,7 @@ namespace OpenEphys.Onix
 
         public unsafe IObservable<Bno055DataFrame> Generate<TSource>(IObservable<TSource> source)
         {
-            return DeviceManager.ReserveDevice(DeviceName).SelectMany(
+            return DeviceManager.GetDevice(DeviceName).SelectMany(
                 deviceInfo => Observable.Create<Bno055DataFrame>(observer =>
                 {
                     var device = deviceInfo.GetDeviceContext(typeof(NeuropixelsV1eBno055));

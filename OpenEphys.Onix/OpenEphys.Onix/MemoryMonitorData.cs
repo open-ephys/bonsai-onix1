@@ -13,7 +13,7 @@ namespace OpenEphys.Onix
 
         public override IObservable<MemoryMonitorDataFrame> Generate()
         {
-            return DeviceManager.ReserveDevice(DeviceName).SelectMany(deviceInfo =>
+            return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
                 var device = deviceInfo.GetDeviceContext(typeof(MemoryMonitor));
                 var totalMemory = device.ReadRegister(MemoryMonitor.TOTAL_MEM);
