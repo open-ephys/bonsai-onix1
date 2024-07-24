@@ -2,19 +2,15 @@
 
 namespace OpenEphys.Onix
 {
-    public class HarpSyncInputDataFrame
+    public class HarpSyncInputDataFrame : DataFrame
     {
         public unsafe HarpSyncInputDataFrame(oni.Frame frame)
+            : base(frame.Clock)
         {
-            Clock = frame.Clock;
             var payload = (HarpSyncInputPayload*)frame.Data.ToPointer();
             HubClock = payload->HubClock;
             HarpTime = payload->HarpTime;
         }
-
-        public ulong Clock { get; }
-
-        public ulong HubClock { get; }
 
         public uint HarpTime { get; }
     }

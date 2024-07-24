@@ -3,18 +3,13 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
-    public class AnalogInputDataFrame
+    public class AnalogInputDataFrame : BufferedDataFrame
     {
         public AnalogInputDataFrame(ulong[] clock, ulong[] hubClock, Mat analogData)
+            : base(clock, hubClock)
         {
-            Clock = clock;
-            HubClock = hubClock;
             AnalogData = analogData;
         }
-
-        public ulong[] Clock { get; }
-
-        public ulong[] HubClock { get; }
 
         public Mat AnalogData { get; }
     }

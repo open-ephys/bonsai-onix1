@@ -2,21 +2,17 @@
 
 namespace OpenEphys.Onix
 {
-    public class TS4231DataFrame
+    public class TS4231DataFrame : DataFrame
     {
         public unsafe TS4231DataFrame(oni.Frame frame)
+            : base(frame.Clock)
         {
-            Clock = frame.Clock;
             var payload = (TS4231Payload*)frame.Data.ToPointer();
             HubClock = payload->HubClock;
             SensorIndex = payload->SensorIndex;
             EnvelopeWidth = payload->EnvelopeWidth;
             EnvelopeType = payload->EnvelopeType;
         }
-
-        public ulong Clock { get; }
-
-        public ulong HubClock { get; }
 
         public int SensorIndex { get; }
 

@@ -3,18 +3,13 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
-    public class NeuropixelsV2eDataFrame
+    public class NeuropixelsV2eDataFrame : BufferedDataFrame
     {
         public NeuropixelsV2eDataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData)
+            : base(clock, hubClock)
         {
-            Clock = clock;
-            HubClock = hubClock;
             AmplifierData = amplifierData;
         }
-
-        public ulong[] Clock { get; }
-
-        public ulong[] HubClock { get; }
 
         public Mat AmplifierData { get; }
 

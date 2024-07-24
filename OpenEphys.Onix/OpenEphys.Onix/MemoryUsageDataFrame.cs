@@ -2,24 +2,16 @@
 
 namespace OpenEphys.Onix
 {
-    public class MemoryUsageDataFrame 
+    public class MemoryUsageDataFrame : DataFrame
     {
-        public unsafe MemoryUsageDataFrame(oni.Frame frame, uint totalMemory) 
+        public unsafe MemoryUsageDataFrame(oni.Frame frame, uint totalMemory)
+            : base(frame.Clock)
         {
             var payload = (MemoryUsagePayload*)frame.Data.ToPointer();
-
-            Clock = frame.Clock;
-            DeviceAddress = frame.DeviceAddress;
             HubClock = payload->HubClock;
             PercentUsed = 100.0 * payload->Usage / totalMemory;
             BytesUsed = payload->Usage * 4;
         }
-
-        public ulong Clock { get; private set; }
-
-        public uint DeviceAddress { get; private set; }
-
-        public ulong HubClock { get; }
 
         public double PercentUsed { get; }
 
