@@ -15,7 +15,7 @@ namespace OpenEphys.Onix
         /// <param name="hubClock">An array of hub clock counter values.</param>
         /// <param name="amplifierData">An array of multi-channel amplifier data.</param>
         /// <param name="frameCount">An array of frame count values.</param>
-        public NeuropixelsV2eBetaDataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData, int[] frameCounter)
+        public NeuropixelsV2eBetaDataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData, int[] frameCount)
             : base(clock, hubClock)
         {
             AmplifierData = amplifierData;
