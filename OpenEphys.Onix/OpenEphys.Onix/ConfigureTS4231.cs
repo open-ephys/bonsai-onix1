@@ -26,6 +26,7 @@ namespace OpenEphys.Onix
         /// <remarks>
         /// If set to true, a <see cref="TS4231Data"/> instance that is linked to this configuration will produce data. If set to false,
         /// it will not produce data.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Specifies whether the TS4231 device is enabled.")]
         public bool Enable { get; set; } = true;

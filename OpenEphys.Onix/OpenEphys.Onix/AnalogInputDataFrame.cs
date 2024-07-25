@@ -11,8 +11,8 @@ namespace OpenEphys.Onix
         /// <summary>
         /// Initializes a new instance of the AnalogInputDataFrame class.
         /// </summary>
-        /// <param name="clock">A buffered array of <see cref="ManagedFrame{T}.FrameClock"/> values.</param>
-        /// <param name="hubSyncCounter"> A buffered array of hub clock counter values.</param>
+        /// <param name="clock">A buffered array of <see cref="DataFrame.Clock"/> values.</param>
+        /// <param name="hubClock"> A buffered array of hub clock counter values.</param>
         /// <param name="analogData">A buffered array of multi-channel analog data.</param>
         public AnalogInputDataFrame(ulong[] clock, ulong[] hubClock, Mat analogData)
             : base(clock, hubClock)

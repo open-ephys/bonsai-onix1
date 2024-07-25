@@ -42,6 +42,7 @@ namespace OpenEphys.Onix
         /// <remarks>
         /// If set to true, a <see cref="HeartbeatData"/> instance that is linked to this configuration will produce data.
         /// If set to false, it will not produce data.
+        /// </remarks>
         [Range(1, 10e6)]
         [Category(AcquisitionCategory)]
         [Description("Rate at which beats are produced (Hz).")]

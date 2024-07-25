@@ -11,7 +11,7 @@ namespace OpenEphys.Onix
         /// <summary>
         /// Initializes a new instance of the <see cref="Rhd2164DataFrame"/> class.
         /// </summary>
-        /// <param name="clock">An array of <see cref="ManagedFrame{T}.FrameClock"/> values.</param>
+        /// <param name="clock">An array of <see cref="DataFrame.Clock"/> values.</param>
         /// <param name="hubClock"> An array of hub clock counter values.</param>
         /// <param name="amplifierData">An array of RHD2164 multi-channel electrophysiology data.</param>
         /// <param name="auxData">An array of RHD2164 auxiliary channel data.</param>
@@ -27,7 +27,7 @@ namespace OpenEphys.Onix
         /// </summary>
         /// <remarks>
         /// Each row corresponds to a channel. Each column corresponds to a sample whose time is indicated by
-        /// the corresponding element <see cref="Clock"/> and <see cref="HubClock"/>.
+        /// the corresponding element <see cref="DataFrame.Clock"/> and <see cref="DataFrame.HubClock"/>.
         /// </remarks>
         public Mat AmplifierData { get; }
 
@@ -36,7 +36,7 @@ namespace OpenEphys.Onix
         /// </summary>
         /// <remarks>
         /// Each row corresponds to a channel. Each column corresponds to a sample whose time is indicated by
-        /// the corresponding element <see cref="Clock"/> and <see cref="HubClock"/>.
+        /// the corresponding element <see cref="DataFrame.Clock"/> and <see cref="DataFrame.HubClock"/>.
         /// </remarks>
         public Mat AuxData { get; }
     }

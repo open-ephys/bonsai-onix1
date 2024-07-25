@@ -11,7 +11,7 @@ namespace OpenEphys.Onix
         /// <summary>
         /// Initializes a new instance of the <see cref="NeuropixelsV1eDataFrame"/> class.
         /// </summary>
-        /// <param name="clock">An array of <see cref="ManagedFrame{T}.FrameClock"/> values.</param>
+        /// <param name="clock">An array of <see cref="DataFrame.Clock"/> values.</param>
         /// <param name="hubClock">An array of hub clock counter values.</param>
         /// <param name="frameCount">An array of frame count values.</param>
         /// <param name="spikeData">An array of multi-channel spike data as a <see cref="Mat"/> object.</param>

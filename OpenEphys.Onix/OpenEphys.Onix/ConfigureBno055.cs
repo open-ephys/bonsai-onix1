@@ -25,6 +25,7 @@ namespace OpenEphys.Onix
         /// <remarks>
         /// If set to true, a <see cref="Bno055Data"/> instance that is linked to this configuration will produce data. If set to false,
         /// it will not produce data.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Specifies whether the BNO055 device is enabled.")]
         public bool Enable { get; set; } = true;
