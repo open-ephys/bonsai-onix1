@@ -25,9 +25,9 @@ namespace OpenEphys.Onix
                 var info = (NeuropixelsV2eDeviceInfo)deviceInfo;
                 var device = info.GetDeviceContext(typeof(NeuropixelsV2eBeta));
                 var passthrough = device.GetPassthroughDeviceContext(typeof(DS90UB9x));
-                var probeData = device.Context.FrameReceived.Where(frame =>
-                    frame.DeviceAddress == passthrough.Address &&
-                    NeuropixelsV2eBetaDataFrame.GetProbeIndex(frame) == (int)ProbeIndex);
+                var probeData = device.Context
+                    .GetDeviceFrames(passthrough.Address)
+                    .Where(frame => NeuropixelsV2eBetaDataFrame.GetProbeIndex(frame) == (int)ProbeIndex);
 
                 var gainCorrection = ProbeIndex switch
                 {
