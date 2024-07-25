@@ -26,6 +26,7 @@ namespace OpenEphys.Onix
         /// <remarks>
         /// If set to true, a <see cref="Rhd2164Data"/> instance that is linked to this configuration will produce data.
         /// If set to false, it will not produce data.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Specifies whether the RHD2164 device is enabled.")]
         public bool Enable { get; set; } = true;
