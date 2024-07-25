@@ -6,19 +6,19 @@ using Bonsai;
 
 namespace OpenEphys.Onix
 {
-    public class DigitalInput : Source<DigitalInputDataFrame>
+    public class BreakoutDigitalInput : Source<BreakoutDigitalInputDataFrame>
     {
-        [TypeConverter(typeof(DigitalIO.NameConverter))]
+        [TypeConverter(typeof(BreakoutDigitalIO.NameConverter))]
         public string DeviceName { get; set; }
 
-        public unsafe override IObservable<DigitalInputDataFrame> Generate()
+        public unsafe override IObservable<BreakoutDigitalInputDataFrame> Generate()
         {
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
-                var device = deviceInfo.GetDeviceContext(typeof(DigitalIO));
+                var device = deviceInfo.GetDeviceContext(typeof(BreakoutDigitalIO));
                 return deviceInfo.Context.FrameReceived
                     .Where(frame => frame.DeviceAddress == device.Address)
-                    .Select(frame => new DigitalInputDataFrame(frame));
+                    .Select(frame => new BreakoutDigitalInputDataFrame(frame));
             });
         }
     }

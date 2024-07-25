@@ -6,16 +6,16 @@ using Bonsai;
 
 namespace OpenEphys.Onix
 {
-    public class DigitalOutput : Sink<DigitalPortState>
+    public class BreakoutDigitalOutput : Sink<BreakoutDigitalPortState>
     {
-        [TypeConverter(typeof(DigitalIO.NameConverter))]
+        [TypeConverter(typeof(BreakoutDigitalIO.NameConverter))]
         public string DeviceName { get; set; }
 
-        public override IObservable<DigitalPortState> Process(IObservable<DigitalPortState> source)
+        public override IObservable<BreakoutDigitalPortState> Process(IObservable<BreakoutDigitalPortState> source)
         {
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
-                var device = deviceInfo.GetDeviceContext(typeof(DigitalIO));
+                var device = deviceInfo.GetDeviceContext(typeof(BreakoutDigitalIO));
                 return source.Do(value => device.Write((uint)value));
             });
         }
