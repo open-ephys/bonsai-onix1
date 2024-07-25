@@ -3,18 +3,39 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// Buffered data from a NeuropixelsV2e device.
+    /// </summary>
     public class NeuropixelsV2eBetaDataFrame : BufferedDataFrame
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NeuropixelsV2eDataFrame"/> class.
+        /// </summary>
+        /// <param name="clock">An array of <see cref="ManagedFrame{T}.FrameClock"/> values.</param>
+        /// <param name="hubClock">An array of hub clock counter values.</param>
+        /// <param name="amplifierData">An array of multi-channel amplifier data.</param>
+        /// <param name="frameCount">An array of frame count values.</param>
         public NeuropixelsV2eBetaDataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData, int[] frameCounter)
             : base(clock, hubClock)
         {
             AmplifierData = amplifierData;
-            FrameCounter = frameCounter;
+            FrameCount = frameCount;
         }
 
+        /// <summary>
+        /// Gets the amplifier data array.
+        /// </summary>
         public Mat AmplifierData { get; }
 
-        public int[] FrameCounter { get; }
+        /// <summary>
+        /// Gets the frame count array.
+        /// </summary>
+        /// <remarks>
+        /// Frame count is a 20-bit counter on the probe that increments its value for every frame produced.
+        /// The value ranges from 0 to 1048575 (2^20-1), and should always increment by 1 until it wraps around back to 0.
+        /// This can be used to detect dropped frames.
+        /// </remarks>
+        public int[] FrameCount { get; }
 
         internal static unsafe ushort GetProbeIndex(oni.Frame frame)
         {

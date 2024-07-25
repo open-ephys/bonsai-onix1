@@ -3,17 +3,39 @@ using System.ComponentModel;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// A class that configures a NeuropixelsV1eBno055 device.
+    /// </summary>
     public class ConfigureNeuropixelsV1eBno055 : SingleDeviceFactory
     {
+        /// <summary>
+        /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV1eBno055"/> class.
+        /// </summary>
         public ConfigureNeuropixelsV1eBno055()
             : base(typeof(NeuropixelsV1eBno055))
         {
         }
 
+        /// <summary>
+        /// Gets or sets the device enable state.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, <see cref="NeuropixelsV1eBno055Data"/> will produce data. If set to false, 
+        /// <see cref="NeuropixelsV1eBno055Data"/> will not produce data.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Specifies whether the BNO055 device is enabled.")]
         public bool Enable { get; set; } = true;
 
+        /// <summary>
+        /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
+        /// prior to data acquisition.
+        /// </summary>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> that holds all configuration actions.</param>
+        /// <returns>
+        /// The original sequence with the side effect of an additional configuration action to configure
+        /// a NeuropixelsV1eBno055 device.
+        /// </returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;

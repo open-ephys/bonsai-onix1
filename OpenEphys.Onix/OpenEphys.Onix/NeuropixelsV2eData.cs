@@ -8,15 +8,35 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// Produces a sequence of <see cref="NeuropixelsV2eDataFrame"/> from a NeuropixelsV2e headstage.
+    /// </summary>
     public class NeuropixelsV2eData : Source<NeuropixelsV2eDataFrame>
     {
+        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(NeuropixelsV2e.NameConverter))]
         public string DeviceName { get; set; }
 
+        /// <summary>
+        /// Gets or sets the buffer size.
+        /// </summary>
+        /// <remarks>
+        /// This property determines the number of super-frames that are buffered before data is propagated. A super-frame consists of 384 
+        /// channels from the spike-band and 32 channels from the LFP band. If this value is set to 30, then 30 super-frames, along with 
+        /// corresponding clock values, will be collected and packed into each <see cref="NeuropixelsV2eDataFrame"/>. Because channels are 
+        /// sampled at 30 kHz, this is equivalent to 1 millisecond of data from each channel.
+        /// </remarks>
         public int BufferSize { get; set; } = 30;
 
+        /// <summary>
+        /// Gets or sets the probe index.
+        /// </summary>
         public NeuropixelsV2Probe ProbeIndex { get; set; }
 
+        /// <summary>
+        /// Generates a sequence of <see cref="NeuropixelsV2eDataFrame"/> objects.
+        /// </summary>
+        /// <returns>A sequence of <see cref="NeuropixelsV2eDataFrame"/> objects.</returns>
         public unsafe override IObservable<NeuropixelsV2eDataFrame> Generate()
         {
             var bufferSize = BufferSize;
