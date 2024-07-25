@@ -112,10 +112,7 @@ namespace OpenEphys.Onix
         /// Gets the existing channel map listing all currently enabled electrodes.
         /// </summary>
         /// <remarks>
-        /// The channel map will always be 384 channels, and will return the 384 enabled electrodes. To update
-        /// the channel map, call <see cref="SelectElectrodes"/> with a selection
-        /// of electrodes to add to the channel map. Note that electrodes will be automatically replaced based on a combination
-        /// of their shank / block / block index, as only some combinations of channels are valid.
+        /// The channel map will always be 384 channels, and will return the 384 enabled electrodes.
         /// </remarks>
         public List<NeuropixelsV2QuadShankElectrode> ChannelMap { get; }
 
