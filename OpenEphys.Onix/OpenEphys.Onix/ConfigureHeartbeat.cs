@@ -31,12 +31,13 @@ namespace OpenEphys.Onix
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
+            var enable = Enable;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
             return source.ConfigureDevice((context, observer) =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
-                device.WriteRegister(Heartbeat.ENABLE, 1);
+                device.WriteRegister(Heartbeat.ENABLE, enable ? 1u : 0u);
                 var subscription = beatsPerSecond.SubscribeSafe(observer, newValue =>
                 {
                     var clkHz = device.ReadRegister(Heartbeat.CLK_HZ);

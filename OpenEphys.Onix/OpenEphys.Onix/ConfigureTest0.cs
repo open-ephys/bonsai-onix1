@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Xml.Serialization;
 
@@ -38,15 +39,20 @@ namespace OpenEphys.Onix
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
+            var enable = Enable;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
-            return source.ConfigureDevice(context =>
+            return source.ConfigureDevice((context, observer) =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
-                device.WriteRegister(Test0.ENABLE, Enable ? 1u : 0);
+                device.WriteRegister(Test0.ENABLE, enable ? 1u : 0);
                 FramesPerSecond = device.ReadRegister(Test0.FRAMERATE);
                 DummyCount = device.ReadRegister(Test0.NUMTESTWORDS);
-                return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
+
+                return new CompositeDisposable(
+                    DeviceManager.RegisterDevice(deviceName, device, DeviceType),
+                    message.SubscribeSafe(observer, newValue => device.WriteRegister(Test0.MESSAGE, (uint)newValue))
+                );
             });
         }
     }
