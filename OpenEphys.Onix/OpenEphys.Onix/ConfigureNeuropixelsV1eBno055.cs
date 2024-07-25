@@ -9,7 +9,7 @@ namespace OpenEphys.Onix
     public class ConfigureNeuropixelsV1eBno055 : SingleDeviceFactory
     {
         /// <summary>
-        /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV1eBno055"/> object.
+        /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV1eBno055"/> class.
         /// </summary>
         public ConfigureNeuropixelsV1eBno055()
             : base(typeof(NeuropixelsV1eBno055))
@@ -17,7 +17,7 @@ namespace OpenEphys.Onix
         }
 
         /// <summary>
-        /// Get or set the device enable state.
+        /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>
         /// If set to true, <see cref="NeuropixelsV1eBno055Data"/> will produce data. If set to false, 

@@ -12,7 +12,7 @@ namespace OpenEphys.Onix
     public class ConfigureNeuropixelsV1e : SingleDeviceFactory
     {
         /// <summary>
-        /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV1e"/> object.
+        /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV1e"/> class.
         /// </summary>
         public ConfigureNeuropixelsV1e()
             : base(typeof(NeuropixelsV1e))
@@ -20,7 +20,7 @@ namespace OpenEphys.Onix
         }
 
         /// <summary>
-        /// Get or set the device enable state.
+        /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>
         /// If set to true, <see cref="NeuropixelsV1eData"/> will produce data. If set to false, 
@@ -31,7 +31,7 @@ namespace OpenEphys.Onix
         public bool Enable { get; set; } = true;
 
         /// <summary>
-        /// Get or set the LED enable state.
+        /// Gets or sets the LED enable state.
         /// </summary>
         /// <remarks>
         /// If true, the headstage LED will turn on during data acquisition. If false, the LED will not turn on.
@@ -41,7 +41,7 @@ namespace OpenEphys.Onix
         public bool EnableLed { get; set; } = true;
 
         /// <summary>
-        /// Get or set the amplifier gain for the spike-band.
+        /// Gets or sets the amplifier gain for the spike-band.
         /// </summary>
         /// <remarks>
         /// The spike-band is from DC to 10 kHz if <see cref="SpikeFilter"/> is set to false, while the 
@@ -52,7 +52,7 @@ namespace OpenEphys.Onix
         public NeuropixelsV1Gain SpikeAmplifierGain { get; set; } = NeuropixelsV1Gain.Gain1000;
 
         /// <summary>
-        /// Get or set the amplifier gain for the LFP-band.
+        /// Gets or sets the amplifier gain for the LFP-band.
         /// </summary>
         /// <remarks>
         /// The LFP band is from 0.5 to 500 Hz.
@@ -62,7 +62,7 @@ namespace OpenEphys.Onix
         public NeuropixelsV1Gain LfpAmplifierGain { get; set; } = NeuropixelsV1Gain.Gain50;
 
         /// <summary>
-        /// Get or set the reference for all electrodes.
+        /// Gets or sets the reference for all electrodes.
         /// </summary>
         /// <remarks>
         /// All electrodes are set to the same reference, which can be either 
@@ -75,7 +75,7 @@ namespace OpenEphys.Onix
         public NeuropixelsV1ReferenceSource Reference { get; set; } = NeuropixelsV1ReferenceSource.External;
 
         /// <summary>
-        /// Get or set the state of the spike-band filter.
+        /// Gets or sets the state of the spike-band filter.
         /// </summary>
         /// <remarks>
         /// If set to true, the spike-band has a 300 Hz high-pass filter which will be activated. If set to
@@ -86,7 +86,7 @@ namespace OpenEphys.Onix
         public bool SpikeFilter { get; set; } = true;
 
         /// <summary>
-        /// Get or set the path to the gain calibration file.
+        /// Gets or sets the path to the gain calibration file.
         /// </summary>
         /// <remarks>
         /// Each probe must be provided with a gain calibration file that contains calibration data
@@ -98,7 +98,7 @@ namespace OpenEphys.Onix
         public string GainCalibrationFile { get; set; }
 
         /// <summary>
-        /// Get or set the path to the ADC calibration file.
+        /// Gets or sets the path to the ADC calibration file.
         /// </summary>
         /// <remarks>
         /// Each probe must be provided with an ADC calibration file that contains calibration data

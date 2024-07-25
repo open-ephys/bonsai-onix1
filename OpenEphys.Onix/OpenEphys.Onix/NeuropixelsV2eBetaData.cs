@@ -18,7 +18,7 @@ namespace OpenEphys.Onix
         public string DeviceName { get; set; }
 
         /// <summary>
-        /// Get or set the buffer size.
+        /// Gets or sets the buffer size.
         /// </summary>
         /// <remarks>
         /// Buffer size sets the number of frames that are buffered before propagating data.
@@ -26,7 +26,7 @@ namespace OpenEphys.Onix
         public int BufferSize { get; set; } = 30;
 
         /// <summary>
-        /// Get or set the probe index.
+        /// Gets or sets the probe index.
         /// </summary>
         public NeuropixelsV2Probe ProbeIndex { get; set; }
 

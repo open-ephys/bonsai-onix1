@@ -97,7 +97,7 @@ namespace OpenEphys.Onix
         }
 
         /// <summary>
-        /// Get or set the reference for all electrodes.
+        /// Gets or sets the reference for all electrodes.
         /// </summary>
         /// <remarks>
         /// All electrodes are set to the same reference, which can be  
@@ -109,7 +109,7 @@ namespace OpenEphys.Onix
         public NeuropixelsV2QuadShankReference Reference { get; set; } = NeuropixelsV2QuadShankReference.External;
 
         /// <summary>
-        /// Get the existing channel map listing all currently enabled electrodes.
+        /// Gets the existing channel map listing all currently enabled electrodes.
         /// </summary>
         /// <remarks>
         /// The channel map will always be 384 channels, and will return the 384 enabled electrodes. To update
@@ -140,10 +140,10 @@ namespace OpenEphys.Onix
         private int electrodeNumber = 0;
 
         /// <summary>
-        /// Get or set the electrode number.
+        /// Gets or sets the electrode number.
         /// </summary>
         /// <remarks>
-        /// When the electrode number is updated, all other variables are automatically calculated based on
+        /// When the electrode number is updated, all other properties are automatically calculated based on
         /// the number given.
         /// </remarks>
         public int ElectrodeNumber
@@ -213,7 +213,7 @@ namespace OpenEphys.Onix
         }
 
         /// <summary>
-        /// Get the channel number of this electrode.
+        /// Gets the channel number of this electrode.
         /// </summary>
         /// <remarks>
         /// Channel number is automatically calculated from the electrode number, and will be between 0 and 383.
@@ -222,7 +222,7 @@ namespace OpenEphys.Onix
         public int Channel { get; private set; } = 0;
 
         /// <summary>
-        /// Get the shank of this electrode.
+        /// Gets the shank of this electrode.
         /// </summary>
         /// <remarks>
         /// Shank is automatically determined from the electrode number, and will be between 0 and 3.
@@ -231,7 +231,7 @@ namespace OpenEphys.Onix
         public int Shank { get; private set; } = 0;
 
         /// <summary>
-        /// Get the index of the shank of this electrode.
+        /// Gets the index of the shank of this electrode.
         /// </summary>
         /// <remarks>
         /// Shank index is automatically determined from the electrode number, and will be between 0 and 1279.
@@ -240,7 +240,7 @@ namespace OpenEphys.Onix
         public int IntraShankElectrodeIndex { get; private set; } = 0;
 
         /// <summary>
-        /// Get the <see cref="NeuropixelsV2QuadShankBank"/> of this electrode.
+        /// Gets the <see cref="NeuropixelsV2QuadShankBank"/> of this electrode.
         /// </summary>
         /// <remarks>
         /// The bank is automatically determined from the electrode number, and corresponds to one of four logical
@@ -250,7 +250,7 @@ namespace OpenEphys.Onix
         public NeuropixelsV2QuadShankBank Bank { get; private set; } = NeuropixelsV2QuadShankBank.A;
 
         /// <summary>
-        /// Get the position of the electrode in relation to the probe.
+        /// Gets the position of the electrode in relation to the probe.
         /// </summary>
         [XmlIgnore]
         public PointF Position { get; private set; } = new(0f, 0f);

@@ -11,7 +11,7 @@ namespace OpenEphys.Onix
     public class ConfigureNeuropixelsV2eBeta : SingleDeviceFactory
     {
         /// <summary>
-        /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV2eBeta"/> object.
+        /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV2eBeta"/> class.
         /// </summary>
         public ConfigureNeuropixelsV2eBeta()
             : base(typeof(NeuropixelsV2eBeta))
@@ -19,7 +19,7 @@ namespace OpenEphys.Onix
         }
 
         /// <summary>
-        /// Get or set the device enable state.
+        /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>
         /// If set to true, <see cref="NeuropixelsV2eBetaData"/> will produce data. If set to false, 
@@ -30,7 +30,7 @@ namespace OpenEphys.Onix
         public bool Enable { get; set; } = true;
 
         /// <summary>
-        /// Get or set the LED enable state.
+        /// Gets or sets the LED enable state.
         /// </summary>
         /// <remarks>
         /// If true, the headstage LED will turn on during data acquisition. If false, the LED will not turn on.
@@ -40,14 +40,14 @@ namespace OpenEphys.Onix
         public bool EnableLed { get; set; } = true;
 
         /// <summary>
-        /// Get or set the electrode configuration for Probe A.
+        /// Gets or sets the electrode configuration for Probe A.
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Probe A electrode configuration.")]
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration();
 
         /// <summary>
-        /// Get or set the path to the gain calibration file for Probe A.
+        /// Gets or sets the path to the gain calibration file for Probe A.
         /// </summary>
         /// <remarks>
         /// Each probe must be provided with a gain calibration file that contains calibration data
@@ -59,14 +59,14 @@ namespace OpenEphys.Onix
         public string GainCalibrationFileA { get; set; }
 
         /// <summary>
-        /// Get or set the electrode configuration for Probe B.
+        /// Gets or sets the electrode configuration for Probe B.
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Probe B electrode configuration.")]
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration();
 
         /// <summary>
-        /// Get or set the path to the gain calibration file for Probe B.
+        /// Gets or sets the path to the gain calibration file for Probe B.
         /// </summary>
         /// <remarks>
         /// Each probe must be provided with a gain calibration file that contains calibration data

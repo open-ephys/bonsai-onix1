@@ -20,7 +20,7 @@ namespace OpenEphys.Onix
         int bufferSize = 36;
 
         /// <summary>
-        /// Get or set the buffer size.
+        /// Gets or sets the buffer size.
         /// </summary>
         /// <remarks>
         /// Buffer size sets the number of super frames that are buffered before propagating data.

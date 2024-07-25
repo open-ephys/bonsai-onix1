@@ -11,10 +11,10 @@ namespace OpenEphys.Onix
         /// <summary>
         /// Initializes a new instance of the <see cref="NeuropixelsV2eDataFrame"/> class.
         /// </summary>
-        /// <param name="clock">A buffered array of <see cref="ManagedFrame{T}.FrameClock"/> values.</param>
-        /// <param name="hubClock">A buffered array of hub clock counter values.</param>
-        /// <param name="amplifierData">A buffered array of multi-channel amplifier data.</param>
-        /// <param name="frameCount">A buffered array of frame count values.</param>
+        /// <param name="clock">An array of <see cref="ManagedFrame{T}.FrameClock"/> values.</param>
+        /// <param name="hubClock">An array of hub clock counter values.</param>
+        /// <param name="amplifierData">An array of multi-channel amplifier data.</param>
+        /// <param name="frameCount">An array of frame count values.</param>
         public NeuropixelsV2eBetaDataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData, int[] frameCount)
         {
             Clock = clock;
@@ -27,17 +27,17 @@ namespace OpenEphys.Onix
         public ulong[] Clock { get; }
 
         /// <summary>
-        /// Get the possibly asynchronous local clock counter.
+        /// Gets the possibly asynchronous local clock counter array.
         /// </summary>
         public ulong[] HubClock { get; }
 
         /// <summary>
-        /// Get the buffered amplifier data as a <see cref="Mat"/> object.
+        /// Gets the amplifier data array.
         /// </summary>
         public Mat AmplifierData { get; }
 
         /// <summary>
-        /// Get buffered frame count values.
+        /// Gets the frame count array.
         /// </summary>
         /// <remarks>
         /// Frame count is a 20-bit counter on the probe that increments its value for every frame produced.

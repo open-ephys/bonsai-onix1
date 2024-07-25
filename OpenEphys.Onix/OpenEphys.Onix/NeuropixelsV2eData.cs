@@ -18,15 +18,18 @@ namespace OpenEphys.Onix
         public string DeviceName { get; set; }
 
         /// <summary>
-        /// Get or set the buffer size.
+        /// Gets or sets the buffer size.
         /// </summary>
         /// <remarks>
-        /// Buffer size sets the number of frames that are buffered before propagating data.
+        /// This property determines the number of super-frames that are buffered before data is propagated. A super-frame consists of 384 
+        /// channels from the spike-band and 32 channels from the LFP band. If this value is set to 30, then 30 super-frames, along with 
+        /// corresponding clock values, will be collected and packed into each <see cref="NeuropixelsV2eDataFrame"/>. Because channels are 
+        /// sampled at 30 kHz, this is equivalent to 1 millisecond of data from each channel.
         /// </remarks>
         public int BufferSize { get; set; } = 30;
 
         /// <summary>
-        /// Get or set the probe index.
+        /// Gets or sets the probe index.
         /// </summary>
         public NeuropixelsV2Probe ProbeIndex { get; set; }
 

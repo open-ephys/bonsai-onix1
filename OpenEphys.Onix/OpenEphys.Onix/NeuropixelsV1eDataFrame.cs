@@ -11,11 +11,11 @@ namespace OpenEphys.Onix
         /// <summary>
         /// Initializes a new instance of the <see cref="NeuropixelsV1eDataFrame"/> class.
         /// </summary>
-        /// <param name="clock">A buffered array of <see cref="ManagedFrame{T}.FrameClock"/> values.</param>
-        /// <param name="hubClock">A buffered array of hub clock counter values.</param>
-        /// <param name="frameCount">A buffered array of frame count values.</param>
-        /// <param name="spikeData">A buffered array of multi-channel spike data as a <see cref="Mat"/> object.</param>
-        /// <param name="lfpData">A buffered array of multi-channel LFP data as a <see cref="Mat"/> object.</param>
+        /// <param name="clock">An array of <see cref="ManagedFrame{T}.FrameClock"/> values.</param>
+        /// <param name="hubClock">An array of hub clock counter values.</param>
+        /// <param name="frameCount">An array of frame count values.</param>
+        /// <param name="spikeData">An array of multi-channel spike data as a <see cref="Mat"/> object.</param>
+        /// <param name="lfpData">An array of multi-channel LFP data as a <see cref="Mat"/> object.</param>
         public NeuropixelsV1eDataFrame(ulong[] clock, ulong[] hubClock, int[] frameCount, Mat spikeData, Mat lfpData)
         {
             Clock = clock;
@@ -29,12 +29,12 @@ namespace OpenEphys.Onix
         public ulong[] Clock { get; }
 
         /// <summary>
-        /// Get the possibly asynchronous local clock counter.
+        /// Gets the possibly asynchronous local clock counter array.
         /// </summary>
         public ulong[] HubClock { get; }
 
         /// <summary>
-        /// Get buffered frame count values.
+        /// Gets the frame count value array.
         /// </summary>
         /// <remarks>
         /// Frame count is a 20-bit counter on the probe that increments its value for every frame produced.
@@ -44,13 +44,21 @@ namespace OpenEphys.Onix
         public int[] FrameCount { get; }
 
         /// <summary>
-        /// Get the spike-band data as a <see cref="Mat"/> object.
+        /// Gets the spike-band data as a <see cref="Mat"/> object.
         /// </summary>
+        /// <remarks>
+        /// Spike-band data has 384 rows (channels) with columns representing the samples acquired at 30 kHz. Each sample is a
+        /// 10-bit offset binary encoded as an unsigned short value.
+        /// </remarks>
         public Mat SpikeData { get; }
 
         /// <summary>
-        /// Get the LFP band data as a <see cref="Mat"/> object.
+        /// Gets the LFP band data as a <see cref="Mat"/> object.
         /// </summary>
+        /// <remarks>
+        /// LFP data has 32 rows (channels) with columns representing the samples acquired at 2.5 kHz. Each sample is a
+        /// 10-bit offset binary encoded as an unsigned short value.
+        /// </remarks>
         public Mat LfpData { get; }
 
         internal static unsafe void CopyAmplifierBuffer(ushort* amplifierData, int[] frameCountBuffer, ushort[,] spikeBuffer, ushort[,] lfpBuffer, int index, double apGainCorrection, double lfpGainCorrection, ushort[] thresholds, ushort[] offsets)

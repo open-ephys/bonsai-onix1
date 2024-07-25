@@ -21,8 +21,7 @@ namespace OpenEphys.Onix
         /// </summary>
         /// <returns>A sequence of <see cref="Bno055DataFrame"/> objects.</returns>
         /// <remarks>
-        /// If no input is given to the <see cref="NeuropixelsV1eBno055Data"/> object, then it will
-        /// generate a sequence of <see cref="Bno055DataFrame"/> objects at approximately 100 Hz. This rate
+        /// This will generate a sequence of <see cref="Bno055DataFrame"/> objects at approximately 100 Hz. This rate
         /// may be limited by the I2C bus.
         /// </remarks>
         public override IObservable<Bno055DataFrame> Generate()

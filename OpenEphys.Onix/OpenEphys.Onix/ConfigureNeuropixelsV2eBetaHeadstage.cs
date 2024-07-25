@@ -12,7 +12,7 @@ namespace OpenEphys.Onix
         readonly ConfigureNeuropixelsV2eLinkController LinkController = new();
 
         /// <summary>
-        /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV2eBetaHeadstage"/> object.
+        /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV2eBetaHeadstage"/> class.
         /// </summary>
         public ConfigureNeuropixelsV2eBetaHeadstage()
         {
@@ -21,21 +21,21 @@ namespace OpenEphys.Onix
         }
 
         /// <summary>
-        /// Get or set a <see cref="ConfigureNeuropixelsV2eBeta"/> object.
+        /// Gets or sets a <see cref="ConfigureNeuropixelsV2eBeta"/> object.
         /// </summary>
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
         public ConfigureNeuropixelsV2eBeta NeuropixelsV2Beta { get; set; } = new();
 
         /// <summary>
-        /// Get or set a <see cref="ConfigureNeuropixelsV2eBno055"/> object.
+        /// Gets or sets a <see cref="ConfigureNeuropixelsV2eBno055"/> object.
         /// </summary>
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
         public ConfigureNeuropixelsV2eBno055 Bno055 { get; set; } = new();
 
         /// <summary>
-        /// Get or set the <see cref="PortName"/>.
+        /// Gets or sets the <see cref="PortName"/>.
         /// </summary>
         /// <remarks>
         /// The port is the physical connection on the breakout board.
@@ -54,7 +54,7 @@ namespace OpenEphys.Onix
         }
 
         /// <summary>
-        /// Get or set the port voltage.
+        /// Gets or sets the port voltage.
         /// </summary>
         /// <remarks>
         /// If a port voltage is defined this will override the automated voltage discovery and applies
