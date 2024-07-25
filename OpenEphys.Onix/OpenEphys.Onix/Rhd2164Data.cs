@@ -11,11 +11,11 @@ namespace OpenEphys.Onix
 {
     /// <summary>
     /// A class that produces a sequence of RHD2164 data frames.
+    /// </summary>
     /// <remarks>
     /// This data stream class must be linked to an appropriate configuration, such as a <see cref="ConfigureRhd2164"/>,
     /// in order to stream electrophysiology data.
     /// </remarks>
-    /// </summary>
     public class Rhd2164Data : Source<Rhd2164DataFrame>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
