@@ -3,29 +3,64 @@ using System.ComponentModel;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// A class for configuring an Intan RHD2164 bioamplifier chip.
+    /// <remarks>
+    /// This configuration class can be linked to a <see cref="Rhd2164Data"/> instance to stream
+    /// electrophysiology data from the chip.
+    /// </remarks>
+    /// </summary>
     public class ConfigureRhd2164 : SingleDeviceFactory
     {
+        /// <summary>
+        /// Initializes and new instance of the <see cref="ConfigureRhd2164"/> class.
+        /// </summary>
         public ConfigureRhd2164()
             : base(typeof(Rhd2164))
         {
         }
 
+        /// <summary>
+        /// Get or set the device enable state.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, a <see cref="Rhd2164Data"/> instance that is linked to this configuration will produce data.
+        /// If set to false, it will not produce data.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Specifies whether the RHD2164 device is enabled.")]
         public bool Enable { get; set; } = true;
 
+        /// <summary>
+        /// Gets or sets the cutoff frequency for the digital (post-ADC) high-pass filter used for amplifier offset removal.
+        /// </summary>
         [Category(ConfigurationCategory)]
-        [Description("Specifies the cutoff frequency for the DSP high-pass filter used for amplifier offset removal.")]
+        [Description("Specifies the cutoff frequency for the digital (post-ADC) high-pass filter used for amplifier offset removal.")]
         public Rhd2164DspCutoff DspCutoff { get; set; } = Rhd2164DspCutoff.Dsp146mHz;
 
+        /// <summary>
+        /// Gets or sets the low cutoff frequency of the analog (pre-ADC) bandpass filter.
+        /// </summary>
         [Category(ConfigurationCategory)]
-        [Description("Specifies the lower cutoff frequency of the pre-ADC amplifiers.")]
+        [Description("Specifies the low cutoff frequency of the analog (pre-ADC) bandpass filter.")]
         public Rhd2164AnalogLowCutoff AnalogLowCutoff { get; set; } = Rhd2164AnalogLowCutoff.Low100mHz;
 
+        /// <summary>
+        /// Gets or sets the high cutoff frequency of the analog (pre-ADC) bandpass filter.
+        /// </summary>
         [Category(ConfigurationCategory)]
-        [Description("Specifies the upper cutoff frequency of the pre-ADC amplifiers.")]
+        [Description("Specifies the high cutoff frequency of the analog (pre-ADC) bandpass filter.")]
         public Rhd2164AnalogHighCutoff AnalogHighCutoff { get; set; } = Rhd2164AnalogHighCutoff.High10000Hz;
 
+        /// <summary>
+        /// Configure a RHD2164 device.
+        /// </summary>
+        /// <remarks>
+        /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance
+        /// prior to data acquisition.
+        /// </remarks>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that holds configuration actions.</param>
+        /// <returns>The original sequence modified by adding additional configuration actions required to configure a RHD2164 device./></returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;
@@ -52,8 +87,8 @@ namespace OpenEphys.Onix
                     format |= (uint)dspCutoff;
                 }
 
-                var highCutoff = Rhd2164Config.AnalogHighCutoffToRegisters[AnalogHighCutoff];
-                var lowCutoff = Rhd2164Config.AnalogLowCutoffToRegisters[AnalogLowCutoff];
+                var highCutoff = Rhd2164Config.ToHighCutoffToRegisters(AnalogHighCutoff);
+                var lowCutoff = Rhd2164Config.ToLowCutoffToRegisters(AnalogLowCutoff);
                 var bw0 = device.ReadRegister(Rhd2164.BW0);
                 var bw1 = device.ReadRegister(Rhd2164.BW1);
                 var bw2 = device.ReadRegister(Rhd2164.BW2);
