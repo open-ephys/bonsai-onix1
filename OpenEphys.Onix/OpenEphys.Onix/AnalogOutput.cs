@@ -19,58 +19,56 @@ namespace OpenEphys.Onix
         public override IObservable<Mat> Process(IObservable<Mat> source)
         {
             var dataType = DataType;
-            return Observable.Using(
-                () => DeviceManager.ReserveDevice(DeviceName),
-                disposable => disposable.Subject.SelectMany(deviceInfo =>
+            return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
+            {
+                var bufferSize = 0;
+                var scaleBuffer = default(Mat);
+                var transposeBuffer = default(Mat);
+                var sampleScale = dataType == AnalogIODataType.Volts
+                    ? 1 / AnalogIODeviceInfo.GetVoltsPerDivision(OutputRange)
+                    : 1;
+                var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));
+                return source.Do(data =>
                 {
-                    var bufferSize = 0;
-                    var scaleBuffer = default(Mat);
-                    var transposeBuffer = default(Mat);
-                    var sampleScale = dataType == AnalogIODataType.Volts
-                        ? 1 / AnalogIODeviceInfo.GetVoltsPerDivision(OutputRange)
-                        : 1;
-                    var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));
-                    return source.Do(data =>
+                    if (dataType == AnalogIODataType.S16 && data.Depth != Depth.S16 ||
+                        dataType == AnalogIODataType.Volts && data.Depth != Depth.F32)
                     {
-                        if (dataType == AnalogIODataType.S16 && data.Depth != Depth.S16 ||
-                            dataType == AnalogIODataType.Volts && data.Depth != Depth.F32)
-                        {
-                            ThrowDataTypeException(data.Depth);
-                        }
+                        ThrowDataTypeException(data.Depth);
+                    }
 
-                        AssertChannelCount(data.Rows);
-                        if (bufferSize != data.Cols)
+                    AssertChannelCount(data.Rows);
+                    if (bufferSize != data.Cols)
+                    {
+                        bufferSize = data.Cols;
+                        transposeBuffer = bufferSize > 1
+                            ? new Mat(data.Cols, data.Rows, data.Depth, 1)
+                            : null;
+                        if (sampleScale != 1)
                         {
-                            bufferSize = data.Cols;
-                            transposeBuffer = bufferSize > 1
-                                ? new Mat(data.Cols, data.Rows, data.Depth, 1)
-                                : null;
-                            if (sampleScale != 1)
-                            {
-                                scaleBuffer = transposeBuffer != null
-                                    ? new Mat(data.Cols, data.Rows, Depth.S16, 1)
-                                    : new Mat(data.Rows, data.Cols, Depth.S16, 1);
-                            }
-                            else scaleBuffer = null;
+                            scaleBuffer = transposeBuffer != null
+                                ? new Mat(data.Cols, data.Rows, Depth.S16, 1)
+                                : new Mat(data.Rows, data.Cols, Depth.S16, 1);
                         }
+                        else scaleBuffer = null;
+                    }
 
-                        var outputBuffer = data;
-                        if (transposeBuffer != null)
-                        {
-                            CV.Transpose(outputBuffer, transposeBuffer);
-                            outputBuffer = transposeBuffer;
-                        }
+                    var outputBuffer = data;
+                    if (transposeBuffer != null)
+                    {
+                        CV.Transpose(outputBuffer, transposeBuffer);
+                        outputBuffer = transposeBuffer;
+                    }
 
-                        if (scaleBuffer != null)
-                        {
-                            CV.ConvertScale(outputBuffer, scaleBuffer, sampleScale);
-                            outputBuffer = scaleBuffer;
-                        }
+                    if (scaleBuffer != null)
+                    {
+                        CV.ConvertScale(outputBuffer, scaleBuffer, sampleScale);
+                        outputBuffer = scaleBuffer;
+                    }
 
-                        var dataSize = outputBuffer.Step * outputBuffer.Rows;
-                        device.Write(outputBuffer.Data, dataSize);
-                    });
-                }));
+                    var dataSize = outputBuffer.Step * outputBuffer.Rows;
+                    device.Write(outputBuffer.Data, dataSize);
+                });
+            });
         }
 
         public IObservable<short[]> Process(IObservable<short[]> source)
@@ -78,17 +76,15 @@ namespace OpenEphys.Onix
             if (DataType != AnalogIODataType.S16)
                 ThrowDataTypeException(Depth.S16);
 
-            return Observable.Using(
-                () => DeviceManager.ReserveDevice(DeviceName),
-                disposable => disposable.Subject.SelectMany(deviceInfo =>
+            return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
+            {
+                var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));
+                return source.Do(data =>
                 {
-                    var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));
-                    return source.Do(data =>
-                    {
-                        AssertChannelCount(data.Length);
-                        device.Write(data);
-                    });
-                }));
+                    AssertChannelCount(data.Length);
+                    device.Write(data);
+                });
+            });
         }
 
         public IObservable<float[]> Process(IObservable<float[]> source)
@@ -96,24 +92,22 @@ namespace OpenEphys.Onix
             if (DataType != AnalogIODataType.Volts)
                 ThrowDataTypeException(Depth.F32);
 
-            return Observable.Using(
-                () => DeviceManager.ReserveDevice(DeviceName),
-                disposable => disposable.Subject.SelectMany(deviceInfo =>
+            return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
+            {
+                var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));
+                var divisionsPerVolt = 1 / AnalogIODeviceInfo.GetVoltsPerDivision(OutputRange);
+                return source.Do(data =>
                 {
-                    var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));
-                    var divisionsPerVolt = 1 / AnalogIODeviceInfo.GetVoltsPerDivision(OutputRange);
-                    return source.Do(data =>
+                    AssertChannelCount(data.Length);
+                    var samples = new short[data.Length];
+                    for (int i = 0; i < samples.Length; i++)
                     {
-                        AssertChannelCount(data.Length);
-                        var samples = new short[data.Length];
-                        for (int i = 0; i < samples.Length; i++)
-                        {
-                            samples[i] = (short)(data[i] * divisionsPerVolt);
-                        }
+                        samples[i] = (short)(data[i] * divisionsPerVolt);
+                    }
 
-                        device.Write(samples);
-                    });
-                }));
+                    device.Write(samples);
+                });
+            });
         }
 
         static void AssertChannelCount(int channels)

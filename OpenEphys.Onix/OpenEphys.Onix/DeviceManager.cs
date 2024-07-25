@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
 namespace OpenEphys.Onix
 {
     class DeviceManager
     {
-        static readonly Dictionary<string, ResourceHandle> deviceMap = new();
+        static readonly Dictionary<string, DeviceDisposable> deviceMap = new();
         static readonly object managerLock = new();
 
         internal static IDisposable RegisterDevice(string name, DeviceContext device, Type deviceType)
@@ -20,15 +21,8 @@ namespace OpenEphys.Onix
         {
             lock (managerLock)
             {
-                var disposable = ReserveDevice(name);
+                var disposable = RegisterDevice(name);
                 var subject = disposable.Subject;
-                if (subject.IsCompleted)
-                {
-                    throw new ArgumentException(
-                        $"A device with the same name '{name}' has already been configured.",
-                        nameof(name)
-                    );
-                }
 
                 foreach (var entry in deviceMap)
                 {
@@ -55,35 +49,48 @@ namespace OpenEphys.Onix
             }
         }
 
-        internal static DeviceDisposable ReserveDevice(string name)
+        static DeviceDisposable RegisterDevice(string name)
         {
             lock (managerLock)
             {
-                if (!deviceMap.TryGetValue(name, out var resourceHandle))
+                if (deviceMap.ContainsKey(name))
                 {
-                    var subject = new AsyncSubject<DeviceInfo>();
-                    var dispose = Disposable.Create(() =>
-                    {
-                        subject.Dispose();
-                        deviceMap.Remove(name);
-                    });
-
-                    resourceHandle.Subject = subject;
-                    resourceHandle.RefCount = new RefCountDisposable(dispose);
-                    deviceMap.Add(name, resourceHandle);
-                    return new DeviceDisposable(subject, resourceHandle.RefCount);
+                    throw new ArgumentException(
+                        $"A device with the same name '{name}' has already been configured.",
+                        nameof(name)
+                    );
                 }
 
-                return new DeviceDisposable(
-                    resourceHandle.Subject,
-                    resourceHandle.RefCount.GetDisposable());
+                var subject = new AsyncSubject<DeviceInfo>();
+                var dispose = Disposable.Create(() =>
+                {
+                    subject.Dispose();
+                    deviceMap.Remove(name);
+                });
+
+                var deviceDisposable = new DeviceDisposable(subject, dispose);
+                deviceMap.Add(name, deviceDisposable);
+                return deviceDisposable;
             }
         }
 
-        struct ResourceHandle
+        internal static IObservable<DeviceInfo> GetDevice(string name)
         {
-            public AsyncSubject<DeviceInfo> Subject;
-            public RefCountDisposable RefCount;
+            return Observable.Create<DeviceInfo>(observer =>
+            {
+                lock (managerLock)
+                {
+                    if (!deviceMap.TryGetValue(name, out var deviceDisposable))
+                    {
+                        throw new ArgumentException(
+                            $"No device with the specified name '{name}' has been configured.",
+                            nameof(name)
+                        );
+                    }
+
+                    return deviceDisposable.Subject.SubscribeSafe(observer);
+                }
+            });
         }
 
         internal sealed class DeviceDisposable : IDisposable

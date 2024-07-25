@@ -24,10 +24,8 @@ namespace OpenEphys.Onix
         {
             var bufferSize = BufferSize; // TODO: Branch for bufferSize = 1?
 
-            return Observable.Using(
-                () => DeviceManager.ReserveDevice(DeviceName),
-                disposable => disposable.Subject.SelectMany(deviceInfo =>
-                Observable.Create<Test0DataFrame>(observer =>
+            return DeviceManager.GetDevice(DeviceName).SelectMany(
+                deviceInfo => Observable.Create<Test0DataFrame>(observer =>
                 {
                     // Find number of dummy words in the frame
                     var device = deviceInfo.GetDeviceContext(typeof(Test0));
@@ -63,7 +61,7 @@ namespace OpenEphys.Onix
                     return deviceInfo.Context.FrameReceived
                         .Where(frame => frame.DeviceAddress == device.Address)
                         .SubscribeSafe(frameObserver);
-                })));
+                }));
         }
     }
 }

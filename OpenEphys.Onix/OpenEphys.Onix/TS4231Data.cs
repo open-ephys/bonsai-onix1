@@ -13,15 +13,13 @@ namespace OpenEphys.Onix
 
         public override IObservable<TS4231DataFrame> Generate()
         {
-            return Observable.Using(
-                () => DeviceManager.ReserveDevice(DeviceName),
-                disposable => disposable.Subject.SelectMany(deviceInfo =>
-                {
-                    var device = deviceInfo.GetDeviceContext(typeof(TS4231));
-                    return deviceInfo.Context.FrameReceived
-                        .Where(frame => frame.DeviceAddress == device.Address)
-                        .Select(frame => new TS4231DataFrame(frame));
-                }));
+            return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
+            {
+                var device = deviceInfo.GetDeviceContext(typeof(TS4231));
+                return deviceInfo.Context.FrameReceived
+                    .Where(frame => frame.DeviceAddress == device.Address)
+                    .Select(frame => new TS4231DataFrame(frame));
+            });
         }
     }
 }
