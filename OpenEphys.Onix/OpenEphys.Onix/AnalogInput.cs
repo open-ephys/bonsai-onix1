@@ -4,22 +4,51 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.Remoting.Channels;
 using Bonsai;
+using Bonsai.Reactive;
 using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// Produces a sequence of analog input frames from an ONIX breakout board.
+    /// </summary>
     public class AnalogInput : Source<AnalogInputDataFrame>
     {
+
+        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(AnalogIO.NameConverter))]
         public string DeviceName { get; set; }
 
+        /// <summary>
+        /// Gets or sets the number of samples collected for each channel that are use to create a single <see cref="AnalogInputDataFrame"/>.
+        /// </summary>
+        /// <remarks>
+        /// This property determines the number of analog samples that are buffered for each channel before data is propagated. For instance, if this
+        /// value is set to 100, then 100 samples, along with corresponding clock values, will be collected from each of the input channels
+        /// and packed into each <see cref="AnalogInputDataFrame"/>. Because channels are sampled at 100 kHz, this is equivalent to 1
+        /// millisecond of data from each channel.
+        /// </remarks>
+        [Description("The number of analog samples that are buffered for each channel before data is propagated.")]
         public int BufferSize { get; set; } = 100;
 
+        /// <summary>
+        /// Gets or sets the data type used to represent analog samples.
+        /// </summary>
+        /// <remarks>
+        /// If <see cref="AnalogIODataType.S16"/> is selected, each ADC sample is represented at a signed, twos-complement encoded
+        /// 16-bit integer. <see cref="AnalogIODataType.S16"/> samples can be converted to a voltage using each channels'
+        /// <see cref="AnalogIOVoltageRange"/> selection. For instance, channel 0 can be converted using <see cref="ConfigureAnalogIO.InputRange0"/>.
+        /// When <see cref="AnalogIODataType.Volts"/> is selected, the voltage conversion is performed automatically and samples
+        /// are represented as 32-bit floating point voltages.
+        /// </remarks>
+        [Description("The data type used to represent analog samples.")]
         public AnalogIODataType DataType { get; set; } = AnalogIODataType.S16;
 
         static Mat CreateVoltageScale(int bufferSize, float[] voltsPerDivision)
         {
+
             using var scaleHeader = Mat.CreateMatHeader(
                 voltsPerDivision,
                 rows: voltsPerDivision.Length,
@@ -31,6 +60,10 @@ namespace OpenEphys.Onix
             return voltageScale;
         }
 
+        /// <summary>
+        /// Generates a sequence of <see cref="AnalogInputDataFrame"/>.
+        /// </summary>
+        /// <returns>A sequence of <see cref="AnalogInputDataFrame"/></returns>
         public unsafe override IObservable<AnalogInputDataFrame> Generate()
         {
             var bufferSize = BufferSize;
