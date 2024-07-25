@@ -19,6 +19,11 @@ namespace OpenEphys.Onix
 
         internal static IDisposable RegisterDevice(string name, DeviceInfo deviceInfo)
         {
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentException("A valid device name must be specified.", nameof(name));
+            }
+
             lock (managerLock)
             {
                 var disposable = RegisterDevice(name);
@@ -76,6 +81,11 @@ namespace OpenEphys.Onix
 
         internal static IObservable<DeviceInfo> GetDevice(string name)
         {
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentException("A valid device name must be specified.", nameof(name));
+            }
+
             return Observable.Create<DeviceInfo>(observer =>
             {
                 lock (managerLock)
