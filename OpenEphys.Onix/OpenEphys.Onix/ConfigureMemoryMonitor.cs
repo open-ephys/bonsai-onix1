@@ -4,23 +4,60 @@ using Bonsai;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// A class for configuring a hardware memory monitor.
+    /// </summary>
+    /// <remarks>
+    /// The memory monitor produces periodic snapshots of the system's first in, first out (FIFO) data buffer.
+    /// This can be useful for:
+    /// <list type="bullet">
+    /// <item><description>Ensuring that data is being read by the host PC quickly enough to prevent real-time delays or overflows.
+    /// In the case that the PC is not keeping up with data collection, FIFO memory use will increase monotonically.</description></item>
+    /// <item><description>Tuning the value of <see cref="StartAcquisition.ReadSize"/> to optimize real-time performance.
+    /// For optimal real-time performance, <see cref="StartAcquisition.ReadSize"/> should be as small as possible and the FIFO should be bypassed
+    /// (memory usage should remain at 0). However, these requirements are in conflict. The memory monitor provides a way to find the minimal value of
+    /// value of <see cref="StartAcquisition.ReadSize"/> that does not result in excessive FIFO data buffering. This tradeoff will depend on the
+    /// bandwidth of data being acquired, the performance of the host PC, and downstream real-time processing.</description></item>
+    /// </list>
+    /// </remarks>
     public class ConfigureMemoryMonitor : SingleDeviceFactory
     {
+        /// <summary>
+        /// Initialize a new instance of <see cref="ConfigureMemoryMonitor"/>.
+        /// </summary>
         public ConfigureMemoryMonitor()
             : base(typeof(MemoryMonitor))
         {
             DeviceAddress = 10;
         }
 
+        /// <summary>
+        /// Get or set the device enable state.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, <see cref="MemoryMonitorData"/> will produce data. If set to false, <see cref="MemoryMonitorData"/> will not produce data.
+        /// </remarks>
         [Category(ConfigurationCategory)]
-        [Description("Specifies whether the monitor device is enabled.")]
+        [Description("Specifies whether the memory monitor device is enabled.")]
         public bool Enable { get; set; } = false;
 
+        /// <summary>
+        /// Get or set the frequency at which memory use is recorded in Hz.
+        /// </summary>
         [Range(1, 1000)]
         [Category(ConfigurationCategory)]
-        [Description("Frequency at which hardware memory use is recorded (Hz).")]
+        [Description("Frequency at which memory use is recorded (Hz).")]
         public uint SamplesPerSecond { get; set; } = 10;
 
+        /// <summary>
+        /// Configure a memory monitor device.
+        /// </summary>
+        /// <remarks>
+        /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance
+        /// prior to data acquisition.
+        /// </remarks>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that holds configuration actions.</param>
+        /// <returns>The original sequence modified by adding additional configuration actions required to configure a memory monitor device./></returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var deviceName = DeviceName;
