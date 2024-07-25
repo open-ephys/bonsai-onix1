@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace OpenEphys.Onix
 {
-    public class Bno055DataFrame
+    public class Bno055DataFrame : DataFrame
     {
         public unsafe Bno055DataFrame(oni.Frame frame)
             : this(frame.Clock, (Bno055Payload*)frame.Data.ToPointer())
@@ -18,8 +18,8 @@ namespace OpenEphys.Onix
         }
 
         internal unsafe Bno055DataFrame(ulong clock, Bno055DataPayload* payload)
+            : base(clock)
         {
-            Clock = clock;
             EulerAngle = new Vector3(
                 x: Bno055.EulerAngleScale * payload->EulerAngle[0],
                 y: Bno055.EulerAngleScale * payload->EulerAngle[1],
@@ -40,10 +40,6 @@ namespace OpenEphys.Onix
             Temperature = payload->Temperature;
             Calibration = payload->Calibration;
         }
-
-        public ulong Clock { get; }
-
-        public ulong HubClock { get; }
 
         public Vector3 EulerAngle { get; }
 

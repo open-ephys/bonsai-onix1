@@ -3,19 +3,14 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
-    public class Test0DataFrame
+    public class Test0DataFrame : BufferedDataFrame
     {
         public Test0DataFrame(ulong[] clock, ulong[] hubClock, Mat message, Mat dummy)
+            : base(clock, hubClock)
         {
-            Clock = clock;
-            HubClock = hubClock;
             Message = message;
             Dummy = dummy;
         }
-
-        public ulong[] Clock { get; }
-
-        public ulong[] HubClock { get; }
 
         public Mat Message { get; }
 

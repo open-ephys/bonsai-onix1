@@ -3,19 +3,14 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
-    public class Rhd2164DataFrame
+    public class Rhd2164DataFrame : BufferedDataFrame
     {
         public Rhd2164DataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData, Mat auxData)
+            : base(clock, hubClock)
         {
-            Clock = clock;
-            HubClock = hubClock;
             AmplifierData = amplifierData;
             AuxData = auxData;
         }
-
-        public ulong[] Clock { get; }
-
-        public ulong[] HubClock { get; }
 
         public Mat AmplifierData { get; }
 

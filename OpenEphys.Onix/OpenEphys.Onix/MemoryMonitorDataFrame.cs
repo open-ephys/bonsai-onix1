@@ -1,27 +1,17 @@
 ﻿using System.Runtime.InteropServices;
-using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
-    public class MemoryUsageDataFrame 
+    public class MemoryMonitorDataFrame : DataFrame
     {
-        public unsafe MemoryUsageDataFrame(oni.Frame frame, uint totalMemory) 
+        public unsafe MemoryMonitorDataFrame(oni.Frame frame, uint totalMemory)
+            : base(frame.Clock)
         {
             var payload = (MemoryUsagePayload*)frame.Data.ToPointer();
-
-            FrameClock = frame.Clock;
-            DeviceAddress = frame.DeviceAddress;
             HubClock = payload->HubClock;
             PercentUsed = 100.0 * payload->Usage / totalMemory;
             BytesUsed = payload->Usage * 4;
-
         }
-
-        public ulong FrameClock { get; private set; }
-
-        public uint DeviceAddress { get; private set; }
-
-        public ulong HubClock { get; }
 
         public double PercentUsed { get; }
 

@@ -3,18 +3,13 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
-    public class AnalogInputDataFrame
+    public class AnalogInputDataFrame : BufferedDataFrame
     {
-        public AnalogInputDataFrame(ulong[] clock, ulong[] hubSyncCounter, Mat analogData)
+        public AnalogInputDataFrame(ulong[] clock, ulong[] hubClock, Mat analogData)
+            : base(clock, hubClock)
         {
-            Clock = clock;
-            HubSyncCounter = hubSyncCounter;
             AnalogData = analogData;
         }
-
-        public ulong[] Clock { get; }
-
-        public ulong[] HubSyncCounter { get; }
 
         public Mat AnalogData { get; }
     }
@@ -22,7 +17,7 @@ namespace OpenEphys.Onix
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     unsafe struct AnalogInputPayload
     {
-        public ulong HubSyncCounter;
+        public ulong HubClock;
         public fixed short AnalogData[AnalogIO.ChannelCount];
     }
 }

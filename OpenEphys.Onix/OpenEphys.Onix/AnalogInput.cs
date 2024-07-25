@@ -51,7 +51,7 @@ namespace OpenEphys.Onix
                             ? new Mat(AnalogIO.ChannelCount, bufferSize, Depth.S16, 1)
                             : null;
                         var analogDataBuffer = new short[AnalogIO.ChannelCount * bufferSize];
-                        var hubSyncCounterBuffer = new ulong[bufferSize];
+                        var hubClockBuffer = new ulong[bufferSize];
                         var clockBuffer = new ulong[bufferSize];
 
                         var frameObserver = Observer.Create<oni.Frame>(
@@ -59,7 +59,7 @@ namespace OpenEphys.Onix
                             {
                                 var payload = (AnalogInputPayload*)frame.Data.ToPointer();
                                 Marshal.Copy(new IntPtr(payload->AnalogData), analogDataBuffer, sampleIndex * AnalogIO.ChannelCount, AnalogIO.ChannelCount);
-                                hubSyncCounterBuffer[sampleIndex] = payload->HubSyncCounter;
+                                hubClockBuffer[sampleIndex] = payload->HubClock;
                                 clockBuffer[sampleIndex] = frame.Clock;
                                 if (++sampleIndex >= bufferSize)
                                 {
@@ -70,8 +70,8 @@ namespace OpenEphys.Onix
                                         Depth.S16,
                                         voltageScale,
                                         transposeBuffer);
-                                    observer.OnNext(new AnalogInputDataFrame(clockBuffer, hubSyncCounterBuffer, analogData));
-                                    hubSyncCounterBuffer = new ulong[bufferSize];
+                                    observer.OnNext(new AnalogInputDataFrame(clockBuffer, hubClockBuffer, analogData));
+                                    hubClockBuffer = new ulong[bufferSize];
                                     clockBuffer = new ulong[bufferSize];
                                     sampleIndex = 0;
                                 }

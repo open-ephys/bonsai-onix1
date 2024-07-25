@@ -6,23 +6,21 @@ using Bonsai;
 
 namespace OpenEphys.Onix
 {
-    public class MemoryUsage : Source<MemoryUsageDataFrame>
+    public class HeartbeatData : Source<HeartbeatDataFrame>
     {
-        [TypeConverter(typeof(MemoryMonitor.NameConverter))]
+        [TypeConverter(typeof(Heartbeat.NameConverter))]
         public string DeviceName { get; set; }
 
-        public override IObservable<MemoryUsageDataFrame> Generate()
+        public override IObservable<HeartbeatDataFrame> Generate()
         {
             return Observable.Using(
                 () => DeviceManager.ReserveDevice(DeviceName),
                 disposable => disposable.Subject.SelectMany(deviceInfo =>
                 {
-                    var device = deviceInfo.GetDeviceContext(typeof(MemoryMonitor));
-                    var totalMemory = device.ReadRegister(MemoryMonitor.TOTAL_MEM);
-
+                    var device = deviceInfo.GetDeviceContext(typeof(Heartbeat));
                     return deviceInfo.Context.FrameReceived
                         .Where(frame => frame.DeviceAddress == device.Address)
-                        .Select(frame => new MemoryUsageDataFrame(frame, totalMemory));
+                        .Select(frame => new HeartbeatDataFrame(frame));
                 }));
         }
     }
