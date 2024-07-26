@@ -5,14 +5,14 @@ namespace OpenEphys.Onix
 {
     /// <summary>
     /// A class for configuring a Bosch BNO055 9-axis inertial measurement unit (IMU).
+    /// </summary>
     /// <remarks>
     /// This configuration class can be linked to a <see cref="Bno055Data"/> instance to stream orientation data from the IMU.
     /// </remarks>
-    /// </summary>
     public class ConfigureBno055 : SingleDeviceFactory
     {
         /// <summary>
-        /// Initializes and new instance of the <see cref="ConfigureBno055"/> class.
+        /// Initializes a new instance of the <see cref="ConfigureBno055"/> class.
         /// </summary>
         public ConfigureBno055()
             : base(typeof(Bno055))
@@ -38,7 +38,7 @@ namespace OpenEphys.Onix
         /// prior to data acquisition.
         /// </remarks>
         /// <param name="source">A sequence of <see cref="ContextTask"/> instances that holds configuration actions.</param>
-        /// <returns>The original sequence modified by adding additional configuration actions required to configure a BNO055 device./></returns>
+        /// <returns>The original sequence modified by adding additional configuration actions required to configure a BNO055 device.</returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var deviceName = DeviceName;

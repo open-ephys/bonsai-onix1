@@ -106,7 +106,7 @@ namespace OpenEphys.Onix
         /// </summary>
         Low25Hz,
         /// <summary>
-        /// Specifies 500 Hz.
+        /// Specifies 20 Hz.
         /// </summary>
         Low20Hz,
         /// <summary>
@@ -312,7 +312,7 @@ namespace OpenEphys.Onix
         /// </summary>
         Dsp146mHz,
         /// <summary>
-        /// Specifies that the no digital high-pass filtering should be applied.
+        /// Specifies that no digital high-pass filtering should be applied.
         /// </summary>
         Off,
     }

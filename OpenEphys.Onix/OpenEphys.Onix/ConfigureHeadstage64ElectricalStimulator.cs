@@ -4,16 +4,16 @@ namespace OpenEphys.Onix
 {
     /// <summary>
     /// A class that configures a headstage-64 onboard electrical stimulator.
+    /// </summary>
     /// <remarks>
     /// This configuration class can be linked to a <see cref="Headstage64ElectricalStimulatorTrigger"/> instance to deliver
     /// current controlled electrical micro-stimulation through a contact on the probe connector on the bottom of the headstage
     /// or the corresponding contact on a compatible electrode interface board.
     /// </remarks>
-    /// </summary>
     public class ConfigureHeadstage64ElectricalStimulator : SingleDeviceFactory
     {
         /// <summary>
-        /// Initializes and new instance of the <see cref="ConfigureHeadstage64ElectricalStimulator"/> class.
+        /// Initializes a new instance of the <see cref="ConfigureHeadstage64ElectricalStimulator"/> class.
         /// </summary>
         public ConfigureHeadstage64ElectricalStimulator()
             : base(typeof(Headstage64ElectricalStimulator))
@@ -29,7 +29,7 @@ namespace OpenEphys.Onix
         /// </remarks>
         /// <param name="source">A sequence of <see cref="ContextTask"/> instances that holds configuration actions.</param>
         /// <returns>The original sequence modified by adding additional configuration actions required to configure a headstage-64
-        /// onboard electrical stimulator./></returns>
+        /// onboard electrical stimulator.</returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var deviceName = DeviceName;

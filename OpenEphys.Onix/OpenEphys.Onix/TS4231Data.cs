@@ -8,11 +8,11 @@ namespace OpenEphys.Onix
 {
     /// <summary>
     /// A class that produces a sequence of 3D position measurements produced by an array of Triad TS4231 receivers.
+    /// </summary>
     /// <remarks>
     /// This data stream class must be linked to an appropriate configuration, such as a <see cref="ConfigureTS4231"/>,
     /// in order to stream 3D position data.
     /// </remarks>
-    /// </summary>
     public class TS4231Data : Source<TS4231DataFrame>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>

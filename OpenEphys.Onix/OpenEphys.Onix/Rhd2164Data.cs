@@ -23,10 +23,10 @@ namespace OpenEphys.Onix
         public string DeviceName { get; set; }
 
         /// <summary>
-        /// Gets or sets the number of samples collected for each channel that are use to create a single <see cref="Rhd2164DataFrame"/>.
+        /// Gets or sets the number of samples collected for each channel that are used to create a single <see cref="Rhd2164DataFrame"/>.
         /// </summary>
         /// <remarks>
-        /// This property determines the number of samples that are buffered for each electrophysiology and auxiliary produced by the RHD2164 chip
+        /// This property determines the number of samples that are buffered for each electrophysiology and auxiliary channel produced by the RHD2164 chip
         /// before data is propagated. For instance, if this value is set to 30, then 30 samples, along with corresponding clock values, will be collected
         /// from each of the electrophysiology and auxiliary channels and packed into each <see cref="Rhd2164DataFrame"/>. Because channels are sampled at
         /// 30 kHz, this is equivalent to 1 millisecond of data from each channel.
@@ -34,7 +34,7 @@ namespace OpenEphys.Onix
         public int BufferSize { get; set; } = 30;
 
         /// <summary>
-        /// Generates a sequence of <see cref="Rhd2164DataFrame"/> objects, each of which a buffered set of multichannel samples an RHD2164 device.
+        /// Generates a sequence of <see cref="Rhd2164DataFrame"/> objects, each of which are a buffered set of multichannel samples an RHD2164 device.
         /// </summary>
         /// <returns>A sequence of <see cref="Rhd2164DataFrame"/> objects.</returns>
         public unsafe override IObservable<Rhd2164DataFrame> Generate()

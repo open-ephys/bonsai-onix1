@@ -5,15 +5,15 @@ namespace OpenEphys.Onix
 {
     /// <summary>
     /// A class for configuring an Intan RHD2164 bioamplifier chip.
+    /// </summary>
     /// <remarks>
     /// This configuration class can be linked to a <see cref="Rhd2164Data"/> instance to stream
     /// electrophysiology data from the chip.
     /// </remarks>
-    /// </summary>
     public class ConfigureRhd2164 : SingleDeviceFactory
     {
         /// <summary>
-        /// Initializes and new instance of the <see cref="ConfigureRhd2164"/> class.
+        /// Initializes a new instance of the <see cref="ConfigureRhd2164"/> class.
         /// </summary>
         public ConfigureRhd2164()
             : base(typeof(Rhd2164))
@@ -60,7 +60,7 @@ namespace OpenEphys.Onix
         /// prior to data acquisition.
         /// </remarks>
         /// <param name="source">A sequence of <see cref="ContextTask"/> instances that holds configuration actions.</param>
-        /// <returns>The original sequence modified by adding additional configuration actions required to configure a RHD2164 device./></returns>
+        /// <returns>The original sequence modified by adding additional configuration actions required to configure a RHD2164 device.</returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;

@@ -12,11 +12,11 @@ namespace OpenEphys.Onix
 {
     /// <summary>
     /// A class that controls a headstage-64 onboard electrical stimulus sequencer.
+    /// </summary>
     /// <remarks>
     /// This class must be linked to an appropriate configuration, such as a <see cref="ConfigureHeadstage64ElectricalStimulator"/>,
     /// in order to define and deliver electrical stimulation sequences.
     /// </remarks>
-    /// </summary>
     public class Headstage64ElectricalStimulatorTrigger: Sink<bool>
     {
         readonly BehaviorSubject<bool> enable = new(true);
@@ -39,10 +39,10 @@ namespace OpenEphys.Onix
 
         /// <summary>
         /// Gets or sets the device enable state.
-        /// <remarks>
-        /// If set to true, then the electrical stimulator circuit will respect triggers. If set to false, it they will be ignored.
-        /// </remarks>
         /// </summary>
+        /// <remarks>
+        /// If set to true, then the electrical stimulator circuit will respect triggers. If set to false, triggers will be ignored.
+        /// </remarks>
         [Description("Specifies whether the electrical stimulator will respect triggers.")]
         public bool Enable
         {
