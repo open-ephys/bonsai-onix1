@@ -16,8 +16,8 @@ namespace OpenEphys.Onix
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
                 var device = deviceInfo.GetDeviceContext(typeof(BreakoutDigitalIO));
-                return deviceInfo.Context.FrameReceived
-                    .Where(frame => frame.DeviceAddress == device.Address)
+                return deviceInfo.Context
+                    .GetDeviceFrames(device.Address)
                     .Select(frame => new BreakoutDigitalInputDataFrame(frame));
             });
         }

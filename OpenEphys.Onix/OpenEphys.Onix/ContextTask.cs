@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
@@ -42,7 +43,8 @@ namespace OpenEphys.Onix
         event Func<ContextTask, IDisposable> ConfigureDeviceEvent;
 
         // FrameReceived observable sequence
-        internal Subject<oni.Frame> FrameReceived = new();
+        private readonly Subject<oni.Frame> frameReceived = new();
+        private readonly IConnectableObservable<IGroupedObservable<uint, oni.Frame>> groupedFrames;
 
         // TODO: These work for RIFFA implementation, but potentially not others!!
         private readonly object readLock = new();
@@ -55,6 +57,8 @@ namespace OpenEphys.Onix
 
         public ContextTask(string driver, int index)
         {
+            groupedFrames = frameReceived.GroupBy(frame => frame.DeviceAddress).Replay();
+            groupedFrames.Connect();
             contextDriver = driver;
             contextIndex = index;
             Initialize();
@@ -94,6 +98,13 @@ namespace OpenEphys.Onix
         public uint MaxWriteFrameSize { get; private set; }
 
         public Dictionary<uint, oni.Device> DeviceTable { get; private set; }
+
+        public IObservable<IGroupedObservable<uint, oni.Frame>> GroupedFrames => groupedFrames;
+
+        public IObservable<oni.Frame> GetDeviceFrames(uint deviceAddress)
+        {
+            return groupedFrames.Where(deviceFrames => deviceFrames.Key == deviceAddress).Merge();
+        }
 
         void AssertConfigurationContext()
         {
@@ -252,7 +263,7 @@ namespace OpenEphys.Onix
                             {
                                 if (frameQueue.TryTake(out oni.Frame frame, QueueTimeoutMilliseconds, collectFramesToken))
                                 {
-                                    FrameReceived.OnNext(frame);
+                                    frameReceived.OnNext(frame);
                                     frame.Dispose();
                                 }
                             }
@@ -274,7 +285,7 @@ namespace OpenEphys.Onix
                         if (readFrames.IsFaulted && readFrames.Exception is AggregateException ex)
                         {
                             var error = ex.InnerExceptions.Count == 1 ? ex.InnerExceptions[0] : ex;
-                            FrameReceived.OnError(error);
+                            frameReceived.OnError(error);
                         }
 
                         lock (regLock)

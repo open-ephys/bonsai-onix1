@@ -17,8 +17,8 @@ namespace OpenEphys.Onix
             {
                 var device = deviceInfo.GetDeviceContext(typeof(TS4231V1));
                 var hubClockPeriod = 1e6 / device.Hub.ClockHz;
-                return deviceInfo.Context.FrameReceived
-                    .Where(frame => frame.DeviceAddress == device.Address)
+                return deviceInfo.Context
+                    .GetDeviceFrames(device.Address)
                     .Select(frame => new TS4231V1DataFrame(frame, hubClockPeriod));
             });
         }

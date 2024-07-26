@@ -49,8 +49,8 @@ namespace OpenEphys.Onix
                         },
                         observer.OnError,
                         observer.OnCompleted);
-                    return deviceInfo.Context.FrameReceived
-                        .Where(frame => frame.DeviceAddress == device.Address)
+                    return deviceInfo.Context
+                        .GetDeviceFrames(device.Address)
                         .SubscribeSafe(frameObserver);
                 }));
         }

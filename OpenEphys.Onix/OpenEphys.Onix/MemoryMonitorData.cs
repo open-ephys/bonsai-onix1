@@ -18,8 +18,8 @@ namespace OpenEphys.Onix
                 var device = deviceInfo.GetDeviceContext(typeof(MemoryMonitor));
                 var totalMemory = device.ReadRegister(MemoryMonitor.TOTAL_MEM);
 
-                return deviceInfo.Context.FrameReceived
-                    .Where(frame => frame.DeviceAddress == device.Address)
+                return deviceInfo.Context
+                    .GetDeviceFrames(device.Address)
                     .Select(frame => new MemoryMonitorDataFrame(frame, totalMemory));
             });
         }
