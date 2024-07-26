@@ -6,13 +6,13 @@ namespace OpenEphys.Onix
     /// <summary>
     /// A class for configuring the ONIX breakout board's digital inputs and outputs.
     /// </summary>
-    public class ConfigureDigitalIO : SingleDeviceFactory
+    public class ConfigureBreakoutDigitalIO : SingleDeviceFactory
     {
         /// <summary>
-        /// Initialize a new instance of <see cref="ConfigureDigitalIO"/>.
+        /// Initialize a new instance of <see cref="ConfigureBreakoutDigitalIO"/>.
         /// </summary>
-        public ConfigureDigitalIO()
-            : base(typeof(DigitalIO))
+        public ConfigureBreakoutDigitalIO()
+            : base(typeof(BreakoutDigitalIO))
         {
             DeviceAddress = 7;
         }
@@ -21,7 +21,7 @@ namespace OpenEphys.Onix
         /// Get or set the device enable state.
         /// </summary>
         /// <remarks>
-        /// If set to true, <see cref="DigitalInput"/> will produce data. If set to false, <see cref="DigitalInput"/> will not produce data.
+        /// If set to true, <see cref="BreakoutDigitalInput"/> will produce data. If set to false, <see cref="BreakoutDigitalInput"/> will not produce data.
         /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Specifies whether the digital IO device is enabled.")]
@@ -42,13 +42,13 @@ namespace OpenEphys.Onix
             return source.ConfigureDevice(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
-                device.WriteRegister(DigitalIO.ENABLE, Enable ? 1u : 0);
+                device.WriteRegister(BreakoutDigitalIO.ENABLE, Enable ? 1u : 0);
                 return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
             });
         }
     }
 
-    static class DigitalIO
+    static class BreakoutDigitalIO
     {
         public const int ID = 18;
 
@@ -58,7 +58,7 @@ namespace OpenEphys.Onix
         internal class NameConverter : DeviceNameConverter
         {
             public NameConverter()
-                : base(typeof(DigitalIO))
+                : base(typeof(BreakoutDigitalIO))
             {
             }
         }

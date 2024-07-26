@@ -18,13 +18,13 @@ namespace OpenEphys.Onix
         /// Gets or sets the breakout board's analog IO configuration.
         /// </summary>
         [TypeConverter(typeof(HubDeviceConverter))]
-        public ConfigureAnalogIO AnalogIO { get; set; } = new();
+        public ConfigureBreakoutAnalogIO AnalogIO { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the breakout board's digital IO configuration.
         /// </summary>
         [TypeConverter(typeof(HubDeviceConverter))]
-        public ConfigureDigitalIO DigitalIO { get; set; } = new();
+        public ConfigureBreakoutDigitalIO DigitalIO { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the hardware memory monitor configuration.

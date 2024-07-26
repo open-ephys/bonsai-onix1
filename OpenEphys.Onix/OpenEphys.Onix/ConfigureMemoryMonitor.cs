@@ -60,14 +60,15 @@ namespace OpenEphys.Onix
         /// <returns>The original sequence modified by adding additional configuration actions required to configure a memory monitor device./></returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
+            var enable = Enable;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
+            var samplesPerSecond = SamplesPerSecond;
             return source.ConfigureDevice(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
-                device.WriteRegister(MemoryMonitor.ENABLE, 1);
-                device.WriteRegister(MemoryMonitor.CLK_DIV, device.ReadRegister(MemoryMonitor.CLK_HZ) / SamplesPerSecond);
-
+                device.WriteRegister(MemoryMonitor.ENABLE, enable ? 1u : 0u);
+                device.WriteRegister(MemoryMonitor.CLK_DIV, device.ReadRegister(MemoryMonitor.CLK_HZ) / samplesPerSecond);
                 return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
             });
         }

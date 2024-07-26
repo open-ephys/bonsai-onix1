@@ -11,7 +11,7 @@ namespace OpenEphys.Onix
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This data stream class must be linked to an appropriate configuration, such as a <see cref="ConfigureTS4231"/>,
+    /// This data stream class must be linked to an appropriate configuration, such as a <see cref="ConfigureTS4231V1"/>,
     /// in order to stream 3D position data.
     /// </para>
     /// <para>
@@ -21,25 +21,26 @@ namespace OpenEphys.Onix
     /// position estimates, use the <see cref="TS4231V1GeometricPositionData"/> operator instead of this one.
     /// </para>
     /// </remarks>
-    public class TS4231Data : Source<TS4231DataFrame>
+    public class TS4231V1Data : Source<TS4231V1DataFrame>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
-        [TypeConverter(typeof(TS4231.NameConverter))]
+        [TypeConverter(typeof(TS4231V1.NameConverter))]
         public string DeviceName { get; set; }
 
         /// <summary>
-        /// Generates a sequence of <see cref="TS4231DataFrame"/> objects, each of which contains information on a single
+        /// Generates a sequence of <see cref="TS4231V1DataFrame"/> objects, each of which contains information on a single
         /// lighthouse optical sweep or pulse.
         /// </summary>
-        /// <returns>A sequence of <see cref="TS4231DataFrame"/> objects.</returns>
-        public override IObservable<TS4231DataFrame> Generate()
+        /// <returns>A sequence of <see cref="TS4231V1DataFrame"/> objects.</returns>
+        public override IObservable<TS4231V1DataFrame> Generate()
         {
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
-                var device = deviceInfo.GetDeviceContext(typeof(TS4231));
+                var device = deviceInfo.GetDeviceContext(typeof(TS4231V1));
+                var hubClockPeriod = 1e6 / device.Hub.ClockHz;
                 return deviceInfo.Context.FrameReceived
                     .Where(frame => frame.DeviceAddress == device.Address)
-                    .Select(frame => new TS4231DataFrame(frame));
+                    .Select(frame => new TS4231V1DataFrame(frame, hubClockPeriod));
             });
         }
     }

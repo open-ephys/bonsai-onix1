@@ -8,16 +8,16 @@ namespace OpenEphys.Onix
     /// a pair of SteamVR V1 base stations.
     /// </summary>
     /// <remarks>
-    /// This configuration class can be linked to a <see cref="TS4231V1GeometricData"/> instance to stream 3D position data from
+    /// This configuration class can be linked to a <see cref="TS4231V1GeometricPositionData"/> instance to stream 3D position data from
     /// light-house receivers when SteamVR V1 base stations have been installed above the arena.
     /// </remarks>
-    public class ConfigureTS4231 : SingleDeviceFactory
+    public class ConfigureTS4231V1 : SingleDeviceFactory
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigureTS4231"/> class.
+        /// Initializes a new instance of the <see cref="ConfigureTS4231V1"/> class.
         /// </summary>
-        public ConfigureTS4231()
-            : base(typeof(TS4231))
+        public ConfigureTS4231V1()
+            : base(typeof(TS4231V1))
         {
         }
 
@@ -25,7 +25,7 @@ namespace OpenEphys.Onix
         /// Get or set the device enable state.
         /// </summary>
         /// <remarks>
-        /// If set to true, a <see cref="TS4231Data"/> instance that is linked to this configuration will produce data. If set to false,
+        /// If set to true, a <see cref="TS4231V1Data"/> instance that is linked to this configuration will produce data. If set to false,
         /// it will not produce data.
         /// </remarks>
         [Category(ConfigurationCategory)]
@@ -48,13 +48,13 @@ namespace OpenEphys.Onix
             return source.ConfigureDevice(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
-                device.WriteRegister(TS4231.ENABLE, Enable ? 1u : 0);
+                device.WriteRegister(TS4231V1.ENABLE, Enable ? 1u : 0);
                 return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
             });
         }
     }
 
-    static class TS4231
+    static class TS4231V1
     {
         public const int ID = 25;
 
@@ -64,7 +64,7 @@ namespace OpenEphys.Onix
         internal class NameConverter : DeviceNameConverter
         {
             public NameConverter()
-                : base(typeof(TS4231))
+                : base(typeof(TS4231V1))
             {
             }
         }

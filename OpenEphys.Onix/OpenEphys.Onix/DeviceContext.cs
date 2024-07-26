@@ -19,6 +19,8 @@ namespace OpenEphys.Onix
 
         public oni.Device DeviceMetadata => _device;
 
+        public oni.Hub Hub => _context.GetHub(_device.Address);
+
         public uint ReadRegister(uint registerAddress)
         {
             return _context.ReadRegister(_device.Address, registerAddress);

@@ -52,11 +52,11 @@ namespace OpenEphys.Onix
         public ConfigureBno055 Bno055 { get; set; } = new();
 
         /// <summary>
-        /// Gets or sets the SteamVR V1 basesation 3D tracking array configuration.
+        /// Gets or sets the SteamVR V1 basestation 3D tracking array configuration.
         /// </summary>
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
-        public ConfigureTS4231 TS4231 { get; set; } = new() { Enable = false };
+        public ConfigureTS4231V1 TS4231 { get; set; } = new() { Enable = false };
 
         /// <summary>
         /// Gets or sets onboard electrical stimulator configuration.

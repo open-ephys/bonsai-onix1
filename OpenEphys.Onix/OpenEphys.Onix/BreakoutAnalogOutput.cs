@@ -10,24 +10,24 @@ namespace OpenEphys.Onix
     /// <summary>
     /// Sends analog output data to an ONIX breakout board.
     /// </summary>
-    public class AnalogOutput : Sink<Mat>
+    public class BreakoutAnalogOutput : Sink<Mat>
     {
-        const AnalogIOVoltageRange OutputRange = AnalogIOVoltageRange.TenVolts;
+        const BreakoutAnalogIOVoltageRange OutputRange = BreakoutAnalogIOVoltageRange.TenVolts;
 
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
-        [TypeConverter(typeof(AnalogIO.NameConverter))]
+        [TypeConverter(typeof(BreakoutAnalogIO.NameConverter))]
         public string DeviceName { get; set; }
 
         /// <summary>
         /// Gets or sets the data type used to represent analog samples.
         /// </summary>
         /// <remarks>
-        /// If <see cref="AnalogIODataType.S16"/> is selected, each DAC value is represented by a signed, twos-complement encoded
-        /// 16-bit integer. In this case, the output voltage always corresponds to <see cref="AnalogIOVoltageRange.TenVolts"/>.
-        /// When <see cref="AnalogIODataType.Volts"/> is selected, 32-bit floating point voltages between -10 and 10 volts are sent
+        /// If <see cref="BreakoutAnalogIODataType.S16"/> is selected, each DAC value is represented by a signed, twos-complement encoded
+        /// 16-bit integer. In this case, the output voltage always corresponds to <see cref="BreakoutAnalogIOVoltageRange.TenVolts"/>.
+        /// When <see cref="BreakoutAnalogIODataType.Volts"/> is selected, 32-bit floating point voltages between -10 and 10 volts are sent
         /// directly to the DACs.
         /// </remarks>
-        public AnalogIODataType DataType { get; set; } = AnalogIODataType.S16;
+        public BreakoutAnalogIODataType DataType { get; set; } = BreakoutAnalogIODataType.S16;
 
         /// <summary>
         /// Send samples to analog outputs.
@@ -42,14 +42,14 @@ namespace OpenEphys.Onix
                 var bufferSize = 0;
                 var scaleBuffer = default(Mat);
                 var transposeBuffer = default(Mat);
-                var sampleScale = dataType == AnalogIODataType.Volts
-                    ? 1 / AnalogIODeviceInfo.GetVoltsPerDivision(OutputRange)
+                var sampleScale = dataType == BreakoutAnalogIODataType.Volts
+                    ? 1 / BreakoutAnalogIODeviceInfo.GetVoltsPerDivision(OutputRange)
                     : 1;
-                var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));
+                var device = deviceInfo.GetDeviceContext(typeof(BreakoutAnalogIO));
                 return source.Do(data =>
                 {
-                    if (dataType == AnalogIODataType.S16 && data.Depth != Depth.S16 ||
-                        dataType == AnalogIODataType.Volts && data.Depth != Depth.F32)
+                    if (dataType == BreakoutAnalogIODataType.S16 && data.Depth != Depth.S16 ||
+                        dataType == BreakoutAnalogIODataType.Volts && data.Depth != Depth.F32)
                     {
                         ThrowDataTypeException(data.Depth);
                     }
@@ -96,12 +96,12 @@ namespace OpenEphys.Onix
         /// <returns> A sequence of 12x1 element arrays each containing the analog data to write to channels 0 to 11.</returns>
         public IObservable<short[]> Process(IObservable<short[]> source)
         {
-            if (DataType != AnalogIODataType.S16)
+            if (DataType != BreakoutAnalogIODataType.S16)
                 ThrowDataTypeException(Depth.S16);
 
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
-                var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));
+                var device = deviceInfo.GetDeviceContext(typeof(BreakoutAnalogIO));
                 return source.Do(data =>
                 {
                     AssertChannelCount(data.Length);
@@ -117,13 +117,13 @@ namespace OpenEphys.Onix
         /// <returns> A sequence of 12x1 element arrays each containing the analog data to write to channels 0 to 11.</returns>
         public IObservable<float[]> Process(IObservable<float[]> source)
         {
-            if (DataType != AnalogIODataType.Volts)
+            if (DataType != BreakoutAnalogIODataType.Volts)
                 ThrowDataTypeException(Depth.F32);
 
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
-                var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));
-                var divisionsPerVolt = 1 / AnalogIODeviceInfo.GetVoltsPerDivision(OutputRange);
+                var device = deviceInfo.GetDeviceContext(typeof(BreakoutAnalogIO));
+                var divisionsPerVolt = 1 / BreakoutAnalogIODeviceInfo.GetVoltsPerDivision(OutputRange);
                 return source.Do(data =>
                 {
                     AssertChannelCount(data.Length);
@@ -140,10 +140,10 @@ namespace OpenEphys.Onix
 
         static void AssertChannelCount(int channels)
         {
-            if (channels != AnalogIO.ChannelCount)
+            if (channels != BreakoutAnalogIO.ChannelCount)
             {
                 throw new InvalidOperationException(
-                    $"The input data must have exactly {AnalogIO.ChannelCount} channels."
+                    $"The input data must have exactly {BreakoutAnalogIO.ChannelCount} channels."
                 );
             }
         }

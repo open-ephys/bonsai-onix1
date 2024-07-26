@@ -17,6 +17,10 @@ namespace OpenEphys.Onix
         }
 
         [Category(ConfigurationCategory)]
+        [Description("Specifies whether the load testing device is enabled.")]
+        public bool Enable { get; set; } = false;
+
+        [Category(ConfigurationCategory)]
         [Description("Number of repetitions of the 16-bit unsigned integer 42 sent with each read-frame.")]
         [Range(0, 10e6)]
         public uint ReceivedWords { get; set; }
@@ -36,6 +40,7 @@ namespace OpenEphys.Onix
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
+            var enable = Enable;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
             var receivedWords = ReceivedWords;
@@ -43,29 +48,30 @@ namespace OpenEphys.Onix
             return source.ConfigureDevice((context, observer) =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
-                device.WriteRegister(LoadTester.ENABLE, 1);
+                device.WriteRegister(LoadTester.ENABLE, enable ? 1u : 0u);
 
-                var clk_hz = device.ReadRegister(LoadTester.CLK_HZ);
+                var clockHz = device.ReadRegister(LoadTester.CLK_HZ);
+
                 // Assumes 8-byte timer
                 uint ValidSize()
                 {
-                    var clk_div = device.ReadRegister(LoadTester.CLK_DIV);
-                    return clk_div - 4 - 10; // -10 is overhead hack
+                    var clkDiv = device.ReadRegister(LoadTester.CLK_DIV);
+                    return clkDiv - 4 - 10; // -10 is overhead hack
                 }
 
-                var max_size = ValidSize();
-                var bounded = receivedWords > max_size ? max_size : receivedWords;
+                var maxSize = ValidSize();
+                var bounded = receivedWords > maxSize ? maxSize : receivedWords;
                 device.WriteRegister(LoadTester.DT0H16_WORDS, bounded);
 
                 var writeArray = Enumerable.Repeat((uint)42, (int)(transmittedWords + 2)).ToArray();
                 device.WriteRegister(LoadTester.HTOD32_WORDS, transmittedWords);
                 var frameHzSubscription = frameHz.SubscribeSafe(observer, newValue =>
                 {
-                    device.WriteRegister(LoadTester.CLK_DIV, clk_hz / newValue);
-                    var max_size = ValidSize();
-                    if (receivedWords > max_size)
+                    device.WriteRegister(LoadTester.CLK_DIV, clockHz / newValue);
+                    var maxSize = ValidSize();
+                    if (receivedWords > maxSize)
                     {
-                        receivedWords = max_size;
+                        receivedWords = maxSize;
                     }
                 });
 

@@ -5,16 +5,16 @@ namespace OpenEphys.Onix
     /// <summary>
     /// A class that contains information about a digital event on the ONIX breakout board.
     /// </summary>
-    public class DigitalInputDataFrame : DataFrame
+    public class BreakoutDigitalInputDataFrame : DataFrame
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="DigitalInputDataFrame"/> class.
+        /// Initializes a new instance of the <see cref="BreakoutDigitalInputDataFrame"/> class.
         /// </summary>
         /// <param name="frame">A frame produced by an ONIX breakout board's digital IO device.</param>
-        public unsafe DigitalInputDataFrame(oni.Frame frame)
+        public unsafe BreakoutDigitalInputDataFrame(oni.Frame frame)
             : base(frame.Clock)
         {
-            var payload = (DigitalInputPayload*)frame.Data.ToPointer();
+            var payload = (BreakoutDigitalInputPayload*)frame.Data.ToPointer();
             HubClock = payload->HubClock;
             DigitalInputs = payload->DigitalInputs;
             Buttons = payload->Buttons;
@@ -32,7 +32,7 @@ namespace OpenEphys.Onix
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct DigitalInputPayload
+    struct BreakoutDigitalInputPayload
     {
         public ulong HubClock;
         public BreakoutDigitalPortState DigitalInputs;
