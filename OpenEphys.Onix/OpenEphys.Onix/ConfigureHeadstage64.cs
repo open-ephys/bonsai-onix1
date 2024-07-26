@@ -52,7 +52,7 @@ namespace OpenEphys.Onix
         public ConfigureBno055 Bno055 { get; set; } = new();
 
         /// <summary>
-        /// Gets or sets the 3x TS4231 lighthouse receiver 3D tracking array configuration.
+        /// Gets or sets the SteamVR V1 basesation 3D tracking array configuration.
         /// </summary>
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
