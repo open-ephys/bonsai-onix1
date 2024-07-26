@@ -9,15 +9,10 @@ namespace OpenEphys.Onix
 {
     class TS4231V1PulseQueue
     {
-        public Queue<double> PulseTimes { get; } = new(new double[TS4231V1GeometricPositionConverter.ValidPulseSequenceTemplate.Length / 4]);
-
-        public Queue<double> PulseWidths { get; } = new(new double[TS4231V1GeometricPositionConverter.ValidPulseSequenceTemplate.Length / 4]);
-
-        public Queue<bool> PulseParse { get; } = new(new bool[TS4231V1GeometricPositionConverter.ValidPulseSequenceTemplate.Length]);
-
-        public Queue<ulong> PulseDataClock { get; } = new(new ulong[TS4231V1GeometricPositionConverter.ValidPulseSequenceTemplate.Length / 4]);
-
         public Queue<ulong> PulseFrameClock { get; } = new(new ulong[TS4231V1GeometricPositionConverter.ValidPulseSequenceTemplate.Length / 4]);
+        public Queue<ulong> PulseHubClock { get; } = new(new ulong[TS4231V1GeometricPositionConverter.ValidPulseSequenceTemplate.Length / 4]);
+        public Queue<double> PulseWidths { get; } = new(new double[TS4231V1GeometricPositionConverter.ValidPulseSequenceTemplate.Length / 4]);
+        public Queue<bool> PulseParse { get; } = new(new bool[TS4231V1GeometricPositionConverter.ValidPulseSequenceTemplate.Length]);
     }
 
     class TS4231V1GeometricPositionConverter
@@ -71,14 +66,11 @@ namespace OpenEphys.Onix
             var queues = PulseQueues[payload->SensorIndex];
 
             // Push pulse time into buffer and pop oldest
-            queues.PulseTimes.Dequeue();
-            queues.PulseTimes.Enqueue(HubClockFrequencyPeriod * payload->HubClock);
-
-            queues.PulseDataClock.Dequeue();
-            queues.PulseDataClock.Enqueue(payload->HubClock);
-
             queues.PulseFrameClock.Dequeue();
             queues.PulseFrameClock.Enqueue(frame.Clock);
+
+            queues.PulseHubClock.Dequeue();
+            queues.PulseHubClock.Enqueue(payload->HubClock);
 
             // Push pulse width into buffer and pop oldest
             queues.PulseWidths.Dequeue();
@@ -94,19 +86,19 @@ namespace OpenEphys.Onix
             queues.PulseParse.Enqueue((int)payload->EnvelopeType % 2 == 1 & payload->EnvelopeType != TS4231V1Envelope.Sweep); // axis
             queues.PulseParse.Enqueue(payload->EnvelopeType == TS4231V1Envelope.Sweep); // sweep
 
+            // convert to arrays
+            var times = queues.PulseHubClock.Select(x => HubClockFrequencyPeriod * x).ToArray();
+            var widths = queues.PulseWidths.ToArray();
+
             // test template match and make sure time between pulses does not integrate to more than two periods
             if (!queues.PulseParse.SequenceEqual(ValidPulseSequenceTemplate) ||
-                queues.PulseTimes.Last() - queues.PulseTimes.First() > 2 / SweepFrequencyHz)
+                 times.Last() - times.First() > 2 / SweepFrequencyHz)
             {
                 return null;
             }
 
-            // position measurement time is defined to be the mean of the data used
-            var time = queues.PulseTimes.ToArray();
-            var width = queues.PulseWidths.ToArray();
-
-            var t11 = time[2] + width[2] / 2 - time[0];
-            var t21 = time[5] + width[5] / 2 - time[3];
+            var t11 = times[2] + widths[2] / 2 - times[0];
+            var t21 = times[5] + widths[5] / 2 - times[3];
             var theta0 = 2 * Math.PI * SweepFrequencyHz * t11 - Math.PI / 2;
             var gamma0 = 2 * Math.PI * SweepFrequencyHz * t21 - Math.PI / 2;
 
@@ -116,8 +108,8 @@ namespace OpenEphys.Onix
             u[2] = new Scalar(1);
             CV.Normalize(u, u);
 
-            var t12 = time[8] + width[8] / 2 - time[7];
-            var t22 = time[11] + width[11] / 2 - time[10];
+            var t12 = times[8] + widths[8] / 2 - times[7];
+            var t22 = times[11] + widths[11] / 2 - times[10];
             var theta1 = 2 * Math.PI * SweepFrequencyHz * t12 - Math.PI / 2;
             var gamma1 = 2 * Math.PI * SweepFrequencyHz * t22 - Math.PI / 2;
 
@@ -162,7 +154,8 @@ namespace OpenEphys.Onix
             var q1 = q + x2 * v;
             var position = 0.5 * (p1 + q1);
 
-            return new TS4231V1GeometricPositionDataFrame(queues.PulseDataClock.ElementAt(ValidPulseSequenceTemplate.Length / 8),
+            return new TS4231V1GeometricPositionDataFrame(
+                queues.PulseHubClock.ElementAt(ValidPulseSequenceTemplate.Length / 8),
                 queues.PulseFrameClock.ElementAt(ValidPulseSequenceTemplate.Length / 8),
                 payload->SensorIndex,
                 new Vector3((float)position[0].Val0, (float)position[1].Val0, (float)position[2].Val0));
