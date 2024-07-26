@@ -58,7 +58,7 @@ namespace OpenEphys.Onix
 
         public unsafe TS4231V1GeometricPositionDataFrame Convert(oni.Frame frame)
         {
-            var payload = (TS4231Payload*)frame.Data.ToPointer();
+            var payload = (TS4231V1Payload*)frame.Data.ToPointer();
 
             if (!PulseQueues.ContainsKey(payload->SensorIndex))
                 PulseQueues.Add(payload->SensorIndex, new TS4231V1PulseQueue());

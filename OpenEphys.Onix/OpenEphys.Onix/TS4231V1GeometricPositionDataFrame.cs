@@ -13,7 +13,7 @@ namespace OpenEphys.Onix
     public class TS4231V1GeometricPositionDataFrame
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="Rhd2164DataFrame"/> class.
+        /// Initializes a new instance of the <see cref="TS4231V1GeometricPositionDataFrame"/> class.
         /// </summary>
         /// <param name="clock">The median <see cref="DataFrame.Clock"/> value of the 12 frames required to construct a single position.</param>
         /// <param name="hubClock">The median <see cref="DataFrame.HubClock"/> value of the 12 frames required to construct a single position.</param>
