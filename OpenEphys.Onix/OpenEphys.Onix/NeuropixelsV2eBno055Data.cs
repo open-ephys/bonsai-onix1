@@ -6,11 +6,23 @@ using Bonsai;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// Produces a sequence of <see cref="Bno055DataFrame"/> from a NeuropixelsV2e headstage.
+    /// </summary>
     public class NeuropixelsV2eBno055Data : Source<Bno055DataFrame>
     {
+        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(NeuropixelsV2eBno055.NameConverter))]
         public string DeviceName { get; set; }
 
+        /// <summary>
+        /// Generates a sequence of <see cref="Bno055DataFrame"/> objects at approximately 100 Hz.
+        /// </summary>
+        /// <returns>A sequence of <see cref="Bno055DataFrame"/> objects.</returns>
+        /// <remarks>
+        /// This will generate a sequence of <see cref="Bno055DataFrame"/> objects at approximately 100 Hz. This rate
+        /// may be limited by the I2C bus.
+        /// </remarks>
         public override IObservable<Bno055DataFrame> Generate()
         {
             // Max of 100 Hz, but limited by I2C bus
@@ -18,6 +30,10 @@ namespace OpenEphys.Onix
             return Generate(source);
         }
 
+        /// <summary>
+        /// Generates a sequence of <see cref="Bno055DataFrame"/> objects.
+        /// </summary>
+        /// <returns>A sequence of <see cref="Bno055DataFrame"/> objects.</returns>
         public unsafe IObservable<Bno055DataFrame> Generate<TSource>(IObservable<TSource> source)
         {
             return DeviceManager.GetDevice(DeviceName).SelectMany(

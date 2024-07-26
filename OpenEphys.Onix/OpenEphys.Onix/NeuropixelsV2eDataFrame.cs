@@ -3,14 +3,26 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// Buffered data from a NeuropixelsV2e device.
+    /// </summary>
     public class NeuropixelsV2eDataFrame : BufferedDataFrame
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NeuropixelsV2eDataFrame"/> class.
+        /// </summary>
+        /// <param name="clock">An array of <see cref="DataFrame.Clock"/> values.</param>
+        /// <param name="hubClock">An array of hub clock counter values.</param>
+        /// <param name="amplifierData">An array of multi-channel amplifier data.</param>
         public NeuropixelsV2eDataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData)
             : base(clock, hubClock)
         {
             AmplifierData = amplifierData;
         }
 
+        /// <summary>
+        /// Gets the amplifier data array.
+        /// </summary>
         public Mat AmplifierData { get; }
 
         internal static unsafe ushort GetProbeIndex(oni.Frame frame)

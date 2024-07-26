@@ -5,39 +5,87 @@ using Bonsai;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// A class that configures a NeuropixelsV2eBeta device.
+    /// </summary>
     public class ConfigureNeuropixelsV2eBeta : SingleDeviceFactory
     {
+        /// <summary>
+        /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV2eBeta"/> class.
+        /// </summary>
         public ConfigureNeuropixelsV2eBeta()
             : base(typeof(NeuropixelsV2eBeta))
         {
         }
 
+        /// <summary>
+        /// Gets or sets the device enable state.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, <see cref="NeuropixelsV2eBetaData"/> will produce data. If set to false, 
+        /// <see cref="NeuropixelsV2eBetaData"/> will not produce data.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Specifies whether the NeuropixelsV2Beta device is enabled.")]
         public bool Enable { get; set; } = true;
 
+        /// <summary>
+        /// Gets or sets the LED enable state.
+        /// </summary>
+        /// <remarks>
+        /// If true, the headstage LED will turn on during data acquisition. If false, the LED will not turn on.
+        /// </remarks>
         [Category(ConfigurationCategory)]
-        [Description("Enable headstage LED when acquiring data.")]
+        [Description("If true, the headstage LED will turn on during data acquisition. If false, the LED will not turn on.")]
         public bool EnableLed { get; set; } = true;
 
+        /// <summary>
+        /// Gets or sets the electrode configuration for Probe A.
+        /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Probe A electrode configuration.")]
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration();
 
+        /// <summary>
+        /// Gets or sets the path to the gain calibration file for Probe A.
+        /// </summary>
+        /// <remarks>
+        /// Each probe must be provided with a gain calibration file that contains calibration data
+        /// specific to each probe. This file is mandatory for accurate recordings.
+        /// </remarks>
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
-        [Description("Path to the gain calibraiton file for probe A.")]
+        [Description("Path to the gain calibration file for probe A.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string GainCalibrationFileA { get; set; }
 
+        /// <summary>
+        /// Gets or sets the electrode configuration for Probe B.
+        /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Probe B electrode configuration.")]
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration();
 
+        /// <summary>
+        /// Gets or sets the path to the gain calibration file for Probe B.
+        /// </summary>
+        /// <remarks>
+        /// Each probe must be provided with a gain calibration file that contains calibration data
+        /// specific to each probe. This file is mandatory for accurate recordings.
+        /// </remarks>
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
-        [Description("Path to the gain calibraiton file for probe B.")]
+        [Description("Path to the gain calibration file for probe B.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string GainCalibrationFileB { get; set; }
 
+        /// <summary>
+        /// Configure a NeuropixelsV2eBeta device.
+        /// </summary>
+        /// <remarks>
+        /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance
+        /// prior to data acquisition.
+        /// </remarks>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that holds configuration actions.</param>
+        /// <returns>The original sequence modified by adding additional configuration actions required to configure a NeuropixelsV2eBeta device./></returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;
@@ -168,7 +216,7 @@ namespace OpenEphys.Onix
         {
             if (gainCalibrationFile == null)
             {
-                throw new ArgumentException("Calibraiton file must be specified.");
+                throw new ArgumentException("Calibration file must be specified.");
             }
 
             System.IO.StreamReader gainFile = new(gainCalibrationFile);
@@ -176,7 +224,7 @@ namespace OpenEphys.Onix
 
             if (probeSerialNumber != sn)
             {
-                throw new ArgumentException($"Probe serial number {probeSerialNumber} does not match calibraiton file serial number {sn}.");
+                throw new ArgumentException($"Probe serial number {probeSerialNumber} does not match calibration file serial number {sn}.");
             }
 
             // Q1.14 fixed point conversion

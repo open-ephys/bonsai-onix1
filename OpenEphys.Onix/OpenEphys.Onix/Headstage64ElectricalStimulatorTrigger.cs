@@ -10,6 +10,13 @@ using Bonsai;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// A class that controls a headstage-64 onboard electrical stimulus sequencer.
+    /// </summary>
+    /// <remarks>
+    /// This class must be linked to an appropriate configuration, such as a <see cref="ConfigureHeadstage64ElectricalStimulator"/>,
+    /// in order to define and deliver electrical stimulation sequences.
+    /// </remarks>
     public class Headstage64ElectricalStimulatorTrigger: Sink<bool>
     {
         readonly BehaviorSubject<bool> enable = new(true);
@@ -23,21 +30,58 @@ namespace OpenEphys.Onix
         readonly BehaviorSubject<uint> burstPulseCount = new(0);
         readonly BehaviorSubject<uint> interBurstInterval = new(0);
         readonly BehaviorSubject<uint> trainBurstCount = new(0);
-        readonly BehaviorSubject<uint> trainDelay = new(0);
+        readonly BehaviorSubject<uint> triggerDelay = new(0);
         readonly BehaviorSubject<bool> powerEnable = new(false);
 
-
+        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(Headstage64ElectricalStimulator.NameConverter))]
         public string DeviceName { get; set; }
 
-        [Description("Specifies whether the electrical stimulation subcircuit will respect triggers.")]
+        /// <summary>
+        /// Gets or sets the device enable state.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, then the electrical stimulator circuit will respect triggers. If set to false, triggers will be ignored.
+        /// </remarks>
+        [Description("Specifies whether the electrical stimulator will respect triggers.")]
         public bool Enable
         {
             get => enable.Value;
             set => enable.OnNext(value);
         }
 
-        [Description("Phase 1 pulse current (uA).")]
+        /// <summary>
+        /// Gets or sets the electrical stimulator's power state.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, then the electrical stimulator's ±15V power supplies will be turned on. If set to false,
+        /// they will be turned off. It may be desirable to power down the electrical stimulator's power supplies outside
+        /// of stimulation windows to reduce power consumption and electrical noise. This property must be set to true
+        /// in order for electrical stimuli to be delivered properly. It takes ~10 milliseconds for these supplies to stabilize.
+        /// </remarks>
+        [Description("Stimulator power on/off.")]
+        public bool PowerEnable
+        {
+            get => powerEnable.Value;
+            set => powerEnable.OnNext(value);
+        }
+
+        /// <summary>
+        /// Gets or sets a delay from receiving a trigger to the start of stimulus sequence application in μsec
+        /// </summary>
+        [Description("A delay from receiving a trigger to the start of stimulus sequence application (uSec).")]
+        [Range(0, uint.MaxValue)]
+        public uint TriggerDelay
+        {
+            get => triggerDelay.Value;
+            set => triggerDelay.OnNext(value);
+        }
+
+
+        /// <summary>
+        /// Gets or sets the amplitude of the first phase of each pulse in μA.
+        /// </summary>
+        [Description("Amplitude of the first phase of each pulse (uA).")]
         [Range(-Headstage64ElectricalStimulator.AbsMaxMicroAmps, Headstage64ElectricalStimulator.AbsMaxMicroAmps)]
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
         [Precision(3, 1)]
@@ -47,7 +91,10 @@ namespace OpenEphys.Onix
             set => phaseOneCurrent.OnNext(value);
         }
 
-        [Description("Interphase rest current (uA).")]
+        /// <summary>
+        /// Gets or sets the amplitude of the interphase current of each pulse in μA.
+        /// </summary>
+        [Description("The amplitude of the inter-phase current of each pulse (uA).")]
         [Range(-Headstage64ElectricalStimulator.AbsMaxMicroAmps, Headstage64ElectricalStimulator.AbsMaxMicroAmps)]
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
         [Precision(3, 1)]
@@ -57,7 +104,10 @@ namespace OpenEphys.Onix
             set => interPhaseCurrent.OnNext(value);
         }
 
-        [Description("Phase 2 pulse current (uA).")]
+        /// <summary>
+        /// Gets or sets the amplitude of the second phase of each pulse in μA.
+        /// </summary>
+        [Description("The amplitude of the second phase of each pulse (uA).")]
         [Range(-Headstage64ElectricalStimulator.AbsMaxMicroAmps, Headstage64ElectricalStimulator.AbsMaxMicroAmps)]
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
         [Precision(3, 1)]
@@ -67,15 +117,10 @@ namespace OpenEphys.Onix
             set => phaseTwoCurrent.OnNext(value);
         }
 
-        [Description("Pulse train start delay (uSec).")]
-        [Range(0, uint.MaxValue)]
-        public uint TrainDelay
-        {
-            get => trainDelay.Value;
-            set => trainDelay.OnNext(value);
-        }
-
-        [Description("Phase 1 pulse duration (uSec).")]
+        /// <summary>
+        /// Gets or sets the duration of the first phase of each pulse in μsec.
+        /// </summary>
+        [Description("The duration of the first phase of each pulse in μsec.")]
         [Range(0, uint.MaxValue)]
         public uint PhaseOneDuration
         {
@@ -83,7 +128,10 @@ namespace OpenEphys.Onix
             set => phaseOneDuration.OnNext(value);
         }
 
-        [Description("Inter-phase interval (uSec).")]
+        /// <summary>
+        /// Gets or sets the duration of the interphase interval of each pulse in μsec.
+        /// </summary>
+        [Description("The duration of the interphase interval of each pulse (uSec).")]
         [Range(0, uint.MaxValue)]
         public uint InterPhaseInterval
         {
@@ -91,7 +139,10 @@ namespace OpenEphys.Onix
             set => interPhaseInterval.OnNext(value);
         }
 
-        [Description("Phase 2 pulse duration (uSec).")]
+        /// <summary>
+        /// Gets or sets the duration of the second phase of each pulse in μsec.
+        /// </summary>
+        [Description("The duration of the second phase of each pulse (uSec).")]
         [Range(0, uint.MaxValue)]
         public uint PhaseTwoDuration
         {
@@ -99,7 +150,10 @@ namespace OpenEphys.Onix
             set => phaseTwoDuration.OnNext(value);
         }
 
-        [Description("Inter-pulse interval (uSec).")]
+        /// <summary>
+        /// Gets or sets the duration of the inter-pulse interval within a single burst in μsec.
+        /// </summary>
+        [Description("The duration of the inter-pulse interval within a single burst (uSec).")]
         [Range(0, uint.MaxValue)]
         public uint InterPulseInterval
         {
@@ -107,7 +161,10 @@ namespace OpenEphys.Onix
             set => interPulseInterval.OnNext(value);
         }
 
-        [Description("Inter-burst interval (uSec).")]
+        /// <summary>
+        /// Gets or sets the duration of the inter-burst interval within a stimulus train in μsec.
+        /// </summary>
+        [Description("The duration of the inter-burst interval within a stimulus train (uSec).")]
         [Range(0, uint.MaxValue)]
         public uint InterBurstInterval
         {
@@ -115,7 +172,10 @@ namespace OpenEphys.Onix
             set => interBurstInterval.OnNext(value);
         }
 
-        [Description("Number of pulses in each burst.")]
+        /// <summary>
+        /// Gets or sets the number of pulses per burst.
+        /// </summary>
+        [Description("The number of pulses per burst.")]
         [Range(0, uint.MaxValue)]
         public uint BurstPulseCount
         {
@@ -123,7 +183,10 @@ namespace OpenEphys.Onix
             set => burstPulseCount.OnNext(value);
         }
 
-        [Description("Number of bursts in each train.")]
+        /// <summary>
+        /// Gets or sets the number of bursts in a stimulus train.
+        /// </summary>
+        [Description("The number of bursts in each train.")]
         [Range(0, uint.MaxValue)]
         public uint TrainBurstCount
         {
@@ -131,14 +194,11 @@ namespace OpenEphys.Onix
             set => trainBurstCount.OnNext(value);
         }
 
-        [Description("Stimulator power on/off.")]
-        [Range(0, uint.MaxValue)]
-        public bool PowerEnable
-        {
-            get => powerEnable.Value;
-            set => powerEnable.OnNext(value);
-        }
-
+        /// <summary>
+        /// Start an electrical stimulus sequence.
+        /// </summary>
+        /// <param name="source">A sequence of boolean values indicating the start of a stimulus sequence when true.</param>
+        /// <returns>A sequence of boolean values that is identical to <paramref name="source"/></returns>
         public override IObservable<bool> Process(IObservable<bool> source)
         {
             return DeviceManager.GetDevice(DeviceName).SelectMany(
@@ -161,7 +221,7 @@ namespace OpenEphys.Onix
                         phaseOneCurrent.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.CURRENT1, uAToCode(value))),
                         interPhaseCurrent.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.RESTCURR, uAToCode(value))),
                         phaseTwoCurrent.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.CURRENT2, uAToCode(value))),
-                        trainDelay.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.TRAINDELAY, value)),
+                        triggerDelay.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.TRAINDELAY, value)),
                         phaseOneDuration.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.PULSEDUR1, value)),
                         interPhaseInterval.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.INTERPHASEINTERVAL, value)),
                         phaseTwoDuration.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.PULSEDUR2, value)),

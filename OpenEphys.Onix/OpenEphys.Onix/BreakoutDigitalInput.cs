@@ -6,11 +6,28 @@ using Bonsai;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// A class that produces a sequence of digital input data frames.
+    /// </summary>
+    /// <remarks>
+    /// This data stream class must be linked to an appropriate configuration, such as a <see cref="ConfigureBreakoutDigitalIO"/>,
+    /// in order to stream data.
+    /// </remarks>
     public class BreakoutDigitalInput : Source<BreakoutDigitalInputDataFrame>
     {
+        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(BreakoutDigitalIO.NameConverter))]
         public string DeviceName { get; set; }
 
+        /// <summary>
+        /// Generates a sequence of <see cref="BreakoutDigitalInputDataFrame"/> objects, which contains information about breakout
+        /// board's digital input state.
+        /// </summary>
+        /// <remarks>
+        /// Digital inputs are not regularly sampled. Instead, a new <see cref="BreakoutDigitalInputDataFrame"/> is produced each
+        /// whenever any digital state (i.e. a digital input pin, button, or switch state) changes.
+        /// </remarks>
+        /// <returns>A sequence of <see cref="BreakoutDigitalInputDataFrame"/> objects.</returns>
         public unsafe override IObservable<BreakoutDigitalInputDataFrame> Generate()
         {
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
