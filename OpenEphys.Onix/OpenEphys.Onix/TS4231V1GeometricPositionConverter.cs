@@ -7,7 +7,7 @@ using System.Reactive.Linq;
 
 namespace OpenEphys.Onix
 {
-    class TS4231PulseQueue
+    class TS4231V1PulseQueue
     {
         public Queue<double> PulseTimes { get; } = new(new double[TS4231V1GeometricPositionConverter.ValidPulseSequenceTemplate.Length / 4]);
 
@@ -44,21 +44,21 @@ namespace OpenEphys.Onix
             false, false, false, true  // axis 1, station 1
         };
 
-        Dictionary<int, TS4231PulseQueue> PulseQueues = new();
+        Dictionary<int, TS4231V1PulseQueue> PulseQueues = new();
 
-        public TS4231V1GeometricPositionConverter(uint hubClockFrequencyHz, Point3d baseSation1Origin, Point3d baseSation2Origin)
+        public TS4231V1GeometricPositionConverter(uint hubClockFrequencyHz, Point3d baseStation1Origin, Point3d baseStation2Origin)
         {
             HubClockFrequencyPeriod = 1d / hubClockFrequencyHz;
 
             p = new Mat(3, 1, Depth.F64, 1);
-            p[0] = new Scalar(baseSation1Origin.X);
-            p[1] = new Scalar(baseSation1Origin.Y);
-            p[2] = new Scalar(baseSation1Origin.Z);
+            p[0] = new Scalar(baseStation1Origin.X);
+            p[1] = new Scalar(baseStation1Origin.Y);
+            p[2] = new Scalar(baseStation1Origin.Z);
 
             q = new Mat(3, 1, Depth.F64, 1);
-            q[0] = new Scalar(baseSation2Origin.X);
-            q[1] = new Scalar(baseSation2Origin.Y);
-            q[2] = new Scalar(baseSation2Origin.Z);
+            q[0] = new Scalar(baseStation2Origin.X);
+            q[1] = new Scalar(baseStation2Origin.Y);
+            q[2] = new Scalar(baseStation2Origin.Z);
         }
 
         public unsafe TS4231V1GeometricPositionDataFrame Convert(oni.Frame frame)
@@ -66,7 +66,7 @@ namespace OpenEphys.Onix
             var payload = (TS4231Payload*)frame.Data.ToPointer();
 
             if (!PulseQueues.ContainsKey(payload->SensorIndex))
-                PulseQueues.Add(payload->SensorIndex, new TS4231PulseQueue());
+                PulseQueues.Add(payload->SensorIndex, new TS4231V1PulseQueue());
 
             var queues = PulseQueues[payload->SensorIndex];
 
@@ -149,7 +149,10 @@ namespace OpenEphys.Onix
             var x1 = (b1 - a12 * x2) / a11;
 
             // If singular, return null
-            if (double.IsNaN(x1) || double.IsNaN(x2))
+            if (double.IsNaN(x1) ||
+                double.IsNaN(x2) ||
+                double.IsInfinity(x1) ||
+                double.IsInfinity(x2))
             {
                 return null;
             }
@@ -163,7 +166,6 @@ namespace OpenEphys.Onix
                 queues.PulseFrameClock.ElementAt(ValidPulseSequenceTemplate.Length / 8),
                 payload->SensorIndex,
                 new Vector3((float)position[0].Val0, (float)position[1].Val0, (float)position[2].Val0));
-
         }
     }
 }

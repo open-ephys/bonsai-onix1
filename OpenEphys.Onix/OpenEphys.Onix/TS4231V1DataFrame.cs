@@ -6,13 +6,13 @@ namespace OpenEphys.Onix
 {
     public class TS4231V1DataFrame : DataFrame
     {
-        public unsafe TS4231V1DataFrame(oni.Frame frame, double hubClockPerioduSec)
+        public unsafe TS4231V1DataFrame(oni.Frame frame, double hubClockPeriod)
             : base(frame.Clock)
         {
             var payload = (TS4231Payload*)frame.Data.ToPointer();
             HubClock = payload->HubClock;
             SensorIndex = payload->SensorIndex;
-            EnvelopeWidth = hubClockPerioduSec * payload->EnvelopeWidth;
+            EnvelopeWidth = hubClockPeriod * payload->EnvelopeWidth;
             EnvelopeType = payload->EnvelopeType;
         }
 
