@@ -29,7 +29,7 @@ namespace OpenEphys.Onix
 
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
-        public ConfigureTS4231 TS4231 { get; set; } = new() { Enable = false };
+        public ConfigureTS4231V1 TS4231 { get; set; } = new() { Enable = false };
 
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]

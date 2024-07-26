@@ -3,10 +3,10 @@ using System.ComponentModel;
 
 namespace OpenEphys.Onix
 {
-    public class ConfigureTS4231 : SingleDeviceFactory
+    public class ConfigureTS4231V1 : SingleDeviceFactory
     {
-        public ConfigureTS4231()
-            : base(typeof(TS4231))
+        public ConfigureTS4231V1()
+            : base(typeof(TS4231V1))
         {
         }
 
@@ -21,13 +21,13 @@ namespace OpenEphys.Onix
             return source.ConfigureDevice(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
-                device.WriteRegister(TS4231.ENABLE, Enable ? 1u : 0);
+                device.WriteRegister(TS4231V1.ENABLE, Enable ? 1u : 0);
                 return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
             });
         }
     }
 
-    static class TS4231
+    static class TS4231V1
     {
         public const int ID = 25;
 
@@ -37,7 +37,7 @@ namespace OpenEphys.Onix
         internal class NameConverter : DeviceNameConverter
         {
             public NameConverter()
-                : base(typeof(TS4231))
+                : base(typeof(TS4231V1))
             {
             }
         }
