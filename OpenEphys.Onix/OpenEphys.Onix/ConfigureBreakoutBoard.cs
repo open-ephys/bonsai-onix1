@@ -9,10 +9,10 @@ namespace OpenEphys.Onix
         public ConfigureHeartbeat Heartbeat { get; set; } = new();
 
         [TypeConverter(typeof(HubDeviceConverter))]
-        public ConfigureAnalogIO AnalogIO { get; set; } = new();
+        public ConfigureBreakoutAnalogIO AnalogIO { get; set; } = new();
 
         [TypeConverter(typeof(HubDeviceConverter))]
-        public ConfigureDigitalIO DigitalIO { get; set; } = new();
+        public ConfigureBreakoutDigitalIO DigitalIO { get; set; } = new();
 
         [TypeConverter(typeof(HubDeviceConverter))]
         public ConfigureMemoryMonitor MemoryMonitor { get; set; } = new();

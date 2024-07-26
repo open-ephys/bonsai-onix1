@@ -5,10 +5,10 @@ using System.Linq;
 namespace OpenEphys.Onix
 {
     [TypeConverter(typeof(SortedPropertyConverter))]
-    public class ConfigureAnalogIO : SingleDeviceFactory
+    public class ConfigureBreakoutAnalogIO : SingleDeviceFactory
     {
-        public ConfigureAnalogIO()
-            : base(typeof(AnalogIO))
+        public ConfigureBreakoutAnalogIO()
+            : base(typeof(BreakoutAnalogIO))
         {
             DeviceAddress = 6;
         }
@@ -19,99 +19,99 @@ namespace OpenEphys.Onix
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 0.")]
-        public AnalogIOVoltageRange InputRange0 { get; set; }
+        public BreakoutAnalogIOVoltageRange InputRange0 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 1.")]
-        public AnalogIOVoltageRange InputRange1 { get; set; }
+        public BreakoutAnalogIOVoltageRange InputRange1 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 2.")]
-        public AnalogIOVoltageRange InputRange2 { get; set; }
+        public BreakoutAnalogIOVoltageRange InputRange2 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 3.")]
-        public AnalogIOVoltageRange InputRange3 { get; set; }
+        public BreakoutAnalogIOVoltageRange InputRange3 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 4.")]
-        public AnalogIOVoltageRange InputRange4 { get; set; }
+        public BreakoutAnalogIOVoltageRange InputRange4 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 5.")]
-        public AnalogIOVoltageRange InputRange5 { get; set; }
+        public BreakoutAnalogIOVoltageRange InputRange5 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 6.")]
-        public AnalogIOVoltageRange InputRange6 { get; set; }
+        public BreakoutAnalogIOVoltageRange InputRange6 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 7.")]
-        public AnalogIOVoltageRange InputRange7 { get; set; }
+        public BreakoutAnalogIOVoltageRange InputRange7 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 8.")]
-        public AnalogIOVoltageRange InputRange8 { get; set; }
+        public BreakoutAnalogIOVoltageRange InputRange8 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 9.")]
-        public AnalogIOVoltageRange InputRange9 { get; set; }
+        public BreakoutAnalogIOVoltageRange InputRange9 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 10.")]
-        public AnalogIOVoltageRange InputRange10 { get; set; }
+        public BreakoutAnalogIOVoltageRange InputRange10 { get; set; }
 
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 11.")]
-        public AnalogIOVoltageRange InputRange11 { get; set; }
+        public BreakoutAnalogIOVoltageRange InputRange11 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 0.")]
-        public AnalogIODirection Direction0 { get; set; }
+        public BreakoutAnalogIODirection Direction0 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 1.")]
-        public AnalogIODirection Direction1 { get; set; }
+        public BreakoutAnalogIODirection Direction1 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 2.")]
-        public AnalogIODirection Direction2 { get; set; }
+        public BreakoutAnalogIODirection Direction2 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 3.")]
-        public AnalogIODirection Direction3 { get; set; }
+        public BreakoutAnalogIODirection Direction3 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 4.")]
-        public AnalogIODirection Direction4 { get; set; }
+        public BreakoutAnalogIODirection Direction4 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 5.")]
-        public AnalogIODirection Direction5 { get; set; }
+        public BreakoutAnalogIODirection Direction5 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 6.")]
-        public AnalogIODirection Direction6 { get; set; }
+        public BreakoutAnalogIODirection Direction6 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 7.")]
-        public AnalogIODirection Direction7 { get; set; }
+        public BreakoutAnalogIODirection Direction7 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 8.")]
-        public AnalogIODirection Direction8 { get; set; }
+        public BreakoutAnalogIODirection Direction8 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 9.")]
-        public AnalogIODirection Direction9 { get; set; }
+        public BreakoutAnalogIODirection Direction9 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 10.")]
-        public AnalogIODirection Direction10 { get; set; }
+        public BreakoutAnalogIODirection Direction10 { get; set; }
 
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 11.")]
-        public AnalogIODirection Direction11 { get; set; }
+        public BreakoutAnalogIODirection Direction11 { get; set; }
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
@@ -120,22 +120,22 @@ namespace OpenEphys.Onix
             return source.ConfigureDevice(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
-                device.WriteRegister(AnalogIO.ENABLE, Enable ? 1u : 0u);
-                device.WriteRegister(AnalogIO.CH00INRANGE, (uint)InputRange0);
-                device.WriteRegister(AnalogIO.CH01INRANGE, (uint)InputRange1);
-                device.WriteRegister(AnalogIO.CH02INRANGE, (uint)InputRange2);
-                device.WriteRegister(AnalogIO.CH03INRANGE, (uint)InputRange3);
-                device.WriteRegister(AnalogIO.CH04INRANGE, (uint)InputRange4);
-                device.WriteRegister(AnalogIO.CH05INRANGE, (uint)InputRange5);
-                device.WriteRegister(AnalogIO.CH06INRANGE, (uint)InputRange6);
-                device.WriteRegister(AnalogIO.CH07INRANGE, (uint)InputRange7);
-                device.WriteRegister(AnalogIO.CH08INRANGE, (uint)InputRange8);
-                device.WriteRegister(AnalogIO.CH09INRANGE, (uint)InputRange9);
-                device.WriteRegister(AnalogIO.CH10INRANGE, (uint)InputRange10);
-                device.WriteRegister(AnalogIO.CH11INRANGE, (uint)InputRange11);
+                device.WriteRegister(BreakoutAnalogIO.ENABLE, Enable ? 1u : 0u);
+                device.WriteRegister(BreakoutAnalogIO.CH00INRANGE, (uint)InputRange0);
+                device.WriteRegister(BreakoutAnalogIO.CH01INRANGE, (uint)InputRange1);
+                device.WriteRegister(BreakoutAnalogIO.CH02INRANGE, (uint)InputRange2);
+                device.WriteRegister(BreakoutAnalogIO.CH03INRANGE, (uint)InputRange3);
+                device.WriteRegister(BreakoutAnalogIO.CH04INRANGE, (uint)InputRange4);
+                device.WriteRegister(BreakoutAnalogIO.CH05INRANGE, (uint)InputRange5);
+                device.WriteRegister(BreakoutAnalogIO.CH06INRANGE, (uint)InputRange6);
+                device.WriteRegister(BreakoutAnalogIO.CH07INRANGE, (uint)InputRange7);
+                device.WriteRegister(BreakoutAnalogIO.CH08INRANGE, (uint)InputRange8);
+                device.WriteRegister(BreakoutAnalogIO.CH09INRANGE, (uint)InputRange9);
+                device.WriteRegister(BreakoutAnalogIO.CH10INRANGE, (uint)InputRange10);
+                device.WriteRegister(BreakoutAnalogIO.CH11INRANGE, (uint)InputRange11);
 
                 // Build the whole value for CHDIR and write it once
-                static uint SetIO(uint io_reg, int channel, AnalogIODirection direction) =>
+                static uint SetIO(uint io_reg, int channel, BreakoutAnalogIODirection direction) =>
                     (io_reg & ~((uint)1 << channel)) | ((uint)(direction) << channel);
 
                 var io_reg = 0u;
@@ -151,9 +151,9 @@ namespace OpenEphys.Onix
                 io_reg = SetIO(io_reg, 9, Direction9);
                 io_reg = SetIO(io_reg, 10, Direction10);
                 io_reg = SetIO(io_reg, 11, Direction11);
-                device.WriteRegister(AnalogIO.CHDIR, io_reg);
+                device.WriteRegister(BreakoutAnalogIO.CHDIR, io_reg);
 
-                var deviceInfo = new AnalogIODeviceInfo(device, this);
+                var deviceInfo = new BreakoutAnalogIODeviceInfo(device, this);
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
         }
@@ -164,8 +164,8 @@ namespace OpenEphys.Onix
             {
                 var properties = base.GetProperties(context, value, attributes);
                 var sortedOrder = properties.Cast<PropertyDescriptor>()
-                                            .Where(p => p.PropertyType == typeof(AnalogIOVoltageRange)
-                                                     || p.PropertyType == typeof(AnalogIODirection))
+                                            .Where(p => p.PropertyType == typeof(BreakoutAnalogIOVoltageRange)
+                                                     || p.PropertyType == typeof(BreakoutAnalogIODirection))
                                             .OrderBy(p => p.PropertyType.MetadataToken)
                                             .Select(p => p.Name)
                                             .Prepend(nameof(Enable))
@@ -175,7 +175,7 @@ namespace OpenEphys.Onix
         }
     }
 
-    static class AnalogIO
+    static class BreakoutAnalogIO
     {
         public const int ID = 22;
 
@@ -202,15 +202,15 @@ namespace OpenEphys.Onix
         internal class NameConverter : DeviceNameConverter
         {
             public NameConverter()
-                : base(typeof(AnalogIO))
+                : base(typeof(BreakoutAnalogIO))
             {
             }
         }
     }
 
-    class AnalogIODeviceInfo : DeviceInfo
+    class BreakoutAnalogIODeviceInfo : DeviceInfo
     {
-        public AnalogIODeviceInfo(DeviceContext device, ConfigureAnalogIO deviceFactory)
+        public BreakoutAnalogIODeviceInfo(DeviceContext device, ConfigureBreakoutAnalogIO deviceFactory)
             : base(device, deviceFactory.DeviceType)
         {
             VoltsPerDivision = new[]
@@ -230,13 +230,13 @@ namespace OpenEphys.Onix
             };
         }
 
-        public static float GetVoltsPerDivision(AnalogIOVoltageRange voltageRange)
+        public static float GetVoltsPerDivision(BreakoutAnalogIOVoltageRange voltageRange)
         {
             return voltageRange switch
             {
-                AnalogIOVoltageRange.TenVolts => 20.0f / AnalogIO.NumberOfDivisions,
-                AnalogIOVoltageRange.TwoPointFiveVolts => 5.0f / AnalogIO.NumberOfDivisions,
-                AnalogIOVoltageRange.FiveVolts => 10.0f / AnalogIO.NumberOfDivisions,
+                BreakoutAnalogIOVoltageRange.TenVolts => 20.0f / BreakoutAnalogIO.NumberOfDivisions,
+                BreakoutAnalogIOVoltageRange.TwoPointFiveVolts => 5.0f / BreakoutAnalogIO.NumberOfDivisions,
+                BreakoutAnalogIOVoltageRange.FiveVolts => 10.0f / BreakoutAnalogIO.NumberOfDivisions,
                 _ => throw new ArgumentOutOfRangeException(nameof(voltageRange)),
             };
         }
@@ -244,7 +244,7 @@ namespace OpenEphys.Onix
         public float[] VoltsPerDivision { get; }
     }
 
-    public enum AnalogIOVoltageRange
+    public enum BreakoutAnalogIOVoltageRange
     {
         [Description("+/-10.0 V")]
         TenVolts = 0,
@@ -254,13 +254,13 @@ namespace OpenEphys.Onix
         FiveVolts,
     }
 
-    public enum AnalogIODirection
+    public enum BreakoutAnalogIODirection
     {
         Input = 0,
         Output = 1
     }
 
-    public enum AnalogIODataType
+    public enum BreakoutAnalogIODataType
     {
         S16,
         Volts

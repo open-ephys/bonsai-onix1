@@ -3,9 +3,9 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
-    public class AnalogInputDataFrame : BufferedDataFrame
+    public class BreakoutAnalogInputDataFrame : BufferedDataFrame
     {
-        public AnalogInputDataFrame(ulong[] clock, ulong[] hubClock, Mat analogData)
+        public BreakoutAnalogInputDataFrame(ulong[] clock, ulong[] hubClock, Mat analogData)
             : base(clock, hubClock)
         {
             AnalogData = analogData;
@@ -15,9 +15,9 @@ namespace OpenEphys.Onix
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    unsafe struct AnalogInputPayload
+    unsafe struct BreakoutAnalogInputPayload
     {
         public ulong HubClock;
-        public fixed short AnalogData[AnalogIO.ChannelCount];
+        public fixed short AnalogData[BreakoutAnalogIO.ChannelCount];
     }
 }

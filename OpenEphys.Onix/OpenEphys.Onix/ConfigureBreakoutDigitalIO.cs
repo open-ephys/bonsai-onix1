@@ -3,10 +3,10 @@ using System.ComponentModel;
 
 namespace OpenEphys.Onix
 {
-    public class ConfigureDigitalIO : SingleDeviceFactory
+    public class ConfigureBreakoutDigitalIO : SingleDeviceFactory
     {
-        public ConfigureDigitalIO()
-            : base(typeof(DigitalIO))
+        public ConfigureBreakoutDigitalIO()
+            : base(typeof(BreakoutDigitalIO))
         {
             DeviceAddress = 7;
         }
@@ -22,13 +22,13 @@ namespace OpenEphys.Onix
             return source.ConfigureDevice(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
-                device.WriteRegister(DigitalIO.ENABLE, Enable ? 1u : 0);
+                device.WriteRegister(BreakoutDigitalIO.ENABLE, Enable ? 1u : 0);
                 return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
             });
         }
     }
 
-    static class DigitalIO
+    static class BreakoutDigitalIO
     {
         public const int ID = 18;
 
@@ -38,14 +38,14 @@ namespace OpenEphys.Onix
         internal class NameConverter : DeviceNameConverter
         {
             public NameConverter()
-                : base(typeof(DigitalIO))
+                : base(typeof(BreakoutDigitalIO))
             {
             }
         }
     }
 
     [Flags]
-    public enum DigitalPortState : ushort
+    public enum BreakoutDigitalPortState : ushort
     {
         Pin0 = 0x1,
         Pin1 = 0x2,

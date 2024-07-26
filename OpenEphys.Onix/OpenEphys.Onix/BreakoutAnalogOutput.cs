@@ -7,14 +7,14 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
-    public class AnalogOutput : Sink<Mat>
+    public class BreakoutAnalogOutput : Sink<Mat>
     {
-        const AnalogIOVoltageRange OutputRange = AnalogIOVoltageRange.TenVolts;
+        const BreakoutAnalogIOVoltageRange OutputRange = BreakoutAnalogIOVoltageRange.TenVolts;
 
-        [TypeConverter(typeof(AnalogIO.NameConverter))]
+        [TypeConverter(typeof(BreakoutAnalogIO.NameConverter))]
         public string DeviceName { get; set; }
 
-        public AnalogIODataType DataType { get; set; } = AnalogIODataType.S16;
+        public BreakoutAnalogIODataType DataType { get; set; } = BreakoutAnalogIODataType.S16;
 
         public override IObservable<Mat> Process(IObservable<Mat> source)
         {
@@ -24,14 +24,14 @@ namespace OpenEphys.Onix
                 var bufferSize = 0;
                 var scaleBuffer = default(Mat);
                 var transposeBuffer = default(Mat);
-                var sampleScale = dataType == AnalogIODataType.Volts
-                    ? 1 / AnalogIODeviceInfo.GetVoltsPerDivision(OutputRange)
+                var sampleScale = dataType == BreakoutAnalogIODataType.Volts
+                    ? 1 / BreakoutAnalogIODeviceInfo.GetVoltsPerDivision(OutputRange)
                     : 1;
-                var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));
+                var device = deviceInfo.GetDeviceContext(typeof(BreakoutAnalogIO));
                 return source.Do(data =>
                 {
-                    if (dataType == AnalogIODataType.S16 && data.Depth != Depth.S16 ||
-                        dataType == AnalogIODataType.Volts && data.Depth != Depth.F32)
+                    if (dataType == BreakoutAnalogIODataType.S16 && data.Depth != Depth.S16 ||
+                        dataType == BreakoutAnalogIODataType.Volts && data.Depth != Depth.F32)
                     {
                         ThrowDataTypeException(data.Depth);
                     }
@@ -73,12 +73,12 @@ namespace OpenEphys.Onix
 
         public IObservable<short[]> Process(IObservable<short[]> source)
         {
-            if (DataType != AnalogIODataType.S16)
+            if (DataType != BreakoutAnalogIODataType.S16)
                 ThrowDataTypeException(Depth.S16);
 
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
-                var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));
+                var device = deviceInfo.GetDeviceContext(typeof(BreakoutAnalogIO));
                 return source.Do(data =>
                 {
                     AssertChannelCount(data.Length);
@@ -89,13 +89,13 @@ namespace OpenEphys.Onix
 
         public IObservable<float[]> Process(IObservable<float[]> source)
         {
-            if (DataType != AnalogIODataType.Volts)
+            if (DataType != BreakoutAnalogIODataType.Volts)
                 ThrowDataTypeException(Depth.F32);
 
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
-                var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));
-                var divisionsPerVolt = 1 / AnalogIODeviceInfo.GetVoltsPerDivision(OutputRange);
+                var device = deviceInfo.GetDeviceContext(typeof(BreakoutAnalogIO));
+                var divisionsPerVolt = 1 / BreakoutAnalogIODeviceInfo.GetVoltsPerDivision(OutputRange);
                 return source.Do(data =>
                 {
                     AssertChannelCount(data.Length);
@@ -112,10 +112,10 @@ namespace OpenEphys.Onix
 
         static void AssertChannelCount(int channels)
         {
-            if (channels != AnalogIO.ChannelCount)
+            if (channels != BreakoutAnalogIO.ChannelCount)
             {
                 throw new InvalidOperationException(
-                    $"The input data must have exactly {AnalogIO.ChannelCount} channels."
+                    $"The input data must have exactly {BreakoutAnalogIO.ChannelCount} channels."
                 );
             }
         }

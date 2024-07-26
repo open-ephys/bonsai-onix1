@@ -9,14 +9,14 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix
 {
-    public class AnalogInput : Source<AnalogInputDataFrame>
+    public class BreakoutAnalogInput : Source<BreakoutAnalogInputDataFrame>
     {
-        [TypeConverter(typeof(AnalogIO.NameConverter))]
+        [TypeConverter(typeof(BreakoutAnalogIO.NameConverter))]
         public string DeviceName { get; set; }
 
         public int BufferSize { get; set; } = 100;
 
-        public AnalogIODataType DataType { get; set; } = AnalogIODataType.S16;
+        public BreakoutAnalogIODataType DataType { get; set; } = BreakoutAnalogIODataType.S16;
 
         static Mat CreateVoltageScale(int bufferSize, float[] voltsPerDivision)
         {
@@ -31,32 +31,32 @@ namespace OpenEphys.Onix
             return voltageScale;
         }
 
-        public unsafe override IObservable<AnalogInputDataFrame> Generate()
+        public unsafe override IObservable<BreakoutAnalogInputDataFrame> Generate()
         {
             var bufferSize = BufferSize;
             var dataType = DataType;
             return DeviceManager.GetDevice(DeviceName).SelectMany(
-                deviceInfo => Observable.Create<AnalogInputDataFrame>(observer =>
+                deviceInfo => Observable.Create<BreakoutAnalogInputDataFrame>(observer =>
                 {
-                    var device = deviceInfo.GetDeviceContext(typeof(AnalogIO));
-                    var ioDeviceInfo = (AnalogIODeviceInfo)deviceInfo;
+                    var device = deviceInfo.GetDeviceContext(typeof(BreakoutAnalogIO));
+                    var ioDeviceInfo = (BreakoutAnalogIODeviceInfo)deviceInfo;
 
                     var sampleIndex = 0;
-                    var voltageScale = dataType == AnalogIODataType.Volts
+                    var voltageScale = dataType == BreakoutAnalogIODataType.Volts
                         ? CreateVoltageScale(bufferSize, ioDeviceInfo.VoltsPerDivision)
                         : null;
                     var transposeBuffer = voltageScale != null
-                        ? new Mat(AnalogIO.ChannelCount, bufferSize, Depth.S16, 1)
+                        ? new Mat(BreakoutAnalogIO.ChannelCount, bufferSize, Depth.S16, 1)
                         : null;
-                    var analogDataBuffer = new short[AnalogIO.ChannelCount * bufferSize];
+                    var analogDataBuffer = new short[BreakoutAnalogIO.ChannelCount * bufferSize];
                     var hubClockBuffer = new ulong[bufferSize];
                     var clockBuffer = new ulong[bufferSize];
 
                     var frameObserver = Observer.Create<oni.Frame>(
                         frame =>
                         {
-                            var payload = (AnalogInputPayload*)frame.Data.ToPointer();
-                            Marshal.Copy(new IntPtr(payload->AnalogData), analogDataBuffer, sampleIndex * AnalogIO.ChannelCount, AnalogIO.ChannelCount);
+                            var payload = (BreakoutAnalogInputPayload*)frame.Data.ToPointer();
+                            Marshal.Copy(new IntPtr(payload->AnalogData), analogDataBuffer, sampleIndex * BreakoutAnalogIO.ChannelCount, BreakoutAnalogIO.ChannelCount);
                             hubClockBuffer[sampleIndex] = payload->HubClock;
                             clockBuffer[sampleIndex] = frame.Clock;
                             if (++sampleIndex >= bufferSize)
@@ -64,11 +64,11 @@ namespace OpenEphys.Onix
                                 var analogData = BufferHelper.CopyTranspose(
                                     analogDataBuffer,
                                     bufferSize,
-                                    AnalogIO.ChannelCount,
+                                    BreakoutAnalogIO.ChannelCount,
                                     Depth.S16,
                                     voltageScale,
                                     transposeBuffer);
-                                observer.OnNext(new AnalogInputDataFrame(clockBuffer, hubClockBuffer, analogData));
+                                observer.OnNext(new BreakoutAnalogInputDataFrame(clockBuffer, hubClockBuffer, analogData));
                                 hubClockBuffer = new ulong[bufferSize];
                                 clockBuffer = new ulong[bufferSize];
                                 sampleIndex = 0;
