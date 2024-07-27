@@ -9,13 +9,13 @@ namespace OpenEphys.Onix
 {
     class TS4231V1PulseQueue
     {
-        public Queue<ulong> PulseFrameClock { get; } = new(new ulong[TS4231V1GeometricPositionConverter.ValidPulseSequenceTemplate.Length / 4]);
-        public Queue<ulong> PulseHubClock { get; } = new(new ulong[TS4231V1GeometricPositionConverter.ValidPulseSequenceTemplate.Length / 4]);
-        public Queue<double> PulseWidths { get; } = new(new double[TS4231V1GeometricPositionConverter.ValidPulseSequenceTemplate.Length / 4]);
-        public Queue<bool> PulseParse { get; } = new(new bool[TS4231V1GeometricPositionConverter.ValidPulseSequenceTemplate.Length]);
+        public Queue<ulong> PulseFrameClock { get; } = new(new ulong[TS4231V1PositionConverter.ValidPulseSequenceTemplate.Length / 4]);
+        public Queue<ulong> PulseHubClock { get; } = new(new ulong[TS4231V1PositionConverter.ValidPulseSequenceTemplate.Length / 4]);
+        public Queue<double> PulseWidths { get; } = new(new double[TS4231V1PositionConverter.ValidPulseSequenceTemplate.Length / 4]);
+        public Queue<bool> PulseParse { get; } = new(new bool[TS4231V1PositionConverter.ValidPulseSequenceTemplate.Length]);
     }
 
-    class TS4231V1GeometricPositionConverter
+    class TS4231V1PositionConverter
     {
         const double SweepFrequencyHz = 60;
         readonly double HubClockFrequencyPeriod;
@@ -41,7 +41,7 @@ namespace OpenEphys.Onix
 
         Dictionary<int, TS4231V1PulseQueue> PulseQueues = new();
 
-        public TS4231V1GeometricPositionConverter(uint hubClockFrequencyHz, Point3d baseStation1Origin, Point3d baseStation2Origin)
+        public TS4231V1PositionConverter(uint hubClockFrequencyHz, Point3d baseStation1Origin, Point3d baseStation2Origin)
         {
             HubClockFrequencyPeriod = 1d / hubClockFrequencyHz;
 
@@ -56,7 +56,7 @@ namespace OpenEphys.Onix
             q[2] = new Scalar(baseStation2Origin.Z);
         }
 
-        public unsafe TS4231V1GeometricPositionDataFrame Convert(oni.Frame frame)
+        public unsafe TS4231V1PositionDataFrame Convert(oni.Frame frame)
         {
             var payload = (TS4231V1Payload*)frame.Data.ToPointer();
 
@@ -154,7 +154,7 @@ namespace OpenEphys.Onix
             var q1 = q + x2 * v;
             var position = 0.5 * (p1 + q1);
 
-            return new TS4231V1GeometricPositionDataFrame(
+            return new TS4231V1PositionDataFrame(
                 queues.PulseHubClock.ElementAt(ValidPulseSequenceTemplate.Length / 8),
                 queues.PulseFrameClock.ElementAt(ValidPulseSequenceTemplate.Length / 8),
                 payload->SensorIndex,
