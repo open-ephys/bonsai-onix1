@@ -10,10 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Bonsai.Core" Version="2.8.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\OpenEphys.Onix\OpenEphys.Onix.csproj" />
   </ItemGroup>
 
