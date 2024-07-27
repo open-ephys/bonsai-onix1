@@ -18,7 +18,7 @@ namespace OpenEphys.Onix
     /// The data produced by this class contains individual base station pulse/sweep codes and timing information. These data provide
     /// rapid updates that constrain the possible position of a sensor and therefore can be combined with orientation information
     /// in a downstream predictive model (e.g. Kalman filter) for high-accuracy and robust position tracking. To produce naïve
-    /// position estimates, use the <see cref="TS4231V1GeometricPositionData"/> operator instead of this one.
+    /// position estimates, use the <see cref="TS4231V1PositionData"/> operator instead of this one.
     /// </para>
     /// </remarks>
     public class TS4231V1Data : Source<TS4231V1DataFrame>

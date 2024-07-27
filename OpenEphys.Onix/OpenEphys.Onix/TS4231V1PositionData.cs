@@ -35,7 +35,7 @@ namespace OpenEphys.Onix
     /// estimates using downstream processing.
     /// </para>
     /// </remarks>
-    public class TS4231V1GeometricPositionData : Source<TS4231V1GeometricPositionDataFrame>
+    public class TS4231V1PositionData : Source<TS4231V1PositionDataFrame>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(TS4231V1.NameConverter))]
@@ -45,7 +45,7 @@ namespace OpenEphys.Onix
         /// Gets or sets the position of the first base station in arbitrary units.
         /// </summary>
         /// <remarks>
-        /// The units used will determine the units of <see cref="TS4231V1GeometricPositionDataFrame.Position"/> and must match those used in <see cref="Q"/>.
+        /// The units used will determine the units of <see cref="TS4231V1PositionDataFrame.Position"/> and must match those used in <see cref="Q"/>.
         /// Typically this value is used to define the origin and remains at (0, 0, 0).
         /// </remarks>
         public Point3d P { get; set; } = new(0, 0, 0);
@@ -54,21 +54,21 @@ namespace OpenEphys.Onix
         /// Gets or sets the position of the first base station in arbitrary units.
         /// </summary>
         /// <remarks>
-        /// The units used will determine the units of <see cref="TS4231V1GeometricPositionDataFrame.Position"/> and must match those used in <see cref="P"/>.
+        /// The units used will determine the units of <see cref="TS4231V1PositionDataFrame.Position"/> and must match those used in <see cref="P"/>.
         /// </remarks>
         public Point3d Q { get; set; } = new(1, 0, 0);
 
         /// <summary>
-        /// Generates a sequence of <see cref="TS4231V1GeometricPositionDataFrame"/> objects, each of which contains the 3D position of single photodiode.
+        /// Generates a sequence of <see cref="TS4231V1PositionDataFrame"/> objects, each of which contains the 3D position of single photodiode.
         /// </summary>
-        /// <returns>A sequence of <see cref="TS4231V1GeometricPositionDataFrame"/> objects.</returns>
-        public unsafe override IObservable<TS4231V1GeometricPositionDataFrame> Generate()
+        /// <returns>A sequence of <see cref="TS4231V1PositionDataFrame"/> objects.</returns>
+        public unsafe override IObservable<TS4231V1PositionDataFrame> Generate()
         {
             return DeviceManager.GetDevice(DeviceName).SelectMany(
-                deviceInfo => Observable.Create<TS4231V1GeometricPositionDataFrame>(observer =>
+                deviceInfo => Observable.Create<TS4231V1PositionDataFrame>(observer =>
                 {
                     var device = deviceInfo.GetDeviceContext(typeof(TS4231V1));
-                    var pulseConverter = new TS4231V1GeometricPositionConverter(device.Hub.ClockHz, P, Q);
+                    var pulseConverter = new TS4231V1PositionConverter(device.Hub.ClockHz, P, Q);
 
                     var frameObserver = Observer.Create<oni.Frame>(
                         frame =>
