@@ -1,33 +1,5 @@
-﻿using System;
-using System.ComponentModel;
-
-namespace OpenEphys.Onix
+﻿namespace OpenEphys.Onix
 {
-    public class ConfigureDS90UB9x : SingleDeviceFactory
-    {
-        public ConfigureDS90UB9x()
-            : base(typeof(DS90UB9x))
-        {
-        }
-
-        [Category(ConfigurationCategory)]
-        [Description("Specifies whether the DS90UB9x raw device is enabled.")]
-        public bool Enable { get; set; } = true;
-
-        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
-        {
-            var enable = Enable;
-            var deviceName = DeviceName;
-            var deviceAddress = DeviceAddress;
-            return source.ConfigureDevice(context =>
-            {
-                var device = context.GetDeviceContext(deviceAddress, DeviceType);
-                device.WriteRegister(DS90UB9x.ENABLE, enable ? 1u : 0);
-                return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
-            });
-        }
-    }
-
     static class DS90UB9x
     {
         public const int ID = 24;

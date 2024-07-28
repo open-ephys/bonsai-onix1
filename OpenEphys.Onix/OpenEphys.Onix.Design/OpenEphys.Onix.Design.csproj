@@ -7,11 +7,8 @@
     <TargetFramework>net472</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <VersionPrefix>0.1.0</VersionPrefix>
+    <Platforms>x64</Platforms>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Bonsai.Core" Version="2.8.0" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\OpenEphys.Onix\OpenEphys.Onix.csproj" />
