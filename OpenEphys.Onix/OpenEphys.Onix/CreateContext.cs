@@ -6,9 +6,10 @@ using System.Reactive.Linq;
 namespace OpenEphys.Onix
 {
     /// <summary>
-    /// Produces a sequence of <see cref="ContextTask"/> elements, each of which orchestrate a single ONI-compliant controller.
+    /// Creates a <see cref="ContextTask"/> to orchestrate a single ONI-compliant controller
+    /// using the specified device driver and host interconnect.
     /// </summary>
-    [Description("Produces a sequence of ContextTasks, each of which orchestrate a single ONI-compliant controller.")]
+    [Description("Creates a ContextTask to orchestrate a single ONI-compliant controller using the specified device driver and host interconnect.")]
     [Combinator(MethodName = nameof(Generate))]
     [WorkflowElementCategory(ElementCategory.Source)]
     public class CreateContext
@@ -16,6 +17,7 @@ namespace OpenEphys.Onix
         /// <summary>
         /// Gets or sets a string specifying the device driver used to communicate with hardware.
         /// </summary>
+        [Description("Specifies the device driver used to communicate with hardware.")]
         public string Driver { get; set; } = ContextTask.DefaultDriver;
 
         /// <summary>
@@ -27,12 +29,16 @@ namespace OpenEphys.Onix
         /// A value of -1 will attempt to open the default index and is useful if there is only a single ONI controller
         /// managed by the specified selected <see cref="Driver"/> in the host computer.
         /// </remarks>
+        [Description("The index of the host interconnect between the ONI controller and host computer.")]
         public int Index { get; set; } = ContextTask.DefaultIndex;
 
         /// <summary>
-        /// Produces a sequence of <see cref="ContextTask"/> elements that orchestrate ONI compliant controller.
+        /// Generates a sequence that creates a new <see cref="ContextTask"/> object.
         /// </summary>
-        /// <returns>A sequence of <see cref="ContextTask"/> elements that orchestrate ONI compliant controller.</returns>
+        /// <returns>
+        /// A sequence containing a single instance of the <see cref="ContextTask"/> class. Cancelling the sequence
+        /// will dispose of the created context.
+        /// </returns>
         public IObservable<ContextTask> Generate()
         {
             return Observable.Create<ContextTask>(observer =>

@@ -379,7 +379,7 @@ namespace OpenEphys.Onix
         /// </remarks>
         internal bool Running => ctx.Running;
 
-        public int HardwareAddress
+        internal int HardwareAddress
         {
             get => ctx.HardwareAddress;
             set => ctx.HardwareAddress = value;

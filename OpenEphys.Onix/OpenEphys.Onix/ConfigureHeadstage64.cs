@@ -5,8 +5,9 @@ using System.Threading;
 namespace OpenEphys.Onix
 {
     /// <summary>
-    /// A class that configures ONIX headstage-64.
+    /// A class that configures an ONIX headstage-64 in the specified port.
     /// </summary>
+    [Description("Configures an ONIX headstage-64 in the specified port.")]
     public class ConfigureHeadstage64 : HubDeviceFactory
     {
         PortName port;
@@ -42,6 +43,7 @@ namespace OpenEphys.Onix
         /// </summary>
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
+        [Description("Specifies the configuration for the Rhd2164 device in the headstage-64.")]
         public ConfigureRhd2164 Rhd2164 { get; set; } = new();
 
         /// <summary>
@@ -49,6 +51,7 @@ namespace OpenEphys.Onix
         /// </summary>
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
+        [Description("Specifies the configuration for the Bno055 device in the headstage-64.")]
         public ConfigureBno055 Bno055 { get; set; } = new();
 
         /// <summary>
@@ -56,6 +59,7 @@ namespace OpenEphys.Onix
         /// </summary>
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
+        [Description("Specifies the configuration for the TS4231 device in the headstage-64.")]
         public ConfigureTS4231V1 TS4231 { get; set; } = new() { Enable = false };
 
         /// <summary>
@@ -63,6 +67,7 @@ namespace OpenEphys.Onix
         /// </summary>
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
+        [Description("Specifies the configuration for the ElectricalStimulator device in the headstage-64.")]
         public ConfigureHeadstage64ElectricalStimulator ElectricalStimulator { get; set; } = new();
 
         /// <summary>
@@ -70,6 +75,7 @@ namespace OpenEphys.Onix
         /// </summary>
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
+        [Description("Specifies the configuration for the OpticalStimulator device in the headstage-64.")]
         public ConfigureHeadstage64OpticalStimulator OpticalStimulator { get; set; } = new();
 
         /// <summary>
@@ -78,6 +84,7 @@ namespace OpenEphys.Onix
         /// <remarks>
         /// The port is the physical connection to the ONIX breakout board and must be specified prior to operation.
         /// </remarks>
+        [Description("Specifies the physical connection of the headstage to the ONIX breakout board.")]
         public PortName Port
         {
             get { return port; }
@@ -95,7 +102,7 @@ namespace OpenEphys.Onix
         }
 
         /// <summary>
-        /// Get or set the port voltage override.
+        /// Gets or sets the port voltage override.
         /// </summary>
         /// <remarks>
         /// <para>

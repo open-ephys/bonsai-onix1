@@ -17,6 +17,7 @@ namespace OpenEphys.Onix
     /// This class must be linked to an appropriate configuration, such as a <see cref="ConfigureHeadstage64ElectricalStimulator"/>,
     /// in order to define and deliver electrical stimulation sequences.
     /// </remarks>
+    [Description("Controls a headstage-64 onboard electrical stimulus sequencer.")]
     public class Headstage64ElectricalStimulatorTrigger: Sink<bool>
     {
         readonly BehaviorSubject<bool> enable = new(true);
@@ -35,6 +36,7 @@ namespace OpenEphys.Onix
 
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(Headstage64ElectricalStimulator.NameConverter))]
+        [Description(SingleDeviceFactory.DeviceNameDescription)]
         public string DeviceName { get; set; }
 
         /// <summary>

@@ -10,6 +10,7 @@ namespace OpenEphys.Onix
     /// This configuration class can be linked to a <see cref="Rhd2164Data"/> instance to stream
     /// electrophysiology data from the chip.
     /// </remarks>
+    [Description("Configures a RHD2164 device.")]
     public class ConfigureRhd2164 : SingleDeviceFactory
     {
         /// <summary>
@@ -21,7 +22,7 @@ namespace OpenEphys.Onix
         }
 
         /// <summary>
-        /// Get or set the device enable state.
+        /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>
         /// If set to true, a <see cref="Rhd2164Data"/> instance that is linked to this configuration will produce data.
@@ -53,7 +54,7 @@ namespace OpenEphys.Onix
         public Rhd2164AnalogHighCutoff AnalogHighCutoff { get; set; } = Rhd2164AnalogHighCutoff.High10000Hz;
 
         /// <summary>
-        /// Configure a RHD2164 device.
+        /// Configures a RHD2164 device.
         /// </summary>
         /// <remarks>
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance

@@ -9,10 +9,12 @@ namespace OpenEphys.Onix
     /// <summary>
     /// Sends digital output data to an ONIX breakout board.
     /// </summary>
+    [Description("Sends digital output data to an ONIX breakout board.")]
     public class BreakoutDigitalOutput : Sink<BreakoutDigitalPortState>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(BreakoutDigitalIO.NameConverter))]
+        [Description(SingleDeviceFactory.DeviceNameDescription)]
         public string DeviceName { get; set; }
 
         /// <summary>

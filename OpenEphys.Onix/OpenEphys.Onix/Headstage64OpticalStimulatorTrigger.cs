@@ -17,6 +17,7 @@ namespace OpenEphys.Onix
     /// This class must be linked to an appropriate configuration, such as a <see cref="ConfigureHeadstage64OpticalStimulator"/>,
     /// in order to define and deliver optical stimulation sequences.
     /// </remarks>
+    [Description("Controls a headstage-64 onboard optical stimulus sequencer.")]
     public class Headstage64OpticalStimulatorTrigger : Sink<bool>
     {
         readonly BehaviorSubject<bool> enable = new(true);

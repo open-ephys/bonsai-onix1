@@ -21,10 +21,12 @@ namespace OpenEphys.Onix
     /// position estimates, use the <see cref="TS4231V1PositionData"/> operator instead of this one.
     /// </para>
     /// </remarks>
+    [Description("Produces a sequence of decoded optical signals produced by a pair of SteamVR V1 base stations.")]
     public class TS4231V1Data : Source<TS4231V1DataFrame>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(TS4231V1.NameConverter))]
+        [Description(SingleDeviceFactory.DeviceNameDescription)]
         public string DeviceName { get; set; }
 
         /// <summary>

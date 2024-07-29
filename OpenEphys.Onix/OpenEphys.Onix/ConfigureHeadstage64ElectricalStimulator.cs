@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace OpenEphys.Onix
 {
@@ -10,6 +11,7 @@ namespace OpenEphys.Onix
     /// current controlled electrical micro-stimulation through a contact on the probe connector on the bottom of the headstage
     /// or the corresponding contact on a compatible electrode interface board.
     /// </remarks>
+    [Description("Configures a headstage-64 onboard electrical stimulator.")]
     public class ConfigureHeadstage64ElectricalStimulator : SingleDeviceFactory
     {
         /// <summary>

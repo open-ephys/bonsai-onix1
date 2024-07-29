@@ -9,12 +9,14 @@ using OpenCV.Net;
 namespace OpenEphys.Onix
 {
     /// <summary>
-    /// Produces a sequence of NeuropixelsV1e frames from a NeuropixelsV1e headstage.
+    /// Produces a sequence of <see cref="NeuropixelsV1eDataFrame"/> objects from a NeuropixelsV1e headstage.
     /// </summary>
+    [Description("Produces a sequence of NeuropixelsV1eDataFrame objects from a NeuropixelsV1e headstage.")]
     public class NeuropixelsV1eData : Source<NeuropixelsV1eDataFrame>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(NeuropixelsV1e.NameConverter))]
+        [Description(SingleDeviceFactory.DeviceNameDescription)]
         public string DeviceName { get; set; }
 
         int bufferSize = 36;

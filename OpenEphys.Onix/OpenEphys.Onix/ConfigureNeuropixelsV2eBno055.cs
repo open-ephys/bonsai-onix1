@@ -4,8 +4,9 @@ using System.ComponentModel;
 namespace OpenEphys.Onix
 {
     /// <summary>
-    /// A class that configures a ConfigureNeuropixelsV2eBno055 device.
+    /// A class that configures a NeuropixelsV2eBno055 device.
     /// </summary>
+    [Description("Configures a NeuropixelsV2eBno055 device.")]
     public class ConfigureNeuropixelsV2eBno055 : SingleDeviceFactory
     {
         /// <summary>
@@ -28,9 +29,12 @@ namespace OpenEphys.Onix
         public bool Enable { get; set; } = true;
 
         /// <summary>
+        /// Configures a NeuropixelsV2eBno055 device.
+        /// </summary>
+        /// <remarks>
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
         /// prior to data acquisition.
-        /// </summary>
+        /// </remarks>
         /// <param name="source">A sequence of <see cref="ContextTask"/> that holds all configuration actions.</param>
         /// <returns>
         /// The original sequence with the side effect of an additional configuration action to configure

@@ -8,6 +8,7 @@ namespace OpenEphys.Onix
     /// A class for configuring the ONIX breakout board's analog inputs and outputs.
     /// </summary>
     [TypeConverter(typeof(SortedPropertyConverter))]
+    [Description("Configures the analog input and output device in the ONIX breakout board.")]
     public class ConfigureBreakoutAnalogIO : SingleDeviceFactory
     {
         /// <summary>
@@ -20,7 +21,7 @@ namespace OpenEphys.Onix
         }
 
         /// <summary>
-        /// Get or set the device enable state.
+        /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>
         /// If set to true, <see cref="BreakoutAnalogInput"/> will produce data. If set to false, <see cref="BreakoutAnalogInput"/> will not produce data.
@@ -30,185 +31,186 @@ namespace OpenEphys.Onix
         public bool Enable { get; set; } = true;
 
         /// <summary>
-        /// Get or set the input voltage range of channel 0.
+        /// Gets or sets the input voltage range of channel 0.
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 0.")]
         public BreakoutAnalogIOVoltageRange InputRange0 { get; set; }
 
         /// <summary>
-        /// Get or set the input voltage range of channel 1.
+        /// Gets or sets the input voltage range of channel 1.
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 1.")]
         public BreakoutAnalogIOVoltageRange InputRange1 { get; set; }
 
         /// <summary>
-        /// Get or set the input voltage range of channel 2.
+        /// Gets or sets the input voltage range of channel 2.
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 2.")]
         public BreakoutAnalogIOVoltageRange InputRange2 { get; set; }
 
         /// <summary>
-        /// Get or set the input voltage range of channel 3.
+        /// Gets or sets the input voltage range of channel 3.
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 3.")]
         public BreakoutAnalogIOVoltageRange InputRange3 { get; set; }
 
         /// <summary>
-        /// Get or set the input voltage range of channel 4.
+        /// Gets or sets the input voltage range of channel 4.
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 4.")]
         public BreakoutAnalogIOVoltageRange InputRange4 { get; set; }
 
         /// <summary>
-        /// Get or set the input voltage range of channel 5.
+        /// Gets or sets the input voltage range of channel 5.
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 5.")]
         public BreakoutAnalogIOVoltageRange InputRange5 { get; set; }
 
         /// <summary>
-        /// Get or set the input voltage range of channel 6.
+        /// Gets or sets the input voltage range of channel 6.
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 6.")]
         public BreakoutAnalogIOVoltageRange InputRange6 { get; set; }
 
         /// <summary>
-        /// Get or set the input voltage range of channel 7.
+        /// Gets or sets the input voltage range of channel 7.
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 7.")]
         public BreakoutAnalogIOVoltageRange InputRange7 { get; set; }
 
         /// <summary>
-        /// Get or set the input voltage range of channel 8.
+        /// Gets or sets the input voltage range of channel 8.
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 8.")]
         public BreakoutAnalogIOVoltageRange InputRange8 { get; set; }
 
         /// <summary>
-        /// Get or set the input voltage range of channel 9.
+        /// Gets or sets the input voltage range of channel 9.
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 9.")]
         public BreakoutAnalogIOVoltageRange InputRange9 { get; set; }
 
         /// <summary>
-        /// Get or set the input voltage range of channel 10.
+        /// Gets or sets the input voltage range of channel 10.
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 10.")]
         public BreakoutAnalogIOVoltageRange InputRange10 { get; set; }
 
         /// <summary>
-        /// Get or set the input voltage range of channel 11.
+        /// Gets or sets the input voltage range of channel 11.
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("The input voltage range of channel 11.")]
         public BreakoutAnalogIOVoltageRange InputRange11 { get; set; }
 
         /// <summary>
-        /// Get or set the direction of channel 0.
+        /// Gets or sets the direction of channel 0.
         /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 0.")]
         public BreakoutAnalogIODirection Direction0 { get; set; }
 
         /// <summary>
-        /// Get or set the direction of channel 1.
+        /// Gets or sets the direction of channel 1.
         /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 1.")]
         public BreakoutAnalogIODirection Direction1 { get; set; }
 
         /// <summary>
-        /// Get or set the direction of channel 2.
+        /// Gets or sets the direction of channel 2.
         /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 2.")]
         public BreakoutAnalogIODirection Direction2 { get; set; }
 
         /// <summary>
-        /// Get or set the direction of channel 3.
+        /// Gets or sets the direction of channel 3.
         /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 3.")]
         public BreakoutAnalogIODirection Direction3 { get; set; }
 
         /// <summary>
-        /// Get or set the direction of channel 4.
+        /// Gets or sets the direction of channel 4.
         /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 4.")]
         public BreakoutAnalogIODirection Direction4 { get; set; }
 
         /// <summary>
-        /// Get or set the direction of channel 5.
+        /// Gets or sets the direction of channel 5.
         /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 5.")]
         public BreakoutAnalogIODirection Direction5 { get; set; }
 
         /// <summary>
-        /// Get or set the direction of channel 6.
+        /// Gets or sets the direction of channel 6.
         /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 6.")]
         public BreakoutAnalogIODirection Direction6 { get; set; }
 
         /// <summary>
-        /// Get or set the direction of channel 7.
+        /// Gets or sets the direction of channel 7.
         /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 7.")]
         public BreakoutAnalogIODirection Direction7 { get; set; }
 
         /// <summary>
-        /// Get or set the direction of channel 8.
+        /// Gets or sets the direction of channel 8.
         /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 8.")]
         public BreakoutAnalogIODirection Direction8 { get; set; }
 
         /// <summary>
-        /// Get or set the direction of channel 9.
+        /// Gets or sets the direction of channel 9.
         /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 9.")]
         public BreakoutAnalogIODirection Direction9 { get; set; }
 
         /// <summary>
-        /// Get or set the direction of channel 10.
+        /// Gets or sets the direction of channel 10.
         /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 10.")]
         public BreakoutAnalogIODirection Direction10 { get; set; }
 
         /// <summary>
-        /// Get or set the direction of channel 11.
+        /// Gets or sets the direction of channel 11.
         /// </summary>
         [Category(AcquisitionCategory)]
         [Description("The direction of channel 11.")]
         public BreakoutAnalogIODirection Direction11 { get; set; }
 
         /// <summary>
-        /// Configure analog inputs and outputs within an ONI context.
+        /// Configures the analog input and output device in the ONIX breakout board.
         /// </summary>
         /// <remarks>
-        /// This will schedule analog IO hardware configuration actions that can be applied by a <see cref="StartAcquisition"/> object prior to data collection.
+        /// This will schedule analog IO hardware configuration actions that can be applied by a
+        /// <see cref="StartAcquisition"/> object prior to data collection.
         /// </remarks>
         /// <param name="source">
         /// The sequence of <see cref="ContextTask"/> objects on which to apply the analog IO configuration.
         /// </param>
         /// <returns>
-        /// A sequence of <see cref="ContextTask"/> objects that is identical to <paramref name="source"/> in which each <see cref="ContextTask"/> has been instructed
-        /// to apply the analog IO configuration.
+        /// A sequence of <see cref="ContextTask"/> objects that is identical to <paramref name="source"/>
+        /// in which each <see cref="ContextTask"/> has been instructed to apply the analog IO configuration.
         /// </returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {

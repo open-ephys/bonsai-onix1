@@ -6,6 +6,7 @@ namespace OpenEphys.Onix
     /// <summary>
     /// A class that configures a NeuropixelsV2e headstage.
     /// </summary>
+    [Description("configures a NeuropixelsV2e headstage.")]
     public class ConfigureNeuropixelsV2eHeadstage : HubDeviceFactory
     {
         PortName port;
@@ -21,27 +22,28 @@ namespace OpenEphys.Onix
         }
 
         /// <summary>
-        /// Gets or sets a <see cref="ConfigureNeuropixelsV2e"/> object.
+        /// Gets or sets the NeuropixelsV2e configuration.
         /// </summary>
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
-        [Description("Configure a NeuropixelsV2e device.")]
-        public ConfigureNeuropixelsV2e NeuropixelsV2 { get; set; } = new();
+        [Description("Specifies the configuration for the NeuropixelsV2e device.")]
+        public ConfigureNeuropixelsV2e NeuropixelsV2e { get; set; } = new();
 
         /// <summary>
-        /// Gets or sets a <see cref="ConfigureNeuropixelsV2eBno055"/> object.
+        /// Gets or sets the Bno055 9-axis inertial measurement unit configuration.
         /// </summary>
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
-        [Description("Configure a NeuropixelsV2eBno055 device.")]
+        [Description("Specifies the configuration for the Bno055 device.")]
         public ConfigureNeuropixelsV2eBno055 Bno055 { get; set; } = new();
 
         /// <summary>
-        /// Gets or sets the <see cref="PortName"/>.
+        /// Gets or sets the port.
         /// </summary>
         /// <remarks>
-        /// The port is the physical connection on the breakout board.
+        /// The port is the physical connection to the ONIX breakout board and must be specified prior to operation.
         /// </remarks>
+        [Description("Specifies the physical connection of the headstage to the ONIX breakout board.")]
         public PortName Port
         {
             get { return port; }
@@ -50,7 +52,7 @@ namespace OpenEphys.Onix
                 port = value;
                 var offset = (uint)port << 8;
                 LinkController.DeviceAddress = (uint)port;
-                NeuropixelsV2.DeviceAddress = offset + 0;
+                NeuropixelsV2e.DeviceAddress = offset + 0;
                 Bno055.DeviceAddress = offset + 1;
             }
         }
@@ -76,7 +78,7 @@ namespace OpenEphys.Onix
         internal override IEnumerable<IDeviceConfiguration> GetDevices()
         {
             yield return LinkController;
-            yield return NeuropixelsV2;
+            yield return NeuropixelsV2e;
             yield return Bno055;
         }
     }

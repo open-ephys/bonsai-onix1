@@ -35,10 +35,12 @@ namespace OpenEphys.Onix
     /// estimates using downstream processing.
     /// </para>
     /// </remarks>
+    [Description("Produces a sequence of 3D positions from an array of Triad Semiconductor TS4231 receivers beneath a pair of SteamVR V1 base stations.")]
     public class TS4231V1PositionData : Source<TS4231V1PositionDataFrame>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(TS4231V1.NameConverter))]
+        [Description(SingleDeviceFactory.DeviceNameDescription)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -48,14 +50,16 @@ namespace OpenEphys.Onix
         /// The units used will determine the units of <see cref="TS4231V1PositionDataFrame.Position"/> and must match those used in <see cref="Q"/>.
         /// Typically this value is used to define the origin and remains at (0, 0, 0).
         /// </remarks>
+        [Description("The position of the first base station in arbitrary units.")]
         public Point3d P { get; set; } = new(0, 0, 0);
 
         /// <summary>
-        /// Gets or sets the position of the first base station in arbitrary units.
+        /// Gets or sets the position of the second base station in arbitrary units.
         /// </summary>
         /// <remarks>
         /// The units used will determine the units of <see cref="TS4231V1PositionDataFrame.Position"/> and must match those used in <see cref="P"/>.
         /// </remarks>
+        [Description("The position of the second base station in arbitrary units.")]
         public Point3d Q { get; set; } = new(1, 0, 0);
 
         /// <summary>

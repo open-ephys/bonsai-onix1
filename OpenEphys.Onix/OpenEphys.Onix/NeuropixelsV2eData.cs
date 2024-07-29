@@ -9,12 +9,14 @@ using OpenCV.Net;
 namespace OpenEphys.Onix
 {
     /// <summary>
-    /// Produces a sequence of <see cref="NeuropixelsV2eDataFrame"/> from a NeuropixelsV2e headstage.
+    /// Produces a sequence of <see cref="NeuropixelsV2eDataFrame"/> objects from a NeuropixelsV2e headstage.
     /// </summary>
+    [Description("Produces a sequence of NeuropixelsV2eDataFrame objects from a NeuropixelsV2e headstage.")]
     public class NeuropixelsV2eData : Source<NeuropixelsV2eDataFrame>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(NeuropixelsV2e.NameConverter))]
+        [Description(SingleDeviceFactory.DeviceNameDescription)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -26,11 +28,13 @@ namespace OpenEphys.Onix
         /// corresponding clock values, will be collected and packed into each <see cref="NeuropixelsV2eDataFrame"/>. Because channels are 
         /// sampled at 30 kHz, this is equivalent to 1 millisecond of data from each channel.
         /// </remarks>
+        [Description("The number of samples collected for each channel that are used to create a single NeuropixelsV2eDataFrame.")]
         public int BufferSize { get; set; } = 30;
 
         /// <summary>
         /// Gets or sets the probe index.
         /// </summary>
+        [Description("The index of the probe from which to collect sample data")]
         public NeuropixelsV2Probe ProbeIndex { get; set; }
 
         /// <summary>
