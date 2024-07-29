@@ -68,12 +68,11 @@ namespace OpenEphys.Onix
         /// Initializes a new instance of the <see cref="ContextTask"/> class.
         /// </summary>
         /// <param name="driver"> A string specifying the device driver used to control hardware. </param>
-        /// <param name="index">An index representing the physical location of ONI compliant hardware, to be communicated with using the
-        /// specified  <paramref name="driver"/>, that will be managed by the internal <see cref="oni.Context"/>. For instance, 0 might
+        /// <param name="index">The index of the host interconnect between the ONI controller and host computer. For instance, 0 could
         /// correspond to a particular PCIe slot or USB port as enumerated by the operating system and translated by an
         /// <see href="https://open-ephys.github.io/ONI/api/liboni/driver-translators/index.html#drivers">ONI device driver translator</see>. 
-        /// A value of -1 will attempt to open the default hardware index and is useful if there is only a single ONI controller host
-        /// managed by the specified  <paramref name="driver"/> in the host computer.</param>
+        /// A value of -1 will attempt to open the default hardware index and is useful if there is only a single ONI controller
+        /// managed by the specified <paramref name="driver"/> in the host computer.</param>
         internal ContextTask(string driver, int index)
         {
             groupedFrames = frameReceived.GroupBy(frame => frame.DeviceAddress).Replay();
@@ -387,25 +386,27 @@ namespace OpenEphys.Onix
         }
 
         /// <summary>
-        /// Gets the number of bytes read during each device driver access to the read channel.
+        /// Gets the number of bytes read by the device driver access to the read channel.
         /// </summary>
         /// <remarks>
         /// This option allows control over a fundamental trade-off between closed-loop response time and overall bandwidth. 
-        /// A minimal value (<see cref="MaxReadFrameSize"/>) will generally provide the lowest response latency. Larger values
-        /// will reduce system call frequency and may improve processing performance for high-bandwidth data sources. 
-        /// The optimal value depends on the host computer and hardware configuration and must be determined via testing.
+        /// A minimal value, which is determined by <see cref="MaxReadFrameSize"/>, will may provide the lowest response latency,
+        /// so long as data can be cleared form hardware memory fast enough to prevent buffering. Larger values will reduce system
+        /// call frequency, increase overall bandwidth, and may improve processing performance for high-bandwidth data sources.
+        /// The optimal value depends on the host computer and hardware configuration and must be determined via testing (e.g.
+        /// using <see cref="MemoryMonitorData"/>).
         /// </remarks>
         public int BlockReadSize => ctx.BlockReadSize;
 
         /// <summary>
-        /// Gets the number of bytes read during each device driver access to the read channel.
+        /// Gets the number of bytes that are pre-allocated for writing data to hardware.
         /// </summary>
         /// <remarks>
-        /// This option allows control over a fundamental trade-off between closed-loop response time and overall bandwidth. 
-        /// A minimal value (<see cref="MaxReadFrameSize"/>) will may provide the lowest response latency, so long as data can be
-        /// cleared form hardware memory fast enough to prevent buffering. Larger values will reduce system call frequency, increase
-        /// overall bandwidth, and may improve processing performance for high-bandwidth data sources. The optimal value depends on
-        /// the host computer and hardware configuration and must be determined via testing (e.g. using <see cref="MemoryMonitorData"/>).
+        /// This value determines the amount of memory pre-allocated for calls to <see cref="oni.Context.Write(uint, IntPtr, int)"/>,
+        /// <see cref="oni.Context.Write{T}(uint, T)"/>, and <see cref="oni.Context.Write{T}(uint, T[])"/>. A larger size will reduce
+        /// the average amount of dynamic memory allocation system calls but increase the cost of each of those calls. The minimum
+        /// size of this option is determined by <see cref="MaxWriteFrameSize"/>. The effect on real-timer performance is not as
+        /// large as that of <see cref="BlockReadSize"/>.
         /// </remarks>
         public int BlockWriteSize => ctx.BlockWriteSize;
 
