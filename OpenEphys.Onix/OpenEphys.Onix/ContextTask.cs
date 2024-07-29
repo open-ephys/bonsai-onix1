@@ -9,22 +9,31 @@ using System.Threading.Tasks;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// Encapsulates an <see cref="oni.Context"/> and orchestrates interaction with ONI hardware.
+    /// </summary>
+    /// <remarks>
+    /// This class forms the basis for ONI hardware interaction within the library. It manages an <see cref="oni.Context"/>. It
+    /// reads and distributes <see cref="oni.Frame"/>s using a dedicated acquisition thread. It allows <see cref="oni.Frame"/>s to
+    /// be written to devices that accept them. Finally, it exposes information about the underlying ONI hardware such as the device
+    /// table, clock rates, and block read and write sizes.
+    /// </remarks>
     public class ContextTask : IDisposable
     {
-        private oni.Context ctx;
+        oni.Context ctx;
 
         /// <summary>
         /// Maximum amount of frames the reading queue will hold. If the queue fills or the read
         /// thread is not performant enough to fill it faster than data is produced, frame reading
-        /// will throttle, filling host memory instead of userspace memory.
+        /// will throttle, filling host memory instead of user space memory.
         /// </summary>
-        private const int MaxQueuedFrames = 2_000_000;
+        const int MaxQueuedFrames = 2_000_000;
 
         /// <summary>
         /// Timeout in ms for queue reads. This should not be critical as the read operation will
         /// cancel if the task is stopped
         /// </summary>
-        private const int QueueTimeoutMilliseconds = 200;
+        const int QueueTimeoutMilliseconds = 200;
 
         /// <summary>
         /// In this package most operators are tied in to the RIFFA PCIe backend used by the FMC host.
@@ -32,29 +41,39 @@ namespace OpenEphys.Onix
         internal const string DefaultDriver = "riffa";
         internal const int DefaultIndex = 0;
 
-        // NB: Decouple OnNext() form hadware reads
-        private bool disposed;
-        private Task readFrames;
-        private Task distributeFrames;
-        private Task acquisition = Task.CompletedTask;
-        private CancellationTokenSource collectFramesCancellation;
+        // NB: Decouple OnNext() form hardware reads
+        bool disposed;
+        Task readFrames;
+        Task distributeFrames;
+        Task acquisition = Task.CompletedTask;
+        CancellationTokenSource collectFramesCancellation;
         event Func<ContextTask, IDisposable> ConfigureHostEvent;
         event Func<ContextTask, IDisposable> ConfigureLinkEvent;
         event Func<ContextTask, IDisposable> ConfigureDeviceEvent;
 
         // FrameReceived observable sequence
-        private readonly Subject<oni.Frame> frameReceived = new();
-        private readonly IConnectableObservable<IGroupedObservable<uint, oni.Frame>> groupedFrames;
+        readonly Subject<oni.Frame> frameReceived = new();
+        readonly IConnectableObservable<IGroupedObservable<uint, oni.Frame>> groupedFrames;
 
         // TODO: These work for RIFFA implementation, but potentially not others!!
-        private readonly object readLock = new();
-        private readonly object writeLock = new();
-        private readonly object regLock = new();
-        private readonly object disposeLock = new();
+        readonly object readLock = new();
+        readonly object writeLock = new();
+        readonly object regLock = new();
+        readonly object disposeLock = new();
 
-        private readonly string contextDriver = DefaultDriver;
-        private readonly int contextIndex = DefaultIndex;
+        readonly string contextDriver = DefaultDriver;
+        readonly int contextIndex = DefaultIndex;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ContextTask"/> class.
+        /// </summary>
+        /// <param name="driver"> A string specifying the device driver used to control hardware. </param>
+        /// <param name="index">An index representing the physical location of ONI compliant hardware, to be communicated with using the
+        /// specified  <paramref name="driver"/>, that will be managed by the internal <see cref="oni.Context"/>. For instance, 0 might
+        /// correspond to a particular PCIe slot or USB port as enumerated by the operating system and translated by an
+        /// <see href="https://open-ephys.github.io/ONI/api/liboni/driver-translators/index.html#drivers">ONI device driver translator</see>. 
+        /// A value of -1 will attempt to open the default hardware index and is useful if there is only a single ONI controller host
+        /// managed by the specified  <paramref name="driver"/> in the host computer.</param>
         internal ContextTask(string driver, int index)
         {
             groupedFrames = frameReceived.GroupBy(frame => frame.DeviceAddress).Replay();
@@ -89,18 +108,57 @@ namespace OpenEphys.Onix
                 }
         }
 
+        /// <summary>
+        /// Gets the system clock rate in Hz.
+        /// </summary>
+        /// <remarks>
+        /// This describes the frequency of the clock governing the controller hardware.
+        /// </remarks>
         public uint SystemClockHz { get; private set; }
 
+        /// <summary>
+        /// Gets the acquisition clock rate in Hz.
+        /// </summary>
+        /// <remarks>
+        /// This describes the frequency of the clock used to drive the acquisition counter which is used to provide the clock
+        /// counter values in <see cref="oni.Frame.Clock"/> and its derivative types (e.g. <see cref="DataFrame.Clock"/>,
+        /// <see cref="BufferedDataFrame.Clock"/>, etc.)
+        /// </remarks>
         public uint AcquisitionClockHz { get; private set; }
 
+        /// <summary>
+        /// Gets the maximal size of a frame produced by a call to <see cref="oni.Context.ReadFrame"/> in bytes.
+        /// </summary>
+        /// <remarks>
+        /// This number is the maximum sized frame that can be produced across every device within the device table
+        /// that generates data.
+        /// </remarks>
         public uint MaxReadFrameSize { get; private set; }
 
+        /// <summary>
+        /// Gets the maximal size consumed by a call to <see cref="oni.Context.Write"/> in bytes. 
+        /// </summary>
+        /// <remarks>
+        /// This number is the maximum sized frame that can be consumed across every device within the device table
+        /// that accepts write data.
+        /// </remarks>
         public uint MaxWriteFrameSize { get; private set; }
 
+        /// <summary>
+        /// Gets the device table containing the full device hierarchy governed by the internal <see cref="oni.Context"/>.
+        /// </summary>
+        /// <remarks>
+        /// This dictionary maps a fully-qualified <see cref="oni.Device.Address"/> to an <see cref="oni.Device"/> instance.
+        /// </remarks>
         public Dictionary<uint, oni.Device> DeviceTable { get; private set; }
 
         internal IObservable<IGroupedObservable<uint, oni.Frame>> GroupedFrames => groupedFrames;
 
+        /// <summary>
+        /// Gets the sequence of <see cref="oni.Frame"/>s produced by a particular device.
+        /// </summary>
+        /// <param name="deviceAddress">The fully qualified <see cref="oni.Device.Address"/> that will produce the frame sequence.</param>
+        /// <returns>The frame sequence produced by the device at address <paramref name="deviceAddress"/>.</returns>
         public IObservable<oni.Frame> GetDeviceFrames(uint deviceAddress)
         {
             return groupedFrames.Where(deviceFrames => deviceFrames.Key == deviceAddress).Merge();
@@ -312,6 +370,14 @@ namespace OpenEphys.Onix
 
         #region oni.Context Properties
 
+        /// <summary>
+        /// Gets the data acquisition state. 
+        /// </summary>
+        /// <remarks>
+        /// A value of true indicates that data is being acquired by the host computer from the host controller.
+        /// False indicates that the host computer is not collecting data from the controller and that the controller
+        /// memory remains cleared.
+        /// </remarks>
         internal bool Running => ctx.Running;
 
         public int HardwareAddress
@@ -320,11 +386,30 @@ namespace OpenEphys.Onix
             set => ctx.HardwareAddress = value;
         }
 
+        /// <summary>
+        /// Gets the number of bytes read during each device driver access to the read channel.
+        /// </summary>
+        /// <remarks>
+        /// This option allows control over a fundamental trade-off between closed-loop response time and overall bandwidth. 
+        /// A minimal value (<see cref="MaxReadFrameSize"/>) will generally provide the lowest response latency. Larger values
+        /// will reduce system call frequency and may improve processing performance for high-bandwidth data sources. 
+        /// The optimal value depends on the host computer and hardware configuration and must be determined via testing.
+        /// </remarks>
         public int BlockReadSize => ctx.BlockReadSize;
 
+        /// <summary>
+        /// Gets the number of bytes read during each device driver access to the read channel.
+        /// </summary>
+        /// <remarks>
+        /// This option allows control over a fundamental trade-off between closed-loop response time and overall bandwidth. 
+        /// A minimal value (<see cref="MaxReadFrameSize"/>) will may provide the lowest response latency, so long as data can be
+        /// cleared form hardware memory fast enough to prevent buffering. Larger values will reduce system call frequency, increase
+        /// overall bandwidth, and may improve processing performance for high-bandwidth data sources. The optimal value depends on
+        /// the host computer and hardware configuration and must be determined via testing (e.g. using <see cref="MemoryMonitorData"/>).
+        /// </remarks>
         public int BlockWriteSize => ctx.BlockWriteSize;
 
-        // PortA and PortB each have a bit in portfunc
+        // Port A and Port B each have a bit in PORTFUNC
         internal PassthroughState HubState
         {
             get => (PassthroughState)ctx.GetCustomOption((int)oni.ONIXOption.PORTFUNC);
@@ -419,6 +504,9 @@ namespace OpenEphys.Onix
                         }
         }
 
+        /// <summary>
+        /// Dispose the <see cref="ContextTask"/> and free all resources.
+        /// </summary>
         public void Dispose()
         {
             lock (disposeLock)
