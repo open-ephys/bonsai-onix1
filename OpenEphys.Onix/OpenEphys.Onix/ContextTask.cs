@@ -55,7 +55,7 @@ namespace OpenEphys.Onix
         private readonly string contextDriver = DefaultDriver;
         private readonly int contextIndex = DefaultIndex;
 
-        public ContextTask(string driver, int index)
+        internal ContextTask(string driver, int index)
         {
             groupedFrames = frameReceived.GroupBy(frame => frame.DeviceAddress).Replay();
             groupedFrames.Connect();
@@ -74,7 +74,7 @@ namespace OpenEphys.Onix
             DeviceTable = ctx.DeviceTable;
         }
 
-        public void Reset()
+        private void Reset()
         {
             lock (disposeLock)
                 lock (regLock)
@@ -99,7 +99,7 @@ namespace OpenEphys.Onix
 
         public Dictionary<uint, oni.Device> DeviceTable { get; private set; }
 
-        public IObservable<IGroupedObservable<uint, oni.Frame>> GroupedFrames => groupedFrames;
+        internal IObservable<IGroupedObservable<uint, oni.Frame>> GroupedFrames => groupedFrames;
 
         public IObservable<oni.Frame> GetDeviceFrames(uint deviceAddress)
         {
@@ -325,7 +325,7 @@ namespace OpenEphys.Onix
         public int BlockWriteSize => ctx.BlockWriteSize;
 
         // PortA and PortB each have a bit in portfunc
-        public PassthroughState HubState
+        internal PassthroughState HubState
         {
             get => (PassthroughState)ctx.GetCustomOption((int)oni.ONIXOption.PORTFUNC);
             set => ctx.SetCustomOption((int)oni.ONIXOption.PORTFUNC, (int)value);
@@ -358,7 +358,7 @@ namespace OpenEphys.Onix
             }
         }
 
-        public oni.Frame ReadFrame()
+        private oni.Frame ReadFrame()
         {
             lock (readLock)
             {
@@ -366,7 +366,7 @@ namespace OpenEphys.Onix
             }
         }
 
-        public void Write<T>(uint deviceAddress, T data) where T : unmanaged
+        internal void Write<T>(uint deviceAddress, T data) where T : unmanaged
         {
             lock (writeLock)
             {
@@ -374,7 +374,7 @@ namespace OpenEphys.Onix
             }
         }
 
-        public void Write<T>(uint deviceAddress, T[] data) where T : unmanaged
+        internal void Write<T>(uint deviceAddress, T[] data) where T : unmanaged
         {
             lock (writeLock)
             {
@@ -382,7 +382,7 @@ namespace OpenEphys.Onix
             }
         }
 
-        public void Write(uint deviceAddress, IntPtr data, int dataSize)
+        internal void Write(uint deviceAddress, IntPtr data, int dataSize)
         {
             lock (writeLock)
             {
@@ -390,9 +390,9 @@ namespace OpenEphys.Onix
             }
         }
 
-        public oni.Hub GetHub(uint deviceAddress) => ctx.GetHub(deviceAddress);
+        internal oni.Hub GetHub(uint deviceAddress) => ctx.GetHub(deviceAddress);
 
-        public virtual uint GetPassthroughDeviceAddress(uint deviceAddress)
+        internal uint GetPassthroughDeviceAddress(uint deviceAddress)
         {
             var hubAddress = (deviceAddress & 0xFF00u) >> 8;
             if (hubAddress == 0)

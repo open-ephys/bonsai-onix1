@@ -25,7 +25,7 @@ namespace OpenEphys.Onix
             }
         }
 
-        protected string GetFullDeviceName(string deviceName)
+        internal string GetFullDeviceName(string deviceName)
         {
             return !string.IsNullOrEmpty(_name) ? $"{_name}/{deviceName}" : string.Empty;
         }
