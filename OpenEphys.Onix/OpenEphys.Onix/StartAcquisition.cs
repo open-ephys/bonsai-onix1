@@ -17,8 +17,8 @@ namespace OpenEphys.Onix
         /// </summary>
         /// <remarks>
         /// This option allows control over a fundamental trade-off between closed-loop response time and overall bandwidth. 
-        /// A minimal value, which is determined by <see cref="ContextTask.MaxReadFrameSize"/>, will may provide the lowest response latency,
-        /// so long as data can be cleared form hardware memory fast enough to prevent buffering. Larger values will reduce system
+        /// A minimal value, which is determined by <see cref="ContextTask.MaxReadFrameSize"/>, will provide the lowest response latency,
+        /// so long as data can be cleared from hardware memory fast enough to prevent buffering. Larger values will reduce system
         /// call frequency, increase overall bandwidth, and may improve processing performance for high-bandwidth data sources.
         /// The optimal value depends on the host computer and hardware configuration and must be determined via testing (e.g.
         /// using <see cref="MemoryMonitorData"/>).

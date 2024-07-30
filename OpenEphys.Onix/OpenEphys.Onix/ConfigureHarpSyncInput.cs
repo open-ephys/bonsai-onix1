@@ -9,7 +9,7 @@ namespace OpenEphys.Onix
     /// <remarks>
     /// Harp is a standard for asynchronous real-time data acquisition and experimental
     /// control in neuroscience. It includes a clock synchronization protocol which allows
-    /// Harp devices to be connected to a shared clock line and continuously self-synchronise
+    /// Harp devices to be connected to a shared clock line and continuously self-synchronize
     /// their clocks to a precision of tens of microseconds. This means that all experimental
     /// events are timestamped on the same clock and no post-hoc alignment of timing is necessary.
     /// 
