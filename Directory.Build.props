@@ -9,6 +9,7 @@
     <IncludeSymbols>true</IncludeSymbols>
     <RepositoryUrl></RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <UseArtifactsOutput>true</UseArtifactsOutput>
     <PackageIcon>icon.png</PackageIcon>
@@ -21,5 +22,6 @@
   <ItemGroup>
     <Content Include="..\LICENSE" PackagePath="/" />
     <Content Include="..\icon.png" PackagePath="/" />
+    <Content Include="..\README.md" PackagePath="/" />
   </ItemGroup>
 </Project>
