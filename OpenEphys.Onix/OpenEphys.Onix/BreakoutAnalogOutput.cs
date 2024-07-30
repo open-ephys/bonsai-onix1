@@ -10,12 +10,14 @@ namespace OpenEphys.Onix
     /// <summary>
     /// Sends analog output data to an ONIX breakout board.
     /// </summary>
+    [Description("Sends analog output data to an ONIX breakout board.")]
     public class BreakoutAnalogOutput : Sink<Mat>
     {
         const BreakoutAnalogIOVoltageRange OutputRange = BreakoutAnalogIOVoltageRange.TenVolts;
 
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(BreakoutAnalogIO.NameConverter))]
+        [Description(SingleDeviceFactory.DeviceNameDescription)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -27,6 +29,7 @@ namespace OpenEphys.Onix
         /// When <see cref="BreakoutAnalogIODataType.Volts"/> is selected, 32-bit floating point voltages between -10 and 10 volts are sent
         /// directly to the DACs.
         /// </remarks>
+        [Description("The data type used to represent analog samples.")]
         public BreakoutAnalogIODataType DataType { get; set; } = BreakoutAnalogIODataType.S16;
 
         /// <summary>

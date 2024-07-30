@@ -13,6 +13,7 @@ namespace OpenEphys.Onix
     /// heartbeats from the acquisition system.
     /// </remarks>
     /// </summary>
+    [Description("Configures a heartbeat device.")]
     public class ConfigureHeartbeat : SingleDeviceFactory
     {
         readonly BehaviorSubject<uint> beatsPerSecond = new(10);
@@ -26,7 +27,7 @@ namespace OpenEphys.Onix
         }
 
         /// <summary>
-        /// Get or set the device enable state.
+        /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>
         /// If set to true, a <see cref="HeartbeatData"/> instance that is linked to this configuration will produce data.
@@ -37,7 +38,7 @@ namespace OpenEphys.Onix
         public bool Enable { get; set; } = true;
 
         /// <summary>
-        /// Get or set the rate at which beats are produced in Hz.
+        /// Gets or sets the rate at which beats are produced in Hz.
         /// </summary>
         /// <remarks>
         /// If set to true, a <see cref="HeartbeatData"/> instance that is linked to this configuration will produce data.
@@ -53,7 +54,7 @@ namespace OpenEphys.Onix
         }
 
         /// <summary>
-        /// Configure a heartbeat device.
+        /// Configures a heartbeat device.
         /// </summary>
         /// <remarks>
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance

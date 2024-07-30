@@ -5,7 +5,7 @@ using Bonsai;
 namespace OpenEphys.Onix
 {
     /// <summary>
-    /// A class for configuring a hardware memory monitor.
+    /// A class for configuring a hardware memory monitor device.
     /// </summary>
     /// <remarks>
     /// The memory monitor produces periodic snapshots of the system's first in, first out (FIFO) data buffer.
@@ -20,6 +20,7 @@ namespace OpenEphys.Onix
     /// bandwidth of data being acquired, the performance of the host PC, and downstream real-time processing.</description></item>
     /// </list>
     /// </remarks>
+    [Description("Configures a hardware memory monitor device.")]
     public class ConfigureMemoryMonitor : SingleDeviceFactory
     {
         /// <summary>
@@ -32,7 +33,7 @@ namespace OpenEphys.Onix
         }
 
         /// <summary>
-        /// Get or set the device enable state.
+        /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>
         /// If set to true, <see cref="MemoryMonitorData"/> will produce data. If set to false, <see cref="MemoryMonitorData"/> will not produce data.
@@ -42,7 +43,7 @@ namespace OpenEphys.Onix
         public bool Enable { get; set; } = false;
 
         /// <summary>
-        /// Get or set the frequency at which memory use is recorded in Hz.
+        /// Gets or sets the frequency at which memory use is recorded in Hz.
         /// </summary>
         [Range(1, 1000)]
         [Category(ConfigurationCategory)]
@@ -50,7 +51,7 @@ namespace OpenEphys.Onix
         public uint SamplesPerSecond { get; set; } = 10;
 
         /// <summary>
-        /// Configure a memory monitor device.
+        /// Configures a memory monitor device.
         /// </summary>
         /// <remarks>
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance

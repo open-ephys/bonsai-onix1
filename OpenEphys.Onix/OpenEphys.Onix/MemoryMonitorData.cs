@@ -13,10 +13,12 @@ namespace OpenEphys.Onix
     /// This data stream class must be linked to an appropriate configuration, such as a <see cref="ConfigureMemoryMonitor"/>,
     /// in order to stream data.
     /// </remarks>
+    [Description("Produces a sequence of memory usage data frames.")]
     public class MemoryMonitorData : Source<MemoryMonitorDataFrame>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(MemoryMonitor.NameConverter))]
+        [Description(SingleDeviceFactory.DeviceNameDescription)]
         public string DeviceName { get; set; }
 
         /// <summary>

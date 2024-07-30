@@ -6,7 +6,7 @@
     public abstract class DataFrame
     {
         /// <summary>
-        /// Initializes and new instance of the <see cref="DataFrame"/> class.
+        /// Initializes a new instance of the <see cref="DataFrame"/> class.
         /// </summary>
         /// <param name="clock">System clock count. Generally provided by the underlying <see cref="oni.Frame.Clock"/> value.</param>
         internal DataFrame(ulong clock)
@@ -24,7 +24,7 @@
         /// Gets the acquisition clock count.
         /// </summary>
         /// <remarks>
-        /// Acquisition clock count that is synchronous for all frames collected within With an ONI context created using <see cref="CreateContext"/>.
+        /// Acquisition clock count that is synchronous for all frames collected within an ONI context created using <see cref="CreateContext"/>.
         /// The acquisition clock rate is given by <see cref="ContextTask.AcquisitionClockHz"/>. This clock value provides a common, synchronized
         /// time base for all data collected with an single ONI context.
         /// </remarks>

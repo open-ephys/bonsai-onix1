@@ -12,10 +12,12 @@ namespace OpenEphys.Onix
     /// <summary>
     /// Produces a sequence of analog input frames from an ONIX breakout board.
     /// </summary>
+    [Description("Produces a sequence of analog input frames from an ONIX breakout board.")]
     public class BreakoutAnalogInput : Source<BreakoutAnalogInputDataFrame>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(BreakoutAnalogIO.NameConverter))]
+        [Description(SingleDeviceFactory.DeviceNameDescription)]
         public string DeviceName { get; set; }
 
         /// <summary>

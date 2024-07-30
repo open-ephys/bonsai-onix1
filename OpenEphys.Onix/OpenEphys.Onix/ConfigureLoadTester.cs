@@ -7,29 +7,52 @@ using Bonsai;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// A class for configuring a load testing device.
+    /// </summary>
+    /// <remarks>
+    /// The load tester device can be configured to produce data at user-settable size and rate
+    /// to stress test various communication links and test closed-loop response latency.
+    /// </remarks>
+    [Description("Configures a load testing device.")]
     public class ConfigureLoadTester : SingleDeviceFactory
     {
         readonly BehaviorSubject<uint> frameHz = new(1000);
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ConfigureLoadTester"/> class.
+        /// </summary>
         public ConfigureLoadTester()
             : base(typeof(LoadTester))
         {
         }
 
+        /// <summary>
+        /// Gets or sets a value specifying whether the load testing device is enabled.
+        /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Specifies whether the load testing device is enabled.")]
         public bool Enable { get; set; } = false;
 
+        /// <summary>
+        /// Gets or sets the number of repetitions of the 16-bit unsigned integer 42 sent with each read-frame.
+        /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Number of repetitions of the 16-bit unsigned integer 42 sent with each read-frame.")]
         [Range(0, 10e6)]
         public uint ReceivedWords { get; set; }
 
+        /// <summary>
+        /// Gets or sets the number of repetitions of the 32-bit integer 42 sent with each write frame.
+        /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Number of repetitions of the 32-bit integer 42 sent with each write frame.")]
         [Range(0, 10e6)]
         public uint TransmittedWords { get; set; }
 
+        /// <summary>
+        /// Gets or sets a value specifying the rate at which frames are produced, in Hz.
+        /// </summary>
         [Category(AcquisitionCategory)]
         [Description("Specifies the rate at which frames are produced (Hz).")]
         public uint FramesPerSecond
@@ -38,6 +61,18 @@ namespace OpenEphys.Onix
             set { frameHz.OnNext(value); }
         }
 
+        /// <summary>
+        /// Configures a load testing device.
+        /// </summary>
+        /// <remarks>
+        /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance
+        /// prior to data acquisition.
+        /// </remarks>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that hold configuration actions.</param>
+        /// <returns>
+        /// The original sequence modified by adding additional configuration actions required to configure
+        /// a load testing device.
+        /// </returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;

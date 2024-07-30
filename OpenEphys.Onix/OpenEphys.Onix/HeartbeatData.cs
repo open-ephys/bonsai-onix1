@@ -13,10 +13,12 @@ namespace OpenEphys.Onix
     /// This data stream class must be linked to an appropriate configuration, such as a <see cref="ConfigureHeartbeat"/>,
     /// in order to stream heartbeat data.
     /// </remarks>
+    [Description("Produces a sequence of heartbeat data frames.")]
     public class HeartbeatData : Source<HeartbeatDataFrame>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(Heartbeat.NameConverter))]
+        [Description(SingleDeviceFactory.DeviceNameDescription)]
         public string DeviceName { get; set; }
 
         /// <summary>

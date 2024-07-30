@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace OpenEphys.Onix
 {
@@ -10,6 +11,7 @@ namespace OpenEphys.Onix
     /// through laser diodes or LEDs connected to two contacts on the probe connector on the bottom of the headstage
     /// or the corresponding contacts on a compatible electrode interface board.
     /// </remarks>
+    [Description("Configures a headstage-64 dual-channel optical stimulator.")]
     public class ConfigureHeadstage64OpticalStimulator : SingleDeviceFactory
     {
         /// <summary>

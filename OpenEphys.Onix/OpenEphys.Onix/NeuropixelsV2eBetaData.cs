@@ -9,12 +9,14 @@ using OpenCV.Net;
 namespace OpenEphys.Onix
 {
     /// <summary>
-    /// Produces a sequence of <see cref="NeuropixelsV2eBetaDataFrame"/> from a NeuropixelsV2eBeta headstage.
+    /// Produces a sequence of <see cref="NeuropixelsV2eBetaDataFrame"/> objects from a NeuropixelsV2eBeta headstage.
     /// </summary>
+    [Description("Produces a sequence of NeuropixelsV2eDataFrame objects from a NeuropixelsV2e headstage.")]
     public class NeuropixelsV2eBetaData : Source<NeuropixelsV2eBetaDataFrame>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(NeuropixelsV2eBeta.NameConverter))]
+        [Description(SingleDeviceFactory.DeviceNameDescription)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -23,11 +25,13 @@ namespace OpenEphys.Onix
         /// <remarks>
         /// Buffer size sets the number of frames that are buffered before propagating data.
         /// </remarks>
+        [Description("The number of samples collected for each channel that are used to create a single NeuropixelsV2eBetaDataFrame.")]
         public int BufferSize { get; set; } = 30;
 
         /// <summary>
         /// Gets or sets the probe index.
         /// </summary>
+        [Description("The index of the probe from which to collect sample data")]
         public NeuropixelsV2Probe ProbeIndex { get; set; }
 
         /// <summary>

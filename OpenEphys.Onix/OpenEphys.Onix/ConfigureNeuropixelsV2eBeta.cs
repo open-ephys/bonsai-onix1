@@ -8,6 +8,7 @@ namespace OpenEphys.Onix
     /// <summary>
     /// A class that configures a NeuropixelsV2eBeta device.
     /// </summary>
+    [Description("Configures a NeuropixelsV2eBeta device.")]
     public class ConfigureNeuropixelsV2eBeta : SingleDeviceFactory
     {
         /// <summary>
@@ -78,7 +79,7 @@ namespace OpenEphys.Onix
         public string GainCalibrationFileB { get; set; }
 
         /// <summary>
-        /// Configure a NeuropixelsV2eBeta device.
+        /// Configures a NeuropixelsV2eBeta device.
         /// </summary>
         /// <remarks>
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance

@@ -7,10 +7,11 @@ namespace OpenEphys.Onix
     /// <summary>
     /// A class that configures a NeuropixelsV1e headstage.
     /// </summary>
+    [Description("Configures a NeuropixelsV1e headstage.")]
     public class ConfigureNeuropixelsV1eHeadstage : HubDeviceFactory
     {
         PortName port;
-        readonly ConfigureNeuropixelsV1LinkController LinkController = new();
+        readonly ConfigureNeuropixelsV1eLinkController LinkController = new();
 
         /// <summary>
         /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV1eHeadstage"/> class.
@@ -22,27 +23,28 @@ namespace OpenEphys.Onix
         }
 
         /// <summary>
-        /// Gets or sets a <see cref="ConfigureNeuropixelsV1e"/> object.
+        /// Gets or sets the NeuropixelsV1e configuration.
         /// </summary>
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
-        [Description("Configure a NeuropixelsV1e device.")]
-        public ConfigureNeuropixelsV1e NeuropixelsV1 { get; set; } = new();
+        [Description("Specifies the configuration for the NeuropixelsV1e device.")]
+        public ConfigureNeuropixelsV1e NeuropixelsV1e { get; set; } = new();
 
         /// <summary>
-        /// Gets or sets a <see cref="ConfigureNeuropixelsV1eBno055"/> object.
+        /// Gets or sets the Bno055 9-axis inertial measurement unit configuration.
         /// </summary>
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(HubDeviceConverter))]
-        [Description("Configure a NeuropixelsV1eBno055 device.")]
+        [Description("Specifies the configuration for the Bno055 device.")]
         public ConfigureNeuropixelsV1eBno055 Bno055 { get; set; } = new();
 
         /// <summary>
-        /// Gets or sets the <see cref="PortName"/>.
+        /// Gets or sets the port.
         /// </summary>
         /// <remarks>
-        /// The port is the physical connection on the breakout board.
+        /// The port is the physical connection to the ONIX breakout board and must be specified prior to operation.
         /// </remarks>
+        [Description("Specifies the physical connection of the headstage to the ONIX breakout board.")]
         public PortName Port
         {
             get { return port; }
@@ -51,7 +53,7 @@ namespace OpenEphys.Onix
                 port = value;
                 var offset = (uint)port << 8;
                 LinkController.DeviceAddress = (uint)port;
-                NeuropixelsV1.DeviceAddress = offset + 0;
+                NeuropixelsV1e.DeviceAddress = offset + 0;
                 Bno055.DeviceAddress = offset + 1;
             }
         }
@@ -77,11 +79,11 @@ namespace OpenEphys.Onix
         internal override IEnumerable<IDeviceConfiguration> GetDevices()
         {
             yield return LinkController;
-            yield return NeuropixelsV1;
+            yield return NeuropixelsV1e;
             yield return Bno055;
         }
 
-        class ConfigureNeuropixelsV1LinkController : ConfigureFmcLinkController
+        class ConfigureNeuropixelsV1eLinkController : ConfigureFmcLinkController
         {
             protected override bool ConfigurePortVoltage(DeviceContext device)
             {

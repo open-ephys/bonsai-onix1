@@ -7,12 +7,14 @@ using Bonsai;
 namespace OpenEphys.Onix
 {
     /// <summary>
-    /// Produces a sequence of NeuropixelsV1eBno055 frames from a NeuropixelsV1e headstage.
+    /// Produces a sequence of <see cref="Bno055DataFrame"/> objects from a NeuropixelsV1e headstage.
     /// </summary>
+    [Description("Produces a sequence of Bno055DataFrame objects from a NeuropixelsV1e headstage.")]
     public class NeuropixelsV1eBno055Data : Source<Bno055DataFrame>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(NeuropixelsV1eBno055.NameConverter))]
+        [Description(SingleDeviceFactory.DeviceNameDescription)]
         public string DeviceName { get; set; }
 
         /// <summary>

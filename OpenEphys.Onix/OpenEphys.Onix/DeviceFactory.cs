@@ -5,6 +5,15 @@ using Bonsai;
 
 namespace OpenEphys.Onix
 {
+    /// <summary>
+    /// Provides an abstract base class for all device configuration operators.
+    /// </summary>
+    /// <remarks>
+    /// ONI devices usually require a specific sequence of configuration and parameterization
+    /// steps before they can be interacted with. The <see cref="DeviceFactory"/> provides
+    /// a modular abstraction for flexible assembly and sequencing of both single and multi-
+    /// device configuration.
+    /// </remarks>
     public abstract class DeviceFactory : Sink<ContextTask>
     {
         internal const string ConfigurationCategory = "Configuration";
@@ -13,8 +22,21 @@ namespace OpenEphys.Onix
         internal abstract IEnumerable<IDeviceConfiguration> GetDevices();
     }
 
+    /// <summary>
+    /// Provides an abstract base class for configuration operators responsible for
+    /// registering a single device in the context device table.
+    /// </summary>
+    /// <remarks>
+    /// ONI devices usually require a specific sequence of configuration and parameterization
+    /// steps before they can be interacted with. The <see cref="SingleDeviceFactory"/>
+    /// provides a modular abstraction allowing flexible assembly and sequencing of
+    /// of all device-specific configuration code.
+    /// </remarks>
     public abstract class SingleDeviceFactory : DeviceFactory, IDeviceConfiguration
     {
+        internal const string DeviceNameDescription = "The unique device name.";
+        internal const string DeviceAddressDescription = "The device address.";
+
         internal SingleDeviceFactory(Type deviceType)
         {
             DeviceType = deviceType ?? throw new ArgumentNullException(nameof(deviceType));
@@ -28,6 +50,7 @@ namespace OpenEphys.Onix
         /// elements for configuration, control, and data streaming to hardware. This is often a one-to-one
         /// representation of an ONI device, but can also represent abstract ONI device aggregates or virtual devices.
         /// </remarks>
+        [Description(DeviceNameDescription)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -37,6 +60,7 @@ namespace OpenEphys.Onix
         /// This address provides a fully-qualified location of a device within the device table. This is often a one-to-one
         /// representation of a ONI address, but can also represent abstract device addresses.
         /// </remarks>
+        [Description(DeviceAddressDescription)]
         public uint DeviceAddress { get; set; }
 
         /// <summary>

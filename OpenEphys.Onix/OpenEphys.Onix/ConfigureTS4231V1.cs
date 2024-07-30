@@ -11,6 +11,7 @@ namespace OpenEphys.Onix
     /// This configuration class can be linked to a <see cref="TS4231V1PositionData"/> instance to stream 3D position data from
     /// light-house receivers when SteamVR V1 base stations have been installed above the arena.
     /// </remarks>
+    [Description("Configures a TS4231 receiver array.")]
     public class ConfigureTS4231V1 : SingleDeviceFactory
     {
         /// <summary>
@@ -22,7 +23,7 @@ namespace OpenEphys.Onix
         }
 
         /// <summary>
-        /// Get or set the device enable state.
+        /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>
         /// If set to true, a <see cref="TS4231V1Data"/> instance that is linked to this configuration will produce data. If set to false,
@@ -33,7 +34,7 @@ namespace OpenEphys.Onix
         public bool Enable { get; set; } = true;
 
         /// <summary>
-        /// Configure a TS4231 receiver array.
+        /// Configures a TS4231 receiver array.
         /// </summary>
         /// <remarks>
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance

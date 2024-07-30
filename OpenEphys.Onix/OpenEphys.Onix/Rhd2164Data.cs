@@ -10,16 +10,18 @@ using OpenCV.Net;
 namespace OpenEphys.Onix
 {
     /// <summary>
-    /// A class that produces a sequence of RHD2164 data frames.
+    /// A class that produces a sequence of <see cref="Rhd2164DataFrame"/> objects.
     /// </summary>
     /// <remarks>
     /// This data stream class must be linked to an appropriate configuration, such as a <see cref="ConfigureRhd2164"/>,
     /// in order to stream electrophysiology data.
     /// </remarks>
+    [Description("produces a sequence of Rhd2164DataFrame objects.")]
     public class Rhd2164Data : Source<Rhd2164DataFrame>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(Rhd2164.NameConverter))]
+        [Description(SingleDeviceFactory.DeviceNameDescription)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -31,6 +33,7 @@ namespace OpenEphys.Onix
         /// from each of the electrophysiology and auxiliary channels and packed into each <see cref="Rhd2164DataFrame"/>. Because channels are sampled at
         /// 30 kHz, this is equivalent to 1 millisecond of data from each channel.
         /// </remarks>
+        [Description("The number of samples collected for each channel that are used to create a single Rhd2164DataFrame.")]
         public int BufferSize { get; set; } = 30;
 
         /// <summary>

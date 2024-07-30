@@ -9,6 +9,7 @@ namespace OpenEphys.Onix
     /// <summary>
     /// A class that configures a NeuropixelsV1e device.
     /// </summary>
+    [Description("Configures a NeuropixelsV1e device.")]
     public class ConfigureNeuropixelsV1e : SingleDeviceFactory
     {
         /// <summary>
@@ -110,9 +111,12 @@ namespace OpenEphys.Onix
         public string AdcCalibrationFile { get; set; }
 
         /// <summary>
+        /// Configures a NeuropixelsV1e device.
+        /// </summary>
+        /// <remarks>
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
         /// prior to data acquisition.
-        /// </summary>
+        /// </remarks>
         /// <param name="source">A sequence of <see cref="ContextTask"/> that holds all configuration actions.</param>
         /// <returns>
         /// The original sequence with the side effect of an additional configuration action to configure

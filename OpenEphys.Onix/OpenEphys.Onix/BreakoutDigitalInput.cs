@@ -7,16 +7,18 @@ using Bonsai;
 namespace OpenEphys.Onix
 {
     /// <summary>
-    /// A class that produces a sequence of digital input data frames.
+    /// A class that produces a sequence of digital input frames from an ONIX breakout board.
     /// </summary>
     /// <remarks>
     /// This data stream class must be linked to an appropriate configuration, such as a <see cref="ConfigureBreakoutDigitalIO"/>,
     /// in order to stream data.
     /// </remarks>
+    [Description("Produces a sequence of digital input frames from an ONIX breakout board.")]
     public class BreakoutDigitalInput : Source<BreakoutDigitalInputDataFrame>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(BreakoutDigitalIO.NameConverter))]
+        [Description(SingleDeviceFactory.DeviceNameDescription)]
         public string DeviceName { get; set; }
 
         /// <summary>

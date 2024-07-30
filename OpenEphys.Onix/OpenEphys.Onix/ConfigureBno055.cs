@@ -9,6 +9,7 @@ namespace OpenEphys.Onix
     /// <remarks>
     /// This configuration class can be linked to a <see cref="Bno055Data"/> instance to stream orientation data from the IMU.
     /// </remarks>
+    [Description("Configures a Bosch BNO055 9-axis IMU device.")]
     public class ConfigureBno055 : SingleDeviceFactory
     {
         /// <summary>
@@ -20,7 +21,7 @@ namespace OpenEphys.Onix
         }
 
         /// <summary>
-        /// Get or set the device enable state.
+        /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>
         /// If set to true, a <see cref="Bno055Data"/> instance that is linked to this configuration will produce data. If set to false,
@@ -31,7 +32,7 @@ namespace OpenEphys.Onix
         public bool Enable { get; set; } = true;
 
         /// <summary>
-        /// Configure a BNO055 device.
+        /// Configures a Bosch BNO055 9-axis IMU device.
         /// </summary>
         /// <remarks>
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance
