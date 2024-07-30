@@ -19,6 +19,8 @@
     <Features>strict</Features>
   </PropertyGroup>
 
+  <Import Project="build/Version.props" />
+
   <ItemGroup>
     <Content Include="..\LICENSE" PackagePath="/" />
     <Content Include="..\icon.png" PackagePath="/" />
