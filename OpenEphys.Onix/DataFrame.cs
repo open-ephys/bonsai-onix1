@@ -8,7 +8,7 @@
         /// <summary>
         /// Initializes a new instance of the <see cref="DataFrame"/> class.
         /// </summary>
-        /// <param name="clock">System clock count. Generally provided by the underlying <see cref="oni.Frame.Clock"/> value.</param>
+        /// <param name="clock">Acquisition clock count. Generally provided by the underlying <see cref="oni.Frame.Clock"/> value.</param>
         internal DataFrame(ulong clock)
         {
             Clock = clock;

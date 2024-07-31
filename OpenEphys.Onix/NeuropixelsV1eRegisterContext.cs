@@ -238,14 +238,10 @@ namespace OpenEphys.Onix
             WriteByte(NeuropixelsV1e.OP_MODE, (uint)NeuropixelsV1OperationRegisterValues.RECORD);
         }
 
-        // TODO: There is an issue getting these SR write sequences to complete correctly.
-        // We have a suspicion it is due to the nature of the MCLK signal and that this
-        // headstage needs either a different oscillator with even more drive strength or
-        // a clock buffer (second might be easiest).
         public void WriteConfiguration()
         {
-            // shank
-            // NB: no read check because of ASIC bug
+            // shank configuration
+            // NB: no read check because of ASIC bug that is documented in IMEC-API comments
             var shankBytes = BitArrayToBytes(ShankConfig);
 
             WriteByte(NeuropixelsV1e.SR_LENGTH1, (uint)shankBytes.Length % 0x100);
@@ -256,15 +252,14 @@ namespace OpenEphys.Onix
                WriteByte(NeuropixelsV1e.SR_CHAIN1, b);
             }
 
-            // base
+            // base configuration
             for (int i = 0; i < BaseConfigs.Length; i++)
             {
                 var srAddress = i == 0 ? NeuropixelsV1e.SR_CHAIN2 : NeuropixelsV1e.SR_CHAIN3;
 
                 for (int j = 0; j < 2; j++)
                 {
-                    // TODO: HACK HACK HACK
-                    // If we do not do this, the ShiftRegisterSuccess check below will always fail
+                    // WONTFIX: Without this reset, the ShiftRegisterSuccess check below will always fail
                     // on whatever the second shift register write sequence regardless of order or
                     // contents. Could be increased current draw during internal process causes MCLK
                     // to droop and mess up internal state. Or that MCLK is just not good enough to
@@ -293,8 +288,8 @@ namespace OpenEphys.Onix
 
         public void StartAcquisition()
         {
-            // TODO: Hack inside settings.WriteShiftRegisters() above puts probe in reset set that needs to be
-            // undone here
+            // WONTFIX: Soft reset inside settings.WriteShiftRegisters() above puts probe in reset set that
+            // needs to be undone here
             WriteByte(NeuropixelsV1e.OP_MODE, (uint)NeuropixelsV1OperationRegisterValues.RECORD);
             WriteByte(NeuropixelsV1e.REC_MOD, (uint)NeuropixelsV1RecordRegisterValues.ACTIVE);
         }
