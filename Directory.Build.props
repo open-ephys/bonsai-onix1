@@ -3,23 +3,27 @@
   <PropertyGroup>
     <Authors>Open Ephys</Authors>
     <Copyright>Copyright © Open Ephys and Contributors 2024</Copyright>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <PackageOutputPath>..\bin\$(Configuration)</PackageOutputPath>
     <PackageProjectUrl></PackageProjectUrl>
-    <IncludeSymbols Condition="'$(Configuration)'=='Release'">true</IncludeSymbols>
-    <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <IncludeSymbols>true</IncludeSymbols>
     <RepositoryUrl></RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <UseArtifactsOutput>true</UseArtifactsOutput>
     <PackageIcon>icon.png</PackageIcon>
+    <VersionPrefix>0.1.0</VersionPrefix>
     <VersionSuffix></VersionSuffix>
     <LangVersion>9.0</LangVersion>
     <Features>strict</Features>
   </PropertyGroup>
 
+  <Import Project="build/Version.props" />
+
   <ItemGroup>
-    <Content Include="..\..\LICENSE" PackagePath="/" />
-    <Content Include="..\..\icon.png" PackagePath="/" />
+    <Content Include="..\LICENSE" PackagePath="/" />
+    <Content Include="..\icon.png" PackagePath="/" />
+    <Content Include="..\README.md" PackagePath="/" />
   </ItemGroup>
 </Project>

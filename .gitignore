@@ -1,8 +1,6 @@
-.vs
-bin
-obj
-Packages
-*.user
-*.exe
-*.exe.settings
-*.exe.WebView2
+.vs/
+/artifacts/
+.bonsai/Packages/
+.bonsai/*.exe
+.bonsai/*.exe.settings
+.bonsai/*.exe.WebView2/

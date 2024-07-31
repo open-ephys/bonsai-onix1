@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <Title>OpenEphys.Onix.Design</Title>
@@ -6,7 +6,7 @@
     <PackageTags>Bonsai Rx Open Ephys Onix Design</PackageTags>
     <TargetFramework>net472</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
-    <VersionPrefix>0.1.0</VersionPrefix>
+    <IsPackable>false</IsPackable>
     <Platforms>x64</Platforms>
   </PropertyGroup>
 
