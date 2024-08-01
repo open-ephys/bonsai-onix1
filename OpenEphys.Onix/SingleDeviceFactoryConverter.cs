@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace OpenEphys.Onix
 {
-    internal class HubDeviceConverter : ExpandableObjectConverter
+    internal class SingleDeviceFactoryConverter : ExpandableObjectConverter
     {
         public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
         {
