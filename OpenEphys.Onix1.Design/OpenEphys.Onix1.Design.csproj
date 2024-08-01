@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Title>OpenEphys.Onix1.Design</Title>
+    <Description>Bonsai Library containing visual interfaces for configuring ONIX devices.</Description>
+    <PackageTags>Bonsai Rx Open Ephys Onix Design</PackageTags>
+    <TargetFramework>net472</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <IsPackable>false</IsPackable>
+    <Platforms>x64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OpenEphys.Onix1\OpenEphys.Onix1.csproj" />
+  </ItemGroup>
+
+</Project>

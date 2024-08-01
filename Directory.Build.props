@@ -3,11 +3,11 @@
   <PropertyGroup>
     <Authors>Open Ephys</Authors>
     <Copyright>Copyright © Open Ephys and Contributors 2024</Copyright>
-    <PackageProjectUrl></PackageProjectUrl>
+    <PackageProjectUrl>https://open-ephys.github.io/onix1-bonsai-docs</PackageProjectUrl>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <IncludeSymbols>true</IncludeSymbols>
-    <RepositoryUrl></RepositoryUrl>
+    <RepositoryUrl>https://github.com/open-ephys/onix-bonsai-onix1</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
