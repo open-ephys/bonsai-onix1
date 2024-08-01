@@ -7,33 +7,33 @@ namespace OpenEphys.Onix
     /// A class that configures an ONIX breakout board.
     /// </summary>
     [Description("Configures an ONIX breakout board.")]
-    public class ConfigureBreakoutBoard : HubDeviceFactory
+    public class ConfigureBreakoutBoard : MultiDeviceFactory
     {
         /// <summary>
         /// Gets or sets the heartbeat configuration.
         /// </summary>
-        [TypeConverter(typeof(HubDeviceConverter))]
+        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the heartbeat device in the ONIX breakout board.")]
         public ConfigureHeartbeat Heartbeat { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the breakout board's analog IO configuration.
         /// </summary>
-        [TypeConverter(typeof(HubDeviceConverter))]
+        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the analog IO device in the ONIX breakout board.")]
         public ConfigureBreakoutAnalogIO AnalogIO { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the breakout board's digital IO configuration.
         /// </summary>
-        [TypeConverter(typeof(HubDeviceConverter))]
+        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the digital IO device in the ONIX breakout board.")]
         public ConfigureBreakoutDigitalIO DigitalIO { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the hardware memory monitor configuration.
         /// </summary>
-        [TypeConverter(typeof(HubDeviceConverter))]
+        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the memory monitor device in the ONIX breakout board.")]
         public ConfigureMemoryMonitor MemoryMonitor { get; set; } = new();
 

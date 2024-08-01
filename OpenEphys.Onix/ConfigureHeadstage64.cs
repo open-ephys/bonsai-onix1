@@ -8,7 +8,7 @@ namespace OpenEphys.Onix
     /// A class that configures an ONIX headstage-64 in the specified port.
     /// </summary>
     [Description("Configures an ONIX headstage-64 in the specified port.")]
-    public class ConfigureHeadstage64 : HubDeviceFactory
+    public class ConfigureHeadstage64 : MultiDeviceFactory
     {
         PortName port;
         readonly ConfigureHeadstage64LinkController LinkController = new();
@@ -42,7 +42,7 @@ namespace OpenEphys.Onix
         /// Gets or sets the Rhd2164 configuration.
         /// </summary>
         [Category(ConfigurationCategory)]
-        [TypeConverter(typeof(HubDeviceConverter))]
+        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the Rhd2164 device in the headstage-64.")]
         public ConfigureRhd2164 Rhd2164 { get; set; } = new();
 
@@ -50,7 +50,7 @@ namespace OpenEphys.Onix
         /// Gets or sets the Bno055 9-axis inertial measurement unit configuration.
         /// </summary>
         [Category(ConfigurationCategory)]
-        [TypeConverter(typeof(HubDeviceConverter))]
+        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the Bno055 device in the headstage-64.")]
         public ConfigureBno055 Bno055 { get; set; } = new();
 
@@ -58,7 +58,7 @@ namespace OpenEphys.Onix
         /// Gets or sets the SteamVR V1 basestation 3D tracking array configuration.
         /// </summary>
         [Category(ConfigurationCategory)]
-        [TypeConverter(typeof(HubDeviceConverter))]
+        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the TS4231 device in the headstage-64.")]
         public ConfigureTS4231V1 TS4231 { get; set; } = new() { Enable = false };
 
@@ -66,7 +66,7 @@ namespace OpenEphys.Onix
         /// Gets or sets onboard electrical stimulator configuration.
         /// </summary>
         [Category(ConfigurationCategory)]
-        [TypeConverter(typeof(HubDeviceConverter))]
+        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the ElectricalStimulator device in the headstage-64.")]
         public ConfigureHeadstage64ElectricalStimulator ElectricalStimulator { get; set; } = new();
 
@@ -74,7 +74,7 @@ namespace OpenEphys.Onix
         /// Gets or sets onboard optical stimulator configuration.
         /// </summary>
         [Category(ConfigurationCategory)]
-        [TypeConverter(typeof(HubDeviceConverter))]
+        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the OpticalStimulator device in the headstage-64.")]
         public ConfigureHeadstage64OpticalStimulator OpticalStimulator { get; set; } = new();
 

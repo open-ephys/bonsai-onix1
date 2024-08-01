@@ -9,21 +9,24 @@ namespace OpenEphys.Onix
     /// registering all devices in an ONI device aggregate in the context device table.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// ONI devices are often grouped into multi-device aggregates connected to hubs or
     /// headstages. These aggregates provide access to multiple devices through hub-specific
     /// addresses and usually require a specific sequence of configuration steps to determine
     /// operational port voltages and other link-specific settings.
-    /// 
+    /// </para>
+    /// <para>
     /// These multi-device aggregates are the most common starting point for configuration
-    /// of an ONI system, and the <see cref="HubDeviceFactory"/> provides a modular abstraction
+    /// of an ONI system, and the <see cref="MultiDeviceFactory"/> provides a modular abstraction
     /// for flexible assembly and sequencing of multiple such aggregates.
+    /// </para>
     /// </remarks>
-    public abstract class HubDeviceFactory : DeviceFactory, INamedElement
+    public abstract class MultiDeviceFactory : DeviceFactory, INamedElement
     {
         const string BaseTypePrefix = "Configure";
         string _name;
 
-        internal HubDeviceFactory()
+        internal MultiDeviceFactory()
         {
             var baseName = GetType().Name;
             var prefixIndex = baseName.IndexOf(BaseTypePrefix);

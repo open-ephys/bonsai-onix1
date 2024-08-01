@@ -8,7 +8,7 @@ namespace OpenEphys.Onix
     /// A class that configures a NeuropixelsV1e headstage.
     /// </summary>
     [Description("Configures a NeuropixelsV1e headstage.")]
-    public class ConfigureNeuropixelsV1eHeadstage : HubDeviceFactory
+    public class ConfigureNeuropixelsV1eHeadstage : MultiDeviceFactory
     {
         PortName port;
         readonly ConfigureNeuropixelsV1eLinkController LinkController = new();
@@ -26,7 +26,7 @@ namespace OpenEphys.Onix
         /// Gets or sets the NeuropixelsV1e configuration.
         /// </summary>
         [Category(ConfigurationCategory)]
-        [TypeConverter(typeof(HubDeviceConverter))]
+        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the NeuropixelsV1e device.")]
         public ConfigureNeuropixelsV1e NeuropixelsV1e { get; set; } = new();
 
@@ -34,7 +34,7 @@ namespace OpenEphys.Onix
         /// Gets or sets the Bno055 9-axis inertial measurement unit configuration.
         /// </summary>
         [Category(ConfigurationCategory)]
-        [TypeConverter(typeof(HubDeviceConverter))]
+        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the Bno055 device.")]
         public ConfigureNeuropixelsV1eBno055 Bno055 { get; set; } = new();
 

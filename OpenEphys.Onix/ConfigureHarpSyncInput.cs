@@ -7,20 +7,24 @@ namespace OpenEphys.Onix
     /// A class for configuring the ONIX breakout board Harp sync input device.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Harp is a standard for asynchronous real-time data acquisition and experimental
     /// control in neuroscience. It includes a clock synchronization protocol which allows
     /// Harp devices to be connected to a shared clock line and continuously self-synchronize
     /// their clocks to a precision of tens of microseconds. This means that all experimental
     /// events are timestamped on the same clock and no post-hoc alignment of timing is necessary.
-    /// 
+    /// </para>
+    /// <para>
     /// The Harp clock signal is transmitted over a serial line every second.
     /// Every time the Harp sync input device in the ONIX breakout board detects a full Harp
     /// synchronization packet, a new data frame is emitted pairing the current value of the
     /// Harp clock with the local ONIX acquisition clock.
-    /// 
+    /// </para>
+    /// <para>
     /// Logging the sequence of all Harp synchronization packets can greatly facilitate post-hoc
     /// analysis and interpretation of timing signals. For more information see
     /// <see href="https://harp-tech.org/"/>.
+    /// </para>
     /// </remarks>
     [Description("Configures a ONIX breakout board Harp sync input device.")]
     public class ConfigureHarpSyncInput : SingleDeviceFactory
