@@ -13,7 +13,7 @@ namespace OpenEphys.Onix
     /// their clocks to a precision of tens of microseconds. This means that all experimental
     /// events are timestamped on the same clock and no post-hoc alignment of timing is necessary.
     /// 
-    /// The Harp clock signal is transmitted over a serial line with high precision every second.
+    /// The Harp clock signal is transmitted over a serial line every second.
     /// Every time the Harp sync input device in the ONIX breakout board detects a full Harp
     /// synchronization packet, a new data frame is emitted pairing the current value of the
     /// Harp clock with the local ONIX acquisition clock.
@@ -105,16 +105,18 @@ namespace OpenEphys.Onix
     public enum HarpSyncSource
     {
         /// <summary>
-        /// In standard ONIX breakout boards, the Harp mini-jack connector on the side of the
-        /// breakout is configured to receive Harp clock synchronization signals.
+        /// Specifies the Harp 3.5-mm audio jack connector on the side of the ONIX breakout board.
         /// </summary>
         Breakout = 0,
 
         /// <summary>
-        /// In early access versions of the ONIX breakout board, the Harp mini-jack connector is
-        /// configured for output only, so a special adapter is needed to transmit the
-        /// Harp clock synchronization signal to the breakout clock input zero.
+        /// Specifies SMA clock input 0 on the ONIX breakout board.
         /// </summary>
+        /// <remarks>
+        /// In early access versions of the ONIX breakout board, Harp 3.5-mm audio jack connector was
+        /// configured for output only, so a special adapter was needed to transmit the Harp clock
+        /// synchronization signal to the breakout clock input zero.
+        /// </remarks>
         ClockAdapter = 1
     }
 }

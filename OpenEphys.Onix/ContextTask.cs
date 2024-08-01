@@ -111,7 +111,7 @@ namespace OpenEphys.Onix
         /// Gets the system clock rate in Hz.
         /// </summary>
         /// <remarks>
-        /// This describes the frequency of the clock governing the controller hardware.
+        /// This describes the frequency of the clock governing the ONI controller.
         /// </remarks>
         public uint SystemClockHz { get; private set; }
 
@@ -119,8 +119,8 @@ namespace OpenEphys.Onix
         /// Gets the acquisition clock rate in Hz.
         /// </summary>
         /// <remarks>
-        /// This describes the frequency of the clock used to drive the acquisition counter which is used to provide the clock
-        /// counter values in <see cref="oni.Frame.Clock"/> and its derivative types (e.g. <see cref="DataFrame.Clock"/>,
+        /// This describes the frequency of the clock used to drive the ONI controller's acquisition clock which is used
+        /// to generate the clock counter values in <see cref="oni.Frame.Clock"/> and its derivative types (e.g. <see cref="DataFrame.Clock"/>,
         /// <see cref="BufferedDataFrame.Clock"/>, etc.)
         /// </remarks>
         public uint AcquisitionClockHz { get; private set; }
@@ -144,7 +144,7 @@ namespace OpenEphys.Onix
         public uint MaxWriteFrameSize { get; private set; }
 
         /// <summary>
-        /// Gets the device table containing the full device hierarchy governed by the internal <see cref="oni.Context"/>.
+        /// Gets the device table containing the device hierarchy governed by the internal <see cref="oni.Context"/>.
         /// </summary>
         /// <remarks>
         /// This dictionary maps a fully-qualified <see cref="oni.Device.Address"/> to an <see cref="oni.Device"/> instance.
@@ -260,10 +260,10 @@ namespace OpenEphys.Onix
                     ctx.BlockReadSize = blockReadSize;
                     ctx.BlockWriteSize = blockWriteSize;
 
-                    // NB: Stuff related to sync mode is 100% ONIX, not ONI, so long term another place
-                    // to do this separation might be needed
-                    int addr = ctx.HardwareAddress;
-                    int mode = (addr & 0x00FF0000) >> 16;
+                    // TODO: Stuff related to sync mode is 100% ONIX, not ONI. Therefore, in the long term,
+                    // another place to do this separation might be needed
+                    int address = ctx.HardwareAddress;
+                    int mode = (address & 0x00FF0000) >> 16;
                     if (mode == 0) // Standalone mode
                     {
                         ctx.Start(true);

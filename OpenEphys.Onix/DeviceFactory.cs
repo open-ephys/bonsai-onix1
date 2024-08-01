@@ -48,7 +48,8 @@ namespace OpenEphys.Onix
         /// <remarks>
         /// The device name provides a unique, human-readable identifier that is used to link software
         /// elements for configuration, control, and data streaming to hardware. This is often a one-to-one
-        /// representation of an ONI device, but can also represent abstract ONI device aggregates or virtual devices.
+        /// representation of a single <see cref="oni.Device"/>, but can also represent abstract ONI device
+        /// aggregates or virtual devices.
         /// </remarks>
         [Description(DeviceNameDescription)]
         public string DeviceName { get; set; }
@@ -58,7 +59,7 @@ namespace OpenEphys.Onix
         /// </summary>
         /// <remarks>
         /// This address provides a fully-qualified location of a device within the device table. This is often a one-to-one
-        /// representation of a ONI address, but can also represent abstract device addresses.
+        /// representation of a <see cref="oni.Device.Address"/>, but can also represent abstract device addresses.
         /// </remarks>
         [Description(DeviceAddressDescription)]
         public uint DeviceAddress { get; set; }
@@ -68,7 +69,7 @@ namespace OpenEphys.Onix
         /// </summary>
         /// <remarks>
         /// This type provides a device identity to each device within the device table. This is often a one-to-one
-        /// representation of a ONI device ID, but can also represent abstract device identities.
+        /// representation of a a <see cref="oni.Device.ID"/>, but can also represent abstract device identities.
         /// </remarks>
         [Browsable(false)]
         public Type DeviceType { get; }
