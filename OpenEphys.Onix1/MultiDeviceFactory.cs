@@ -6,19 +6,26 @@ namespace OpenEphys.Onix1
 {
     /// <summary>
     /// Provides an abstract base class for configuration operators responsible for
-    /// registering all devices in an ONI device aggregate in the context device table.
+    /// registering logical groups of <see cref="oni.Device"/>s.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// ONI devices are often grouped into multi-device aggregates connected to hubs or
-    /// headstages. These aggregates provide access to multiple devices through hub-specific
-    /// addresses and usually require a specific sequence of configuration steps to determine
-    /// operational port voltages and other link-specific settings.
+    /// The ONI standard states that devices are grouped into aggregates called hubs, each of which is
+    /// governed by a single, potentially asynchronous clock and share a common base address. The devices on
+    /// a headstage are an example of a hub. Devices within a hub are accessed through hub-specific addresses
+    /// and usually require a specific sequence of configuration steps prior to acquisition.
     /// </para>
     /// <para>
-    /// These multi-device aggregates are the most common starting point for configuration
-    /// of an ONI system, and the <see cref="MultiDeviceFactory"/> provides a modular abstraction
-    /// for flexible assembly and sequencing of multiple such aggregates.
+    /// This class allows configuration of logical device groups of <see cref="oni.Device"/>s across ONI-defined
+    /// hubs. For instance, the group of devices within a headstage (a single hub) can be combined with a device
+    /// from another hub that is used to control its port voltage and communication status
+    /// (e.g. <see cref="ConfigureHeadstage64"/>). Alternatively, diagnostic devices that are present within
+    /// an ONI hub can be omitted from a device group to aid it useability (e.g. <see cref="ConfigureBreakoutBoard"/>).
+    /// </para>
+    /// <para>
+    /// These device groups are the most common starting point for configuration
+    /// of an ONI system, and the <see cref="MultiDeviceFactory"/> provides a modular abstraction for flexible
+    /// assembly and sequencing of device groups.
     /// </para>
     /// </remarks>
     public abstract class MultiDeviceFactory : DeviceFactory, INamedElement
@@ -34,10 +41,10 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets or sets a unique hub device name.
+        /// Gets or sets a unique device group name.
         /// </summary>
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
-        [Description("The unique hub device name.")]
+        [Description("The unique device group name.")]
         public string Name
         {
             get { return _name; }
@@ -62,7 +69,7 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Configure all the ONI devices in the multi-device aggregate.
+        /// Configure all devices in the device group.
         /// </summary>
         /// <remarks>
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance
@@ -71,13 +78,13 @@ namespace OpenEphys.Onix1
         /// <param name="source">A sequence of <see cref="ContextTask"/> instances that hold configuration actions.</param>
         /// <returns>
         /// The original sequence modified by adding additional configuration actions required to configure
-        /// all the ONI devices in the multi-device aggregate.
+        /// all the devices in the device group.
         /// </returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             if (string.IsNullOrEmpty(_name))
             {
-                throw new InvalidOperationException("A valid hub device name must be specified.");
+                throw new InvalidOperationException("A valid device group name must be specified.");
             }
 
             var output = source;
@@ -90,3 +97,4 @@ namespace OpenEphys.Onix1
         }
     }
 }
+
