@@ -20,7 +20,7 @@ namespace OpenEphys.Onix1
     /// hubs. For instance, the group of devices within a headstage (a single hub) can be combined with a device
     /// from another hub that is used to control its port voltage and communication status
     /// (e.g. <see cref="ConfigureHeadstage64"/>). Alternatively, diagnostic devices that are present within
-    /// an ONI hub can be omitted from a device group to aid it useability (e.g. <see cref="ConfigureBreakoutBoard"/>).
+    /// an ONI hub can be omitted from a device group to aid its useability (e.g. <see cref="ConfigureBreakoutBoard"/>).
     /// </para>
     /// <para>
     /// These device groups are the most common starting point for configuration
