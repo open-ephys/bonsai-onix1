@@ -54,3 +54,27 @@ jobs:
           name: Packages
           if-no-files-found: error
           path: artifacts/package/${{matrix.configuration}}/**
+
+  publish-github:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    needs: [build]
+    if: github.event_name == 'push'
+    steps:
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.x
+
+      - name: Download packages
+        uses: actions/download-artifact@v4
+        with:
+          name: Packages
+          path: Packages
+
+      - name: Push to GitHub Packages
+        run: dotnet nuget push "Packages/*.nupkg" --skip-duplicate --no-symbols --api-key ${{secrets.GITHUB_TOKEN}} --source https://nuget.pkg.github.com/${{github.repository_owner}}
+        env:
+          # This is a workaround for https://github.com/NuGet/Home/issues/9775
+          DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER: 0
