@@ -1,0 +1,56 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32825.248
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenEphys.Onix1", "OpenEphys.Onix1\OpenEphys.Onix1.csproj", "{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenEphys.Onix1.Design", "OpenEphys.Onix1.Design\OpenEphys.Onix1.Design.csproj", "{149E86EC-B865-463D-81A8-8290CA7F8871}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F8644FAC-94E5-4E73-B809-925ABABE35B1}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenEphys.ProbeInterface", "OpenEphys.ProbeInterface\OpenEphys.ProbeInterface\OpenEphys.ProbeInterface.csproj", "{6DE45906-E96C-4E58-929D-55655ABB2655}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}.Debug|Any CPU.Build.0 = Debug|x64
+		{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}.Debug|x64.ActiveCfg = Debug|x64
+		{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}.Debug|x64.Build.0 = Debug|x64
+		{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}.Release|Any CPU.ActiveCfg = Release|x64
+		{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}.Release|Any CPU.Build.0 = Release|x64
+		{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}.Release|x64.ActiveCfg = Release|x64
+		{353B1EBC-F8EB-4D99-8331-9FF15EC17F38}.Release|x64.Build.0 = Release|x64
+		{149E86EC-B865-463D-81A8-8290CA7F8871}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{149E86EC-B865-463D-81A8-8290CA7F8871}.Debug|Any CPU.Build.0 = Debug|x64
+		{149E86EC-B865-463D-81A8-8290CA7F8871}.Debug|x64.ActiveCfg = Debug|x64
+		{149E86EC-B865-463D-81A8-8290CA7F8871}.Debug|x64.Build.0 = Debug|x64
+		{149E86EC-B865-463D-81A8-8290CA7F8871}.Release|Any CPU.ActiveCfg = Release|x64
+		{149E86EC-B865-463D-81A8-8290CA7F8871}.Release|Any CPU.Build.0 = Release|x64
+		{149E86EC-B865-463D-81A8-8290CA7F8871}.Release|x64.ActiveCfg = Release|x64
+		{149E86EC-B865-463D-81A8-8290CA7F8871}.Release|x64.Build.0 = Release|x64
+		{6DE45906-E96C-4E58-929D-55655ABB2655}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6DE45906-E96C-4E58-929D-55655ABB2655}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6DE45906-E96C-4E58-929D-55655ABB2655}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6DE45906-E96C-4E58-929D-55655ABB2655}.Debug|x64.Build.0 = Debug|Any CPU
+		{6DE45906-E96C-4E58-929D-55655ABB2655}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6DE45906-E96C-4E58-929D-55655ABB2655}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6DE45906-E96C-4E58-929D-55655ABB2655}.Release|x64.ActiveCfg = Release|Any CPU
+		{6DE45906-E96C-4E58-929D-55655ABB2655}.Release|x64.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {86554706-612A-4283-B0DC-5477B01D58B6}
+	EndGlobalSection
+EndGlobal
