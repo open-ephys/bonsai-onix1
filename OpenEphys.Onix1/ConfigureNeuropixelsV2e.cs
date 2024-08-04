@@ -136,6 +136,9 @@ namespace OpenEphys.Onix1
                     ConfigureProbeStreaming(probeControl);
                 }
 
+                // disconnect i2c bus from both probes to prevent digital interference during acquisition
+                SelectProbe(serializer, NeuropixelsV2e.NoProbeSelected);
+
                 var deviceInfo = new NeuropixelsV2eDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB);
                 var shutdown = Disposable.Create(() =>
                 {
