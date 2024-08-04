@@ -6,6 +6,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// A class that configures a NeuropixelsV2e headstage.
     /// </summary>
+    [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eHeadstageEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("configures a NeuropixelsV2e headstage.")]
     public class ConfigureNeuropixelsV2eHeadstage : MultiDeviceFactory
     {

@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
+using System.ComponentModel;
+using Bonsai;
+using Newtonsoft.Json;
+using System.Text;
 using System.Xml.Serialization;
+using System.Linq;
 
 namespace OpenEphys.Onix1
 {
@@ -72,6 +75,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Creates a model of the probe with all electrodes instantiated.
         /// </summary>
+        [XmlIgnore]
         public static readonly IReadOnlyList<NeuropixelsV2QuadShankElectrode> ProbeModel = CreateProbeModel();
 
         /// <summary>
@@ -91,7 +95,7 @@ namespace OpenEphys.Onix1
             var electrodes = new List<NeuropixelsV2QuadShankElectrode>(NeuropixelsV2.ElectrodePerShank * 4);
             for (int i = 0; i < NeuropixelsV2.ElectrodePerShank * 4; i++)
             {
-                electrodes.Add(new NeuropixelsV2QuadShankElectrode() { ElectrodeNumber = i });
+                electrodes.Add(new NeuropixelsV2QuadShankElectrode(i));
             }
             return electrodes;
         }
@@ -114,6 +118,7 @@ namespace OpenEphys.Onix1
         /// <remarks>
         /// The channel map will always be 384 channels, and will return the 384 enabled electrodes.
         /// </remarks>
+        [XmlIgnore]
         public List<NeuropixelsV2QuadShankElectrode> ChannelMap { get; }
 
         /// <summary>
@@ -127,129 +132,28 @@ namespace OpenEphys.Onix1
                 ChannelMap[e.Channel] = e;
             }
         }
-    }
 
-    /// <summary>
-    /// Defines a configuration for quad-shank electrodes.
-    /// </summary>
-    public class NeuropixelsV2QuadShankElectrode
-    {
-        private int electrodeNumber = 0;
+        // TODO: This class has over-lapping functionality with ChannelMap. V
+        [XmlIgnore]
+        [Category("Configuration")]
+        [Description("Defines the shape of the probe, and which contacts are currently selected for streaming")]
+        public NeuropixelsV2eProbeGroup ChannelConfiguration { get; private set; } = new();
 
-        /// <summary>
-        /// Gets or sets the electrode number.
-        /// </summary>
-        /// <remarks>
-        /// When the electrode number is updated, all other properties are automatically calculated based on
-        /// the number given.
-        /// </remarks>
-        public int ElectrodeNumber
+        [Browsable(false)]
+        [Externalizable(false)]
+        [XmlElement(nameof(ChannelConfiguration))]
+        public string ChannelConfigurationString
         {
-            get => electrodeNumber;
+            get
+            {
+                var jsonString = JsonConvert.SerializeObject(ChannelConfiguration);
+                return Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonString));
+            }
             set
             {
-                electrodeNumber = value;
-                Shank = electrodeNumber / NeuropixelsV2.ElectrodePerShank;
-                IntraShankElectrodeIndex = electrodeNumber % NeuropixelsV2.ElectrodePerShank;
-
-                Position = new PointF(x: electrodeNumber % 2 * 32.0f + 8.0f, y: (IntraShankElectrodeIndex - (IntraShankElectrodeIndex % 2)) * 7.5f);
-
-                if (IntraShankElectrodeIndex < 384)
-                    Bank = NeuropixelsV2QuadShankBank.A;
-                else if (IntraShankElectrodeIndex >= 384 && IntraShankElectrodeIndex < 768)
-                    Bank = NeuropixelsV2QuadShankBank.B;
-                else if (IntraShankElectrodeIndex >= 768 && IntraShankElectrodeIndex < 1152)
-                    Bank = NeuropixelsV2QuadShankBank.C;
-                else
-                    Bank = NeuropixelsV2QuadShankBank.D;
-
-                var block = IntraShankElectrodeIndex % 384 / 48;
-                var blockIndex = IntraShankElectrodeIndex % 48;
-
-                Channel = (Shank, block) switch
-                {
-                    (0, 0) => blockIndex + 48 * 0,
-                    (0, 1) => blockIndex + 48 * 2,
-                    (0, 2) => blockIndex + 48 * 4,
-                    (0, 3) => blockIndex + 48 * 6,
-                    (0, 4) => blockIndex + 48 * 5,
-                    (0, 5) => blockIndex + 48 * 7,
-                    (0, 6) => blockIndex + 48 * 1,
-                    (0, 7) => blockIndex + 48 * 3,
-
-                    (1, 0) => blockIndex + 48 * 1,
-                    (1, 1) => blockIndex + 48 * 3,
-                    (1, 2) => blockIndex + 48 * 5,
-                    (1, 3) => blockIndex + 48 * 7,
-                    (1, 4) => blockIndex + 48 * 4,
-                    (1, 5) => blockIndex + 48 * 6,
-                    (1, 6) => blockIndex + 48 * 0,
-                    (1, 7) => blockIndex + 48 * 2,
-
-                    (2, 0) => blockIndex + 48 * 4,
-                    (2, 1) => blockIndex + 48 * 6,
-                    (2, 2) => blockIndex + 48 * 0,
-                    (2, 3) => blockIndex + 48 * 2,
-                    (2, 4) => blockIndex + 48 * 1,
-                    (2, 5) => blockIndex + 48 * 3,
-                    (2, 6) => blockIndex + 48 * 5,
-                    (2, 7) => blockIndex + 48 * 7,
-
-                    (3, 0) => blockIndex + 48 * 5,
-                    (3, 1) => blockIndex + 48 * 7,
-                    (3, 2) => blockIndex + 48 * 1,
-                    (3, 3) => blockIndex + 48 * 3,
-                    (3, 4) => blockIndex + 48 * 0,
-                    (3, 5) => blockIndex + 48 * 2,
-                    (3, 6) => blockIndex + 48 * 4,
-                    (3, 7) => blockIndex + 48 * 6,
-
-                    _ => throw new ArgumentOutOfRangeException($"Invalid shank and/or electrode value: {(Shank, IntraShankElectrodeIndex)}"),
-                };
+                var jsonString = Encoding.UTF8.GetString(Convert.FromBase64String(value));
+                ChannelConfiguration = JsonConvert.DeserializeObject<NeuropixelsV2eProbeGroup>(jsonString);
             }
         }
-
-        /// <summary>
-        /// Gets the channel number of this electrode.
-        /// </summary>
-        /// <remarks>
-        /// Channel number is automatically calculated from the electrode number, and will be between 0 and 383.
-        /// </remarks>
-        [XmlIgnore]
-        public int Channel { get; private set; } = 0;
-
-        /// <summary>
-        /// Gets the shank of this electrode.
-        /// </summary>
-        /// <remarks>
-        /// Shank is automatically determined from the electrode number, and will be between 0 and 3.
-        /// </remarks>
-        [XmlIgnore]
-        public int Shank { get; private set; } = 0;
-
-        /// <summary>
-        /// Gets the index of the shank of this electrode.
-        /// </summary>
-        /// <remarks>
-        /// Shank index is automatically determined from the electrode number, and will be between 0 and 1279.
-        /// </remarks>
-        [XmlIgnore]
-        public int IntraShankElectrodeIndex { get; private set; } = 0;
-
-        /// <summary>
-        /// Gets the <see cref="NeuropixelsV2QuadShankBank"/> of this electrode.
-        /// </summary>
-        /// <remarks>
-        /// The bank is automatically determined from the electrode number, and corresponds to one of four logical
-        /// groupings along each shank. See <see cref="NeuropixelsV2QuadShankBank"/> for more details.
-        /// </remarks>
-        [XmlIgnore]
-        public NeuropixelsV2QuadShankBank Bank { get; private set; } = NeuropixelsV2QuadShankBank.A;
-
-        /// <summary>
-        /// Gets the position of the electrode in relation to the probe.
-        /// </summary>
-        [XmlIgnore]
-        public PointF Position { get; private set; } = new(0f, 0f);
     }
 }

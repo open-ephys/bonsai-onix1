@@ -8,6 +8,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// A class that configures a NeuropixelsV2e device.
     /// </summary>
+    [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a NeuropixelsV2e device.")]
     public class ConfigureNeuropixelsV2e : SingleDeviceFactory
     {
@@ -17,6 +18,18 @@ namespace OpenEphys.Onix1
         public ConfigureNeuropixelsV2e()
             : base(typeof(NeuropixelsV2e))
         {
+        }
+
+        public ConfigureNeuropixelsV2e(ConfigureNeuropixelsV2e configureNode)
+            : base(typeof(NeuropixelsV2e))
+        {
+            Enable = configureNode.Enable;
+            ProbeConfigurationA = configureNode.ProbeConfigurationA;
+            ProbeConfigurationB = configureNode.ProbeConfigurationB;
+            GainCalibrationFileA = configureNode.GainCalibrationFileA;
+            GainCalibrationFileB = configureNode.GainCalibrationFileB;
+            DeviceName = configureNode.DeviceName;
+            DeviceAddress = configureNode.DeviceAddress;
         }
 
         /// <summary>
@@ -135,6 +148,9 @@ namespace OpenEphys.Onix1
                     probeControl.WriteConfiguration(ProbeConfigurationB);
                     ConfigureProbeStreaming(probeControl);
                 }
+
+                // prevent noise from i2c bus during streaming
+                SelectProbe(serializer, NeuropixelsV2e.NoProbeSelected);
 
                 var deviceInfo = new NeuropixelsV2eDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB);
                 var shutdown = Disposable.Create(() =>

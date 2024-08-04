@@ -6,6 +6,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// A class that configures a NeuropixelsV2eBno055 device.
     /// </summary>
+    [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eBno055Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a NeuropixelsV2eBno055 device.")]
     public class ConfigureNeuropixelsV2eBno055 : SingleDeviceFactory
     {
@@ -15,6 +16,14 @@ namespace OpenEphys.Onix1
         public ConfigureNeuropixelsV2eBno055()
             : base(typeof(NeuropixelsV2eBno055))
         {
+        }
+
+        public ConfigureNeuropixelsV2eBno055(ConfigureNeuropixelsV2eBno055 configureNeuropixelsV2eBno055)
+            : base(typeof(NeuropixelsV2eBno055))
+        {
+            Enable = configureNeuropixelsV2eBno055.Enable;
+            DeviceName = configureNeuropixelsV2eBno055.DeviceName;
+            DeviceAddress = configureNeuropixelsV2eBno055.DeviceAddress;
         }
 
         /// <summary>

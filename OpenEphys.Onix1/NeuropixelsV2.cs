@@ -29,6 +29,7 @@ namespace OpenEphys.Onix1
         public const int ChannelCount = 384;
         public const int BaseBitsPerChannel = 4;
         public const int ElectrodePerShank = 1280;
+        public const int ElectrodePerBlock = 48;
         public const int ReferencePixelCount = 4;
         public const int DummyRegisterCount = 4;
         public const int RegistersPerShank = ElectrodePerShank + ReferencePixelCount + DummyRegisterCount;
@@ -70,10 +71,11 @@ namespace OpenEphys.Onix1
 
             const int PixelOffset = (NeuropixelsV2.ElectrodePerShank - 1) / 2;
             const int ReferencePixelOffset = 3;
-            foreach (var c in probe.ChannelMap)
+ 
+            foreach (var c in NeuropixelsV2eProbeGroup.ToChannelMap(probe.ChannelConfiguration))
             {
-                var baseIndex = c.IntraShankElectrodeIndex % 2;
-                var pixelIndex = c.IntraShankElectrodeIndex / 2;
+                var baseIndex = c.IntraShankIndex % 2;
+                var pixelIndex = c.IntraShankIndex / 2;
                 pixelIndex = baseIndex == 0
                     ? pixelIndex + PixelOffset + 2 * ReferencePixelOffset
                     : PixelOffset - pixelIndex + ReferencePixelOffset;

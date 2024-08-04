@@ -1,0 +1,3 @@
+[submodule "OpenEphys.ProbeInterface"]
+	path = OpenEphys.ProbeInterface
+	url = https://github.com/open-ephys/OpenEphys.ProbeInterface
