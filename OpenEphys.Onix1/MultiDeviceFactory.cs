@@ -6,7 +6,7 @@ namespace OpenEphys.Onix1
 {
     /// <summary>
     /// Provides an abstract base class for configuration operators responsible for
-    /// registering logical groups of <see cref="oni.Device"/>s.
+    /// registering all devices within a logical group within an internal device manager. 
     /// </summary>
     /// <remarks>
     /// <para>
@@ -16,11 +16,12 @@ namespace OpenEphys.Onix1
     /// and usually require a specific sequence of configuration steps prior to acquisition.
     /// </para>
     /// <para>
-    /// This class allows configuration of logical device groups of <see cref="oni.Device"/>s across ONI-defined
+    /// This class allows configuration of logical groups of devices within or across ONI-defined
     /// hubs. For instance, the group of devices within a headstage (a single hub) can be combined with a device
     /// from another hub that is used to control its port voltage and communication status
     /// (e.g. <see cref="ConfigureHeadstage64"/>). Alternatively, diagnostic devices that are present within
-    /// an ONI hub can be omitted from a device group to aid its useability (e.g. <see cref="ConfigureBreakoutBoard"/>).
+    /// an ONI hub can be omitted from a device group to aid its usability (e.g. <see cref="ConfigureBreakoutBoard"/>). 
+    /// Of course, all devices within to a single hub can also be grouped without modification. 
     /// </para>
     /// <para>
     /// These device groups are the most common starting point for configuration
@@ -43,7 +44,10 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets a unique device group name.
         /// </summary>
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <remarks>
+        /// A human-readable identifier that is used as a prefix for 
+        /// the <see cref="SingleDeviceFactory.DeviceName"/> of each device in the the group. 
+        /// </remarks>
         [Description("The unique device group name.")]
         public string Name
         {
