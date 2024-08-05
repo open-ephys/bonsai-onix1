@@ -114,14 +114,15 @@ namespace OpenEphys.Onix1
                 ResetProbes(serializer, gpo10Config);
 
                 // configure probe streaming
-                ushort? gainCorrectionA = null;
-                ushort? gainCorrectionB = null;
+                double? gainCorrectionA = null;
+                double? gainCorrectionB = null;
                 var probeControl = new NeuropixelsV2eRegisterContext(device, NeuropixelsV2e.ProbeAddress);
 
                 // configure probe A streaming
                 if (probeAMetadata.ProbeSerialNumber != null)
                 {
-                    gainCorrectionA = ReadGainCorrection(GainCalibrationFileA, (ulong)probeAMetadata.ProbeSerialNumber, NeuropixelsV2Probe.ProbeA);
+                    gainCorrectionA = NeuropixelsV2.ReadGainCorrection(
+                        GainCalibrationFileA, (ulong)probeAMetadata.ProbeSerialNumber, NeuropixelsV2Probe.ProbeA);
                     SelectProbe(serializer, NeuropixelsV2e.ProbeASelected);
                     probeControl.WriteConfiguration(ProbeConfigurationA);
                     ConfigureProbeStreaming(probeControl);
@@ -130,7 +131,8 @@ namespace OpenEphys.Onix1
                 // configure probe B streaming
                 if (probeBMetadata.ProbeSerialNumber != null)
                 {
-                    gainCorrectionB = ReadGainCorrection(GainCalibrationFileB, (ulong)probeBMetadata.ProbeSerialNumber, NeuropixelsV2Probe.ProbeB);
+                    gainCorrectionB = NeuropixelsV2.ReadGainCorrection(
+                        GainCalibrationFileB, (ulong)probeBMetadata.ProbeSerialNumber, NeuropixelsV2Probe.ProbeB);
                     SelectProbe(serializer, NeuropixelsV2e.ProbeBSelected);
                     probeControl.WriteConfiguration(ProbeConfigurationB);
                     ConfigureProbeStreaming(probeControl);
@@ -199,29 +201,6 @@ namespace OpenEphys.Onix1
             SelectProbe(serializer, probeSelect);
             return new NeuropixelsV2eMetadata(serializer);
         }
-
-        static ushort ReadGainCorrection(string gainCalibrationFile, ulong probeSerialNumber, NeuropixelsV2Probe probe)
-        {
-            if (gainCalibrationFile == null)
-            {
-                throw new ArgumentException($"A calibration file must be specified for {probe} with serial number " +
-                    $"{probeSerialNumber})");
-            }
-
-            System.IO.StreamReader gainFile = new(gainCalibrationFile);
-            var sn = ulong.Parse(gainFile.ReadLine());
-
-            if (probeSerialNumber != sn)
-            {
-                throw new ArgumentException($"{probe}'s serial number ({probeSerialNumber}) does not " +
-                    $"match the calibration file serial number: {sn}.");
-            }
-
-            // Q1.14 fixed point conversion
-            // TODO: use double!
-            return (ushort)(double.Parse(gainFile.ReadLine()) * (1 << 14));
-        }
-
         static void SelectProbe(I2CRegisterContext serializer, byte probeSelect)
         {
             serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO32, probeSelect);
