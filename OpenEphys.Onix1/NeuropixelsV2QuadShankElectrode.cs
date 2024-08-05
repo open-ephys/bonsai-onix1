@@ -16,28 +16,28 @@ namespace OpenEphys.Onix1
         public int Block { get; private set; }
         public int BlockIndex { get; private set; }
 
-        public NeuropixelsV2QuadShankElectrode(int electrodeNumber)
+        public NeuropixelsV2QuadShankElectrode(int index)
         {
-            ElectrodeNumber = electrodeNumber;
-            Shank = electrodeNumber / NeuropixelsV2.ElectrodePerShank;
-            ShankIndex = electrodeNumber % NeuropixelsV2.ElectrodePerShank;
-            Bank = (NeuropixelsV2QuadShankBank)(ShankIndex / NeuropixelsV2.ChannelCount);
-            Block = ShankIndex % NeuropixelsV2.ChannelCount / NeuropixelsV2.ElectrodePerBlock;
-            BlockIndex = ShankIndex % NeuropixelsV2.ElectrodePerBlock;
+            Index = index;
+            Shank = index / NeuropixelsV2.ElectrodePerShank;
+            IntraShankIndex = index % NeuropixelsV2.ElectrodePerShank;
+            Bank = (NeuropixelsV2QuadShankBank)(IntraShankIndex / NeuropixelsV2.ChannelCount);
+            Block = IntraShankIndex % NeuropixelsV2.ChannelCount / NeuropixelsV2.ElectrodePerBlock;
+            BlockIndex = IntraShankIndex % NeuropixelsV2.ElectrodePerBlock;
             Channel = GetChannelNumber(Shank, Block, BlockIndex);
-            Position = GetPosition(electrodeNumber);
+            Position = GetPosition(index);
         }
 
         public NeuropixelsV2QuadShankElectrode(Contact contact)
         {
-            ElectrodeNumber = contact.Index;
-            Shank = ElectrodeNumber / NeuropixelsV2.ElectrodePerShank;
-            ShankIndex = ElectrodeNumber % NeuropixelsV2.ElectrodePerShank;
-            Bank = (NeuropixelsV2QuadShankBank)(ShankIndex / NeuropixelsV2.ChannelCount);
-            Block = ShankIndex % NeuropixelsV2.ChannelCount / NeuropixelsV2.ElectrodePerBlock;
-            BlockIndex = ShankIndex % NeuropixelsV2.ElectrodePerBlock;
+            Index = contact.Index;
+            Shank = Index / NeuropixelsV2.ElectrodePerShank;
+            IntraShankIndex = Index % NeuropixelsV2.ElectrodePerShank;
+            Bank = (NeuropixelsV2QuadShankBank)(IntraShankIndex / NeuropixelsV2.ChannelCount);
+            Block = IntraShankIndex % NeuropixelsV2.ChannelCount / NeuropixelsV2.ElectrodePerBlock;
+            BlockIndex = IntraShankIndex % NeuropixelsV2.ElectrodePerBlock;
             Channel = GetChannelNumber(Shank, Block, BlockIndex);
-            Position = GetPosition(ElectrodeNumber);
+            Position = GetPosition(Index);
         }
 
         private PointF GetPosition(int electrodeNumber)
@@ -58,41 +58,41 @@ namespace OpenEphys.Onix1
 
         internal static int GetChannelNumber(int shank, int block, int blockIndex) => (shank, block) switch
         {
-            (0, 0) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 0,
-            (0, 1) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 2,
-            (0, 2) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 4,
-            (0, 3) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 6,
-            (0, 4) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 5,
-            (0, 5) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 7,
-            (0, 6) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 1,
-            (0, 7) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 3,
+            (0, 0) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 0,
+            (0, 1) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 2,
+            (0, 2) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 4,
+            (0, 3) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 6,
+            (0, 4) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 5,
+            (0, 5) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 7,
+            (0, 6) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 1,
+            (0, 7) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 3,
 
-            (1, 0) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 1,
-            (1, 1) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 3,
-            (1, 2) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 5,
-            (1, 3) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 7,
-            (1, 4) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 4,
-            (1, 5) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 6,
-            (1, 6) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 0,
-            (1, 7) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 2,
+            (1, 0) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 1,
+            (1, 1) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 3,
+            (1, 2) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 5,
+            (1, 3) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 7,
+            (1, 4) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 4,
+            (1, 5) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 6,
+            (1, 6) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 0,
+            (1, 7) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 2,
 
-            (2, 0) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 4,
-            (2, 1) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 6,
-            (2, 2) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 0,
-            (2, 3) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 2,
-            (2, 4) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 1,
-            (2, 5) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 3,
-            (2, 6) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 5,
-            (2, 7) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 7,
+            (2, 0) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 4,
+            (2, 1) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 6,
+            (2, 2) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 0,
+            (2, 3) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 2,
+            (2, 4) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 1,
+            (2, 5) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 3,
+            (2, 6) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 5,
+            (2, 7) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 7,
 
-            (3, 0) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 5,
-            (3, 1) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 7,
-            (3, 2) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 1,
-            (3, 3) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 3,
-            (3, 4) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 0,
-            (3, 5) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 2,
-            (3, 6) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 4,
-            (3, 7) => blockIndex + NeuropixelsV2.ElectrodePerBlock* 6,
+            (3, 0) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 5,
+            (3, 1) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 7,
+            (3, 2) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 1,
+            (3, 3) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 3,
+            (3, 4) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 0,
+            (3, 5) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 2,
+            (3, 6) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 4,
+            (3, 7) => blockIndex + NeuropixelsV2.ElectrodePerBlock * 6,
 
             _ => throw new ArgumentOutOfRangeException($"Invalid shank and/or electrode value: {(shank, block)}"),
         };

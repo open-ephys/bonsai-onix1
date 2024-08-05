@@ -18,6 +18,10 @@ namespace OpenEphys.Onix1
         {
         }
 
+        /// <summary>
+        /// Copy constructor for the <see cref="ConfigureNeuropixelsV2eBno055"/> class.
+        /// </summary>
+        /// <param name="configureNeuropixelsV2eBno055">A pre-existing <see cref="ConfigureNeuropixelsV2eBno055"/> object.</param>
         public ConfigureNeuropixelsV2eBno055(ConfigureNeuropixelsV2eBno055 configureNeuropixelsV2eBno055)
             : base(typeof(NeuropixelsV2eBno055))
         {

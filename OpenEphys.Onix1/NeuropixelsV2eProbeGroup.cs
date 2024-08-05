@@ -272,7 +272,7 @@ namespace OpenEphys.Onix1
 
             foreach (var e in channelMap)
             {
-                deviceChannelIndices[e.ElectrodeNumber] = e.Channel;
+                deviceChannelIndices[e.Index] = e.Channel;
             }
 
             probeGroup.UpdateDeviceChannelIndices(0, deviceChannelIndices);

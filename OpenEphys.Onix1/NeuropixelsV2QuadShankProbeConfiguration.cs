@@ -68,7 +68,7 @@ namespace OpenEphys.Onix1
     }
 
     /// <summary>
-    /// Defines a configuration for quad-shank probes.
+    /// Defines a configuration for quad-shank, Neuropixels 2.0 and 2.0-beta probes.
     /// </summary>
     public class NeuropixelsV2QuadShankProbeConfiguration
     {
@@ -88,6 +88,30 @@ namespace OpenEphys.Onix1
             {
                 ChannelMap.Add(ProbeModel.FirstOrDefault(e => e.Channel == i));
             }
+        }
+
+        /// <summary>
+        /// Copy constructor for the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class.
+        /// </summary>
+        /// <param name="probeConfiguration">The existing <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> object to copy.</param>
+        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2QuadShankProbeConfiguration probeConfiguration)
+        {
+            Reference = probeConfiguration.Reference;
+            ChannelMap = probeConfiguration.ChannelMap;
+            ChannelConfiguration = new(probeConfiguration.ChannelConfiguration);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class with the given
+        /// <see cref="NeuropixelsV2eProbeGroup"/> channel configuration. The <see cref="ChannelMap"/> is automatically 
+        /// generated from the <see cref="ChannelConfiguration"/>. 
+        /// </summary>
+        /// <param name="channelConfiguration">The existing <see cref="NeuropixelsV2eProbeGroup"/> instance to use.</param>
+        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2eProbeGroup channelConfiguration)
+        {
+            ChannelConfiguration = channelConfiguration;
+
+            SelectElectrodes(NeuropixelsV2eProbeGroup.ToChannelMap(channelConfiguration));
         }
 
         private static List<NeuropixelsV2QuadShankElectrode> CreateProbeModel()
@@ -131,13 +155,27 @@ namespace OpenEphys.Onix1
             {
                 ChannelMap[e.Channel] = e;
             }
+
+            if (ChannelMap.Count != NeuropixelsV2.ChannelCount)
+            {
+                throw new InvalidOperationException($"Channel map does not match the expected number of active channels " +
+                    $"for a NeuropixelsV2 probe. Expected {NeuropixelsV2.ChannelCount}, but there are {ChannelMap.Count} values.");
+            }
         }
 
+        /// <summary>
+        /// Gets the <see cref="NeuropixelsV2eProbeGroup"/> channel configuration for this probe.
+        /// </summary>
         [XmlIgnore]
         [Category("Configuration")]
         [Description("Defines the shape of the probe, and which contacts are currently selected for streaming")]
         public NeuropixelsV2eProbeGroup ChannelConfiguration { get; private set; } = new();
 
+        /// <summary>
+        /// Gets or sets a string defining the <see cref="ChannelConfiguration"/> in Base64.
+        /// This variable is needed to properly save a workflow in Bonsai, but it is not
+        /// directly accessible in the Bonsai editor.
+        /// </summary>
         [Browsable(false)]
         [Externalizable(false)]
         [XmlElement(nameof(ChannelConfiguration))]

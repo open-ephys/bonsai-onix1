@@ -56,7 +56,7 @@ namespace OpenEphys.Onix1.Design
             textBoxProbeCalibrationFileA.Text = ConfigureNode.GainCalibrationFileA;
             textBoxProbeCalibrationFileB.Text = ConfigureNode.GainCalibrationFileB;
 
-            ChannelConfigurationA = new(ConfigureNode.ProbeConfigurationA.ChannelConfiguration)
+            ChannelConfigurationA = new(ConfigureNode.ProbeConfigurationA)
             {
                 TopLevel = false,
                 FormBorderStyle = FormBorderStyle.None,
@@ -73,7 +73,7 @@ namespace OpenEphys.Onix1.Design
                 panelProbeA.Visible = false;
             }
 
-            ChannelConfigurationB = new(ConfigureNode.ProbeConfigurationB.ChannelConfiguration)
+            ChannelConfigurationB = new(ConfigureNode.ProbeConfigurationB)
             {
                 TopLevel = false,
                 FormBorderStyle = FormBorderStyle.None,
@@ -216,184 +216,184 @@ namespace OpenEphys.Onix1.Design
         {
             var channelConfiguration = probeSelected == NeuropixelsV2Probe.ProbeA ? ChannelConfigurationA : ChannelConfigurationB;
 
-            var channelMap = channelConfiguration.ChannelMap;
-            var electrodes = channelConfiguration.Electrodes;
+            var probeConfiguration = channelConfiguration.ProbeConfiguration;
+            var electrodes = NeuropixelsV2eProbeGroup.ToElectrodes(channelConfiguration.ProbeConfiguration.ChannelConfiguration);
 
             switch (preset)
             {
                 case ChannelPreset.Shank0BankA:
-                    channelMap.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.A &&
-                                                                      e.Shank == 0).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.A &&
+                                                                              e.Shank == 0).ToList());
                     break;
 
                 case ChannelPreset.Shank0BankB:
-                    channelMap.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.B &&
-                                                                      e.Shank == 0).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.B &&
+                                                                              e.Shank == 0).ToList());
                     break;
 
                 case ChannelPreset.Shank0BankC:
-                    channelMap.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.C &&
-                                                                      e.Shank == 0).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.C &&
+                                                                              e.Shank == 0).ToList());
                     break;
 
                 case ChannelPreset.Shank0BankD:
-                    channelMap.SelectElectrodes(electrodes.Where(e => (e.Bank == NeuropixelsV2QuadShankBank.D ||
-                                                                      (e.Bank == NeuropixelsV2QuadShankBank.C && e.ElectrodeNumber >= 896)) &&
-                                                                      e.Shank == 0).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Bank == NeuropixelsV2QuadShankBank.D ||
+                                                                              (e.Bank == NeuropixelsV2QuadShankBank.C && e.Index >= 896)) &&
+                                                                               e.Shank == 0).ToList());
                     break;
 
                 case ChannelPreset.Shank1BankA:
-                    channelMap.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.A &&
-                                                                      e.Shank == 1).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.A &&
+                                                                              e.Shank == 1).ToList());
                     break;
 
                 case ChannelPreset.Shank1BankB:
-                    channelMap.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.B &&
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.B &&
                                                                       e.Shank == 1).ToList());
                     break;
 
                 case ChannelPreset.Shank1BankC:
-                    channelMap.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.C &&
-                                                                      e.Shank == 1).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.C &&
+                                                                              e.Shank == 1).ToList());
                     break;
 
                 case ChannelPreset.Shank1BankD:
-                    channelMap.SelectElectrodes(electrodes.Where(e => (e.Bank == NeuropixelsV2QuadShankBank.D ||
-                                                                      (e.Bank == NeuropixelsV2QuadShankBank.C && e.ElectrodeNumber >= 896)) &&
-                                                                      e.Shank == 1).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Bank == NeuropixelsV2QuadShankBank.D ||
+                                                                              (e.Bank == NeuropixelsV2QuadShankBank.C && e.Index >= 896)) &&
+                                                                               e.Shank == 1).ToList());
                     break;
 
                 case ChannelPreset.Shank2BankA:
-                    channelMap.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.A &&
-                                                                      e.Shank == 2).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.A &&
+                                                                              e.Shank == 2).ToList());
                     break;
 
                 case ChannelPreset.Shank2BankB:
-                    channelMap.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.B &&
-                                                                      e.Shank == 2).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.B &&
+                                                                              e.Shank == 2).ToList());
                     break;
 
                 case ChannelPreset.Shank2BankC:
-                    channelMap.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.C &&
-                                                                      e.Shank == 2).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.C &&
+                                                                              e.Shank == 2).ToList());
                     break;
 
                 case ChannelPreset.Shank2BankD:
-                    channelMap.SelectElectrodes(electrodes.Where(e => (e.Bank == NeuropixelsV2QuadShankBank.D ||
-                                                                      (e.Bank == NeuropixelsV2QuadShankBank.C && e.ElectrodeNumber >= 896)) &&
-                                                                      e.Shank == 2).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Bank == NeuropixelsV2QuadShankBank.D ||
+                                                                              (e.Bank == NeuropixelsV2QuadShankBank.C && e.Index >= 896)) &&
+                                                                               e.Shank == 2).ToList());
                     break;
 
                 case ChannelPreset.Shank3BankA:
-                    channelMap.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.A &&
-                                                                      e.Shank == 3).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.A &&
+                                                                              e.Shank == 3).ToList());
                     break;
 
                 case ChannelPreset.Shank3BankB:
-                    channelMap.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.B &&
-                                                                      e.Shank == 3).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.B &&
+                                                                              e.Shank == 3).ToList());
                     break;
 
                 case ChannelPreset.Shank3BankC:
-                    channelMap.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.C &&
-                                                                      e.Shank == 3).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV2QuadShankBank.C &&
+                                                                              e.Shank == 3).ToList());
                     break;
 
                 case ChannelPreset.Shank3BankD:
-                    channelMap.SelectElectrodes(electrodes.Where(e => (e.Bank == NeuropixelsV2QuadShankBank.D ||
-                                                                      (e.Bank == NeuropixelsV2QuadShankBank.C && e.ElectrodeNumber >= 896)) &&
-                                                                      e.Shank == 3).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Bank == NeuropixelsV2QuadShankBank.D ||
+                                                                              (e.Bank == NeuropixelsV2QuadShankBank.C && e.Index >= 896)) &&
+                                                                               e.Shank == 3).ToList());
                     break;
 
                 case ChannelPreset.AllShanks0_95:
-                    channelMap.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.ShankIndex >= 0 && e.ShankIndex <= 95) ||
-                                                                      (e.Shank == 1 && e.ShankIndex >= 0 && e.ShankIndex <= 95) ||
-                                                                      (e.Shank == 2 && e.ShankIndex >= 0 && e.ShankIndex <= 95) ||
-                                                                      (e.Shank == 3 && e.ShankIndex >= 0 && e.ShankIndex <= 95)).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.IntraShankIndex >= 0 && e.IntraShankIndex <= 95) ||
+                                                                              (e.Shank == 1 && e.IntraShankIndex >= 0 && e.IntraShankIndex <= 95) ||
+                                                                              (e.Shank == 2 && e.IntraShankIndex >= 0 && e.IntraShankIndex <= 95) ||
+                                                                              (e.Shank == 3 && e.IntraShankIndex >= 0 && e.IntraShankIndex <= 95)).ToList());
                     break;
 
                 case ChannelPreset.AllShanks96_191:
-                    channelMap.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.ShankIndex >= 96 && e.ShankIndex <= 191) ||
-                                                                      (e.Shank == 1 && e.ShankIndex >= 96 && e.ShankIndex <= 191) ||
-                                                                      (e.Shank == 2 && e.ShankIndex >= 96 && e.ShankIndex <= 191) ||
-                                                                      (e.Shank == 3 && e.ShankIndex >= 96 && e.ShankIndex <= 191)).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.IntraShankIndex >= 96 && e.IntraShankIndex <= 191) ||
+                                                                              (e.Shank == 1 && e.IntraShankIndex >= 96 && e.IntraShankIndex <= 191) ||
+                                                                              (e.Shank == 2 && e.IntraShankIndex >= 96 && e.IntraShankIndex <= 191) ||
+                                                                              (e.Shank == 3 && e.IntraShankIndex >= 96 && e.IntraShankIndex <= 191)).ToList());
                     break;
 
                 case ChannelPreset.AllShanks192_287:
-                    channelMap.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.ShankIndex >= 192 && e.ShankIndex <= 287) ||
-                                                                      (e.Shank == 1 && e.ShankIndex >= 192 && e.ShankIndex <= 287) ||
-                                                                      (e.Shank == 2 && e.ShankIndex >= 192 && e.ShankIndex <= 287) ||
-                                                                      (e.Shank == 3 && e.ShankIndex >= 192 && e.ShankIndex <= 287)).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.IntraShankIndex >= 192 && e.IntraShankIndex <= 287) ||
+                                                                              (e.Shank == 1 && e.IntraShankIndex >= 192 && e.IntraShankIndex <= 287) ||
+                                                                              (e.Shank == 2 && e.IntraShankIndex >= 192 && e.IntraShankIndex <= 287) ||
+                                                                              (e.Shank == 3 && e.IntraShankIndex >= 192 && e.IntraShankIndex <= 287)).ToList());
                     break;
 
                 case ChannelPreset.AllShanks288_383:
-                    channelMap.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.ShankIndex >= 288 && e.ShankIndex <= 383) ||
-                                                                      (e.Shank == 1 && e.ShankIndex >= 288 && e.ShankIndex <= 383) ||
-                                                                      (e.Shank == 2 && e.ShankIndex >= 288 && e.ShankIndex <= 383) ||
-                                                                      (e.Shank == 3 && e.ShankIndex >= 288 && e.ShankIndex <= 383)).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.IntraShankIndex >= 288 && e.IntraShankIndex <= 383) ||
+                                                                              (e.Shank == 1 && e.IntraShankIndex >= 288 && e.IntraShankIndex <= 383) ||
+                                                                              (e.Shank == 2 && e.IntraShankIndex >= 288 && e.IntraShankIndex <= 383) ||
+                                                                              (e.Shank == 3 && e.IntraShankIndex >= 288 && e.IntraShankIndex <= 383)).ToList());
                     break;
 
                 case ChannelPreset.AllShanks384_479:
-                    channelMap.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.ShankIndex >= 384 && e.ShankIndex <= 479) ||
-                                                                      (e.Shank == 1 && e.ShankIndex >= 384 && e.ShankIndex <= 479) ||
-                                                                      (e.Shank == 2 && e.ShankIndex >= 384 && e.ShankIndex <= 479) ||
-                                                                      (e.Shank == 3 && e.ShankIndex >= 384 && e.ShankIndex <= 479)).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.IntraShankIndex >= 384 && e.IntraShankIndex <= 479) ||
+                                                                              (e.Shank == 1 && e.IntraShankIndex >= 384 && e.IntraShankIndex <= 479) ||
+                                                                              (e.Shank == 2 && e.IntraShankIndex >= 384 && e.IntraShankIndex <= 479) ||
+                                                                              (e.Shank == 3 && e.IntraShankIndex >= 384 && e.IntraShankIndex <= 479)).ToList());
                     break;
 
                 case ChannelPreset.AllShanks480_575:
-                    channelMap.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.ShankIndex >= 480 && e.ShankIndex <= 575) ||
-                                                                      (e.Shank == 1 && e.ShankIndex >= 480 && e.ShankIndex <= 575) ||
-                                                                      (e.Shank == 2 && e.ShankIndex >= 480 && e.ShankIndex <= 575) ||
-                                                                      (e.Shank == 3 && e.ShankIndex >= 480 && e.ShankIndex <= 575)).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.IntraShankIndex >= 480 && e.IntraShankIndex <= 575) ||
+                                                                              (e.Shank == 1 && e.IntraShankIndex >= 480 && e.IntraShankIndex <= 575) ||
+                                                                              (e.Shank == 2 && e.IntraShankIndex >= 480 && e.IntraShankIndex <= 575) ||
+                                                                              (e.Shank == 3 && e.IntraShankIndex >= 480 && e.IntraShankIndex <= 575)).ToList());
                     break;
 
                 case ChannelPreset.AllShanks576_671:
-                    channelMap.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.ShankIndex >= 576 && e.ShankIndex <= 671) ||
-                                                                      (e.Shank == 1 && e.ShankIndex >= 576 && e.ShankIndex <= 671) ||
-                                                                      (e.Shank == 2 && e.ShankIndex >= 576 && e.ShankIndex <= 671) ||
-                                                                      (e.Shank == 3 && e.ShankIndex >= 576 && e.ShankIndex <= 671)).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.IntraShankIndex >= 576 && e.IntraShankIndex <= 671) ||
+                                                                              (e.Shank == 1 && e.IntraShankIndex >= 576 && e.IntraShankIndex <= 671) ||
+                                                                              (e.Shank == 2 && e.IntraShankIndex >= 576 && e.IntraShankIndex <= 671) ||
+                                                                              (e.Shank == 3 && e.IntraShankIndex >= 576 && e.IntraShankIndex <= 671)).ToList());
                     break;
 
                 case ChannelPreset.AllShanks672_767:
-                    channelMap.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.ShankIndex >= 672 && e.ShankIndex <= 767) ||
-                                                                      (e.Shank == 1 && e.ShankIndex >= 672 && e.ShankIndex <= 767) ||
-                                                                      (e.Shank == 2 && e.ShankIndex >= 672 && e.ShankIndex <= 767) ||
-                                                                      (e.Shank == 3 && e.ShankIndex >= 672 && e.ShankIndex <= 767)).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.IntraShankIndex >= 672 && e.IntraShankIndex <= 767) ||
+                                                                              (e.Shank == 1 && e.IntraShankIndex >= 672 && e.IntraShankIndex <= 767) ||
+                                                                              (e.Shank == 2 && e.IntraShankIndex >= 672 && e.IntraShankIndex <= 767) ||
+                                                                              (e.Shank == 3 && e.IntraShankIndex >= 672 && e.IntraShankIndex <= 767)).ToList());
                     break;
 
                 case ChannelPreset.AllShanks768_863:
-                    channelMap.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.ShankIndex >= 768 && e.ShankIndex <= 863) ||
-                                                                      (e.Shank == 1 && e.ShankIndex >= 768 && e.ShankIndex <= 863) ||
-                                                                      (e.Shank == 2 && e.ShankIndex >= 768 && e.ShankIndex <= 863) ||
-                                                                      (e.Shank == 3 && e.ShankIndex >= 768 && e.ShankIndex <= 863)).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.IntraShankIndex >= 768 && e.IntraShankIndex <= 863) ||
+                                                                              (e.Shank == 1 && e.IntraShankIndex >= 768 && e.IntraShankIndex <= 863) ||
+                                                                              (e.Shank == 2 && e.IntraShankIndex >= 768 && e.IntraShankIndex <= 863) ||
+                                                                              (e.Shank == 3 && e.IntraShankIndex >= 768 && e.IntraShankIndex <= 863)).ToList());
                     break;
 
                 case ChannelPreset.AllShanks864_959:
-                    channelMap.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.ShankIndex >= 864 && e.ShankIndex <= 959) ||
-                                                                      (e.Shank == 1 && e.ShankIndex >= 864 && e.ShankIndex <= 959) ||
-                                                                      (e.Shank == 2 && e.ShankIndex >= 864 && e.ShankIndex <= 959) ||
-                                                                      (e.Shank == 3 && e.ShankIndex >= 864 && e.ShankIndex <= 959)).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.IntraShankIndex >= 864 && e.IntraShankIndex <= 959) ||
+                                                                              (e.Shank == 1 && e.IntraShankIndex >= 864 && e.IntraShankIndex <= 959) ||
+                                                                              (e.Shank == 2 && e.IntraShankIndex >= 864 && e.IntraShankIndex <= 959) ||
+                                                                              (e.Shank == 3 && e.IntraShankIndex >= 864 && e.IntraShankIndex <= 959)).ToList());
                     break;
 
                 case ChannelPreset.AllShanks960_1055:
-                    channelMap.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.ShankIndex >= 960 && e.ShankIndex <= 1055) ||
-                                                                      (e.Shank == 1 && e.ShankIndex >= 960 && e.ShankIndex <= 1055) ||
-                                                                      (e.Shank == 2 && e.ShankIndex >= 960 && e.ShankIndex <= 1055) ||
-                                                                      (e.Shank == 3 && e.ShankIndex >= 960 && e.ShankIndex <= 1055)).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.IntraShankIndex >= 960 && e.IntraShankIndex <= 1055) ||
+                                                                              (e.Shank == 1 && e.IntraShankIndex >= 960 && e.IntraShankIndex <= 1055) ||
+                                                                              (e.Shank == 2 && e.IntraShankIndex >= 960 && e.IntraShankIndex <= 1055) ||
+                                                                              (e.Shank == 3 && e.IntraShankIndex >= 960 && e.IntraShankIndex <= 1055)).ToList());
                     break;
 
                 case ChannelPreset.AllShanks1056_1151:
-                    channelMap.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.ShankIndex >= 1056 && e.ShankIndex <= 1151) ||
-                                                                      (e.Shank == 1 && e.ShankIndex >= 1056 && e.ShankIndex <= 1151) ||
-                                                                      (e.Shank == 2 && e.ShankIndex >= 1056 && e.ShankIndex <= 1151) ||
-                                                                      (e.Shank == 3 && e.ShankIndex >= 1056 && e.ShankIndex <= 1151)).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.IntraShankIndex >= 1056 && e.IntraShankIndex <= 1151) ||
+                                                                              (e.Shank == 1 && e.IntraShankIndex >= 1056 && e.IntraShankIndex <= 1151) ||
+                                                                              (e.Shank == 2 && e.IntraShankIndex >= 1056 && e.IntraShankIndex <= 1151) ||
+                                                                              (e.Shank == 3 && e.IntraShankIndex >= 1056 && e.IntraShankIndex <= 1151)).ToList());
                     break;
 
                 case ChannelPreset.AllShanks1152_1247:
-                    channelMap.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.ShankIndex >= 1152 && e.ShankIndex <= 1247) ||
-                                                                      (e.Shank == 1 && e.ShankIndex >= 1152 && e.ShankIndex <= 1247) ||
-                                                                      (e.Shank == 2 && e.ShankIndex >= 1152 && e.ShankIndex <= 1247) ||
-                                                                      (e.Shank == 3 && e.ShankIndex >= 1152 && e.ShankIndex <= 1247)).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Shank == 0 && e.IntraShankIndex >= 1152 && e.IntraShankIndex <= 1247) ||
+                                                                              (e.Shank == 1 && e.IntraShankIndex >= 1152 && e.IntraShankIndex <= 1247) ||
+                                                                              (e.Shank == 2 && e.IntraShankIndex >= 1152 && e.IntraShankIndex <= 1247) ||
+                                                                              (e.Shank == 3 && e.IntraShankIndex >= 1152 && e.IntraShankIndex <= 1247)).ToList());
                     break;
             }
 
@@ -408,7 +408,7 @@ namespace OpenEphys.Onix1.Design
             var channelConfiguration = probeSelected == NeuropixelsV2Probe.ProbeA ? ChannelConfigurationA : ChannelConfigurationB;
             var comboBox = probeSelected == NeuropixelsV2Probe.ProbeA ? comboBoxChannelPresetsA : comboBoxChannelPresetsB;
 
-            var channelMap = channelConfiguration.ChannelMap;
+            var channelMap = channelConfiguration.ProbeConfiguration.ChannelMap;
 
             if (channelMap.All(e => e.Bank == NeuropixelsV2QuadShankBank.A &&
                                     e.Shank == 0))
@@ -426,7 +426,7 @@ namespace OpenEphys.Onix1.Design
                 comboBox.SelectedItem = ChannelPreset.Shank0BankC;
             }
             else if (channelMap.All(e => (e.Bank == NeuropixelsV2QuadShankBank.D ||
-                                         (e.Bank == NeuropixelsV2QuadShankBank.C && e.ElectrodeNumber >= 896)) &&
+                                         (e.Bank == NeuropixelsV2QuadShankBank.C && e.Index >= 896)) &&
                                          e.Shank == 0))
             {
                 comboBox.SelectedItem = ChannelPreset.Shank0BankD;
@@ -447,7 +447,7 @@ namespace OpenEphys.Onix1.Design
                 comboBox.SelectedItem = ChannelPreset.Shank1BankC;
             }
             else if (channelMap.All(e => (e.Bank == NeuropixelsV2QuadShankBank.D ||
-                                         (e.Bank == NeuropixelsV2QuadShankBank.C && e.ElectrodeNumber >= 896)) &&
+                                         (e.Bank == NeuropixelsV2QuadShankBank.C && e.Index >= 896)) &&
                                          e.Shank == 1))
             {
                 comboBox.SelectedItem = ChannelPreset.Shank1BankD;
@@ -468,7 +468,7 @@ namespace OpenEphys.Onix1.Design
                 comboBox.SelectedItem = ChannelPreset.Shank2BankC;
             }
             else if (channelMap.All(e => (e.Bank == NeuropixelsV2QuadShankBank.D ||
-                                         (e.Bank == NeuropixelsV2QuadShankBank.C && e.ElectrodeNumber >= 896)) &&
+                                         (e.Bank == NeuropixelsV2QuadShankBank.C && e.Index >= 896)) &&
                                          e.Shank == 2))
             {
                 comboBox.SelectedItem = ChannelPreset.Shank2BankD;
@@ -489,92 +489,92 @@ namespace OpenEphys.Onix1.Design
                 comboBox.SelectedItem = ChannelPreset.Shank3BankC;
             }
             else if (channelMap.All(e => (e.Bank == NeuropixelsV2QuadShankBank.D ||
-                                         (e.Bank == NeuropixelsV2QuadShankBank.C && e.ElectrodeNumber >= 896)) &&
+                                         (e.Bank == NeuropixelsV2QuadShankBank.C && e.Index >= 896)) &&
                                          e.Shank == 3))
             {
                 comboBox.SelectedItem = ChannelPreset.Shank3BankD;
             }
-            else if (channelMap.All(e => (e.Shank == 0 && e.ShankIndex >= 0 && e.ShankIndex <= 95) ||
-                                         (e.Shank == 1 && e.ShankIndex >= 0 && e.ShankIndex <= 95) ||
-                                         (e.Shank == 2 && e.ShankIndex >= 0 && e.ShankIndex <= 95) ||
-                                         (e.Shank == 3 && e.ShankIndex >= 0 && e.ShankIndex <= 95)))
+            else if (channelMap.All(e => (e.Shank == 0 && e.IntraShankIndex >= 0 && e.IntraShankIndex <= 95) ||
+                                         (e.Shank == 1 && e.IntraShankIndex >= 0 && e.IntraShankIndex <= 95) ||
+                                         (e.Shank == 2 && e.IntraShankIndex >= 0 && e.IntraShankIndex <= 95) ||
+                                         (e.Shank == 3 && e.IntraShankIndex >= 0 && e.IntraShankIndex <= 95)))
             {
                 comboBox.SelectedItem = ChannelPreset.AllShanks0_95;
             }
-            else if (channelMap.All(e => (e.Shank == 0 && e.ShankIndex >= 192 && e.ShankIndex <= 287) ||
-                                         (e.Shank == 1 && e.ShankIndex >= 192 && e.ShankIndex <= 287) ||
-                                         (e.Shank == 2 && e.ShankIndex >= 192 && e.ShankIndex <= 287) ||
-                                         (e.Shank == 3 && e.ShankIndex >= 192 && e.ShankIndex <= 287)))
+            else if (channelMap.All(e => (e.Shank == 0 && e.IntraShankIndex >= 192 && e.IntraShankIndex <= 287) ||
+                                         (e.Shank == 1 && e.IntraShankIndex >= 192 && e.IntraShankIndex <= 287) ||
+                                         (e.Shank == 2 && e.IntraShankIndex >= 192 && e.IntraShankIndex <= 287) ||
+                                         (e.Shank == 3 && e.IntraShankIndex >= 192 && e.IntraShankIndex <= 287)))
             {
                 comboBox.SelectedItem = ChannelPreset.AllShanks192_287;
             }
-            else if (channelMap.All(e => (e.Shank == 0 && e.ShankIndex >= 288 && e.ShankIndex <= 383) ||
-                                         (e.Shank == 1 && e.ShankIndex >= 288 && e.ShankIndex <= 383) ||
-                                         (e.Shank == 2 && e.ShankIndex >= 288 && e.ShankIndex <= 383) ||
-                                         (e.Shank == 3 && e.ShankIndex >= 288 && e.ShankIndex <= 383)))
+            else if (channelMap.All(e => (e.Shank == 0 && e.IntraShankIndex >= 288 && e.IntraShankIndex <= 383) ||
+                                         (e.Shank == 1 && e.IntraShankIndex >= 288 && e.IntraShankIndex <= 383) ||
+                                         (e.Shank == 2 && e.IntraShankIndex >= 288 && e.IntraShankIndex <= 383) ||
+                                         (e.Shank == 3 && e.IntraShankIndex >= 288 && e.IntraShankIndex <= 383)))
             {
                 comboBox.SelectedItem = ChannelPreset.AllShanks288_383;
             }
-            else if (channelMap.All(e => (e.Shank == 0 && e.ShankIndex >= 394 && e.ShankIndex <= 479) ||
-                                         (e.Shank == 1 && e.ShankIndex >= 394 && e.ShankIndex <= 479) ||
-                                         (e.Shank == 2 && e.ShankIndex >= 394 && e.ShankIndex <= 479) ||
-                                         (e.Shank == 3 && e.ShankIndex >= 394 && e.ShankIndex <= 479)))
+            else if (channelMap.All(e => (e.Shank == 0 && e.IntraShankIndex >= 394 && e.IntraShankIndex <= 479) ||
+                                         (e.Shank == 1 && e.IntraShankIndex >= 394 && e.IntraShankIndex <= 479) ||
+                                         (e.Shank == 2 && e.IntraShankIndex >= 394 && e.IntraShankIndex <= 479) ||
+                                         (e.Shank == 3 && e.IntraShankIndex >= 394 && e.IntraShankIndex <= 479)))
             {
                 comboBox.SelectedItem = ChannelPreset.AllShanks384_479;
             }
-            else if (channelMap.All(e => (e.Shank == 0 && e.ShankIndex >= 480 && e.ShankIndex <= 575) ||
-                                         (e.Shank == 1 && e.ShankIndex >= 480 && e.ShankIndex <= 575) ||
-                                         (e.Shank == 2 && e.ShankIndex >= 480 && e.ShankIndex <= 575) ||
-                                         (e.Shank == 3 && e.ShankIndex >= 480 && e.ShankIndex <= 575)))
+            else if (channelMap.All(e => (e.Shank == 0 && e.IntraShankIndex >= 480 && e.IntraShankIndex <= 575) ||
+                                         (e.Shank == 1 && e.IntraShankIndex >= 480 && e.IntraShankIndex <= 575) ||
+                                         (e.Shank == 2 && e.IntraShankIndex >= 480 && e.IntraShankIndex <= 575) ||
+                                         (e.Shank == 3 && e.IntraShankIndex >= 480 && e.IntraShankIndex <= 575)))
             {
                 comboBox.SelectedItem = ChannelPreset.AllShanks480_575;
             }
-            else if (channelMap.All(e => (e.Shank == 0 && e.ShankIndex >= 576 && e.ShankIndex <= 671) ||
-                                         (e.Shank == 1 && e.ShankIndex >= 576 && e.ShankIndex <= 671) ||
-                                         (e.Shank == 2 && e.ShankIndex >= 576 && e.ShankIndex <= 671) ||
-                                         (e.Shank == 3 && e.ShankIndex >= 576 && e.ShankIndex <= 671)))
+            else if (channelMap.All(e => (e.Shank == 0 && e.IntraShankIndex >= 576 && e.IntraShankIndex <= 671) ||
+                                         (e.Shank == 1 && e.IntraShankIndex >= 576 && e.IntraShankIndex <= 671) ||
+                                         (e.Shank == 2 && e.IntraShankIndex >= 576 && e.IntraShankIndex <= 671) ||
+                                         (e.Shank == 3 && e.IntraShankIndex >= 576 && e.IntraShankIndex <= 671)))
             {
                 comboBox.SelectedItem = ChannelPreset.AllShanks576_671;
             }
-            else if (channelMap.All(e => (e.Shank == 0 && e.ShankIndex >= 672 && e.ShankIndex <= 767) ||
-                                         (e.Shank == 1 && e.ShankIndex >= 672 && e.ShankIndex <= 767) ||
-                                         (e.Shank == 2 && e.ShankIndex >= 672 && e.ShankIndex <= 767) ||
-                                         (e.Shank == 3 && e.ShankIndex >= 672 && e.ShankIndex <= 767)))
+            else if (channelMap.All(e => (e.Shank == 0 && e.IntraShankIndex >= 672 && e.IntraShankIndex <= 767) ||
+                                         (e.Shank == 1 && e.IntraShankIndex >= 672 && e.IntraShankIndex <= 767) ||
+                                         (e.Shank == 2 && e.IntraShankIndex >= 672 && e.IntraShankIndex <= 767) ||
+                                         (e.Shank == 3 && e.IntraShankIndex >= 672 && e.IntraShankIndex <= 767)))
             {
                 comboBox.SelectedItem = ChannelPreset.AllShanks672_767;
             }
-            else if (channelMap.All(e => (e.Shank == 0 && e.ShankIndex >= 768 && e.ShankIndex <= 863) ||
-                                         (e.Shank == 1 && e.ShankIndex >= 768 && e.ShankIndex <= 863) ||
-                                         (e.Shank == 2 && e.ShankIndex >= 768 && e.ShankIndex <= 863) ||
-                                         (e.Shank == 3 && e.ShankIndex >= 768 && e.ShankIndex <= 863)))
+            else if (channelMap.All(e => (e.Shank == 0 && e.IntraShankIndex >= 768 && e.IntraShankIndex <= 863) ||
+                                         (e.Shank == 1 && e.IntraShankIndex >= 768 && e.IntraShankIndex <= 863) ||
+                                         (e.Shank == 2 && e.IntraShankIndex >= 768 && e.IntraShankIndex <= 863) ||
+                                         (e.Shank == 3 && e.IntraShankIndex >= 768 && e.IntraShankIndex <= 863)))
             {
                 comboBox.SelectedItem = ChannelPreset.AllShanks768_863;
             }
-            else if (channelMap.All(e => (e.Shank == 0 && e.ShankIndex >= 864 && e.ShankIndex <= 959) ||
-                                         (e.Shank == 1 && e.ShankIndex >= 864 && e.ShankIndex <= 959) ||
-                                         (e.Shank == 2 && e.ShankIndex >= 864 && e.ShankIndex <= 959) ||
-                                         (e.Shank == 3 && e.ShankIndex >= 864 && e.ShankIndex <= 959)))
+            else if (channelMap.All(e => (e.Shank == 0 && e.IntraShankIndex >= 864 && e.IntraShankIndex <= 959) ||
+                                         (e.Shank == 1 && e.IntraShankIndex >= 864 && e.IntraShankIndex <= 959) ||
+                                         (e.Shank == 2 && e.IntraShankIndex >= 864 && e.IntraShankIndex <= 959) ||
+                                         (e.Shank == 3 && e.IntraShankIndex >= 864 && e.IntraShankIndex <= 959)))
             {
                 comboBox.SelectedItem = ChannelPreset.AllShanks864_959;
             }
-            else if (channelMap.All(e => (e.Shank == 0 && e.ShankIndex >= 960 && e.ShankIndex <= 1055) ||
-                                         (e.Shank == 1 && e.ShankIndex >= 960 && e.ShankIndex <= 1055) ||
-                                         (e.Shank == 2 && e.ShankIndex >= 960 && e.ShankIndex <= 1055) ||
-                                         (e.Shank == 3 && e.ShankIndex >= 960 && e.ShankIndex <= 1055)))
+            else if (channelMap.All(e => (e.Shank == 0 && e.IntraShankIndex >= 960 && e.IntraShankIndex <= 1055) ||
+                                         (e.Shank == 1 && e.IntraShankIndex >= 960 && e.IntraShankIndex <= 1055) ||
+                                         (e.Shank == 2 && e.IntraShankIndex >= 960 && e.IntraShankIndex <= 1055) ||
+                                         (e.Shank == 3 && e.IntraShankIndex >= 960 && e.IntraShankIndex <= 1055)))
             {
                 comboBox.SelectedItem = ChannelPreset.AllShanks960_1055;
             }
-            else if (channelMap.All(e => (e.Shank == 0 && e.ShankIndex >= 1056 && e.ShankIndex <= 1151) ||
-                                         (e.Shank == 1 && e.ShankIndex >= 1056 && e.ShankIndex <= 1151) ||
-                                         (e.Shank == 2 && e.ShankIndex >= 1056 && e.ShankIndex <= 1151) ||
-                                         (e.Shank == 3 && e.ShankIndex >= 1056 && e.ShankIndex <= 1151)))
+            else if (channelMap.All(e => (e.Shank == 0 && e.IntraShankIndex >= 1056 && e.IntraShankIndex <= 1151) ||
+                                         (e.Shank == 1 && e.IntraShankIndex >= 1056 && e.IntraShankIndex <= 1151) ||
+                                         (e.Shank == 2 && e.IntraShankIndex >= 1056 && e.IntraShankIndex <= 1151) ||
+                                         (e.Shank == 3 && e.IntraShankIndex >= 1056 && e.IntraShankIndex <= 1151)))
             {
                 comboBox.SelectedItem = ChannelPreset.AllShanks1056_1151;
             }
-            else if (channelMap.All(e => (e.Shank == 0 && e.ShankIndex >= 1152 && e.ShankIndex <= 1247) ||
-                                         (e.Shank == 1 && e.ShankIndex >= 1152 && e.ShankIndex <= 1247) ||
-                                         (e.Shank == 2 && e.ShankIndex >= 1152 && e.ShankIndex <= 1247) ||
-                                         (e.Shank == 3 && e.ShankIndex >= 1152 && e.ShankIndex <= 1247)))
+            else if (channelMap.All(e => (e.Shank == 0 && e.IntraShankIndex >= 1152 && e.IntraShankIndex <= 1247) ||
+                                         (e.Shank == 1 && e.IntraShankIndex >= 1152 && e.IntraShankIndex <= 1247) ||
+                                         (e.Shank == 2 && e.IntraShankIndex >= 1152 && e.IntraShankIndex <= 1247) ||
+                                         (e.Shank == 3 && e.IntraShankIndex >= 1152 && e.IntraShankIndex <= 1247)))
             {
                 comboBox.SelectedItem = ChannelPreset.AllShanks1152_1247;
             }
@@ -716,20 +716,18 @@ namespace OpenEphys.Onix1.Design
 
         internal void UpdateProbeGroups()
         {
-            NeuropixelsV2eProbeGroup.UpdateProbeGroup(ChannelConfigurationA.ChannelMap, ConfigureNode.ProbeConfigurationA.ChannelConfiguration);
-            NeuropixelsV2eProbeGroup.UpdateProbeGroup(ChannelConfigurationB.ChannelMap, ConfigureNode.ProbeConfigurationB.ChannelConfiguration);
+            ConfigureNode.ProbeConfigurationA = ChannelConfigurationA.ProbeConfiguration;
+            ConfigureNode.ProbeConfigurationB = ChannelConfigurationB.ProbeConfiguration;
         }
 
         private void EnableSelectedContacts(NeuropixelsV2Probe probeSelected)
         {
             var channelConfiguration = probeSelected == NeuropixelsV2Probe.ProbeA ? ChannelConfigurationA : ChannelConfigurationB;
 
-            if (channelConfiguration.SelectedContacts.Length != channelConfiguration.Electrodes.Count)
-                throw new Exception("Invalid number of contacts versus electrodes found.");
+            var electrodes = NeuropixelsV2eProbeGroup.ToElectrodes(channelConfiguration.ProbeConfiguration.ChannelConfiguration);
 
-            var selectedElectrodes = channelConfiguration.Electrodes
-                                                          .Where((e, ind) => channelConfiguration.SelectedContacts[ind])
-                                                          .ToList();
+            var selectedElectrodes = electrodes.Where((e, ind) => channelConfiguration.SelectedContacts[ind])
+                                               .ToList();
 
             channelConfiguration.EnableElectrodes(selectedElectrodes);
 

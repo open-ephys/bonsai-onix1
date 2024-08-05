@@ -45,7 +45,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Probe A electrode configuration.")]
-        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration();
+        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the path to the gain calibration file for Probe A.
@@ -64,7 +64,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Probe B electrode configuration.")]
-        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration();
+        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the path to the gain calibration file for Probe B.

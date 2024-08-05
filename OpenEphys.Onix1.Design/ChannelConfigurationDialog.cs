@@ -19,9 +19,9 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// Local variable that holds the channel configuration in memory until the user presses Okay
         /// </summary>
-        internal ProbeGroup ChannelConfiguration;
+        ProbeGroup ChannelConfiguration;
 
-        internal List<int> ReferenceContacts = new();
+        internal readonly List<int> ReferenceContacts = new();
 
         internal readonly bool[] SelectedContacts = null;
 
@@ -324,7 +324,7 @@ namespace OpenEphys.Onix1.Design
                 {
                     var tag = (ContactTag)contact.Tag;
 
-                    contact.Fill.Color = ReferenceContacts.Any(x => x == tag.ContactNumber) ? ReferenceContactFill : EnabledContactFill;
+                    contact.Fill.Color = ReferenceContacts.Any(x => x == tag.ContactIndex) ? ReferenceContactFill : EnabledContactFill;
                 }
             }
         }
@@ -844,7 +844,7 @@ namespace OpenEphys.Onix1.Design
 
         private void SetSelectedContact(ContactTag contactTag, bool status)
         {
-            SetSelectedContact(contactTag.ContactNumber, status);
+            SetSelectedContact(contactTag.ContactIndex, status);
         }
 
         private void SetSelectedContact(int index, bool status)
@@ -866,7 +866,7 @@ namespace OpenEphys.Onix1.Design
 
         private bool GetContactStatus(ContactTag tag)
         {
-            return SelectedContacts[tag.ContactNumber];
+            return SelectedContacts[tag.ContactIndex];
         }
 
         private static PointD TransformPixelsToCoordinates(Point pixels, GraphPane graphPane)

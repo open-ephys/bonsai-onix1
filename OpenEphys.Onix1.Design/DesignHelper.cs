@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -7,7 +6,7 @@ using Newtonsoft.Json;
 
 namespace OpenEphys.Onix1.Design
 {
-    public static class DesignHelper
+    static class DesignHelper
     {
         public static T DeserializeString<T>(string channelLayout)
         {
@@ -139,16 +138,6 @@ namespace OpenEphys.Onix1.Design
                     existingMenuItem.DropDownItems.Add(newItems);
                 }
             }
-        }
-
-        public static List<TElectrode> SelectElectrodes<TElectrode>(this List<TElectrode> channelMap, List<TElectrode> electrodes) where TElectrode : Electrode
-        {
-            foreach (var e in electrodes)
-            {
-                channelMap[e.Channel] = e;
-            }
-
-            return channelMap;
         }
     }
 }

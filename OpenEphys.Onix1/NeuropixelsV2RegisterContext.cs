@@ -98,10 +98,10 @@ namespace OpenEphys.Onix1
 
             const int PixelOffset = (NeuropixelsV2.ElectrodePerShank - 1) / 2;
             const int ReferencePixelOffset = 3;
-            foreach (var c in NeuropixelsV2eProbeGroup.ToChannelMap(probe.ChannelConfiguration))
+            foreach (var c in probe.ChannelMap)
             {
-                var baseIndex = c.ShankIndex % 2;
-                var pixelIndex = c.ShankIndex / 2;
+                var baseIndex = c.IntraShankIndex % 2;
+                var pixelIndex = c.IntraShankIndex / 2;
                 pixelIndex = baseIndex == 0
                     ? pixelIndex + PixelOffset + 2 * ReferencePixelOffset
                     : PixelOffset - pixelIndex + ReferencePixelOffset;

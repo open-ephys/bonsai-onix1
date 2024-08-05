@@ -2,68 +2,51 @@
 
 namespace OpenEphys.Onix1.Design
 {
+    /// <summary>
+    /// Public class used to create tags for contacts in their respective GUIs.
+    /// </summary>
     public class ContactTag
     {
-        public const string ContactStringFormat = "Probe_{0}-Contact_{1}";
-        public const string TextStringFormat = "TextProbe_{0}-Contact_{1}";
+        const string ContactStringFormat = "Probe_{0}-Contact_{1}";
+        const string TextStringFormat = "TextProbe_{0}-Contact_{1}";
 
-        public int ProbeNumber;
-        public int ContactNumber;
+        /// <summary>
+        /// Gets the probe index of this contact.
+        /// </summary>
+        public int ProbeIndex { get; }
 
-        public string ContactString => GetContactString(ProbeNumber, ContactNumber);
+        /// <summary>
+        /// Gets the contact index of this contact.
+        /// </summary>
+        public int ContactIndex;
 
-        public string TextString => GetTextString(ProbeNumber, ContactNumber);
+        /// <summary>
+        /// Gets the string defining the probe and contact index for this contact.
+        /// </summary>
+        public string ContactString => GetContactString(ProbeIndex, ContactIndex);
 
-        public ContactTag(int probeNumber, int contactNumber)
+        /// <summary>
+        /// Gets the string defining the probe and contact index of a text object for this contact.
+        /// </summary>
+        public string TextString => GetTextString(ProbeIndex, ContactIndex);
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ContactTag"/> class with the given indices.
+        /// </summary>
+        /// <param name="probeIndex">Index of the probe for this contact.</param>
+        /// <param name="contactIndex">Index of the contact for this contact.</param>
+        public ContactTag(int probeIndex, int contactIndex)
         {
-            ProbeNumber = probeNumber;
-            ContactNumber = contactNumber;
+            ProbeIndex = probeIndex;
+            ContactIndex = contactIndex;
         }
 
-        public ContactTag(string tag)
-        {
-            ProbeNumber = ParseProbeNumber(tag);
-            ContactNumber = ParseContactNumber(tag);
-        }
-
-        public static int ParseProbeNumber(string tag)
-        {
-            if (string.IsNullOrEmpty(tag))
-                throw new NullReferenceException(nameof(tag));
-
-            string[] words = tag.Split('-');
-            string[] probeStrings = words[0].Split('_');
-
-            if (!int.TryParse(probeStrings[1], out int probeNumber))
-            {
-                throw new ArgumentException($"Invalid channel tag \"{tag}\" found");
-            }
-
-            return probeNumber;
-        }
-
-        public static int ParseContactNumber(string tag)
-        {
-            if (string.IsNullOrEmpty(tag))
-                throw new NullReferenceException(nameof(tag));
-
-            string[] words = tag.Split('-');
-            string[] contactStrings = words[1].Split('_');
-
-            if (!int.TryParse(contactStrings[1], out int contactNumber))
-            {
-                throw new ArgumentException($"Invalid channel tag \"{tag}\" found");
-            }
-
-            return contactNumber;
-        }
-
-        public static string GetContactString(int probeNumber, int contactNumber)
+        static string GetContactString(int probeNumber, int contactNumber)
         {
             return string.Format(ContactStringFormat, probeNumber, contactNumber);
         }
 
-        public static string GetTextString(int probeNumber, int contactNumber)
+        static string GetTextString(int probeNumber, int contactNumber)
         {
             return string.Format(TextStringFormat, probeNumber, contactNumber);
         }
