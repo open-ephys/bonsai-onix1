@@ -8,13 +8,29 @@ using ZedGraph;
 
 namespace OpenEphys.Onix1.Design
 {
+    /// <summary>
+    /// Partial class to create a GUI for <see cref="ConfigureNeuropixelsV2e"/>.
+    /// </summary>
     public partial class NeuropixelsV2eChannelConfigurationDialog : ChannelConfigurationDialog
     {
         internal event EventHandler OnZoom;
         internal event EventHandler OnFileLoad;
 
+        /// <summary>
+        /// Public <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> object that is manipulated by
+        /// <see cref="NeuropixelsV2eChannelConfigurationDialog"/>.
+        /// </summary>
+        /// <remarks>
+        /// When a <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> is passed to 
+        /// <see cref="NeuropixelsV2eChannelConfigurationDialog"/>, it is copied and stored in this
+        /// variable so that any modifications made to configuration settings can be easily reversed.
+        /// </remarks>
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfiguration;
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="NeuropixelsV2eChannelConfigurationDialog"/>.
+        /// </summary>
+        /// <param name="probeConfiguration">A <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> object holding the current configuration settings.</param>
         public NeuropixelsV2eChannelConfigurationDialog(NeuropixelsV2QuadShankProbeConfiguration probeConfiguration)
             : base(probeConfiguration.ChannelConfiguration)
         {
@@ -24,6 +40,9 @@ namespace OpenEphys.Onix1.Design
             zedGraphChannels.ZoomStepFraction = 0.5;
 
             ProbeConfiguration = new(probeConfiguration);
+
+            ZoomBoundaryX = 400;
+            ZoomBoundaryY = 400;
 
             HighlightEnabledContacts();
             UpdateContactLabels();

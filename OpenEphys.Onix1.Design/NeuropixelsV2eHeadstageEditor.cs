@@ -5,8 +5,12 @@ using System;
 
 namespace OpenEphys.Onix1.Design
 {
+    /// <summary>
+    /// Class that opens a new dialog for a <see cref="ConfigureNeuropixelsV2eHeadstage"/>.
+    /// </summary>
     public class NeuropixelsV2eHeadstageEditor : WorkflowComponentEditor
     {
+        /// <inheritdoc/>
         public override bool EditComponent(ITypeDescriptorContext context, object component, IServiceProvider provider, IWin32Window owner)
         {
             if (provider != null)
@@ -20,11 +24,11 @@ namespace OpenEphys.Onix1.Design
                     {
                         configureHeadstage.Bno055.Enable = editorDialog.ConfigureBno055.ConfigureNode.Enable;
 
-                        configureHeadstage.NeuropixelsV2e.Enable = editorDialog.ConfigureNeuropixelsV2e.ConfigureNode.Enable;
-                        configureHeadstage.NeuropixelsV2e.ProbeConfigurationA = editorDialog.ConfigureNeuropixelsV2e.ConfigureNode.ProbeConfigurationA;
-                        configureHeadstage.NeuropixelsV2e.ProbeConfigurationB = editorDialog.ConfigureNeuropixelsV2e.ConfigureNode.ProbeConfigurationB;
-                        configureHeadstage.NeuropixelsV2e.GainCalibrationFileA = editorDialog.ConfigureNeuropixelsV2e.ConfigureNode.GainCalibrationFileA;
-                        configureHeadstage.NeuropixelsV2e.GainCalibrationFileB = editorDialog.ConfigureNeuropixelsV2e.ConfigureNode.GainCalibrationFileB;
+                        configureHeadstage.NeuropixelsV2e.Enable = editorDialog.DialogNeuropixelsV2e.ConfigureNode.Enable;
+                        configureHeadstage.NeuropixelsV2e.ProbeConfigurationA = editorDialog.DialogNeuropixelsV2e.ConfigureNode.ProbeConfigurationA;
+                        configureHeadstage.NeuropixelsV2e.ProbeConfigurationB = editorDialog.DialogNeuropixelsV2e.ConfigureNode.ProbeConfigurationB;
+                        configureHeadstage.NeuropixelsV2e.GainCalibrationFileA = editorDialog.DialogNeuropixelsV2e.ConfigureNode.GainCalibrationFileA;
+                        configureHeadstage.NeuropixelsV2e.GainCalibrationFileB = editorDialog.DialogNeuropixelsV2e.ConfigureNode.GainCalibrationFileB;
 
                         return true;
                     }

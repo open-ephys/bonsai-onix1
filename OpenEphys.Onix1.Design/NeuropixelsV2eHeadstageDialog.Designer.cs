@@ -84,7 +84,7 @@
             this.tabPageBno055.Location = new System.Drawing.Point(4, 29);
             this.tabPageBno055.Name = "tabPageBno055";
             this.tabPageBno055.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageBno055.Size = new System.Drawing.Size(1287, 689);
+            this.tabPageBno055.Size = new System.Drawing.Size(1287, 686);
             this.tabPageBno055.TabIndex = 1;
             this.tabPageBno055.Text = "Bno055";
             this.tabPageBno055.UseVisualStyleBackColor = true;
@@ -94,7 +94,7 @@
             this.panelBno055.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelBno055.Location = new System.Drawing.Point(3, 3);
             this.panelBno055.Name = "panelBno055";
-            this.panelBno055.Size = new System.Drawing.Size(1281, 683);
+            this.panelBno055.Size = new System.Drawing.Size(1281, 680);
             this.panelBno055.TabIndex = 0;
             // 
             // splitContainer1
@@ -154,7 +154,7 @@
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(54, 32);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(54, 30);
             this.fileToolStripMenuItem.Text = "File";
             // 
             // NeuropixelsV2eHeadstageDialog

@@ -6,6 +6,9 @@ using OpenEphys.ProbeInterface;
 
 namespace OpenEphys.Onix1
 {
+    /// <summary>
+    /// A <see cref="ProbeGroup"/> class for NeuropixelsV2e.
+    /// </summary>
     public class NeuropixelsV2eProbeGroup : ProbeGroup
     {
         const float shankOffsetX = 200f;
@@ -13,6 +16,13 @@ namespace OpenEphys.Onix1
         const float shankPitchX = 250f;
         const int numberOfShanks = 4;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NeuropixelsV2eProbeGroup"/> class.
+        /// </summary>
+        /// <remarks>
+        /// The default constructor will initialize the new <see cref="NeuropixelsV2eProbeGroup"/> with
+        /// the default settings for all contacts, including their positions, shapes, and IDs.
+        /// </remarks>
         public NeuropixelsV2eProbeGroup()
             : base("probeinterface", "0.2.21",
                   new List<Probe>()
@@ -29,31 +39,48 @@ namespace OpenEphys.Onix1
                           DefaultDeviceChannelIndices(NeuropixelsV2.ChannelCount, NeuropixelsV2.ElectrodePerShank * numberOfShanks),
                           Probe.DefaultContactIds(NeuropixelsV2.ElectrodePerShank * numberOfShanks),
                           DefaultShankIds(NeuropixelsV2.ElectrodePerShank * numberOfShanks))
-                  }.ToArray())
+                  })
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NeuropixelsV2eProbeGroup"/> class.
+        /// </summary>
+        /// <remarks>
+        /// This constructor is marked with the <see cref="JsonConstructorAttribute"/>, and is the
+        /// entry point for deserializing the JSON data into a C# class.
+        /// </remarks>
+        /// <param name="specification">String defining the <see cref="ProbeGroup.Specification"/>.</param>
+        /// <param name="version">String defining the <see cref="ProbeGroup.Version"/>.</param>
+        /// <param name="probes">Array of <see cref="Probe"/>s.</param>
         [JsonConstructor]
         public NeuropixelsV2eProbeGroup(string specification, string version, Probe[] probes)
             : base(specification, version, probes)
         {
         }
 
+        /// <summary>
+        /// Copy constructor that initializes a copied instance of the <see cref="NeuropixelsV2eProbeGroup"/> class.
+        /// </summary>
+        /// <param name="probeGroup">An existing <see cref="NeuropixelsV2eProbeGroup"/> object.</param>
         public NeuropixelsV2eProbeGroup(NeuropixelsV2eProbeGroup probeGroup)
             : base(probeGroup)
         {
         }
 
-        public static float[][] DefaultContactPositions(int numberOfChannels)
+        /// <summary>
+        /// Generates a 2D array of default contact positions based on the given number of channels.
+        /// </summary>
+        /// <param name="numberOfContacts">Value defining the number of contacts to create positions for.</param>
+        /// <returns>
+        /// 2D array of floats [N x 2], where the first dimension is the contact index [N] and the second dimension [2]
+        /// contains the X and Y values, respectively.
+        /// </returns>
+        public static float[][] DefaultContactPositions(int numberOfContacts)
         {
-            if (numberOfChannels % 2 != 0)
-            {
-                throw new ArgumentException("Invalid number of channels given; must be a multiple of two");
-            }
+            float[][] contactPositions = new float[numberOfContacts][];
 
-            float[][] contactPositions = new float[numberOfChannels][];
-
-            for (int i = 0; i < numberOfChannels; i++)
+            for (int i = 0; i < numberOfContacts; i++)
             {
                 contactPositions[i] = DefaultContactPosition(i);
             }
@@ -61,9 +88,14 @@ namespace OpenEphys.Onix1
             return contactPositions;
         }
 
-        public static float[] DefaultContactPosition(int index)
+        /// <summary>
+        /// Generates a float array containing the X and Y position of a single contact.
+        /// </summary>
+        /// <param name="contactIndex">Index of the contact.</param>
+        /// <returns>A float array of size [2 x 1] with the X and Y coordinates, respectively.</returns>
+        public static float[] DefaultContactPosition(int contactIndex)
         {
-            return new float[2] { ContactPositionX(index), index % NeuropixelsV2.ElectrodePerShank / 2 * 15 + 170 };
+            return new float[2] { ContactPositionX(contactIndex), contactIndex % NeuropixelsV2.ElectrodePerShank / 2 * 15 + 170 };
         }
 
         private static float ContactPositionX(int index)
@@ -192,29 +224,14 @@ namespace OpenEphys.Onix1
 
             foreach (var c in channelConfiguration.GetContacts())
             {
-                electrodes.Add(new NeuropixelsV2QuadShankElectrode(c));
+                electrodes.Add(new NeuropixelsV2QuadShankElectrode(c.Index));
             }
 
             return electrodes;
         }
 
-        public static void UpdateElectrodes(List<NeuropixelsV2QuadShankElectrode> electrodes, NeuropixelsV2eProbeGroup channelConfiguration)
-        {
-            if (electrodes.Count != channelConfiguration.NumberOfContacts)
-            {
-                throw new InvalidOperationException($"Different number of electrodes found in {nameof(electrodes)} versus {nameof(channelConfiguration)}");
-            }
-
-            int index = 0;
-
-            foreach (var c in channelConfiguration.GetContacts())
-            {
-                electrodes[index++] = new NeuropixelsV2QuadShankElectrode(c);
-            }
-        }
-
         /// <summary>
-        /// Convert a ProbeInterface object to a list of electrodes, which only includes currently enabled electrodes
+        /// Convert a <see cref="NeuropixelsV2eProbeGroup"/> object to a list of electrodes, which only includes currently enabled electrodes
         /// </summary>
         /// <param name="channelConfiguration">A <see cref="NeuropixelsV2eProbeGroup"/> object</param>
         /// <returns>List of <see cref="NeuropixelsV2QuadShankElectrode"/> electrodes that are enabled</returns>
@@ -233,49 +250,10 @@ namespace OpenEphys.Onix1
 
             foreach (var c in enabledContacts)
             {
-                channelMap.Add(new NeuropixelsV2QuadShankElectrode(c));
+                channelMap.Add(new NeuropixelsV2QuadShankElectrode(c.Index));
             }
 
             return channelMap.OrderBy(e => e.Channel).ToList();
-        }
-
-        public static void UpdateChannelMap(List<NeuropixelsV2QuadShankElectrode> channelMap, NeuropixelsV2eProbeGroup channelConfiguration)
-        {
-            var enabledElectrodes = channelConfiguration.GetContacts()
-                                                        .Where(c => c.DeviceId != -1);
-
-            if (channelMap.Count != enabledElectrodes.Count())
-            {
-                throw new InvalidOperationException($"Different number of enabled electrodes found in {nameof(channelMap)} versus {nameof(channelConfiguration)}");
-            }
-
-            int index = 0;
-
-            foreach (var c in enabledElectrodes)
-            {
-                channelMap[index++] = new NeuropixelsV2QuadShankElectrode(c);
-            }
-        }
-
-        /// <summary>
-        /// Update the currently enabled contacts in the probe group, based on the currently selected contacts in 
-        /// the given channel map. The only operation that occurs is an update of the DeviceChannelIndices field,
-        /// where -1 indicates the contact is no longer enabled
-        /// </summary>
-        /// <param name="channelMap">List of <see cref="NeuropixelsV2QuadShankElectrode"/> objects, which contain the index of the selected contact</param>
-        /// <param name="probeGroup"><see cref="NeuropixelsV2eProbeGroup"/></param>
-        public static void UpdateProbeGroup(List<NeuropixelsV2QuadShankElectrode> channelMap, NeuropixelsV2eProbeGroup probeGroup)
-        {
-            int[] deviceChannelIndices = new int[probeGroup.NumberOfContacts];
-
-            deviceChannelIndices = deviceChannelIndices.Select(i => i = -1).ToArray();
-
-            foreach (var e in channelMap)
-            {
-                deviceChannelIndices[e.Index] = e.Channel;
-            }
-
-            probeGroup.UpdateDeviceChannelIndices(0, deviceChannelIndices);
         }
     }
 }

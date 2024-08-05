@@ -5,6 +5,9 @@ using System.Windows.Forms;
 
 namespace OpenEphys.Onix1.Design
 {
+    /// <summary>
+    /// Partial class to create a GUI for <see cref="ConfigureNeuropixelsV2e"/>.
+    /// </summary>
     public partial class NeuropixelsV2eDialog : Form
     {
         readonly NeuropixelsV2eChannelConfigurationDialog ChannelConfigurationA;
@@ -44,8 +47,21 @@ namespace OpenEphys.Onix1.Design
             None
         }
 
+        /// <summary>
+        /// Public <see cref="ConfigureNeuropixelsV2e"/> object that is manipulated by
+        /// <see cref="NeuropixelsV2eDialog"/>.
+        /// </summary>
+        /// <remarks>
+        /// When a <see cref="ConfigureNeuropixelsV2e"/> is passed to 
+        /// <see cref="NeuropixelsV2eDialog"/>, it is copied and stored in this
+        /// variable so that any modifications made to configuration settings can be easily reversed.
+        /// </remarks>
         public ConfigureNeuropixelsV2e ConfigureNode { get; set; }
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="NeuropixelsV2eDialog"/>.
+        /// </summary>
+        /// <param name="configureNode">A <see cref="ConfigureNeuropixelsV2e"/> object holding the current configuration settings.</param>
         public NeuropixelsV2eDialog(ConfigureNeuropixelsV2e configureNode)
         {
             InitializeComponent();

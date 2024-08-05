@@ -86,6 +86,8 @@ namespace OpenEphys.Onix1.Design
             if (newState.Type == ZoomState.StateType.Zoom || newState.Type == ZoomState.StateType.WheelZoom)
             {
                 SetEqualAxisLimits(sender);
+                CheckZoomBoundaries(sender);
+                CenterAxesOnCursor(sender);
             }
         }
 
@@ -108,6 +110,91 @@ namespace OpenEphys.Onix1.Design
                 zedGraphControl.GraphPane.XAxis.Scale.Max += diff / 2;
                 zedGraphControl.GraphPane.XAxis.Scale.Min -= diff / 2;
             }
+        }
+
+        private void CenterAxesOnCursor(ZedGraphControl zedGraphControl)
+        {
+            var mouseClientPosition = PointToClient(Cursor.Position);
+            mouseClientPosition.X -= (zedGraphControl.Parent.Width - zedGraphControl.Width) / 2;
+
+            var currentMousePosition = TransformPixelsToCoordinates(mouseClientPosition, zedGraphControl.GraphPane);
+
+            var centerX = CalculateRange(zedGraphChannels.GraphPane.XAxis.Scale) / 2 +
+                zedGraphControl.GraphPane.XAxis.Scale.Min;
+
+            var centerY = CalculateRange(zedGraphChannels.GraphPane.YAxis.Scale) / 2 +
+                zedGraphControl.GraphPane.YAxis.Scale.Min;
+
+            var diffX = centerX - currentMousePosition.X;
+            var diffY = centerY - currentMousePosition.Y;
+
+            zedGraphControl.GraphPane.XAxis.Scale.Min += diffX;
+            zedGraphControl.GraphPane.XAxis.Scale.Max += diffX;
+
+            zedGraphControl.GraphPane.YAxis.Scale.Min += diffY;
+            zedGraphControl.GraphPane.YAxis.Scale.Max += diffY;
+        }
+
+        private static double CalculateRange(Scale scale)
+        {
+            return scale.Max - scale.Min;
+        }
+
+        /// <summary>
+        /// Gets the value of the zoom boundary on the x-axis.
+        /// </summary>
+        /// <remarks>
+        /// When zooming in excessively, it is possible to lose view of the entire probe and make it
+        /// difficult to zoom back out. This value is the boundary, where if the current zoom would make the x-axis
+        /// less than <see cref="ZoomBoundaryX"/>, <see cref="CheckZoomBoundaries(ZedGraphControl)"/> would 
+        /// automatically zoom back out to match <see cref="ZoomBoundaryX"/>.
+        /// </remarks>
+        public double ZoomBoundaryX { get; internal set; } = 20;
+
+        /// <summary>
+        /// Gets the value of the zoom boundary on the y-axis.
+        /// </summary>
+        /// <remarks>
+        /// When zooming in excessively, it is possible to lose view of the entire probe and make it
+        /// difficult to zoom back out. This value is the boundary, where if the current zoom would make the y-axis
+        /// less than <see cref="ZoomBoundaryY"/>, <see cref="CheckZoomBoundaries(ZedGraphControl)"/> would 
+        /// automatically zoom back out to match <see cref="ZoomBoundaryY"/>.
+        /// </remarks>
+        public double ZoomBoundaryY { get; internal set; } = 20;
+
+        /// <summary>
+        /// Checks if the <see cref="ZedGraphControl"/> is too zoomed in. If the graph is too zoomed in,
+        /// reset the boundaries to match <see cref="ZoomBoundaryX"/> and <see cref="ZoomBoundaryY"/>.
+        /// </summary>
+        /// <param name="zedGraphControl">A <see cref="ZedGraphControl"/> object.</param>
+        /// <returns>True if the control is zoomed out, false if it is zoomed in too far.</returns>
+        private bool CheckZoomBoundaries(ZedGraphControl zedGraphControl)
+        {
+            var rangeX = CalculateRange(zedGraphControl.GraphPane.XAxis.Scale);
+            var rangeY = CalculateRange(zedGraphControl.GraphPane.YAxis.Scale);
+
+            if (rangeX < ZoomBoundaryX || rangeY < ZoomBoundaryY)
+            {
+                if (rangeX < ZoomBoundaryX)
+                {
+                    var diffX = (ZoomBoundaryX - rangeX) / 2;
+
+                    zedGraphControl.GraphPane.XAxis.Scale.Min -= diffX;
+                    zedGraphControl.GraphPane.XAxis.Scale.Max += diffX;
+                }
+
+                if (rangeY < ZoomBoundaryY)
+                {
+                    var diffY = (ZoomBoundaryY - rangeY) / 2;
+
+                    zedGraphControl.GraphPane.YAxis.Scale.Min -= diffY;
+                    zedGraphControl.GraphPane.YAxis.Scale.Max += diffY;
+                }
+
+                return false;
+            }
+
+            return true;
         }
 
         private void FormShown(object sender, EventArgs e)
@@ -520,6 +607,8 @@ namespace OpenEphys.Onix1.Design
         {
             zedGraphChannels.IsZoomOnMouseCenter = true;
 
+            zedGraphChannels.IsAntiAlias = true;
+
             zedGraphChannels.GraphPane.Title.IsVisible = false;
             zedGraphChannels.GraphPane.TitleGap = 0;
             zedGraphChannels.GraphPane.Border.IsVisible = false;
@@ -654,13 +743,14 @@ namespace OpenEphys.Onix1.Design
             var center = new PointF(zedGraphChannels.GraphPane.Rect.Left + zedGraphChannels.GraphPane.Rect.Width / 2,
                                     zedGraphChannels.GraphPane.Rect.Top  + zedGraphChannels.GraphPane.Rect.Height / 2);
 
-            zedGraphChannels.ZoomPane(zedGraphChannels.GraphPane, 1 / zoomFactor, center, true);
+            zedGraphChannels.ZoomPane(zedGraphChannels.GraphPane, 1 / zoomFactor, center, false);
 
             UpdateFontSize();
         }
 
         internal void ResetZoom()
         {
+            zedGraphChannels.ZoomOutAll(zedGraphChannels.GraphPane);
             SetEqualAspectRatio();
             UpdateFontSize();
         }
@@ -839,6 +929,9 @@ namespace OpenEphys.Onix1.Design
 
         private void ToggleSelectedContact(ContactTag tag)
         {
+            if (tag == null)
+                return;
+
             SetSelectedContact(tag, !GetContactStatus(tag));
         }
 
@@ -866,6 +959,9 @@ namespace OpenEphys.Onix1.Design
 
         private bool GetContactStatus(ContactTag tag)
         {
+            if (tag == null)
+                throw new ArgumentNullException("Attempted to check contact status of an object that is not a contact.");
+
             return SelectedContacts[tag.ContactIndex];
         }
 
