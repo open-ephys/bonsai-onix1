@@ -24,7 +24,7 @@ namespace OpenEphys.Onix1
 
     /// <summary>
     /// Provides an abstract base class for configuration operators responsible for
-    /// registering a single device in the context device table.
+    /// registering a single device within the internal device manager.
     /// </summary>
     /// <remarks>
     /// ONI devices usually require a specific sequence of configuration and parameterization

@@ -6,25 +6,21 @@ namespace OpenEphys.Onix1
 {
     /// <summary>
     /// Provides an abstract base class for configuration operators responsible for
-    /// registering logical groups of <see cref="oni.Device"/>s.
+    /// registering all devices within a logical group in the internal device manager.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The ONI standard states that devices are grouped into aggregates called hubs, each of which is
-    /// governed by a single, potentially asynchronous clock and share a common base address. The devices on
-    /// a headstage are an example of a hub. Devices within a hub are accessed through hub-specific addresses
-    /// and usually require a specific sequence of configuration steps prior to acquisition.
-    /// </para>
-    /// <para>
-    /// This class allows configuration of logical device groups of <see cref="oni.Device"/>s across ONI-defined
-    /// hubs. For instance, the group of devices within a headstage (a single hub) can be combined with a device
-    /// from another hub that is used to control its port voltage and communication status
-    /// (e.g. <see cref="ConfigureHeadstage64"/>). Alternatively, diagnostic devices that are present within
-    /// an ONI hub can be omitted from a device group to aid its useability (e.g. <see cref="ConfigureBreakoutBoard"/>).
+    /// This class allows configuration of logical groups of devices that share some common functionality
+    /// and/or require a specific sequence of interdependent configuration steps prior to acquisition. For
+    /// instance, devices on a headstage can be combined with a device on the controller
+    /// that is used to set the port voltage and monitor headstage communication status
+    /// (e.g. <see cref="ConfigureHeadstage64"/>). Alternatively, devices that share some common functionality
+    /// from the user's perspective, but share no actual interdependent configuration from the perspective of
+    /// the hardware, can be grouped for ease of use (e.g. <see cref="ConfigureBreakoutBoard"/>).
     /// </para>
     /// <para>
     /// These device groups are the most common starting point for configuration
-    /// of an ONI system, and the <see cref="MultiDeviceFactory"/> provides a modular abstraction for flexible
+    /// of an ONIX system, and the <see cref="MultiDeviceFactory"/> provides a modular abstraction for flexible
     /// assembly and sequencing of device groups.
     /// </para>
     /// </remarks>
@@ -43,7 +39,10 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets a unique device group name.
         /// </summary>
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <remarks>
+        /// A human-readable identifier that is used as a prefix for 
+        /// the <see cref="SingleDeviceFactory.DeviceName"/> of each device in the the group. 
+        /// </remarks>
         [Description("The unique device group name.")]
         public string Name
         {
