@@ -35,7 +35,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Probe A electrode configuration.")]
-        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; }
+        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the path to the gain calibration file for Probe A.
@@ -54,7 +54,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Probe B electrode configuration.")]
-        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; }
+        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the path to the gain calibration file for Probe B.
@@ -96,6 +96,10 @@ namespace OpenEphys.Onix1
                 var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
                 var gpo10Config = EnableProbeSupply(serializer);
 
+                // set I2C clock rate to ~400 kHz
+                serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.SCLHIGH, 20);
+                serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.SCLLOW, 20);
+
                 // read probe metadata
                 var probeAMetadata = ReadProbeMetadata(serializer, NeuropixelsV2e.ProbeASelected);
                 var probeBMetadata = ReadProbeMetadata(serializer, NeuropixelsV2e.ProbeBSelected);
@@ -110,14 +114,15 @@ namespace OpenEphys.Onix1
                 ResetProbes(serializer, gpo10Config);
 
                 // configure probe streaming
-                ushort? gainCorrectionA = null;
-                ushort? gainCorrectionB = null;
-                var probeControl = new NeuropixelsV2RegisterContext(device, NeuropixelsV2e.ProbeAddress);
+                double? gainCorrectionA = null;
+                double? gainCorrectionB = null;
+                var probeControl = new NeuropixelsV2eRegisterContext(device, NeuropixelsV2e.ProbeAddress);
 
                 // configure probe A streaming
                 if (probeAMetadata.ProbeSerialNumber != null)
                 {
-                    gainCorrectionA = ReadGainCorrection(GainCalibrationFileA, (ulong)probeAMetadata.ProbeSerialNumber);
+                    gainCorrectionA = NeuropixelsV2.ReadGainCorrection(
+                        GainCalibrationFileA, (ulong)probeAMetadata.ProbeSerialNumber, NeuropixelsV2Probe.ProbeA);
                     SelectProbe(serializer, NeuropixelsV2e.ProbeASelected);
                     probeControl.WriteConfiguration(ProbeConfigurationA);
                     ConfigureProbeStreaming(probeControl);
@@ -126,11 +131,15 @@ namespace OpenEphys.Onix1
                 // configure probe B streaming
                 if (probeBMetadata.ProbeSerialNumber != null)
                 {
-                    gainCorrectionB = ReadGainCorrection(GainCalibrationFileB, (ulong)probeBMetadata.ProbeSerialNumber);
+                    gainCorrectionB = NeuropixelsV2.ReadGainCorrection(
+                        GainCalibrationFileB, (ulong)probeBMetadata.ProbeSerialNumber, NeuropixelsV2Probe.ProbeB);
                     SelectProbe(serializer, NeuropixelsV2e.ProbeBSelected);
                     probeControl.WriteConfiguration(ProbeConfigurationB);
                     ConfigureProbeStreaming(probeControl);
                 }
+
+                // disconnect i2c bus from both probes to prevent digital interference during acquisition
+                SelectProbe(serializer, NeuropixelsV2e.NoProbeSelected);
 
                 var deviceInfo = new NeuropixelsV2eDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB);
                 var shutdown = Disposable.Create(() =>
@@ -192,26 +201,6 @@ namespace OpenEphys.Onix1
             SelectProbe(serializer, probeSelect);
             return new NeuropixelsV2eMetadata(serializer);
         }
-
-        static ushort ReadGainCorrection(string gainCalibrationFile, ulong probeSerialNumber)
-        {
-            if (gainCalibrationFile == null)
-            {
-                throw new ArgumentException("Calibration file must be specified.");
-            }
-
-            System.IO.StreamReader gainFile = new(gainCalibrationFile);
-            var sn = ulong.Parse(gainFile.ReadLine());
-
-            if (probeSerialNumber != sn)
-            {
-                throw new ArgumentException($"Probe serial number {probeSerialNumber} does not match calibration file serial number {sn}.");
-            }
-
-            // Q1.14 fixed point conversion
-            return (ushort)(double.Parse(gainFile.ReadLine()) * (1 << 14));
-        }
-
         static void SelectProbe(I2CRegisterContext serializer, byte probeSelect)
         {
             serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO32, probeSelect);
@@ -229,25 +218,25 @@ namespace OpenEphys.Onix1
         static void ConfigureProbeStreaming(I2CRegisterContext i2cNP)
         {
             // Write super sync bits into ASIC
-            i2cNP.WriteByte(0x15, 0b00011000);
-            i2cNP.WriteByte(0x14, 0b01100001);
-            i2cNP.WriteByte(0x13, 0b10000110);
-            i2cNP.WriteByte(0x12, 0b00011000);
-            i2cNP.WriteByte(0x11, 0b01100001);
-            i2cNP.WriteByte(0x10, 0b10000110);
-            i2cNP.WriteByte(0x0F, 0b00011000);
-            i2cNP.WriteByte(0x0E, 0b01100001);
-            i2cNP.WriteByte(0x0D, 0b10000110);
-            i2cNP.WriteByte(0x0C, 0b00011000);
-            i2cNP.WriteByte(0x0B, 0b01100001);
-            i2cNP.WriteByte(0x0A, 0b10111001);
+            i2cNP.WriteByte(NeuropixelsV2e.SUPERSYNC11, 0b00011000);
+            i2cNP.WriteByte(NeuropixelsV2e.SUPERSYNC10, 0b01100001);
+            i2cNP.WriteByte(NeuropixelsV2e.SUPERSYNC9, 0b10000110);
+            i2cNP.WriteByte(NeuropixelsV2e.SUPERSYNC8, 0b00011000);
+            i2cNP.WriteByte(NeuropixelsV2e.SUPERSYNC7, 0b01100001);
+            i2cNP.WriteByte(NeuropixelsV2e.SUPERSYNC6, 0b10000110);
+            i2cNP.WriteByte(NeuropixelsV2e.SUPERSYNC5, 0b00011000);
+            i2cNP.WriteByte(NeuropixelsV2e.SUPERSYNC4, 0b01100001);
+            i2cNP.WriteByte(NeuropixelsV2e.SUPERSYNC3, 0b10000110);
+            i2cNP.WriteByte(NeuropixelsV2e.SUPERSYNC2, 0b00011000);
+            i2cNP.WriteByte(NeuropixelsV2e.SUPERSYNC1, 0b01100001);
+            i2cNP.WriteByte(NeuropixelsV2e.SUPERSYNC0, 0b10111001);
 
             // Activate recording mode on NP
-            i2cNP.WriteByte(0, 0b0100_0000);
+            i2cNP.WriteByte(NeuropixelsV2e.OP_MODE, 0b0100_0000);
 
             // Set global ADC settings
             // TODO: Undocumented
-            i2cNP.WriteByte(3, 0b0000_1000);
+            i2cNP.WriteByte(NeuropixelsV2e.ADC_CONFIG, 0b0000_1000);
         }
     }
 
@@ -267,6 +256,40 @@ namespace OpenEphys.Onix1
         public const int ADCsPerProbe = 24;
         public const int ChannelCount = 384;
         public const int FrameWords = 36; // TRASH TRASH TRASH 0 ADC0 ADC8 ADC16 0 ADC1 ADC9 ADC17 0 ... ADC7 ADC15 ADC23 0
+
+        // unmanaged register map
+        public const uint OP_MODE = 0x00;
+        public const uint REC_MODE = 0x01;
+        public const uint CAL_MODE = 0x02;
+        public const uint ADC_CONFIG = 0x03;
+        public const uint TEST_CONFIG1 = 0x04;
+        public const uint TEST_CONFIG2 = 0x05;
+        public const uint TEST_CONFIG3 = 0x06;
+        public const uint TEST_CONFIG4 = 0x07;
+        public const uint TEST_CONFIG5 = 0x08;
+        public const uint STATUS = 0x09;
+        public const uint SUPERSYNC0 = 0x0A;
+        public const uint SUPERSYNC1 = 0x0B;
+        public const uint SUPERSYNC2 = 0x0C;
+        public const uint SUPERSYNC3 = 0x0D;
+        public const uint SUPERSYNC4 = 0x0E;
+        public const uint SUPERSYNC5 = 0x0F;
+        public const uint SUPERSYNC6 = 0x10;
+        public const uint SUPERSYNC7 = 0x11;
+        public const uint SUPERSYNC8 = 0x12;
+        public const uint SUPERSYNC9 = 0x13;
+        public const uint SUPERSYNC10 = 0x14;
+        public const uint SUPERSYNC11 = 0x15;
+        public const uint SR_CHAIN6 = 0x16; // Odd channel base config
+        public const uint SR_CHAIN5 = 0x17; // Even channel base config
+        public const uint SR_CHAIN4 = 0x18; // Shank 4
+        public const uint SR_CHAIN3 = 0x19; // Shank 3
+        public const uint SR_CHAIN2 = 0x1A; // Shank 2
+        public const uint SR_CHAIN1 = 0x1B; // Shank 1
+        public const uint SR_LENGTH2 = 0x1C;
+        public const uint SR_LENGTH1 = 0x1D;
+        public const uint PROBE_ID = 0x1E;
+        public const uint SOFT_RESET = 0x1F;
 
         internal class NameConverter : DeviceNameConverter
         {

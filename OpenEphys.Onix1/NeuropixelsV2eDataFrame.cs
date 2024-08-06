@@ -31,7 +31,7 @@ namespace OpenEphys.Onix1
             return data->ProbeIndex;
         }
 
-        internal static unsafe void CopyAmplifierBuffer(ushort* amplifierData, ushort[,] amplifierBuffer, int index, ushort gainCorrection)
+        internal static unsafe void CopyAmplifierBuffer(ushort* amplifierData, ushort[,] amplifierBuffer, int index, double gainCorrection)
         {
             // Loop over 16 "frames" within each "super-frame"
             for (int i = 0; i < NeuropixelsV2e.FramesPerSuperFrame; i++)
@@ -41,7 +41,7 @@ namespace OpenEphys.Onix1
 
                 for (int k = 0; k < NeuropixelsV2e.ADCsPerProbe; k++)
                 {
-                    amplifierBuffer[RawToChannel[k, i], index] = (ushort)(amplifierData[ADCIndices[k] + adcDataOffset] * gainCorrection >> 14); // Q14.0 * Q1.14 -> Q14.0
+                    amplifierBuffer[RawToChannel[k, i], index] = (ushort)(gainCorrection * amplifierData[ADCIndices[k] + adcDataOffset]);
                 }
             }
         }

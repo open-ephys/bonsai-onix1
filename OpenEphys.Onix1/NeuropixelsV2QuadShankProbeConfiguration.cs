@@ -65,7 +65,7 @@ namespace OpenEphys.Onix1
     }
 
     /// <summary>
-    /// Defines a configuration for quad-shank probes.
+    /// Defines a configuration for quad-shank, Neuropixels 2.0 and 2.0-beta probes.
     /// </summary>
     public class NeuropixelsV2QuadShankProbeConfiguration
     {

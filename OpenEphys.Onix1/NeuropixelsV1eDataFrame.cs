@@ -66,7 +66,7 @@ namespace OpenEphys.Onix1
             for (int k = 0; k < NeuropixelsV1e.AdcCount; k++)
             {
                 var a = amplifierData[adcToFrameIndex[k]];
-                lfpBuffer[RawToChannel[k, lfpFrameIndex], lfpBufferIndex] = (ushort)(a > thresholds[k] ? a - offsets[k] : a);
+                lfpBuffer[RawToChannel[k, lfpFrameIndex], lfpBufferIndex] = (ushort)(lfpGainCorrection * (a > thresholds[k] ? a - offsets[k] : a));
             }
 
 
@@ -79,7 +79,7 @@ namespace OpenEphys.Onix1
                 for (int k = 0; k < NeuropixelsV1e.AdcCount; k++)
                 {
                     var a = amplifierData[adcToFrameIndex[k] + adcDataOffset];
-                    spikeBuffer[RawToChannel[k, i], index] = (ushort)(a > thresholds[k] ? a - offsets[k] : a);
+                    spikeBuffer[RawToChannel[k, i], index] = (ushort)(apGainCorrection * (a > thresholds[k] ? a - offsets[k] : a));
                 }
 
                 frameCountBuffer[frameCountStartIndex + i + 1] = (amplifierData[adcDataOffset + 31] << 10) | (amplifierData[adcDataOffset + 39] << 0);

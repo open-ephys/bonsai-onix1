@@ -52,9 +52,9 @@ namespace OpenEphys.Onix1
 
                 var gainCorrection = ProbeIndex switch
                 {
-                    NeuropixelsV2Probe.ProbeA => (ushort)info.GainCorrectionA,
-                    NeuropixelsV2Probe.ProbeB => (ushort)info.GainCorrectionB,
-                    _ => throw new ArgumentOutOfRangeException(nameof(ProbeIndex), $"Unexpected ProbeIndex value: {ProbeIndex}"),
+                    NeuropixelsV2Probe.ProbeA => (double)info.GainCorrectionA,
+                    NeuropixelsV2Probe.ProbeB => (double)info.GainCorrectionB,
+                    _ => throw new ArgumentOutOfRangeException(nameof(ProbeIndex), $"Unexpected {nameof(ProbeIndex)} value: {ProbeIndex}"),
                 };
 
                 return Observable.Create<NeuropixelsV2eBetaDataFrame>(observer =>
