@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -20,7 +21,7 @@ namespace OpenEphys.Onix1.Design
             File.WriteAllText(filepath, stringJson);
         }
 
-        public static IEnumerable<Control> GetAllChildren(this Control root)
+        public static IEnumerable<Control> GetAllControls(this Control root)
         {
             var stack = new Stack<Control>();
             stack.Push(root);
@@ -34,25 +35,40 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
+        public static IEnumerable<Control> GetTopLevelControls(this Control root)
+        {
+            var stack = new Stack<Control>();
+            stack.Push(root);
+
+            if (stack.Any())
+            {
+                var next = stack.Pop();
+                foreach (Control child in next.Controls)
+                {
+                    yield return child;
+                }
+            }
+        }
+
         /// <summary>
         /// Given two forms, take all menu items that are in the "File" MenuItem of the child form, and copy them directly to the 
         /// "File" MenuItem for the parent form
         /// </summary>
         /// <param name="thisForm"></param>
-        /// <param name="form"></param>
-        public static void AddMenuItemsFromDialogToFileOption(this Form thisForm, Form form)
+        /// <param name="childForm"></param>
+        public static void AddMenuItemsFromDialogToFileOption(this Form thisForm, Form childForm)
         {
             const string FileString = "File";
 
-            if (form != null)
+            if (childForm != null)
             {
-                var menuStrips = form.GetAllChildren()
-                                     .OfType<MenuStrip>()
-                                     .ToList();
+                var childMenuStrip = childForm.GetAllControls()
+                                              .OfType<MenuStrip>()
+                                              .FirstOrDefault() ?? throw new InvalidOperationException($"There are no menu strips in any child controls of the {childForm.Text} dialog.");
 
-                var thisMenuStrip = thisForm.GetAllChildren()
+                var thisMenuStrip = thisForm.GetTopLevelControls()
                                             .OfType<MenuStrip>()
-                                            .FirstOrDefault();
+                                            .FirstOrDefault() ?? throw new InvalidOperationException($"There are no menu strips at the top level of the {thisForm.Text} dialog to pull out.");
 
                 ToolStripMenuItem existingMenuItem = null;
 
@@ -64,19 +80,13 @@ namespace OpenEphys.Onix1.Design
                     }
                 }
 
-                if (menuStrips != null && menuStrips.Count > 0)
+                foreach (ToolStripMenuItem menuItem in childMenuStrip.Items)
                 {
-                    foreach (var menuStrip in menuStrips)
+                    if (menuItem.Text == FileString)
                     {
-                        foreach (ToolStripMenuItem menuItem in menuStrip.Items)
+                        while (menuItem.DropDownItems.Count > 0)
                         {
-                            if (menuItem.Text == FileString)
-                            {
-                                while (menuItem.DropDownItems.Count > 0)
-                                {
-                                    existingMenuItem.DropDownItems.Add(menuItem.DropDownItems[0]);
-                                }
-                            }
+                            existingMenuItem.DropDownItems.Add(menuItem.DropDownItems[0]);
                         }
                     }
                 }
@@ -88,55 +98,49 @@ namespace OpenEphys.Onix1.Design
         /// sub-menu name given, nested under the "File" MenuItem for the parent form
         /// </summary>
         /// <param name="thisForm"></param>
-        /// <param name="form"></param>
+        /// <param name="childForm"></param>
         /// <param name="subMenuName"></param>
-        public static void AddMenuItemsFromDialogToFileOption(this Form thisForm, Form form, string subMenuName)
+        public static void AddMenuItemsFromDialogToFileOption(this Form thisForm, Form childForm, string subMenuName)
         {
             const string FileString = "File";
 
-            if (form != null)
+            if (childForm != null)
             {
-                var menuStrips = form.GetAllChildren()
-                                     .OfType<MenuStrip>()
-                                     .ToList();
+                var childMenuStrip = childForm.GetAllControls()
+                                              .OfType<MenuStrip>()
+                                              .First() ?? throw new InvalidOperationException($"There are no menu strips in any child controls of the {childForm.Text} dialog.");
 
-                var thisMenuStrip = thisForm.GetAllChildren()
+                var thisMenuStrip = thisForm.GetTopLevelControls()
                                             .OfType<MenuStrip>()
-                                            .FirstOrDefault();
+                                            .FirstOrDefault() ?? throw new InvalidOperationException($"There are no menu strips at the top level of the {thisForm.Text} dialog to pull out.");
 
-                ToolStripMenuItem existingMenuItem = null;
+                ToolStripMenuItem thisFileMenuItem = null;
 
                 foreach (ToolStripMenuItem menuItem in thisMenuStrip.Items)
                 {
                     if (menuItem.Text == FileString)
                     {
-                        existingMenuItem = menuItem;
+                        thisFileMenuItem = menuItem;
                     }
                 }
 
-                ToolStripMenuItem newItems = new()
+                ToolStripMenuItem newChildMenuItems = new()
                 {
                     Text = subMenuName
                 };
 
-                if (menuStrips != null && menuStrips.Count > 0)
+                foreach (ToolStripMenuItem childItem in childMenuStrip.Items)
                 {
-                    foreach (var menuStrip in menuStrips)
+                    if (childItem.Text == FileString)
                     {
-                        foreach (ToolStripMenuItem menuItem in menuStrip.Items)
+                        while (childItem.DropDownItems.Count > 0)
                         {
-                            if (menuItem.Text == FileString)
-                            {
-                                while (menuItem.DropDownItems.Count > 0)
-                                {
-                                    newItems.DropDownItems.Add(menuItem.DropDownItems[0]);
-                                }
-                            }
+                            newChildMenuItems.DropDownItems.Add(childItem.DropDownItems[0]);
                         }
                     }
-
-                    existingMenuItem.DropDownItems.Add(newItems);
                 }
+
+                thisFileMenuItem.DropDownItems.Add(newChildMenuItems);
             }
         }
     }

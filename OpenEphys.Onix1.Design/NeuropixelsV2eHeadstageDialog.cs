@@ -57,7 +57,7 @@ namespace OpenEphys.Onix1.Design
             {
                 if (button.Name == nameof(buttonOkay))
                 {
-                    DialogNeuropixelsV2e.UpdateProbeGroups();
+                    DialogNeuropixelsV2e.SaveVariables();
 
                     DialogResult = DialogResult.OK;
                 }

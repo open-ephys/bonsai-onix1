@@ -56,7 +56,7 @@
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(1295, 719);
+            this.tabControl1.Size = new System.Drawing.Size(1295, 731);
             this.tabControl1.TabIndex = 0;
             // 
             // tabPageNeuropixelsV2e
@@ -65,7 +65,7 @@
             this.tabPageNeuropixelsV2e.Location = new System.Drawing.Point(4, 29);
             this.tabPageNeuropixelsV2e.Name = "tabPageNeuropixelsV2e";
             this.tabPageNeuropixelsV2e.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageNeuropixelsV2e.Size = new System.Drawing.Size(1287, 686);
+            this.tabPageNeuropixelsV2e.Size = new System.Drawing.Size(1287, 698);
             this.tabPageNeuropixelsV2e.TabIndex = 0;
             this.tabPageNeuropixelsV2e.Text = "NeuropixelsV2e";
             this.tabPageNeuropixelsV2e.UseVisualStyleBackColor = true;
@@ -75,7 +75,7 @@
             this.panelNeuropixelsV2e.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelNeuropixelsV2e.Location = new System.Drawing.Point(3, 3);
             this.panelNeuropixelsV2e.Name = "panelNeuropixelsV2e";
-            this.panelNeuropixelsV2e.Size = new System.Drawing.Size(1281, 680);
+            this.panelNeuropixelsV2e.Size = new System.Drawing.Size(1281, 692);
             this.panelNeuropixelsV2e.TabIndex = 0;
             // 
             // tabPageBno055
@@ -101,7 +101,7 @@
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
-            this.splitContainer1.Location = new System.Drawing.Point(0, 36);
+            this.splitContainer1.Location = new System.Drawing.Point(0, 33);
             this.splitContainer1.Name = "splitContainer1";
             this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
@@ -113,15 +113,15 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.buttonCancel);
             this.splitContainer1.Panel2.Controls.Add(this.buttonOkay);
-            this.splitContainer1.Size = new System.Drawing.Size(1295, 775);
-            this.splitContainer1.SplitterDistance = 719;
+            this.splitContainer1.Size = new System.Drawing.Size(1295, 778);
+            this.splitContainer1.SplitterDistance = 731;
             this.splitContainer1.TabIndex = 1;
             // 
             // buttonCancel
             // 
             this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.buttonCancel.Location = new System.Drawing.Point(1121, 7);
+            this.buttonCancel.Location = new System.Drawing.Point(1121, 1);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(162, 40);
             this.buttonCancel.TabIndex = 6;
@@ -131,7 +131,7 @@
             // buttonOkay
             // 
             this.buttonOkay.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOkay.Location = new System.Drawing.Point(938, 7);
+            this.buttonOkay.Location = new System.Drawing.Point(938, 1);
             this.buttonOkay.Name = "buttonOkay";
             this.buttonOkay.Size = new System.Drawing.Size(162, 40);
             this.buttonOkay.TabIndex = 5;
@@ -147,14 +147,14 @@
             this.fileToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1295, 36);
+            this.menuStrip1.Size = new System.Drawing.Size(1295, 33);
             this.menuStrip1.TabIndex = 2;
             this.menuStrip1.Text = "menuStrip1";
             // 
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(54, 30);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(54, 29);
             this.fileToolStripMenuItem.Text = "File";
             // 
             // NeuropixelsV2eHeadstageDialog

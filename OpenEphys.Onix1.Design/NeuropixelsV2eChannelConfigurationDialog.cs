@@ -39,7 +39,7 @@ namespace OpenEphys.Onix1.Design
 
             zedGraphChannels.ZoomStepFraction = 0.5;
 
-            ProbeConfiguration = new(probeConfiguration);
+            ProbeConfiguration = probeConfiguration;
 
             ZoomBoundaryX = 400;
             ZoomBoundaryY = 400;
@@ -56,7 +56,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override void LoadDefaultChannelLayout()
         {
-            ProbeConfiguration = new();
+            ProbeConfiguration = new(ProbeConfiguration.Probe);
 
             OnFileOpenHandler();
         }
@@ -74,7 +74,7 @@ namespace OpenEphys.Onix1.Design
             {
                 newConfiguration.Validate();
 
-                ProbeConfiguration = new(newConfiguration);
+                ProbeConfiguration = new(newConfiguration, ProbeConfiguration.Reference, ProbeConfiguration.Probe);
 
                 DrawProbeGroup();
                 RefreshZedGraph();

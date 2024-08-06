@@ -91,6 +91,19 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class.
+        /// </summary>
+        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe probe)
+        {
+            ChannelMap = new List<NeuropixelsV2QuadShankElectrode>(NeuropixelsV2.ChannelCount);
+            for (int i = 0; i < NeuropixelsV2.ChannelCount; i++)
+            {
+                ChannelMap.Add(ProbeModel.FirstOrDefault(e => e.Channel == i));
+            }
+            Probe = probe;
+        }
+
+        /// <summary>
         /// Copy constructor for the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class.
         /// </summary>
         /// <param name="probeConfiguration">The existing <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> object to copy.</param>
@@ -99,6 +112,7 @@ namespace OpenEphys.Onix1
             Reference = probeConfiguration.Reference;
             ChannelMap = probeConfiguration.ChannelMap;
             ChannelConfiguration = new(probeConfiguration.ChannelConfiguration);
+            Probe = probeConfiguration.Probe;
         }
 
         /// <summary>
@@ -107,11 +121,15 @@ namespace OpenEphys.Onix1
         /// generated from the <see cref="ChannelConfiguration"/>. 
         /// </summary>
         /// <param name="channelConfiguration">The existing <see cref="NeuropixelsV2eProbeGroup"/> instance to use.</param>
-        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2eProbeGroup channelConfiguration)
+        /// <param name="reference">The <see cref="NeuropixelsV2QuadShankReference"/> reference value.</param>
+        /// <param name="probe">The <see cref="NeuropixelsV2Probe"/> for this probe.</param>
+        [JsonConstructor]
+        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2eProbeGroup channelConfiguration, NeuropixelsV2QuadShankReference reference, NeuropixelsV2Probe probe)
         {
             ChannelConfiguration = channelConfiguration;
-
-            SelectElectrodes(NeuropixelsV2eProbeGroup.ToChannelMap(channelConfiguration));
+            ChannelMap = NeuropixelsV2eProbeGroup.ToChannelMap(channelConfiguration);
+            Reference = reference;
+            Probe = probe;
         }
 
         private static List<NeuropixelsV2QuadShankElectrode> CreateProbeModel()
@@ -123,6 +141,11 @@ namespace OpenEphys.Onix1
             }
             return electrodes;
         }
+
+        /// <summary>
+        /// Gets or sets the <see cref="NeuropixelsV2Probe"/> for this probe.
+        /// </summary>
+        public NeuropixelsV2Probe Probe { get; set; } = NeuropixelsV2Probe.ProbeA;
 
         /// <summary>
         /// Gets or sets the reference for all electrodes.

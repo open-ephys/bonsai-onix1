@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Drawing.Design;
 using System.Reactive.Disposables;
 using Bonsai;
 
@@ -52,7 +53,8 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Probe A electrode configuration.")]
-        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new();
+        [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
+        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new(NeuropixelsV2Probe.ProbeA);
 
         /// <summary>
         /// Gets or sets the path to the gain calibration file for Probe A.
@@ -71,7 +73,8 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Probe B electrode configuration.")]
-        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new();
+        [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
+        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new(NeuropixelsV2Probe.ProbeB);
 
         /// <summary>
         /// Gets or sets the path to the gain calibration file for Probe B.
