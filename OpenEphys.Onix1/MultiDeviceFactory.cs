@@ -13,7 +13,7 @@ namespace OpenEphys.Onix1
     /// This class allows configuration of logical groups of devices that share some common functionality
     /// and/or require a specific sequence of interdependent configuration steps prior to acquisition. For
     /// instance, devices on a headstage can be combined with a device on the controller
-    /// that that is used to set the port voltage and monitor headstage communication status
+    /// that is used to set the port voltage and monitor headstage communication status
     /// (e.g. <see cref="ConfigureHeadstage64"/>). Alternatively, devices that share some common functionality
     /// from the user's perspective, but share no actual interdependent configuration from the perspective of
     /// the hardware, can be grouped for ease of use (e.g. <see cref="ConfigureBreakoutBoard"/>).
