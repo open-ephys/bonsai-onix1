@@ -2,9 +2,9 @@
 using System.ComponentModel;
 using System.Threading;
 
-namespace OpenEphys.Onix
+namespace OpenEphys.Onix1
 {
-    public class ConfigureHeadstageRhs2116 : HubDeviceFactory
+    public class ConfigureHeadstageRhs2116 : MultiDeviceFactory
     {
         PortName port;
         readonly ConfigureHeadstageRhs2116LinkController LinkController = new();
@@ -16,15 +16,15 @@ namespace OpenEphys.Onix
         }
 
         [Category(ConfigurationCategory)]
-        [TypeConverter(typeof(HubDeviceConverter))]
+        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         public ConfigureRhs2116 Rhs2116A { get; set; } = new();
 
         [Category(ConfigurationCategory)]
-        [TypeConverter(typeof(HubDeviceConverter))]
+        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         public ConfigureRhs2116 Rhs2116B { get; set; } = new();
 
         [Category(ConfigurationCategory)]
-        [TypeConverter(typeof(HubDeviceConverter))]
+        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         public ConfigureRhs2116Trigger StimulusTrigger { get; set; } = new();
 
         internal override void UpdateDeviceNames()

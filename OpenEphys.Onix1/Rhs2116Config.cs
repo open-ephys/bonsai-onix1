@@ -5,7 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Xml.Serialization;
 
-namespace OpenEphys.Onix
+namespace OpenEphys.Onix1
 {
     public static class Rhs2116Config
     {

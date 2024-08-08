@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 
-namespace OpenEphys.Onix
+namespace OpenEphys.Onix1
 {
     public class ConfigureRhs2116Trigger : SingleDeviceFactory
     {
@@ -21,7 +21,7 @@ namespace OpenEphys.Onix
             var deviceAddress = DeviceAddress;
             return source.ConfigureDevice(context =>
             {
-                var device = context.GetDeviceContext(deviceAddress, Rhs2116Trigger.ID);
+                var device = context.GetDeviceContext(deviceAddress, DeviceType);
                 device.WriteRegister(Rhs2116Trigger.TRIGGERSOURCE, (uint)triggerSource);
                 return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
             });

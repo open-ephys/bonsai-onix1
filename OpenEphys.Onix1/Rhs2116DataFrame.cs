@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using OpenCV.Net;
 
-namespace OpenEphys.Onix
+namespace OpenEphys.Onix1
 {
     public class Rhs2116DataFrame
     {

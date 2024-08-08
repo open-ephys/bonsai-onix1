@@ -5,7 +5,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
-namespace OpenEphys.Onix
+namespace OpenEphys.Onix1
 {
     public class ConfigureRhs2116 : SingleDeviceFactory
     {
@@ -85,7 +85,7 @@ namespace OpenEphys.Onix
             {
                 // config register format following RHS2116 datasheet
                 // https://www.intantech.com/files/Intan_RHS2116_datasheet.pdf
-                var device = context.GetDeviceContext(deviceAddress, Rhs2116.ID);
+                var device = context.GetDeviceContext(deviceAddress, DeviceType);
 
                 var format = device.ReadRegister(Rhs2116.FORMAT);
                 var dspCutoff = DspCutoff;

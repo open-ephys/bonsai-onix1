@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using Bonsai;
 
-namespace OpenEphys.Onix
+namespace OpenEphys.Onix1
 {
     public class Rhs2116StimulusTrigger : Sink<double>
     {
@@ -13,19 +13,17 @@ namespace OpenEphys.Onix
 
         public override IObservable<double> Process(IObservable<double> source)
         {
-            return Observable.Using(
-                () => DeviceManager.ReserveDevice(DeviceName),
-                disposable => disposable.Subject.SelectMany(deviceInfo =>
+            return DeviceManager.GetDevice(DeviceName).SelectMany(
+                deviceInfo =>
                 {
-                var device = deviceInfo.GetDeviceContext(typeof(Rhs2116Trigger));
+                    var device = deviceInfo.GetDeviceContext(typeof(Rhs2116Trigger));
                     return source.Do(t =>
                     {
                         const double SampleFrequencyMegaHz = Rhs2116.SampleFrequencyHz / 1e6;
                         var delaySamples = (int)(t * SampleFrequencyMegaHz);
                         device.WriteRegister(Rhs2116Trigger.TRIGGER, (uint)(delaySamples << 12 | 0x1));
                     });
-
-                }));
+                });
         }
     }
 }
