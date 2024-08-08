@@ -21,7 +21,7 @@ namespace OpenEphys.Onix1
                      "Consult the device datasheet and documentation for allowable voltage ranges.")]
         public double? PortVoltage { get; set; } = null;
 
-        protected bool CheckLinkState(DeviceContext device)
+        protected virtual bool CheckLinkState(DeviceContext device)
         {
             var linkState = device.ReadRegister(FmcLinkController.LINKSTATE);
             return (linkState & FmcLinkController.LINKSTATE_SL) != 0;
@@ -67,12 +67,13 @@ namespace OpenEphys.Onix1
                 }
                 return Disposable.Create(dispose);
             })
-            .ConfigureDevice(context => 
+            .ConfigureDevice(context =>
             {
                 var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
         }
+    }
 
     internal static class FmcLinkController
     {
