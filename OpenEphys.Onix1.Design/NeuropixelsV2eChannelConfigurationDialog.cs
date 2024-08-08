@@ -231,9 +231,6 @@ namespace OpenEphys.Onix1.Design
             if (ProbeConfiguration.ChannelConfiguration == null)
                 return;
 
-            var indices = ProbeConfiguration.ChannelConfiguration.GetDeviceChannelIndices()
-                                                                 .Select(ind => ind == -1).ToArray();
-
             var textObjs = zedGraphChannels.GraphPane.GraphObjList.OfType<TextObj>()
                                                                   .Where(t => t.Tag is ContactTag);
 
@@ -245,11 +242,11 @@ namespace OpenEphys.Onix1.Design
             }
 
             textObjsToUpdate = textObjs.Where(c =>
-                                           {
-                                               var tag = c.Tag as ContactTag;
-                                               var channel = NeuropixelsV2QuadShankElectrode.GetChannelNumber(tag.ContactIndex);
-                                               return ProbeConfiguration.ChannelMap[channel].Index == tag.ContactIndex;
-                                           });
+                                              {
+                                                  var tag = c.Tag as ContactTag;
+                                                  var channel = NeuropixelsV2QuadShankElectrode.GetChannelNumber(tag.ContactIndex);
+                                                  return ProbeConfiguration.ChannelMap[channel].Index == tag.ContactIndex;
+                                              });
 
             foreach (var textObj in textObjsToUpdate)
             {
