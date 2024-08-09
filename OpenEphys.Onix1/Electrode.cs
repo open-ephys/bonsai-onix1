@@ -25,7 +25,7 @@ namespace OpenEphys.Onix1
         /// Gets the index of the electrode within the context of <see cref="Shank"/>.
         /// </summary>
         [XmlIgnore]
-        public int IntraShankIndex { get; internal set; }
+        public int IntraShankElectrodeIndex { get; internal set; }
 
         /// <summary>
         /// Gets the electrical channel that this electrode is mapped to.

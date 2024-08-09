@@ -104,6 +104,20 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class.
+        /// </summary>
+        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe probe, NeuropixelsV2QuadShankReference reference)
+        {
+            ChannelMap = new List<NeuropixelsV2QuadShankElectrode>(NeuropixelsV2.ChannelCount);
+            for (int i = 0; i < NeuropixelsV2.ChannelCount; i++)
+            {
+                ChannelMap.Add(ProbeModel.FirstOrDefault(e => e.Channel == i));
+            }
+            Probe = probe;
+            Reference = reference;
+        }
+
+        /// <summary>
         /// Copy constructor for the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class.
         /// </summary>
         /// <param name="probeConfiguration">The existing <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> object to copy.</param>
@@ -184,6 +198,8 @@ namespace OpenEphys.Onix1
                 throw new InvalidOperationException($"Channel map does not match the expected number of active channels " +
                     $"for a NeuropixelsV2 probe. Expected {NeuropixelsV2.ChannelCount}, but there are {ChannelMap.Count} values.");
             }
+
+            ChannelConfiguration.UpdateDeviceChannelIndices(ChannelMap);
         }
 
         /// <summary>
@@ -213,6 +229,7 @@ namespace OpenEphys.Onix1
             {
                 var jsonString = Encoding.UTF8.GetString(Convert.FromBase64String(value));
                 ChannelConfiguration = JsonConvert.DeserializeObject<NeuropixelsV2eProbeGroup>(jsonString);
+                SelectElectrodes(NeuropixelsV2eProbeGroup.ToChannelMap(ChannelConfiguration));
             }
         }
     }

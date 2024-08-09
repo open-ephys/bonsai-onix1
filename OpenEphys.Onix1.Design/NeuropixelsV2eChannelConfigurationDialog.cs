@@ -56,7 +56,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override void LoadDefaultChannelLayout()
         {
-            ProbeConfiguration = new(ProbeConfiguration.Probe);
+            ProbeConfiguration = new(ProbeConfiguration.Probe, ProbeConfiguration.Reference);
 
             OnFileOpenHandler();
         }

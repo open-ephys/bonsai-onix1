@@ -255,5 +255,28 @@ namespace OpenEphys.Onix1
 
             return channelMap.OrderBy(e => e.Channel).ToList();
         }
+
+        /// <summary>
+        /// Updates the <see cref="Probe.DeviceChannelIndices"/> based on the given channel map.
+        /// </summary>
+        /// <param name="channelMap">Existing <see cref="NeuropixelsV2QuadShankProbeConfiguration.ChannelMap"/>.</param>
+        internal void UpdateDeviceChannelIndices(List<NeuropixelsV2QuadShankElectrode> channelMap)
+        {
+            var numberOfContacts = NumberOfContacts;
+
+            int[] newDeviceChannelIndices = new int[numberOfContacts];
+
+            for (int i = 0; i < numberOfContacts; i++)
+            {
+                newDeviceChannelIndices[i] = -1;
+            }
+
+            foreach (var e in channelMap)
+            {
+                newDeviceChannelIndices[e.Index] = e.Channel;
+            }
+
+            UpdateDeviceChannelIndices(0, newDeviceChannelIndices);
+        }
     }
 }

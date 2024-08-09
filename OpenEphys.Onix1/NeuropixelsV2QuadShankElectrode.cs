@@ -36,10 +36,10 @@ namespace OpenEphys.Onix1
         {
             Index = index;
             Shank = index / NeuropixelsV2.ElectrodePerShank;
-            IntraShankIndex = index % NeuropixelsV2.ElectrodePerShank;
-            Bank = (NeuropixelsV2QuadShankBank)(IntraShankIndex / NeuropixelsV2.ChannelCount);
-            Block = IntraShankIndex % NeuropixelsV2.ChannelCount / NeuropixelsV2.ElectrodePerBlock;
-            BlockIndex = IntraShankIndex % NeuropixelsV2.ElectrodePerBlock;
+            IntraShankElectrodeIndex = index % NeuropixelsV2.ElectrodePerShank;
+            Bank = (NeuropixelsV2QuadShankBank)(IntraShankElectrodeIndex / NeuropixelsV2.ChannelCount);
+            Block = IntraShankElectrodeIndex % NeuropixelsV2.ChannelCount / NeuropixelsV2.ElectrodePerBlock;
+            BlockIndex = IntraShankElectrodeIndex % NeuropixelsV2.ElectrodePerBlock;
             Channel = GetChannelNumber(Shank, Block, BlockIndex);
             Position = GetPosition(index);
         }
