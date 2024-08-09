@@ -242,7 +242,7 @@ namespace OpenEphys.Onix1
         {
             // shank configuration
             // NB: no read check because of ASIC bug that is documented in IMEC-API comments
-            var shankBytes = BitArrayToBytes(ShankConfig);
+            var shankBytes = BitHelper.ToBitReversedBytes(ShankConfig);
 
             WriteByte(NeuropixelsV1e.SR_LENGTH1, (uint)shankBytes.Length % 0x100);
             WriteByte(NeuropixelsV1e.SR_LENGTH2, (uint)shankBytes.Length / 0x100);
@@ -268,7 +268,7 @@ namespace OpenEphys.Onix1
                     WriteByte(NeuropixelsV1e.SOFT_RESET, 0xFF);
                     WriteByte(NeuropixelsV1e.SOFT_RESET, 0x00);
 
-                    var baseBytes = BitArrayToBytes(BaseConfigs[i]);
+                    var baseBytes = BitHelper.ToBitReversedBytes(BaseConfigs[i]);
 
                     WriteByte(NeuropixelsV1e.SR_LENGTH1, (uint)baseBytes.Length % 0x100);
                     WriteByte(NeuropixelsV1e.SR_LENGTH2, (uint)baseBytes.Length / 0x100);
@@ -292,28 +292,6 @@ namespace OpenEphys.Onix1
             // needs to be undone here
             WriteByte(NeuropixelsV1e.OP_MODE, (uint)NeuropixelsV1OperationRegisterValues.RECORD);
             WriteByte(NeuropixelsV1e.REC_MOD, (uint)NeuropixelsV1RecordRegisterValues.ACTIVE);
-        }
-
-
-        // Bits go into the shift registers MSB first
-        // This creates a *bit-reversed* byte array from a bit array
-        private static byte[] BitArrayToBytes(BitArray bits)
-        {
-            if (bits.Length == 0)
-            {
-                throw new ArgumentException("Shift register data is empty", nameof(bits));
-            }
-
-            var bytes = new byte[(bits.Length - 1) / 8 + 1];
-            bits.CopyTo(bytes, 0);
-
-            for (int i = 0; i < bytes.Length; i++)
-            {
-                // NB: http://graphics.stanford.edu/~seander/bithacks.html
-                bytes[i] = (byte)((bytes[i] * 0x0202020202ul & 0x010884422010ul) % 1023);
-            }
-
-            return bytes;
         }
     }
 }

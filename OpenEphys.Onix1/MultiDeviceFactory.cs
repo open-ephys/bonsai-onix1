@@ -6,19 +6,22 @@ namespace OpenEphys.Onix1
 {
     /// <summary>
     /// Provides an abstract base class for configuration operators responsible for
-    /// registering all devices in an ONI device aggregate in the context device table.
+    /// registering all devices within a logical group in the internal device manager.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// ONI devices are often grouped into multi-device aggregates connected to hubs or
-    /// headstages. These aggregates provide access to multiple devices through hub-specific
-    /// addresses and usually require a specific sequence of configuration steps to determine
-    /// operational port voltages and other link-specific settings.
+    /// This class allows configuration of logical groups of devices that share some common functionality
+    /// and/or require a specific sequence of interdependent configuration steps prior to acquisition. For
+    /// instance, devices on a headstage can be combined with a device on the controller
+    /// that is used to set the port voltage and monitor headstage communication status
+    /// (e.g. <see cref="ConfigureHeadstage64"/>). Alternatively, devices that share some common functionality
+    /// from the user's perspective, but share no actual interdependent configuration from the perspective of
+    /// the hardware, can be grouped for ease of use (e.g. <see cref="ConfigureBreakoutBoard"/>).
     /// </para>
     /// <para>
-    /// These multi-device aggregates are the most common starting point for configuration
-    /// of an ONI system, and the <see cref="MultiDeviceFactory"/> provides a modular abstraction
-    /// for flexible assembly and sequencing of multiple such aggregates.
+    /// These device groups are the most common starting point for configuration
+    /// of an ONIX system, and the <see cref="MultiDeviceFactory"/> provides a modular abstraction for flexible
+    /// assembly and sequencing of device groups.
     /// </para>
     /// </remarks>
     public abstract class MultiDeviceFactory : DeviceFactory, INamedElement
@@ -34,10 +37,13 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets or sets a unique hub device name.
+        /// Gets or sets a unique device group name.
         /// </summary>
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
-        [Description("The unique hub device name.")]
+        /// <remarks>
+        /// A human-readable identifier that is used as a prefix for 
+        /// the <see cref="SingleDeviceFactory.DeviceName"/> of each device in the the group. 
+        /// </remarks>
+        [Description("The unique device group name.")]
         public string Name
         {
             get { return _name; }
@@ -62,7 +68,7 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Configure all the ONI devices in the multi-device aggregate.
+        /// Configure all devices in the device group.
         /// </summary>
         /// <remarks>
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance
@@ -71,13 +77,13 @@ namespace OpenEphys.Onix1
         /// <param name="source">A sequence of <see cref="ContextTask"/> instances that hold configuration actions.</param>
         /// <returns>
         /// The original sequence modified by adding additional configuration actions required to configure
-        /// all the ONI devices in the multi-device aggregate.
+        /// all the devices in the device group.
         /// </returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             if (string.IsNullOrEmpty(_name))
             {
-                throw new InvalidOperationException("A valid hub device name must be specified.");
+                throw new InvalidOperationException("A valid device group name must be specified.");
             }
 
             var output = source;
@@ -90,3 +96,4 @@ namespace OpenEphys.Onix1
         }
     }
 }
+

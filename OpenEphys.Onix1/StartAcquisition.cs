@@ -13,7 +13,7 @@ namespace OpenEphys.Onix1
     public class StartAcquisition : Combinator<ContextTask, IGroupedObservable<uint, oni.Frame>>
     {
         /// <summary>
-        /// Gets or sets the number of bytes read by the device driver access to the read channel.
+        /// Gets or sets the number of bytes read per cycle of the <see cref="ContextTask"/>'s acquisition thread.
         /// </summary>
         /// <remarks>
         /// This option allows control over a fundamental trade-off between closed-loop response time and overall bandwidth. 
@@ -23,7 +23,7 @@ namespace OpenEphys.Onix1
         /// The optimal value depends on the host computer and hardware configuration and must be determined via testing (e.g.
         /// using <see cref="MemoryMonitorData"/>).
         /// </remarks>
-        [Description("The number of bytes read by the device driver access to the read channel.")]
+        [Description("Number of bytes read per cycle of the acquisition thread.")]
         public int ReadSize { get; set; } = 2048;
 
         /// <summary>

@@ -2,9 +2,10 @@ name: Build
  
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+  release:
+    types: [published]
 env:
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
@@ -14,7 +15,17 @@ env:
   CiRunPushSuffix: ${{ github.ref_name }}-ci${{ github.run_number }}
   CiRunPullSuffix: pull-${{ github.event.number }}-ci${{ github.run_number }}
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      build-suffix: ${{ steps.setup-build.outputs.build-suffix }}
+    steps:
+      - name: Setup Build
+        id: setup-build
+        run: echo "build-suffix=${{ github.event_name == 'push' && env.CiRunPushSuffix || github.event_name == 'pull_request' && env.CiRunPullSuffix || null }}" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: [setup]
     strategy:
       fail-fast: false
       matrix:
@@ -25,6 +36,8 @@ jobs:
             configuration: release
             collect-packages: true
     runs-on: ${{ matrix.os }}
+    env:
+      CiBuildVersionSuffix: ${{ needs.setup.outputs.build-suffix }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,8 +56,6 @@ jobs:
       - name: Pack
         id: pack
         if: matrix.collect-packages
-        env:
-          CiBuildVersionSuffix: ${{ github.event_name == 'push' && env.CiRunPushSuffix || env.CiRunPullSuffix }}
         run: dotnet pack --no-build --configuration ${{ matrix.configuration }}
 
       - name: Collect packages
@@ -60,7 +71,7 @@ jobs:
     permissions:
       packages: write
     needs: [build]
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || github.event_name == 'release'
     steps:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
