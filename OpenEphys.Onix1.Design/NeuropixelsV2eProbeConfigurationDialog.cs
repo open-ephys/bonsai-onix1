@@ -566,10 +566,6 @@ namespace OpenEphys.Onix1.Design
                 {
                     DialogResult = DialogResult.OK;
                 }
-                else if (button.Name == nameof(buttonCancel))
-                {
-                    DialogResult = DialogResult.Cancel;
-                }
                 else if (button.Name == nameof(buttonChooseCalibrationFile))
                 {
                     var ofd = new OpenFileDialog()

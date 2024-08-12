@@ -124,8 +124,9 @@ namespace OpenEphys.Onix1
         public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2QuadShankProbeConfiguration probeConfiguration)
         {
             Reference = probeConfiguration.Reference;
-            ChannelMap = probeConfiguration.ChannelMap;
-            ChannelConfiguration = new(probeConfiguration.ChannelConfiguration);
+            ChannelConfiguration = new();
+            ChannelConfiguration.UpdateDeviceChannelIndices(probeConfiguration.ChannelMap);
+            ChannelMap = NeuropixelsV2eProbeGroup.ToChannelMap(ChannelConfiguration);
             Probe = probeConfiguration.Probe;
         }
 
@@ -140,8 +141,9 @@ namespace OpenEphys.Onix1
         [JsonConstructor]
         public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2eProbeGroup channelConfiguration, NeuropixelsV2QuadShankReference reference, NeuropixelsV2Probe probe)
         {
-            ChannelConfiguration = channelConfiguration;
             ChannelMap = NeuropixelsV2eProbeGroup.ToChannelMap(channelConfiguration);
+            ChannelConfiguration = new();
+            ChannelConfiguration.UpdateDeviceChannelIndices(ChannelMap);
             Reference = reference;
             Probe = probe;
         }

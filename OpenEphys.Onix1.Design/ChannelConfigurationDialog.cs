@@ -86,15 +86,29 @@ namespace OpenEphys.Onix1.Design
             if (newState.Type == ZoomState.StateType.Zoom || newState.Type == ZoomState.StateType.WheelZoom)
             {
                 SetEqualAxisLimits(sender);
-                CheckZoomBoundaries(sender);
-                CenterAxesOnCursor(sender);
+
+                if (CheckZoomBoundaries(sender))
+                {
+                    CenterAxesOnCursor(sender);
+                    CheckProbeIsInView(sender);
+                }
+                else
+                {
+                    sender.ZoomOut(sender.GraphPane);
+                }
+            }
+            else if (newState.Type == ZoomState.StateType.Pan)
+            {
+                CheckProbeIsInView(sender);
             }
         }
 
         private void SetEqualAxisLimits(ZedGraphControl zedGraphControl)
         {
-            var rangeX = zedGraphControl.GraphPane.XAxis.Scale.Max - zedGraphControl.GraphPane.XAxis.Scale.Min;
-            var rangeY = zedGraphControl.GraphPane.YAxis.Scale.Max - zedGraphControl.GraphPane.YAxis.Scale.Min;
+            var rangeX = CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale);
+            var rangeY = CalculateScaleRange(zedGraphControl.GraphPane.YAxis.Scale);
+
+            if (rangeX == rangeY) return;
 
             if (rangeX > rangeY)
             {
@@ -114,15 +128,25 @@ namespace OpenEphys.Onix1.Design
 
         private void CenterAxesOnCursor(ZedGraphControl zedGraphControl)
         {
+            if ((zedGraphControl.GraphPane.XAxis.Scale.Min == ZoomOutBoundaryMinX &&
+                zedGraphControl.GraphPane.XAxis.Scale.Max == ZoomOutBoundaryMaxX &&
+                zedGraphControl.GraphPane.YAxis.Scale.Min == ZoomOutBoundaryMinY &&
+                zedGraphControl.GraphPane.YAxis.Scale.Max == ZoomOutBoundaryMaxY) ||
+                (CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale) == ZoomInBoundaryX &&
+                CalculateScaleRange(zedGraphControl.GraphPane.YAxis.Scale) == ZoomInBoundaryY))
+            {
+                return;
+            }
+
             var mouseClientPosition = PointToClient(Cursor.Position);
             mouseClientPosition.X -= (zedGraphControl.Parent.Width - zedGraphControl.Width) / 2;
 
             var currentMousePosition = TransformPixelsToCoordinates(mouseClientPosition, zedGraphControl.GraphPane);
 
-            var centerX = CalculateRange(zedGraphChannels.GraphPane.XAxis.Scale) / 2 +
+            var centerX = CalculateScaleRange(zedGraphChannels.GraphPane.XAxis.Scale) / 2 +
                 zedGraphControl.GraphPane.XAxis.Scale.Min;
 
-            var centerY = CalculateRange(zedGraphChannels.GraphPane.YAxis.Scale) / 2 +
+            var centerY = CalculateScaleRange(zedGraphChannels.GraphPane.YAxis.Scale) / 2 +
                 zedGraphControl.GraphPane.YAxis.Scale.Min;
 
             var diffX = centerX - currentMousePosition.X;
@@ -135,7 +159,174 @@ namespace OpenEphys.Onix1.Design
             zedGraphControl.GraphPane.YAxis.Scale.Max += diffY;
         }
 
-        private static double CalculateRange(Scale scale)
+        private struct ProbeEdge
+        {
+            public double Left;
+            public double Bottom;
+            public double Right;
+            public double Top;
+
+            public ProbeEdge(ZedGraphControl zedGraphControl)
+            {
+                Left = GetProbeContourMinX(zedGraphControl.GraphPane.GraphObjList);
+                Right = GetProbeContourMaxX(zedGraphControl.GraphPane.GraphObjList);
+                Bottom = GetProbeContourMinY(zedGraphControl.GraphPane.GraphObjList);
+                Top = GetProbeContourMaxY(zedGraphControl.GraphPane.GraphObjList);
+            }
+        }
+
+        private struct ScaleEdge
+        {
+            public double Left;
+            public double Bottom;
+            public double Right;
+            public double Top;
+
+            public ScaleEdge(ZedGraphControl zedGraphControl)
+            {
+                Left = zedGraphControl.GraphPane.XAxis.Scale.Min;
+                Right = zedGraphControl.GraphPane.XAxis.Scale.Max;
+                Bottom = zedGraphControl.GraphPane.YAxis.Scale.Min;
+                Top = zedGraphControl.GraphPane.YAxis.Scale.Max;
+            }
+        }
+
+        private void CheckProbeIsInView(ZedGraphControl zedGraphControl)
+        {
+            var probeEdge = new ProbeEdge(zedGraphControl);
+            var scaleEdge = new ScaleEdge(zedGraphControl);
+
+            var rangeX = CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale);
+            var rangeY = CalculateScaleRange(zedGraphControl.GraphPane.YAxis.Scale);
+
+            var boundaryX = rangeX / 4;
+            var boundaryY = rangeY / 4;
+
+            if (IsProbeCentered(probeEdge, scaleEdge))
+            {
+                return;
+            }
+            else if (IsProbeCenteredX(probeEdge, scaleEdge))
+            {
+                if (IsProbeTooHigh(probeEdge, scaleEdge, boundaryY))
+                {
+                    MoveProbeDown(zedGraphControl, probeEdge, scaleEdge, boundaryY);
+                }
+                else if (IsProbeTooLow(probeEdge, scaleEdge, boundaryY))
+                {
+                    MoveProbeUp(zedGraphControl, probeEdge, scaleEdge, boundaryY);
+                }
+            }
+            else if (IsProbeCenteredY(probeEdge, scaleEdge))
+            {
+                if (IsProbeTooLeft(probeEdge, scaleEdge, boundaryX))
+                {
+                    MoveProbeRight(zedGraphControl, probeEdge, scaleEdge, boundaryX);
+                }
+                else if (IsProbeTooRight(probeEdge, scaleEdge, boundaryX))
+                {
+                    MoveProbeLeft(zedGraphControl, probeEdge, scaleEdge, boundaryX);
+                }
+            }
+            else
+            {
+                if (IsProbeTooHigh(probeEdge, scaleEdge, boundaryY))
+                {
+                    MoveProbeDown(zedGraphControl, probeEdge, scaleEdge, boundaryY);
+                }
+                else if (IsProbeTooLow(probeEdge, scaleEdge, boundaryY))
+                {
+                    MoveProbeUp(zedGraphControl, probeEdge, scaleEdge, boundaryY);
+                }
+
+                if (IsProbeTooLeft(probeEdge, scaleEdge, boundaryX))
+                {
+                    MoveProbeRight(zedGraphControl, probeEdge, scaleEdge, boundaryX);
+                }
+                else if (IsProbeTooRight(probeEdge, scaleEdge, boundaryX))
+                {
+                    MoveProbeLeft(zedGraphControl, probeEdge, scaleEdge, boundaryX);
+                }
+            }
+        }
+
+        private void MoveProbeLeft(ZedGraphControl zedGraphControl, ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
+        {
+            bool probeSmallerThanScale = probeEdge.Right - probeEdge.Left < scaleEdge.Right - scaleEdge.Left;
+
+            double diff = probeSmallerThanScale ? probeEdge.Right - scaleEdge.Right : probeEdge.Left - (scaleEdge.Left + boundary);
+
+            zedGraphControl.GraphPane.XAxis.Scale.Min += diff;
+            zedGraphControl.GraphPane.XAxis.Scale.Max += diff;
+        }
+
+        private bool IsProbeTooRight(ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
+        {
+            return probeEdge.Left > scaleEdge.Left + boundary;
+        }
+
+        private void MoveProbeRight(ZedGraphControl zedGraphControl, ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
+        {
+            bool probeSmallerThanScale = probeEdge.Right - probeEdge.Left < scaleEdge.Right - scaleEdge.Left;
+
+            var diff = probeSmallerThanScale ? probeEdge.Left - scaleEdge.Left : probeEdge.Right - (scaleEdge.Right - boundary);
+
+            zedGraphControl.GraphPane.XAxis.Scale.Min += diff;
+            zedGraphControl.GraphPane.XAxis.Scale.Max += diff;
+        }
+
+        private bool IsProbeTooLeft(ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
+        {
+            return probeEdge.Right < scaleEdge.Right - boundary;
+        }
+
+        private void MoveProbeUp(ZedGraphControl zedGraphControl, ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
+        {
+            var diff = probeEdge.Top - (scaleEdge.Top - boundary);
+
+            zedGraphControl.GraphPane.YAxis.Scale.Min += diff;
+            zedGraphControl.GraphPane.YAxis.Scale.Max += diff;
+        }
+
+        private bool IsProbeTooLow(ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
+        {
+            return probeEdge.Top < scaleEdge.Top - boundary;
+        }
+
+        private void MoveProbeDown(ZedGraphControl zedGraphControl, ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
+        {
+            var diff = probeEdge.Bottom - (scaleEdge.Bottom + boundary);
+
+            zedGraphControl.GraphPane.YAxis.Scale.Min += diff;
+            zedGraphControl.GraphPane.YAxis.Scale.Max += diff;
+        }
+
+        private bool IsProbeTooHigh(ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
+        {
+            return probeEdge.Bottom > scaleEdge.Bottom + boundary;
+        }
+
+        private bool IsProbeCenteredY(ProbeEdge probeEdge, ScaleEdge scaleEdge)
+        {
+            return probeEdge.Bottom >= scaleEdge.Bottom && probeEdge.Top <= scaleEdge.Top ||
+                   probeEdge.Bottom <= scaleEdge.Bottom && probeEdge.Top >= scaleEdge.Top;
+        }
+
+        private bool IsProbeCenteredX(ProbeEdge probeEdge, ScaleEdge scaleEdge)
+        {
+            return probeEdge.Left >= scaleEdge.Left && probeEdge.Right <= scaleEdge.Right ||
+                   probeEdge.Left <= scaleEdge.Left && probeEdge.Right >= scaleEdge.Right;
+        }
+
+        private bool IsProbeCentered(ProbeEdge probeEdge, ScaleEdge scaleEdge)
+        {
+            return (probeEdge.Left >= scaleEdge.Left && probeEdge.Right <= scaleEdge.Right &&
+                    probeEdge.Bottom >= scaleEdge.Bottom && probeEdge.Top <= scaleEdge.Top) ||
+                   (probeEdge.Left <= scaleEdge.Left && probeEdge.Right >= scaleEdge.Right &&
+                    probeEdge.Bottom <= scaleEdge.Bottom && probeEdge.Top >= scaleEdge.Top);
+        }
+
+        private static double CalculateScaleRange(Scale scale)
         {
             return scale.Max - scale.Min;
         }
@@ -146,10 +337,10 @@ namespace OpenEphys.Onix1.Design
         /// <remarks>
         /// When zooming in excessively, it is possible to lose view of the entire probe and make it
         /// difficult to zoom back out. This value is the boundary, where if the current zoom would make the x-axis
-        /// less than <see cref="ZoomBoundaryX"/>, <see cref="CheckZoomBoundaries(ZedGraphControl)"/> would 
-        /// automatically zoom back out to match <see cref="ZoomBoundaryX"/>.
+        /// less than <see cref="ZoomInBoundaryX"/>, <see cref="CheckZoomBoundaries(ZedGraphControl)"/> would 
+        /// automatically zoom back out to match <see cref="ZoomInBoundaryX"/>.
         /// </remarks>
-        public double ZoomBoundaryX { get; internal set; } = 20;
+        public double ZoomInBoundaryX { get; internal set; } = 20;
 
         /// <summary>
         /// Gets the value of the zoom boundary on the y-axis.
@@ -157,44 +348,57 @@ namespace OpenEphys.Onix1.Design
         /// <remarks>
         /// When zooming in excessively, it is possible to lose view of the entire probe and make it
         /// difficult to zoom back out. This value is the boundary, where if the current zoom would make the y-axis
-        /// less than <see cref="ZoomBoundaryY"/>, <see cref="CheckZoomBoundaries(ZedGraphControl)"/> would 
-        /// automatically zoom back out to match <see cref="ZoomBoundaryY"/>.
+        /// less than <see cref="ZoomInBoundaryY"/>, <see cref="CheckZoomBoundaries(ZedGraphControl)"/> would 
+        /// automatically zoom back out to match <see cref="ZoomInBoundaryY"/>.
         /// </remarks>
-        public double ZoomBoundaryY { get; internal set; } = 20;
+        public double ZoomInBoundaryY { get; internal set; } = 20;
 
         /// <summary>
-        /// Checks if the <see cref="ZedGraphControl"/> is too zoomed in. If the graph is too zoomed in,
-        /// reset the boundaries to match <see cref="ZoomBoundaryX"/> and <see cref="ZoomBoundaryY"/>.
+        /// Checks if the <see cref="ZedGraphControl"/> is too zoomed in or out. If the graph is too zoomed in,
+        /// reset the boundaries to match <see cref="ZoomInBoundaryX"/> and <see cref="ZoomInBoundaryY"/>. If the graph is too zoomed out,
+        /// reset the boundaries to match the automatically generated boundaries based on the size of the probe.
         /// </summary>
         /// <param name="zedGraphControl">A <see cref="ZedGraphControl"/> object.</param>
-        /// <returns>True if the control is zoomed out, false if it is zoomed in too far.</returns>
+        /// <returns>True if the zoom boundary has been correctly handled, False if the previous zoom state should be reinstated.</returns>
         private bool CheckZoomBoundaries(ZedGraphControl zedGraphControl)
         {
-            var rangeX = CalculateRange(zedGraphControl.GraphPane.XAxis.Scale);
-            var rangeY = CalculateRange(zedGraphControl.GraphPane.YAxis.Scale);
+            var rangeX = CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale);
+            var rangeY = CalculateScaleRange(zedGraphControl.GraphPane.YAxis.Scale);
 
-            if (rangeX < ZoomBoundaryX || rangeY < ZoomBoundaryY)
+            if (rangeX < ZoomInBoundaryX || rangeY < ZoomInBoundaryY)
             {
-                if (rangeX < ZoomBoundaryX)
+                if (rangeX / ZoomInBoundaryX == zedGraphControl.ZoomStepFraction || rangeY / ZoomInBoundaryY == zedGraphControl.ZoomStepFraction)
+                    return false;
+                else
                 {
-                    var diffX = (ZoomBoundaryX - rangeX) / 2;
+                    var diff = (ZoomInBoundaryX - rangeX) / 2;
+                    zedGraphControl.GraphPane.XAxis.Scale.Min -= diff;
+                    zedGraphControl.GraphPane.XAxis.Scale.Max += diff;
 
-                    zedGraphControl.GraphPane.XAxis.Scale.Min -= diffX;
-                    zedGraphControl.GraphPane.XAxis.Scale.Max += diffX;
+                    diff = (ZoomInBoundaryY - rangeY) / 2;
+                    zedGraphControl.GraphPane.YAxis.Scale.Min -= diff;
+                    zedGraphControl.GraphPane.YAxis.Scale.Max += diff;
+
+                    return true;
                 }
-
-                if (rangeY < ZoomBoundaryY)
-                {
-                    var diffY = (ZoomBoundaryY - rangeY) / 2;
-
-                    zedGraphControl.GraphPane.YAxis.Scale.Min -= diffY;
-                    zedGraphControl.GraphPane.YAxis.Scale.Max += diffY;
-                }
-
-                return false;
             }
+            else
+            {
+                if (zedGraphControl.GraphPane.XAxis.Scale.Min < ZoomOutBoundaryMinX && zedGraphControl.GraphPane.XAxis.Scale.Max > ZoomOutBoundaryMaxX ||
+                    CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale) >= ZoomOutBoundaryMaxX - ZoomOutBoundaryMinX)
+                {
+                    zedGraphControl.GraphPane.XAxis.Scale.Min = ZoomOutBoundaryMinX;
+                    zedGraphControl.GraphPane.XAxis.Scale.Max = ZoomOutBoundaryMaxX;
+                }
+                if (zedGraphControl.GraphPane.YAxis.Scale.Min < ZoomOutBoundaryMinY && zedGraphControl.GraphPane.YAxis.Scale.Max > ZoomOutBoundaryMaxY ||
+                    CalculateScaleRange(zedGraphControl.GraphPane.YAxis.Scale) >= ZoomOutBoundaryMaxY - ZoomOutBoundaryMinY)
+                {
+                    zedGraphControl.GraphPane.YAxis.Scale.Min = ZoomOutBoundaryMinY;
+                    zedGraphControl.GraphPane.YAxis.Scale.Max = ZoomOutBoundaryMaxY;
+                }
 
-            return true;
+                return true;
+            }
         }
 
         private void FormShown(object sender, EventArgs e)
@@ -267,12 +471,18 @@ namespace OpenEphys.Onix1.Design
 
             DrawProbeContour();
             SetEqualAspectRatio();
+            SetZoomOutBoundaries();
             DrawContacts();
             HighlightEnabledContacts();
             HighlightSelectedContacts();
             DrawContactLabels();
             DrawScale();
         }
+
+        private double ZoomOutBoundaryMinX = default;
+        private double ZoomOutBoundaryMaxX = default;
+        private double ZoomOutBoundaryMinY = default;
+        private double ZoomOutBoundaryMaxY = default;
 
         internal void DrawProbeContour()
         {
@@ -291,15 +501,29 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
+        private void SetZoomOutBoundaries()
+        {
+            // TODO: These boundaries need to be redefined when loading a new file
+            var rangeX = CalculateScaleRange(zedGraphChannels.GraphPane.XAxis.Scale);
+            var rangeY = CalculateScaleRange(zedGraphChannels.GraphPane.YAxis.Scale);
+
+            var margin = Math.Min(rangeX, rangeY) * 0.02;
+
+            ZoomOutBoundaryMinX = zedGraphChannels.GraphPane.XAxis.Scale.Min - margin;
+            ZoomOutBoundaryMinY = zedGraphChannels.GraphPane.YAxis.Scale.Min - margin;
+            ZoomOutBoundaryMaxX = zedGraphChannels.GraphPane.XAxis.Scale.Max + margin;
+            ZoomOutBoundaryMaxY = zedGraphChannels.GraphPane.YAxis.Scale.Max + margin;
+        }
+
         internal void SetEqualAspectRatio()
         {
             if (zedGraphChannels.GraphPane.GraphObjList.Count == 0)
                 return;
 
-            var minX = MinX(zedGraphChannels.GraphPane.GraphObjList);
-            var minY = MinY(zedGraphChannels.GraphPane.GraphObjList);
-            var maxX = MaxX(zedGraphChannels.GraphPane.GraphObjList);
-            var maxY = MaxY(zedGraphChannels.GraphPane.GraphObjList);
+            var minX = GetProbeContourMinX(zedGraphChannels.GraphPane.GraphObjList);
+            var minY = GetProbeContourMinY(zedGraphChannels.GraphPane.GraphObjList);
+            var maxX = GetProbeContourMaxX(zedGraphChannels.GraphPane.GraphObjList);
+            var maxY = GetProbeContourMaxY(zedGraphChannels.GraphPane.GraphObjList);
 
             var rangeX = maxX - minX;
             var rangeY = maxY - minY;
@@ -319,13 +543,11 @@ namespace OpenEphys.Onix1.Design
                 maxX += diff;
             }
 
-            var margin = Math.Max(rangeX, rangeY) * 0.02;
+            zedGraphChannels.GraphPane.XAxis.Scale.Min = minX;
+            zedGraphChannels.GraphPane.XAxis.Scale.Max = maxX;
 
-            zedGraphChannels.GraphPane.XAxis.Scale.Min = minX - margin;
-            zedGraphChannels.GraphPane.XAxis.Scale.Max = maxX + margin;
-
-            zedGraphChannels.GraphPane.YAxis.Scale.Min = minY - margin;
-            zedGraphChannels.GraphPane.YAxis.Scale.Max = maxY + margin;
+            zedGraphChannels.GraphPane.YAxis.Scale.Min = minY;
+            zedGraphChannels.GraphPane.YAxis.Scale.Max = maxY;
         }
 
         internal void DrawContacts()
@@ -556,25 +778,25 @@ namespace OpenEphys.Onix1.Design
             return 1f;
         }
 
-        internal static double MinX(GraphObjList graphObjs)
+        internal static double GetProbeContourMinX(GraphObjList graphObjs)
         {
             return graphObjs.OfType<PolyObj>()
                             .Min(obj => { return obj.Points.Min(p => p.X); });
         }
 
-        internal static double MinY(GraphObjList graphObjs)
+        internal static double GetProbeContourMinY(GraphObjList graphObjs)
         {
             return graphObjs.OfType<PolyObj>()
                             .Min(obj => { return obj.Points.Min(p => p.Y); });
         }
 
-        internal static double MaxX(GraphObjList graphObjs)
+        internal static double GetProbeContourMaxX(GraphObjList graphObjs)
         {
             return graphObjs.OfType<PolyObj>()
                             .Max(obj => { return obj.Points.Max(p => p.X); });
         }
 
-        internal static double MaxY(GraphObjList graphObjs)
+        internal static double GetProbeContourMaxY(GraphObjList graphObjs)
         {
             return graphObjs.OfType<PolyObj>()
                             .Max(obj => { return obj.Points.Max(p => p.Y); });
@@ -673,8 +895,7 @@ namespace OpenEphys.Onix1.Design
             UpdateControlSizeBasedOnAxisSize();
             UpdateFontSize();
             DrawScale();
-            zedGraphChannels.AxisChange();
-            zedGraphChannels.Refresh();
+            RefreshZedGraph();
         }
 
         /// <summary>
@@ -738,16 +959,6 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        internal void ManualZoom(double zoomFactor)
-        {
-            var center = new PointF(zedGraphChannels.GraphPane.Rect.Left + zedGraphChannels.GraphPane.Rect.Width / 2,
-                                    zedGraphChannels.GraphPane.Rect.Top  + zedGraphChannels.GraphPane.Rect.Height / 2);
-
-            zedGraphChannels.ZoomPane(zedGraphChannels.GraphPane, 1 / zoomFactor, center, false);
-
-            UpdateFontSize();
-        }
-
         internal void ResetZoom()
         {
             zedGraphChannels.ZoomOutAll(zedGraphChannels.GraphPane);
@@ -772,8 +983,8 @@ namespace OpenEphys.Onix1.Design
 
             var currentRange = zedGraphChannels.GraphPane.YAxis.Scale.Max - zedGraphChannels.GraphPane.YAxis.Scale.Min;
 
-            var minY = MinY(zedGraphChannels.GraphPane.GraphObjList);
-            var maxY = MaxY(zedGraphChannels.GraphPane.GraphObjList);
+            var minY = GetProbeContourMinY(zedGraphChannels.GraphPane.GraphObjList);
+            var maxY = GetProbeContourMaxY(zedGraphChannels.GraphPane.GraphObjList);
 
             var newMinY = (maxY - minY - currentRange) * relativePosition;
 
@@ -783,8 +994,8 @@ namespace OpenEphys.Onix1.Design
 
         internal float GetRelativeVerticalPosition()
         {
-            var minY = MinY(zedGraphChannels.GraphPane.GraphObjList);
-            var maxY = MaxY(zedGraphChannels.GraphPane.GraphObjList);
+            var minY = GetProbeContourMinY(zedGraphChannels.GraphPane.GraphObjList);
+            var maxY = GetProbeContourMaxY(zedGraphChannels.GraphPane.GraphObjList);
 
             var currentRange = zedGraphChannels.GraphPane.YAxis.Scale.Max - zedGraphChannels.GraphPane.YAxis.Scale.Min;
 

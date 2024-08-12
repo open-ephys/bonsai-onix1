@@ -41,8 +41,8 @@ namespace OpenEphys.Onix1.Design
 
             ProbeConfiguration = probeConfiguration;
 
-            ZoomBoundaryX = 400;
-            ZoomBoundaryY = 400;
+            ZoomInBoundaryX = 600;
+            ZoomInBoundaryY = 600;
 
             HighlightEnabledContacts();
             UpdateContactLabels();
@@ -138,9 +138,9 @@ namespace OpenEphys.Onix1.Design
             var majorTickOffset = MajorTickLength + GetXRange(zedGraphChannels) * 0.015;
             majorTickOffset = majorTickOffset > 50 ? 50 : majorTickOffset;
 
-            var x = MaxX(zedGraphChannels.GraphPane.GraphObjList) + 100;
-            var minY = MinY(zedGraphChannels.GraphPane.GraphObjList);
-            var maxY = MaxY(zedGraphChannels.GraphPane.GraphObjList);
+            var x = GetProbeContourMaxX(zedGraphChannels.GraphPane.GraphObjList) + 50;
+            var minY = GetProbeContourMinY(zedGraphChannels.GraphPane.GraphObjList);
+            var maxY = GetProbeContourMaxY(zedGraphChannels.GraphPane.GraphObjList);
 
             zedGraphChannels.GraphPane.CurveList.Clear();
 
