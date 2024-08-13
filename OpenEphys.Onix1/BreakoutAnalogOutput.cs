@@ -37,7 +37,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <param name="source"> A sequence of 12xN sample matrices containing the analog data to write to channels 0 to 11.</param>
         /// <returns> A sequence of 12xN sample matrices containing the analog data that were written to channels 0 to 11.</returns>
-        public override IObservable<Mat> Process(IObservable<Mat> source)
+        public override unsafe IObservable<Mat> Process(IObservable<Mat> source)
         {
             var dataType = DataType;
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
@@ -87,7 +87,14 @@ namespace OpenEphys.Onix1
                     }
 
                     var dataSize = outputBuffer.Step * outputBuffer.Rows;
-                    device.Write(outputBuffer.Data, dataSize);
+
+                    // twos-complement to offset binary
+                    var dataPtr = (short *)outputBuffer.Data.ToPointer();
+                    const short Mask = -32768;
+                    for (int i = 0; i < dataSize / sizeof(short); i++)
+                        *(dataPtr + i) ^= Mask;
+
+                     device.Write(outputBuffer.Data, dataSize);
                 });
             });
         }
@@ -108,6 +115,12 @@ namespace OpenEphys.Onix1
                 return source.Do(data =>
                 {
                     AssertChannelCount(data.Length);
+                    var samples = new ushort[data.Length];
+                    for (int i = 0; i < samples.Length; i++)
+                    {
+                        const short Mask = -32768;
+                        data[i] ^= Mask; // twos-complement to offset binary
+                    }
                     device.Write(data);
                 });
             });
@@ -130,10 +143,10 @@ namespace OpenEphys.Onix1
                 return source.Do(data =>
                 {
                     AssertChannelCount(data.Length);
-                    var samples = new short[data.Length];
+                    var samples = new ushort[data.Length];
                     for (int i = 0; i < samples.Length; i++)
                     {
-                        samples[i] = (short)(data[i] * divisionsPerVolt);
+                        samples[i] = (ushort)(data[i] * divisionsPerVolt + BreakoutAnalogIO.DacMidScale);
                     }
 
                     device.Write(samples);
