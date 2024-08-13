@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
-using OpenEphys.ProbeInterface;
+using OpenEphys.ProbeInterface.NET;
 
 namespace OpenEphys.Onix1
 {

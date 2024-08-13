@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using OpenEphys.ProbeInterface;
+using OpenEphys.ProbeInterface.NET;
 using ZedGraph;
 
 namespace OpenEphys.Onix1.Design
@@ -57,6 +57,10 @@ namespace OpenEphys.Onix1.Design
         internal override void LoadDefaultChannelLayout()
         {
             ProbeConfiguration = new(ProbeConfiguration.Probe, ProbeConfiguration.Reference);
+            ChannelConfiguration = ProbeConfiguration.ChannelConfiguration;
+
+            DrawProbeGroup();
+            RefreshZedGraph();
 
             OnFileOpenHandler();
         }

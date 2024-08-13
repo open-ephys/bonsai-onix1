@@ -54,6 +54,7 @@ namespace OpenEphys.Onix1
         /// Each probe must be provided with a gain calibration file that contains calibration data
         /// specific to each probe. This file is mandatory for accurate recordings.
         /// </remarks>
+        [Category(ConfigurationCategory)]
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the gain calibration file for probe A.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
@@ -73,6 +74,7 @@ namespace OpenEphys.Onix1
         /// Each probe must be provided with a gain calibration file that contains calibration data
         /// specific to each probe. This file is mandatory for accurate recordings.
         /// </remarks>
+        [Category(ConfigurationCategory)]
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the gain calibration file for probe B.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]

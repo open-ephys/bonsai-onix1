@@ -4,7 +4,7 @@ using System.Linq;
 using System.Windows.Forms;
 using ZedGraph;
 using System;
-using OpenEphys.ProbeInterface;
+using OpenEphys.ProbeInterface.NET;
 using System.Collections.Generic;
 
 namespace OpenEphys.Onix1.Design
@@ -19,7 +19,7 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// Local variable that holds the channel configuration in memory until the user presses Okay
         /// </summary>
-        ProbeGroup ChannelConfiguration;
+        internal ProbeGroup ChannelConfiguration;
 
         internal readonly List<int> ReferenceContacts = new();
 
