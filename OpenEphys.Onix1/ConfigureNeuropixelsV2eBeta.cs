@@ -51,8 +51,11 @@ namespace OpenEphys.Onix1
         /// Gets or sets the path to the gain calibration file for Probe A.
         /// </summary>
         /// <remarks>
-        /// Each probe must be provided with a gain calibration file that contains calibration data
-        /// specific to each probe. This file is mandatory for accurate recordings.
+        /// Each probe is linked to a gain calibration file that contains a gain adjustments determined by IMEC during
+        /// factory testing. Electrode voltages are scaled using these values to ensure they can be accurately compared
+        /// across probes. Therefore, using the correct gain calibration file is mandatory to create standardized recordings.
+        /// If you have lost track of the gain calibration file for your probe, you can email IMEC at neuropixels.info@imec.be
+        /// with the probe serial number to retrieve a new copy.
         /// </remarks>
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the gain calibration file for probe A.")]
@@ -70,8 +73,11 @@ namespace OpenEphys.Onix1
         /// Gets or sets the path to the gain calibration file for Probe B.
         /// </summary>
         /// <remarks>
-        /// Each probe must be provided with a gain calibration file that contains calibration data
-        /// specific to each probe. This file is mandatory for accurate recordings.
+        /// Each probe is linked to a gain calibration file that contains a gain adjustments determined by IMEC during
+        /// factory testing. Electrode voltages are scaled using these values to ensure they can be accurately compared
+        /// across probes. Therefore, using the correct gain calibration file is mandatory to create standardized recordings.
+        /// If you have lost track of the gain calibration file for your probe, you can email IMEC at neuropixels.info@imec.be
+        /// with the probe serial number to retrieve a new copy.
         /// </remarks>
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the gain calibration file for probe B.")]
