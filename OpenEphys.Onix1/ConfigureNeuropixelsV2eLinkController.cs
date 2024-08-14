@@ -29,7 +29,7 @@ namespace OpenEphys.Onix1
 
         void SetVoltage(DeviceContext device, double voltage)
         {
-            device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
+            device.WriteRegister(PortController.PORTVOLTAGE, 0);
             Thread.Sleep(200);
             device.WriteRegister(FmcLinkController.PORTVOLTAGE, (uint)(10 * voltage));
             Thread.Sleep(200);

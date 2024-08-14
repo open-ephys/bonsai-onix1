@@ -88,11 +88,47 @@ namespace OpenEphys.Onix1
 
         public const uint LINKSTATE_PP = 0x2; // parity check pass bit
         public const uint LINKSTATE_SL = 0x1; // SERDES lock bit
+
+        internal class NameConverter : DeviceNameConverter
+        {
+            public NameConverter()
+                : base(typeof(FmcLinkController))
+            {
+            }
+        }
     }
 
     internal enum HubConfiguration
     {
         Standard,
         Passthrough
+    }
+
+    /// <summary>
+    /// Specifies the headstage port status codes.
+    /// </summary>
+    [Flags]
+    public enum PortStatusCode : byte
+    {
+        /// <summary>
+        /// Specifies nominal communication status.
+        /// </summary>
+        Nominal = 0x0,
+        /// <summary>
+        /// Specifies a cyclic redundancy check failure.
+        /// </summary>
+        CrcError = 0x1,
+        /// <summary>
+        /// Specifies too many devices were indicated in the hub device table.
+        /// </summary>
+        TooManyDevices = 0x2,
+        /// <summary>
+        /// Specifies a hub initialization error.
+        /// </summary>
+        InitializationError = 0x4,
+        /// <summary>
+        /// Specifies the receipt of a badly formed data packet.
+        /// </summary>
+        BadPacketFormat = 0x8,
     }
 }
