@@ -51,7 +51,7 @@ namespace OpenEphys.Onix1
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
                 ConfigureDeserializer(device);
                 ConfigureBno055(device);
-                var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
+                var deviceInfo = new NeuropixelsV2eBno055DeviceInfo(context, DeviceType, deviceAddress, enable);
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
         }
@@ -90,5 +90,16 @@ namespace OpenEphys.Onix1
             {
             }
         }
+    }
+
+    class NeuropixelsV2eBno055DeviceInfo : DeviceInfo
+    {
+        public NeuropixelsV2eBno055DeviceInfo(ContextTask context, Type deviceType, uint deviceAddress, bool enable)
+            : base(context, deviceType, deviceAddress)
+        {
+            Enable = enable;
+        }
+
+        public bool Enable { get; }
     }
 }
