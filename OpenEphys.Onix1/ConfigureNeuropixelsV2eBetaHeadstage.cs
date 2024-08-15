@@ -4,13 +4,13 @@ using System.ComponentModel;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that configures a NeuropixelsV2eBeta headstage.
+    /// A class that configures a NeuropixelsV2eBeta headstage on the specified port.
     /// </summary>
     [Description("Configures a NeuropixelsV2eBeta headstage.")]
     public class ConfigureNeuropixelsV2eBetaHeadstage : MultiDeviceFactory
     {
         PortName port;
-        readonly ConfigureNeuropixelsV2eLinkController LinkController = new();
+        readonly ConfigureNeuropixelsV2ePortController LinkController = new();
 
         /// <summary>
         /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV2eBetaHeadstage"/> class.

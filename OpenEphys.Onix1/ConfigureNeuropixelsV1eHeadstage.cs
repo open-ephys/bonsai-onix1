@@ -5,13 +5,13 @@ using System.Threading;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that configures a NeuropixelsV1e headstage.
+    /// A class that configures a NeuropixelsV1e headstage on the specified port.
     /// </summary>
     [Description("Configures a NeuropixelsV1e headstage.")]
     public class ConfigureNeuropixelsV1eHeadstage : MultiDeviceFactory
     {
         PortName port;
-        readonly ConfigureNeuropixelsV1eLinkController LinkController = new();
+        readonly ConfigureNeuropixelsV1ePortController LinkController = new();
 
         /// <summary>
         /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV1eHeadstage"/> class.
@@ -83,7 +83,7 @@ namespace OpenEphys.Onix1
             yield return Bno055;
         }
 
-        class ConfigureNeuropixelsV1eLinkController : ConfigureFmcLinkController
+        class ConfigureNeuropixelsV1ePortController : ConfigurePortController
         {
             protected override bool ConfigurePortVoltage(DeviceContext device)
             {
@@ -108,9 +108,9 @@ namespace OpenEphys.Onix1
 
             void SetVoltage(DeviceContext device, double voltage)
             {
-                device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
+                device.WriteRegister(PortController.PORTVOLTAGE, 0);
                 Thread.Sleep(200);
-                device.WriteRegister(FmcLinkController.PORTVOLTAGE, (uint)(10 * voltage));
+                device.WriteRegister(PortController.PORTVOLTAGE, (uint)(10 * voltage));
                 Thread.Sleep(200);
             }
         }

@@ -5,13 +5,13 @@ using System.Threading;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that configures an ONIX headstage-64 in the specified port.
+    /// A class that configures an ONIX headstage-64 on the specified port.
     /// </summary>
     [Description("Configures an ONIX headstage-64 in the specified port.")]
     public class ConfigureHeadstage64 : MultiDeviceFactory
     {
         PortName port;
-        readonly ConfigureHeadstage64LinkController LinkController = new();
+        readonly ConfigureHeadstage64PortController LinkController = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureHeadstage64"/> class.
@@ -136,7 +136,7 @@ namespace OpenEphys.Onix1
             yield return OpticalStimulator;
         }
 
-        class ConfigureHeadstage64LinkController : ConfigureFmcLinkController
+        class ConfigureHeadstage64PortController : ConfigurePortController
         {
             protected override bool ConfigurePortVoltage(DeviceContext device)
             {
@@ -153,7 +153,7 @@ namespace OpenEphys.Onix1
                 var voltage = MaxVoltage;
                 for (; voltage >= MinVoltage; voltage -= VoltageIncrement)
                 {
-                    device.WriteRegister(FmcLinkController.PORTVOLTAGE, voltage);
+                    device.WriteRegister(PortController.PORTVOLTAGE, voltage);
                     Thread.Sleep(200);
                     if (!CheckLinkState(device))
                     {
@@ -162,32 +162,15 @@ namespace OpenEphys.Onix1
                     }
                 }
 
-                device.WriteRegister(FmcLinkController.PORTVOLTAGE, MinVoltage);
-                device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
+                device.WriteRegister(PortController.PORTVOLTAGE, MinVoltage);
+                device.WriteRegister(PortController.PORTVOLTAGE, 0);
                 Thread.Sleep(1000);
-                device.WriteRegister(FmcLinkController.PORTVOLTAGE, voltage + VoltageOffset);
+                device.WriteRegister(PortController.PORTVOLTAGE, voltage + VoltageOffset);
                 Thread.Sleep(200);
                 return CheckLinkState(device);
             }
         }
     }
 
-    /// <summary>
-    /// Specifies the physical port that a headstage is plugged into.
-    /// </summary>
-    /// <remarks>
-    /// ONIX uses a common protocol to communicate with a variety of devices using the same physical connection. For this reason
-    /// lots of different headstage types can be plugged into a headstage port.
-    /// </remarks>
-    public enum PortName
-    {
-        /// <summary>
-        /// Specifies Port A.
-        /// </summary>
-        PortA = 1,
-        /// <summary>
-        /// Specifies Port B.
-        /// </summary>
-        PortB = 2
-    }
+
 }
