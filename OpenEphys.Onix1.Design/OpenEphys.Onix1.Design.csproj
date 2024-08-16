@@ -6,8 +6,8 @@
     <PackageTags>Bonsai Rx Open Ephys Onix Design</PackageTags>
     <TargetFramework>net472</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
-    <IsPackable>true</IsPackable>
     <Platforms>x64</Platforms>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
   </PropertyGroup>
 
   <ItemGroup>
