@@ -21,7 +21,7 @@ namespace OpenEphys.Onix1.Design
         /// Initializes a new instance of <see cref="NeuropixelsV2eBno055Dialog"/> with the given
         /// <see cref="ConfigureNeuropixelsV2eBno055"/> object.
         /// </summary>
-        /// <param name="configureNode">A <see cref="ConfigureNeuropixelsV2eBno055"/> object that contains configuration settings</param>
+        /// <param name="configureNode">A <see cref="ConfigureNeuropixelsV2eBno055"/> object that contains configuration settings.</param>
         public NeuropixelsV2eBno055Dialog(ConfigureNeuropixelsV2eBno055 configureNode)
         {
             InitializeComponent();

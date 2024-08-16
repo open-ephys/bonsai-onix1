@@ -18,7 +18,7 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// Gets the contact index of this contact.
         /// </summary>
-        public int ContactIndex;
+        public int ContactIndex { get; }
 
         /// <summary>
         /// Gets the string defining the probe and contact index for this contact.

@@ -15,7 +15,7 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// A <see cref="NeuropixelsV2eBno055Dialog"/> that configures a <see cref="ConfigureNeuropixelsV2eBno055"/>.
         /// </summary>
-        public readonly NeuropixelsV2eBno055Dialog ConfigureBno055;
+        public readonly NeuropixelsV2eBno055Dialog DialogBno055;
 
         /// <summary>
         /// Initializes a new instance of a <see cref="NeuropixelsV2eHeadstageDialog"/>.
@@ -38,7 +38,7 @@ namespace OpenEphys.Onix1.Design
             this.AddMenuItemsFromDialogToFileOption(DialogNeuropixelsV2e, "NeuropixelsV2e");
             DialogNeuropixelsV2e.Show();
 
-            ConfigureBno055 = new(configureBno055)
+            DialogBno055 = new(configureBno055)
             {
                 TopLevel = false,
                 FormBorderStyle = FormBorderStyle.None,
@@ -46,9 +46,9 @@ namespace OpenEphys.Onix1.Design
                 Parent = this
             };
 
-            panelBno055.Controls.Add(ConfigureBno055);
-            ConfigureBno055.Show();
-            ConfigureBno055.Invalidate();
+            panelBno055.Controls.Add(DialogBno055);
+            DialogBno055.Show();
+            DialogBno055.Invalidate();
         }
 
         private void ButtonClick(object sender, System.EventArgs e)

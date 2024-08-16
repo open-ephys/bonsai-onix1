@@ -17,11 +17,6 @@ namespace OpenEphys.Onix1.Design
         /// Public <see cref="ConfigureNeuropixelsV2e"/> object that is manipulated by
         /// <see cref="NeuropixelsV2eDialog"/>.
         /// </summary>
-        /// <remarks>
-        /// When a <see cref="ConfigureNeuropixelsV2e"/> is passed to 
-        /// <see cref="NeuropixelsV2eDialog"/>, it is copied and stored in this
-        /// variable so that any modifications made to configuration settings can be easily reversed.
-        /// </remarks>
         public ConfigureNeuropixelsV2e ConfigureNode { get; set; }
 
         /// <summary>

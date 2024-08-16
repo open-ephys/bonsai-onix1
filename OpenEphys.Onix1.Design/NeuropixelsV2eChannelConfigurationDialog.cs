@@ -9,7 +9,7 @@ using ZedGraph;
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Partial class to create a GUI for <see cref="ConfigureNeuropixelsV2e"/>.
+    /// Partial class to create a channel configuration GUI for <see cref="ConfigureNeuropixelsV2e"/>.
     /// </summary>
     public partial class NeuropixelsV2eChannelConfigurationDialog : ChannelConfigurationDialog
     {
@@ -20,11 +20,6 @@ namespace OpenEphys.Onix1.Design
         /// Public <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> object that is manipulated by
         /// <see cref="NeuropixelsV2eChannelConfigurationDialog"/>.
         /// </summary>
-        /// <remarks>
-        /// When a <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> is passed to 
-        /// <see cref="NeuropixelsV2eChannelConfigurationDialog"/>, it is copied and stored in this
-        /// variable so that any modifications made to configuration settings can be easily reversed.
-        /// </remarks>
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfiguration;
 
         /// <summary>

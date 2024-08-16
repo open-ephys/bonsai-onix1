@@ -51,18 +51,13 @@ namespace OpenEphys.Onix1.Design
         /// Public <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> object that is manipulated by
         /// <see cref="NeuropixelsV2eProbeConfigurationDialog"/>.
         /// </summary>
-        /// <remarks>
-        /// When a <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> is passed to 
-        /// <see cref="NeuropixelsV2eProbeConfigurationDialog"/>, it is copied and stored in this
-        /// variable so that any modifications made to configuration settings can be easily reversed.
-        /// </remarks>
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfiguration { get; set; }
 
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV2eProbeConfigurationDialog"/>.
         /// </summary>
         /// <param name="configuration">A <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> object holding the current configuration settings.</param>
-        /// <param name="calibrationFile">String containing the path to the gain calibration file for this probe.</param>
+        /// <param name="calibrationFile">String containing the path to the calibration file for this probe.</param>
         public NeuropixelsV2eProbeConfigurationDialog(NeuropixelsV2QuadShankProbeConfiguration configuration, string calibrationFile)
         {
             InitializeComponent();

@@ -22,7 +22,7 @@ namespace OpenEphys.Onix1.Design
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
-                        configureHeadstage.Bno055.Enable = editorDialog.ConfigureBno055.ConfigureNode.Enable;
+                        configureHeadstage.Bno055.Enable = editorDialog.DialogBno055.ConfigureNode.Enable;
 
                         configureHeadstage.NeuropixelsV2e.Enable = editorDialog.DialogNeuropixelsV2e.ConfigureNode.Enable;
                         configureHeadstage.NeuropixelsV2e.ProbeConfigurationA = editorDialog.DialogNeuropixelsV2e.ConfigureNode.ProbeConfigurationA;

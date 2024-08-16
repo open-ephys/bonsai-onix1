@@ -18,9 +18,6 @@ namespace OpenEphys.Onix1.Design
     {
         internal event EventHandler OnResizeZedGraph;
 
-        /// <summary>
-        /// Local variable that holds the channel configuration in memory until the user presses Okay
-        /// </summary>
         internal ProbeGroup ChannelConfiguration;
 
         internal readonly List<int> ReferenceContacts = new();
