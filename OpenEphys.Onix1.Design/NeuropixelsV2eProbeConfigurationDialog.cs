@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using System.Drawing;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -120,6 +121,16 @@ namespace OpenEphys.Onix1.Design
 
             ChannelConfiguration.Show();
             ChannelConfiguration.ConnectResizeEventHandler();
+            ChannelConfiguration.OnResizeZedGraph += ResizeTrackBar;
+        }
+
+        private void ResizeTrackBar(object sender, EventArgs e)
+        {
+            if (sender is ChannelConfigurationDialog dialog)
+            {
+                panelTrackBar.Height = dialog.zedGraphChannels.Size.Height;
+                panelTrackBar.Location = new Point(panelProbe.Size.Width - panelTrackBar.Width, ChannelConfiguration.zedGraphChannels.Location.Y);
+            }
         }
 
         private void FileTextChanged(object sender, EventArgs e)
@@ -544,18 +555,6 @@ namespace OpenEphys.Onix1.Design
             // NB: Ensure that the newly loaded ProbeConfiguration in the ChannelConfigurationDialog is reflected here.
             ProbeConfiguration = ChannelConfiguration.ProbeConfiguration; 
             CheckForExistingChannelPreset();
-        }
-
-        private void LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            try
-            {
-                System.Diagnostics.Process.Start("https://open-ephys.github.io/onix1-bonsai-docs/api/OpenEphys.Onix1.ConfigureNeuropixelsV2eHeadstage.html");
-            }
-            catch (Exception)
-            {
-                MessageBox.Show("Unable to open documentation link.");
-            }
         }
 
         internal void ButtonClick(object sender, EventArgs e)

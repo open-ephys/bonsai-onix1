@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(NeuropixelsV2eDialog));
             this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
@@ -66,7 +67,7 @@
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
             this.splitContainer1.Location = new System.Drawing.Point(0, 24);
-            this.splitContainer1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.splitContainer1.Margin = new System.Windows.Forms.Padding(2);
             this.splitContainer1.Name = "splitContainer1";
             this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
@@ -78,7 +79,7 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.panel1);
             this.splitContainer1.Size = new System.Drawing.Size(843, 506);
-            this.splitContainer1.SplitterDistance = 475;
+            this.splitContainer1.SplitterDistance = 477;
             this.splitContainer1.SplitterWidth = 3;
             this.splitContainer1.TabIndex = 2;
             // 
@@ -86,10 +87,10 @@
             // 
             this.tabControlProbe.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControlProbe.Location = new System.Drawing.Point(0, 0);
-            this.tabControlProbe.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tabControlProbe.Margin = new System.Windows.Forms.Padding(2);
             this.tabControlProbe.Name = "tabControlProbe";
             this.tabControlProbe.SelectedIndex = 0;
-            this.tabControlProbe.Size = new System.Drawing.Size(843, 475);
+            this.tabControlProbe.Size = new System.Drawing.Size(843, 477);
             this.tabControlProbe.TabIndex = 1;
             // 
             // panel1
@@ -98,16 +99,16 @@
             this.panel1.Controls.Add(this.buttonOkay);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
-            this.panel1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.panel1.Margin = new System.Windows.Forms.Padding(2);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(843, 28);
+            this.panel1.Size = new System.Drawing.Size(843, 26);
             this.panel1.TabIndex = 0;
             // 
             // buttonCancel
             // 
             this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonCancel.Location = new System.Drawing.Point(753, 4);
-            this.buttonCancel.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.buttonCancel.Location = new System.Drawing.Point(753, 2);
+            this.buttonCancel.Margin = new System.Windows.Forms.Padding(2);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(83, 22);
             this.buttonCancel.TabIndex = 1;
@@ -118,8 +119,8 @@
             // buttonOkay
             // 
             this.buttonOkay.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOkay.Location = new System.Drawing.Point(664, 4);
-            this.buttonOkay.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.buttonOkay.Location = new System.Drawing.Point(664, 2);
+            this.buttonOkay.Margin = new System.Windows.Forms.Padding(2);
             this.buttonOkay.Name = "buttonOkay";
             this.buttonOkay.Size = new System.Drawing.Size(83, 22);
             this.buttonOkay.TabIndex = 0;
@@ -135,8 +136,9 @@
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.menuStrip);
             this.DoubleBuffered = true;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip;
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "NeuropixelsV2eDialog";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "NeuropixelsV2eDialog";

@@ -16,6 +16,8 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     public abstract partial class ChannelConfigurationDialog : Form
     {
+        internal event EventHandler OnResizeZedGraph;
+
         /// <summary>
         /// Local variable that holds the channel configuration in memory until the user presses Okay
         /// </summary>
@@ -896,6 +898,12 @@ namespace OpenEphys.Onix1.Design
             UpdateFontSize();
             DrawScale();
             RefreshZedGraph();
+            OnResizeHandler();
+        }
+
+        private void OnResizeHandler()
+        {
+            OnResizeZedGraph?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>

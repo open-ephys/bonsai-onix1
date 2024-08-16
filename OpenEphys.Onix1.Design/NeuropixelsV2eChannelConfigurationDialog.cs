@@ -190,7 +190,7 @@ namespace OpenEphys.Onix1.Design
 
             var curve = zedGraphChannels.GraphPane.AddCurve(ScalePointsTag, pointList, Color.Black, SymbolType.None);
 
-            curve.Line.Width = 4;
+            curve.Line.Width = zoomedOut ? 2 : 4;
             curve.Label.IsVisible = false;
             curve.Symbol.IsVisible = false;
         }
