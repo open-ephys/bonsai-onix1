@@ -328,7 +328,7 @@ namespace OpenEphys.Onix1.Design
                     probeEdge.Bottom <= scaleEdge.Bottom && probeEdge.Top >= scaleEdge.Top);
         }
 
-        private static double CalculateScaleRange(Scale scale)
+        internal static double CalculateScaleRange(Scale scale)
         {
             return scale.Max - scale.Min;
         }

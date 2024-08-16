@@ -79,6 +79,7 @@ namespace OpenEphys.Onix1.Design
                 newConfiguration.Validate();
 
                 ProbeConfiguration = new(newConfiguration, ProbeConfiguration.Reference, ProbeConfiguration.Probe);
+                ChannelConfiguration = ProbeConfiguration.ChannelConfiguration;
 
                 DrawProbeGroup();
                 RefreshZedGraph();
@@ -139,14 +140,12 @@ namespace OpenEphys.Onix1.Design
             var zoomedOut = fontSize <= 2;
 
             fontSize = zoomedOut ? 8 : fontSize * 4;
-            var majorTickOffset = MajorTickLength + GetXRange(zedGraphChannels) * 0.015;
+            var majorTickOffset = MajorTickLength + CalculateScaleRange(zedGraphChannels.GraphPane.XAxis.Scale) * 0.015;
             majorTickOffset = majorTickOffset > 50 ? 50 : majorTickOffset;
 
             var x = GetProbeContourMaxX(zedGraphChannels.GraphPane.GraphObjList) + 50;
             var minY = GetProbeContourMinY(zedGraphChannels.GraphPane.GraphObjList);
             var maxY = GetProbeContourMaxY(zedGraphChannels.GraphPane.GraphObjList);
-
-            zedGraphChannels.GraphPane.CurveList.Clear();
 
             PointPairList pointList = new();
 
@@ -193,11 +192,6 @@ namespace OpenEphys.Onix1.Design
             curve.Line.Width = zoomedOut ? 2 : 4;
             curve.Label.IsVisible = false;
             curve.Symbol.IsVisible = false;
-        }
-
-        private static double GetXRange(ZedGraphControl zedGraph)
-        {
-            return zedGraph.GraphPane.XAxis.Scale.Max - zedGraph.GraphPane.XAxis.Scale.Min;
         }
 
         internal override void HighlightEnabledContacts()
