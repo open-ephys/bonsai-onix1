@@ -1,6 +1,7 @@
-.vs/
+.vs*/
 /artifacts/
 .bonsai/Packages/
 .bonsai/*.exe
 .bonsai/*.exe.settings
 .bonsai/*.exe.WebView2/
+*.user

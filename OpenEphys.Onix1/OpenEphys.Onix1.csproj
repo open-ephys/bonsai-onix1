@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Title>OpenEphys.Onix1</Title>
+    <Title>Bonsai Onix1 - Open Ephys</Title>
     <Description>Bonsai library containing interfaces for data acquisition and control of ONIX devices.</Description>
     <PackageTags>Bonsai Rx Open Ephys Onix</PackageTags>
     <TargetFramework>net472</TargetFramework>
