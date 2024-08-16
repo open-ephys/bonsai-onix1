@@ -150,7 +150,7 @@ namespace OpenEphys.Onix1
                         var dt = newValue.DeltaTable;
                         device.WriteRegister(Rhs2116.NUMDELTAS, (uint)dt.Count);
 
-                        // TODO: If we want to do this efficently, we probably need a different data structure on the
+                        // TODO: If we want to do this efficiently, we probably need a different data structure on the
                         // FPGA ram that allows columns to be out of order (e.g. linked list)
                         uint j = 0;
                         foreach (var d in dt)

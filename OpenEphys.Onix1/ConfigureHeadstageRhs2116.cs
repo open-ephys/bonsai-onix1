@@ -17,11 +17,7 @@ namespace OpenEphys.Onix1
 
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
-        public ConfigureRhs2116 Rhs2116A { get; set; } = new();
-
-        [Category(ConfigurationCategory)]
-        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
-        public ConfigureRhs2116 Rhs2116B { get; set; } = new();
+        public ConfigureRhs2116Dual Rhs2116Dual { get; set; } = new();
 
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
@@ -30,8 +26,7 @@ namespace OpenEphys.Onix1
         internal override void UpdateDeviceNames()
         {
             LinkController.DeviceName = GetFullDeviceName(nameof(LinkController));
-            Rhs2116A.DeviceName = GetFullDeviceName(nameof(Rhs2116A));
-            Rhs2116B.DeviceName = GetFullDeviceName(nameof(Rhs2116B));
+            Rhs2116Dual.DeviceName = GetFullDeviceName(nameof(Rhs2116Dual));
             StimulusTrigger.DeviceName = GetFullDeviceName(nameof(StimulusTrigger));
         }
 
@@ -43,8 +38,7 @@ namespace OpenEphys.Onix1
                 port = value;
                 var offset = (uint)port << 8;
                 LinkController.DeviceAddress = (uint)port;
-                Rhs2116A.DeviceAddress = offset + 0;
-                Rhs2116B.DeviceAddress = offset + 1;
+                Rhs2116Dual.DeviceAddress = offset + 0;
                 StimulusTrigger.DeviceAddress = offset + 2;
             }
         }
@@ -62,8 +56,7 @@ namespace OpenEphys.Onix1
         internal override IEnumerable<IDeviceConfiguration> GetDevices()
         {
             yield return LinkController;
-            yield return Rhs2116A;
-            yield return Rhs2116B;
+            yield return Rhs2116Dual;
             yield return StimulusTrigger;
         }
 
@@ -106,4 +99,5 @@ namespace OpenEphys.Onix1
             }
         }
     }
+
 }
