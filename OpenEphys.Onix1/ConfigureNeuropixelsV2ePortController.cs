@@ -2,7 +2,7 @@
 
 namespace OpenEphys.Onix1
 {
-    class ConfigureNeuropixelsV2eLinkController : ConfigureFmcLinkController
+    class ConfigureNeuropixelsV2ePortController : ConfigurePortController
     {
 
         protected override bool ConfigurePortVoltage(DeviceContext device)
@@ -29,9 +29,9 @@ namespace OpenEphys.Onix1
 
         void SetVoltage(DeviceContext device, double voltage)
         {
-            device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
+            device.WriteRegister(PortController.PORTVOLTAGE, 0);
             Thread.Sleep(200);
-            device.WriteRegister(FmcLinkController.PORTVOLTAGE, (uint)(10 * voltage));
+            device.WriteRegister(PortController.PORTVOLTAGE, (uint)(10 * voltage));
             Thread.Sleep(200);
         }
     }
