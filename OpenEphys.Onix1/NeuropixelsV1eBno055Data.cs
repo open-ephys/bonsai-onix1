@@ -39,32 +39,37 @@ namespace OpenEphys.Onix1
         public unsafe IObservable<Bno055DataFrame> Generate<TSource>(IObservable<TSource> source)
         {
             return DeviceManager.GetDevice(DeviceName).SelectMany(
-                deviceInfo => Observable.Create<Bno055DataFrame>(observer =>
+                deviceInfo =>
                 {
-                    var device = deviceInfo.GetDeviceContext(typeof(NeuropixelsV1eBno055));
-                    var passthrough = device.GetPassthroughDeviceContext(typeof(DS90UB9x));
-                    var i2c = new I2CRegisterContext(passthrough, NeuropixelsV1eBno055.BNO055Address);
-
-                    return source.SubscribeSafe(observer, _ =>
+                return !((NeuropixelsV1eBno055DeviceInfo)deviceInfo).Enable
+                    ? Observable.Empty<Bno055DataFrame>()
+                    : Observable.Create<Bno055DataFrame>(observer =>
                     {
-                        Bno055DataFrame frame = default;
-                        device.Context.EnsureContext(() =>
+                        var device = deviceInfo.GetDeviceContext(typeof(NeuropixelsV1eBno055));
+                        var passthrough = device.GetPassthroughDeviceContext(typeof(DS90UB9x));
+                        var i2c = new I2CRegisterContext(passthrough, NeuropixelsV1eBno055.BNO055Address);
+
+                        return source.SubscribeSafe(observer, _ =>
                         {
-                            var data = i2c.ReadBytes(NeuropixelsV1eBno055.DataAddress, sizeof(Bno055DataPayload));
-                            ulong clock = passthrough.ReadRegister(DS90UB9x.LASTI2CL);
-                            clock += (ulong)passthrough.ReadRegister(DS90UB9x.LASTI2CH) << 32;
-                            fixed (byte* dataPtr = data)
+                            Bno055DataFrame frame = default;
+                            device.Context.EnsureContext(() =>
                             {
-                                frame = new Bno055DataFrame(clock, (Bno055DataPayload*)dataPtr);
+                                var data = i2c.ReadBytes(NeuropixelsV1eBno055.DataAddress, sizeof(Bno055DataPayload));
+                                ulong clock = passthrough.ReadRegister(DS90UB9x.LASTI2CL);
+                                clock += (ulong)passthrough.ReadRegister(DS90UB9x.LASTI2CH) << 32;
+                                fixed (byte* dataPtr = data)
+                                {
+                                    frame = new Bno055DataFrame(clock, (Bno055DataPayload*)dataPtr);
+                                }
+                            });
+
+                            if (frame != null)
+                            {
+                                observer.OnNext(frame);
                             }
                         });
-
-                        if (frame != null)
-                        {
-                            observer.OnNext(frame);
-                        }
                     });
-                }));
+                });
         }
     }
 }
