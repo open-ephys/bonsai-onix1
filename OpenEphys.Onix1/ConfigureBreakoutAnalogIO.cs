@@ -281,6 +281,7 @@ namespace OpenEphys.Onix1
         // constants
         public const int ChannelCount = 12;
         public const int NumberOfDivisions = 1 << 16;
+        public const int DacMidScale = 1 << 15;
 
         // managed registers
         public const uint ENABLE = 0;
