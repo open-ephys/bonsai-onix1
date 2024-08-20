@@ -28,11 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabelGainCalSN;
-            System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabelAdcCalSN;
             System.Windows.Forms.Label labelPresets;
-            System.Windows.Forms.Label label4;
-            System.Windows.Forms.Label labelGainCorrection;
             System.Windows.Forms.Label adcCalibrationFile;
             System.Windows.Forms.Label gainCalibrationFile;
             System.Windows.Forms.Label spikeFilter;
@@ -44,10 +40,6 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(NeuropixelsV1eDialog));
             this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.statusStrip = new System.Windows.Forms.StatusStrip();
-            this.gainCalibrationSN = new System.Windows.Forms.ToolStripStatusLabel();
-            this.adcCalibrationSN = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabControlProbe = new System.Windows.Forms.TabControl();
             this.tabPageProbe = new System.Windows.Forms.TabPage();
@@ -56,30 +48,22 @@
             this.panelTrackBar = new System.Windows.Forms.Panel();
             this.trackBarProbePosition = new System.Windows.Forms.TrackBar();
             this.panelOptions = new System.Windows.Forms.Panel();
+            this.buttonChooseAdcCalibrationFile = new System.Windows.Forms.Button();
+            this.buttonChooseGainCalibrationFile = new System.Windows.Forms.Button();
             this.buttonEnableContacts = new System.Windows.Forms.Button();
             this.buttonClearSelections = new System.Windows.Forms.Button();
             this.comboBoxChannelPresets = new System.Windows.Forms.ComboBox();
             this.buttonResetZoom = new System.Windows.Forms.Button();
-            this.textBoxLfpGainCorrection = new System.Windows.Forms.TextBox();
-            this.textBoxApGainCorrection = new System.Windows.Forms.TextBox();
             this.checkBoxSpikeFilter = new System.Windows.Forms.CheckBox();
             this.textBoxAdcCalibrationFile = new System.Windows.Forms.TextBox();
             this.textBoxGainCalibrationFile = new System.Windows.Forms.TextBox();
             this.comboBoxReference = new System.Windows.Forms.ComboBox();
             this.comboBoxLfpGain = new System.Windows.Forms.ComboBox();
             this.comboBoxApGain = new System.Windows.Forms.ComboBox();
-            this.tabPageADCs = new System.Windows.Forms.TabPage();
-            this.dataGridViewAdcs = new System.Windows.Forms.DataGridView();
             this.panel1 = new System.Windows.Forms.Panel();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonOkay = new System.Windows.Forms.Button();
-            this.buttonChooseGainCalibrationFile = new System.Windows.Forms.Button();
-            this.buttonChooseAdcCalibrationFile = new System.Windows.Forms.Button();
-            toolStripStatusLabelGainCalSN = new System.Windows.Forms.ToolStripStatusLabel();
-            toolStripStatusLabelAdcCalSN = new System.Windows.Forms.ToolStripStatusLabel();
             labelPresets = new System.Windows.Forms.Label();
-            label4 = new System.Windows.Forms.Label();
-            labelGainCorrection = new System.Windows.Forms.Label();
             adcCalibrationFile = new System.Windows.Forms.Label();
             gainCalibrationFile = new System.Windows.Forms.Label();
             spikeFilter = new System.Windows.Forms.Label();
@@ -89,7 +73,6 @@
             label3 = new System.Windows.Forms.Label();
             label1 = new System.Windows.Forms.Label();
             this.menuStrip.SuspendLayout();
-            this.statusStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -104,58 +87,18 @@
             this.panelTrackBar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarProbePosition)).BeginInit();
             this.panelOptions.SuspendLayout();
-            this.tabPageADCs.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewAdcs)).BeginInit();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // toolStripStatusLabelGainCalSN
-            // 
-            toolStripStatusLabelGainCalSN.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            toolStripStatusLabelGainCalSN.Name = "toolStripStatusLabelGainCalSN";
-            toolStripStatusLabelGainCalSN.Size = new System.Drawing.Size(119, 15);
-            toolStripStatusLabelGainCalSN.Text = "Gain Calibration SN: ";
-            // 
-            // toolStripStatusLabelAdcCalSN
-            // 
-            toolStripStatusLabelAdcCalSN.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            toolStripStatusLabelAdcCalSN.Name = "toolStripStatusLabelAdcCalSN";
-            toolStripStatusLabelAdcCalSN.Size = new System.Drawing.Size(118, 15);
-            toolStripStatusLabelAdcCalSN.Text = "ADC Calibration SN: ";
             // 
             // labelPresets
             // 
             labelPresets.AutoSize = true;
-            labelPresets.Location = new System.Drawing.Point(10, 231);
+            labelPresets.Location = new System.Drawing.Point(10, 219);
             labelPresets.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             labelPresets.Name = "labelPresets";
             labelPresets.Size = new System.Drawing.Size(46, 26);
             labelPresets.TabIndex = 25;
             labelPresets.Text = "Channel\r\nPresets:";
-            // 
-            // label4
-            // 
-            label4.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            label4.AutoSize = true;
-            label4.Location = new System.Drawing.Point(66, 103);
-            label4.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            label4.Name = "label4";
-            label4.Size = new System.Drawing.Size(29, 13);
-            label4.TabIndex = 20;
-            label4.Text = "Gain";
-            // 
-            // labelGainCorrection
-            // 
-            labelGainCorrection.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            labelGainCorrection.AutoSize = true;
-            labelGainCorrection.Location = new System.Drawing.Point(140, 103);
-            labelGainCorrection.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            labelGainCorrection.Name = "labelGainCorrection";
-            labelGainCorrection.Size = new System.Drawing.Size(55, 13);
-            labelGainCorrection.TabIndex = 15;
-            labelGainCorrection.Text = "Correction";
             // 
             // adcCalibrationFile
             // 
@@ -182,7 +125,7 @@
             // spikeFilter
             // 
             spikeFilter.AutoSize = true;
-            spikeFilter.Location = new System.Drawing.Point(10, 180);
+            spikeFilter.Location = new System.Drawing.Point(10, 168);
             spikeFilter.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             spikeFilter.Name = "spikeFilter";
             spikeFilter.Size = new System.Drawing.Size(62, 13);
@@ -192,7 +135,7 @@
             // Reference
             // 
             Reference.AutoSize = true;
-            Reference.Location = new System.Drawing.Point(10, 207);
+            Reference.Location = new System.Drawing.Point(10, 195);
             Reference.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             Reference.Name = "Reference";
             Reference.Size = new System.Drawing.Size(60, 13);
@@ -202,22 +145,22 @@
             // lfpGain
             // 
             lfpGain.AutoSize = true;
-            lfpGain.Location = new System.Drawing.Point(10, 151);
+            lfpGain.Location = new System.Drawing.Point(10, 139);
             lfpGain.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             lfpGain.Name = "lfpGain";
-            lfpGain.Size = new System.Drawing.Size(29, 13);
+            lfpGain.Size = new System.Drawing.Size(54, 13);
             lfpGain.TabIndex = 2;
-            lfpGain.Text = "LFP:";
+            lfpGain.Text = "LFP Gain:";
             // 
             // apGain
             // 
             apGain.AutoSize = true;
-            apGain.Location = new System.Drawing.Point(10, 122);
+            apGain.Location = new System.Drawing.Point(10, 110);
             apGain.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             apGain.Name = "apGain";
-            apGain.Size = new System.Drawing.Size(24, 13);
+            apGain.Size = new System.Drawing.Size(49, 13);
             apGain.TabIndex = 0;
-            apGain.Text = "AP:";
+            apGain.Text = "AP Gain:";
             // 
             // label3
             // 
@@ -257,44 +200,6 @@
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 22);
             this.fileToolStripMenuItem.Text = "File";
             // 
-            // statusStrip
-            // 
-            this.statusStrip.AutoSize = false;
-            this.statusStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
-            this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            toolStripStatusLabelGainCalSN,
-            this.gainCalibrationSN,
-            toolStripStatusLabelAdcCalSN,
-            this.adcCalibrationSN,
-            this.toolStripStatus});
-            this.statusStrip.Location = new System.Drawing.Point(0, 607);
-            this.statusStrip.Name = "statusStrip";
-            this.statusStrip.Padding = new System.Windows.Forms.Padding(1, 0, 9, 0);
-            this.statusStrip.Size = new System.Drawing.Size(998, 20);
-            this.statusStrip.TabIndex = 1;
-            this.statusStrip.Text = "statusStrip1";
-            // 
-            // gainCalibrationSN
-            // 
-            this.gainCalibrationSN.Name = "gainCalibrationSN";
-            this.gainCalibrationSN.Size = new System.Drawing.Size(13, 15);
-            this.gainCalibrationSN.Text = "  ";
-            this.gainCalibrationSN.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // adcCalibrationSN
-            // 
-            this.adcCalibrationSN.Name = "adcCalibrationSN";
-            this.adcCalibrationSN.Size = new System.Drawing.Size(13, 15);
-            this.adcCalibrationSN.Text = "  ";
-            this.adcCalibrationSN.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // toolStripStatus
-            // 
-            this.toolStripStatus.Image = global::OpenEphys.Onix1.Design.Properties.Resources.StatusReadyImage;
-            this.toolStripStatus.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
-            this.toolStripStatus.Name = "toolStripStatus";
-            this.toolStripStatus.Size = new System.Drawing.Size(16, 15);
-            // 
             // splitContainer1
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -312,21 +217,20 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.panel1);
-            this.splitContainer1.Size = new System.Drawing.Size(998, 583);
-            this.splitContainer1.SplitterDistance = 550;
+            this.splitContainer1.Size = new System.Drawing.Size(998, 603);
+            this.splitContainer1.SplitterDistance = 571;
             this.splitContainer1.SplitterWidth = 3;
             this.splitContainer1.TabIndex = 2;
             // 
             // tabControlProbe
             // 
             this.tabControlProbe.Controls.Add(this.tabPageProbe);
-            this.tabControlProbe.Controls.Add(this.tabPageADCs);
             this.tabControlProbe.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControlProbe.Location = new System.Drawing.Point(0, 0);
             this.tabControlProbe.Margin = new System.Windows.Forms.Padding(2);
             this.tabControlProbe.Name = "tabControlProbe";
             this.tabControlProbe.SelectedIndex = 0;
-            this.tabControlProbe.Size = new System.Drawing.Size(998, 550);
+            this.tabControlProbe.Size = new System.Drawing.Size(998, 571);
             this.tabControlProbe.TabIndex = 0;
             // 
             // tabPageProbe
@@ -336,7 +240,7 @@
             this.tabPageProbe.Margin = new System.Windows.Forms.Padding(2);
             this.tabPageProbe.Name = "tabPageProbe";
             this.tabPageProbe.Padding = new System.Windows.Forms.Padding(2);
-            this.tabPageProbe.Size = new System.Drawing.Size(990, 524);
+            this.tabPageProbe.Size = new System.Drawing.Size(990, 545);
             this.tabPageProbe.TabIndex = 0;
             this.tabPageProbe.Text = "Probe";
             this.tabPageProbe.UseVisualStyleBackColor = true;
@@ -357,8 +261,8 @@
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.panelOptions);
-            this.splitContainer2.Size = new System.Drawing.Size(986, 520);
-            this.splitContainer2.SplitterDistance = 765;
+            this.splitContainer2.Size = new System.Drawing.Size(986, 541);
+            this.splitContainer2.SplitterDistance = 766;
             this.splitContainer2.SplitterWidth = 3;
             this.splitContainer2.TabIndex = 0;
             // 
@@ -369,7 +273,7 @@
             this.panelProbe.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelProbe.Location = new System.Drawing.Point(0, 0);
             this.panelProbe.Name = "panelProbe";
-            this.panelProbe.Size = new System.Drawing.Size(765, 520);
+            this.panelProbe.Size = new System.Drawing.Size(766, 541);
             this.panelProbe.TabIndex = 0;
             // 
             // panelTrackBar
@@ -378,7 +282,7 @@
             this.panelTrackBar.Controls.Add(label1);
             this.panelTrackBar.Controls.Add(label3);
             this.panelTrackBar.Controls.Add(this.trackBarProbePosition);
-            this.panelTrackBar.Location = new System.Drawing.Point(714, -2);
+            this.panelTrackBar.Location = new System.Drawing.Point(715, 8);
             this.panelTrackBar.Name = "panelTrackBar";
             this.panelTrackBar.Size = new System.Drawing.Size(48, 524);
             this.panelTrackBar.TabIndex = 33;
@@ -409,10 +313,6 @@
             this.panelOptions.Controls.Add(this.comboBoxChannelPresets);
             this.panelOptions.Controls.Add(labelPresets);
             this.panelOptions.Controls.Add(this.buttonResetZoom);
-            this.panelOptions.Controls.Add(label4);
-            this.panelOptions.Controls.Add(this.textBoxLfpGainCorrection);
-            this.panelOptions.Controls.Add(this.textBoxApGainCorrection);
-            this.panelOptions.Controls.Add(labelGainCorrection);
             this.panelOptions.Controls.Add(this.checkBoxSpikeFilter);
             this.panelOptions.Controls.Add(this.textBoxAdcCalibrationFile);
             this.panelOptions.Controls.Add(adcCalibrationFile);
@@ -429,17 +329,41 @@
             this.panelOptions.Location = new System.Drawing.Point(0, 0);
             this.panelOptions.Margin = new System.Windows.Forms.Padding(2);
             this.panelOptions.Name = "panelOptions";
-            this.panelOptions.Size = new System.Drawing.Size(218, 520);
+            this.panelOptions.Size = new System.Drawing.Size(217, 541);
             this.panelOptions.TabIndex = 2;
+            // 
+            // buttonChooseAdcCalibrationFile
+            // 
+            this.buttonChooseAdcCalibrationFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonChooseAdcCalibrationFile.Location = new System.Drawing.Point(180, 24);
+            this.buttonChooseAdcCalibrationFile.Margin = new System.Windows.Forms.Padding(2);
+            this.buttonChooseAdcCalibrationFile.Name = "buttonChooseAdcCalibrationFile";
+            this.buttonChooseAdcCalibrationFile.Size = new System.Drawing.Size(28, 20);
+            this.buttonChooseAdcCalibrationFile.TabIndex = 36;
+            this.buttonChooseAdcCalibrationFile.Text = "...";
+            this.buttonChooseAdcCalibrationFile.UseVisualStyleBackColor = true;
+            this.buttonChooseAdcCalibrationFile.Click += new System.EventHandler(this.ButtonClick);
+            // 
+            // buttonChooseGainCalibrationFile
+            // 
+            this.buttonChooseGainCalibrationFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonChooseGainCalibrationFile.Location = new System.Drawing.Point(180, 72);
+            this.buttonChooseGainCalibrationFile.Margin = new System.Windows.Forms.Padding(2);
+            this.buttonChooseGainCalibrationFile.Name = "buttonChooseGainCalibrationFile";
+            this.buttonChooseGainCalibrationFile.Size = new System.Drawing.Size(28, 20);
+            this.buttonChooseGainCalibrationFile.TabIndex = 35;
+            this.buttonChooseGainCalibrationFile.Text = "...";
+            this.buttonChooseGainCalibrationFile.UseVisualStyleBackColor = true;
+            this.buttonChooseGainCalibrationFile.Click += new System.EventHandler(this.ButtonClick);
             // 
             // buttonEnableContacts
             // 
             this.buttonEnableContacts.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonEnableContacts.Location = new System.Drawing.Point(10, 277);
+            this.buttonEnableContacts.Location = new System.Drawing.Point(10, 265);
             this.buttonEnableContacts.Margin = new System.Windows.Forms.Padding(2);
             this.buttonEnableContacts.Name = "buttonEnableContacts";
-            this.buttonEnableContacts.Size = new System.Drawing.Size(199, 36);
+            this.buttonEnableContacts.Size = new System.Drawing.Size(198, 36);
             this.buttonEnableContacts.TabIndex = 28;
             this.buttonEnableContacts.Text = "Enable Selected Contacts";
             this.buttonEnableContacts.UseVisualStyleBackColor = true;
@@ -449,10 +373,10 @@
             // 
             this.buttonClearSelections.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonClearSelections.Location = new System.Drawing.Point(10, 317);
+            this.buttonClearSelections.Location = new System.Drawing.Point(10, 305);
             this.buttonClearSelections.Margin = new System.Windows.Forms.Padding(2);
             this.buttonClearSelections.Name = "buttonClearSelections";
-            this.buttonClearSelections.Size = new System.Drawing.Size(199, 36);
+            this.buttonClearSelections.Size = new System.Drawing.Size(198, 36);
             this.buttonClearSelections.TabIndex = 27;
             this.buttonClearSelections.Text = "Deselect Contacts";
             this.buttonClearSelections.UseVisualStyleBackColor = true;
@@ -464,51 +388,29 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.comboBoxChannelPresets.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxChannelPresets.FormattingEnabled = true;
-            this.comboBoxChannelPresets.Location = new System.Drawing.Point(76, 234);
+            this.comboBoxChannelPresets.Location = new System.Drawing.Point(76, 222);
             this.comboBoxChannelPresets.Margin = new System.Windows.Forms.Padding(2);
             this.comboBoxChannelPresets.Name = "comboBoxChannelPresets";
-            this.comboBoxChannelPresets.Size = new System.Drawing.Size(133, 21);
+            this.comboBoxChannelPresets.Size = new System.Drawing.Size(132, 21);
             this.comboBoxChannelPresets.TabIndex = 26;
             // 
             // buttonResetZoom
             // 
             this.buttonResetZoom.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonResetZoom.Location = new System.Drawing.Point(10, 357);
+            this.buttonResetZoom.Location = new System.Drawing.Point(10, 345);
             this.buttonResetZoom.Margin = new System.Windows.Forms.Padding(2);
             this.buttonResetZoom.Name = "buttonResetZoom";
-            this.buttonResetZoom.Size = new System.Drawing.Size(199, 36);
+            this.buttonResetZoom.Size = new System.Drawing.Size(198, 36);
             this.buttonResetZoom.TabIndex = 22;
             this.buttonResetZoom.Text = "Reset Zoom";
             this.buttonResetZoom.UseVisualStyleBackColor = true;
             this.buttonResetZoom.Click += new System.EventHandler(this.ButtonClick);
             // 
-            // textBoxLfpGainCorrection
-            // 
-            this.textBoxLfpGainCorrection.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxLfpGainCorrection.Location = new System.Drawing.Point(126, 147);
-            this.textBoxLfpGainCorrection.Margin = new System.Windows.Forms.Padding(2);
-            this.textBoxLfpGainCorrection.Name = "textBoxLfpGainCorrection";
-            this.textBoxLfpGainCorrection.ReadOnly = true;
-            this.textBoxLfpGainCorrection.Size = new System.Drawing.Size(83, 20);
-            this.textBoxLfpGainCorrection.TabIndex = 18;
-            // 
-            // textBoxApGainCorrection
-            // 
-            this.textBoxApGainCorrection.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxApGainCorrection.Location = new System.Drawing.Point(126, 118);
-            this.textBoxApGainCorrection.Margin = new System.Windows.Forms.Padding(2);
-            this.textBoxApGainCorrection.Name = "textBoxApGainCorrection";
-            this.textBoxApGainCorrection.ReadOnly = true;
-            this.textBoxApGainCorrection.Size = new System.Drawing.Size(83, 20);
-            this.textBoxApGainCorrection.TabIndex = 16;
-            // 
             // checkBoxSpikeFilter
             // 
             this.checkBoxSpikeFilter.AutoSize = true;
-            this.checkBoxSpikeFilter.Location = new System.Drawing.Point(76, 179);
+            this.checkBoxSpikeFilter.Location = new System.Drawing.Point(76, 167);
             this.checkBoxSpikeFilter.Margin = new System.Windows.Forms.Padding(2);
             this.checkBoxSpikeFilter.Name = "checkBoxSpikeFilter";
             this.checkBoxSpikeFilter.Size = new System.Drawing.Size(65, 17);
@@ -523,7 +425,7 @@
             this.textBoxAdcCalibrationFile.Location = new System.Drawing.Point(10, 24);
             this.textBoxAdcCalibrationFile.Margin = new System.Windows.Forms.Padding(2);
             this.textBoxAdcCalibrationFile.Name = "textBoxAdcCalibrationFile";
-            this.textBoxAdcCalibrationFile.Size = new System.Drawing.Size(167, 20);
+            this.textBoxAdcCalibrationFile.Size = new System.Drawing.Size(166, 20);
             this.textBoxAdcCalibrationFile.TabIndex = 12;
             this.textBoxAdcCalibrationFile.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.textBoxAdcCalibrationFile.TextChanged += new System.EventHandler(this.FileTextChanged);
@@ -535,7 +437,7 @@
             this.textBoxGainCalibrationFile.Location = new System.Drawing.Point(10, 72);
             this.textBoxGainCalibrationFile.Margin = new System.Windows.Forms.Padding(2);
             this.textBoxGainCalibrationFile.Name = "textBoxGainCalibrationFile";
-            this.textBoxGainCalibrationFile.Size = new System.Drawing.Size(167, 20);
+            this.textBoxGainCalibrationFile.Size = new System.Drawing.Size(166, 20);
             this.textBoxGainCalibrationFile.TabIndex = 9;
             this.textBoxGainCalibrationFile.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.textBoxGainCalibrationFile.TextChanged += new System.EventHandler(this.FileTextChanged);
@@ -546,54 +448,31 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.comboBoxReference.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxReference.FormattingEnabled = true;
-            this.comboBoxReference.Location = new System.Drawing.Point(76, 203);
+            this.comboBoxReference.Location = new System.Drawing.Point(76, 191);
             this.comboBoxReference.Margin = new System.Windows.Forms.Padding(2);
             this.comboBoxReference.Name = "comboBoxReference";
-            this.comboBoxReference.Size = new System.Drawing.Size(133, 21);
+            this.comboBoxReference.Size = new System.Drawing.Size(132, 21);
             this.comboBoxReference.TabIndex = 5;
             // 
             // comboBoxLfpGain
             // 
             this.comboBoxLfpGain.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxLfpGain.FormattingEnabled = true;
-            this.comboBoxLfpGain.Location = new System.Drawing.Point(39, 147);
+            this.comboBoxLfpGain.Location = new System.Drawing.Point(76, 135);
             this.comboBoxLfpGain.Margin = new System.Windows.Forms.Padding(2);
             this.comboBoxLfpGain.Name = "comboBoxLfpGain";
-            this.comboBoxLfpGain.Size = new System.Drawing.Size(82, 21);
+            this.comboBoxLfpGain.Size = new System.Drawing.Size(132, 21);
             this.comboBoxLfpGain.TabIndex = 3;
             // 
             // comboBoxApGain
             // 
             this.comboBoxApGain.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxApGain.FormattingEnabled = true;
-            this.comboBoxApGain.Location = new System.Drawing.Point(39, 118);
+            this.comboBoxApGain.Location = new System.Drawing.Point(76, 106);
             this.comboBoxApGain.Margin = new System.Windows.Forms.Padding(2);
             this.comboBoxApGain.Name = "comboBoxApGain";
-            this.comboBoxApGain.Size = new System.Drawing.Size(82, 21);
+            this.comboBoxApGain.Size = new System.Drawing.Size(132, 21);
             this.comboBoxApGain.TabIndex = 1;
-            // 
-            // tabPageADCs
-            // 
-            this.tabPageADCs.Controls.Add(this.dataGridViewAdcs);
-            this.tabPageADCs.Location = new System.Drawing.Point(4, 22);
-            this.tabPageADCs.Margin = new System.Windows.Forms.Padding(2);
-            this.tabPageADCs.Name = "tabPageADCs";
-            this.tabPageADCs.Size = new System.Drawing.Size(990, 528);
-            this.tabPageADCs.TabIndex = 2;
-            this.tabPageADCs.Text = "ADCs";
-            this.tabPageADCs.UseVisualStyleBackColor = true;
-            // 
-            // dataGridViewAdcs
-            // 
-            this.dataGridViewAdcs.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridViewAdcs.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridViewAdcs.Location = new System.Drawing.Point(0, 0);
-            this.dataGridViewAdcs.Margin = new System.Windows.Forms.Padding(2);
-            this.dataGridViewAdcs.Name = "dataGridViewAdcs";
-            this.dataGridViewAdcs.RowHeadersWidth = 62;
-            this.dataGridViewAdcs.RowTemplate.Height = 28;
-            this.dataGridViewAdcs.Size = new System.Drawing.Size(990, 528);
-            this.dataGridViewAdcs.TabIndex = 0;
             // 
             // panel1
             // 
@@ -603,14 +482,14 @@
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Margin = new System.Windows.Forms.Padding(2);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(998, 30);
+            this.panel1.Size = new System.Drawing.Size(998, 29);
             this.panel1.TabIndex = 0;
             // 
             // buttonCancel
             // 
             this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.buttonCancel.Location = new System.Drawing.Point(908, 1);
+            this.buttonCancel.Location = new System.Drawing.Point(908, 0);
             this.buttonCancel.Margin = new System.Windows.Forms.Padding(2);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(83, 22);
@@ -621,7 +500,7 @@
             // buttonOkay
             // 
             this.buttonOkay.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOkay.Location = new System.Drawing.Point(819, 1);
+            this.buttonOkay.Location = new System.Drawing.Point(819, 0);
             this.buttonOkay.Margin = new System.Windows.Forms.Padding(2);
             this.buttonOkay.Name = "buttonOkay";
             this.buttonOkay.Size = new System.Drawing.Size(83, 22);
@@ -630,37 +509,12 @@
             this.buttonOkay.UseVisualStyleBackColor = true;
             this.buttonOkay.Click += new System.EventHandler(this.ButtonClick);
             // 
-            // buttonChooseGainCalibrationFile
-            // 
-            this.buttonChooseGainCalibrationFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonChooseGainCalibrationFile.Location = new System.Drawing.Point(181, 72);
-            this.buttonChooseGainCalibrationFile.Margin = new System.Windows.Forms.Padding(2);
-            this.buttonChooseGainCalibrationFile.Name = "buttonChooseGainCalibrationFile";
-            this.buttonChooseGainCalibrationFile.Size = new System.Drawing.Size(28, 20);
-            this.buttonChooseGainCalibrationFile.TabIndex = 35;
-            this.buttonChooseGainCalibrationFile.Text = "...";
-            this.buttonChooseGainCalibrationFile.UseVisualStyleBackColor = true;
-            this.buttonChooseGainCalibrationFile.Click += new System.EventHandler(this.ButtonClick);
-            // 
-            // buttonChooseAdcCalibrationFile
-            // 
-            this.buttonChooseAdcCalibrationFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonChooseAdcCalibrationFile.Location = new System.Drawing.Point(181, 24);
-            this.buttonChooseAdcCalibrationFile.Margin = new System.Windows.Forms.Padding(2);
-            this.buttonChooseAdcCalibrationFile.Name = "buttonChooseAdcCalibrationFile";
-            this.buttonChooseAdcCalibrationFile.Size = new System.Drawing.Size(28, 20);
-            this.buttonChooseAdcCalibrationFile.TabIndex = 36;
-            this.buttonChooseAdcCalibrationFile.Text = "...";
-            this.buttonChooseAdcCalibrationFile.UseVisualStyleBackColor = true;
-            this.buttonChooseAdcCalibrationFile.Click += new System.EventHandler(this.ButtonClick);
-            // 
             // NeuropixelsV1eDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(998, 627);
             this.Controls.Add(this.splitContainer1);
-            this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.menuStrip);
             this.DoubleBuffered = true;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -671,8 +525,6 @@
             this.Text = "NeuropixelsV1eDialog";
             this.menuStrip.ResumeLayout(false);
             this.menuStrip.PerformLayout();
-            this.statusStrip.ResumeLayout(false);
-            this.statusStrip.PerformLayout();
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
@@ -689,8 +541,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.trackBarProbePosition)).EndInit();
             this.panelOptions.ResumeLayout(false);
             this.panelOptions.PerformLayout();
-            this.tabPageADCs.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewAdcs)).EndInit();
             this.panel1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -700,7 +550,6 @@
         #endregion
 
         private System.Windows.Forms.MenuStrip menuStrip;
-        private System.Windows.Forms.StatusStrip statusStrip;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.TabControl tabControlProbe;
         private System.Windows.Forms.TabPage tabPageProbe;
@@ -708,19 +557,12 @@
         private System.Windows.Forms.SplitContainer splitContainer2;
         private System.Windows.Forms.Button buttonCancel;
         private System.Windows.Forms.Button buttonOkay;
-        private System.Windows.Forms.ToolStripStatusLabel gainCalibrationSN;
-        private System.Windows.Forms.ToolStripStatusLabel adcCalibrationSN;
-        private System.Windows.Forms.ToolStripStatusLabel toolStripStatus;
-        private System.Windows.Forms.TabPage tabPageADCs;
-        private System.Windows.Forms.DataGridView dataGridViewAdcs;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.Panel panelOptions;
         private System.Windows.Forms.Button buttonEnableContacts;
         private System.Windows.Forms.Button buttonClearSelections;
         private System.Windows.Forms.ComboBox comboBoxChannelPresets;
         private System.Windows.Forms.Button buttonResetZoom;
-        private System.Windows.Forms.TextBox textBoxLfpGainCorrection;
-        private System.Windows.Forms.TextBox textBoxApGainCorrection;
         private System.Windows.Forms.CheckBox checkBoxSpikeFilter;
         private System.Windows.Forms.TextBox textBoxAdcCalibrationFile;
         private System.Windows.Forms.TextBox textBoxGainCalibrationFile;

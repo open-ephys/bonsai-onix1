@@ -23,11 +23,6 @@ namespace OpenEphys.Onix1.Design
             None
         }
 
-        NeuropixelsV1eAdc[] Adcs = null;
-
-        double ApGainCorrection = default;
-        double LfpGainCorrection = default;
-
         /// <summary>
         /// Public <see cref="ConfigureNeuropixelsV1e"/> instance that is manipulated by
         /// <see cref="NeuropixelsV1eDialog"/>.
@@ -122,55 +117,14 @@ namespace OpenEphys.Onix1.Design
                 if (textBox.Name == nameof(textBoxGainCalibrationFile))
                 {
                     ConfigureNode.GainCalibrationFile = textBox.Text;
-                    ParseGainCalibrationFile();
                 }
                 else if (textBox.Name == nameof(textBoxAdcCalibrationFile))
                 {
                     ConfigureNode.AdcCalibrationFile = textBox.Text;
-                    ParseAdcCalibrationFile();
                 }
             }
 
             CheckStatus();
-        }
-
-        private void ParseAdcCalibrationFile()
-        {
-            if (ConfigureNode.AdcCalibrationFile != null && ConfigureNode.AdcCalibrationFile != "")
-            {
-                if (File.Exists(ConfigureNode.AdcCalibrationFile))
-                {
-                    StreamReader adcFile = new(ConfigureNode.AdcCalibrationFile);
-
-                    var adcCalibration = NeuropixelsV1Helper.ParseAdcCalibrationFile(adcFile);
-
-                    adcCalibrationSN.Text = adcCalibration.SN.ToString();
-                    Adcs = adcCalibration.Adcs;
-
-                    dataGridViewAdcs.DataSource = Adcs;
-
-                    adcFile.Close();
-                }
-            }
-        }
-
-        private void ParseGainCalibrationFile()
-        {
-            if (ConfigureNode.GainCalibrationFile != null && ConfigureNode.GainCalibrationFile != "")
-            {
-                if (File.Exists(ConfigureNode.GainCalibrationFile))
-                {
-                    StreamReader gainCalibrationFile = new(ConfigureNode.GainCalibrationFile);
-
-                    var gainCorrection = NeuropixelsV1Helper.ParseGainCalibrationFile(gainCalibrationFile, ConfigureNode.ProbeConfiguration.SpikeAmplifierGain, ConfigureNode.ProbeConfiguration.LfpAmplifierGain);
-
-                    gainCalibrationSN.Text = gainCorrection.SN.ToString();
-                    ApGainCorrection = gainCorrection.AP;
-                    LfpGainCorrection = gainCorrection.LFP;
-
-                    gainCalibrationFile.Close();
-                }
-            }
         }
 
         private void SelectedIndexChanged(object sender, EventArgs e)
@@ -180,22 +134,10 @@ namespace OpenEphys.Onix1.Design
                 if (comboBox.Name == nameof(comboBoxApGain))
                 {
                     ConfigureNode.ProbeConfiguration.SpikeAmplifierGain = (NeuropixelsV1Gain)comboBox.SelectedItem;
-                    ParseGainCalibrationFile();
-
-                    if (ApGainCorrection != default && LfpGainCorrection != default)
-                    {
-                        ShowCorrectionValues();
-                    }
                 }
                 else if (comboBox.Name == nameof(comboBoxLfpGain))
                 {
                     ConfigureNode.ProbeConfiguration.LfpAmplifierGain = (NeuropixelsV1Gain)comboBox.SelectedItem;
-                    ParseGainCalibrationFile();
-
-                    if (ApGainCorrection != default && LfpGainCorrection != default)
-                    {
-                        ShowCorrectionValues();
-                    }
                 }
                 else if (comboBox.Name == nameof(comboBoxReference))
                 {
@@ -295,33 +237,7 @@ namespace OpenEphys.Onix1.Design
 
         private void CheckStatus()
         {
-            if (gainCalibrationSN.Text == "" || adcCalibrationSN.Text == "" || gainCalibrationSN.Text != adcCalibrationSN.Text)
-            {
-                toolStripStatus.Image = Properties.Resources.StatusWarningImage;
-                toolStripStatus.Text = "Serial number mismatch";
-            }
-            else if (!ChannelConfiguration.ChannelConfiguration.ValidateDeviceChannelIndices())
-            {
-                toolStripStatus.Image = Properties.Resources.StatusBlockedImage;
-                toolStripStatus.Text = "Invalid channels selected";
-            }
-            else
-            {
-                toolStripStatus.Image = Properties.Resources.StatusReadyImage;
-                toolStripStatus.Text = "";
-            }
-
-            if (ApGainCorrection != default && LfpGainCorrection != default)
-            {
-                ShowCorrectionValues();
-            }
-            else
-            {
-                textBoxApGainCorrection.Text = "";
-                textBoxLfpGainCorrection.Text = "";
-            }
-
-            if (ApGainCorrection != default && LfpGainCorrection != default && Adcs != null)
+            if (File.Exists(ConfigureNode.AdcCalibrationFile) && File.Exists(ConfigureNode.GainCalibrationFile))
             {
                 panelProbe.Visible = true;
             }
@@ -329,12 +245,6 @@ namespace OpenEphys.Onix1.Design
             {
                 panelProbe.Visible = false;
             }
-        }
-
-        private void ShowCorrectionValues()
-        {
-            textBoxApGainCorrection.Text = ApGainCorrection.ToString();
-            textBoxLfpGainCorrection.Text = LfpGainCorrection.ToString();
         }
 
         private void ButtonClick(object sender, EventArgs e)
