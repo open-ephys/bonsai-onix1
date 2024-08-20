@@ -117,84 +117,84 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets the direction of channel 0.
         /// </summary>
-        [Category(AcquisitionCategory)]
+        [Category(ConfigurationCategory)]
         [Description("The direction of channel 0.")]
         public BreakoutAnalogIODirection Direction0 { get; set; }
 
         /// <summary>
         /// Gets or sets the direction of channel 1.
         /// </summary>
-        [Category(AcquisitionCategory)]
+        [Category(ConfigurationCategory)]
         [Description("The direction of channel 1.")]
         public BreakoutAnalogIODirection Direction1 { get; set; }
 
         /// <summary>
         /// Gets or sets the direction of channel 2.
         /// </summary>
-        [Category(AcquisitionCategory)]
+        [Category(ConfigurationCategory)]
         [Description("The direction of channel 2.")]
         public BreakoutAnalogIODirection Direction2 { get; set; }
 
         /// <summary>
         /// Gets or sets the direction of channel 3.
         /// </summary>
-        [Category(AcquisitionCategory)]
+        [Category(ConfigurationCategory)]
         [Description("The direction of channel 3.")]
         public BreakoutAnalogIODirection Direction3 { get; set; }
 
         /// <summary>
         /// Gets or sets the direction of channel 4.
         /// </summary>
-        [Category(AcquisitionCategory)]
+        [Category(ConfigurationCategory)]
         [Description("The direction of channel 4.")]
         public BreakoutAnalogIODirection Direction4 { get; set; }
 
         /// <summary>
         /// Gets or sets the direction of channel 5.
         /// </summary>
-        [Category(AcquisitionCategory)]
+        [Category(ConfigurationCategory)]
         [Description("The direction of channel 5.")]
         public BreakoutAnalogIODirection Direction5 { get; set; }
 
         /// <summary>
         /// Gets or sets the direction of channel 6.
         /// </summary>
-        [Category(AcquisitionCategory)]
+        [Category(ConfigurationCategory)]
         [Description("The direction of channel 6.")]
         public BreakoutAnalogIODirection Direction6 { get; set; }
 
         /// <summary>
         /// Gets or sets the direction of channel 7.
         /// </summary>
-        [Category(AcquisitionCategory)]
+        [Category(ConfigurationCategory)]
         [Description("The direction of channel 7.")]
         public BreakoutAnalogIODirection Direction7 { get; set; }
 
         /// <summary>
         /// Gets or sets the direction of channel 8.
         /// </summary>
-        [Category(AcquisitionCategory)]
+        [Category(ConfigurationCategory)]
         [Description("The direction of channel 8.")]
         public BreakoutAnalogIODirection Direction8 { get; set; }
 
         /// <summary>
         /// Gets or sets the direction of channel 9.
         /// </summary>
-        [Category(AcquisitionCategory)]
+        [Category(ConfigurationCategory)]
         [Description("The direction of channel 9.")]
         public BreakoutAnalogIODirection Direction9 { get; set; }
 
         /// <summary>
         /// Gets or sets the direction of channel 10.
         /// </summary>
-        [Category(AcquisitionCategory)]
+        [Category(ConfigurationCategory)]
         [Description("The direction of channel 10.")]
         public BreakoutAnalogIODirection Direction10 { get; set; }
 
         /// <summary>
         /// Gets or sets the direction of channel 11.
         /// </summary>
-        [Category(AcquisitionCategory)]
+        [Category(ConfigurationCategory)]
         [Description("The direction of channel 11.")]
         public BreakoutAnalogIODirection Direction11 { get; set; }
 
