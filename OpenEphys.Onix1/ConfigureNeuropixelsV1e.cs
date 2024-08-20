@@ -90,8 +90,16 @@ namespace OpenEphys.Onix1
         /// Gets or sets the path to the gain calibration file.
         /// </summary>
         /// <remarks>
-        /// Each probe must be provided with a gain calibration file that contains calibration data
-        /// specific to each probe. This file is mandatory for accurate recordings.
+        /// <para>
+        /// Each probe is linked to a gain calibration file that contains gain adjustments determined by IMEC during
+        /// factory testing. Electrode voltages are scaled using these values to ensure they can be accurately compared
+        /// across probes. Therefore, using the correct gain calibration file is mandatory to create standardized recordings.
+        /// </para>
+        /// <para>
+        /// Calibration files are probe-specific and not interchangeable across probes. Calibration files must contain the 
+        /// serial number of the corresponding probe on their first line of text. If you have lost track of a calibration 
+        /// file for your probe, email IMEC at neuropixels.info@imec.be with the probe serial number to retrieve a new copy.
+        /// </para>
         /// </remarks>
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the Neuropixels 1.0 gain calibration file.")]
@@ -102,8 +110,17 @@ namespace OpenEphys.Onix1
         /// Gets or sets the path to the ADC calibration file.
         /// </summary>
         /// <remarks>
-        /// Each probe must be provided with an ADC calibration file that contains calibration data
-        /// specific to each probe. This file is mandatory for accurate recordings.
+        /// <para>
+        /// Each probe must be provided with an ADC calibration file that contains probe-specific hardware settings that is
+        /// created by IMEC during factory calibration. These files are used to set internal bias currents, correct for ADC
+        /// nonlinearities, correct ADC-zero crossing non-monotonicities, etc. Using the correct calibration file is mandatory
+        /// for the probe to operate correctly. 
+        /// </para>
+        /// <para>
+        /// Calibration files are probe-specific and not interchangeable across probes. Calibration files must contain the 
+        /// serial number of the corresponding probe on their first line of text. If you have lost track of a calibration 
+        /// file for your probe, email IMEC at neuropixels.info@imec.be with the probe serial number to retrieve a new copy.
+        /// </para>
         /// </remarks>
         [FileNameFilter("ADC calibration files (*_ADCCalibration.csv)|*_ADCCalibration.csv")]
         [Description("Path to the Neuropixels 1.0 ADC calibration file.")]
