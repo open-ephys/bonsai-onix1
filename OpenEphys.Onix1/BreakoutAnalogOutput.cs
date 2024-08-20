@@ -89,12 +89,9 @@ namespace OpenEphys.Onix1
                     var dataSize = outputBuffer.Step * outputBuffer.Rows;
 
                     // twos-complement to offset binary
-                    var dataPtr = (short *)outputBuffer.Data.ToPointer();
                     const short Mask = -32768;
-                    for (int i = 0; i < dataSize / sizeof(short); i++)
-                        *(dataPtr + i) ^= Mask;
-
-                     device.Write(outputBuffer.Data, dataSize);
+                    CV.XorS(outputBuffer, new Scalar(Mask, 0, 0), outputBuffer);
+                    device.Write(outputBuffer.Data, dataSize);
                 });
             });
         }
