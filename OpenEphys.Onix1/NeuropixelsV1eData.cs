@@ -17,6 +17,7 @@ namespace OpenEphys.Onix1
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(NeuropixelsV1e.NameConverter))]
         [Description(SingleDeviceFactory.DeviceNameDescription)]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         int bufferSize = 36;
@@ -31,6 +32,7 @@ namespace OpenEphys.Onix1
         /// </remarks>
         [Description("Number of super-frames (384 channels from spike band and 32 channels from " +
             "LFP band) to buffer before propagating data. Must be a multiple of 12.")]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public int BufferSize
         {
             get => bufferSize;

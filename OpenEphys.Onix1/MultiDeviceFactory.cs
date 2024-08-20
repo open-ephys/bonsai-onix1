@@ -44,6 +44,7 @@ namespace OpenEphys.Onix1
         /// the <see cref="SingleDeviceFactory.DeviceName"/> of each device in the the group. 
         /// </remarks>
         [Description("The unique device group name.")]
+        [Category(ConfigurationCategory)]
         public string Name
         {
             get { return _name; }

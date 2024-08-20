@@ -4,7 +4,6 @@ namespace OpenEphys.Onix1
 {
     class ConfigureNeuropixelsV2eLinkController : ConfigureFmcLinkController
     {
-
         protected override bool ConfigurePortVoltage(DeviceContext device)
         {
             const double MinVoltage = 3.3;

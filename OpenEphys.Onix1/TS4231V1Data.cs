@@ -27,6 +27,7 @@ namespace OpenEphys.Onix1
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(TS4231V1.NameConverter))]
         [Description(SingleDeviceFactory.DeviceNameDescription)]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>

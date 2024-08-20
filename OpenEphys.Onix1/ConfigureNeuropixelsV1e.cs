@@ -96,6 +96,7 @@ namespace OpenEphys.Onix1
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the Neuropixels 1.0 gain calibration file.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
+        [Category(ConfigurationCategory)]
         public string GainCalibrationFile { get; set; }
 
         /// <summary>
@@ -108,6 +109,7 @@ namespace OpenEphys.Onix1
         [FileNameFilter("ADC calibration files (*_ADCCalibration.csv)|*_ADCCalibration.csv")]
         [Description("Path to the Neuropixels 1.0 ADC calibration file.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
+        [Category(ConfigurationCategory)]
         public string AdcCalibrationFile { get; set; }
 
         /// <summary>

@@ -19,6 +19,7 @@ namespace OpenEphys.Onix1
         [Description("Specifies the supplied port voltage. If this value is specified, it will override automated" +
                      "voltage discovery. Warning: Supplying excessive voltage may result in damage to devices. " +
                      "Consult the device datasheet and documentation for allowable voltage ranges.")]
+        [Category(ConfigurationCategory)]
         public double? PortVoltage { get; set; } = null;
 
         protected virtual bool CheckLinkState(DeviceContext device)

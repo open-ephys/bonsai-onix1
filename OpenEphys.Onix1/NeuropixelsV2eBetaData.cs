@@ -17,6 +17,7 @@ namespace OpenEphys.Onix1
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(NeuropixelsV2eBeta.NameConverter))]
         [Description(SingleDeviceFactory.DeviceNameDescription)]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -26,12 +27,14 @@ namespace OpenEphys.Onix1
         /// Buffer size sets the number of frames that are buffered before propagating data.
         /// </remarks>
         [Description("The number of samples collected for each channel that are used to create a single NeuropixelsV2eBetaDataFrame.")]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public int BufferSize { get; set; } = 30;
 
         /// <summary>
         /// Gets or sets the probe index.
         /// </summary>
         [Description("The index of the probe from which to collect sample data")]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public NeuropixelsV2Probe ProbeIndex { get; set; }
 
         /// <summary>

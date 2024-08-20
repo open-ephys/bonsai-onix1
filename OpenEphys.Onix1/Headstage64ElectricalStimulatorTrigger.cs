@@ -37,6 +37,7 @@ namespace OpenEphys.Onix1
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(Headstage64ElectricalStimulator.NameConverter))]
         [Description(SingleDeviceFactory.DeviceNameDescription)]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -46,6 +47,7 @@ namespace OpenEphys.Onix1
         /// If set to true, then the electrical stimulator circuit will respect triggers. If set to false, triggers will be ignored.
         /// </remarks>
         [Description("Specifies whether the electrical stimulator will respect triggers.")]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public bool Enable
         {
             get => enable.Value;
@@ -62,6 +64,7 @@ namespace OpenEphys.Onix1
         /// in order for electrical stimuli to be delivered properly. It takes ~10 milliseconds for these supplies to stabilize.
         /// </remarks>
         [Description("Stimulator power on/off.")]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public bool PowerEnable
         {
             get => powerEnable.Value;
@@ -73,6 +76,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Description("A delay from receiving a trigger to the start of stimulus sequence application (uSec).")]
         [Range(0, uint.MaxValue)]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public uint TriggerDelay
         {
             get => triggerDelay.Value;
@@ -87,6 +91,7 @@ namespace OpenEphys.Onix1
         [Range(-Headstage64ElectricalStimulator.AbsMaxMicroAmps, Headstage64ElectricalStimulator.AbsMaxMicroAmps)]
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
         [Precision(3, 1)]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public double PhaseOneCurrent
         {
             get => phaseOneCurrent.Value;
@@ -100,6 +105,7 @@ namespace OpenEphys.Onix1
         [Range(-Headstage64ElectricalStimulator.AbsMaxMicroAmps, Headstage64ElectricalStimulator.AbsMaxMicroAmps)]
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
         [Precision(3, 1)]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public double InterPhaseCurrent
         {
             get => interPhaseCurrent.Value;
@@ -113,6 +119,7 @@ namespace OpenEphys.Onix1
         [Range(-Headstage64ElectricalStimulator.AbsMaxMicroAmps, Headstage64ElectricalStimulator.AbsMaxMicroAmps)]
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
         [Precision(3, 1)]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public double PhaseTwoCurrent
         {
             get => phaseTwoCurrent.Value;
@@ -124,6 +131,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Description("The duration of the first phase of each pulse in μsec.")]
         [Range(0, uint.MaxValue)]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public uint PhaseOneDuration
         {
             get => phaseOneDuration.Value;
@@ -135,6 +143,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Description("The duration of the interphase interval of each pulse (uSec).")]
         [Range(0, uint.MaxValue)]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public uint InterPhaseInterval
         {
             get => interPhaseInterval.Value;
@@ -146,6 +155,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Description("The duration of the second phase of each pulse (uSec).")]
         [Range(0, uint.MaxValue)]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public uint PhaseTwoDuration
         {
             get => phaseTwoDuration.Value;
@@ -157,6 +167,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Description("The duration of the inter-pulse interval within a single burst (uSec).")]
         [Range(0, uint.MaxValue)]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public uint InterPulseInterval
         {
             get => interPulseInterval.Value;
@@ -168,6 +179,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Description("The duration of the inter-burst interval within a stimulus train (uSec).")]
         [Range(0, uint.MaxValue)]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public uint InterBurstInterval
         {
             get => interBurstInterval.Value;
@@ -179,6 +191,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Description("The number of pulses per burst.")]
         [Range(0, uint.MaxValue)]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public uint BurstPulseCount
         {
             get => burstPulseCount.Value;
@@ -190,6 +203,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Description("The number of bursts in each train.")]
         [Range(0, uint.MaxValue)]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public uint TrainBurstCount
         {
             get => trainBurstCount.Value;

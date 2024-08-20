@@ -41,6 +41,7 @@ namespace OpenEphys.Onix1
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(TS4231V1.NameConverter))]
         [Description(SingleDeviceFactory.DeviceNameDescription)]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -51,6 +52,7 @@ namespace OpenEphys.Onix1
         /// Typically this value is used to define the origin and remains at (0, 0, 0).
         /// </remarks>
         [Description("The position of the first base station in arbitrary units.")]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public Point3d P { get; set; } = new(0, 0, 0);
 
         /// <summary>
@@ -60,6 +62,7 @@ namespace OpenEphys.Onix1
         /// The units used will determine the units of <see cref="TS4231V1PositionDataFrame.Position"/> and must match those used in <see cref="P"/>.
         /// </remarks>
         [Description("The position of the second base station in arbitrary units.")]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public Point3d Q { get; set; } = new(1, 0, 0);
 
         /// <summary>
