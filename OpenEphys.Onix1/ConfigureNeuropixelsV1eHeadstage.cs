@@ -8,6 +8,7 @@ namespace OpenEphys.Onix1
     /// A class that configures a NeuropixelsV1e headstage.
     /// </summary>
     [Description("Configures a NeuropixelsV1e headstage.")]
+    [Editor("OpenEphys.Onix1.Design.NeuropixelsV1eHeadstageEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureNeuropixelsV1eHeadstage : MultiDeviceFactory
     {
         PortName port;

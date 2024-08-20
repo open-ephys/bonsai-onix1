@@ -10,6 +10,7 @@ namespace OpenEphys.Onix1
     /// A class that configures a NeuropixelsV1e device.
     /// </summary>
     [Description("Configures a NeuropixelsV1e device.")]
+    [Editor("OpenEphys.Onix1.Design.NeuropixelsV1eEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureNeuropixelsV1e : SingleDeviceFactory
     {
         /// <summary>
@@ -18,6 +19,22 @@ namespace OpenEphys.Onix1
         public ConfigureNeuropixelsV1e()
             : base(typeof(NeuropixelsV1e))
         {
+        }
+
+        /// <summary>
+        /// Copy constructor for the <see cref="ConfigureNeuropixelsV1e"/> class.
+        /// </summary>
+        /// <param name="configureNeuropixelsV1e">Existing <see cref="ConfigureNeuropixelsV1e"/> instance.</param>
+        public ConfigureNeuropixelsV1e(ConfigureNeuropixelsV1e configureNeuropixelsV1e)
+            : base(typeof(NeuropixelsV1e))
+        {
+            Enable = configureNeuropixelsV1e.Enable;
+            EnableLed = configureNeuropixelsV1e.EnableLed;
+            GainCalibrationFile = configureNeuropixelsV1e.GainCalibrationFile;
+            AdcCalibrationFile = configureNeuropixelsV1e.AdcCalibrationFile;
+            ProbeConfiguration = new(configureNeuropixelsV1e.ProbeConfiguration);
+            DeviceName = configureNeuropixelsV1e.DeviceName;
+            DeviceAddress = configureNeuropixelsV1e.DeviceAddress;
         }
 
         /// <summary>
@@ -40,51 +57,6 @@ namespace OpenEphys.Onix1
         [Category(ConfigurationCategory)]
         [Description("If true, the headstage LED will turn on during data acquisition. If false, the LED will not turn on.")]
         public bool EnableLed { get; set; } = true;
-
-        /// <summary>
-        /// Gets or sets the amplifier gain for the spike-band.
-        /// </summary>
-        /// <remarks>
-        /// The spike-band is from DC to 10 kHz if <see cref="SpikeFilter"/> is set to false, while the 
-        /// spike-band is from 300 Hz to 10 kHz if <see cref="SpikeFilter"/> is set to true.
-        /// </remarks>
-        [Category(ConfigurationCategory)]
-        [Description("Amplifier gain for spike-band.")]
-        public NeuropixelsV1Gain SpikeAmplifierGain { get; set; } = NeuropixelsV1Gain.Gain1000;
-
-        /// <summary>
-        /// Gets or sets the amplifier gain for the LFP-band.
-        /// </summary>
-        /// <remarks>
-        /// The LFP band is from 0.5 to 500 Hz.
-        /// </remarks>
-        [Category(ConfigurationCategory)]
-        [Description("Amplifier gain for LFP-band.")]
-        public NeuropixelsV1Gain LfpAmplifierGain { get; set; } = NeuropixelsV1Gain.Gain50;
-
-        /// <summary>
-        /// Gets or sets the reference for all electrodes.
-        /// </summary>
-        /// <remarks>
-        /// All electrodes are set to the same reference, which can be either 
-        /// <see cref="NeuropixelsV1ReferenceSource.External"/> or <see cref="NeuropixelsV1ReferenceSource.Tip"/>. 
-        /// Setting to <see cref="NeuropixelsV1ReferenceSource.External"/> will use the external reference, while 
-        /// <see cref="NeuropixelsV1ReferenceSource.Tip"/> sets the reference to the electrode at the tip of the probe.
-        /// </remarks>
-        [Category(ConfigurationCategory)]
-        [Description("Reference selection.")]
-        public NeuropixelsV1ReferenceSource Reference { get; set; } = NeuropixelsV1ReferenceSource.External;
-
-        /// <summary>
-        /// Gets or sets the state of the spike-band filter.
-        /// </summary>
-        /// <remarks>
-        /// If set to true, the spike-band has a 300 Hz high-pass filter which will be activated. If set to
-        /// false, the high-pass filter will not to be activated.
-        /// </remarks>
-        [Category(ConfigurationCategory)]
-        [Description("If true, activates a 300 Hz high-pass filter in the spike-band data stream.")]
-        public bool SpikeFilter { get; set; } = true;
 
         /// <summary>
         /// Gets or sets the path to the gain calibration file.
@@ -128,6 +100,13 @@ namespace OpenEphys.Onix1
         public string AdcCalibrationFile { get; set; }
 
         /// <summary>
+        /// Gets or sets the NeuropixelsV1e probe configuration.
+        /// </summary>
+        [Category(ConfigurationCategory)]
+        [Description("Neuropixels 1.0e probe configuration")]
+        public NeuropixelsV1eProbeConfiguration ProbeConfiguration { get; set; } = new();
+
+        /// <summary>
         /// Configures a NeuropixelsV1e device.
         /// </summary>
         /// <remarks>
@@ -167,7 +146,8 @@ namespace OpenEphys.Onix1
                 ResetProbe(serializer, gpo10Config);
 
                 // program shift registers
-                var probeControl = new NeuropixelsV1eRegisterContext(device, NeuropixelsV1e.ProbeAddress, probeMetadata.ProbeSerialNumber, SpikeAmplifierGain, LfpAmplifierGain, Reference, SpikeFilter, GainCalibrationFile, AdcCalibrationFile);
+                var probeControl = new NeuropixelsV1eRegisterContext(device, NeuropixelsV1e.ProbeAddress, 
+                                        probeMetadata.ProbeSerialNumber, ProbeConfiguration, GainCalibrationFile, AdcCalibrationFile);
                 probeControl.InitializeProbe();
                 probeControl.WriteConfiguration();
                 probeControl.StartAcquisition();
@@ -254,6 +234,7 @@ namespace OpenEphys.Onix1
         public const int FramesPerRoundRobin = 12;
         public const int AdcCount = 32;
         public const int ChannelCount = 384;
+        public const int ElectrodeCount = 960;
         public const int FrameWords = 40;
 
         // unmanaged registers

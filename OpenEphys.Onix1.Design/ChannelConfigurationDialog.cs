@@ -44,6 +44,8 @@ namespace OpenEphys.Onix1.Design
 
             SelectedContacts = new bool[ChannelConfiguration.NumberOfContacts];
 
+            ReferenceContacts = new List<int>();
+
             zedGraphChannels.MouseDownEvent += MouseDownEvent;
             zedGraphChannels.MouseMoveEvent += MouseMoveEvent;
             zedGraphChannels.MouseUpEvent += MouseUpEvent;
@@ -1079,7 +1081,6 @@ namespace OpenEphys.Onix1.Design
         private bool MouseUpEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             sender.Cursor = Cursors.Arrow;
-
             if (e.Button == MouseButtons.Left)
             {
                 if (sender.GraphPane.GraphObjList[SelectionAreaTag] is BoxObj selectionArea && selectionArea != null && ChannelConfiguration != null)
@@ -1095,7 +1096,6 @@ namespace OpenEphys.Onix1.Design
                                                                             {
                                                                                 var x = c.Location.X + c.Location.Width / 2;
                                                                                 var y = c.Location.Y - c.Location.Height / 2;
-
                                                                                 return c is not PolyObj &&
                                                                                         x >= rect.X &&
                                                                                         x <= rect.X + rect.Width &&
