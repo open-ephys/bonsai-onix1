@@ -202,7 +202,11 @@ namespace OpenEphys.Onix1
                 {
                     var device = deviceInfo.GetDeviceContext(typeof(Headstage64OpticalStimulator));
                     var triggerObserver = Observer.Create<bool>(
-                        value => device.WriteRegister(Headstage64OpticalStimulator.TRIGGER, value ? 1u : 0u),
+                        value =>
+                        {
+                            device.WriteRegister(Headstage64OpticalStimulator.TRIGGER, value ? 1u : 0u);
+                            observer.OnNext(value);
+                        },
                         observer.OnError,
                         observer.OnCompleted);
 
