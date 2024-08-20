@@ -11,7 +11,7 @@ namespace OpenEphys.Onix1
     public class ConfigureHeadstage64 : MultiDeviceFactory
     {
         PortName port;
-        readonly ConfigureHeadstage64PortController LinkController = new();
+        readonly ConfigureHeadstage64PortController PortControl = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureHeadstage64"/> class.
@@ -35,7 +35,7 @@ namespace OpenEphys.Onix1
             // The FMC port voltage can only go down to 3.3V, which means that its very hard to find the true lowest voltage
             // for a lock and then add a large offset to that. Fixing this requires a hardware change.
             Port = PortName.PortA;
-            LinkController.HubConfiguration = HubConfiguration.Standard;
+            PortControl.HubConfiguration = HubConfiguration.Standard;
         }
 
         /// <summary>
@@ -92,7 +92,7 @@ namespace OpenEphys.Onix1
             {
                 port = value;
                 var offset = (uint)port << 8;
-                LinkController.DeviceAddress = (uint)port;
+                PortControl.DeviceAddress = (uint)port;
                 Rhd2164.DeviceAddress = offset + 0;
                 Bno055.DeviceAddress = offset + 1;
                 TS4231.DeviceAddress = offset + 2;
@@ -122,13 +122,13 @@ namespace OpenEphys.Onix1
                      "Supplying higher voltages may result in damage to the headstage.")]
         public double? PortVoltage
         {
-            get => LinkController.PortVoltage;
-            set => LinkController.PortVoltage = value;
+            get => PortControl.PortVoltage;
+            set => PortControl.PortVoltage = value;
         }
 
         internal override IEnumerable<IDeviceConfiguration> GetDevices()
         {
-            yield return LinkController;
+            yield return PortControl;
             yield return Rhd2164;
             yield return Bno055;
             yield return TS4231;
