@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Drawing.Design;
 using System.Reactive.Disposables;
 using Bonsai;
 
@@ -8,6 +9,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// A class that configures a NeuropixelsV2e device.
     /// </summary>
+    [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a NeuropixelsV2e device.")]
     public class ConfigureNeuropixelsV2e : SingleDeviceFactory
     {
@@ -17,6 +19,22 @@ namespace OpenEphys.Onix1
         public ConfigureNeuropixelsV2e()
             : base(typeof(NeuropixelsV2e))
         {
+        }
+
+        /// <summary>
+        /// Copy constructor for the <see cref="ConfigureNeuropixelsV2e"/> class.
+        /// </summary>
+        /// <param name="configureNode">A pre-existing <see cref="ConfigureNeuropixelsV2e"/> object.</param>
+        public ConfigureNeuropixelsV2e(ConfigureNeuropixelsV2e configureNode)
+            : base(typeof(NeuropixelsV2e))
+        {
+            Enable = configureNode.Enable;
+            ProbeConfigurationA = configureNode.ProbeConfigurationA;
+            ProbeConfigurationB = configureNode.ProbeConfigurationB;
+            GainCalibrationFileA = configureNode.GainCalibrationFileA;
+            GainCalibrationFileB = configureNode.GainCalibrationFileB;
+            DeviceName = configureNode.DeviceName;
+            DeviceAddress = configureNode.DeviceAddress;
         }
 
         /// <summary>
@@ -33,9 +51,16 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets the electrode configuration for Probe A.
         /// </summary>
+        /// <remarks>
+        /// Configuration is accomplished using a GUI to aid in channel selection and relevant configuration properties.
+        /// To open a probe configuration GUI, select the ellipses next the <see cref="ProbeConfigurationA"/> variable
+        /// in the property pane, or double-click <see cref="ConfigureNeuropixelsV2eHeadstage"/> to configure both
+        /// probes and the <see cref="ConfigureNeuropixelsV2eBno055"/> simultaneously.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Probe A electrode configuration.")]
-        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new();
+        [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
+        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new(NeuropixelsV2Probe.ProbeA);
 
         /// <summary>
         /// Gets or sets the path to the gain calibration file for Probe A.
@@ -52,6 +77,7 @@ namespace OpenEphys.Onix1
         /// file for your probe, email IMEC at neuropixels.info@imec.be with the probe serial number to retrieve a new copy.
         /// </para>
         /// </remarks>
+        [Category(ConfigurationCategory)]
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the gain calibration file for probe A.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
@@ -60,9 +86,16 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets the electrode configuration for Probe B.
         /// </summary>
+        /// <remarks>
+        /// Configuration is accomplished using a GUI to aid in channel selection and relevant configuration properties.
+        /// To open a probe configuration GUI, select the ellipses next the <see cref="ProbeConfigurationB"/> variable
+        /// in the property pane, or double-click <see cref="ConfigureNeuropixelsV2eHeadstage"/> to configure both
+        /// probes and the <see cref="ConfigureNeuropixelsV2eBno055"/> simultaneously.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Probe B electrode configuration.")]
-        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new();
+        [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
+        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new(NeuropixelsV2Probe.ProbeB);
 
         /// <summary>
         /// Gets or sets the path to the gain calibration file for Probe B.
@@ -79,6 +112,7 @@ namespace OpenEphys.Onix1
         /// file for your probe, email IMEC at neuropixels.info@imec.be with the probe serial number to retrieve a new copy.
         /// </para>
         /// </remarks>
+        [Category(ConfigurationCategory)]
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the gain calibration file for probe B.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]

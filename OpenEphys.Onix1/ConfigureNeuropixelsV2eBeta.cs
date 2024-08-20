@@ -45,7 +45,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Probe A electrode configuration.")]
-        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new();
+        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new(NeuropixelsV2Probe.ProbeA);
 
         /// <summary>
         /// Gets or sets the path to the gain calibration file for Probe A.
@@ -62,6 +62,7 @@ namespace OpenEphys.Onix1
         /// file for your probe, email IMEC at neuropixels.info@imec.be with the probe serial number to retrieve a new copy.
         /// </para>
         /// </remarks>
+        [Category(ConfigurationCategory)]
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the gain calibration file for probe A.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
@@ -72,7 +73,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Probe B electrode configuration.")]
-        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new();
+        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new(NeuropixelsV2Probe.ProbeB);
 
         /// <summary>
         /// Gets or sets the path to the gain calibration file for Probe B.
@@ -89,6 +90,7 @@ namespace OpenEphys.Onix1
         /// file for your probe, email IMEC at neuropixels.info@imec.be with the probe serial number to retrieve a new copy.
         /// </para>
         /// </remarks>
+        [Category(ConfigurationCategory)]
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the gain calibration file for probe B.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
