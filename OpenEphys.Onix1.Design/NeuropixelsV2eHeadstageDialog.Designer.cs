@@ -58,7 +58,7 @@
             this.tabControl1.Margin = new System.Windows.Forms.Padding(2);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(863, 469);
+            this.tabControl1.Size = new System.Drawing.Size(863, 468);
             this.tabControl1.TabIndex = 0;
             // 
             // tabPageNeuropixelsV2e
@@ -68,7 +68,7 @@
             this.tabPageNeuropixelsV2e.Margin = new System.Windows.Forms.Padding(2);
             this.tabPageNeuropixelsV2e.Name = "tabPageNeuropixelsV2e";
             this.tabPageNeuropixelsV2e.Padding = new System.Windows.Forms.Padding(2);
-            this.tabPageNeuropixelsV2e.Size = new System.Drawing.Size(855, 443);
+            this.tabPageNeuropixelsV2e.Size = new System.Drawing.Size(855, 442);
             this.tabPageNeuropixelsV2e.TabIndex = 0;
             this.tabPageNeuropixelsV2e.Text = "NeuropixelsV2e";
             this.tabPageNeuropixelsV2e.UseVisualStyleBackColor = true;
@@ -79,7 +79,7 @@
             this.panelNeuropixelsV2e.Location = new System.Drawing.Point(2, 2);
             this.panelNeuropixelsV2e.Margin = new System.Windows.Forms.Padding(2);
             this.panelNeuropixelsV2e.Name = "panelNeuropixelsV2e";
-            this.panelNeuropixelsV2e.Size = new System.Drawing.Size(851, 439);
+            this.panelNeuropixelsV2e.Size = new System.Drawing.Size(851, 438);
             this.panelNeuropixelsV2e.TabIndex = 0;
             // 
             // tabPageBno055
@@ -89,7 +89,7 @@
             this.tabPageBno055.Margin = new System.Windows.Forms.Padding(2);
             this.tabPageBno055.Name = "tabPageBno055";
             this.tabPageBno055.Padding = new System.Windows.Forms.Padding(2);
-            this.tabPageBno055.Size = new System.Drawing.Size(855, 443);
+            this.tabPageBno055.Size = new System.Drawing.Size(855, 444);
             this.tabPageBno055.TabIndex = 1;
             this.tabPageBno055.Text = "Bno055";
             this.tabPageBno055.UseVisualStyleBackColor = true;
@@ -100,13 +100,14 @@
             this.panelBno055.Location = new System.Drawing.Point(2, 2);
             this.panelBno055.Margin = new System.Windows.Forms.Padding(2);
             this.panelBno055.Name = "panelBno055";
-            this.panelBno055.Size = new System.Drawing.Size(851, 439);
+            this.panelBno055.Size = new System.Drawing.Size(851, 440);
             this.panelBno055.TabIndex = 0;
             // 
             // splitContainer1
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
+            this.splitContainer1.IsSplitterFixed = true;
             this.splitContainer1.Location = new System.Drawing.Point(0, 24);
             this.splitContainer1.Margin = new System.Windows.Forms.Padding(2);
             this.splitContainer1.Name = "splitContainer1";
@@ -121,7 +122,7 @@
             this.splitContainer1.Panel2.Controls.Add(this.buttonCancel);
             this.splitContainer1.Panel2.Controls.Add(this.buttonOkay);
             this.splitContainer1.Size = new System.Drawing.Size(863, 503);
-            this.splitContainer1.SplitterDistance = 469;
+            this.splitContainer1.SplitterDistance = 468;
             this.splitContainer1.SplitterWidth = 3;
             this.splitContainer1.TabIndex = 1;
             // 
@@ -129,7 +130,7 @@
             // 
             this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.buttonCancel.Location = new System.Drawing.Point(747, 3);
+            this.buttonCancel.Location = new System.Drawing.Point(747, -1);
             this.buttonCancel.Margin = new System.Windows.Forms.Padding(2);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(108, 26);
@@ -140,7 +141,7 @@
             // buttonOkay
             // 
             this.buttonOkay.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOkay.Location = new System.Drawing.Point(625, 3);
+            this.buttonOkay.Location = new System.Drawing.Point(625, -1);
             this.buttonOkay.Margin = new System.Windows.Forms.Padding(2);
             this.buttonOkay.Name = "buttonOkay";
             this.buttonOkay.Size = new System.Drawing.Size(108, 26);

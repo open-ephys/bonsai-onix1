@@ -78,7 +78,7 @@ namespace OpenEphys.Onix1.Design
             panelProbe.Controls.Add(ChannelConfiguration);
             this.AddMenuItemsFromDialogToFileOption(ChannelConfiguration);
 
-            panelProbe.Visible = File.Exists(textBoxProbeCalibrationFile.Text);
+            panelProbe.Visible = IsProbeCalibrationFileValid(textBoxProbeCalibrationFile.Text);
 
             ChannelConfiguration.OnZoom += UpdateTrackBarLocation;
             ChannelConfiguration.OnFileLoad += OnFileLoadEvent;
@@ -90,16 +90,6 @@ namespace OpenEphys.Onix1.Design
             comboBoxChannelPresets.DataSource = Enum.GetValues(typeof(ChannelPreset));
             comboBoxChannelPresets.SelectedIndexChanged += SelectedIndexChanged;
             CheckForExistingChannelPreset();
-        }
-
-        private string GetProbeName(NeuropixelsV2Probe probe)
-        {
-            return probe switch
-            {
-                NeuropixelsV2Probe.ProbeA => "Probe A",
-                NeuropixelsV2Probe.ProbeB => "Probe B",
-                _ => throw new ArgumentException("Invalid probe was specified.")
-            };
         }
 
         private void FormShown(object sender, EventArgs e)
@@ -517,6 +507,22 @@ namespace OpenEphys.Onix1.Design
             CheckForExistingChannelPreset();
         }
 
+        private void FileTextChanged(object sender, EventArgs e)
+        {
+            if (sender is TextBox textBox && textBox != null && textBox.Name == nameof(textBoxProbeCalibrationFile))
+            {
+                panelProbe.Visible = IsProbeCalibrationFileValid(textBoxProbeCalibrationFile.Text);
+            }
+        }
+
+        private bool IsProbeCalibrationFileValid(string file)
+        {
+            if (string.IsNullOrEmpty(file))
+                return false;
+
+            return File.Exists(file);
+        }
+
         internal void ButtonClick(object sender, EventArgs e)
         {
             if (sender is Button button && button != null)
@@ -537,11 +543,11 @@ namespace OpenEphys.Onix1.Design
                     if (ofd.ShowDialog() == DialogResult.OK)
                     {
                         textBoxProbeCalibrationFile.Text = ofd.FileName;
-                        panelProbe.Visible = true;
+                        panelProbe.Visible = IsProbeCalibrationFileValid(textBoxProbeCalibrationFile.Text);
                     }
                     else
                     {
-                        panelProbe.Visible = File.Exists(textBoxProbeCalibrationFile.Text);
+                        panelProbe.Visible = IsProbeCalibrationFileValid(textBoxProbeCalibrationFile.Text);
                     }
                 }
                 else if (button.Name == nameof(buttonResetZoom))
