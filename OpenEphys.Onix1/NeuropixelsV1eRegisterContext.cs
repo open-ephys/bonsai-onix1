@@ -31,26 +31,26 @@ namespace OpenEphys.Onix1
                 throw new ArgumentException("Calibration files must be specified.");
             }
 
-            StreamReader gainFile = new(gainCalibrationFile);
-            var calSerialNumber = ulong.Parse(gainFile.ReadLine());
-
-            if (calSerialNumber != probeSerialNumber)
-                throw new ArgumentException("Gain calibration file serial number does not match probe serial number.");
-
             StreamReader adcFile = new(adcCalibrationFile);
-            var adcSerialNumber = ulong.Parse(adcFile.ReadLine());
 
-            if (adcSerialNumber != probeSerialNumber)
-                throw new ArgumentException("ADC calibration file serial number does not match probe serial number.");
+            // parse ADC calibration file
+            var adcCalibration = NeuropixelsV1Helper.ParseAdcCalibrationFile(adcFile);
+
+            if (adcCalibration.SN != probeSerialNumber)
+                throw new ArgumentException($"ADC calibration file serial number {adcCalibration.SN} does not match probe serial number {probeSerialNumber}.");
+
+            StreamReader gainFile = new(gainCalibrationFile);
 
             // parse gain correction file
             var gainCorrection = NeuropixelsV1Helper.ParseGainCalibrationFile(gainFile, probeConfiguration.SpikeAmplifierGain, probeConfiguration.LfpAmplifierGain);
+
+            if (gainCorrection.SN != probeSerialNumber)
+                throw new ArgumentException($"Gain calibration file serial number {gainCorrection.SN} does not match probe serial number {probeSerialNumber}.");
+
             ApGainCorrection = gainCorrection.AP;
             LfpGainCorrection = gainCorrection.LFP;
 
-            // parse ADC calibration file
-            Adcs = NeuropixelsV1Helper.ParseAdcCalibrationFile(adcFile);
-            
+            Adcs = adcCalibration.Adcs;
             AdcThresholds = Adcs.ToList().Select(a => (ushort)a.Threshold).ToArray();
             AdcOffsets = Adcs.ToList().Select(a => (ushort)a.Offset).ToArray();
 

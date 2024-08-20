@@ -12,18 +12,20 @@ namespace OpenEphys.Onix1
         internal const int NumberOfGains = 8;
 
         /// <summary>
-        /// Returns the ADC values from an ADC calibration file for a specific probe.
+        /// Returns the ADC values and serial number from an ADC calibration file for a specific probe.
         /// </summary>
         /// <param name="file">Incoming <see cref="StreamReader"/> that is reading from the ADC calibration file.</param>
         /// <returns>Array of <see cref="NeuropixelsV1eAdc"/> values.</returns>
         /// <exception cref="ArgumentException"></exception>
         /// <exception cref="InvalidOperationException"></exception>
-        public static NeuropixelsV1eAdc[] ParseAdcCalibrationFile(StreamReader file)
+        public static NeuropixelsV1eAdcCalibration ParseAdcCalibrationFile(StreamReader file)
         {
             if (file == null || file.EndOfStream)
             {
                 throw new ArgumentException("Incoming stream reader is not pointing to a valid ADC calibration file.");
             }
+
+            var adcSerialNumber = ulong.Parse(file.ReadLine());
 
             NeuropixelsV1eAdc[] adcs = new NeuropixelsV1eAdc[NeuropixelsV1e.AdcCount];
 
@@ -48,7 +50,7 @@ namespace OpenEphys.Onix1
                 };
             }
 
-            return adcs;
+            return new(adcSerialNumber, adcs);
         }
 
         /// <summary>
@@ -67,6 +69,8 @@ namespace OpenEphys.Onix1
                 throw new ArgumentException("Incoming stream reader is not pointing to a valid gain calibration file.");
             }
 
+            var serialNumber = ulong.Parse(file.ReadLine());
+
             var gainCorrections = file.ReadLine().Split(',').Skip(1);
 
             if (gainCorrections.Count() != 2 * NumberOfGains)
@@ -75,7 +79,7 @@ namespace OpenEphys.Onix1
             var ap = double.Parse(gainCorrections.ElementAt(Array.IndexOf(Enum.GetValues(typeof(NeuropixelsV1Gain)), apGain)));
             var lfp = double.Parse(gainCorrections.ElementAt(Array.IndexOf(Enum.GetValues(typeof(NeuropixelsV1Gain)), lfpGain) + 8));
 
-            return new NeuropixelsV1eGainCorrection(ap, lfp);
+            return new NeuropixelsV1eGainCorrection(serialNumber, ap, lfp);
         }
     }
 }

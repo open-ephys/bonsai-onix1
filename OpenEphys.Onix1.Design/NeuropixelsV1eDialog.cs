@@ -142,9 +142,10 @@ namespace OpenEphys.Onix1.Design
                 {
                     StreamReader adcFile = new(ConfigureNode.AdcCalibrationFile);
 
-                    adcCalibrationSN.Text = ulong.Parse(adcFile.ReadLine()).ToString();
+                    var adcCalibration = NeuropixelsV1Helper.ParseAdcCalibrationFile(adcFile);
 
-                    Adcs = NeuropixelsV1Helper.ParseAdcCalibrationFile(adcFile);
+                    adcCalibrationSN.Text = adcCalibration.SN.ToString();
+                    Adcs = adcCalibration.Adcs;
 
                     dataGridViewAdcs.DataSource = Adcs;
 
@@ -161,10 +162,9 @@ namespace OpenEphys.Onix1.Design
                 {
                     StreamReader gainCalibrationFile = new(ConfigureNode.GainCalibrationFile);
 
-                    gainCalibrationSN.Text = ulong.Parse(gainCalibrationFile.ReadLine()).ToString();
-
                     var gainCorrection = NeuropixelsV1Helper.ParseGainCalibrationFile(gainCalibrationFile, ConfigureNode.ProbeConfiguration.SpikeAmplifierGain, ConfigureNode.ProbeConfiguration.LfpAmplifierGain);
 
+                    gainCalibrationSN.Text = gainCorrection.SN.ToString();
                     ApGainCorrection = gainCorrection.AP;
                     LfpGainCorrection = gainCorrection.LFP;
 
@@ -359,16 +359,6 @@ namespace OpenEphys.Onix1.Design
                         textBoxGainCalibrationFile.Text = ofd.FileName;
                     }
                 }
-                else if (button.Name == nameof(buttonClearGainCalibrationFile))
-                {
-                    textBoxGainCalibrationFile.Text = "";
-                    ApGainCorrection = default;
-                    LfpGainCorrection = default;
-
-                    panelProbe.Visible = false;
-
-                    CheckStatus();
-                }
                 else if (button.Name == nameof(buttonChooseAdcCalibrationFile))
                 {
                     var ofd = new OpenFileDialog()
@@ -382,14 +372,6 @@ namespace OpenEphys.Onix1.Design
                     {
                         textBoxAdcCalibrationFile.Text = ofd.FileName;
                     }
-                }
-                else if (button.Name == nameof(buttonClearAdcCalibrationFile))
-                {
-                    textBoxAdcCalibrationFile.Text = "";
-                    Adcs = null;
-                    dataGridViewAdcs.DataSource = null;
-
-                    CheckStatus();
                 }
                 else if (button.Name == nameof(buttonResetZoom))
                 {

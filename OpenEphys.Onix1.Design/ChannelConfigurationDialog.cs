@@ -632,10 +632,34 @@ namespace OpenEphys.Onix1.Design
 
                 foreach (var contact in contactsToEnable)
                 {
-                    var tag = (ContactTag)contact.Tag;
-
-                    contact.Fill.Color = ReferenceContacts.Any(x => x == tag.ContactIndex) ? ReferenceContactFill : EnabledContactFill;
+                    contact.Fill.Color = EnabledContactFill;
                 }
+            }
+
+            HighlightReferenceContacts();
+        }
+
+        internal void HighlightReferenceContacts()
+        {
+            if (ChannelConfiguration == null)
+                return;
+
+            var contactObjects = zedGraphChannels.GraphPane.GraphObjList.OfType<BoxObj>()
+                                                                        .Where(c => c is not PolyObj);
+
+            var referenceContacts = contactObjects.Where(c =>
+            {
+                if (c.Tag is ContactTag tag)
+                {
+                    return ReferenceContacts.Any(r => tag.ContactIndex == r);
+                }
+
+                return false;
+            });
+
+            foreach (var contact in referenceContacts)
+            {
+                contact.Fill.Color = ReferenceContactFill;
             }
         }
 

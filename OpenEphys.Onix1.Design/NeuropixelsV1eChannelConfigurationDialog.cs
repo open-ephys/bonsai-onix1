@@ -31,7 +31,6 @@ namespace OpenEphys.Onix1.Design
         public NeuropixelsV1eChannelConfigurationDialog(NeuropixelsV1eProbeConfiguration probeConfiguration)
             : base(probeConfiguration.ChannelConfiguration)
         {
-            zedGraphChannels.IsEnableHPan = false;
             zedGraphChannels.ZoomButtons = MouseButtons.None;
             zedGraphChannels.ZoomButtons2 = MouseButtons.None;
 
@@ -40,6 +39,9 @@ namespace OpenEphys.Onix1.Design
             ReferenceContacts.AddRange(ReferenceContactsList);
 
             ProbeConfiguration = probeConfiguration;
+
+            ZoomInBoundaryX = 400;
+            ZoomInBoundaryY = 400;
 
             HighlightEnabledContacts();
             UpdateContactLabels();
@@ -166,7 +168,9 @@ namespace OpenEphys.Onix1.Design
 
             var curve = zedGraphChannels.GraphPane.AddCurve(ScalePointsTag, pointList, Color.Black, SymbolType.None);
 
-            curve.Line.Width = zoomedOut ? 2 : 4;
+            const float scaleBarWidth = 1;
+
+            curve.Line.Width = scaleBarWidth;
             curve.Label.IsVisible = false;
             curve.Symbol.IsVisible = false;
         }
@@ -195,10 +199,10 @@ namespace OpenEphys.Onix1.Design
 
             foreach (var contact in contactsToEnable)
             {
-                var tag = (ContactTag)contact.Tag;
-
-                contact.Fill.Color = ReferenceContacts.Any(x => x == tag.ContactIndex) ? ReferenceContactFill : EnabledContactFill;
+                contact.Fill.Color = EnabledContactFill;
             }
+
+            HighlightReferenceContacts();
         }
 
         internal override void UpdateContactLabels()
