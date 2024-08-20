@@ -668,7 +668,7 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        internal readonly Color DisabledContactTextColor = Color.Black;
+        internal readonly Color DisabledContactTextColor = Color.Gray;
         internal readonly Color EnabledContactTextColor = Color.White;
 
         internal virtual void UpdateContactLabels()
@@ -683,7 +683,7 @@ namespace OpenEphys.Onix1.Design
 
             zedGraphChannels.GraphPane.GraphObjList.RemoveAll(obj => obj is TextObj && obj.Tag is ContactTag);
 
-            var fontSize = CalculateFontSize();
+            var fontSize = CalculateFontSize(0.5);
 
             int probeNumber = 0;
 
@@ -748,7 +748,7 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        internal virtual float CalculateFontSize()
+        internal virtual float CalculateFontSize(double scale = 1.0)
         {
             float rangeY = (float)(zedGraphChannels.GraphPane.YAxis.Scale.Max - zedGraphChannels.GraphPane.YAxis.Scale.Min);
 
@@ -759,7 +759,7 @@ namespace OpenEphys.Onix1.Design
             fontSize = fontSize < 1f ? 0.001f : fontSize;
             fontSize = fontSize > 100f ? 100f : fontSize;
 
-            return fontSize;
+            return (float)scale * fontSize;
         }
 
         internal float ContactSize()

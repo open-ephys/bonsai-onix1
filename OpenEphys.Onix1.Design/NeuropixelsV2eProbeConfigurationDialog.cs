@@ -67,8 +67,6 @@ namespace OpenEphys.Onix1.Design
 
             textBoxProbeCalibrationFile.Text = calibrationFile;
 
-            toolStripLabelProbeNumber.Text = GetProbeName(ProbeConfiguration.Probe);
-
             ChannelConfiguration = new(ProbeConfiguration)
             {
                 TopLevel = false,
@@ -125,39 +123,6 @@ namespace OpenEphys.Onix1.Design
             {
                 panelTrackBar.Height = dialog.zedGraphChannels.Size.Height;
                 panelTrackBar.Location = new Point(panelProbe.Size.Width - panelTrackBar.Width, ChannelConfiguration.zedGraphChannels.Location.Y);
-            }
-        }
-
-        private void FileTextChanged(object sender, EventArgs e)
-        {
-            if (sender is TextBox textBox && textBox != null && textBox.Name == nameof(textBoxProbeCalibrationFile))
-            {
-                ParseGainCalibrationFile(textBox.Text, probeSn, gain);
-            }
-        }
-
-        private void ParseGainCalibrationFile(string filename, ToolStripStatusLabel probeSN, ToolStripStatusLabel gainLabel)
-        {
-            if (filename != null && filename != "")
-            {
-                if (File.Exists(filename))
-                {
-                    using StreamReader gainCalibrationFile = new(filename);
-
-                    probeSN.Text = ulong.Parse(gainCalibrationFile.ReadLine()).ToString();
-                    gainLabel.Text = double.Parse(gainCalibrationFile.ReadLine()).ToString();
-                }
-                else
-                {
-                    probeSN.Text = "";
-                    gainLabel.Text = "";
-                }
-            }
-
-            else
-            {
-                probeSN.Text = "";
-                gainLabel.Text = "";
             }
         }
 
@@ -600,11 +565,6 @@ namespace OpenEphys.Onix1.Design
                     ChannelConfiguration.HighlightSelectedContacts();
                     ChannelConfiguration.UpdateContactLabels();
                     ChannelConfiguration.RefreshZedGraph();
-                }
-                else if (button.Name == nameof(buttonClearCalibrationFile))
-                {
-                    textBoxProbeCalibrationFile.Text = "";
-                    panelProbe.Visible = false;
                 }
             }
         }
