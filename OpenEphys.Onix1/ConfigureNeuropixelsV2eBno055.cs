@@ -6,6 +6,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// A class that configures a NeuropixelsV2eBno055 device.
     /// </summary>
+    [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eBno055Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a NeuropixelsV2eBno055 device.")]
     public class ConfigureNeuropixelsV2eBno055 : SingleDeviceFactory
     {
@@ -15,6 +16,18 @@ namespace OpenEphys.Onix1
         public ConfigureNeuropixelsV2eBno055()
             : base(typeof(NeuropixelsV2eBno055))
         {
+        }
+
+        /// <summary>
+        /// Copy constructor for the <see cref="ConfigureNeuropixelsV2eBno055"/> class.
+        /// </summary>
+        /// <param name="configureNeuropixelsV2eBno055">A pre-existing <see cref="ConfigureNeuropixelsV2eBno055"/> object.</param>
+        public ConfigureNeuropixelsV2eBno055(ConfigureNeuropixelsV2eBno055 configureNeuropixelsV2eBno055)
+            : base(typeof(NeuropixelsV2eBno055))
+        {
+            Enable = configureNeuropixelsV2eBno055.Enable;
+            DeviceName = configureNeuropixelsV2eBno055.DeviceName;
+            DeviceAddress = configureNeuropixelsV2eBno055.DeviceAddress;
         }
 
         /// <summary>
@@ -51,7 +64,7 @@ namespace OpenEphys.Onix1
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
                 ConfigureDeserializer(device);
                 ConfigureBno055(device);
-                var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
+                var deviceInfo = new NeuropixelsV2eBno055DeviceInfo(context, DeviceType, deviceAddress, enable);
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
         }
@@ -90,5 +103,16 @@ namespace OpenEphys.Onix1
             {
             }
         }
+    }
+
+    class NeuropixelsV2eBno055DeviceInfo : DeviceInfo
+    {
+        public NeuropixelsV2eBno055DeviceInfo(ContextTask context, Type deviceType, uint deviceAddress, bool enable)
+            : base(context, deviceType, deviceAddress)
+        {
+            Enable = enable;
+        }
+
+        public bool Enable { get; }
     }
 }

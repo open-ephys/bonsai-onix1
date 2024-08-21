@@ -1,14 +1,15 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Reactive.Disposables;
+using System.Reflection;
 using System.Threading;
 
 namespace OpenEphys.Onix1
 {
-    internal abstract class ConfigureFmcLinkController : SingleDeviceFactory
+    internal abstract class ConfigurePortController : SingleDeviceFactory
     {
-        public ConfigureFmcLinkController()
-            : base(typeof(FmcLinkController))
+        public ConfigurePortController()
+            : base(typeof(PortController))
         {
         }
 
@@ -24,15 +25,15 @@ namespace OpenEphys.Onix1
 
         protected virtual bool CheckLinkState(DeviceContext device)
         {
-            var linkState = device.ReadRegister(FmcLinkController.LINKSTATE);
-            return (linkState & FmcLinkController.LINKSTATE_SL) != 0;
+            var linkState = device.ReadRegister(PortController.LINKSTATE);
+            return (linkState & PortController.LINKSTATE_SL) != 0;
         }
 
         protected abstract bool ConfigurePortVoltage(DeviceContext device);
 
         private bool ConfigurePortVoltageOverride(DeviceContext device, double voltage)
         {
-            device.WriteRegister(FmcLinkController.PORTVOLTAGE, (uint)(voltage * 10));
+            device.WriteRegister(PortController.PORTVOLTAGE, (uint)(voltage * 10));
             Thread.Sleep(500);
             return CheckLinkState(device);
         }
@@ -45,7 +46,7 @@ namespace OpenEphys.Onix1
             var portVoltage = PortVoltage;
             return source.ConfigureHost(context =>
             {
-                // configure passthrough mode on the FMC link controller
+                // configure passthrough mode on the port controller
                 // assuming the device address is the port number
                 var portShift = ((int)deviceAddress - 1) * 2;
                 var passthroughState = (hubConfiguration == HubConfiguration.Passthrough ? 1 : 0) << portShift;
@@ -55,8 +56,8 @@ namespace OpenEphys.Onix1
             .ConfigureLink(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
-                void dispose() => device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
-                device.WriteRegister(FmcLinkController.ENABLE, 1);
+                void dispose() => device.WriteRegister(PortController.PORTVOLTAGE, 0);
+                device.WriteRegister(PortController.ENABLE, 1);
 
                 var serdesLock = portVoltage.HasValue
                     ? ConfigurePortVoltageOverride(device, portVoltage.GetValueOrDefault())
@@ -64,7 +65,12 @@ namespace OpenEphys.Onix1
                 if (!serdesLock)
                 {
                     dispose();
-                    throw new InvalidOperationException("Unable to get SERDES lock on FMC link controller.");
+                    var port = (PortName)deviceAddress;
+                    var portString = port.GetType()
+                                         .GetField(port.ToString())?
+                                         .GetCustomAttribute<DescriptionAttribute>()?
+                                         .Description ?? "Address " + deviceAddress.ToString();
+                    throw new InvalidOperationException($"Unable to acquire communication lock on {portString}.");
                 }
                 return Disposable.Create(dispose);
             })
@@ -76,7 +82,7 @@ namespace OpenEphys.Onix1
         }
     }
 
-    internal static class FmcLinkController
+    internal static class PortController
     {
         public const int ID = 23;
 
@@ -89,11 +95,68 @@ namespace OpenEphys.Onix1
 
         public const uint LINKSTATE_PP = 0x2; // parity check pass bit
         public const uint LINKSTATE_SL = 0x1; // SERDES lock bit
+
+        internal class NameConverter : DeviceNameConverter
+        {
+            public NameConverter()
+                : base(typeof(PortController))
+            {
+            }
+        }
     }
 
     internal enum HubConfiguration
     {
         Standard,
         Passthrough
+    }
+
+    /// <summary>
+    /// Specifies the headstage port status codes.
+    /// </summary>
+    [Flags]
+    public enum PortStatusCode : byte
+    {
+        /// <summary>
+        /// Specifies that the status code should be disregarded.
+        /// </summary>
+        Invalid = 0x0,
+        /// <summary>
+        /// Specifies a cyclic redundancy check failure.
+        /// </summary>
+        CrcError = 0x1,
+        /// <summary>
+        /// Specifies that too many devices were indicated in the hub device table.
+        /// </summary>
+        TooManyDevices = 0x2,
+        /// <summary>
+        /// Specifies a hub initialization error.
+        /// </summary>
+        InitializationError = 0x4,
+        /// <summary>
+        /// Specifies the receipt of a badly formatted data packet.
+        /// </summary>
+        BadPacketFormat = 0x8,
+    }
+
+    /// <summary>
+    /// Specifies the physical port that a headstage is plugged into.
+    /// </summary>
+    /// <remarks>
+    /// ONIX uses a common protocol to communicate with a variety of devices using the same physical connection. For this reason
+    /// lots of different headstage types can be plugged into a headstage port.
+    /// </remarks>
+    public enum PortName
+    {
+        /// <summary>
+        /// Specifies Port A.
+        /// </summary>
+        [Description("Port A")]
+        PortA = 1,
+        /// <summary>
+        /// Specifies Port B.
+        /// </summary>
+        [Description("Port B")]
+        PortB = 2
     }
 }

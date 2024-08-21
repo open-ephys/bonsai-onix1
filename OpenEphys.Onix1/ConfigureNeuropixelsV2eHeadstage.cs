@@ -4,13 +4,14 @@ using System.ComponentModel;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that configures a NeuropixelsV2e headstage.
+    /// A class that configures a NeuropixelsV2e headstage on the specified port.
     /// </summary>
+    [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eHeadstageEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("configures a NeuropixelsV2e headstage.")]
     public class ConfigureNeuropixelsV2eHeadstage : MultiDeviceFactory
     {
         PortName port;
-        readonly ConfigureNeuropixelsV2eLinkController LinkController = new();
+        readonly ConfigureNeuropixelsV2ePortController PortControl = new();
 
         /// <summary>
         /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV2e"/> class.
@@ -18,7 +19,7 @@ namespace OpenEphys.Onix1
         public ConfigureNeuropixelsV2eHeadstage()
         {
             Port = PortName.PortA;
-            LinkController.HubConfiguration = HubConfiguration.Passthrough;
+            PortControl.HubConfiguration = HubConfiguration.Passthrough;
         }
 
         /// <summary>
@@ -51,7 +52,7 @@ namespace OpenEphys.Onix1
             {
                 port = value;
                 var offset = (uint)port << 8;
-                LinkController.DeviceAddress = (uint)port;
+                PortControl.DeviceAddress = (uint)port;
                 NeuropixelsV2e.DeviceAddress = offset + 0;
                 Bno055.DeviceAddress = offset + 1;
             }
@@ -71,13 +72,13 @@ namespace OpenEphys.Onix1
             "for proper operation. Higher voltages can damage the headstage.")]
         public double? PortVoltage
         {
-            get => LinkController.PortVoltage;
-            set => LinkController.PortVoltage = value;
+            get => PortControl.PortVoltage;
+            set => PortControl.PortVoltage = value;
         }
 
         internal override IEnumerable<IDeviceConfiguration> GetDevices()
         {
-            yield return LinkController;
+            yield return PortControl;
             yield return NeuropixelsV2e;
             yield return Bno055;
         }

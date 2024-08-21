@@ -29,6 +29,7 @@ namespace OpenEphys.Onix1
         public const int ChannelCount = 384;
         public const int BaseBitsPerChannel = 4;
         public const int ElectrodePerShank = 1280;
+        public const int ElectrodePerBlock = 48;
         public const int ReferencePixelCount = 4;
         public const int DummyRegisterCount = 4;
         public const int RegistersPerShank = ElectrodePerShank + ReferencePixelCount + DummyRegisterCount;
@@ -38,10 +39,10 @@ namespace OpenEphys.Onix1
         {
             BitArray[] shankBits =
             {
-                new(NeuropixelsV2.RegistersPerShank, false),
-                new(NeuropixelsV2.RegistersPerShank, false),
-                new(NeuropixelsV2.RegistersPerShank, false),
-                new(NeuropixelsV2.RegistersPerShank, false)
+                new(RegistersPerShank, false),
+                new(RegistersPerShank, false),
+                new(RegistersPerShank, false),
+                new(RegistersPerShank, false)
             };
 
 
@@ -68,7 +69,7 @@ namespace OpenEphys.Onix1
                 shankBits[3][1285] = true;
             }
 
-            const int PixelOffset = (NeuropixelsV2.ElectrodePerShank - 1) / 2;
+            const int PixelOffset = (ElectrodePerShank - 1) / 2;
             const int ReferencePixelOffset = 3;
             foreach (var c in probe.ChannelMap)
             {
@@ -88,8 +89,8 @@ namespace OpenEphys.Onix1
         {
             BitArray[] baseBits =
             {
-                new(NeuropixelsV2.ChannelCount * NeuropixelsV2.BaseBitsPerChannel / 2, false),
-                new(NeuropixelsV2.ChannelCount * NeuropixelsV2.BaseBitsPerChannel / 2, false)
+                new(ChannelCount * BaseBitsPerChannel / 2, false),
+                new(ChannelCount * BaseBitsPerChannel / 2, false)
             };
 
             var referenceBit = probe.Reference switch
@@ -102,10 +103,10 @@ namespace OpenEphys.Onix1
                 _ => throw new InvalidOperationException("Invalid reference selection."),
             };
 
-            for (int i = 0; i < NeuropixelsV2.ChannelCount; i++)
+            for (int i = 0; i < ChannelCount; i++)
             {
                 var configIndex = i % 2;
-                var bitOffset = (382 - i + configIndex) / 2 * NeuropixelsV2.BaseBitsPerChannel;
+                var bitOffset = (382 - i + configIndex) / 2 * BaseBitsPerChannel;
                 baseBits[configIndex][bitOffset + 0] = false; // standby bit
                 baseBits[configIndex][bitOffset + referenceBit] = true;
             }
