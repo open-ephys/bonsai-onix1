@@ -2,11 +2,11 @@
 using Bonsai;
 using Bonsai.Design.Visualizers;
 using System.Numerics;
-using Bonsai.Vision.Design;
+using OpenEphys.Onix1.Design;
 
 [assembly: TypeVisualizer(typeof(Vector3Visualizer), Target = typeof(Vector3))]
 
-namespace Bonsai.Vision.Design
+namespace OpenEphys.Onix1.Design
 {
     /// <summary>
     /// Provides a type visualizer that displays a sequence of <see cref="Vector3"/>

@@ -2,11 +2,11 @@
 using Bonsai;
 using Bonsai.Design.Visualizers;
 using System.Numerics;
-using Bonsai.Vision.Design;
+using OpenEphys.Onix1.Design;
 
 [assembly: TypeVisualizer(typeof(QuaternionVisualizer), Target = typeof(Quaternion))]
 
-namespace Bonsai.Vision.Design
+namespace OpenEphys.Onix1.Design
 {
     /// <summary>
     /// Provides a type visualizer that displays a sequence of <see cref="Quaternion"/>
