@@ -12,7 +12,7 @@ namespace OpenEphys.Onix1
     /// <remarks>
     /// This data stream class must be linked to an appropriate headstage,
     /// miniscope, etc. configuration whose communication is dictated by
-    /// a <see cref="PortController"/>.
+    /// a PortController.
     /// </remarks>
     [Description("Produces a sequence of port status information.")]
     public class PortStatus : Source<PortStatusFrame>
