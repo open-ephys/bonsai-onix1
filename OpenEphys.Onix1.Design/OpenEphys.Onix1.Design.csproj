@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="Bonsai.Design" Version="2.8.5" />
+    <PackageReference Include="Bonsai.Design.Visualizers" Version="2.8.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="OpenEphys.ProbeInterface.NET" Version="0.1.0" />
     <PackageReference Include="ZedGraph" Version="5.1.7" />
