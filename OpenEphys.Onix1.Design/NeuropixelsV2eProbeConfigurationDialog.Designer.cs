@@ -164,7 +164,7 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.panel1);
             this.splitContainer1.Size = new System.Drawing.Size(834, 509);
-            this.splitContainer1.SplitterDistance = 478;
+            this.splitContainer1.SplitterDistance = 479;
             this.splitContainer1.SplitterWidth = 3;
             this.splitContainer1.TabIndex = 2;
             // 
@@ -183,8 +183,8 @@
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.panelChannelOptions);
-            this.splitContainer2.Size = new System.Drawing.Size(834, 478);
-            this.splitContainer2.SplitterDistance = 626;
+            this.splitContainer2.Size = new System.Drawing.Size(834, 479);
+            this.splitContainer2.SplitterDistance = 627;
             this.splitContainer2.SplitterWidth = 3;
             this.splitContainer2.TabIndex = 1;
             // 
@@ -195,7 +195,7 @@
             this.panelProbe.Location = new System.Drawing.Point(0, 0);
             this.panelProbe.Margin = new System.Windows.Forms.Padding(2);
             this.panelProbe.Name = "panelProbe";
-            this.panelProbe.Size = new System.Drawing.Size(626, 478);
+            this.panelProbe.Size = new System.Drawing.Size(627, 479);
             this.panelProbe.TabIndex = 1;
             // 
             // panelTrackBar
@@ -204,7 +204,7 @@
             this.panelTrackBar.Controls.Add(label6);
             this.panelTrackBar.Controls.Add(label7);
             this.panelTrackBar.Controls.Add(this.trackBarProbePosition);
-            this.panelTrackBar.Location = new System.Drawing.Point(584, 2);
+            this.panelTrackBar.Location = new System.Drawing.Point(585, 2);
             this.panelTrackBar.Name = "panelTrackBar";
             this.panelTrackBar.Size = new System.Drawing.Size(39, 474);
             this.panelTrackBar.TabIndex = 30;
@@ -222,7 +222,7 @@
             this.trackBarProbePosition.Size = new System.Drawing.Size(37, 470);
             this.trackBarProbePosition.TabIndex = 22;
             this.trackBarProbePosition.TickFrequency = 2;
-            this.trackBarProbePosition.TickStyle = System.Windows.Forms.TickStyle.Both;
+            this.trackBarProbePosition.TickStyle = System.Windows.Forms.TickStyle.TopLeft;
             this.trackBarProbePosition.Value = 50;
             this.trackBarProbePosition.Scroll += new System.EventHandler(this.TrackBarScroll);
             // 
@@ -243,18 +243,19 @@
             this.panelChannelOptions.Location = new System.Drawing.Point(0, 0);
             this.panelChannelOptions.Margin = new System.Windows.Forms.Padding(2);
             this.panelChannelOptions.Name = "panelChannelOptions";
-            this.panelChannelOptions.Size = new System.Drawing.Size(205, 478);
+            this.panelChannelOptions.Size = new System.Drawing.Size(204, 479);
             this.panelChannelOptions.TabIndex = 1;
             // 
             // buttonChooseCalibrationFile
             // 
             this.buttonChooseCalibrationFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonChooseCalibrationFile.Location = new System.Drawing.Point(170, 24);
+            this.buttonChooseCalibrationFile.Location = new System.Drawing.Point(169, 24);
             this.buttonChooseCalibrationFile.Margin = new System.Windows.Forms.Padding(2);
             this.buttonChooseCalibrationFile.Name = "buttonChooseCalibrationFile";
             this.buttonChooseCalibrationFile.Size = new System.Drawing.Size(28, 20);
             this.buttonChooseCalibrationFile.TabIndex = 34;
             this.buttonChooseCalibrationFile.Text = "...";
+            this.toolTip.SetToolTip(this.buttonChooseCalibrationFile, "Browse for a gain calibration file.");
             this.buttonChooseCalibrationFile.UseVisualStyleBackColor = true;
             this.buttonChooseCalibrationFile.Click += new System.EventHandler(this.ButtonClick);
             // 
@@ -265,7 +266,7 @@
             this.textBoxProbeCalibrationFile.Location = new System.Drawing.Point(11, 24);
             this.textBoxProbeCalibrationFile.Margin = new System.Windows.Forms.Padding(2);
             this.textBoxProbeCalibrationFile.Name = "textBoxProbeCalibrationFile";
-            this.textBoxProbeCalibrationFile.Size = new System.Drawing.Size(155, 20);
+            this.textBoxProbeCalibrationFile.Size = new System.Drawing.Size(154, 20);
             this.textBoxProbeCalibrationFile.TabIndex = 33;
             this.textBoxProbeCalibrationFile.TextChanged += new System.EventHandler(this.FileTextChanged);
             // 
@@ -278,7 +279,7 @@
             this.comboBoxReference.Location = new System.Drawing.Point(78, 58);
             this.comboBoxReference.Margin = new System.Windows.Forms.Padding(2);
             this.comboBoxReference.Name = "comboBoxReference";
-            this.comboBoxReference.Size = new System.Drawing.Size(116, 21);
+            this.comboBoxReference.Size = new System.Drawing.Size(115, 21);
             this.comboBoxReference.TabIndex = 31;
             // 
             // comboBoxChannelPresets
@@ -290,7 +291,7 @@
             this.comboBoxChannelPresets.Location = new System.Drawing.Point(78, 97);
             this.comboBoxChannelPresets.Margin = new System.Windows.Forms.Padding(2);
             this.comboBoxChannelPresets.Name = "comboBoxChannelPresets";
-            this.comboBoxChannelPresets.Size = new System.Drawing.Size(116, 21);
+            this.comboBoxChannelPresets.Size = new System.Drawing.Size(115, 21);
             this.comboBoxChannelPresets.TabIndex = 24;
             // 
             // buttonEnableContacts
@@ -300,11 +301,11 @@
             this.buttonEnableContacts.Location = new System.Drawing.Point(11, 138);
             this.buttonEnableContacts.Margin = new System.Windows.Forms.Padding(2);
             this.buttonEnableContacts.Name = "buttonEnableContacts";
-            this.buttonEnableContacts.Size = new System.Drawing.Size(183, 36);
+            this.buttonEnableContacts.Size = new System.Drawing.Size(182, 36);
             this.buttonEnableContacts.TabIndex = 20;
             this.buttonEnableContacts.Text = "Enable Selected Electrodes";
-            this.toolTip.SetToolTip(this.buttonEnableContacts, "Click and drag to select contacts in the probe view. \r\nPress this button to enabl" +
-        "e the selected contacts.");
+            this.toolTip.SetToolTip(this.buttonEnableContacts, "Click and drag to select electrodes in the probe view. \r\nPress this button to ena" +
+        "ble the selected electrodes. \r\nNot all electrode combinations are possible.");
             this.buttonEnableContacts.UseVisualStyleBackColor = true;
             this.buttonEnableContacts.Click += new System.EventHandler(this.ButtonClick);
             // 
@@ -315,11 +316,11 @@
             this.buttonClearSelections.Location = new System.Drawing.Point(11, 178);
             this.buttonClearSelections.Margin = new System.Windows.Forms.Padding(2);
             this.buttonClearSelections.Name = "buttonClearSelections";
-            this.buttonClearSelections.Size = new System.Drawing.Size(183, 36);
+            this.buttonClearSelections.Size = new System.Drawing.Size(182, 36);
             this.buttonClearSelections.TabIndex = 19;
             this.buttonClearSelections.Text = "Clear Electrode Selection";
-            this.toolTip.SetToolTip(this.buttonClearSelections, "Remove selections from contacts in the probe view. Press this button to deselect " +
-        "contacts.\r\nNote that this does not disable contacts, but simply deselects them.");
+            this.toolTip.SetToolTip(this.buttonClearSelections, "Deselect all electrodes in the probe view. \r\nNote that this does not disable elec" +
+        "trodes, but simply deselects them.");
             this.buttonClearSelections.UseVisualStyleBackColor = true;
             this.buttonClearSelections.Click += new System.EventHandler(this.ButtonClick);
             // 
@@ -330,11 +331,10 @@
             this.buttonResetZoom.Location = new System.Drawing.Point(11, 218);
             this.buttonResetZoom.Margin = new System.Windows.Forms.Padding(2);
             this.buttonResetZoom.Name = "buttonResetZoom";
-            this.buttonResetZoom.Size = new System.Drawing.Size(183, 36);
+            this.buttonResetZoom.Size = new System.Drawing.Size(182, 36);
             this.buttonResetZoom.TabIndex = 4;
             this.buttonResetZoom.Text = "Reset Zoom";
-            this.toolTip.SetToolTip(this.buttonResetZoom, "Reset the zoom in the probe view so that the probe is zoomed out and centered.\r\nP" +
-        "ress this button to reset the zoom.");
+            this.toolTip.SetToolTip(this.buttonResetZoom, "Reset the zoom in the probe view so that the probe is zoomed out and centered.");
             this.buttonResetZoom.UseVisualStyleBackColor = true;
             this.buttonResetZoom.Click += new System.EventHandler(this.ButtonClick);
             // 
@@ -346,14 +346,14 @@
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Margin = new System.Windows.Forms.Padding(2);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(834, 28);
+            this.panel1.Size = new System.Drawing.Size(834, 27);
             this.panel1.TabIndex = 0;
             // 
             // buttonCancel
             // 
             this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.buttonCancel.Location = new System.Drawing.Point(744, 2);
+            this.buttonCancel.Location = new System.Drawing.Point(744, 1);
             this.buttonCancel.Margin = new System.Windows.Forms.Padding(2);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(83, 22);
@@ -365,7 +365,7 @@
             // buttonOkay
             // 
             this.buttonOkay.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOkay.Location = new System.Drawing.Point(655, 2);
+            this.buttonOkay.Location = new System.Drawing.Point(655, 1);
             this.buttonOkay.Margin = new System.Windows.Forms.Padding(2);
             this.buttonOkay.Name = "buttonOkay";
             this.buttonOkay.Size = new System.Drawing.Size(83, 22);

@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.Windows.Forms.Label labelPresets;
             System.Windows.Forms.Label adcCalibrationFile;
             System.Windows.Forms.Label gainCalibrationFile;
@@ -60,6 +61,7 @@
             this.buttonOkay = new System.Windows.Forms.Button();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             labelPresets = new System.Windows.Forms.Label();
             adcCalibrationFile = new System.Windows.Forms.Label();
             gainCalibrationFile = new System.Windows.Forms.Label();
@@ -81,7 +83,7 @@
             // labelPresets
             // 
             labelPresets.AutoSize = true;
-            labelPresets.Location = new System.Drawing.Point(10, 219);
+            labelPresets.Location = new System.Drawing.Point(10, 217);
             labelPresets.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             labelPresets.Name = "labelPresets";
             labelPresets.Size = new System.Drawing.Size(46, 26);
@@ -229,6 +231,7 @@
             // 
             // panelOptions
             // 
+            this.panelOptions.BackColor = System.Drawing.SystemColors.ControlLightLight;
             this.panelOptions.Controls.Add(this.buttonChooseAdcCalibrationFile);
             this.panelOptions.Controls.Add(this.buttonChooseGainCalibrationFile);
             this.panelOptions.Controls.Add(this.buttonEnableContacts);
@@ -264,6 +267,7 @@
             this.buttonChooseAdcCalibrationFile.Size = new System.Drawing.Size(28, 20);
             this.buttonChooseAdcCalibrationFile.TabIndex = 36;
             this.buttonChooseAdcCalibrationFile.Text = "...";
+            this.toolTip.SetToolTip(this.buttonChooseAdcCalibrationFile, "Browse for an ADC calibration file.");
             this.buttonChooseAdcCalibrationFile.UseVisualStyleBackColor = true;
             this.buttonChooseAdcCalibrationFile.Click += new System.EventHandler(this.ButtonClick);
             // 
@@ -276,6 +280,7 @@
             this.buttonChooseGainCalibrationFile.Size = new System.Drawing.Size(28, 20);
             this.buttonChooseGainCalibrationFile.TabIndex = 35;
             this.buttonChooseGainCalibrationFile.Text = "...";
+            this.toolTip.SetToolTip(this.buttonChooseGainCalibrationFile, "Browse for a gain calibration file.");
             this.buttonChooseGainCalibrationFile.UseVisualStyleBackColor = true;
             this.buttonChooseGainCalibrationFile.Click += new System.EventHandler(this.ButtonClick);
             // 
@@ -288,7 +293,9 @@
             this.buttonEnableContacts.Name = "buttonEnableContacts";
             this.buttonEnableContacts.Size = new System.Drawing.Size(223, 36);
             this.buttonEnableContacts.TabIndex = 28;
-            this.buttonEnableContacts.Text = "Enable Selected Contacts";
+            this.buttonEnableContacts.Text = "Enable Selected Electrodes";
+            this.toolTip.SetToolTip(this.buttonEnableContacts, "Click and drag to select electrodes in the probe view. \r\nPress this button to ena" +
+        "ble the selected electrodes. \r\nNot all electrode combinations are possible.");
             this.buttonEnableContacts.UseVisualStyleBackColor = true;
             this.buttonEnableContacts.Click += new System.EventHandler(this.ButtonClick);
             // 
@@ -301,7 +308,9 @@
             this.buttonClearSelections.Name = "buttonClearSelections";
             this.buttonClearSelections.Size = new System.Drawing.Size(223, 36);
             this.buttonClearSelections.TabIndex = 27;
-            this.buttonClearSelections.Text = "Deselect Contacts";
+            this.buttonClearSelections.Text = "Clear Electrode Selection";
+            this.toolTip.SetToolTip(this.buttonClearSelections, "Deselect all electrodes in the probe view. \r\nNote that this does not disable elec" +
+        "trodes, but simply deselects them.");
             this.buttonClearSelections.UseVisualStyleBackColor = true;
             this.buttonClearSelections.Click += new System.EventHandler(this.ButtonClick);
             // 
@@ -327,6 +336,7 @@
             this.buttonResetZoom.Size = new System.Drawing.Size(223, 36);
             this.buttonResetZoom.TabIndex = 22;
             this.buttonResetZoom.Text = "Reset Zoom";
+            this.toolTip.SetToolTip(this.buttonResetZoom, "Reset the zoom in the probe view so that the probe is zoomed out and centered.");
             this.buttonResetZoom.UseVisualStyleBackColor = true;
             this.buttonResetZoom.Click += new System.EventHandler(this.ButtonClick);
             // 
@@ -371,7 +381,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.comboBoxReference.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxReference.FormattingEnabled = true;
-            this.comboBoxReference.Location = new System.Drawing.Point(76, 191);
+            this.comboBoxReference.Location = new System.Drawing.Point(76, 192);
             this.comboBoxReference.Margin = new System.Windows.Forms.Padding(2);
             this.comboBoxReference.Name = "comboBoxReference";
             this.comboBoxReference.Size = new System.Drawing.Size(157, 21);
@@ -383,7 +393,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.comboBoxLfpGain.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxLfpGain.FormattingEnabled = true;
-            this.comboBoxLfpGain.Location = new System.Drawing.Point(76, 135);
+            this.comboBoxLfpGain.Location = new System.Drawing.Point(76, 136);
             this.comboBoxLfpGain.Margin = new System.Windows.Forms.Padding(2);
             this.comboBoxLfpGain.Name = "comboBoxLfpGain";
             this.comboBoxLfpGain.Size = new System.Drawing.Size(157, 21);
@@ -505,5 +515,6 @@
         private System.Windows.Forms.Button buttonChooseAdcCalibrationFile;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
+        private System.Windows.Forms.ToolTip toolTip;
     }
 }
