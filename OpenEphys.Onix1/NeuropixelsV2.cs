@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.IO;
 
 namespace OpenEphys.Onix1
 {
@@ -116,13 +117,13 @@ namespace OpenEphys.Onix1
 
         internal static double ReadGainCorrection(string gainCalibrationFile, ulong probeSerialNumber, NeuropixelsV2Probe probe)
         {
-            if (gainCalibrationFile == null)
+            if (!File.Exists(gainCalibrationFile) )
             {
                 throw new ArgumentException($"A calibration file must be specified for {probe} with serial number " +
-                    $"{probeSerialNumber})");
+                    $"{probeSerialNumber}");
             }
 
-            System.IO.StreamReader gainFile = new(gainCalibrationFile);
+            var gainFile = new StreamReader(gainCalibrationFile);
             var sn = ulong.Parse(gainFile.ReadLine());
 
             if (probeSerialNumber != sn)

@@ -26,9 +26,16 @@ namespace OpenEphys.Onix1
             NeuropixelsV1eProbeConfiguration probeConfiguration, string gainCalibrationFile, string adcCalibrationFile)
             : base(deviceContext, i2cAddress)
         {
-            if (gainCalibrationFile == null || adcCalibrationFile == null)
+            if (!File.Exists(gainCalibrationFile))
             {
-                throw new ArgumentException("Calibration files must be specified.");
+                throw new ArgumentException($"A gain calibration file must be specified for the probe with serial number " +
+                    $"{probeSerialNumber}");
+            }
+            
+            if (!File.Exists(adcCalibrationFile))
+            {
+                throw new ArgumentException($"An ADC calibration file must be specified for the probe with serial number " +
+                    $"{probeSerialNumber}");
             }
 
             StreamReader adcFile = new(adcCalibrationFile);
@@ -37,7 +44,10 @@ namespace OpenEphys.Onix1
             var adcCalibration = NeuropixelsV1Helper.ParseAdcCalibrationFile(adcFile);
 
             if (adcCalibration.SN != probeSerialNumber)
-                throw new ArgumentException($"ADC calibration file serial number {adcCalibration.SN} does not match probe serial number {probeSerialNumber}.");
+            {
+                throw new ArgumentException($"The probe serial number ({probeSerialNumber}) does not " +
+                    $"match the ADC calibration file serial number: {adcCalibration.SN}.");
+            }
 
             StreamReader gainFile = new(gainCalibrationFile);
 
@@ -45,7 +55,10 @@ namespace OpenEphys.Onix1
             var gainCorrection = NeuropixelsV1Helper.ParseGainCalibrationFile(gainFile, probeConfiguration.SpikeAmplifierGain, probeConfiguration.LfpAmplifierGain);
 
             if (gainCorrection.SN != probeSerialNumber)
-                throw new ArgumentException($"Gain calibration file serial number {gainCorrection.SN} does not match probe serial number {probeSerialNumber}.");
+            {
+                throw new ArgumentException($"The probe serial number ({probeSerialNumber}) does not " +
+                    $"match the gain calibration file serial number: {gainCorrection.SN}.");
+            }
 
             ApGainCorrection = gainCorrection.AP;
             LfpGainCorrection = gainCorrection.LFP;

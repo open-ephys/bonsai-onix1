@@ -5,14 +5,14 @@ using System.Threading;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that configures a NeuropixelsV1e headstage.
+    /// A class that configures a NeuropixelsV1e headstage on the specified port.
     /// </summary>
     [Description("Configures a NeuropixelsV1e headstage.")]
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV1eHeadstageEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureNeuropixelsV1eHeadstage : MultiDeviceFactory
     {
         PortName port;
-        readonly ConfigureNeuropixelsV1eLinkController LinkController = new();
+        readonly ConfigureNeuropixelsV1ePortController PortControl = new();
 
         /// <summary>
         /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV1eHeadstage"/> class.
@@ -20,7 +20,7 @@ namespace OpenEphys.Onix1
         public ConfigureNeuropixelsV1eHeadstage()
         {
             Port = PortName.PortA;
-            LinkController.HubConfiguration = HubConfiguration.Passthrough;
+            PortControl.HubConfiguration = HubConfiguration.Passthrough;
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace OpenEphys.Onix1
             {
                 port = value;
                 var offset = (uint)port << 8;
-                LinkController.DeviceAddress = (uint)port;
+                PortControl.DeviceAddress = (uint)port;
                 NeuropixelsV1e.DeviceAddress = offset + 0;
                 Bno055.DeviceAddress = offset + 1;
             }
@@ -73,18 +73,18 @@ namespace OpenEphys.Onix1
             "for proper operation. Higher voltages can damage the headstage.")]
         public double? PortVoltage
         {
-            get => LinkController.PortVoltage;
-            set => LinkController.PortVoltage = value;
+            get => PortControl.PortVoltage;
+            set => PortControl.PortVoltage = value;
         }
 
         internal override IEnumerable<IDeviceConfiguration> GetDevices()
         {
-            yield return LinkController;
+            yield return PortControl;
             yield return NeuropixelsV1e;
             yield return Bno055;
         }
 
-        class ConfigureNeuropixelsV1eLinkController : ConfigureFmcLinkController
+        class ConfigureNeuropixelsV1ePortController : ConfigurePortController
         {
             protected override bool ConfigurePortVoltage(DeviceContext device)
             {
@@ -109,9 +109,9 @@ namespace OpenEphys.Onix1
 
             void SetVoltage(DeviceContext device, double voltage)
             {
-                device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
+                device.WriteRegister(PortController.PORTVOLTAGE, 0);
                 Thread.Sleep(200);
-                device.WriteRegister(FmcLinkController.PORTVOLTAGE, (uint)(10 * voltage));
+                device.WriteRegister(PortController.PORTVOLTAGE, (uint)(10 * voltage));
                 Thread.Sleep(200);
             }
         }

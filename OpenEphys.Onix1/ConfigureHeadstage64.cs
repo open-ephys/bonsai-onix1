@@ -5,13 +5,13 @@ using System.Threading;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that configures an ONIX headstage-64 in the specified port.
+    /// A class that configures an ONIX headstage-64 on the specified port.
     /// </summary>
     [Description("Configures an ONIX headstage-64 in the specified port.")]
     public class ConfigureHeadstage64 : MultiDeviceFactory
     {
         PortName port;
-        readonly ConfigureHeadstage64LinkController LinkController = new();
+        readonly ConfigureHeadstage64PortController PortControl = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureHeadstage64"/> class.
@@ -35,7 +35,7 @@ namespace OpenEphys.Onix1
             // The FMC port voltage can only go down to 3.3V, which means that its very hard to find the true lowest voltage
             // for a lock and then add a large offset to that. Fixing this requires a hardware change.
             Port = PortName.PortA;
-            LinkController.HubConfiguration = HubConfiguration.Standard;
+            PortControl.HubConfiguration = HubConfiguration.Standard;
         }
 
         /// <summary>
@@ -92,7 +92,7 @@ namespace OpenEphys.Onix1
             {
                 port = value;
                 var offset = (uint)port << 8;
-                LinkController.DeviceAddress = (uint)port;
+                PortControl.DeviceAddress = (uint)port;
                 Rhd2164.DeviceAddress = offset + 0;
                 Bno055.DeviceAddress = offset + 1;
                 TS4231.DeviceAddress = offset + 2;
@@ -122,13 +122,13 @@ namespace OpenEphys.Onix1
                      "Supplying higher voltages may result in damage to the headstage.")]
         public double? PortVoltage
         {
-            get => LinkController.PortVoltage;
-            set => LinkController.PortVoltage = value;
+            get => PortControl.PortVoltage;
+            set => PortControl.PortVoltage = value;
         }
 
         internal override IEnumerable<IDeviceConfiguration> GetDevices()
         {
-            yield return LinkController;
+            yield return PortControl;
             yield return Rhd2164;
             yield return Bno055;
             yield return TS4231;
@@ -136,7 +136,7 @@ namespace OpenEphys.Onix1
             yield return OpticalStimulator;
         }
 
-        class ConfigureHeadstage64LinkController : ConfigureFmcLinkController
+        class ConfigureHeadstage64PortController : ConfigurePortController
         {
             protected override bool ConfigurePortVoltage(DeviceContext device)
             {
@@ -153,7 +153,7 @@ namespace OpenEphys.Onix1
                 var voltage = MaxVoltage;
                 for (; voltage >= MinVoltage; voltage -= VoltageIncrement)
                 {
-                    device.WriteRegister(FmcLinkController.PORTVOLTAGE, voltage);
+                    device.WriteRegister(PortController.PORTVOLTAGE, voltage);
                     Thread.Sleep(200);
                     if (!CheckLinkState(device))
                     {
@@ -162,32 +162,15 @@ namespace OpenEphys.Onix1
                     }
                 }
 
-                device.WriteRegister(FmcLinkController.PORTVOLTAGE, MinVoltage);
-                device.WriteRegister(FmcLinkController.PORTVOLTAGE, 0);
+                device.WriteRegister(PortController.PORTVOLTAGE, MinVoltage);
+                device.WriteRegister(PortController.PORTVOLTAGE, 0);
                 Thread.Sleep(1000);
-                device.WriteRegister(FmcLinkController.PORTVOLTAGE, voltage + VoltageOffset);
+                device.WriteRegister(PortController.PORTVOLTAGE, voltage + VoltageOffset);
                 Thread.Sleep(200);
                 return CheckLinkState(device);
             }
         }
     }
 
-    /// <summary>
-    /// Specifies the physical port that a headstage is plugged into.
-    /// </summary>
-    /// <remarks>
-    /// ONIX uses a common protocol to communicate with a variety of devices using the same physical connection. For this reason
-    /// lots of different headstage types can be plugged into a headstage port.
-    /// </remarks>
-    public enum PortName
-    {
-        /// <summary>
-        /// Specifies Port A.
-        /// </summary>
-        PortA = 1,
-        /// <summary>
-        /// Specifies Port B.
-        /// </summary>
-        PortB = 2
-    }
+
 }
