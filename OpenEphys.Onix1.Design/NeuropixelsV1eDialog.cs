@@ -58,7 +58,7 @@ namespace OpenEphys.Onix1.Design
             this.AddMenuItemsFromDialogToFileOption(ChannelConfiguration);
 
             ChannelConfiguration.OnZoom += UpdateTrackBarLocation;
-            ChannelConfiguration.OnFileLoad += UpdateChannelPresetIndex;
+            ChannelConfiguration.OnFileLoad += OnFileLoadEvent;
 
             comboBoxApGain.DataSource = Enum.GetValues(typeof(NeuropixelsV1Gain));
             comboBoxApGain.SelectedItem = ConfigureNode.ProbeConfiguration.SpikeAmplifierGain;
@@ -230,8 +230,10 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        private void UpdateChannelPresetIndex(object sender, EventArgs e)
+        private void OnFileLoadEvent(object sender, EventArgs e)
         {
+            // NB: Ensure that the newly loaded ProbeConfiguration in the ChannelConfigurationDialog is reflected here.
+            ConfigureNode.ProbeConfiguration = ChannelConfiguration.ProbeConfiguration;
             CheckForExistingChannelPreset();
         }
 
