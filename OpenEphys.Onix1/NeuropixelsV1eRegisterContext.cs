@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.IO;
 using System.Linq;
 
 namespace OpenEphys.Onix1
@@ -33,22 +34,36 @@ namespace OpenEphys.Onix1
             bool apFilter, string gainCalibrationFile, string adcCalibrationFile)
             : base(deviceContext, i2cAddress)
         {
-            if (gainCalibrationFile == null || adcCalibrationFile == null)
+            if (!File.Exists(gainCalibrationFile))
             {
-                throw new ArgumentException("Calibration files must be specified.");
+                throw new ArgumentException($"A gain calibration file must be specified for the probe with serial number " +
+                    $"{probeSerialNumber}");
             }
 
-            System.IO.StreamReader gainFile = new(gainCalibrationFile);
-            var calSerialNumber = ulong.Parse(gainFile.ReadLine());
+            if (!File.Exists(adcCalibrationFile))
+            {
+                throw new ArgumentException($"An ADC calibration file must be specified for the probe with serial number " +
+                    $"{probeSerialNumber}");
+            }
 
-            if (calSerialNumber != probeSerialNumber)
-                throw new ArgumentException("Gain calibration file serial number does not match probe serial number.");
 
-            System.IO.StreamReader adcFile = new(adcCalibrationFile);
-            var adcSerialNumber = ulong.Parse(adcFile.ReadLine());
+            var  gainFile = new StreamReader(gainCalibrationFile);
+            var sn = ulong.Parse(gainFile.ReadLine());
 
-            if (adcSerialNumber != probeSerialNumber)
-                throw new ArgumentException("ADC calibration file serial number does not match probe serial number.");
+            if (sn != probeSerialNumber)
+            {
+                throw new ArgumentException($"The probe serial number ({probeSerialNumber}) does not " +
+                    $"match the gain calibration file serial number: {sn}.");
+            }
+
+            var adcFile = new StreamReader(adcCalibrationFile);
+            sn = ulong.Parse(adcFile.ReadLine());
+
+            if (sn != probeSerialNumber)
+            {
+                throw new ArgumentException($"The probe serial number ({probeSerialNumber}) does not " +
+                    $"match the ADC calibration file serial number: {sn}.");
+            }
 
             // parse gain correction file
             var gainCorrections = gainFile.ReadLine().Split(',').Skip(1);
