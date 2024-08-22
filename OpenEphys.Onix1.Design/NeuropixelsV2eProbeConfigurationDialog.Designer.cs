@@ -337,17 +337,6 @@
             this.buttonResetZoom.UseVisualStyleBackColor = true;
             this.buttonResetZoom.Click += new System.EventHandler(this.ButtonClick);
             // 
-            // panel1
-            // 
-            this.panel1.Controls.Add(this.buttonCancel);
-            this.panel1.Controls.Add(this.buttonOkay);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel1.Location = new System.Drawing.Point(0, 0);
-            this.panel1.Margin = new System.Windows.Forms.Padding(2);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(834, 27);
-            this.panel1.TabIndex = 0;
-            // 
             // buttonCancel
             // 
             this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
