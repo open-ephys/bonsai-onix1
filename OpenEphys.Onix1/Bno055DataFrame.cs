@@ -115,21 +115,66 @@ namespace OpenEphys.Onix1
         /// Specifies that no sub-system is calibrated.
         /// </summary>
         None = 0,
+
         /// <summary>
-        /// Specifies all three sub-systems (gyroscope, accelerometer, and magnetometer) along with sensor fusion are calibrated.
+        /// Specifies that the magnetometer is poorly calibrated.
         /// </summary>
-        System = 0x3,
+        MagnetometerLow = 0b0000_0001,
+
         /// <summary>
-        /// Specifies that the gyroscope is calibrated.
+        /// Specifies that the magnetometer is partially calibrated.
         /// </summary>
-        Gyroscope = 0xC,
+        MagnetometerMed = 0b0000_0010,
+
         /// <summary>
-        /// Specifies that the accelerometer is calibrated.
+        /// Specifies that the magnetometer is fully calibrated.
         /// </summary>
-        Accelerometer = 0x30,
+        MagnetometerFull = 0b0000_0011,
+
         /// <summary>
-        /// Specifies that the magnetometer is calibrated.
+        /// Specifies that the accelerometer is poorly calibrated.
         /// </summary>
-        Magnetometer = 0xC0
+        AccelerometerLow = 0b0000_0100,
+
+        /// <summary>
+        /// Specifies that the accelerometer is partially calibrated.
+        /// </summary>
+        AccelerometerMed = 0b0000_1000,
+
+        /// <summary>
+        /// Specifies that the accelerometer is fully calibrated.
+        /// </summary>
+        AccelerometerFull = 0b0000_1100,
+
+        /// <summary>
+        /// Specifies that the gyroscope is poorly calibrated.
+        /// </summary>
+        GyroscopeLow = 0b0001_0000,
+
+        /// <summary>
+        /// Specifies that the gyroscope is partially calibrated.
+        /// </summary>
+        GyroscopeMed = 0b0010_0000,
+
+        /// <summary>
+        /// Specifies that the gyroscope is fully calibrated.
+        /// </summary>
+        GyroscopeFull = 0b0011_0000,
+
+        /// <summary>
+        /// Specifies that sensor fusion is poorly calibrated.
+        /// </summary>
+        SystemLow = 0b0100_0000,
+
+        /// <summary>
+        /// Specifies that sensor fusion is partially calibrated.
+        /// </summary>
+        SystemMed = 0b1000_0000,
+
+        /// <summary>
+        /// Specifies that sensor fusion is fully calibrated.
+        /// </summary>
+        SystemFull = 0b1100_0000,
+
     }
 }
