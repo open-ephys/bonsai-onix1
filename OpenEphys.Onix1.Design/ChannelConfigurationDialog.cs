@@ -44,6 +44,8 @@ namespace OpenEphys.Onix1.Design
 
             SelectedContacts = new bool[ChannelConfiguration.NumberOfContacts];
 
+            ReferenceContacts = new List<int>();
+
             zedGraphChannels.MouseDownEvent += MouseDownEvent;
             zedGraphChannels.MouseMoveEvent += MouseMoveEvent;
             zedGraphChannels.MouseUpEvent += MouseUpEvent;
@@ -630,10 +632,34 @@ namespace OpenEphys.Onix1.Design
 
                 foreach (var contact in contactsToEnable)
                 {
-                    var tag = (ContactTag)contact.Tag;
-
-                    contact.Fill.Color = ReferenceContacts.Any(x => x == tag.ContactIndex) ? ReferenceContactFill : EnabledContactFill;
+                    contact.Fill.Color = EnabledContactFill;
                 }
+            }
+
+            HighlightReferenceContacts();
+        }
+
+        internal void HighlightReferenceContacts()
+        {
+            if (ChannelConfiguration == null)
+                return;
+
+            var contactObjects = zedGraphChannels.GraphPane.GraphObjList.OfType<BoxObj>()
+                                                                        .Where(c => c is not PolyObj);
+
+            var referenceContacts = contactObjects.Where(c =>
+            {
+                if (c.Tag is ContactTag tag)
+                {
+                    return ReferenceContacts.Any(r => tag.ContactIndex == r);
+                }
+
+                return false;
+            });
+
+            foreach (var contact in referenceContacts)
+            {
+                contact.Fill.Color = ReferenceContactFill;
             }
         }
 
@@ -1079,7 +1105,6 @@ namespace OpenEphys.Onix1.Design
         private bool MouseUpEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             sender.Cursor = Cursors.Arrow;
-
             if (e.Button == MouseButtons.Left)
             {
                 if (sender.GraphPane.GraphObjList[SelectionAreaTag] is BoxObj selectionArea && selectionArea != null && ChannelConfiguration != null)
@@ -1095,7 +1120,6 @@ namespace OpenEphys.Onix1.Design
                                                                             {
                                                                                 var x = c.Location.X + c.Location.Width / 2;
                                                                                 var y = c.Location.Y - c.Location.Height / 2;
-
                                                                                 return c is not PolyObj &&
                                                                                         x >= rect.X &&
                                                                                         x <= rect.X + rect.Width &&

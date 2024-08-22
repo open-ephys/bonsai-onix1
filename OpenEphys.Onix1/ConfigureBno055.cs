@@ -10,6 +10,7 @@ namespace OpenEphys.Onix1
     /// This configuration class can be linked to a <see cref="Bno055Data"/> instance to stream orientation data from the IMU.
     /// </remarks>
     [Description("Configures a Bosch BNO055 9-axis IMU device.")]
+    [Editor("OpenEphys.Onix1.Design.Bno055Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureBno055 : SingleDeviceFactory
     {
         /// <summary>
@@ -18,6 +19,18 @@ namespace OpenEphys.Onix1
         public ConfigureBno055()
             : base(typeof(Bno055))
         {
+        }
+
+        /// <summary>
+        /// Copy constructor for the <see cref="ConfigureBno055"/> class.
+        /// </summary>
+        /// <param name="configureBno055">Existing <see cref="ConfigureBno055"/> object to be copied.</param>
+        public ConfigureBno055(ConfigureBno055 configureBno055)
+            : base(typeof(Bno055))
+        {
+            Enable = configureBno055.Enable;
+            DeviceName = configureBno055.DeviceName;
+            DeviceAddress = configureBno055.DeviceAddress;
         }
 
         /// <summary>
