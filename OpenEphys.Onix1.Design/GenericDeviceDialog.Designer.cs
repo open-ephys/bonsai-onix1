@@ -45,7 +45,7 @@
             this.propertyGrid.Location = new System.Drawing.Point(0, 0);
             this.propertyGrid.Margin = new System.Windows.Forms.Padding(2);
             this.propertyGrid.Name = "propertyGrid";
-            this.propertyGrid.Size = new System.Drawing.Size(252, 348);
+            this.propertyGrid.Size = new System.Drawing.Size(252, 349);
             this.propertyGrid.TabIndex = 0;
             // 
             // splitContainer1
@@ -67,7 +67,7 @@
             this.splitContainer1.Panel2.Controls.Add(this.buttonCancel);
             this.splitContainer1.Panel2.Controls.Add(this.buttonOK);
             this.splitContainer1.Size = new System.Drawing.Size(252, 386);
-            this.splitContainer1.SplitterDistance = 348;
+            this.splitContainer1.SplitterDistance = 349;
             this.splitContainer1.SplitterWidth = 3;
             this.splitContainer1.TabIndex = 1;
             // 
@@ -108,7 +108,7 @@
             this.Name = "GenericDeviceDialog";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "GenericDeviceDialog";
+            this.Text = "Generic Device Configuration";
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();

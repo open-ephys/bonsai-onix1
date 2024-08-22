@@ -41,11 +41,11 @@
             this.buttonEnableContacts = new System.Windows.Forms.Button();
             this.buttonClearSelections = new System.Windows.Forms.Button();
             this.buttonResetZoom = new System.Windows.Forms.Button();
+            this.buttonChooseCalibrationFile = new System.Windows.Forms.Button();
             this.panelProbe = new System.Windows.Forms.Panel();
             this.panelTrackBar = new System.Windows.Forms.Panel();
             this.trackBarProbePosition = new System.Windows.Forms.TrackBar();
             this.panelChannelOptions = new System.Windows.Forms.Panel();
-            this.buttonChooseCalibrationFile = new System.Windows.Forms.Button();
             this.textBoxProbeCalibrationFile = new System.Windows.Forms.TextBox();
             this.comboBoxReference = new System.Windows.Forms.ComboBox();
             this.comboBoxChannelPresets = new System.Windows.Forms.ComboBox();
@@ -146,11 +146,11 @@
             this.buttonEnableContacts.Location = new System.Drawing.Point(11, 138);
             this.buttonEnableContacts.Margin = new System.Windows.Forms.Padding(2);
             this.buttonEnableContacts.Name = "buttonEnableContacts";
-            this.buttonEnableContacts.Size = new System.Drawing.Size(183, 36);
+            this.buttonEnableContacts.Size = new System.Drawing.Size(182, 36);
             this.buttonEnableContacts.TabIndex = 20;
             this.buttonEnableContacts.Text = "Enable Selected Electrodes";
-            this.toolTip.SetToolTip(this.buttonEnableContacts, "Click and drag to select contacts in the probe view. \r\nPress this button to enabl" +
-        "e the selected contacts.");
+            this.toolTip.SetToolTip(this.buttonEnableContacts, "Click and drag to select electrodes in the probe view. \r\nPress this button to ena" +
+        "ble the selected electrodes. \r\nNot all electrode combinations are possible.");
             this.buttonEnableContacts.UseVisualStyleBackColor = true;
             this.buttonEnableContacts.Click += new System.EventHandler(this.ButtonClick);
             // 
@@ -161,11 +161,11 @@
             this.buttonClearSelections.Location = new System.Drawing.Point(11, 178);
             this.buttonClearSelections.Margin = new System.Windows.Forms.Padding(2);
             this.buttonClearSelections.Name = "buttonClearSelections";
-            this.buttonClearSelections.Size = new System.Drawing.Size(183, 36);
+            this.buttonClearSelections.Size = new System.Drawing.Size(182, 36);
             this.buttonClearSelections.TabIndex = 19;
             this.buttonClearSelections.Text = "Clear Electrode Selection";
-            this.toolTip.SetToolTip(this.buttonClearSelections, "Remove selections from contacts in the probe view. Press this button to deselect " +
-        "contacts.\r\nNote that this does not disable contacts, but simply deselects them.");
+            this.toolTip.SetToolTip(this.buttonClearSelections, "Deselect all electrodes in the probe view. \r\nNote that this does not disable elec" +
+        "trodes, but simply deselects them.");
             this.buttonClearSelections.UseVisualStyleBackColor = true;
             this.buttonClearSelections.Click += new System.EventHandler(this.ButtonClick);
             // 
@@ -176,13 +176,25 @@
             this.buttonResetZoom.Location = new System.Drawing.Point(11, 218);
             this.buttonResetZoom.Margin = new System.Windows.Forms.Padding(2);
             this.buttonResetZoom.Name = "buttonResetZoom";
-            this.buttonResetZoom.Size = new System.Drawing.Size(183, 36);
+            this.buttonResetZoom.Size = new System.Drawing.Size(182, 36);
             this.buttonResetZoom.TabIndex = 4;
             this.buttonResetZoom.Text = "Reset Zoom";
-            this.toolTip.SetToolTip(this.buttonResetZoom, "Reset the zoom in the probe view so that the probe is zoomed out and centered.\r\nP" +
-        "ress this button to reset the zoom.");
+            this.toolTip.SetToolTip(this.buttonResetZoom, "Reset the zoom in the probe view so that the probe is zoomed out and centered.");
             this.buttonResetZoom.UseVisualStyleBackColor = true;
             this.buttonResetZoom.Click += new System.EventHandler(this.ButtonClick);
+            // 
+            // buttonChooseCalibrationFile
+            // 
+            this.buttonChooseCalibrationFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonChooseCalibrationFile.Location = new System.Drawing.Point(169, 24);
+            this.buttonChooseCalibrationFile.Margin = new System.Windows.Forms.Padding(2);
+            this.buttonChooseCalibrationFile.Name = "buttonChooseCalibrationFile";
+            this.buttonChooseCalibrationFile.Size = new System.Drawing.Size(28, 20);
+            this.buttonChooseCalibrationFile.TabIndex = 34;
+            this.buttonChooseCalibrationFile.Text = "...";
+            this.toolTip.SetToolTip(this.buttonChooseCalibrationFile, "Browse for a gain calibration file.");
+            this.buttonChooseCalibrationFile.UseVisualStyleBackColor = true;
+            this.buttonChooseCalibrationFile.Click += new System.EventHandler(this.ButtonClick);
             // 
             // panelProbe
             // 
@@ -245,19 +257,6 @@
             this.panelChannelOptions.Size = new System.Drawing.Size(205, 463);
             this.panelChannelOptions.TabIndex = 1;
             // 
-            // buttonChooseCalibrationFile
-            // 
-            this.buttonChooseCalibrationFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonChooseCalibrationFile.Location = new System.Drawing.Point(169, 24);
-            this.buttonChooseCalibrationFile.Margin = new System.Windows.Forms.Padding(2);
-            this.buttonChooseCalibrationFile.Name = "buttonChooseCalibrationFile";
-            this.buttonChooseCalibrationFile.Size = new System.Drawing.Size(28, 20);
-            this.buttonChooseCalibrationFile.TabIndex = 34;
-            this.buttonChooseCalibrationFile.Text = "...";
-            this.toolTip.SetToolTip(this.buttonChooseCalibrationFile, "Browse for a gain calibration file.");
-            this.buttonChooseCalibrationFile.UseVisualStyleBackColor = true;
-            this.buttonChooseCalibrationFile.Click += new System.EventHandler(this.ButtonClick);
-            // 
             // textBoxProbeCalibrationFile
             // 
             this.textBoxProbeCalibrationFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -292,50 +291,6 @@
             this.comboBoxChannelPresets.Name = "comboBoxChannelPresets";
             this.comboBoxChannelPresets.Size = new System.Drawing.Size(115, 21);
             this.comboBoxChannelPresets.TabIndex = 24;
-            // 
-            // buttonEnableContacts
-            // 
-            this.buttonEnableContacts.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonEnableContacts.Location = new System.Drawing.Point(11, 138);
-            this.buttonEnableContacts.Margin = new System.Windows.Forms.Padding(2);
-            this.buttonEnableContacts.Name = "buttonEnableContacts";
-            this.buttonEnableContacts.Size = new System.Drawing.Size(182, 36);
-            this.buttonEnableContacts.TabIndex = 20;
-            this.buttonEnableContacts.Text = "Enable Selected Electrodes";
-            this.toolTip.SetToolTip(this.buttonEnableContacts, "Click and drag to select electrodes in the probe view. \r\nPress this button to ena" +
-        "ble the selected electrodes. \r\nNot all electrode combinations are possible.");
-            this.buttonEnableContacts.UseVisualStyleBackColor = true;
-            this.buttonEnableContacts.Click += new System.EventHandler(this.ButtonClick);
-            // 
-            // buttonClearSelections
-            // 
-            this.buttonClearSelections.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonClearSelections.Location = new System.Drawing.Point(11, 178);
-            this.buttonClearSelections.Margin = new System.Windows.Forms.Padding(2);
-            this.buttonClearSelections.Name = "buttonClearSelections";
-            this.buttonClearSelections.Size = new System.Drawing.Size(182, 36);
-            this.buttonClearSelections.TabIndex = 19;
-            this.buttonClearSelections.Text = "Clear Electrode Selection";
-            this.toolTip.SetToolTip(this.buttonClearSelections, "Deselect all electrodes in the probe view. \r\nNote that this does not disable elec" +
-        "trodes, but simply deselects them.");
-            this.buttonClearSelections.UseVisualStyleBackColor = true;
-            this.buttonClearSelections.Click += new System.EventHandler(this.ButtonClick);
-            // 
-            // buttonResetZoom
-            // 
-            this.buttonResetZoom.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonResetZoom.Location = new System.Drawing.Point(11, 218);
-            this.buttonResetZoom.Margin = new System.Windows.Forms.Padding(2);
-            this.buttonResetZoom.Name = "buttonResetZoom";
-            this.buttonResetZoom.Size = new System.Drawing.Size(182, 36);
-            this.buttonResetZoom.TabIndex = 4;
-            this.buttonResetZoom.Text = "Reset Zoom";
-            this.toolTip.SetToolTip(this.buttonResetZoom, "Reset the zoom in the probe view so that the probe is zoomed out and centered.");
-            this.buttonResetZoom.UseVisualStyleBackColor = true;
-            this.buttonResetZoom.Click += new System.EventHandler(this.ButtonClick);
             // 
             // buttonCancel
             // 
@@ -408,7 +363,7 @@
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "NeuropixelsV2eProbeConfigurationDialog";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "NeuropixelsV2eProbeConfigurationDialog";
+            this.Text = "NeuropixelsV2e Probe Configuration";
             this.menuStrip.ResumeLayout(false);
             this.menuStrip.PerformLayout();
             this.panelProbe.ResumeLayout(false);

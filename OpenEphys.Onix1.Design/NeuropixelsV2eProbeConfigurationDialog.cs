@@ -90,6 +90,8 @@ namespace OpenEphys.Onix1.Design
             comboBoxChannelPresets.DataSource = Enum.GetValues(typeof(ChannelPreset));
             comboBoxChannelPresets.SelectedIndexChanged += SelectedIndexChanged;
             CheckForExistingChannelPreset();
+
+            Text += ": " + ProbeConfiguration.Probe.ToString();
         }
 
         private void FormShown(object sender, EventArgs e)

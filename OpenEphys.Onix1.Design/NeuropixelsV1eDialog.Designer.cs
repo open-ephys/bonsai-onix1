@@ -475,7 +475,7 @@
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "NeuropixelsV1eDialog";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "NeuropixelsV1eDialog";
+            this.Text = "NeuropixelsV1e Configuration";
             this.menuStrip.ResumeLayout(false);
             this.menuStrip.PerformLayout();
             this.panelProbe.ResumeLayout(false);

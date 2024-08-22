@@ -34,18 +34,18 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
-            this.tabPageBno055 = new System.Windows.Forms.TabPage();
-            this.panelBno055 = new System.Windows.Forms.Panel();
+            this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPageNeuropixelsV2e = new System.Windows.Forms.TabPage();
             this.panelNeuropixelsV2e = new System.Windows.Forms.Panel();
-            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabPageBno055 = new System.Windows.Forms.TabPage();
+            this.panelBno055 = new System.Windows.Forms.Panel();
+            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.menuStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
-            this.flowLayoutPanel1.SuspendLayout();
-            this.tabPageBno055.SuspendLayout();
-            this.tabPageNeuropixelsV2e.SuspendLayout();
             this.tabControl1.SuspendLayout();
+            this.tabPageNeuropixelsV2e.SuspendLayout();
+            this.tabPageBno055.SuspendLayout();
+            this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // buttonCancel
@@ -74,21 +74,20 @@
             // 
             // menuStrip1
             // 
-            this.menuStrip1.GripMargin = new System.Windows.Forms.Padding(2, 2, 0, 2);
             this.menuStrip1.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Padding = new System.Windows.Forms.Padding(4, 1, 0, 1);
-            this.menuStrip1.Size = new System.Drawing.Size(863, 31);
+            this.menuStrip1.Size = new System.Drawing.Size(863, 24);
             this.menuStrip1.TabIndex = 2;
             this.menuStrip1.Text = "menuStrip1";
             // 
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(54, 29);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 22);
             this.fileToolStripMenuItem.Text = "File";
             // 
             // tableLayoutPanel1
@@ -100,48 +99,25 @@
             this.tableLayoutPanel1.Controls.Add(this.tabControl1, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 0, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 31);
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 24);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(863, 496);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(863, 503);
             this.tableLayoutPanel1.TabIndex = 3;
             // 
-            // flowLayoutPanel1
+            // tabControl1
             // 
-            this.flowLayoutPanel1.AutoSize = true;
-            this.flowLayoutPanel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.flowLayoutPanel1.Controls.Add(this.buttonCancel);
-            this.flowLayoutPanel1.Controls.Add(this.buttonOkay);
-            this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 463);
-            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(857, 30);
-            this.flowLayoutPanel1.TabIndex = 1;
-            // 
-            // tabPageBno055
-            // 
-            this.tabPageBno055.Controls.Add(this.panelBno055);
-            this.tabPageBno055.Location = new System.Drawing.Point(4, 22);
-            this.tabPageBno055.Margin = new System.Windows.Forms.Padding(2);
-            this.tabPageBno055.Name = "tabPageBno055";
-            this.tabPageBno055.Padding = new System.Windows.Forms.Padding(2);
-            this.tabPageBno055.Size = new System.Drawing.Size(689, 293);
-            this.tabPageBno055.TabIndex = 1;
-            this.tabPageBno055.Text = "Bno055";
-            this.tabPageBno055.UseVisualStyleBackColor = true;
-            // 
-            // panelBno055
-            // 
-            this.panelBno055.AutoSize = true;
-            this.panelBno055.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelBno055.Location = new System.Drawing.Point(2, 2);
-            this.panelBno055.Margin = new System.Windows.Forms.Padding(2);
-            this.panelBno055.Name = "panelBno055";
-            this.panelBno055.Size = new System.Drawing.Size(685, 289);
-            this.panelBno055.TabIndex = 0;
+            this.tabControl1.Controls.Add(this.tabPageNeuropixelsV2e);
+            this.tabControl1.Controls.Add(this.tabPageBno055);
+            this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tabControl1.Location = new System.Drawing.Point(2, 2);
+            this.tabControl1.Margin = new System.Windows.Forms.Padding(2);
+            this.tabControl1.Name = "tabControl1";
+            this.tabControl1.SelectedIndex = 0;
+            this.tabControl1.Size = new System.Drawing.Size(859, 463);
+            this.tabControl1.TabIndex = 0;
             // 
             // tabPageNeuropixelsV2e
             // 
@@ -150,7 +126,7 @@
             this.tabPageNeuropixelsV2e.Margin = new System.Windows.Forms.Padding(2);
             this.tabPageNeuropixelsV2e.Name = "tabPageNeuropixelsV2e";
             this.tabPageNeuropixelsV2e.Padding = new System.Windows.Forms.Padding(2);
-            this.tabPageNeuropixelsV2e.Size = new System.Drawing.Size(851, 430);
+            this.tabPageNeuropixelsV2e.Size = new System.Drawing.Size(851, 437);
             this.tabPageNeuropixelsV2e.TabIndex = 0;
             this.tabPageNeuropixelsV2e.Text = "NeuropixelsV2e";
             this.tabPageNeuropixelsV2e.UseVisualStyleBackColor = true;
@@ -162,20 +138,43 @@
             this.panelNeuropixelsV2e.Location = new System.Drawing.Point(2, 2);
             this.panelNeuropixelsV2e.Margin = new System.Windows.Forms.Padding(2);
             this.panelNeuropixelsV2e.Name = "panelNeuropixelsV2e";
-            this.panelNeuropixelsV2e.Size = new System.Drawing.Size(847, 426);
+            this.panelNeuropixelsV2e.Size = new System.Drawing.Size(847, 433);
             this.panelNeuropixelsV2e.TabIndex = 0;
             // 
-            // tabControl1
+            // tabPageBno055
             // 
-            this.tabControl1.Controls.Add(this.tabPageNeuropixelsV2e);
-            this.tabControl1.Controls.Add(this.tabPageBno055);
-            this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabControl1.Location = new System.Drawing.Point(2, 2);
-            this.tabControl1.Margin = new System.Windows.Forms.Padding(2);
-            this.tabControl1.Name = "tabControl1";
-            this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(859, 456);
-            this.tabControl1.TabIndex = 0;
+            this.tabPageBno055.Controls.Add(this.panelBno055);
+            this.tabPageBno055.Location = new System.Drawing.Point(4, 22);
+            this.tabPageBno055.Margin = new System.Windows.Forms.Padding(2);
+            this.tabPageBno055.Name = "tabPageBno055";
+            this.tabPageBno055.Padding = new System.Windows.Forms.Padding(2);
+            this.tabPageBno055.Size = new System.Drawing.Size(851, 430);
+            this.tabPageBno055.TabIndex = 1;
+            this.tabPageBno055.Text = "Bno055";
+            this.tabPageBno055.UseVisualStyleBackColor = true;
+            // 
+            // panelBno055
+            // 
+            this.panelBno055.AutoSize = true;
+            this.panelBno055.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelBno055.Location = new System.Drawing.Point(2, 2);
+            this.panelBno055.Margin = new System.Windows.Forms.Padding(2);
+            this.panelBno055.Name = "panelBno055";
+            this.panelBno055.Size = new System.Drawing.Size(847, 426);
+            this.panelBno055.TabIndex = 0;
+            // 
+            // flowLayoutPanel1
+            // 
+            this.flowLayoutPanel1.AutoSize = true;
+            this.flowLayoutPanel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.flowLayoutPanel1.Controls.Add(this.buttonCancel);
+            this.flowLayoutPanel1.Controls.Add(this.buttonOkay);
+            this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 470);
+            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(857, 30);
+            this.flowLayoutPanel1.TabIndex = 1;
             // 
             // NeuropixelsV2eHeadstageDialog
             // 
@@ -189,17 +188,17 @@
             this.MainMenuStrip = this.menuStrip1;
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "NeuropixelsV2eHeadstageDialog";
-            this.Text = "NeuropixelsV2eHeadstageDialog";
+            this.Text = "NeuropixelsV2e Headstage Configuration";
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
-            this.flowLayoutPanel1.ResumeLayout(false);
-            this.tabPageBno055.ResumeLayout(false);
-            this.tabPageBno055.PerformLayout();
+            this.tabControl1.ResumeLayout(false);
             this.tabPageNeuropixelsV2e.ResumeLayout(false);
             this.tabPageNeuropixelsV2e.PerformLayout();
-            this.tabControl1.ResumeLayout(false);
+            this.tabPageBno055.ResumeLayout(false);
+            this.tabPageBno055.PerformLayout();
+            this.flowLayoutPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
