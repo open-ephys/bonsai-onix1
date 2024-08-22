@@ -18,6 +18,7 @@ namespace OpenEphys.Onix1
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(BreakoutAnalogIO.NameConverter))]
         [Description(SingleDeviceFactory.DeviceNameDescription)]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -30,6 +31,7 @@ namespace OpenEphys.Onix1
         /// millisecond of data from each channel.
         /// </remarks>
         [Description("The number of analog samples that are buffered for each channel before data is propagated.")]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public int BufferSize { get; set; } = 100;
 
         /// <summary>
@@ -43,11 +45,11 @@ namespace OpenEphys.Onix1
         /// are represented as 32-bit floating point voltages.
         /// </remarks>
         [Description("The data type used to represent analog samples.")]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public BreakoutAnalogIODataType DataType { get; set; } = BreakoutAnalogIODataType.S16;
 
         static Mat CreateVoltageScale(int bufferSize, float[] voltsPerDivision)
         {
-
             using var scaleHeader = Mat.CreateMatHeader(
                 voltsPerDivision,
                 rows: voltsPerDivision.Length,

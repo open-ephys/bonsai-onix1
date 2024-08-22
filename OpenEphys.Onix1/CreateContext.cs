@@ -18,6 +18,7 @@ namespace OpenEphys.Onix1
         /// Gets or sets a string specifying the device driver used to communicate with hardware.
         /// </summary>
         [Description("Specifies the device driver used to communicate with hardware.")]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public string Driver { get; set; } = ContextTask.DefaultDriver;
 
         /// <summary>
@@ -30,6 +31,7 @@ namespace OpenEphys.Onix1
         /// managed by the specified selected <see cref="Driver"/> in the host computer.
         /// </remarks>
         [Description("The index of the host interconnect between the ONI controller and host computer.")]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public int Index { get; set; } = ContextTask.DefaultIndex;
 
         /// <summary>

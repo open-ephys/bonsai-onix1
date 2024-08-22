@@ -52,6 +52,7 @@ namespace OpenEphys.Onix1
         /// aggregates or virtual devices.
         /// </remarks>
         [Description(DeviceNameDescription)]
+        [Category(ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -62,6 +63,7 @@ namespace OpenEphys.Onix1
         /// representation of a <see cref="oni.Device.Address"/>, but can also represent abstract device addresses.
         /// </remarks>
         [Description(DeviceAddressDescription)]
+        [Category(ConfigurationCategory)]
         public uint DeviceAddress { get; set; }
 
         /// <summary>

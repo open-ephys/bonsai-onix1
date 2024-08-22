@@ -24,6 +24,7 @@ namespace OpenEphys.Onix1
         /// using <see cref="MemoryMonitorData"/>).
         /// </remarks>
         [Description("Number of bytes read per cycle of the acquisition thread.")]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public int ReadSize { get; set; } = 2048;
 
         /// <summary>
@@ -37,6 +38,7 @@ namespace OpenEphys.Onix1
         /// large as that of <see cref="ContextTask.BlockReadSize"/>.
         /// </remarks>
         [Description("The number of bytes that are pre-allocated for writing data to hardware.")]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public int WriteSize { get; set; } = 2048;
 
         /// <summary>

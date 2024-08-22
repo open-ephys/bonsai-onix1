@@ -18,6 +18,7 @@ namespace OpenEphys.Onix1
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(BreakoutAnalogIO.NameConverter))]
         [Description(SingleDeviceFactory.DeviceNameDescription)]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -30,6 +31,7 @@ namespace OpenEphys.Onix1
         /// directly to the DACs.
         /// </remarks>
         [Description("The data type used to represent analog samples.")]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public BreakoutAnalogIODataType DataType { get; set; } = BreakoutAnalogIODataType.S16;
 
         /// <summary>

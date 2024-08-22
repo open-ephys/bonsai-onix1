@@ -22,6 +22,7 @@ namespace OpenEphys.Onix1
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(Rhd2164.NameConverter))]
         [Description(SingleDeviceFactory.DeviceNameDescription)]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -34,6 +35,7 @@ namespace OpenEphys.Onix1
         /// 30 kHz, this is equivalent to 1 millisecond of data from each channel.
         /// </remarks>
         [Description("The number of samples collected for each channel that are used to create a single Rhd2164DataFrame.")]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public int BufferSize { get; set; } = 30;
 
         /// <summary>

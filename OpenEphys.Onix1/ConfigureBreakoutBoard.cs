@@ -14,6 +14,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the heartbeat device in the ONIX breakout board.")]
+        [Category(DevicesCategory)]
         public ConfigureHeartbeat Heartbeat { get; set; } = new();
 
         /// <summary>
@@ -21,6 +22,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the analog IO device in the ONIX breakout board.")]
+        [Category(DevicesCategory)]
         public ConfigureBreakoutAnalogIO AnalogIO { get; set; } = new();
 
         /// <summary>
@@ -28,6 +30,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the digital IO device in the ONIX breakout board.")]
+        [Category(DevicesCategory)]
         public ConfigureBreakoutDigitalIO DigitalIO { get; set; } = new();
 
         /// <summary>
@@ -35,6 +38,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the memory monitor device in the ONIX breakout board.")]
+        [Category(DevicesCategory)]
         public ConfigureMemoryMonitor MemoryMonitor { get; set; } = new();
 
         internal override IEnumerable<IDeviceConfiguration> GetDevices()

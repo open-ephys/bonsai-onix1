@@ -24,7 +24,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets the NeuropixelsV2eBeta configuration.
         /// </summary>
-        [Category(ConfigurationCategory)]
+        [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the NeuropixelsV2eBeta device.")]
         public ConfigureNeuropixelsV2eBeta NeuropixelsV2eBeta { get; set; } = new();
@@ -32,7 +32,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets the Bno055 9-axis inertial measurement unit configuration.
         /// </summary>
-        [Category(ConfigurationCategory)]
+        [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the Bno055 device.")]
         public ConfigureNeuropixelsV2eBno055 Bno055 { get; set; } = new();
@@ -44,6 +44,7 @@ namespace OpenEphys.Onix1
         /// The port is the physical connection to the ONIX breakout board and must be specified prior to operation.
         /// </remarks>
         [Description("Specifies the physical connection of the headstage to the ONIX breakout board.")]
+        [Category(ConfigurationCategory)]
         public PortName Port
         {
             get { return port; }
@@ -69,6 +70,7 @@ namespace OpenEphys.Onix1
         [Description("If defined, overrides automated voltage discovery and applies " +
             "the specified voltage to the headstage. Warning: this device requires 3.0V to 5.0V " +
             "for proper operation. Higher voltages can damage the headstage.")]
+        [Category(ConfigurationCategory)]
         public double? PortVoltage
         {
             get => PortControl.PortVoltage;

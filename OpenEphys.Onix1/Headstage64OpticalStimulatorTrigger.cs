@@ -33,6 +33,7 @@ namespace OpenEphys.Onix1
 
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(Headstage64OpticalStimulator.NameConverter))]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -42,6 +43,7 @@ namespace OpenEphys.Onix1
         /// If set to true, then the optical stimulator circuit will respect triggers. If set to false, triggers will be ignored.
         /// </remarks>
         [Description("Specifies whether the optical stimulator will respect triggers.")]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public bool Enable
         {
             get => enable.Value;
@@ -55,6 +57,7 @@ namespace OpenEphys.Onix1
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
         [Range(0.0, 1000.0)]
         [Precision(3, 1)]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public double Delay
         {
             get => delay.Value;
@@ -75,6 +78,7 @@ namespace OpenEphys.Onix1
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
         [Range(0, 300)]
         [Precision(3, 0)]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public double MaxCurrent
         {
             get => maxCurrent.Value;
@@ -88,6 +92,7 @@ namespace OpenEphys.Onix1
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
         [Range(0, 100)]
         [Precision(1, 12.5)]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public double ChannelOneCurrent
         {
             get => channelOneCurrent.Value;
@@ -101,6 +106,7 @@ namespace OpenEphys.Onix1
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
         [Range(0, 100)]
         [Precision(1, 12.5)]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public double ChannelTwoCurrent
         {
             get => channelTwoCurrent.Value;
@@ -114,6 +120,7 @@ namespace OpenEphys.Onix1
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
         [Range(0.001, 1000.0)]
         [Precision(3, 1)]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public double PulseDuration
         {
             get => pulseDuration.Value;
@@ -127,6 +134,7 @@ namespace OpenEphys.Onix1
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
         [Range(0.01, 10000.0)]
         [Precision(3, 1)]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public double PulsesPerSecond
         {
             get => pulsesPerSecond.Value;
@@ -140,6 +148,7 @@ namespace OpenEphys.Onix1
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
         [Range(1, int.MaxValue)]
         [Precision(0, 1)]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public uint PulsesPerBurst
         {
             get => pulsesPerBurst.Value;
@@ -154,6 +163,7 @@ namespace OpenEphys.Onix1
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
         [Range(0.0, 10000.0)]
         [Precision(3, 1)]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public double InterBurstInterval
         {
             get => interBurstInterval.Value;
@@ -167,6 +177,7 @@ namespace OpenEphys.Onix1
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
         [Range(1, int.MaxValue)]
         [Precision(0, 1)]
+        [Category(DeviceFactory.AcquisitionCategory)]
         public uint BurstsPerTrain
         {
             get => burstsPerTrain.Value;

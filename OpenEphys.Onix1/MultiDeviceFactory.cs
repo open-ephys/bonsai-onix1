@@ -29,6 +29,8 @@ namespace OpenEphys.Onix1
         const string BaseTypePrefix = "Configure";
         string _name;
 
+        internal const string DevicesCategory = "Devices";
+
         internal MultiDeviceFactory()
         {
             var baseName = GetType().Name;
@@ -44,6 +46,7 @@ namespace OpenEphys.Onix1
         /// the <see cref="SingleDeviceFactory.DeviceName"/> of each device in the the group. 
         /// </remarks>
         [Description("The unique device group name.")]
+        [Category(ConfigurationCategory)]
         public string Name
         {
             get { return _name; }
