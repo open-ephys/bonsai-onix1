@@ -25,7 +25,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets the NeuropixelsV1e configuration.
         /// </summary>
-        [Category(ConfigurationCategory)]
+        [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the NeuropixelsV1e device.")]
         public ConfigureNeuropixelsV1e NeuropixelsV1e { get; set; } = new();
@@ -33,7 +33,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets the Bno055 9-axis inertial measurement unit configuration.
         /// </summary>
-        [Category(ConfigurationCategory)]
+        [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the Bno055 device.")]
         public ConfigureNeuropixelsV1eBno055 Bno055 { get; set; } = new();

@@ -41,7 +41,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets the Rhd2164 configuration.
         /// </summary>
-        [Category(ConfigurationCategory)]
+        [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the Rhd2164 device in the headstage-64.")]
         public ConfigureRhd2164 Rhd2164 { get; set; } = new();
@@ -49,7 +49,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets the Bno055 9-axis inertial measurement unit configuration.
         /// </summary>
-        [Category(ConfigurationCategory)]
+        [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the Bno055 device in the headstage-64.")]
         public ConfigureBno055 Bno055 { get; set; } = new();
@@ -57,7 +57,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets the SteamVR V1 basestation 3D tracking array configuration.
         /// </summary>
-        [Category(ConfigurationCategory)]
+        [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the TS4231 device in the headstage-64.")]
         public ConfigureTS4231V1 TS4231 { get; set; } = new() { Enable = false };
@@ -65,7 +65,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets onboard electrical stimulator configuration.
         /// </summary>
-        [Category(ConfigurationCategory)]
+        [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the ElectricalStimulator device in the headstage-64.")]
         public ConfigureHeadstage64ElectricalStimulator ElectricalStimulator { get; set; } = new();
@@ -73,7 +73,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets onboard optical stimulator configuration.
         /// </summary>
-        [Category(ConfigurationCategory)]
+        [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the OpticalStimulator device in the headstage-64.")]
         public ConfigureHeadstage64OpticalStimulator OpticalStimulator { get; set; } = new();
@@ -85,6 +85,7 @@ namespace OpenEphys.Onix1
         /// The port is the physical connection to the ONIX breakout board and must be specified prior to operation.
         /// </remarks>
         [Description("Specifies the physical connection of the headstage to the ONIX breakout board.")]
+        [Category(ConfigurationCategory)]
         public PortName Port
         {
             get { return port; }
@@ -120,6 +121,7 @@ namespace OpenEphys.Onix1
         [Description("If defined, it will override automated voltage discovery and apply the specified voltage" +
                      "to the headstage. Warning: this device requires 5.5V to 6.0V for proper operation." +
                      "Supplying higher voltages may result in damage to the headstage.")]
+        [Category(ConfigurationCategory)]
         public double? PortVoltage
         {
             get => PortControl.PortVoltage;
