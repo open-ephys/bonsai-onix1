@@ -65,7 +65,7 @@
             this.splitContainer1.Panel2.Controls.Add(this.buttonCancel);
             this.splitContainer1.Panel2.Controls.Add(this.buttonOK);
             this.splitContainer1.Size = new System.Drawing.Size(457, 442);
-            this.splitContainer1.SplitterDistance = 404;
+            this.splitContainer1.SplitterDistance = 405;
             this.splitContainer1.SplitterWidth = 3;
             this.splitContainer1.TabIndex = 0;
             // 
@@ -83,7 +83,7 @@
             this.zedGraphChannels.ScrollMinX = 0D;
             this.zedGraphChannels.ScrollMinY = 0D;
             this.zedGraphChannels.ScrollMinY2 = 0D;
-            this.zedGraphChannels.Size = new System.Drawing.Size(457, 404);
+            this.zedGraphChannels.Size = new System.Drawing.Size(457, 405);
             this.zedGraphChannels.TabIndex = 4;
             this.zedGraphChannels.UseExtendedPrintDialog = true;
             this.zedGraphChannels.ZoomEvent += new ZedGraph.ZedGraphControl.ZoomEventHandler(this.ZoomEvent);
@@ -166,7 +166,7 @@
             this.MainMenuStrip = this.menuStrip;
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "ChannelConfigurationDialog";
-            this.Text = "ChannelConfigurationDialog";
+            this.Text = "Channel Configuration";
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();
             this.splitContainer1.Panel2.ResumeLayout(false);

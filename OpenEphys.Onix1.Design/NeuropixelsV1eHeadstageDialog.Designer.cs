@@ -88,7 +88,7 @@
             this.tabPageBno055.Margin = new System.Windows.Forms.Padding(2);
             this.tabPageBno055.Name = "tabPageBno055";
             this.tabPageBno055.Padding = new System.Windows.Forms.Padding(2);
-            this.tabPageBno055.Size = new System.Drawing.Size(1026, 578);
+            this.tabPageBno055.Size = new System.Drawing.Size(1005, 559);
             this.tabPageBno055.TabIndex = 1;
             this.tabPageBno055.Text = "Bno055";
             this.tabPageBno055.UseVisualStyleBackColor = true;
@@ -99,7 +99,7 @@
             this.panelBno055.Location = new System.Drawing.Point(2, 2);
             this.panelBno055.Margin = new System.Windows.Forms.Padding(2);
             this.panelBno055.Name = "panelBno055";
-            this.panelBno055.Size = new System.Drawing.Size(1022, 574);
+            this.panelBno055.Size = new System.Drawing.Size(1001, 555);
             this.panelBno055.TabIndex = 0;
             // 
             // buttonCancel
@@ -181,7 +181,7 @@
             this.MainMenuStrip = this.menuStrip1;
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "NeuropixelsV1eHeadstageDialog";
-            this.Text = "NeuropixelsV1eHeadstageDialog";
+            this.Text = "NeuropixelsV1e Headstage Configuration";
             this.tabControl1.ResumeLayout(false);
             this.tabPageNeuropixelsV1e.ResumeLayout(false);
             this.tabPageBno055.ResumeLayout(false);
