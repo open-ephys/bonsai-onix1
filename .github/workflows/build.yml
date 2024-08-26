@@ -35,6 +35,9 @@ jobs:
           path: current
           fetch-depth: 0
 
+      - id: test-git
+        run: git status
+
       - name: Find previous release
         id: previous-release
         env:
