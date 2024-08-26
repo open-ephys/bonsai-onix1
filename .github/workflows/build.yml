@@ -33,9 +33,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: current
-          sparse-checkout: |
-            Directory.Build.props
-          sparse-checkout-cone-mode: false
+          fetch-depth: 0
 
       - name: Find previous release
         id: previous-release
@@ -61,7 +59,7 @@ jobs:
 
   build:
     needs: [setup, check-semver]
-    if: failure()
+    if: false
     strategy:
       fail-fast: false
       matrix:
@@ -107,7 +105,7 @@ jobs:
     permissions:
       packages: write
     needs: [build, check-semver]
-    if: github.event_name == 'push' || github.event_name == 'release' && failure()
+    if: github.event_name == 'push' || github.event_name == 'release' && false
     steps:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
