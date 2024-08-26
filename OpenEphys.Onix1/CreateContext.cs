@@ -19,6 +19,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Description("Specifies the device driver used to communicate with hardware.")]
         [Category(DeviceFactory.ConfigurationCategory)]
+        [TypeConverter(typeof(ContextDriverConverter))]
         public string Driver { get; set; } = ContextTask.DefaultDriver;
 
         /// <summary>
