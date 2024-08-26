@@ -32,7 +32,6 @@ jobs:
         id: checkout-current-version
         uses: actions/checkout@v4
         with:
-          path: current
           fetch-depth: 0
 
       - name: Find previous release
@@ -47,7 +46,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ steps.previous-release.outputs.RELEASE_NAME }}
-          path: release
+          path: last-release
           sparse-checkout: |
             Directory.Build.props
           sparse-checkout-cone-mode: false
@@ -56,8 +55,8 @@ jobs:
         id: verify
         if: success()
         run: |
-          echo "Current: $(cat ./current/Directory.Build.props | grep -Po '(?<=VersionPrefix>).*(?=</VersionPrefix>)')"
-          echo "Release: $(cat ./release/Directory.Build.props | grep -Po '(?<=VersionPrefix>).*(?=</VersionPrefix>)')"
+          echo "Current: $(cat ./Directory.Build.props | grep -Po '(?<=VersionPrefix>).*(?=</VersionPrefix>)')"
+          echo "Release: $(cat ./last-release/Directory.Build.props | grep -Po '(?<=VersionPrefix>).*(?=</VersionPrefix>)')"
 
   build:
     needs: [setup, check-semver]
