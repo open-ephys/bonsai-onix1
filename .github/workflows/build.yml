@@ -35,13 +35,6 @@ jobs:
           path: current
           fetch-depth: 0
 
-      - id: test-git
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          git status
-
       - name: Find previous release
         id: previous-release
         env:
