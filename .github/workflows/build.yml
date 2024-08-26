@@ -39,6 +39,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git status
 
       - name: Find previous release
