@@ -6,9 +6,18 @@ using System.Reactive.Linq;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Creates a <see cref="ContextTask"/> to orchestrate a single ONI-compliant controller
-    /// using the specified device driver and host interconnect.
+    /// Creates a <see cref="ContextTask"/> to that orchestrates data acquisition for single ONIX.
     /// </summary>
+    /// <remarks>
+    /// ONIX is built on top of the <see href="https://open-ephys.github.io/ONI/">ONI</see> hardware specification and API.
+    /// One of ONI's requirements is the creation of a context that holds information that used for communication between the
+    /// computer and ONI-compliant hardware. The context holds data such as the device driver that will be used to communicate
+    /// with hardware, what devices (e.g. headstages) are currently attached to the hardware, how often data should be read
+    /// from hardware, the run state of the system, etc. <see cref="ContextTask"/> creates a ONI context for a single ONIX
+    /// system. The system is uniquely identified with a host computer by the <see cref="Driver"/> used to communicate with
+    /// hardware and the <see cref="Index"/>, which is a enumeration that is translated by the driver into a physical location
+    /// (e.g. a particular PCIe slot) that the hardware uses to communicate with the host computer.
+    /// </remarks>
     [Description("Creates a ContextTask to orchestrate a single ONI-compliant controller using the specified device driver and host interconnect.")]
     [Combinator(MethodName = nameof(Generate))]
     [WorkflowElementCategory(ElementCategory.Source)]
