@@ -25,6 +25,7 @@ jobs:
         run: echo "build-suffix=${{ github.event_name == 'push' && env.CiRunPushSuffix || github.event_name == 'pull_request' && env.CiRunPullSuffix || null }}" >> "$GITHUB_OUTPUT"
 
   check-semver:
+    needs: setup
     runs-on: ubuntu-latest
     steps:
       - name: Checkout current version
@@ -53,11 +54,11 @@ jobs:
       - name: Verify
         id: verify
         run: |
-          echo "Current: $(cat ./current/Directory.Build.props) | grep -Po '(?<=Version>).*(?=</Version>)')"
-          echo "Release: $(cat ./release/Directory.Build.props) | grep -Po '(?<=Version>).*(?=</Version>)')"
+          echo "$(Current: $(cat ./current/Directory.Build.props) | grep -Po '(?<=Version>).*(?=</Version>)'))"
+          echo "$(Release: $(cat ./release/Directory.Build.props) | grep -Po '(?<=Version>).*(?=</Version>)'))"
 
   build:
-    needs: [setup]
+    needs: [setup, check-semver]
     strategy:
       fail-fast: false
       matrix:
@@ -103,7 +104,7 @@ jobs:
     permissions:
       packages: write
     needs: [build]
-    if: github.event_name == 'push' || github.event_name == 'release'
+    if: github.event_name == 'push' || github.event_name == 'release' && failure()
     steps:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
