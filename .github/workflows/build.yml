@@ -54,11 +54,12 @@ jobs:
       - name: Verify
         id: verify
         run: |
-          echo "$(Current: $(cat ./current/Directory.Build.props) | grep -Po '(?<=Version>).*(?=</Version>)'))"
-          echo "$(Release: $(cat ./release/Directory.Build.props) | grep -Po '(?<=Version>).*(?=</Version>)'))"
+          echo "Current: $(cat ./current/Directory.Build.props | grep -Po '(?<=Version>).*(?=</Version>)')"
+          echo "Release: $(cat ./release/Directory.Build.props | grep -Po '(?<=Version>).*(?=</Version>)')"
 
   build:
     needs: [setup, check-semver]
+    if: failure()
     strategy:
       fail-fast: false
       matrix:
