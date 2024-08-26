@@ -24,6 +24,38 @@ jobs:
         id: setup-build
         run: echo "build-suffix=${{ github.event_name == 'push' && env.CiRunPushSuffix || github.event_name == 'pull_request' && env.CiRunPullSuffix || null }}" >> "$GITHUB_OUTPUT"
 
+  check-semver:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current version
+        id: checkout-current-version
+        uses: actions/checkout@v4
+        with:
+          path: current
+          sparse-checkout: |
+            Directory.Build.props
+          sparse-checkout-cone-mode: false
+
+      - name: Find previous release
+        id: previous-release
+        run: echo "RELEASE_NAME=$(gh release list -L 1 --json tagName -q .[0].tagName)" >> $GITHUB_OUTPUT
+
+      - name: Checkout last release version
+        id: checkout-last-release-version
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.previous-release.outputs.RELEASE_NAME }}
+          path: release
+          sparse-checkout: |
+            Directory.Build.props
+          sparse-checkout-cone-mode: false
+
+      - name: Verify
+        id: verify
+        run: |
+          echo "Current: $(cat ./current/Directory.Build.props) | grep -Po '(?<=Version>).*(?=</Version>)')"
+          echo "Release: $(cat ./release/Directory.Build.props) | grep -Po '(?<=Version>).*(?=</Version>)')"
+
   build:
     needs: [setup]
     strategy:
