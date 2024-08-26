@@ -39,6 +39,8 @@ jobs:
 
       - name: Find previous release
         id: previous-release
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: echo "RELEASE_NAME=$(gh release list -L 1 --json tagName -q .[0].tagName)" >> $GITHUB_OUTPUT
 
       - name: Checkout last release version
@@ -54,8 +56,8 @@ jobs:
       - name: Verify
         id: verify
         run: |
-          echo "Current: $(cat ./current/Directory.Build.props | grep -Po '(?<=Version>).*(?=</Version>)')"
-          echo "Release: $(cat ./release/Directory.Build.props | grep -Po '(?<=Version>).*(?=</Version>)')"
+          echo "Current: $(cat ./current/Directory.Build.props | grep -Po '(?<=VersionPrefix>).*(?=</VersionPrefix>)')"
+          echo "Release: $(cat ./release/Directory.Build.props | grep -Po '(?<=VersionPrefix>).*(?=</VersionPrefix>)')"
 
   build:
     needs: [setup, check-semver]
@@ -104,7 +106,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       packages: write
-    needs: [build]
+    needs: [build, check-semver]
     if: github.event_name == 'push' || github.event_name == 'release' && failure()
     steps:
       - name: Setup .NET
