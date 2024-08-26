@@ -43,6 +43,7 @@ jobs:
 
       - name: Checkout last release version
         id: checkout-last-release-version
+        if: success()
         uses: actions/checkout@v4
         with:
           ref: ${{ steps.previous-release.outputs.RELEASE_NAME }}
@@ -53,6 +54,7 @@ jobs:
 
       - name: Verify
         id: verify
+        if: success()
         run: |
           echo "Current: $(cat ./current/Directory.Build.props | grep -Po '(?<=VersionPrefix>).*(?=</VersionPrefix>)')"
           echo "Release: $(cat ./release/Directory.Build.props | grep -Po '(?<=VersionPrefix>).*(?=</VersionPrefix>)')"
