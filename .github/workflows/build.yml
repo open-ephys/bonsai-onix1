@@ -27,6 +27,7 @@ jobs:
   check-semver:
     needs: setup
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
       - name: Checkout current version
         uses: actions/checkout@v4
