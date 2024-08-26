@@ -29,7 +29,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout current version
-        id: checkout-current-version
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -41,7 +40,6 @@ jobs:
         run: echo "RELEASE_NAME=$(gh release list -L 1 --json tagName -q .[0].tagName)" >> $GITHUB_OUTPUT
 
       - name: Checkout last release version
-        id: checkout-last-release-version
         if: success()
         uses: actions/checkout@v4
         with:
@@ -52,12 +50,20 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Verify
-        id: verify
         if: success()
         run: |
           echo "Current: $(cat ./Directory.Build.props | grep -Po '(?<=VersionPrefix>).*(?=</VersionPrefix>)')"
           echo "Release: $(cat ./last-release/Directory.Build.props | grep -Po '(?<=VersionPrefix>).*(?=</VersionPrefix>)')"
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.x
+        
+      - name: Install semver
+        shell: pwsh
+        run: Install-Package semver
+        
   build:
     needs: [setup, check-semver]
     if: false
