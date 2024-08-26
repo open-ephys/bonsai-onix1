@@ -24,8 +24,50 @@ jobs:
         id: setup-build
         run: echo "build-suffix=${{ github.event_name == 'push' && env.CiRunPushSuffix || github.event_name == 'pull_request' && env.CiRunPullSuffix || null }}" >> "$GITHUB_OUTPUT"
 
+  check-semver:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current version
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find previous release
+        id: previous-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "RELEASE_NAME=$(gh release list -L 1 --json tagName -q .[0].tagName)" >> $GITHUB_OUTPUT
+
+      - name: Checkout last release version
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.previous-release.outputs.RELEASE_NAME }}
+          path: last-release
+          sparse-checkout: |
+            Directory.Build.props
+          sparse-checkout-cone-mode: false
+
+      - name: Extract Versions
+        id: extract-versions
+        run: |
+          echo "CURRENT_VERSION=$(cat ./Directory.Build.props | grep -Po '(?<=VersionPrefix>).*(?=</VersionPrefix>)')" >> $GITHUB_OUTPUT
+          echo "PREVIOUS_VERSION=$(cat ./last-release/Directory.Build.props | grep -Po '(?<=VersionPrefix>).*(?=</VersionPrefix>)')" >> $GITHUB_OUTPUT
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10.12"
+
+      - name: Install semver
+        run: python -m pip install semver
+      
+      - name: Compare Versions
+        run: .github/workflows/compare_version_numbers.sh
+        
   build:
-    needs: [setup]
+    needs: [setup, check-semver]
     strategy:
       fail-fast: false
       matrix:
@@ -70,7 +112,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       packages: write
-    needs: [build]
+    needs: [build, check-semver]
     if: github.event_name == 'push' || github.event_name == 'release'
     steps:
       - name: Setup .NET
