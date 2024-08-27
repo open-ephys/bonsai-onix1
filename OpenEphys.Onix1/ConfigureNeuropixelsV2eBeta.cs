@@ -62,6 +62,12 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets the electrode configuration for Probe A.
         /// </summary>
+        /// <remarks>
+        /// Configuration is accomplished using a GUI to aid in channel selection and relevant configuration properties.
+        /// To open a probe configuration GUI, select the ellipses next the <see cref="ProbeConfigurationA"/> variable
+        /// in the property pane, or double-click <see cref="ConfigureNeuropixelsV2eBetaHeadstage"/> to configure both
+        /// probes and the <see cref="ConfigureNeuropixelsV2eBno055"/> simultaneously.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Probe A electrode configuration.")]
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eBetaProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
@@ -91,6 +97,12 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets the electrode configuration for Probe B.
         /// </summary>
+        /// <remarks>
+        /// Configuration is accomplished using a GUI to aid in channel selection and relevant configuration properties.
+        /// To open a probe configuration GUI, select the ellipses next the <see cref="ProbeConfigurationB"/> variable
+        /// in the property pane, or double-click <see cref="ConfigureNeuropixelsV2eBetaHeadstage"/> to configure both
+        /// probes and the <see cref="ConfigureNeuropixelsV2eBno055"/> simultaneously.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Probe B electrode configuration.")]
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eBetaProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
