@@ -68,7 +68,7 @@ jobs:
         
   build:
     needs: [setup, check-semver]
-    if: github.event_name != 'pull_request' && needs.setup.result == 'success' 
+    if: (github.event_name != 'pull_request' && needs.setup.result == 'success') || github.event_name == 'pull_request'
     strategy:
       fail-fast: false
       matrix:
