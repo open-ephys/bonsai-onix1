@@ -24,6 +24,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="NeuropixelsV2eBetaDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="NeuropixelsV2eBetaHeadstageDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>

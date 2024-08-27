@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Drawing.Design;
 using System.Reactive.Disposables;
 using Bonsai;
 
@@ -8,6 +9,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// A class that configures a NeuropixelsV2eBeta device.
     /// </summary>
+    [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eBetaEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a NeuropixelsV2eBeta device.")]
     public class ConfigureNeuropixelsV2eBeta : SingleDeviceFactory
     {
@@ -17,6 +19,23 @@ namespace OpenEphys.Onix1
         public ConfigureNeuropixelsV2eBeta()
             : base(typeof(NeuropixelsV2eBeta))
         {
+        }
+
+        /// <summary>
+        /// Copy constructor for the <see cref="ConfigureNeuropixelsV2e"/> class.
+        /// </summary>
+        /// <param name="configureNode">A pre-existing <see cref="ConfigureNeuropixelsV2e"/> object.</param>
+        public ConfigureNeuropixelsV2eBeta(ConfigureNeuropixelsV2eBeta configureNode)
+            : base(typeof(NeuropixelsV2eBeta))
+        {
+            Enable = configureNode.Enable;
+            EnableLed = configureNode.EnableLed;
+            ProbeConfigurationA = configureNode.ProbeConfigurationA;
+            ProbeConfigurationB = configureNode.ProbeConfigurationB;
+            GainCalibrationFileA = configureNode.GainCalibrationFileA;
+            GainCalibrationFileB = configureNode.GainCalibrationFileB;
+            DeviceName = configureNode.DeviceName;
+            DeviceAddress = configureNode.DeviceAddress;
         }
 
         /// <summary>
@@ -45,6 +64,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Probe A electrode configuration.")]
+        [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eBetaProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new(NeuropixelsV2Probe.ProbeA);
 
         /// <summary>
@@ -73,6 +93,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Probe B electrode configuration.")]
+        [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eBetaProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new(NeuropixelsV2Probe.ProbeB);
 
         /// <summary>
