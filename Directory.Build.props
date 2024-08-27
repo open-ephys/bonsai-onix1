@@ -17,6 +17,7 @@
     <VersionSuffix></VersionSuffix>
     <LangVersion>10.0</LangVersion>
     <Features>strict</Features>
+    <PackageType>Dependency;BonsaiLibrary</PackageType>
   </PropertyGroup>
 
   <Import Project="build/Version.props" />
