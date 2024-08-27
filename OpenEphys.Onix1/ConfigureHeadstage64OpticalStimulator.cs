@@ -4,10 +4,10 @@ using System.ComponentModel;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that configures a headstage-64 dual-channel optical stimulator.
+    /// Configures a headstage-64 dual-channel optical stimulator.
     /// </summary>
     /// <remarks>
-    /// This configuration class can be linked to a <see cref="Headstage64OpticalStimulatorTrigger"/> instance to drive current
+    /// This configuration operator can be linked to a <see cref="Headstage64OpticalStimulatorTrigger"/> instance to drive current
     /// through laser diodes or LEDs connected to two contacts on the probe connector on the bottom of the headstage
     /// or the corresponding contacts on a compatible electrode interface board.
     /// </remarks>

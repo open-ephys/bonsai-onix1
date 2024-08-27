@@ -5,14 +5,14 @@ using System.Linq;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class for configuring the ONIX breakout board's analog inputs and outputs.
+    /// Configures the ONIX breakout board's analog inputs and outputs.
     /// </summary>
     [TypeConverter(typeof(SortedPropertyConverter))]
-    [Description("Configures the analog input and output device in the ONIX breakout board.")]
+    [Description("Configures the ONIX breakout board's analog inputs and outputs.")]
     public class ConfigureBreakoutAnalogIO : SingleDeviceFactory
     {
         /// <summary>
-        /// Initialize a new instance of ConfigureAnalogIO.
+        /// Initialize a new instance of <see cref="ConfigureBreakoutAnalogIO"/> class.
         /// </summary>
         public ConfigureBreakoutAnalogIO()
             : base(typeof(BreakoutAnalogIO))

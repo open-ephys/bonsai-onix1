@@ -5,14 +5,14 @@ using System.Runtime.InteropServices;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that contains 3D orientation data produced by a Bosch BNO055 9-axis inertial measurement unit (IMU).
+    /// 3D-orientation data produced by a Bosch Bno55 9-axis inertial measurement unit (IMU).
     /// </summary>
     public class Bno055DataFrame : DataFrame
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Bno055DataFrame"/> class.
         /// </summary>
-        /// <param name="frame">An ONI data frame containing BNO055 data.</param>
+        /// <param name="frame">An ONI data frame containing Bno055 data.</param>
         public unsafe Bno055DataFrame(oni.Frame frame)
             : this(frame.Clock, (Bno055Payload*)frame.Data.ToPointer())
         {

@@ -9,7 +9,7 @@ using OpenCV.Net;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Produces a sequence of <see cref="NeuropixelsV1eDataFrame"/> objects from a NeuropixelsV1e headstage.
+    /// Produces a sequence of <see cref="NeuropixelsV1eDataFrame"/>s from a NeuropixelsV1e headstage.
     /// </summary>
     [Description("Produces a sequence of NeuropixelsV1eDataFrame objects from a NeuropixelsV1e headstage.")]
     public class NeuropixelsV1eData : Source<NeuropixelsV1eDataFrame>

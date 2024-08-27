@@ -6,13 +6,13 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that configures a NeuropixelsV2eBeta device.
+    /// Configures a NeuropixelsV2eBeta device.
     /// </summary>
     [Description("Configures a NeuropixelsV2eBeta device.")]
     public class ConfigureNeuropixelsV2eBeta : SingleDeviceFactory
     {
         /// <summary>
-        /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV2eBeta"/> class.
+        /// Initializes a new instance of the <see cref="ConfigureNeuropixelsV2eBeta"/> class.
         /// </summary>
         public ConfigureNeuropixelsV2eBeta()
             : base(typeof(NeuropixelsV2eBeta))

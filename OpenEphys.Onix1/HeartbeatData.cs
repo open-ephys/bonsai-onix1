@@ -7,7 +7,7 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that produces a sequence of heartbeat data frames.
+    /// Produces a sequence of heartbeat data frames.
     /// </summary>
     /// <remarks>
     /// This data stream class must be linked to an appropriate configuration, such as a <see cref="ConfigureHeartbeat"/>,

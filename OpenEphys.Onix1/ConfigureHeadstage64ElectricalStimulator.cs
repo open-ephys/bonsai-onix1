@@ -4,10 +4,10 @@ using System.ComponentModel;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that configures a headstage-64 onboard electrical stimulator.
+    /// Configures a headstage-64 onboard electrical stimulator.
     /// </summary>
     /// <remarks>
-    /// This configuration class can be linked to a <see cref="Headstage64ElectricalStimulatorTrigger"/> instance to deliver
+    /// This configuration operator can be linked to a <see cref="Headstage64ElectricalStimulatorTrigger"/> instance to deliver
     /// current controlled electrical micro-stimulation through a contact on the probe connector on the bottom of the headstage
     /// or the corresponding contact on a compatible electrode interface board.
     /// </remarks>

@@ -4,7 +4,7 @@ using OpenCV.Net;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that contains electrophysiology data produced by an RHD2164 bioamplifier chip.
+    /// Electrophysiology data produced by an Rhd2164 bioamplifier chip.
     /// </summary>
     public class Rhd2164DataFrame : BufferedDataFrame
     {
@@ -13,8 +13,8 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <param name="clock">An array of <see cref="DataFrame.Clock"/> values.</param>
         /// <param name="hubClock"> An array of hub clock counter values.</param>
-        /// <param name="amplifierData">An array of RHD2164 multi-channel electrophysiology data.</param>
-        /// <param name="auxData">An array of RHD2164 auxiliary channel data.</param>
+        /// <param name="amplifierData">An array of Rhd2164 multi-channel electrophysiology data.</param>
+        /// <param name="auxData">An array of Rhd2164 auxiliary channel data.</param>
         public Rhd2164DataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData, Mat auxData)
             : base(clock, hubClock)
         {

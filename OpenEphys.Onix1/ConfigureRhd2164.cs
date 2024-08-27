@@ -4,13 +4,13 @@ using System.ComponentModel;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class for configuring an Intan RHD2164 bioamplifier chip.
+    /// Configures an Intan Rhd2164 bioamplifier chip.
     /// </summary>
     /// <remarks>
-    /// This configuration class can be linked to a <see cref="Rhd2164Data"/> instance to stream
+    /// This configuration operator can be linked to a <see cref="Rhd2164Data"/> instance to stream
     /// electrophysiology data from the chip.
     /// </remarks>
-    [Description("Configures a RHD2164 device.")]
+    [Description("Configures a Rhd2164 device.")]
     public class ConfigureRhd2164 : SingleDeviceFactory
     {
         /// <summary>
@@ -29,7 +29,7 @@ namespace OpenEphys.Onix1
         /// If set to false, it will not produce data.
         /// </remarks>
         [Category(ConfigurationCategory)]
-        [Description("Specifies whether the RHD2164 device is enabled.")]
+        [Description("Specifies whether the Rhd2164 device is enabled.")]
         public bool Enable { get; set; } = true;
 
         /// <summary>
@@ -54,14 +54,14 @@ namespace OpenEphys.Onix1
         public Rhd2164AnalogHighCutoff AnalogHighCutoff { get; set; } = Rhd2164AnalogHighCutoff.High10000Hz;
 
         /// <summary>
-        /// Configures a RHD2164 device.
+        /// Configures a Rhd2164 device.
         /// </summary>
         /// <remarks>
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance
         /// prior to data acquisition.
         /// </remarks>
         /// <param name="source">A sequence of <see cref="ContextTask"/> instances that holds configuration actions.</param>
-        /// <returns>The original sequence modified by adding additional configuration actions required to configure a RHD2164 device.</returns>
+        /// <returns>The original sequence modified by adding additional configuration actions required to configure a Rhd2164 device.</returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;
@@ -69,7 +69,7 @@ namespace OpenEphys.Onix1
             var deviceAddress = DeviceAddress;
             return source.ConfigureDevice(context =>
             {
-                // config register format following RHD2164 datasheet
+                // config register format following Rhd2164 datasheet
                 // https://intantech.com/files/Intan_RHD2000_series_datasheet.pdf
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
 
