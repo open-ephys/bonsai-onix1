@@ -8,7 +8,7 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class for configuring a load testing device.
+    /// Configures a load tester device.
     /// </summary>
     /// <remarks>
     /// The load tester device can be configured to produce data at user-settable size and rate

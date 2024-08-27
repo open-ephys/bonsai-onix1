@@ -7,14 +7,14 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that configures a NeuropixelsV2eBeta device.
+    /// Configures a NeuropixelsV2eBeta device.
     /// </summary>
     [Description("Configures a NeuropixelsV2eBeta device.")]
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureNeuropixelsV2eBeta : SingleDeviceFactory, IConfigureNeuropixelsV2
     {
         /// <summary>
-        /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV2eBeta"/> class.
+        /// Initializes a new instance of the <see cref="ConfigureNeuropixelsV2eBeta"/> class.
         /// </summary>
         public ConfigureNeuropixelsV2eBeta()
             : base(typeof(NeuropixelsV2eBeta))

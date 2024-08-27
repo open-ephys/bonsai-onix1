@@ -7,10 +7,10 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that produces a sequence of port status information frames.
+    /// Produces a sequence of port status information frames.
     /// </summary>
     /// <remarks>
-    /// This data stream class must be linked to an appropriate headstage,
+    /// This data stream operator must be linked to an appropriate headstage,
     /// miniscope, etc. configuration whose communication is dictated by
     /// a PortController.
     /// </remarks>

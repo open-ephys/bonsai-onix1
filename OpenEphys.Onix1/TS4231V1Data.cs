@@ -7,7 +7,7 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that produces a sequence of decoded optical signals produced by a pair of SteamVR V1 base stations.
+    /// Produces a sequence of decoded optical signals produced one or more SteamVR V1 base station(s).
     /// </summary>
     /// <remarks>
     /// <para>

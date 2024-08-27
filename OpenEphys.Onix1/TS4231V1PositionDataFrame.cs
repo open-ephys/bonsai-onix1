@@ -3,8 +3,7 @@
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that contains the 3D position of a photodiode in a TS4231 sensor array relative
-    /// to a given SteamVR V1 base station origin.
+    /// 3D position of a single photodiode within a TS4231 sensor array.
     /// </summary>
     /// <remarks>
     /// A sequence of 12 <see cref="oni.Frame"/> objects produced by a single TS4231 sensor are required to

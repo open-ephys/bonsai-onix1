@@ -4,14 +4,14 @@ using System.ComponentModel;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that configures a NeuropixelsV1eBno055 device.
+    /// Configures a NeuropixelsV1eBno055 device.
     /// </summary>
     [Description("Configures a NeuropixelsV1eBno055 device.")]
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV1eBno055Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureNeuropixelsV1eBno055 : SingleDeviceFactory
     {
         /// <summary>
-        /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV1eBno055"/> class.
+        /// Initializes a new instance of the <see cref="ConfigureNeuropixelsV1eBno055"/> class.
         /// </summary>
         public ConfigureNeuropixelsV1eBno055()
             : base(typeof(NeuropixelsV1eBno055))
@@ -37,7 +37,7 @@ namespace OpenEphys.Onix1
         /// <see cref="NeuropixelsV1eBno055Data"/> will not produce data.
         /// </remarks>
         [Category(ConfigurationCategory)]
-        [Description("Specifies whether the BNO055 device is enabled.")]
+        [Description("Specifies whether the Bno055 device is enabled.")]
         public bool Enable { get; set; } = true;
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace OpenEphys.Onix1
 
         static void ConfigureBno055(DeviceContext device)
         {
-            // setup BNO055 device
+            // setup Bno055 device
             var i2c = new I2CRegisterContext(device, NeuropixelsV1eBno055.BNO055Address);
             i2c.WriteByte(0x3E, 0x00); // Power mode normal
             i2c.WriteByte(0x07, 0x00); // Page ID address 0

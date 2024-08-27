@@ -5,9 +5,9 @@ using System.Threading;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that configures a NeuropixelsV1e headstage on the specified port.
+    /// Configures a NeuropixelsV1e headstage on the specified port.
     /// </summary>
-    [Description("Configures a NeuropixelsV1e headstage.")]
+    [Description("Configures a NeuropixelsV1e headstage on the specified port.")]
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV1eHeadstageEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureNeuropixelsV1eHeadstage : MultiDeviceFactory
     {
@@ -15,7 +15,7 @@ namespace OpenEphys.Onix1
         readonly ConfigureNeuropixelsV1ePortController PortControl = new();
 
         /// <summary>
-        /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV1eHeadstage"/> class.
+        /// Initializes a new instance of the <see cref="ConfigureNeuropixelsV1eHeadstage"/> class.
         /// </summary>
         public ConfigureNeuropixelsV1eHeadstage()
         {

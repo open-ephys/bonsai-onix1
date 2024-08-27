@@ -11,10 +11,10 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that controls a headstage-64 onboard optical stimulus sequencer.
+    /// Controls a headstage-64 onboard optical stimulus sequencer.
     /// </summary>
     /// <remarks>
-    /// This class must be linked to an appropriate configuration, such as a <see cref="ConfigureHeadstage64OpticalStimulator"/>,
+    /// This operator must be linked to an appropriate configuration, such as a <see cref="ConfigureHeadstage64OpticalStimulator"/>,
     /// in order to define and deliver optical stimulation sequences.
     /// </remarks>
     [Description("Controls a headstage-64 onboard optical stimulus sequencer.")]

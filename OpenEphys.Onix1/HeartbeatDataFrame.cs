@@ -3,7 +3,7 @@
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that contains the time of a single heartbeat.
+    /// The time of a single heartbeat.
     /// </summary>
     public class HeartbeatDataFrame : DataFrame
     {
