@@ -14,6 +14,7 @@ env:
   CiRunNumber: ${{ github.run_number }}
   CiRunPushSuffix: ${{ github.ref_name }}-ci${{ github.run_number }}
   CiRunPullSuffix: pull-${{ github.event.number }}-ci${{ github.run_number }}
+
 jobs:
   setup:
     runs-on: ubuntu-latest
