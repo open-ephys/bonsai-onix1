@@ -25,7 +25,6 @@ jobs:
         run: echo "build-suffix=${{ github.event_name == 'push' && env.CiRunPushSuffix || github.event_name == 'pull_request' && env.CiRunPullSuffix || null }}" >> "$GITHUB_OUTPUT"
 
   check-semver:
-    needs: setup
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
@@ -69,6 +68,7 @@ jobs:
         
   build:
     needs: [setup, check-semver]
+    if: github.event_name != 'pull_request' && needs.setup.result == 'success' && needs.check-semver.result == 'skipped'
     strategy:
       fail-fast: false
       matrix:
@@ -113,7 +113,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       packages: write
-    needs: [build, check-semver]
+    needs: build
     if: github.event_name == 'push' || github.event_name == 'release'
     steps:
       - name: Setup .NET
