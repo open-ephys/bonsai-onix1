@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Drawing;
 using System.Xml.Serialization;
-using OpenEphys.ProbeInterface;
 
 namespace OpenEphys.Onix1
 {
