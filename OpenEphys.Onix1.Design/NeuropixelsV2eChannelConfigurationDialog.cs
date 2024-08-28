@@ -54,38 +54,22 @@ namespace OpenEphys.Onix1.Design
             ProbeConfiguration = new(ProbeConfiguration.Probe, ProbeConfiguration.Reference);
             ChannelConfiguration = ProbeConfiguration.ChannelConfiguration;
 
-            DrawProbeGroup();
-            RefreshZedGraph();
-
             OnFileOpenHandler();
         }
 
-        internal override void OpenFile<T>()
+        internal override bool OpenFile<T>()
         {
-            var newConfiguration = OpenAndParseConfigurationFile<NeuropixelsV2eProbeGroup>();
-
-            if (newConfiguration == null)
+            if (base.OpenFile<NeuropixelsV2eProbeGroup>())
             {
-                return;
-            }
-
-            if (ProbeConfiguration.ChannelConfiguration.NumberOfContacts == newConfiguration.NumberOfContacts)
-            {
-                newConfiguration.Validate();
-
-                ProbeConfiguration = new(newConfiguration, ProbeConfiguration.Reference, ProbeConfiguration.Probe);
+                ProbeConfiguration = new((NeuropixelsV2eProbeGroup)ChannelConfiguration, ProbeConfiguration.Reference, ProbeConfiguration.Probe);
                 ChannelConfiguration = ProbeConfiguration.ChannelConfiguration;
 
-                DrawProbeGroup();
-                RefreshZedGraph();
-            }
-            else
-            {
-                throw new InvalidOperationException($"Number of contacts does not match; expected {ProbeConfiguration.ChannelConfiguration.NumberOfContacts} contacts" +
-                    $", but found {newConfiguration.NumberOfContacts} contacts");
+                OnFileOpenHandler();
+
+                return true;
             }
 
-            OnFileOpenHandler();
+            return false;
         }
 
         private void OnFileOpenHandler()

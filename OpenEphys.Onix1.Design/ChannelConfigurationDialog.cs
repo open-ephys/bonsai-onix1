@@ -423,13 +423,13 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        internal virtual void OpenFile<T>() where T : ProbeGroup
+        internal virtual bool OpenFile<T>() where T : ProbeGroup
         {
             var newConfiguration = OpenAndParseConfigurationFile<T>();
 
             if (newConfiguration == null)
             {
-                return;
+                return false;
             }
 
             if (ChannelConfiguration.NumberOfContacts == newConfiguration.NumberOfContacts)
@@ -439,11 +439,15 @@ namespace OpenEphys.Onix1.Design
                 ChannelConfiguration = newConfiguration;
                 DrawProbeGroup();
                 RefreshZedGraph();
+
+                return true;
             }
             else
             {
-                throw new InvalidOperationException($"Number of contacts does not match; expected {ChannelConfiguration.NumberOfContacts} contacts" +
-                    $", but found {newConfiguration.NumberOfContacts} contacts");
+                MessageBox.Show($"Error: Number of contacts does not match; expected {ChannelConfiguration.NumberOfContacts} contacts" +
+                    $", but found {newConfiguration.NumberOfContacts} contacts", "Contact Number Mismatch");
+
+                return false;
             }
         }
 
@@ -460,7 +464,7 @@ namespace OpenEphys.Onix1.Design
             {
                 var newConfiguration = DesignHelper.DeserializeString<T>(File.ReadAllText(ofd.FileName));
 
-                return newConfiguration ?? throw new InvalidOperationException($"Unable to open {ofd.FileName}");
+                return newConfiguration;
             }
 
             return null;
@@ -492,6 +496,8 @@ namespace OpenEphys.Onix1.Design
 
             foreach (var probe in ChannelConfiguration.Probes)
             {
+                if (probe == null || probe.ProbePlanarContour == null) continue;
+
                 PointD[] planarContours = ConvertFloatArrayToPointD(probe.ProbePlanarContour);
                 PolyObj contour = new(planarContours, Color.LightGray, Color.White)
                 {
@@ -969,9 +975,11 @@ namespace OpenEphys.Onix1.Design
 
         private void MenuItemOpenFile(object sender, EventArgs e)
         {
-            OpenFile<ProbeGroup>();
-            DrawProbeGroup();
-            RefreshZedGraph();
+            if (OpenFile<ProbeGroup>())
+            {
+                DrawProbeGroup();
+                RefreshZedGraph();
+            }
         }
 
         private void MenuItemLoadDefaultConfig(object sender, EventArgs e)
@@ -1009,7 +1017,8 @@ namespace OpenEphys.Onix1.Design
         {
             if (relativePosition < 0.0 || relativePosition > 1.0)
             {
-                throw new ArgumentOutOfRangeException(nameof(relativePosition));
+                MessageBox.Show($"Warning: Invalid relative position given while moving. Expected values between 0.0 and 1.0, but received {relativePosition}.", "Invalid Relative Position");
+                return;
             }
 
             var currentRange = zedGraphChannels.GraphPane.YAxis.Scale.Max - zedGraphChannels.GraphPane.YAxis.Scale.Min;
@@ -1200,7 +1209,9 @@ namespace OpenEphys.Onix1.Design
         private bool GetContactStatus(ContactTag tag)
         {
             if (tag == null)
-                throw new ArgumentNullException("Attempted to check contact status of an object that is not a contact.");
+            {
+                MessageBox.Show($"Error: Attempted to check status of an object that is not a contact.", "Invalid Object Selected");
+            }
 
             return SelectedContacts[tag.ContactIndex];
         }

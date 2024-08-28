@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,10 +9,38 @@ namespace OpenEphys.Onix1.Design
 {
     static class DesignHelper
     {
-        public static T DeserializeString<T>(string channelLayout)
+        /// <summary>
+        /// Given a string with a valid JSON structure, deserialize the string to the given type.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="channelLayout"></param>
+        /// <returns></returns>
+        #nullable enable
+        public static T? DeserializeString<T>(string channelLayout)
         {
-            return JsonConvert.DeserializeObject<T>(channelLayout);
+            var errors = new List<string>();
+
+            var serializerSettings = new JsonSerializerSettings()
+            {
+                Error = delegate(object sender, Newtonsoft.Json.Serialization.ErrorEventArgs args)
+                {
+                    errors.Add(args.ErrorContext.Error.Message);
+                    args.ErrorContext.Handled = true;
+                }
+            };
+
+            var obj = JsonConvert.DeserializeObject<T>(channelLayout, serializerSettings);
+
+            if (errors.Count > 0)
+            {
+                MessageBox.Show($"Warning: There were {errors.Count} errors found while deserializing the JSON string.\n" +
+                    $"The first error was '{errors.First()}'.", "Deserializer Error");
+                return default;
+            }
+
+            return obj;
         }
+        #nullable disable
 
         public static void SerializeObject(object _object, string filepath)
         {

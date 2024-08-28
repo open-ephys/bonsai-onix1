@@ -62,14 +62,19 @@ namespace OpenEphys.Onix1.Design
             OnFileOpenHandler();
         }
 
-        internal override void OpenFile<T>()
+        internal override bool OpenFile<T>()
         {
-            base.OpenFile<NeuropixelsV1eProbeGroup>();
+            if (base.OpenFile<NeuropixelsV1eProbeGroup>())
+            {
+                ProbeConfiguration = new((NeuropixelsV1eProbeGroup)ChannelConfiguration, ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain, ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter);
+                ChannelConfiguration = ProbeConfiguration.ChannelConfiguration;
 
-            ProbeConfiguration = new((NeuropixelsV1eProbeGroup)ChannelConfiguration, ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain, ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter);
-            ChannelConfiguration = ProbeConfiguration.ChannelConfiguration;
+                OnFileOpenHandler();
 
-            OnFileOpenHandler();
+                return true;
+            }
+
+            return false;
         }
 
         private void OnFileOpenHandler()
