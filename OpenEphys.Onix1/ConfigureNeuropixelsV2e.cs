@@ -11,7 +11,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a NeuropixelsV2e device.")]
-    public class ConfigureNeuropixelsV2e : SingleDeviceFactory
+    public class ConfigureNeuropixelsV2e : SingleDeviceFactory, IConfigureNeuropixelsV2
     {
         /// <summary>
         /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV2e"/> class.

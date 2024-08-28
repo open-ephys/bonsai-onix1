@@ -17,18 +17,26 @@ namespace OpenEphys.Onix1.Design
         /// Public <see cref="ConfigureNeuropixelsV2e"/> object that is manipulated by
         /// <see cref="NeuropixelsV2eDialog"/>.
         /// </summary>
-        public ConfigureNeuropixelsV2e ConfigureNode { get; set; }
+        public IConfigureNeuropixelsV2 ConfigureNode { get; set; }
 
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV2eDialog"/>.
         /// </summary>
         /// <param name="configureNode">A <see cref="ConfigureNeuropixelsV2e"/> object holding the current configuration settings.</param>
-        public NeuropixelsV2eDialog(ConfigureNeuropixelsV2e configureNode)
+        public NeuropixelsV2eDialog(IConfigureNeuropixelsV2 configureNode)
         {
             InitializeComponent();
             Shown += FormShown;
 
-            ConfigureNode = new(configureNode);
+            if (configureNode is ConfigureNeuropixelsV2eBeta configureV2eBeta)
+            {
+                ConfigureNode = new ConfigureNeuropixelsV2eBeta(configureV2eBeta);
+                Text = Text.Replace("NeuropixelsV2e ", "NeuropixelsV2eBeta ");
+            }
+            else if (configureNode is ConfigureNeuropixelsV2e configureV2e)
+            {
+                ConfigureNode = new ConfigureNeuropixelsV2e(configureV2e);
+            }
 
             ProbeConfigurations = new List<NeuropixelsV2eProbeConfigurationDialog>
             {

@@ -29,11 +29,16 @@ namespace OpenEphys.Onix1.Design
                 if (editorService != null && editorState != null && !editorState.WorkflowRunning &&
                     value is NeuropixelsV2QuadShankProbeConfiguration configuration)
                 {
-                    var instance = (ConfigureNeuropixelsV2e)context.Instance;
+                    var instance = (IConfigureNeuropixelsV2)context.Instance;
 
                     var calibrationFile = configuration.Probe == NeuropixelsV2Probe.ProbeA ? instance.GainCalibrationFileA : instance.GainCalibrationFileB;
 
                     using var editorDialog = new NeuropixelsV2eProbeConfigurationDialog(configuration, calibrationFile);
+
+                    if (instance is ConfigureNeuropixelsV2eBeta)
+                    {
+                        editorDialog.Text = editorDialog.Text.Replace("NeuropixelsV2e ", "NeuropixelsV2eBeta ");
+                    }
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
