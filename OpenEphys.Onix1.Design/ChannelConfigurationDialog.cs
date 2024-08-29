@@ -169,10 +169,10 @@ namespace OpenEphys.Onix1.Design
 
             public ProbeEdge(ZedGraphControl zedGraphControl)
             {
-                Left = GetProbeContourMinX(zedGraphControl.GraphPane.GraphObjList);
-                Right = GetProbeContourMaxX(zedGraphControl.GraphPane.GraphObjList);
-                Bottom = GetProbeContourMinY(zedGraphControl.GraphPane.GraphObjList);
-                Top = GetProbeContourMaxY(zedGraphControl.GraphPane.GraphObjList);
+                Left = GetProbeMinX(zedGraphControl.GraphPane.GraphObjList);
+                Right = GetProbeMaxX(zedGraphControl.GraphPane.GraphObjList);
+                Bottom = GetProbeMinY(zedGraphControl.GraphPane.GraphObjList);
+                Top = GetProbeMaxY(zedGraphControl.GraphPane.GraphObjList);
             }
         }
 
@@ -475,9 +475,9 @@ namespace OpenEphys.Onix1.Design
             zedGraphChannels.GraphPane.GraphObjList.Clear();
 
             DrawProbeContour();
+            DrawContacts();
             SetEqualAspectRatio();
             SetZoomOutBoundaries();
-            DrawContacts();
             HighlightEnabledContacts();
             HighlightSelectedContacts();
             DrawContactLabels();
@@ -527,10 +527,10 @@ namespace OpenEphys.Onix1.Design
             if (zedGraphChannels.GraphPane.GraphObjList.Count == 0)
                 return;
 
-            var minX = GetProbeContourMinX(zedGraphChannels.GraphPane.GraphObjList);
-            var minY = GetProbeContourMinY(zedGraphChannels.GraphPane.GraphObjList);
-            var maxX = GetProbeContourMaxX(zedGraphChannels.GraphPane.GraphObjList);
-            var maxY = GetProbeContourMaxY(zedGraphChannels.GraphPane.GraphObjList);
+            var minX = GetProbeMinX(zedGraphChannels.GraphPane.GraphObjList);
+            var minY = GetProbeMinY(zedGraphChannels.GraphPane.GraphObjList);
+            var maxX = GetProbeMaxX(zedGraphChannels.GraphPane.GraphObjList);
+            var maxY = GetProbeMaxY(zedGraphChannels.GraphPane.GraphObjList);
 
             var rangeX = maxX - minX;
             var rangeY = maxY - minY;
@@ -808,11 +808,51 @@ namespace OpenEphys.Onix1.Design
 
             return 1f;
         }
+        // TODO: Convert from MinX/MaxX/... to Left / Right / etc.
+        internal static double GetProbeMinX(GraphObjList graphObjs)
+        {
+            if (graphObjs == null || graphObjs.Count == 0) return 0f;
+
+            if (graphObjs.OfType<PolyObj>().Count() == 0)
+            {
+                return GetContactMinX(graphObjs);
+            }
+            else
+            {
+                return GetProbeContourMinX(graphObjs);
+            }
+        }
+
+        internal static double GetContactMinX(GraphObjList graphObjs)
+        {
+            return graphObjs.OfType<BoxObj>()
+                            .Min(obj => { return obj.Location.Rect.Left; });
+        }
 
         internal static double GetProbeContourMinX(GraphObjList graphObjs)
         {
             return graphObjs.OfType<PolyObj>()
                             .Min(obj => { return obj.Points.Min(p => p.X); });
+        }
+
+        internal static double GetProbeMinY(GraphObjList graphObjs)
+        {
+            if (graphObjs == null || graphObjs.Count == 0) return 0f;
+
+            if (graphObjs.OfType<PolyObj>().Count() == 0)
+            {
+                return GetContactMinY(graphObjs);
+            }
+            else
+            {
+                return GetProbeContourMinY(graphObjs);
+            }
+        }
+
+        internal static double GetContactMinY(GraphObjList graphObjs)
+        {
+            return graphObjs.OfType<BoxObj>()
+                            .Min(obj => { return obj.Location.Rect.Bottom; });
         }
 
         internal static double GetProbeContourMinY(GraphObjList graphObjs)
@@ -821,10 +861,50 @@ namespace OpenEphys.Onix1.Design
                             .Min(obj => { return obj.Points.Min(p => p.Y); });
         }
 
+        internal static double GetProbeMaxX(GraphObjList graphObjs)
+        {
+            if (graphObjs == null || graphObjs.Count == 0) return 0f;
+
+            if (graphObjs.OfType<PolyObj>().Count() == 0)
+            {
+                return GetContactMaxX(graphObjs);
+            }
+            else
+            {
+                return GetProbeContourMaxX(graphObjs);
+            }
+        }
+
+        internal static double GetContactMaxX(GraphObjList graphObjs)
+        {
+            return graphObjs.OfType<BoxObj>()
+                            .Max(obj => { return obj.Location.Rect.Right; });
+        }
+
         internal static double GetProbeContourMaxX(GraphObjList graphObjs)
         {
             return graphObjs.OfType<PolyObj>()
                             .Max(obj => { return obj.Points.Max(p => p.X); });
+        }
+
+        internal static double GetProbeMaxY(GraphObjList graphObjs)
+        {
+            if (graphObjs == null || graphObjs.Count == 0) return 0f;
+
+            if (graphObjs.OfType<PolyObj>().Count() == 0)
+            {
+                return GetContactMaxY(graphObjs);
+            }
+            else
+            {
+                return GetProbeContourMaxY(graphObjs);
+            }
+        }
+
+        internal static double GetContactMaxY(GraphObjList graphObjs)
+        {
+            return graphObjs.OfType<BoxObj>()
+                            .Max(obj => { return obj.Location.Rect.Top; });
         }
 
         internal static double GetProbeContourMaxY(GraphObjList graphObjs)
@@ -1023,8 +1103,8 @@ namespace OpenEphys.Onix1.Design
 
             var currentRange = zedGraphChannels.GraphPane.YAxis.Scale.Max - zedGraphChannels.GraphPane.YAxis.Scale.Min;
 
-            var minY = GetProbeContourMinY(zedGraphChannels.GraphPane.GraphObjList);
-            var maxY = GetProbeContourMaxY(zedGraphChannels.GraphPane.GraphObjList);
+            var minY = GetProbeMinY(zedGraphChannels.GraphPane.GraphObjList);
+            var maxY = GetProbeMaxY(zedGraphChannels.GraphPane.GraphObjList);
 
             var newMinY = (maxY - minY - currentRange) * relativePosition;
 
@@ -1034,8 +1114,8 @@ namespace OpenEphys.Onix1.Design
 
         internal float GetRelativeVerticalPosition()
         {
-            var minY = GetProbeContourMinY(zedGraphChannels.GraphPane.GraphObjList);
-            var maxY = GetProbeContourMaxY(zedGraphChannels.GraphPane.GraphObjList);
+            var minY = GetProbeMinY(zedGraphChannels.GraphPane.GraphObjList);
+            var maxY = GetProbeMaxY(zedGraphChannels.GraphPane.GraphObjList);
 
             var currentRange = zedGraphChannels.GraphPane.YAxis.Scale.Max - zedGraphChannels.GraphPane.YAxis.Scale.Min;
 

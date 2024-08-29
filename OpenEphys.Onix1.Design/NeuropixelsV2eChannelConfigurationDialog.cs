@@ -62,7 +62,6 @@ namespace OpenEphys.Onix1.Design
             if (base.OpenFile<NeuropixelsV2eProbeGroup>())
             {
                 ProbeConfiguration = new((NeuropixelsV2eProbeGroup)ChannelConfiguration, ProbeConfiguration.Reference, ProbeConfiguration.Probe);
-                ChannelConfiguration = ProbeConfiguration.ChannelConfiguration;
 
                 OnFileOpenHandler();
 
@@ -122,9 +121,9 @@ namespace OpenEphys.Onix1.Design
             var majorTickOffset = MajorTickLength + CalculateScaleRange(zedGraphChannels.GraphPane.XAxis.Scale) * 0.015;
             majorTickOffset = majorTickOffset > 50 ? 50 : majorTickOffset;
 
-            var x = GetProbeContourMaxX(zedGraphChannels.GraphPane.GraphObjList) + 50;
-            var minY = GetProbeContourMinY(zedGraphChannels.GraphPane.GraphObjList);
-            var maxY = GetProbeContourMaxY(zedGraphChannels.GraphPane.GraphObjList);
+            var x = GetProbeMaxX(zedGraphChannels.GraphPane.GraphObjList) + 50;
+            var minY = GetProbeMinY(zedGraphChannels.GraphPane.GraphObjList);
+            var maxY = GetProbeMaxY(zedGraphChannels.GraphPane.GraphObjList);
 
             PointPairList pointList = new();
 
@@ -166,13 +165,14 @@ namespace OpenEphys.Onix1.Design
                 countMajorTicks++;
             }
 
-            var curve = zedGraphChannels.GraphPane.AddCurve(ScalePointsTag, pointList, Color.Black, SymbolType.None);
+            var curve = zedGraphChannels.GraphPane.AddCurve("", pointList, Color.Black, SymbolType.None);
 
             const float scaleBarWidth = 1;
 
             curve.Line.Width = scaleBarWidth; 
             curve.Label.IsVisible = false;
             curve.Symbol.IsVisible = false;
+            curve.Tag = ScalePointsTag;
         }
 
         internal override void HighlightEnabledContacts()

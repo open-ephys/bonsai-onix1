@@ -127,9 +127,9 @@ namespace OpenEphys.Onix1.Design
             var majorTickOffset = MajorTickLength + CalculateScaleRange(zedGraphChannels.GraphPane.XAxis.Scale) * 0.015;
             majorTickOffset = majorTickOffset > 50 ? 50 : majorTickOffset;
 
-            var x = GetProbeContourMaxX(zedGraphChannels.GraphPane.GraphObjList) + 40;
-            var minY = GetProbeContourMinY(zedGraphChannels.GraphPane.GraphObjList);
-            var maxY = GetProbeContourMaxY(zedGraphChannels.GraphPane.GraphObjList);
+            var x = GetProbeMaxX(zedGraphChannels.GraphPane.GraphObjList) + 40;
+            var minY = GetProbeMinY(zedGraphChannels.GraphPane.GraphObjList);
+            var maxY = GetProbeMaxY(zedGraphChannels.GraphPane.GraphObjList);
 
             PointPairList pointList = new();
 
