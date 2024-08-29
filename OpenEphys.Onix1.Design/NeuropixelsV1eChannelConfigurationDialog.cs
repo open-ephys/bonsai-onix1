@@ -131,6 +131,8 @@ namespace OpenEphys.Onix1.Design
             var minY = GetProbeMinY(zedGraphChannels.GraphPane.GraphObjList);
             var maxY = GetProbeMaxY(zedGraphChannels.GraphPane.GraphObjList);
 
+            int textPosition = 0;
+
             PointPairList pointList = new();
 
             var countMajorTicks = 0;
@@ -143,15 +145,17 @@ namespace OpenEphys.Onix1.Design
                 pointList.Add(majorTickLocation);
                 pointList.Add(new PointPair(x, minY + MajorTickIncrement * countMajorTicks));
 
-                if (!zoomedOut || i % (5 * MajorTickIncrement) == 0)
+                if (!zoomedOut || countMajorTicks % 5 == 0)
                 {
-                    TextObj textObj = new($"{i} µm", majorTickLocation.X + 10, majorTickLocation.Y, CoordType.AxisXYScale, AlignH.Left, AlignV.Center)
+                    TextObj textObj = new($"{textPosition} µm", majorTickLocation.X + 10, majorTickLocation.Y, CoordType.AxisXYScale, AlignH.Left, AlignV.Center)
                     {
                         Tag = ScaleTextTag
                     };
                     textObj.FontSpec.Border.IsVisible = false;
                     textObj.FontSpec.Size = fontSize;
                     zedGraphChannels.GraphPane.GraphObjList.Add(textObj);
+
+                    textPosition += zoomedOut ? 5 * MajorTickIncrement : MajorTickIncrement;
                 }
 
                 if (!zoomedOut)

@@ -584,6 +584,8 @@ namespace OpenEphys.Onix1.Design
 
                         contactObj.Border.Width = borderWidth;
                         contactObj.Border.IsVisible = false;
+                        contactObj.Location.AlignV = AlignV.Center;
+                        contactObj.Location.AlignH = AlignH.Center;
 
                         zedGraphChannels.GraphPane.GraphObjList.Add(contactObj);
                     }
@@ -599,6 +601,8 @@ namespace OpenEphys.Onix1.Design
 
                         contactObj.Border.Width = borderWidth;
                         contactObj.Border.IsVisible = false;
+                        contactObj.Location.AlignV = AlignV.Bottom;
+                        contactObj.Location.AlignH = AlignH.Left;
 
                         zedGraphChannels.GraphPane.GraphObjList.Add(contactObj);
                     }
@@ -852,7 +856,7 @@ namespace OpenEphys.Onix1.Design
         internal static double GetContactMinY(GraphObjList graphObjs)
         {
             return graphObjs.OfType<BoxObj>()
-                            .Min(obj => { return obj.Location.Rect.Bottom; });
+                            .Min(obj => { return obj.Location.Rect.Top - obj.Location.Height; });
         }
 
         internal static double GetProbeContourMinY(GraphObjList graphObjs)
@@ -904,7 +908,7 @@ namespace OpenEphys.Onix1.Design
         internal static double GetContactMaxY(GraphObjList graphObjs)
         {
             return graphObjs.OfType<BoxObj>()
-                            .Max(obj => { return obj.Location.Rect.Top; });
+                            .Max(obj => { return obj.Location.Rect.Bottom - obj.Location.Height; });
         }
 
         internal static double GetProbeContourMaxY(GraphObjList graphObjs)
