@@ -4,7 +4,7 @@ using OpenCV.Net;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Buffered data from a Nric1384 bioacqusition device.
+    /// Buffered data from a Nric1384 bioacquisition device.
     /// </summary>
     public class Nric1384DataFrame : BufferedDataFrame
     {

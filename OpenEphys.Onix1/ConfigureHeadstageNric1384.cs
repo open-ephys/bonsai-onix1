@@ -5,8 +5,19 @@ using System.Threading;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that configures a Nric1384-203390 headstage on the specified port.
+    /// A class that configures a Nric1384 headstage on the specified port.
     /// </summary>
+    /// <remarks>
+    /// Headstage-Nric1384 is a 2.5g serialized, multifunction headstage for small animals built around the IMEC Nric1384 bioacquisition chip.
+    /// This headstage is designed to function with passive probes of the user's choosing (e.g. silicon probe arrays, high-density
+    /// tetrode drives, etc). It provides the following features:
+    /// <list type="bullet">
+    /// <item><description>384 analog ephys channels sampled at 30 kHz per channel and exposed via an array of 12x ultra-high density Molex 203390-0323 quad-row connectors. </description></item>
+    /// <item><description>A BNO055 9-axis IMU for real-time, 3D orientation tracking at 100 Hz.</description></item>
+    /// <item><description>Two TS4231 light to digital converters for real-time, 3D position tracking with HTC Vive base stations.</description></item>
+    /// <item><description>A single electrical stimulator (current controlled, +/-15V compliance, automatic electrode discharge).</description></item>
+    /// </list>
+    /// </remarks>
     [Description("Configures a NeuropixelsV1e headstage.")]
     public class ConfigureHeadstageNric1384 : MultiDeviceFactory
     {
@@ -23,7 +34,7 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets or sets the Nric1384, 384-channel bioacquisition chip  configuration.
+        /// Gets or sets the Nric1384 bioacquisition chip configuration.
         /// </summary>
         [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
@@ -63,10 +74,17 @@ namespace OpenEphys.Onix1
         /// Gets or sets the port voltage.
         /// </summary>
         /// <remarks>
-        /// If a port voltage is defined this will override the automated voltage discovery and applies
-        /// the specified voltage to the headstage. To enable automated voltage discovery, leave this field 
-        /// empty. Warning: This device requires 3.8V to 5.5V for proper operation. Voltages higher than 5.5V can 
-        /// damage the headstage
+        /// <para>
+        /// If defined, it will override automated voltage discovery and apply the specified voltage to the headstage.
+        /// If left blank, an automated headstage detection algorithm will attempt to communicate with the headstage and
+        /// apply an appropriate voltage for stable operation. Because ONIX allows any coaxial tether to be used, some of
+        /// which are thin enough to result in a significant voltage drop, its may be required to manually specify the
+        /// port voltage.
+        /// </para>
+        /// <para>
+        /// Warning: This device requires 3.8V to 5.5V for proper operation. Voltages higher than 5.5V can
+        /// damage the headstage.
+        /// </para>
         /// </remarks>
         [Description("If defined, overrides automated voltage discovery and applies " +
             "the specified voltage to the headstage. Warning: this device requires 3.8V to 5.5V " +

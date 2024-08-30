@@ -10,7 +10,7 @@ using OpenCV.Net;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Produces a sequence of <see cref="Nric1384DataFrame"/> objects from a Nric1384 bioacqusition device.
+    /// Produces a sequence of <see cref="Nric1384DataFrame"/> objects from a Nric1384 bioacquisition device.
     /// </summary>
     public class Nric1384Data : Source<Nric1384DataFrame>
     {
