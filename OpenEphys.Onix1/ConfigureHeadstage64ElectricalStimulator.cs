@@ -7,9 +7,10 @@ namespace OpenEphys.Onix1
     /// Configures a headstage-64 onboard electrical stimulator.
     /// </summary>
     /// <remarks>
-    /// This configuration operator can be linked to a <see cref="Headstage64ElectricalStimulatorTrigger"/> instance to deliver
-    /// current controlled electrical micro-stimulation through a contact on the probe connector on the bottom of the headstage
-    /// or the corresponding contact on a compatible electrode interface board.
+    /// This configuration operator can be linked to a <see cref="Headstage64ElectricalStimulatorTrigger"/>
+    /// instance to deliver current controlled electrical micro-stimulation through a contact on the probe
+    /// connector on the bottom of the headstage or the corresponding contact on a compatible electrode
+    /// interface board.
     /// </remarks>
     [Description("Configures a headstage-64 onboard electrical stimulator.")]
     public class ConfigureHeadstage64ElectricalStimulator : SingleDeviceFactory
@@ -26,12 +27,13 @@ namespace OpenEphys.Onix1
         /// Configure a headstage-64 onboard electrical stimulator.
         /// </summary>
         /// <remarks>
-        /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance
-        /// prior to data acquisition.
+        /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/>
+        /// instance prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that holds configuration actions.</param>
-        /// <returns>The original sequence modified by adding additional configuration actions required to configure a headstage-64
-        /// onboard electrical stimulator.</returns>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that holds configuration
+        /// actions.</param>
+        /// <returns>The original sequence modified by adding additional configuration actions required to
+        /// configure a headstage-64 onboard electrical stimulator.</returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var deviceName = DeviceName;

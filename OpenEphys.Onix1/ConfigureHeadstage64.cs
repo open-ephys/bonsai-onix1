@@ -7,6 +7,21 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Configures an ONIX headstage-64 on the specified port.
     /// </summary>
+    /// <remarks>
+    /// Headstage-64 is a 1.5g serialized, multifunction headstage for small animals. This headstage is
+    /// designed to function with tetrode microdrives. Alternatively it can be used with other passive probes
+    /// (e.g. silicon arrays, EEG/ECOG arrays, etc.). It provides the following features on the headstage:
+    /// <list type="bullet">
+    /// <item><description>64 analog ephys channels and 3 auxiliary channels sampled at 30 kHz per
+    /// channel.</description></item>
+    /// <item><description>A BNO055 9-axis IMU for real-time, 3D orientation tracking.</description></item>
+    /// <item><description>Three TS4231 light to digital converters for real-time, 3D position tracking with
+    /// HTC Vive base stations.</description></item>
+    /// <item><description>A single electrical stimulator (current controlled, +/-15V compliance, automatic
+    /// electrode discharge).</description></item>
+    /// <item><description>Two optical stimulators (800 mA peak current per channel).</description></item>
+    /// </list>
+    /// </remarks>
     [Description("Configures an ONIX headstage-64 in the specified port.")]
     public class ConfigureHeadstage64 : MultiDeviceFactory
     {
@@ -30,10 +45,11 @@ namespace OpenEphys.Onix1
         /// </remarks>
         public ConfigureHeadstage64()
         {
-            // WONTFIX: The issue with this headstage is that its locking voltage is far, far lower than the voltage required for full
-            // functionality. Locking occurs at around 2V on the headstage (enough to turn 1.8V on). Full functionality is at 5.0 volts.
-            // The FMC port voltage can only go down to 3.3V, which means that its very hard to find the true lowest voltage
-            // for a lock and then add a large offset to that. Fixing this requires a hardware change.
+            // WONTFIX: The issue with this headstage is that its locking voltage is far, far lower than the
+            // voltage required for full functionality. Locking occurs at around 2V on the headstage (enough
+            // to turn 1.8V on). Full functionality is at 5.0 volts. The FMC port voltage can only go down to
+            // 3.3V, which means that its very hard to find the true lowest voltage for a lock and then add a
+            // large offset to that. Fixing this requires a hardware change.
             Port = PortName.PortA;
             PortControl.HubConfiguration = HubConfiguration.Standard;
         }
@@ -82,7 +98,8 @@ namespace OpenEphys.Onix1
         /// Gets or sets the port.
         /// </summary>
         /// <remarks>
-        /// The port is the physical connection to the ONIX breakout board and must be specified prior to operation.
+        /// The port is the physical connection to the ONIX breakout board and must be specified prior to
+        /// operation.
         /// </remarks>
         [Description("Specifies the physical connection of the headstage to the ONIX breakout board.")]
         [Category(ConfigurationCategory)]
@@ -107,15 +124,15 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <remarks>
         /// <para>
-        /// If defined, it will override automated voltage discovery and apply the specified voltage to the headstage.
-        /// If left blank, an automated headstage detection algorithm will attempt to communicate with the headstage and
-        /// apply an appropriate voltage for stable operation. Because ONIX allows any coaxial tether to be used, some of
-        /// which are thin enough to result in a significant voltage drop, its may be required to manually specify the
-        /// port voltage.
+        /// If defined, it will override automated voltage discovery and apply the specified voltage to the
+        /// headstage. If left blank, an automated headstage detection algorithm will attempt to communicate
+        /// with the headstage and apply an appropriate voltage for stable operation. Because ONIX allows any
+        /// coaxial tether to be used, some of which are thin enough to result in a significant voltage drop,
+        /// its may be required to manually specify the port voltage.
         /// </para>
         /// <para>
-        /// Warning: this device requires 5.5V to 6.0V, measured at the headstage, for proper operation. Supplying higher
-        /// voltages may result in damage.
+        /// Warning: this device requires 5.5V to 6.0V, measured at the headstage, for proper operation.
+        /// Supplying higher voltages may result in damage.
         /// </para>
         /// </remarks>
         [Description("If defined, it will override automated voltage discovery and apply the specified voltage" +
@@ -142,10 +159,10 @@ namespace OpenEphys.Onix1
         {
             protected override bool ConfigurePortVoltage(DeviceContext device)
             {
-                // WONTFIX: It takes a huge amount of time to get to 0, almost 10 seconds.
-                // The best we can do at the moment is drive port voltage to minimum which
-                // is an active process and then settle from there to zero volts. This requires
-                // a hardware revision that discharges the headstage between cycles to fix.
+                // WONTFIX: It takes a huge amount of time to get to 0, almost 10 seconds. The best we can do
+                // at the moment is drive port voltage to minimum which is an active process and then settle
+                // from there to zero volts. This requires a hardware revision that discharges the headstage
+                // between cycles to fix.
                 const uint MinVoltage = 33;
                 const uint MaxVoltage = 60;
                 const uint VoltageOffset = 34;
