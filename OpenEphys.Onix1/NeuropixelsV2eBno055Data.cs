@@ -23,8 +23,8 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <returns>A sequence of <see cref="Bno055DataFrame"/> objects.</returns>
         /// <remarks>
-        /// This will generate a sequence of <see cref="Bno055DataFrame"/> objects at approximately 100 Hz. This rate
-        /// may be limited by the I2C bus.
+        /// This will generate a sequence of <see cref="Bno055DataFrame"/>s at approximately 100 Hz. This rate
+        /// may be limited by the hardware I2C bus.
         /// </remarks>
         public override IObservable<Bno055DataFrame> Generate()
         {
@@ -34,9 +34,16 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Generates a sequence of <see cref="Bno055DataFrame"/> objects.
+        /// Generates a sequence of <see cref="Bno055DataFrame"/>s.
         /// </summary>
-        /// <returns>A sequence of <see cref="Bno055DataFrame"/> objects.</returns>
+        /// <param name="source">An input sequence that drives the production of <see
+        /// cref="Bno055DataFrame"/>s</param>
+        /// <returns>A sequence of <see cref="Bno055DataFrame"/>s.</returns>
+        /// <remarks>
+        /// A <see cref="Bno055DataFrame"/> will be produced each time an element is received from the
+        /// <paramref name="source"/> sequence. This rate is limited by the hardware I2C bus and has a
+        /// maximum of 100 Hz.
+        /// </remarks>
         public unsafe IObservable<Bno055DataFrame> Generate<TSource>(IObservable<TSource> source)
         {
             return DeviceManager.GetDevice(DeviceName).SelectMany(

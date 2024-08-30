@@ -7,26 +7,46 @@ using Bonsai;
 
 namespace OpenEphys.Onix1
 {
+    /// <summary>
+    /// Configures the camera on a UCLA Miniscope V4.
+    /// </summary>
     public class ConfigureUclaMiniscopeV4Camera : SingleDeviceFactory
     {
         readonly BehaviorSubject<double> ledBrightness = new(0);
         readonly BehaviorSubject<UclaMiniscopeV4SensorGain> sensorGain = new(UclaMiniscopeV4SensorGain.Low);
         readonly BehaviorSubject<double> liquidLensVoltage = new(47); // NB: middle of range
 
+        /// <summary>
+        /// Initialize a new instance of a <see cref="ConfigureUclaMiniscopeV4Camera"/> class.
+        /// </summary>
         public ConfigureUclaMiniscopeV4Camera()
             : base(typeof(UclaMiniscopeV4))
         {
         }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether the camera will produce image data.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, <see cref="UclaMiniscopeV4CameraData"/> will produce image data. If set to false, <see
+        /// cref="UclaMiniscopeV4CameraData"/> will not produce image data.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Specifies whether the camera is enabled.")]
         public bool Enable { get; set; } = true;
 
+        /// <summary>
+        /// Gets or sets the camera video rate in frames per second.
+        /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Camera video rate in frames per second.")]
         public UclaMiniscopeV4FramesPerSecond FrameRate { get; set; } = UclaMiniscopeV4FramesPerSecond.Fps30Hz;
 
+        /// <summary>
+        /// Gets or sets the camera sensor's analog gain.
+        /// </summary>
         [Description("Camera sensor analog gain.")]
+        [Category(AcquisitionCategory)]
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
         public UclaMiniscopeV4SensorGain SensorGain
         {
@@ -34,11 +54,24 @@ namespace OpenEphys.Onix1
             set => sensorGain.OnNext(value);
         }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether the excitation LED should turn on only when the camera
+        /// shutter is open.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, the excitation LED will turn on briefly before, and turn off briefly after, the
+        /// camera begins photon collection on its photodiode array. If set to false, the excitation LED will
+        /// remain on at all times.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Only turn on excitation LED during camera exposures.")]
         public bool InterleaveLed { get; set; } = false;
 
-        [Description("Excitation LED brightness (0-100%).")]
+        /// <summary>
+        /// Gets or sets the excitation LED brightness level (0-100%).
+        /// </summary>
+        [Description("Excitation LED brightness level (0-100%).")]
+        [Category(AcquisitionCategory)]
         [Range(0, 100)]
         [Precision(1, 1)]
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
@@ -48,7 +81,18 @@ namespace OpenEphys.Onix1
             set => ledBrightness.OnNext(value);
         }
 
-        [Description("Liquid lens voltage (Volts RMS).")]
+        /// <summary>
+        /// Gets or sets the liquid lens driver voltage (Volts RMS).
+        /// </summary>
+        /// <remarks>
+        /// The imaging focal plane is controlled by using a MAX14574 high-voltage liquid lens driver. This
+        /// chip produces pulse-width modulated, 1 kHz alternative electric field that deforms the miniscope's
+        /// liquid lens in order to change the focal plane. The strength of this field determines the degree
+        /// of deformation and therefore the focal depth. The default setting of 47 Volts RMS corresponds to
+        /// approximately mid-range.
+        /// </remarks>
+        [Description("Liquid lens driver voltage (Volts RMS).")]
+        [Category(AcquisitionCategory)]
         [Range(24.4, 69.7)]
         [Precision(1, 1)]
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
@@ -58,6 +102,19 @@ namespace OpenEphys.Onix1
             set => liquidLensVoltage.OnNext(value);
         }
 
+        /// <summary>
+        /// Configures the camera on a UCLA Miniscope V4.
+        /// </summary>
+        /// <remarks>
+        /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
+        /// prior to data acquisition.
+        /// </remarks>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that holds all
+        /// configuration actions.</param>
+        /// <returns>
+        /// The original sequence but with each <see cref="ContextTask"/> instance now containing
+        /// configuration actions required to use the miniscope's camera.
+        /// </returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;
@@ -78,6 +135,8 @@ namespace OpenEphys.Onix1
             {
                 // configure device via the DS90UB9x deserializer device
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
+
+                // TODO: early exit if false?
                 device.WriteRegister(DS90UB9x.ENABLE, enable ? 1u : 0);
 
                 // configure deserializer, chip states, and camera PLL
@@ -89,7 +148,6 @@ namespace OpenEphys.Onix1
                 WriteCameraRegister(atMega, 200, shutterWidth);
 
                 var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
-                var disposable = DeviceManager.RegisterDevice(deviceName, deviceInfo);
                 var shutdown = Disposable.Create(() =>
                 {
                     // turn off EWL
@@ -104,8 +162,8 @@ namespace OpenEphys.Onix1
                     ledBrightness.Subscribe(value => SetLedBrightness(device, value)),
                     sensorGain.Subscribe(value => SetSensorGain(device, value)),
                     liquidLensVoltage.Subscribe(value => SetLiquidLensVoltage(device, value)),
-                    shutdown,
-                    disposable);
+                    DeviceManager.RegisterDevice(deviceName, deviceInfo),
+                    shutdown);
             });
         }
 
@@ -118,8 +176,8 @@ namespace OpenEphys.Onix1
             device.WriteRegister(DS90UB9x.SYNCBITS, 0);
             device.WriteRegister(DS90UB9x.DATAGATE, (uint)DS90UB9xDataGate.VsyncPositive);
 
-            // NB: This is required because Bonsai is not garuenteed to capure every frame at the start of acqusition.
-            // For this reason, the frame start needs to be marked.
+            // NB: This is required because Bonsai is not guaranteed to capture every frame at the start of
+            // acquisition. For this reason, the frame start needs to be marked.
             device.WriteRegister(DS90UB9x.MARK, (uint)DS90UB9xMarkMode.VsyncRising);
 
             // configure deserializer I2C aliases
@@ -152,13 +210,13 @@ namespace OpenEphys.Onix1
             // turn on LED and setup Python480
             var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
             WriteCameraRegister(atMega, 16, 3); // Turn on PLL
-            WriteCameraRegister(atMega, 32, 0x7007); // Turn on clock managment
+            WriteCameraRegister(atMega, 32, 0x7007); // Turn on clock management
             WriteCameraRegister(atMega, 199, 666); // Defines granularity (unit = 1/PLL clock) of exposure and reset_length
             WriteCameraRegister(atMega, 200, 3300); // Set frame rate to 30 Hz
             WriteCameraRegister(atMega, 201, 3000); // Set Exposure
         }
 
-        private static void WriteCameraRegister(I2CRegisterContext i2c, uint register, uint value)
+        static void WriteCameraRegister(I2CRegisterContext i2c, uint register, uint value)
         {
             // ATMega -> Python480 passthrough protocol
             var regLow = register & 0xFF;
@@ -173,28 +231,22 @@ namespace OpenEphys.Onix1
 
         internal static void SetLedBrightness(DeviceContext device, double percent)
         {
-            var des = device.Context.GetPassthroughDeviceContext(device.Address, typeof(DS90UB9x));
-
-            var atMega = new I2CRegisterContext(des, UclaMiniscopeV4.AtMegaAddress);
+            var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
             atMega.WriteByte(0x01, (uint)((percent == 0) ? 0xFF : 0x08));
 
-            var tpl0102 = new I2CRegisterContext(des, UclaMiniscopeV4.Tpl0102Address);
+            var tpl0102 = new I2CRegisterContext(device, UclaMiniscopeV4.Tpl0102Address);
             tpl0102.WriteByte(0x01, (uint)(255 * ((100 - percent) / 100.0)));
         }
 
         internal static void SetSensorGain(DeviceContext device, UclaMiniscopeV4SensorGain gain)
         {
-            var des = device.Context.GetPassthroughDeviceContext(device.Address, typeof(DS90UB9x));
-
-            var atMega = new I2CRegisterContext(des, UclaMiniscopeV4.AtMegaAddress);
+            var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
             WriteCameraRegister(atMega, 204, (uint)gain);
         }
 
         internal static void SetLiquidLensVoltage(DeviceContext device, double voltage)
         {
-            var des = device.Context.GetPassthroughDeviceContext(device.Address, typeof(DS90UB9x));
-
-            var max14574 = new I2CRegisterContext(des, UclaMiniscopeV4.Max14574Address);
+            var max14574 = new I2CRegisterContext(device, UclaMiniscopeV4.Max14574Address);
             max14574.WriteByte(0x08, (uint)((voltage - 24.4) / 0.0445) >> 2);
             max14574.WriteByte(0x09, 0x02);
         }
@@ -218,19 +270,55 @@ namespace OpenEphys.Onix1
         }
     }
 
+    /// <summary>
+    /// Specifies analog gain of the Python-480 image sensor on a UCLA Miniscope V4.
+    /// </summary>
     public enum UclaMiniscopeV4SensorGain
     {
+        /// <summary>
+        /// Specifies low gain.
+        /// </summary>
         Low = 0x00E1,
+
+        /// <summary>
+        /// Specifies medium gain.
+        /// </summary>
         Medium = 0x00E4,
+
+        /// <summary>
+        /// Specifies high gain.
+        /// </summary>
         High = 0x0024,
     }
 
+    /// <summary>
+    /// Specifies the video frame rate of the Python-480 image sensor on a UCLA Miniscope V4.
+    /// </summary>
     public enum UclaMiniscopeV4FramesPerSecond
     {
+        /// <summary>
+        /// Specifies 10 frames per second.
+        /// </summary>
         Fps10Hz,
+
+        /// <summary>
+        /// Specifies 15 frames per second.
+        /// </summary>
         Fps15Hz,
+
+        /// <summary>
+        /// Specifies 20 frames per second.
+        /// </summary>
         Fps20Hz,
+
+        /// <summary>
+        /// Specifies 25 frames per second.
+        /// </summary>
         Fps25Hz,
+
+        /// <summary>
+        /// Specifies 30 frames per second.
+        /// </summary>
         Fps30Hz,
     }
 }

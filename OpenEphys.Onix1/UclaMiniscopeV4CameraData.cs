@@ -9,21 +9,32 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix1
 {
-    public class UclaMiniscopeV4Camera : Source<UclaMiniscopeV4Image>
+    /// <summary>
+    /// Produces a sequence of <see cref="UclaMiniscopeV4CameraFrame"/>s from the Python-480 image sensor on a
+    /// UCLA Miniscope V4.
+    /// </summary>
+    public class UclaMiniscopeV4CameraData : Source<UclaMiniscopeV4CameraFrame>
     {
+        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(UclaMiniscopeV4.NameConverter))]
+        [Description(SingleDeviceFactory.DeviceNameDescription)]
+        [Category(DeviceFactory.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
-        public unsafe override IObservable<UclaMiniscopeV4Image> Generate()
+        /// <summary>
+        /// Generates a sequence of <see cref="UclaMiniscopeV4CameraFrame"/>s at a rate determined by <see
+        /// cref="ConfigureUclaMiniscopeV4Camera.FrameRate"/>.
+        /// </summary>
+        /// <returns>A sequence of <see cref="UclaMiniscopeV4CameraFrame"/>s</returns>
+        public unsafe override IObservable<UclaMiniscopeV4CameraFrame> Generate()
         {
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
-                var info = (NeuropixelsV2eDeviceInfo)deviceInfo;
-                var device = info.GetDeviceContext(typeof(NeuropixelsV2e));
+                var device = deviceInfo.GetDeviceContext(typeof(UclaMiniscopeV4));
                 var passthrough = device.GetPassthroughDeviceContext(typeof(DS90UB9x));
                 var scopeData = device.Context.GetDeviceFrames(passthrough.Address);
         
-                return Observable.Create<UclaMiniscopeV4Image>(observer =>
+                return Observable.Create<UclaMiniscopeV4CameraFrame>(observer =>
                 {
                     var sampleIndex = 0;
                     var imageBuffer = new short[UclaMiniscopeV4.SensorRows * UclaMiniscopeV4.SensorColumns];
@@ -48,7 +59,7 @@ namespace OpenEphys.Onix1
                             {
                                 var imageData = Mat.FromArray(imageBuffer, UclaMiniscopeV4.SensorRows, UclaMiniscopeV4.SensorColumns,  Depth.U16, 1);
                                 CV.ConvertScale(imageData.GetRow(0), imageData.GetRow(0), 1.0f, -32768.0f); // Get rid first row's mark bit
-                                observer.OnNext(new UclaMiniscopeV4Image(clockBuffer, hubClockBuffer, imageData.GetImage()));
+                                observer.OnNext(new UclaMiniscopeV4CameraFrame(clockBuffer, hubClockBuffer, imageData.GetImage()));
                                 hubClockBuffer = new ulong[UclaMiniscopeV4.SensorRows];
                                 clockBuffer = new ulong[UclaMiniscopeV4.SensorRows];
                                 sampleIndex = 0;

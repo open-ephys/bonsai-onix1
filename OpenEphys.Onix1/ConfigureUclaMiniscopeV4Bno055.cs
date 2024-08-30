@@ -3,17 +3,41 @@ using System.ComponentModel;
 
 namespace OpenEphys.Onix1
 {
+    /// <summary>
+    /// Configures the Bno055 inertial measurement unit (IMU) on a UCLA Miniscope V4.
+    /// </summary>
     public class ConfigureUclaMiniscopeV4Bno055 : SingleDeviceFactory
     {
+        /// <summary>
+        /// Initialize a new instance of a <see cref="ConfigureUclaMiniscopeV4Bno055"/> class.
+        /// </summary>
         public ConfigureUclaMiniscopeV4Bno055()
             : base(typeof(UclaMiniscopeV4Bno055))
         {
         }
 
+        /// <summary>
+        /// Gets or sets the device enable state.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, <see cref="UclaMiniscopeV4Bno055Data"/> will produce data. If set to false, 
+        /// <see cref="UclaMiniscopeV4Bno055Data"/> will not produce data.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Specifies whether the BNO055 device is enabled.")]
         public bool Enable { get; set; } = true;
 
+        /// <summary>
+        /// Configures the Bno055 inertial measurement unit (IMU) on a UCLA Miniscope V4.
+        /// </summary>
+        /// <remarks>
+        /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
+        /// prior to data acquisition.
+        /// </remarks>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that holds all configuration actions.</param>
+        /// <returns>
+        /// The original sequence but with each <see cref="ContextTask"/> instance now containing configuration actions required to use the miniscope's Bno055 IMU.
+        /// </returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;
@@ -25,7 +49,7 @@ namespace OpenEphys.Onix1
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
                 ConfigureDeserializer(device);
                 ConfigureBno055(device);
-                var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
+                var deviceInfo = new UclaMiniscopeV4Bno055DeviceInfo(context, DeviceType, deviceAddress, enable);
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
         }
@@ -65,5 +89,16 @@ namespace OpenEphys.Onix1
             {
             }
         }
+    }
+
+    class UclaMiniscopeV4Bno055DeviceInfo : DeviceInfo
+    {
+        public UclaMiniscopeV4Bno055DeviceInfo(ContextTask context, Type deviceType, uint deviceAddress, bool enable)
+            : base(context, deviceType, deviceAddress)
+        {
+            Enable = enable;
+        }
+
+        public bool Enable { get; }
     }
 }
