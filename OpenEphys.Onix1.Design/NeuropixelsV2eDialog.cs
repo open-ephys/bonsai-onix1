@@ -97,21 +97,11 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        internal void ButtonClick(object sender, EventArgs e)
+        internal void Okay_Click(object sender, EventArgs e)
         {
-            if (sender is Button button && button != null)
-            {
-                if (button.Name == nameof(buttonOkay))
-                {
-                    SaveVariables();
+            SaveVariables();
 
-                    DialogResult = DialogResult.OK;
-                }
-                else if (button.Name == nameof(buttonCancel))
-                {
-                    DialogResult = DialogResult.Cancel;
-                }
-            }
+            DialogResult = DialogResult.OK;
         }
 
         internal void SaveVariables()

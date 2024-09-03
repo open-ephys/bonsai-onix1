@@ -38,6 +38,10 @@
             System.Windows.Forms.Label apGain;
             System.Windows.Forms.Label label3;
             System.Windows.Forms.Label label1;
+            System.Windows.Forms.Label label2;
+            System.Windows.Forms.Label label4;
+            System.Windows.Forms.ToolStripStatusLabel toolStripLabelAdcCalibrationSN;
+            System.Windows.Forms.ToolStripStatusLabel toolStripLabelGainCalibrationSn;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(NeuropixelsV1eDialog));
             this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -45,6 +49,9 @@
             this.panelTrackBar = new System.Windows.Forms.Panel();
             this.trackBarProbePosition = new System.Windows.Forms.TrackBar();
             this.panelOptions = new System.Windows.Forms.Panel();
+            this.textBoxLfpCorrection = new System.Windows.Forms.TextBox();
+            this.textBoxApCorrection = new System.Windows.Forms.TextBox();
+            this.buttonViewAdcs = new System.Windows.Forms.Button();
             this.buttonChooseAdcCalibrationFile = new System.Windows.Forms.Button();
             this.buttonChooseGainCalibrationFile = new System.Windows.Forms.Button();
             this.buttonEnableContacts = new System.Windows.Forms.Button();
@@ -62,6 +69,10 @@
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.toolStripAdcCalSN = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripGainCalSN = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatus = new System.Windows.Forms.ToolStripStatusLabel();
             labelPresets = new System.Windows.Forms.Label();
             adcCalibrationFile = new System.Windows.Forms.Label();
             gainCalibrationFile = new System.Windows.Forms.Label();
@@ -71,6 +82,10 @@
             apGain = new System.Windows.Forms.Label();
             label3 = new System.Windows.Forms.Label();
             label1 = new System.Windows.Forms.Label();
+            label2 = new System.Windows.Forms.Label();
+            label4 = new System.Windows.Forms.Label();
+            toolStripLabelAdcCalibrationSN = new System.Windows.Forms.ToolStripStatusLabel();
+            toolStripLabelGainCalibrationSn = new System.Windows.Forms.ToolStripStatusLabel();
             this.menuStrip.SuspendLayout();
             this.panelProbe.SuspendLayout();
             this.panelTrackBar.SuspendLayout();
@@ -78,77 +93,71 @@
             this.panelOptions.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
+            this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // labelPresets
             // 
             labelPresets.AutoSize = true;
-            labelPresets.Location = new System.Drawing.Point(10, 217);
-            labelPresets.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            labelPresets.Location = new System.Drawing.Point(13, 370);
             labelPresets.Name = "labelPresets";
-            labelPresets.Size = new System.Drawing.Size(46, 26);
+            labelPresets.Size = new System.Drawing.Size(56, 32);
             labelPresets.TabIndex = 25;
             labelPresets.Text = "Channel\r\nPresets:";
             // 
             // adcCalibrationFile
             // 
             adcCalibrationFile.AutoSize = true;
-            adcCalibrationFile.Location = new System.Drawing.Point(10, 9);
-            adcCalibrationFile.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            adcCalibrationFile.MaximumSize = new System.Drawing.Size(133, 29);
+            adcCalibrationFile.Location = new System.Drawing.Point(13, 11);
+            adcCalibrationFile.MaximumSize = new System.Drawing.Size(177, 36);
             adcCalibrationFile.Name = "adcCalibrationFile";
-            adcCalibrationFile.Size = new System.Drawing.Size(103, 13);
+            adcCalibrationFile.Size = new System.Drawing.Size(130, 16);
             adcCalibrationFile.TabIndex = 11;
             adcCalibrationFile.Text = "ADC Calibration File:";
             // 
             // gainCalibrationFile
             // 
             gainCalibrationFile.AutoSize = true;
-            gainCalibrationFile.Location = new System.Drawing.Point(10, 57);
-            gainCalibrationFile.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            gainCalibrationFile.MaximumSize = new System.Drawing.Size(133, 29);
+            gainCalibrationFile.Location = new System.Drawing.Point(13, 114);
+            gainCalibrationFile.MaximumSize = new System.Drawing.Size(177, 36);
             gainCalibrationFile.Name = "gainCalibrationFile";
-            gainCalibrationFile.Size = new System.Drawing.Size(103, 13);
+            gainCalibrationFile.Size = new System.Drawing.Size(130, 16);
             gainCalibrationFile.TabIndex = 8;
             gainCalibrationFile.Text = "Gain Calibration File:";
             // 
             // spikeFilter
             // 
             spikeFilter.AutoSize = true;
-            spikeFilter.Location = new System.Drawing.Point(10, 168);
-            spikeFilter.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            spikeFilter.Location = new System.Drawing.Point(13, 310);
             spikeFilter.Name = "spikeFilter";
-            spikeFilter.Size = new System.Drawing.Size(62, 13);
+            spikeFilter.Size = new System.Drawing.Size(77, 16);
             spikeFilter.TabIndex = 6;
             spikeFilter.Text = "Spike Filter:";
             // 
             // Reference
             // 
             Reference.AutoSize = true;
-            Reference.Location = new System.Drawing.Point(10, 195);
-            Reference.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            Reference.Location = new System.Drawing.Point(13, 343);
             Reference.Name = "Reference";
-            Reference.Size = new System.Drawing.Size(60, 13);
+            Reference.Size = new System.Drawing.Size(73, 16);
             Reference.TabIndex = 4;
             Reference.Text = "Reference:";
             // 
             // lfpGain
             // 
             lfpGain.AutoSize = true;
-            lfpGain.Location = new System.Drawing.Point(10, 139);
-            lfpGain.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            lfpGain.Location = new System.Drawing.Point(13, 244);
             lfpGain.Name = "lfpGain";
-            lfpGain.Size = new System.Drawing.Size(54, 13);
+            lfpGain.Size = new System.Drawing.Size(65, 16);
             lfpGain.TabIndex = 2;
             lfpGain.Text = "LFP Gain:";
             // 
             // apGain
             // 
             apGain.AutoSize = true;
-            apGain.Location = new System.Drawing.Point(10, 110);
-            apGain.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            apGain.Location = new System.Drawing.Point(13, 179);
             apGain.Name = "apGain";
-            apGain.Size = new System.Drawing.Size(49, 13);
+            apGain.Size = new System.Drawing.Size(59, 16);
             apGain.TabIndex = 0;
             apGain.Text = "AP Gain:";
             // 
@@ -156,9 +165,10 @@
             // 
             label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             label3.AutoSize = true;
-            label3.Location = new System.Drawing.Point(4, 0);
+            label3.Location = new System.Drawing.Point(15, 0);
+            label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             label3.Name = "label3";
-            label3.Size = new System.Drawing.Size(38, 13);
+            label3.Size = new System.Drawing.Size(46, 16);
             label3.TabIndex = 32;
             label3.Text = "10 mm";
             // 
@@ -166,11 +176,44 @@
             // 
             label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             label1.AutoSize = true;
-            label1.Location = new System.Drawing.Point(6, 552);
+            label1.Location = new System.Drawing.Point(18, 651);
+            label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             label1.Name = "label1";
-            label1.Size = new System.Drawing.Size(32, 13);
+            label1.Size = new System.Drawing.Size(39, 16);
             label1.TabIndex = 31;
             label1.Text = "0 mm";
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Location = new System.Drawing.Point(13, 210);
+            label2.Name = "label2";
+            label2.Size = new System.Drawing.Size(71, 16);
+            label2.TabIndex = 38;
+            label2.Text = "Correction:";
+            // 
+            // label4
+            // 
+            label4.AutoSize = true;
+            label4.Location = new System.Drawing.Point(13, 277);
+            label4.Name = "label4";
+            label4.Size = new System.Drawing.Size(71, 16);
+            label4.TabIndex = 40;
+            label4.Text = "Correction:";
+            // 
+            // toolStripLabelAdcCalibrationSN
+            // 
+            toolStripLabelAdcCalibrationSN.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            toolStripLabelAdcCalibrationSN.Name = "toolStripLabelAdcCalibrationSN";
+            toolStripLabelAdcCalibrationSN.Size = new System.Drawing.Size(152, 20);
+            toolStripLabelAdcCalibrationSN.Text = "ADC Calibration SN: ";
+            // 
+            // toolStripLabelGainCalibrationSn
+            // 
+            toolStripLabelGainCalibrationSn.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            toolStripLabelGainCalibrationSn.Name = "toolStripLabelGainCalibrationSn";
+            toolStripLabelGainCalibrationSn.Size = new System.Drawing.Size(153, 20);
+            toolStripLabelGainCalibrationSn.Text = "Gain Calibration SN: ";
             // 
             // menuStrip
             // 
@@ -179,15 +222,15 @@
             this.fileToolStripMenuItem});
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
-            this.menuStrip.Padding = new System.Windows.Forms.Padding(4, 1, 0, 1);
-            this.menuStrip.Size = new System.Drawing.Size(984, 24);
+            this.menuStrip.Padding = new System.Windows.Forms.Padding(5, 1, 0, 1);
+            this.menuStrip.Size = new System.Drawing.Size(1312, 26);
             this.menuStrip.TabIndex = 0;
             this.menuStrip.Text = "menuStrip1";
             // 
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 22);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(46, 24);
             this.fileToolStripMenuItem.Text = "File";
             // 
             // panelProbe
@@ -195,9 +238,10 @@
             this.panelProbe.BackColor = System.Drawing.SystemColors.Control;
             this.panelProbe.Controls.Add(this.panelTrackBar);
             this.panelProbe.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelProbe.Location = new System.Drawing.Point(3, 3);
+            this.panelProbe.Location = new System.Drawing.Point(4, 4);
+            this.panelProbe.Margin = new System.Windows.Forms.Padding(4);
             this.panelProbe.Name = "panelProbe";
-            this.panelProbe.Size = new System.Drawing.Size(732, 566);
+            this.panelProbe.Size = new System.Drawing.Size(976, 681);
             this.panelProbe.TabIndex = 0;
             // 
             // panelTrackBar
@@ -206,9 +250,10 @@
             this.panelTrackBar.Controls.Add(label1);
             this.panelTrackBar.Controls.Add(label3);
             this.panelTrackBar.Controls.Add(this.trackBarProbePosition);
-            this.panelTrackBar.Location = new System.Drawing.Point(691, 1);
+            this.panelTrackBar.Location = new System.Drawing.Point(915, 7);
+            this.panelTrackBar.Margin = new System.Windows.Forms.Padding(4);
             this.panelTrackBar.Name = "panelTrackBar";
-            this.panelTrackBar.Size = new System.Drawing.Size(38, 564);
+            this.panelTrackBar.Size = new System.Drawing.Size(61, 666);
             this.panelTrackBar.TabIndex = 33;
             // 
             // trackBarProbePosition
@@ -217,12 +262,12 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.trackBarProbePosition.BackColor = System.Drawing.SystemColors.Control;
-            this.trackBarProbePosition.Location = new System.Drawing.Point(3, 7);
-            this.trackBarProbePosition.Margin = new System.Windows.Forms.Padding(2);
+            this.trackBarProbePosition.Location = new System.Drawing.Point(4, 9);
+            this.trackBarProbePosition.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.trackBarProbePosition.Maximum = 100;
             this.trackBarProbePosition.Name = "trackBarProbePosition";
             this.trackBarProbePosition.Orientation = System.Windows.Forms.Orientation.Vertical;
-            this.trackBarProbePosition.Size = new System.Drawing.Size(45, 550);
+            this.trackBarProbePosition.Size = new System.Drawing.Size(56, 649);
             this.trackBarProbePosition.TabIndex = 30;
             this.trackBarProbePosition.TickFrequency = 2;
             this.trackBarProbePosition.TickStyle = System.Windows.Forms.TickStyle.TopLeft;
@@ -232,6 +277,11 @@
             // panelOptions
             // 
             this.panelOptions.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.panelOptions.Controls.Add(this.textBoxLfpCorrection);
+            this.panelOptions.Controls.Add(label4);
+            this.panelOptions.Controls.Add(this.textBoxApCorrection);
+            this.panelOptions.Controls.Add(label2);
+            this.panelOptions.Controls.Add(this.buttonViewAdcs);
             this.panelOptions.Controls.Add(this.buttonChooseAdcCalibrationFile);
             this.panelOptions.Controls.Add(this.buttonChooseGainCalibrationFile);
             this.panelOptions.Controls.Add(this.buttonEnableContacts);
@@ -252,67 +302,103 @@
             this.panelOptions.Controls.Add(this.comboBoxApGain);
             this.panelOptions.Controls.Add(apGain);
             this.panelOptions.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelOptions.Location = new System.Drawing.Point(740, 2);
-            this.panelOptions.Margin = new System.Windows.Forms.Padding(2);
+            this.panelOptions.Location = new System.Drawing.Point(987, 2);
+            this.panelOptions.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panelOptions.Name = "panelOptions";
-            this.panelOptions.Size = new System.Drawing.Size(242, 568);
+            this.panelOptions.Size = new System.Drawing.Size(322, 685);
             this.panelOptions.TabIndex = 2;
+            // 
+            // textBoxLfpCorrection
+            // 
+            this.textBoxLfpCorrection.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBoxLfpCorrection.Location = new System.Drawing.Point(101, 274);
+            this.textBoxLfpCorrection.Name = "textBoxLfpCorrection";
+            this.textBoxLfpCorrection.ReadOnly = true;
+            this.textBoxLfpCorrection.Size = new System.Drawing.Size(207, 22);
+            this.textBoxLfpCorrection.TabIndex = 41;
+            // 
+            // textBoxApCorrection
+            // 
+            this.textBoxApCorrection.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBoxApCorrection.Location = new System.Drawing.Point(101, 207);
+            this.textBoxApCorrection.Name = "textBoxApCorrection";
+            this.textBoxApCorrection.ReadOnly = true;
+            this.textBoxApCorrection.Size = new System.Drawing.Size(207, 22);
+            this.textBoxApCorrection.TabIndex = 39;
+            // 
+            // buttonViewAdcs
+            // 
+            this.buttonViewAdcs.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonViewAdcs.Enabled = false;
+            this.buttonViewAdcs.Location = new System.Drawing.Point(13, 66);
+            this.buttonViewAdcs.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.buttonViewAdcs.Name = "buttonViewAdcs";
+            this.buttonViewAdcs.Size = new System.Drawing.Size(296, 38);
+            this.buttonViewAdcs.TabIndex = 37;
+            this.buttonViewAdcs.Text = "View ADC Correction Values";
+            this.toolTip.SetToolTip(this.buttonViewAdcs, "Once an ADC calibration file is selected, this button will open a new window show" +
+        "ing the parsed ADC correction values.");
+            this.buttonViewAdcs.UseVisualStyleBackColor = true;
+            this.buttonViewAdcs.Click += new System.EventHandler(this.ViewAdcs_Click);
             // 
             // buttonChooseAdcCalibrationFile
             // 
             this.buttonChooseAdcCalibrationFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonChooseAdcCalibrationFile.Location = new System.Drawing.Point(205, 24);
-            this.buttonChooseAdcCalibrationFile.Margin = new System.Windows.Forms.Padding(2);
+            this.buttonChooseAdcCalibrationFile.Location = new System.Drawing.Point(272, 30);
+            this.buttonChooseAdcCalibrationFile.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonChooseAdcCalibrationFile.Name = "buttonChooseAdcCalibrationFile";
-            this.buttonChooseAdcCalibrationFile.Size = new System.Drawing.Size(28, 20);
+            this.buttonChooseAdcCalibrationFile.Size = new System.Drawing.Size(37, 25);
             this.buttonChooseAdcCalibrationFile.TabIndex = 36;
             this.buttonChooseAdcCalibrationFile.Text = "...";
             this.toolTip.SetToolTip(this.buttonChooseAdcCalibrationFile, "Browse for an ADC calibration file.");
             this.buttonChooseAdcCalibrationFile.UseVisualStyleBackColor = true;
-            this.buttonChooseAdcCalibrationFile.Click += new System.EventHandler(this.ButtonClick);
+            this.buttonChooseAdcCalibrationFile.Click += new System.EventHandler(this.ChooseAdcCalibrationFile_Click);
             // 
             // buttonChooseGainCalibrationFile
             // 
             this.buttonChooseGainCalibrationFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonChooseGainCalibrationFile.Location = new System.Drawing.Point(205, 72);
-            this.buttonChooseGainCalibrationFile.Margin = new System.Windows.Forms.Padding(2);
+            this.buttonChooseGainCalibrationFile.Location = new System.Drawing.Point(272, 133);
+            this.buttonChooseGainCalibrationFile.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonChooseGainCalibrationFile.Name = "buttonChooseGainCalibrationFile";
-            this.buttonChooseGainCalibrationFile.Size = new System.Drawing.Size(28, 20);
+            this.buttonChooseGainCalibrationFile.Size = new System.Drawing.Size(37, 25);
             this.buttonChooseGainCalibrationFile.TabIndex = 35;
             this.buttonChooseGainCalibrationFile.Text = "...";
             this.toolTip.SetToolTip(this.buttonChooseGainCalibrationFile, "Browse for a gain calibration file.");
             this.buttonChooseGainCalibrationFile.UseVisualStyleBackColor = true;
-            this.buttonChooseGainCalibrationFile.Click += new System.EventHandler(this.ButtonClick);
+            this.buttonChooseGainCalibrationFile.Click += new System.EventHandler(this.ChooseGainCalibrationFile_Click);
             // 
             // buttonEnableContacts
             // 
             this.buttonEnableContacts.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonEnableContacts.Location = new System.Drawing.Point(10, 265);
-            this.buttonEnableContacts.Margin = new System.Windows.Forms.Padding(2);
+            this.buttonEnableContacts.Location = new System.Drawing.Point(13, 429);
+            this.buttonEnableContacts.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonEnableContacts.Name = "buttonEnableContacts";
-            this.buttonEnableContacts.Size = new System.Drawing.Size(223, 36);
+            this.buttonEnableContacts.Size = new System.Drawing.Size(296, 44);
             this.buttonEnableContacts.TabIndex = 28;
             this.buttonEnableContacts.Text = "Enable Selected Electrodes";
             this.toolTip.SetToolTip(this.buttonEnableContacts, "Click and drag to select electrodes in the probe view. \r\nPress this button to ena" +
         "ble the selected electrodes. \r\nNot all electrode combinations are possible.");
             this.buttonEnableContacts.UseVisualStyleBackColor = true;
-            this.buttonEnableContacts.Click += new System.EventHandler(this.ButtonClick);
+            this.buttonEnableContacts.Click += new System.EventHandler(this.EnableContacts_Click);
             // 
             // buttonClearSelections
             // 
             this.buttonClearSelections.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonClearSelections.Location = new System.Drawing.Point(10, 305);
-            this.buttonClearSelections.Margin = new System.Windows.Forms.Padding(2);
+            this.buttonClearSelections.Location = new System.Drawing.Point(13, 478);
+            this.buttonClearSelections.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonClearSelections.Name = "buttonClearSelections";
-            this.buttonClearSelections.Size = new System.Drawing.Size(223, 36);
+            this.buttonClearSelections.Size = new System.Drawing.Size(296, 44);
             this.buttonClearSelections.TabIndex = 27;
             this.buttonClearSelections.Text = "Clear Electrode Selection";
             this.toolTip.SetToolTip(this.buttonClearSelections, "Deselect all electrodes in the probe view. \r\nNote that this does not disable elec" +
         "trodes, but simply deselects them.");
             this.buttonClearSelections.UseVisualStyleBackColor = true;
-            this.buttonClearSelections.Click += new System.EventHandler(this.ButtonClick);
+            this.buttonClearSelections.Click += new System.EventHandler(this.ClearSelection_Click);
             // 
             // comboBoxChannelPresets
             // 
@@ -320,33 +406,33 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.comboBoxChannelPresets.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxChannelPresets.FormattingEnabled = true;
-            this.comboBoxChannelPresets.Location = new System.Drawing.Point(76, 222);
-            this.comboBoxChannelPresets.Margin = new System.Windows.Forms.Padding(2);
+            this.comboBoxChannelPresets.Location = new System.Drawing.Point(101, 376);
+            this.comboBoxChannelPresets.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.comboBoxChannelPresets.Name = "comboBoxChannelPresets";
-            this.comboBoxChannelPresets.Size = new System.Drawing.Size(157, 21);
+            this.comboBoxChannelPresets.Size = new System.Drawing.Size(207, 24);
             this.comboBoxChannelPresets.TabIndex = 26;
             // 
             // buttonResetZoom
             // 
             this.buttonResetZoom.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonResetZoom.Location = new System.Drawing.Point(10, 345);
-            this.buttonResetZoom.Margin = new System.Windows.Forms.Padding(2);
+            this.buttonResetZoom.Location = new System.Drawing.Point(13, 528);
+            this.buttonResetZoom.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonResetZoom.Name = "buttonResetZoom";
-            this.buttonResetZoom.Size = new System.Drawing.Size(223, 36);
+            this.buttonResetZoom.Size = new System.Drawing.Size(296, 44);
             this.buttonResetZoom.TabIndex = 22;
             this.buttonResetZoom.Text = "Reset Zoom";
             this.toolTip.SetToolTip(this.buttonResetZoom, "Reset the zoom in the probe view so that the probe is zoomed out and centered.");
             this.buttonResetZoom.UseVisualStyleBackColor = true;
-            this.buttonResetZoom.Click += new System.EventHandler(this.ButtonClick);
+            this.buttonResetZoom.Click += new System.EventHandler(this.ResetZoom_Click);
             // 
             // checkBoxSpikeFilter
             // 
             this.checkBoxSpikeFilter.AutoSize = true;
-            this.checkBoxSpikeFilter.Location = new System.Drawing.Point(76, 167);
-            this.checkBoxSpikeFilter.Margin = new System.Windows.Forms.Padding(2);
+            this.checkBoxSpikeFilter.Location = new System.Drawing.Point(101, 309);
+            this.checkBoxSpikeFilter.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.checkBoxSpikeFilter.Name = "checkBoxSpikeFilter";
-            this.checkBoxSpikeFilter.Size = new System.Drawing.Size(65, 17);
+            this.checkBoxSpikeFilter.Size = new System.Drawing.Size(80, 20);
             this.checkBoxSpikeFilter.TabIndex = 14;
             this.checkBoxSpikeFilter.Text = "Enabled";
             this.checkBoxSpikeFilter.UseVisualStyleBackColor = true;
@@ -355,25 +441,25 @@
             // 
             this.textBoxAdcCalibrationFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxAdcCalibrationFile.Location = new System.Drawing.Point(10, 24);
-            this.textBoxAdcCalibrationFile.Margin = new System.Windows.Forms.Padding(2);
+            this.textBoxAdcCalibrationFile.Location = new System.Drawing.Point(13, 30);
+            this.textBoxAdcCalibrationFile.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textBoxAdcCalibrationFile.Name = "textBoxAdcCalibrationFile";
-            this.textBoxAdcCalibrationFile.Size = new System.Drawing.Size(191, 20);
+            this.textBoxAdcCalibrationFile.Size = new System.Drawing.Size(252, 22);
             this.textBoxAdcCalibrationFile.TabIndex = 12;
             this.textBoxAdcCalibrationFile.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.textBoxAdcCalibrationFile.TextChanged += new System.EventHandler(this.FileTextChanged);
+            this.textBoxAdcCalibrationFile.TextChanged += new System.EventHandler(this.AdcCalibrationFileTextChanged);
             // 
             // textBoxGainCalibrationFile
             // 
             this.textBoxGainCalibrationFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxGainCalibrationFile.Location = new System.Drawing.Point(10, 72);
-            this.textBoxGainCalibrationFile.Margin = new System.Windows.Forms.Padding(2);
+            this.textBoxGainCalibrationFile.Location = new System.Drawing.Point(13, 133);
+            this.textBoxGainCalibrationFile.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textBoxGainCalibrationFile.Name = "textBoxGainCalibrationFile";
-            this.textBoxGainCalibrationFile.Size = new System.Drawing.Size(191, 20);
+            this.textBoxGainCalibrationFile.Size = new System.Drawing.Size(252, 22);
             this.textBoxGainCalibrationFile.TabIndex = 9;
             this.textBoxGainCalibrationFile.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.textBoxGainCalibrationFile.TextChanged += new System.EventHandler(this.FileTextChanged);
+            this.textBoxGainCalibrationFile.TextChanged += new System.EventHandler(this.GainCalibrationFileTextChanged);
             // 
             // comboBoxReference
             // 
@@ -381,10 +467,10 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.comboBoxReference.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxReference.FormattingEnabled = true;
-            this.comboBoxReference.Location = new System.Drawing.Point(76, 192);
-            this.comboBoxReference.Margin = new System.Windows.Forms.Padding(2);
+            this.comboBoxReference.Location = new System.Drawing.Point(101, 339);
+            this.comboBoxReference.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.comboBoxReference.Name = "comboBoxReference";
-            this.comboBoxReference.Size = new System.Drawing.Size(157, 21);
+            this.comboBoxReference.Size = new System.Drawing.Size(207, 24);
             this.comboBoxReference.TabIndex = 5;
             // 
             // comboBoxLfpGain
@@ -393,10 +479,10 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.comboBoxLfpGain.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxLfpGain.FormattingEnabled = true;
-            this.comboBoxLfpGain.Location = new System.Drawing.Point(76, 136);
-            this.comboBoxLfpGain.Margin = new System.Windows.Forms.Padding(2);
+            this.comboBoxLfpGain.Location = new System.Drawing.Point(101, 240);
+            this.comboBoxLfpGain.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.comboBoxLfpGain.Name = "comboBoxLfpGain";
-            this.comboBoxLfpGain.Size = new System.Drawing.Size(157, 21);
+            this.comboBoxLfpGain.Size = new System.Drawing.Size(207, 24);
             this.comboBoxLfpGain.TabIndex = 3;
             // 
             // comboBoxApGain
@@ -405,33 +491,33 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.comboBoxApGain.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxApGain.FormattingEnabled = true;
-            this.comboBoxApGain.Location = new System.Drawing.Point(76, 106);
-            this.comboBoxApGain.Margin = new System.Windows.Forms.Padding(2);
+            this.comboBoxApGain.Location = new System.Drawing.Point(101, 174);
+            this.comboBoxApGain.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.comboBoxApGain.Name = "comboBoxApGain";
-            this.comboBoxApGain.Size = new System.Drawing.Size(157, 21);
+            this.comboBoxApGain.Size = new System.Drawing.Size(207, 24);
             this.comboBoxApGain.TabIndex = 1;
             // 
             // buttonCancel
             // 
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.buttonCancel.Location = new System.Drawing.Point(893, 2);
-            this.buttonCancel.Margin = new System.Windows.Forms.Padding(2);
+            this.buttonCancel.Location = new System.Drawing.Point(1194, 2);
+            this.buttonCancel.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonCancel.Name = "buttonCancel";
-            this.buttonCancel.Size = new System.Drawing.Size(83, 28);
+            this.buttonCancel.Size = new System.Drawing.Size(111, 34);
             this.buttonCancel.TabIndex = 1;
             this.buttonCancel.Text = "Cancel";
             this.buttonCancel.UseVisualStyleBackColor = true;
             // 
             // buttonOkay
             // 
-            this.buttonOkay.Location = new System.Drawing.Point(806, 2);
-            this.buttonOkay.Margin = new System.Windows.Forms.Padding(2);
+            this.buttonOkay.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.buttonOkay.Location = new System.Drawing.Point(1077, 2);
+            this.buttonOkay.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonOkay.Name = "buttonOkay";
-            this.buttonOkay.Size = new System.Drawing.Size(83, 28);
+            this.buttonOkay.Size = new System.Drawing.Size(111, 34);
             this.buttonOkay.TabIndex = 0;
             this.buttonOkay.Text = "OK";
             this.buttonOkay.UseVisualStyleBackColor = true;
-            this.buttonOkay.Click += new System.EventHandler(this.ButtonClick);
             // 
             // tableLayoutPanel1
             // 
@@ -442,12 +528,13 @@
             this.tableLayoutPanel1.Controls.Add(this.panelOptions, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 0, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 24);
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 26);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(984, 612);
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 42F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(1312, 731);
             this.tableLayoutPanel1.TabIndex = 3;
             // 
             // flowLayoutPanel1
@@ -457,22 +544,62 @@
             this.flowLayoutPanel1.Controls.Add(this.buttonOkay);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 575);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(2, 691);
+            this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(2);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(978, 34);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(1308, 38);
             this.flowLayoutPanel1.TabIndex = 0;
+            // 
+            // statusStrip1
+            // 
+            this.statusStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            toolStripLabelAdcCalibrationSN,
+            this.toolStripAdcCalSN,
+            toolStripLabelGainCalibrationSn,
+            this.toolStripGainCalSN,
+            this.toolStripStatus});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 757);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(1312, 26);
+            this.statusStrip1.TabIndex = 34;
+            this.statusStrip1.Text = "statusStrip1";
+            // 
+            // toolStripAdcCalSN
+            // 
+            this.toolStripAdcCalSN.AutoSize = false;
+            this.toolStripAdcCalSN.Name = "toolStripAdcCalSN";
+            this.toolStripAdcCalSN.Size = new System.Drawing.Size(120, 20);
+            this.toolStripAdcCalSN.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // toolStripGainCalSN
+            // 
+            this.toolStripGainCalSN.AutoSize = false;
+            this.toolStripGainCalSN.Name = "toolStripGainCalSN";
+            this.toolStripGainCalSN.Size = new System.Drawing.Size(120, 20);
+            this.toolStripGainCalSN.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // toolStripStatus
+            // 
+            this.toolStripStatus.Image = global::OpenEphys.Onix1.Design.Properties.Resources.StatusWarningImage;
+            this.toolStripStatus.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+            this.toolStripStatus.Name = "toolStripStatus";
+            this.toolStripStatus.Size = new System.Drawing.Size(69, 20);
+            this.toolStripStatus.Text = "Status";
+            this.toolStripStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // NeuropixelsV1eDialog
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(984, 636);
+            this.ClientSize = new System.Drawing.Size(1312, 783);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.menuStrip);
+            this.Controls.Add(this.statusStrip1);
             this.DoubleBuffered = true;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip;
-            this.Margin = new System.Windows.Forms.Padding(2);
+            this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "NeuropixelsV1eDialog";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "NeuropixelsV1e Configuration";
@@ -486,6 +613,8 @@
             this.panelOptions.PerformLayout();
             this.tableLayoutPanel1.ResumeLayout(false);
             this.flowLayoutPanel1.ResumeLayout(false);
+            this.statusStrip1.ResumeLayout(false);
+            this.statusStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -516,5 +645,12 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
         private System.Windows.Forms.ToolTip toolTip;
+        private System.Windows.Forms.Button buttonViewAdcs;
+        private System.Windows.Forms.TextBox textBoxApCorrection;
+        private System.Windows.Forms.TextBox textBoxLfpCorrection;
+        private System.Windows.Forms.StatusStrip statusStrip1;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripAdcCalSN;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripGainCalSN;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatus;
     }
 }

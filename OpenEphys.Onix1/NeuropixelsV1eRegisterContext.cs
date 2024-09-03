@@ -38,30 +38,36 @@ namespace OpenEphys.Onix1
                     $"{probeSerialNumber}");
             }
 
-            // parse ADC calibration file
-            var adcCalibration = NeuropixelsV1Helper.ParseAdcCalibrationFile(new StreamReader(adcCalibrationFile)); 
+            var adcCalibration = NeuropixelsV1Helper.TryParseAdcCalibrationFile(adcCalibrationFile);
 
-            if (adcCalibration.SN != probeSerialNumber)
+            if (!adcCalibration.HasValue)
             {
-                throw new ArgumentException($"The probe serial number ({probeSerialNumber}) does not " +
-                    $"match the ADC calibration file serial number: {adcCalibration.SN}.");
+                throw new ArgumentException($"The calibration file \"{adcCalibrationFile}\" is invalid.");
             }
 
-            
-            // parse gain correction file
-            var gainCorrection = NeuropixelsV1Helper.ParseGainCalibrationFile(new StreamReader(gainCalibrationFile), 
-                probeConfiguration.SpikeAmplifierGain, probeConfiguration.LfpAmplifierGain);
-
-            if (gainCorrection.SN != probeSerialNumber)
+            if (adcCalibration.Value.SerialNumber != probeSerialNumber)
             {
                 throw new ArgumentException($"The probe serial number ({probeSerialNumber}) does not " +
-                    $"match the gain calibration file serial number: {gainCorrection.SN}.");
+                    $"match the ADC calibration file serial number: {adcCalibration.Value.SerialNumber}.");
             }
 
-            ApGainCorrection = gainCorrection.AP;
-            LfpGainCorrection = gainCorrection.LFP;
+            var gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(gainCalibrationFile, probeConfiguration.SpikeAmplifierGain, probeConfiguration.LfpAmplifierGain);
 
-            Adcs = adcCalibration.Adcs;
+            if (!gainCorrection.HasValue)
+            {
+                throw new ArgumentException($"The calibration file \"{gainCalibrationFile}\" is invalid.");
+            }
+
+            if (gainCorrection.Value.SerialNumber != probeSerialNumber)
+            {
+                throw new ArgumentException($"The probe serial number ({probeSerialNumber}) does not " +
+                    $"match the gain calibration file serial number: {gainCorrection.Value.SerialNumber}.");
+            }
+
+            ApGainCorrection = gainCorrection.Value.ApGainCorrectionFactor;
+            LfpGainCorrection = gainCorrection.Value.LfpGainCorrectionFactor;
+
+            Adcs = adcCalibration.Value.Adcs;
             AdcThresholds = Adcs.ToList().Select(a => (ushort)a.Threshold).ToArray();
             AdcOffsets = Adcs.ToList().Select(a => (ushort)a.Offset).ToArray();
 
