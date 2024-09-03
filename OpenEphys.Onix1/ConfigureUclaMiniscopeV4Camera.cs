@@ -86,7 +86,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <remarks>
         /// The imaging focal plane is controlled by using a MAX14574 high-voltage liquid lens driver. This
-        /// chip produces pulse-width modulated, 1 kHz alternative electric field that deforms the miniscope's
+        /// chip produces pulse-width modulated, 5 kHz alternative electric field that deforms the miniscope's
         /// liquid lens in order to change the focal plane. The strength of this field determines the degree
         /// of deformation and therefore the focal depth. The default setting of 47 Volts RMS corresponds to
         /// approximately mid-range.
@@ -204,8 +204,7 @@ namespace OpenEphys.Onix1
 
             // turn on EWL
             var max14574 = new I2CRegisterContext(device, UclaMiniscopeV4.Max14574Address);
-            max14574.WriteByte(0x08, 0x7F);
-            max14574.WriteByte(0x09, 0x02);
+            max14574.WriteByte(0x03, 0x03);
 
             // turn on LED and setup Python480
             var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
