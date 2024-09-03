@@ -29,7 +29,7 @@ namespace OpenEphys.Onix1
                   {
                       new(ProbeNdim.Two,
                           ProbeSiUnits.um,
-                          new ProbeAnnotations("Neuropixels 2.0e", "IMEC"),
+                          new ProbeAnnotations("Neuropixels 2.0 4-shank", "IMEC"),
                           new ContactAnnotations(new string[0]),
                           DefaultContactPositions(NeuropixelsV2.ElectrodePerShank * numberOfShanks),
                           Probe.DefaultContactPlaneAxes(NeuropixelsV2.ElectrodePerShank * numberOfShanks),
