@@ -33,8 +33,14 @@ namespace OpenEphys.Onix1.Design
 
             if (errors.Count > 0)
             {
-                MessageBox.Show($"Warning: There were {errors.Count} errors found while deserializing the JSON string.\n" +
-                    $"The first error was '{errors.First()}'.", "Deserializer Error");
+                MessageBox.Show($"There were errors encountered while parsing a JSON string. Check the console " +
+                    $"for an error log.", "JSON Parse Error");
+
+                foreach (var e in errors)
+                {
+                    Console.Error.WriteLine(e);
+                }
+
                 return default;
             }
 

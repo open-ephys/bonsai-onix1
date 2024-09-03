@@ -38,10 +38,8 @@ namespace OpenEphys.Onix1
                     $"{probeSerialNumber}");
             }
 
-            StreamReader adcFile = new(adcCalibrationFile);
-
             // parse ADC calibration file
-            var adcCalibration = NeuropixelsV1Helper.ParseAdcCalibrationFile(adcFile);
+            var adcCalibration = NeuropixelsV1Helper.ParseAdcCalibrationFile(new StreamReader(adcCalibrationFile)); 
 
             if (adcCalibration.SN != probeSerialNumber)
             {
@@ -49,10 +47,10 @@ namespace OpenEphys.Onix1
                     $"match the ADC calibration file serial number: {adcCalibration.SN}.");
             }
 
-            StreamReader gainFile = new(gainCalibrationFile);
-
+            
             // parse gain correction file
-            var gainCorrection = NeuropixelsV1Helper.ParseGainCalibrationFile(gainFile, probeConfiguration.SpikeAmplifierGain, probeConfiguration.LfpAmplifierGain);
+            var gainCorrection = NeuropixelsV1Helper.ParseGainCalibrationFile(new StreamReader(gainCalibrationFile), 
+                probeConfiguration.SpikeAmplifierGain, probeConfiguration.LfpAmplifierGain);
 
             if (gainCorrection.SN != probeSerialNumber)
             {
