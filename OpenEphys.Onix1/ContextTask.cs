@@ -10,34 +10,46 @@ using System.Threading.Tasks;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Encapsulates an <see cref="oni.Context"/> and orchestrates interaction with ONI hardware.
+    /// Encapsulates a single ONI context and orchestrates interaction with ONI-compliant hardware.
     /// </summary>
     /// <remarks>
-    /// This class forms the basis for ONI hardware interaction within the library. It manages an <see cref="oni.Context"/>. It
-    /// reads and distributes <see cref="oni.Frame"/>s using a dedicated acquisition thread. It allows <see cref="oni.Frame"/>s to
-    /// be written to devices that accept them. Finally, it exposes information about the underlying ONI hardware such as the device
-    /// table, clock rates, and block read and write sizes.
+    /// The <see href="https://open-ephys.github.io/ONI/">open neuro interface (ONI)</see> hardware
+    /// specification and API describe a general purpose acquisition system architecture and programming
+    /// interface for communication with a host PC. One requirement of ONI is that a host application must
+    /// hold a "context" that contains handles for hardware communication, data acquisition parameters, etc.
+    /// for a particular hardware controller, such as the ONIX PCIe card. <see cref="ContextTask"/> fulfils
+    /// this role for this library. Additionally, once data acquisition is started by the <see
+    /// cref="StartAcquisition"/> operator, <see cref="ContextTask"/> performs the following:
+    /// <list type="bullet">
+    /// <item><description>It automatically reads and distributes data from hardware using a dedicated acquisition
+    /// thread.</description></item>
+    /// <item><description>It allows data to be written to devices that accept them.</description></item>
+    /// <item><description>It allows reading and writing to device registers to control their operation (e.g. <see
+    /// cref="ConfigureBno055.Enable"/> or <see
+    /// cref="ConfigureRhd2164.AnalogHighCutoff"/>).</description></item>
+    /// </list>
+    /// Additionally, this operator exposes important information about the underlying ONI hardware such as
+    /// the device table, clock rates, and block read and write sizes. <strong>In summary, <see
+    /// cref="ContextTask"/> forms a complete interface for all hardware interaction within the library: all
+    /// physical interaction with the ONIX system passes through this class.</strong>
     /// </remarks>
     public class ContextTask : IDisposable
     {
         oni.Context ctx;
 
         /// <summary>
-        /// Maximum amount of frames the reading queue will hold. If the queue fills or the read
-        /// thread is not performant enough to fill it faster than data is produced, frame reading
-        /// will throttle, filling host memory instead of user space memory.
+        /// Maximum amount of frames the reading queue will hold. If the queue fills or the read thread is not
+        /// performant enough to fill it faster than data is produced, frame reading will throttle, filling
+        /// host memory instead of user space memory.
         /// </summary>
         const int MaxQueuedFrames = 2_000_000;
 
         /// <summary>
-        /// Timeout in ms for queue reads. This should not be critical as the read operation will
-        /// cancel if the task is stopped
+        /// Timeout in ms for queue reads. This should not be critical as the read operation will cancel if
+        /// the task is stopped
         /// </summary>
         const int QueueTimeoutMilliseconds = 200;
 
-        /// <summary>
-        /// In this package most operators are tied in to the RIFFA PCIe backend used by the FMC host.
-        /// </summary>
         internal const string DefaultDriver = "riffa";
         internal const int DefaultIndex = 0;
 
@@ -119,18 +131,20 @@ namespace OpenEphys.Onix1
         /// Gets the acquisition clock rate in Hz.
         /// </summary>
         /// <remarks>
-        /// This describes the frequency of the clock used to drive the ONI controller's acquisition clock which is used
-        /// to generate the clock counter values in <see cref="oni.Frame.Clock"/> and its derivative types (e.g. <see cref="DataFrame.Clock"/>,
-        /// <see cref="BufferedDataFrame.Clock"/>, etc.)
+        /// This describes the frequency of the clock used to drive the ONI controller's acquisition clock
+        /// which is used to generate the clock counter values, <see cref="BufferedDataFrame.Clock"/> and <see
+        /// cref="DataFrame.Clock"/>, associated with the data frames produced by data operator in this
+        /// library (e.g. <see cref="NeuropixelsV1eData"/> or <see cref="Bno055Data"/>).
         /// </remarks>
         public uint AcquisitionClockHz { get; private set; }
 
         /// <summary>
-        /// Gets the maximal size of a frame produced by a call to <see cref="oni.Context.ReadFrame"/> in bytes.
+        /// Gets the maximal size of a frame produced by a call to <see cref="oni.Context.ReadFrame"/> in
+        /// bytes.
         /// </summary>
         /// <remarks>
-        /// This number is the maximum sized frame that can be produced across every device within the device table
-        /// that generates data.
+        /// This number is the maximum sized frame that can be produced across every device within the device
+        /// table that generates data.
         /// </remarks>
         public uint MaxReadFrameSize { get; private set; }
 
@@ -144,10 +158,12 @@ namespace OpenEphys.Onix1
         public uint MaxWriteFrameSize { get; private set; }
 
         /// <summary>
-        /// Gets the device table containing the device hierarchy governed by the internal <see cref="oni.Context"/>.
+        /// Gets the device table containing the device hierarchy governed by the internal <see
+        /// cref="oni.Context"/>.
         /// </summary>
         /// <remarks>
-        /// This dictionary maps a fully-qualified <see cref="oni.Device.Address"/> to an <see cref="oni.Device"/> instance.
+        /// This dictionary maps a fully-qualified <see cref="oni.Device.Address"/> to an <see
+        /// cref="oni.Device"/> instance.
         /// </remarks>
         public Dictionary<uint, oni.Device> DeviceTable { get; private set; }
 
@@ -156,8 +172,10 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets the sequence of <see cref="oni.Frame"/>s produced by a particular device.
         /// </summary>
-        /// <param name="deviceAddress">The fully qualified <see cref="oni.Device.Address"/> that will produce the frame sequence.</param>
-        /// <returns>The frame sequence produced by the device at address <paramref name="deviceAddress"/>.</returns>
+        /// <param name="deviceAddress">The fully qualified <see cref="oni.Device.Address"/> that will produce
+        /// the frame sequence.</param>
+        /// <returns>The frame sequence produced by the device at address <paramref
+        /// name="deviceAddress"/>.</returns>
         public IObservable<oni.Frame> GetDeviceFrames(uint deviceAddress)
         {
             return groupedFrames.Where(deviceFrames => deviceFrames.Key == deviceAddress).Merge();
