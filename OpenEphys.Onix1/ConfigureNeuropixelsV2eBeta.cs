@@ -280,7 +280,7 @@ namespace OpenEphys.Onix1
         static void ConfigureProbeStreaming(I2CRegisterContext i2cNP)
         {
             // Activate recording mode on NP
-            i2cNP.WriteByte(NeuropixelsV2eBeta.REC_MODE, 0b0100_0000);
+            i2cNP.WriteByte(NeuropixelsV2eBeta.OP_MODE, 0b0100_0000);
 
             // Set global ADC settings
             i2cNP.WriteByte(NeuropixelsV2eBeta.ADC_CONFIG, 0b0000_1000);
