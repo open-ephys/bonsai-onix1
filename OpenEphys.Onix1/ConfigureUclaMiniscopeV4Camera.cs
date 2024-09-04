@@ -140,7 +140,7 @@ namespace OpenEphys.Onix1
                 device.WriteRegister(DS90UB9x.ENABLE, enable ? 1u : 0);
 
                 // configure deserializer, chip states, and camera PLL
-                ConfigureMiniscope(device);
+                ConfigureCameraSystem(device);
 
                 // configuration properties
                 var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
@@ -167,7 +167,7 @@ namespace OpenEphys.Onix1
             });
         }
 
-        internal static void ConfigureMiniscope(DeviceContext device)
+        internal static void ConfigureCameraSystem(DeviceContext device)
         {
             // configure deserializer
             device.WriteRegister(DS90UB9x.TRIGGEROFF, 0);

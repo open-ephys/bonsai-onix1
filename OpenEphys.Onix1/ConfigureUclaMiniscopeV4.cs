@@ -135,7 +135,7 @@ namespace OpenEphys.Onix1
                 try
                 {
                     var ds90ub9x = device.Context.GetPassthroughDeviceContext(DeviceAddress << 8, typeof(DS90UB9x));
-                    ConfigureUclaMiniscopeV4Camera.ConfigureMiniscope(ds90ub9x);
+                    ConfigureUclaMiniscopeV4Camera.ConfigureCameraSystem(ds90ub9x);
                 }
                 catch (oni.ONIException ex)
                 {

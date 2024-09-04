@@ -40,7 +40,6 @@ namespace OpenEphys.Onix1
                     var imageBuffer = new short[UclaMiniscopeV4.SensorRows * UclaMiniscopeV4.SensorColumns];
                     var hubClockBuffer = new ulong[UclaMiniscopeV4.SensorRows];
                     var clockBuffer = new ulong[UclaMiniscopeV4.SensorRows];
-                    var awaitingFrameStart = true;
 
                     var frameObserver = Observer.Create<oni.Frame>(
                         frame =>
@@ -48,10 +47,9 @@ namespace OpenEphys.Onix1
                             var payload = (UclaMiniscopeV4ImagerPayload*)frame.Data.ToPointer();
 
                             // Wait for first row
-                            if (awaitingFrameStart && (payload->ImageRow[0] & 0x8000) == 0)
-                                return;
+                            if (sampleIndex == 0 && (payload->ImageRow[0] & 0x8000) == 0)
+                               return;
 
-                            awaitingFrameStart = false;
                             Marshal.Copy(new IntPtr(payload->ImageRow), imageBuffer, sampleIndex * UclaMiniscopeV4.SensorColumns, UclaMiniscopeV4.SensorColumns);
                             hubClockBuffer[sampleIndex] = payload->HubClock;
                             clockBuffer[sampleIndex] = frame.Clock;
@@ -63,7 +61,6 @@ namespace OpenEphys.Onix1
                                 hubClockBuffer = new ulong[UclaMiniscopeV4.SensorRows];
                                 clockBuffer = new ulong[UclaMiniscopeV4.SensorRows];
                                 sampleIndex = 0;
-                                awaitingFrameStart = true;
                             }
                         },
                         observer.OnError,
