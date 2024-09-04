@@ -10,7 +10,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <param name="value">The value where bits will be replaced.</param>
         /// <param name="mask">A mask defining which bits should be replaced.</param>
-        /// <param name="bits">A value containing the bits that will be assingned to the <paramref name="mask"/>
+        /// <param name="bits">A value containing the bits that will be assigned to the <paramref name="mask"/>
         /// positions in <paramref name="value"/>.</param>
         /// <returns></returns>
         internal static uint Replace(uint value, uint mask, uint bits)
