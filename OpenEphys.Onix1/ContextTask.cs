@@ -255,25 +255,64 @@ namespace OpenEphys.Onix1
                     if (!acquisition.IsCompleted)
                         throw new InvalidOperationException("Acquisition already running in the current context.");
 
-                    // NB: Configure context before starting acquisition
+
+                    // NB: Configure context before starting acquisition or the the settings (e.g. Block read
+                    // and write sizes) will not be respected
                     var contextConfiguration = ConfigureContext();
-                    ctx.BlockReadSize = blockReadSize;
-                    ctx.BlockWriteSize = blockWriteSize;
 
-                    // TODO: Stuff related to sync mode is 100% ONIX, not ONI. Therefore, in the long term,
-                    // another place to do this separation might be needed
-                    int address = ctx.HardwareAddress;
-                    int mode = (address & 0x00FF0000) >> 16;
-                    if (mode == 0) // Standalone mode
+                    try
                     {
-                        ctx.Start(true);
+                        // set block read and write size
+                        ctx.BlockReadSize = blockReadSize;
+                        ctx.BlockWriteSize = blockWriteSize;
+
+                        // TODO: Stuff related to sync mode is 100% ONIX, not ONI. Therefore, in the long term,
+                        // another place to do this separation might be needed
+                        int address = ctx.HardwareAddress;
+                        int mode = (address & 0x00FF0000) >> 16;
+                        if (mode == 0) // Standalone mode
+                        {
+                            ctx.Start(true);
+                        }
+                        else // If synchronized mode, reset counter independently
+                        {
+                            ctx.ResetFrameClock();
+                            ctx.Start(false);
+                        }
+
                     }
-                    else // If synchronized mode, reset counter independently
+                    catch (oni.ONIException ex) when (ex.Number == -20)
                     {
-                        ctx.ResetFrameClock();
-                        ctx.Start(false);
+                        lock (regLock)
+                        {
+                            ctx.Stop();
+                            contextConfiguration.Dispose();
+                        }
+                        throw new InvalidOperationException($"The requested read size of {blockReadSize} bytes is too small for the current " +
+                            $"hardware configuration, which requires at least {ctx.MaxReadFrameSize} bytes.", ex);
+                    }
+                    catch (oni.ONIException ex) when (ex.Number == -24)
+                    {
+                        lock (regLock)
+                        {
+                            ctx.Stop();
+                            contextConfiguration.Dispose();
+                        }
+                        throw new InvalidOperationException($"The requested write size of {blockWriteSize} bytes is too small for the current " +
+                            $"hardware configuration, which requires at least {ctx.MaxWriteFrameSize} bytes.", ex);
+                    }
+                    catch
+                    {
+                        lock (regLock)
+                        {
+                            ctx.Stop();
+                            contextConfiguration.Dispose();
+                        }
+                        throw;
                     }
 
+                    // TODO: If during the creation of of collectFramesCancellation, collectFramesToken, frameQueue, readFrames, or distributeFrames
+                    // an exception is thrown, contextConfiguration will not be disposed. The process will need to be restarted to get out of deadlock
                     collectFramesCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                     var collectFramesToken = collectFramesCancellation.Token;
                     var frameQueue = new BlockingCollection<oni.Frame>(MaxQueuedFrames);
