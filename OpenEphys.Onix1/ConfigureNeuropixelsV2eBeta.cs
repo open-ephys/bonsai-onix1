@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Drawing.Design;
 using System.Reactive.Disposables;
 using Bonsai;
 
@@ -9,7 +10,8 @@ namespace OpenEphys.Onix1
     /// A class that configures a NeuropixelsV2eBeta device.
     /// </summary>
     [Description("Configures a NeuropixelsV2eBeta device.")]
-    public class ConfigureNeuropixelsV2eBeta : SingleDeviceFactory
+    [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
+    public class ConfigureNeuropixelsV2eBeta : SingleDeviceFactory, IConfigureNeuropixelsV2
     {
         /// <summary>
         /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV2eBeta"/> class.
@@ -20,8 +22,23 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets or sets the device enable state.
+        /// Copy constructor for the <see cref="ConfigureNeuropixelsV2e"/> class.
         /// </summary>
+        /// <param name="configureNode">A pre-existing <see cref="ConfigureNeuropixelsV2e"/> object.</param>
+        public ConfigureNeuropixelsV2eBeta(ConfigureNeuropixelsV2eBeta configureNode)
+            : base(typeof(NeuropixelsV2eBeta))
+        {
+            Enable = configureNode.Enable;
+            EnableLed = configureNode.EnableLed;
+            ProbeConfigurationA = configureNode.ProbeConfigurationA;
+            ProbeConfigurationB = configureNode.ProbeConfigurationB;
+            GainCalibrationFileA = configureNode.GainCalibrationFileA;
+            GainCalibrationFileB = configureNode.GainCalibrationFileB;
+            DeviceName = configureNode.DeviceName;
+            DeviceAddress = configureNode.DeviceAddress;
+        }
+
+        /// <inheritdoc/>
         /// <remarks>
         /// If set to true, <see cref="NeuropixelsV2eBetaData"/> will produce data. If set to false, 
         /// <see cref="NeuropixelsV2eBetaData"/> will not produce data.
@@ -40,16 +57,19 @@ namespace OpenEphys.Onix1
         [Description("If true, the headstage LED will turn on during data acquisition. If false, the LED will not turn on.")]
         public bool EnableLed { get; set; } = true;
 
-        /// <summary>
-        /// Gets or sets the electrode configuration for Probe A.
-        /// </summary>
+        /// <inheritdoc/>
+        /// <remarks>
+        /// Configuration is accomplished using a GUI to aid in channel selection and relevant configuration properties.
+        /// To open a probe configuration GUI, select the ellipses next the <see cref="ProbeConfigurationA"/> variable
+        /// in the property pane, or double-click <see cref="ConfigureNeuropixelsV2eBetaHeadstage"/> to configure both
+        /// probes and the <see cref="ConfigureNeuropixelsV2eBno055"/> simultaneously.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Probe A electrode configuration.")]
+        [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new(NeuropixelsV2Probe.ProbeA);
 
-        /// <summary>
-        /// Gets or sets the path to the gain calibration file for Probe A.
-        /// </summary>
+        /// <inheritdoc/>
         /// <remarks>
         /// <para>
         /// Each probe is linked to a gain calibration file that contains gain adjustments determined by IMEC during
@@ -68,16 +88,19 @@ namespace OpenEphys.Onix1
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string GainCalibrationFileA { get; set; }
 
-        /// <summary>
-        /// Gets or sets the electrode configuration for Probe B.
-        /// </summary>
+        /// <inheritdoc/>
+        /// <remarks>
+        /// Configuration is accomplished using a GUI to aid in channel selection and relevant configuration properties.
+        /// To open a probe configuration GUI, select the ellipses next the <see cref="ProbeConfigurationB"/> variable
+        /// in the property pane, or double-click <see cref="ConfigureNeuropixelsV2eBetaHeadstage"/> to configure both
+        /// probes and the <see cref="ConfigureNeuropixelsV2eBno055"/> simultaneously.
+        /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Probe B electrode configuration.")]
+        [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new(NeuropixelsV2Probe.ProbeB);
 
-        /// <summary>
-        /// Gets or sets the path to the gain calibration file for Probe B.
-        /// </summary>
+        /// <inheritdoc/>
         /// <remarks>
         /// <para>
         /// Each probe is linked to a gain calibration file that contains gain adjustments determined by IMEC during

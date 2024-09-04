@@ -16,7 +16,7 @@ namespace OpenEphys.Onix1.Design
             if (provider != null)
             {
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
-                if (editorState != null && !editorState.WorkflowRunning && component is ConfigureNeuropixelsV2e configureNeuropixelsV2e)
+                if (editorState != null && !editorState.WorkflowRunning && component is IConfigureNeuropixelsV2 configureNeuropixelsV2e)
                 {
                     using var editorDialog = new NeuropixelsV2eDialog(configureNeuropixelsV2e);
 
