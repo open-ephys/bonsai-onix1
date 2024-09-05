@@ -5,7 +5,7 @@ namespace OpenEphys.Onix1
 {
     internal static class Rhd2164Config
     {
-        // Page 26 of RHD2000 datasheet
+        // Page 26 of Rhd2000 datasheet
         internal static IReadOnlyList<int> ToLowCutoffToRegisters(Rhd2164AnalogLowCutoff lowCut) => lowCut switch
         {
             Rhd2164AnalogLowCutoff.Low500Hz => new[] { 13, 0, 0 },
@@ -36,7 +36,7 @@ namespace OpenEphys.Onix1
             _ => throw new ArgumentOutOfRangeException(nameof(lowCut), $"Unsupported low cutoff value : {lowCut}"),
         };
 
-        // Page 25 of RHD2000 datasheet
+        // Page 25 of Rhd2000 datasheet
         internal static IReadOnlyList<int> ToHighCutoffToRegisters(Rhd2164AnalogHighCutoff highCut) => highCut switch
         {
             Rhd2164AnalogHighCutoff.High20000Hz => new[] { 8, 0, 4, 0 },
@@ -61,7 +61,7 @@ namespace OpenEphys.Onix1
     }
 
     /// <summary>
-    /// Specifies the lower cutoff frequency of the RHD2164 analog (pre-ADC) bandpass filter.
+    /// Specifies the lower cutoff frequency of the Rhd2164 analog (pre-ADC) bandpass filter.
     /// </summary>
     public enum Rhd2164AnalogLowCutoff
     {
@@ -168,7 +168,7 @@ namespace OpenEphys.Onix1
     }
 
     /// <summary>
-    /// Specifies the upper cutoff frequency of the RHD2164 analog (pre-ADC) bandpass filter.
+    /// Specifies the upper cutoff frequency of the Rhd2164 analog (pre-ADC) bandpass filter.
     /// </summary>
     public enum Rhd2164AnalogHighCutoff
     {
@@ -243,7 +243,7 @@ namespace OpenEphys.Onix1
     }
 
     /// <summary>
-    /// Specifies the cutoff frequency of the RHD2164 digital (post-ADC) high-pass filter.
+    /// Specifies the cutoff frequency of the Rhd2164 digital (post-ADC) high-pass filter.
     /// </summary>
     public enum Rhd2164DspCutoff
     {

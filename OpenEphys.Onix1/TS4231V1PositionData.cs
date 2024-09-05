@@ -9,7 +9,7 @@ using OpenCV.Net;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that produces a sequence of 3D positions from an array of Triad Semiconductor TS4231 receivers beneath
+    /// Produces a sequence of 3D positions from an array of Triad Semiconductor TS4231 receivers beneath
     /// a pair of SteamVR V1 base stations.
     /// </summary>
     /// <remarks>

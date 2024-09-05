@@ -4,7 +4,7 @@ using System.ComponentModel;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that configures an ONIX breakout board.
+    /// Configures an ONIX breakout board.
     /// </summary>
     [Description("Configures an ONIX breakout board.")]
     public class ConfigureBreakoutBoard : MultiDeviceFactory

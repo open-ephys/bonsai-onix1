@@ -4,13 +4,13 @@ using System.ComponentModel;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class for configuring the ONIX breakout board's digital inputs and outputs.
+    /// Configures the ONIX breakout board's digital inputs and outputs.
     /// </summary>
-    [Description("Configures the digital input and output device in the ONIX breakout board.")]
+    [Description("onfigures the ONIX breakout board's digital inputs and outputs.")]
     public class ConfigureBreakoutDigitalIO : SingleDeviceFactory
     {
         /// <summary>
-        /// Initialize a new instance of <see cref="ConfigureBreakoutDigitalIO"/>.
+        /// Initialize a new instance of the <see cref="ConfigureBreakoutDigitalIO"/> class.
         /// </summary>
         public ConfigureBreakoutDigitalIO()
             : base(typeof(BreakoutDigitalIO))

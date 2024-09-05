@@ -5,7 +5,7 @@ using System.Threading;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that configures an ONIX headstage-64 on the specified port.
+    /// Configures an ONIX headstage-64 on the specified port.
     /// </summary>
     [Description("Configures an ONIX headstage-64 in the specified port.")]
     public class ConfigureHeadstage64 : MultiDeviceFactory
@@ -22,7 +22,7 @@ namespace OpenEphys.Onix1
         /// etc.). It provides the following features on the headstage:
         /// <list type="bullet">
         /// <item><description>64 analog ephys channels and 3 auxiliary channels sampled at 30 kHz per channel.</description></item>
-        /// <item><description>A BNO055 9-axis IMU for real-time, 3D orientation tracking.</description></item>
+        /// <item><description>A Bno055 9-axis IMU for real-time, 3D orientation tracking.</description></item>
         /// <item><description>Three TS4231 light to digital converters for real-time, 3D position tracking with HTC Vive base stations.</description></item>
         /// <item><description>A single electrical stimulator (current controlled, +/-15V compliance, automatic electrode discharge).</description></item>
         /// <item><description>Two optical stimulators (800 mA peak current per channel).</description></item>

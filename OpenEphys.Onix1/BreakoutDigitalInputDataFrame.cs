@@ -3,7 +3,7 @@
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that contains information about a digital event on the ONIX breakout board.
+    /// A digital event produced by the ONIX breakout board.
     /// </summary>
     public class BreakoutDigitalInputDataFrame : DataFrame
     {

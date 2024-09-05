@@ -4,7 +4,8 @@ using System.ComponentModel;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class for configuring the ONIX breakout board Harp sync input device.
+    /// Configures the ONIX breakout board's <see href="https://harp-tech.org/">Harp</see>
+    /// sync input.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -26,7 +27,7 @@ namespace OpenEphys.Onix1
     /// <see href="https://harp-tech.org/"/>.
     /// </para>
     /// </remarks>
-    [Description("Configures a ONIX breakout board Harp sync input device.")]
+    [Description("Configures a ONIX breakout board Harp sync input.")]
     public class ConfigureHarpSyncInput : SingleDeviceFactory
     {
         /// <summary>

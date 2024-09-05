@@ -11,10 +11,10 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that controls a headstage-64 onboard electrical stimulus sequencer.
+    /// Controls a headstage-64 onboard electrical stimulus sequencer.
     /// </summary>
     /// <remarks>
-    /// This class must be linked to an appropriate configuration, such as a <see cref="ConfigureHeadstage64ElectricalStimulator"/>,
+    /// This operator must be linked to an appropriate configuration, such as a <see cref="ConfigureHeadstage64ElectricalStimulator"/>,
     /// in order to define and deliver electrical stimulation sequences.
     /// </remarks>
     [Description("Controls a headstage-64 onboard electrical stimulus sequencer.")]

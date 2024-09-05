@@ -4,7 +4,7 @@ using System.ComponentModel;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that configures a NeuropixelsV2eBeta headstage on the specified port.
+    /// Configures a NeuropixelsV2eBeta headstage on the specified port.
     /// </summary>
     [Description("Configures a NeuropixelsV2eBeta headstage.")]
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eHeadstageEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1
         readonly ConfigureNeuropixelsV2ePortController PortControl = new();
 
         /// <summary>
-        /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV2eBetaHeadstage"/> class.
+        /// Initializes a new instance of the <see cref="ConfigureNeuropixelsV2eBetaHeadstage"/> class.
         /// </summary>
         public ConfigureNeuropixelsV2eBetaHeadstage()
         {

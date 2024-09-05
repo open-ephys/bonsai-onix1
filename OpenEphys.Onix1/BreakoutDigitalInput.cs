@@ -7,11 +7,11 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that produces a sequence of digital input frames from an ONIX breakout board.
+    /// Produces a sequence of digital input data from an ONIX breakout board.
     /// </summary>
     /// <remarks>
-    /// This data stream class must be linked to an appropriate configuration, such as a <see cref="ConfigureBreakoutDigitalIO"/>,
-    /// in order to stream data.
+    /// This data stream operator must be linked to an appropriate configuration, such as a
+    /// <see cref="ConfigureBreakoutDigitalIO"/>, in order to stream data.
     /// </remarks>
     [Description("Produces a sequence of digital input frames from an ONIX breakout board.")]
     public class BreakoutDigitalInput : Source<BreakoutDigitalInputDataFrame>
@@ -23,12 +23,12 @@ namespace OpenEphys.Onix1
         public string DeviceName { get; set; }
 
         /// <summary>
-        /// Generates a sequence of <see cref="BreakoutDigitalInputDataFrame"/> objects, which contains information about breakout
-        /// board's digital input state.
+        /// Generates a sequence of digital input data frames, each of which contains information about
+        /// breakout board's digital input state.
         /// </summary>
         /// <remarks>
-        /// Digital inputs are not regularly sampled. Instead, a new <see cref="BreakoutDigitalInputDataFrame"/> is produced each
-        /// whenever any digital state (i.e. a digital input pin, button, or switch state) changes.
+        /// Digital inputs are sampled at 4 MHz but a <see cref="BreakoutDigitalInputDataFrame"/> is produced
+        /// only when a button, switch, or digital input pin is toggled.
         /// </remarks>
         /// <returns>A sequence of <see cref="BreakoutDigitalInputDataFrame"/> objects.</returns>
         public unsafe override IObservable<BreakoutDigitalInputDataFrame> Generate()

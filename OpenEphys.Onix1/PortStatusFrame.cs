@@ -3,7 +3,7 @@
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that contains port status information.
+    /// Port status information.
     /// </summary>
     public class PortStatusFrame : DataFrame
     {
