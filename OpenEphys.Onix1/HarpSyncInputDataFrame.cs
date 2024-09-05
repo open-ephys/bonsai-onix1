@@ -3,7 +3,7 @@
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A Harp clock synchronization event.
+    /// A Harp clock synchronization signal.
     /// </summary>
     public class HarpSyncInputDataFrame : DataFrame
     {

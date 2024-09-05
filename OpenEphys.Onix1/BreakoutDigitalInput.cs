@@ -7,7 +7,7 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Produces a sequence of digital events from an ONIX breakout board.
+    /// Produces a sequence of digital input data from an ONIX breakout board.
     /// </summary>
     /// <remarks>
     /// This data stream operator must be linked to an appropriate configuration, such as a
@@ -23,23 +23,12 @@ namespace OpenEphys.Onix1
         public string DeviceName { get; set; }
 
         /// <summary>
-        /// Generates a sequence of  events, each of which contain information about breakout
-        /// board's digital input state.
+        /// Generates a sequence of digital input data frames, each of which contains information about
+        /// breakout board's digital input state.
         /// </summary>
         /// <remarks>
-        /// Digital inputs are sampled at 5 MHz but a <see cref="BreakoutDigitalInputDataFrame"/> is only propagated if a change
-        /// in digital state has occurred. Changes in digital state include:
-        /// <list type="bullet">
-        /// <item>
-        /// <description>A digital input pin is toggled</description>
-        /// </item>
-        /// <item>
-        /// <description>A button is pressed or released</description>
-        /// </item>
-        /// <item>
-        /// <description>A switch is flipped</description>
-        /// </item>
-        /// </list>
+        /// Digital inputs are sampled at 4 MHz but a <see cref="BreakoutDigitalInputDataFrame"/> is produced
+        /// only when a button, switch, or digital input pin is toggled.
         /// </remarks>
         /// <returns>A sequence of <see cref="BreakoutDigitalInputDataFrame"/> objects.</returns>
         public unsafe override IObservable<BreakoutDigitalInputDataFrame> Generate()

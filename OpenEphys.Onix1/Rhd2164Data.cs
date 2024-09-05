@@ -16,7 +16,7 @@ namespace OpenEphys.Onix1
     /// This data stream operator must be linked to an appropriate configuration, such as a <see cref="ConfigureRhd2164"/>,
     /// in order to stream electrophysiology data.
     /// </remarks>
-    [Description("produces a sequence of Rhd2164DataFrame objects.")]
+    [Description("Produces a sequence of electrophysiology data frames from an Intan Rhd2164 bioacquisition chip.")]
     public class Rhd2164Data : Source<Rhd2164DataFrame>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
