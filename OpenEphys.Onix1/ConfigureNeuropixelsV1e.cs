@@ -9,6 +9,10 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Configures a NeuropixelsV1e device.
     /// </summary>
+    /// <remarks>
+    /// This configuration operator can be linked to a data IO operator, such as <see cref="NeuropixelsV1eData"/>,
+    /// using a shared <see cref="SingleDeviceFactory.DeviceName"/>.
+    /// </remarks>
     [Description("Configures a NeuropixelsV1e device.")]
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV1eEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureNeuropixelsV1e : SingleDeviceFactory

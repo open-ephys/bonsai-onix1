@@ -10,8 +10,8 @@ namespace OpenEphys.Onix1
     /// Produces a sequence of heartbeat data frames.
     /// </summary>
     /// <remarks>
-    /// This data stream class must be linked to an appropriate configuration, such as a <see cref="ConfigureHeartbeat"/>,
-    /// in order to stream heartbeat data.
+    /// This data IO operator must be linked to an appropriate configuration, such as a <see
+    /// cref="ConfigureHeartbeat"/>, using a shared <see cref="DeviceName"/>.
     /// </remarks>
     [Description("Produces a sequence of heartbeat data frames.")]
     public class HeartbeatData : Source<HeartbeatDataFrame>

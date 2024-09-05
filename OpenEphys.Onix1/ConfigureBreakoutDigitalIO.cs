@@ -6,6 +6,11 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Configures the ONIX breakout board's digital inputs and outputs.
     /// </summary>
+    /// <remarks>
+    /// This configuration operator can be linked to data IO operators, such as <see
+    /// cref="BreakoutDigitalInput"/> and <see cref="BreakoutDigitalOutput"/>, using a shared <see
+    /// cref="SingleDeviceFactory.DeviceName"/>.
+    /// </remarks>
     [Description("onfigures the ONIX breakout board's digital inputs and outputs.")]
     public class ConfigureBreakoutDigitalIO : SingleDeviceFactory
     {

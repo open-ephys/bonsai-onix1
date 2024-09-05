@@ -12,6 +12,10 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Produces a sequence of analog input frames from an ONIX breakout board.
     /// </summary>
+    /// <remarks>
+    /// This data IO operator must be linked to an appropriate configuration, such as a <see
+    /// cref="ConfigureBreakoutAnalogIO"/>, using a shared <see cref="DeviceName"/>.
+    /// </remarks>
     [Description("Produces a sequence of analog input frames from an ONIX breakout board.")]
     public class BreakoutAnalogInput : Source<BreakoutAnalogInputDataFrame>
     {

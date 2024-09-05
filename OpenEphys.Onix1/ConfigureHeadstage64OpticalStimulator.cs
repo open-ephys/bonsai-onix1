@@ -7,9 +7,9 @@ namespace OpenEphys.Onix1
     /// Configures a headstage-64 dual-channel optical stimulator.
     /// </summary>
     /// <remarks>
-    /// This configuration class can be linked to a <see cref="Headstage64OpticalStimulatorTrigger"/> instance
-    /// to drive current through laser diodes or LEDs connected to two contacts on the probe connector on the
-    /// bottom of the headstage or the corresponding contacts on a compatible electrode interface board.
+    /// This configuration operator can be linked to a trigger operator, such as <see
+    /// cref="Headstage64OpticalStimulatorTrigger"/>, using a shared <see
+    /// cref="SingleDeviceFactory.DeviceName"/>.
     /// </remarks>
     [Description("Configures a headstage-64 dual-channel optical stimulator.")]
     public class ConfigureHeadstage64OpticalStimulator : SingleDeviceFactory

@@ -8,11 +8,11 @@ namespace OpenEphys.Onix1
 {
     /// <summary>
     /// Configures a heartbeat device.
-    /// <remarks>
-    /// This configuration operator can be linked to a <see cref="HeartbeatData"/> instance to stream
-    /// heartbeats from the acquisition system.
-    /// </remarks>
     /// </summary>
+    /// <remarks>
+    /// This configuration operator can be linked to a data IO operator, such as <see cref="HeartbeatData"/>,
+    /// using a shared <see cref="SingleDeviceFactory.DeviceName"/>.
+    /// </remarks>
     [Description("Configures a heartbeat device.")]
     public class ConfigureHeartbeat : SingleDeviceFactory
     {

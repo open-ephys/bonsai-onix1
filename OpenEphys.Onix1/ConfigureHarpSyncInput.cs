@@ -9,6 +9,10 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// <para>
+    /// This configuration operator can be linked to a data IO operator, such as <see
+    /// cref="HarpSyncInput"/> , using a shared <see cref="SingleDeviceFactory.DeviceName"/>.
+    /// </para>
+    /// <para>
     /// Harp is a standard for asynchronous real-time data acquisition and experimental
     /// control in neuroscience. It includes a clock synchronization protocol which allows
     /// Harp devices to be connected to a shared clock line and continuously self-synchronize

@@ -10,9 +10,8 @@ namespace OpenEphys.Onix1
     /// Produces a sequence of port status information frames.
     /// </summary>
     /// <remarks>
-    /// This data stream operator must be linked to an appropriate headstage,
-    /// miniscope, etc. configuration whose communication is dictated by
-    /// a PortController.
+    /// This data IO operator must be linked to an appropriate headstage or miniscope configuration (e.g. <see
+    /// cref="ConfigureNeuropixelsV2eBeta"/>) using a shared <see cref="DeviceName"/>.
     /// </remarks>
     [Description("Produces a sequence of port status information.")]
     public class PortStatus : Source<PortStatusFrame>

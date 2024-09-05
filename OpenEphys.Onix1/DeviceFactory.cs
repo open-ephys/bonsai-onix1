@@ -23,14 +23,13 @@ namespace OpenEphys.Onix1
     }
 
     /// <summary>
-    /// Provides an abstract base class for configuration operators responsible for
-    /// registering a single device within the internal device manager.
+    /// Abstract base for configuration operators responsible for registering a single device within the
+    /// internal device manager.
     /// </summary>
     /// <remarks>
-    /// ONI devices usually require a specific sequence of configuration and parameterization
-    /// steps before they can be interacted with. The <see cref="SingleDeviceFactory"/>
-    /// provides a modular abstraction allowing flexible assembly and sequencing of
-    /// of all device-specific configuration code.
+    /// ONI devices usually require a specific sequence of configuration and parameterization steps before
+    /// they can be interacted with. The <see cref="SingleDeviceFactory"/> provides a modular abstraction
+    /// allowing flexible assembly and sequencing of of all device-specific configuration code.
     /// </remarks>
     public abstract class SingleDeviceFactory : DeviceFactory, IDeviceConfiguration
     {
@@ -47,9 +46,11 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <remarks>
         /// The device name provides a unique, human-readable identifier that is used to link software
-        /// elements for configuration, control, and data streaming to hardware. This is often a one-to-one
-        /// representation of a single <see cref="oni.Device"/>, but can also represent abstract ONI device
-        /// aggregates or virtual devices.
+        /// elements for configuration, control, and data streaming to hardware. For instance, it can be used
+        /// to link configuration operators to data streaming operators within a workflow.This value is
+        /// usually not set manually, but is assigned in a <see cref="MultiDeviceFactory"/> to correspond to a
+        /// fixed address with a piece of hardware such as a headstage. This address is used for software
+        /// communication.
         /// </remarks>
         [Description(DeviceNameDescription)]
         [Category(ConfigurationCategory)]
@@ -59,8 +60,11 @@ namespace OpenEphys.Onix1
         /// Gets or sets the device address.
         /// </summary>
         /// <remarks>
-        /// This address provides a fully-qualified location of a device within the device table. This is often a one-to-one
-        /// representation of a <see cref="oni.Device.Address"/>, but can also represent abstract device addresses.
+        /// This is a fully-qualified numerical hardware address of a device within the device table produced
+        /// by an <see href="https://open-ephys.github.io/ONI/">Open Neuro Interface (ONI)</see> compliant
+        /// acquisition system. This value is usually not set manually, but is assigned in a <see
+        /// cref="MultiDeviceFactory"/> to correspond to a fixed address with a piece of hardware such as a
+        /// headstage. This address is used for hardware communication.
         /// </remarks>
         [Description(DeviceAddressDescription)]
         [Category(ConfigurationCategory)]
@@ -70,8 +74,9 @@ namespace OpenEphys.Onix1
         /// Gets or sets the device identity.
         /// </summary>
         /// <remarks>
-        /// This type provides a device identity to each device within the device table. This is often a one-to-one
-        /// representation of a a <see cref="oni.Device.ID"/>, but can also represent abstract device identities.
+        /// This type provides a device identity to each device within the device table produced by an <see
+        /// href="https://open-ephys.github.io/ONI/">Open Neuro Interface (ONI)</see> compliant acquisition
+        /// system.
         /// </remarks>
         [Browsable(false)]
         public Type DeviceType { get; }

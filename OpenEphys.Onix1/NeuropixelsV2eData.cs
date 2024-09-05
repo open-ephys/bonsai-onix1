@@ -11,6 +11,10 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Produces a sequence of <see cref="NeuropixelsV2eDataFrame"/> objects from a NeuropixelsV2e headstage.
     /// </summary>
+    /// <remarks>
+    /// This data IO operator must be linked to an appropriate configuration, such as a <see
+    /// cref="ConfigureNeuropixelsV2e"/>, using a shared <see cref="DeviceName"/>.
+    /// </remarks>
     [Description("Produces a sequence of NeuropixelsV2eDataFrame objects from a NeuropixelsV2e headstage.")]
     public class NeuropixelsV2eData : Source<NeuropixelsV2eDataFrame>
     {
@@ -24,12 +28,13 @@ namespace OpenEphys.Onix1
         /// Gets or sets the buffer size.
         /// </summary>
         /// <remarks>
-        /// This property determines the number of super-frames that are buffered before data is propagated. A super-frame consists of 384 
-        /// channels from the spike-band and 32 channels from the LFP band. If this value is set to 30, then 30 super-frames, along with 
-        /// corresponding clock values, will be collected and packed into each <see cref="NeuropixelsV2eDataFrame"/>. Because channels are 
-        /// sampled at 30 kHz, this is equivalent to 1 millisecond of data from each channel.
+        /// This property determines the number of samples that are collected from each of the 384 ephys
+        /// channels before data is propagated. For instance, if this value is set to 30, then 384x30 samples,
+        /// along with 30 corresponding clock values, will be collected and packed into each <see
+        /// cref="NeuropixelsV2eDataFrame"/>. Because channels are sampled at 30 kHz, this is equivalent to 1
+        /// millisecond of data from each channel.
         /// </remarks>
-        [Description("The number of samples collected for each channel that are used to create a single NeuropixelsV2eDataFrame.")]
+        [Description("The number of samples collected from each channel that are used to create a single NeuropixelsV2eDataFrame.")]
         [Category(DeviceFactory.ConfigurationCategory)]
         public int BufferSize { get; set; } = 30;
 
@@ -41,9 +46,9 @@ namespace OpenEphys.Onix1
         public NeuropixelsV2Probe ProbeIndex { get; set; }
 
         /// <summary>
-        /// Generates a sequence of <see cref="NeuropixelsV2eDataFrame"/> objects.
+        /// Generates a sequence of <see cref="NeuropixelsV2eDataFrame"/>s.
         /// </summary>
-        /// <returns>A sequence of <see cref="NeuropixelsV2eDataFrame"/> objects.</returns>
+        /// <returns>A sequence of <see cref="NeuropixelsV2eDataFrame"/>s.</returns>
         public unsafe override IObservable<NeuropixelsV2eDataFrame> Generate()
         {
             var bufferSize = BufferSize;

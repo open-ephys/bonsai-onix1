@@ -10,8 +10,8 @@ namespace OpenEphys.Onix1
     /// Produces a sequence of memory usage data frames.
     /// </summary>
     /// <remarks>
-    /// This data stream operator must be linked to an appropriate configuration, such as a <see cref="ConfigureMemoryMonitor"/>,
-    /// in order to stream data.
+    /// This data IO operator must be linked to an appropriate configuration, such as a <see
+    /// cref="ConfigureMemoryMonitor"/>, using a shared <see cref="DeviceName"/>.
     /// </remarks>
     [Description("Produces a sequence of memory usage data frames.")]
     public class MemoryMonitorData : Source<MemoryMonitorDataFrame>
