@@ -6,6 +6,19 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Configures an ONIX breakout board.
     /// </summary>
+    /// <remarks>
+    /// The ONIX breakout board is a general purpose interface for neural data acquisition. It provides the
+    /// following features on the headstage:
+    /// <list type="bullet">
+    /// <item><description>2x general purpose input ports for headstage, miniscopes, etc.</description></item>
+    /// <item><description>12x configurable ±10V analog input/output channels sampled/updated at 100 kHz per
+    /// channel.</description></item>
+    /// <item><description>8x digital inputs</description></item>
+    /// <item><description>8x digital outputs</description></item>
+    /// <item><description>Hardware time-stamped buttons for manual event logging</description></item>
+    /// <item><description>Indicator LEDs with dark mode for light-sensitive applications.</description></item>
+    /// </list>
+    /// </remarks>
     [Description("Configures an ONIX breakout board.")]
     public class ConfigureBreakoutBoard : MultiDeviceFactory
     {

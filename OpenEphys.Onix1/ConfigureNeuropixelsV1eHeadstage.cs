@@ -7,7 +7,21 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Configures a NeuropixelsV1e headstage on the specified port.
     /// </summary>
-    [Description("Configures a NeuropixelsV1e headstage on the specified port.")]
+    /// <remarks>
+    /// The NeuropixeslV1e Headstage is a 0.68g serialized, multifunction headstage for small animals. This
+    /// headstage is designed to function with IMEC Neuropixels V1 probes. It provides the following features:
+    /// <list type="bullet">
+    /// <item><description>Support for a single IMEC Neuropixels 1.0 probe that features:
+    /// <list type="bullet">
+    /// <item><description>A single 1 cm long shank probe with a 70 x 24 µm shank cross-section.</description></item>
+    /// <item><description>960-electrode low-impedance TiN electrodes.</description></item>
+    /// <item><description>384 parallel, dual-band (AP, LFP), low-noise recording channels.</description></item>
+    /// </list>
+    /// </description></item>
+    /// <item><description>A BNO055 9-axis IMU for real-time, 3D orientation tracking.</description></item>
+    /// </list>
+    /// </remarks>
+    [Description("Configures a NeuropixelsV1e headstage.")]
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV1eHeadstageEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureNeuropixelsV1eHeadstage : MultiDeviceFactory
     {
