@@ -13,18 +13,18 @@ namespace OpenEphys.Onix1
     /// Encapsulates a single ONI context and orchestrates interaction with ONI-compliant hardware.
     /// </summary>
     /// <remarks>
-    /// The <see href="https://open-ephys.github.io/ONI/">open neuro interface (ONI)</see> hardware
+    /// The <see href="https://open-ephys.github.io/ONI/">Open Neuro Interface (ONI)</see> hardware
     /// specification and API describe a general purpose acquisition system architecture and programming
     /// interface for communication with a host PC. One requirement of ONI is that a host application must
     /// hold a "context" that contains handles for hardware communication, data acquisition parameters, etc.
-    /// for a particular hardware controller, such as the ONIX PCIe card. <see cref="ContextTask"/> fulfils
+    /// for a particular hardware controller, such as the ONIX PCIe card. <see cref="ContextTask"/> fulfills
     /// this role for this library. Additionally, once data acquisition is started by the <see
     /// cref="StartAcquisition"/> operator, <see cref="ContextTask"/> performs the following:
     /// <list type="bullet">
     /// <item><description>It automatically reads and distributes data from hardware using a dedicated acquisition
     /// thread.</description></item>
     /// <item><description>It allows data to be written to devices that accept them.</description></item>
-    /// <item><description>It allows reading and writing to device registers to control their operation (e.g. <see
+    /// <item><description>It allows reading from and writing to device registers to control their operation (e.g. <see
     /// cref="ConfigureBno055.Enable"/> or <see
     /// cref="ConfigureRhd2164.AnalogHighCutoff"/>).</description></item>
     /// </list>
@@ -80,11 +80,13 @@ namespace OpenEphys.Onix1
         /// Initializes a new instance of the <see cref="ContextTask"/> class.
         /// </summary>
         /// <param name="driver"> A string specifying the device driver used to control hardware. </param>
-        /// <param name="index">The index of the host interconnect between the ONI controller and host computer. For instance, 0 could
-        /// correspond to a particular PCIe slot or USB port as enumerated by the operating system and translated by an
-        /// <see href="https://open-ephys.github.io/ONI/api/liboni/driver-translators/index.html#drivers">ONI device driver translator</see>. 
-        /// A value of -1 will attempt to open the default hardware index and is useful if there is only a single ONI controller
-        /// managed by the specified <paramref name="driver"/> in the host computer.</param>
+        /// <param name="index">The index of the host interconnect between the ONI controller and host
+        /// computer. For instance, 0 could correspond to a particular PCIe slot or USB port as enumerated by
+        /// the operating system and translated by an <see
+        /// href="https://open-ephys.github.io/ONI/api/liboni/driver-translators/index.html#drivers">ONI
+        /// device driver translator</see>. A value of -1 will attempt to open the default hardware index and
+        /// is useful if there is only a single ONI controller managed by the specified <paramref
+        /// name="driver"/> in the host computer.</param>
         internal ContextTask(string driver, int index)
         {
             groupedFrames = frameReceived.GroupBy(frame => frame.DeviceAddress).Replay();
@@ -123,7 +125,8 @@ namespace OpenEphys.Onix1
         /// Gets the system clock rate in Hz.
         /// </summary>
         /// <remarks>
-        /// This describes the frequency of the clock governing the ONI controller.
+        /// This property describes the frequency of the clock governing the ONI controller. The value of this
+        /// property is determined during hardware initialization.
         /// </remarks>
         public uint SystemClockHz { get; private set; }
 
@@ -131,55 +134,68 @@ namespace OpenEphys.Onix1
         /// Gets the acquisition clock rate in Hz.
         /// </summary>
         /// <remarks>
-        /// This describes the frequency of the clock used to drive the ONI controller's acquisition clock
-        /// which is used to generate the clock counter values, <see cref="BufferedDataFrame.Clock"/> and <see
-        /// cref="DataFrame.Clock"/>, associated with the data frames produced by data operator in this
-        /// library (e.g. <see cref="NeuropixelsV1eData"/> or <see cref="Bno055Data"/>).
+        /// This property describes the frequency of ONI controller's acquisition clock, which is used to
+        /// generate the <see cref="DataFrame.Clock">Clock</see> counter value included in all data frames
+        /// produced by Data IO operators in this library (e.g. <see cref="NeuropixelsV1eData"/> or <see
+        /// cref="Bno055Data"/>). The value of this property is determined during hardware initialization.
         /// </remarks>
         public uint AcquisitionClockHz { get; private set; }
 
         /// <summary>
-        /// Gets the maximal size of a frame produced by a call to <see cref="oni.Context.ReadFrame"/> in
-        /// bytes.
+        /// Gets the size of the largest data frame produced by any device with the acquisition system in bytes.
         /// </summary>
         /// <remarks>
-        /// This number is the maximum sized frame that can be produced across every device within the device
-        /// table that generates data.
+        /// This number describes the the size, in bytes, of the largest <see
+        /// href="https://open-ephys.github.io/ONI/hw-spec/controller.html#data-frames">ONI Data Frame</see>
+        /// produced by any device within the current device table that generates data. Therefore, it also
+        /// defines the lower bound for the value of <see cref="BlockReadSize"/>. The value of this property
+        /// is determined during hardware initialization.
         /// </remarks>
         public uint MaxReadFrameSize { get; private set; }
 
         /// <summary>
-        /// Gets the maximal size consumed by a call to <see cref="oni.Context.Write"/> in bytes. 
+        /// Gets the size of the largest data frame consumed by any device with the acquisition system in bytes.
         /// </summary>
         /// <remarks>
-        /// This number is the maximum sized frame that can be consumed across every device within the device table
-        /// that accepts write data.
+        /// This number describes the the size, in bytes, of the largest <see
+        /// href="https://open-ephys.github.io/ONI/hw-spec/controller.html#data-frames">ONI Data Frame</see>
+        /// consumed by any device within the current device table that accepts data. Therefore, it also
+        /// defines the lower bound for the value of <see cref="BlockWriteSize"/>. The value of this property
+        /// is determined during hardware initialization.
         /// </remarks>
         public uint MaxWriteFrameSize { get; private set; }
 
         /// <summary>
-        /// Gets the device table containing the device hierarchy governed by the internal <see
-        /// cref="oni.Context"/>.
+        /// Gets the device table containing the device hierarchy of the acquisition system.
         /// </summary>
         /// <remarks>
-        /// This dictionary maps a fully-qualified <see cref="oni.Device.Address"/> to an <see
-        /// cref="oni.Device"/> instance.
+        /// This dictionary provides access to the <see
+        /// href="https://open-ephys.github.io/ONI/hw-spec/dev_table.html">ONI Device Table</see>, which maps
+        /// a set of fully-qualified <see
+        /// href="https://open-ephys.github.io/ONI/hw-spec/dev_table.html#dev-address"> ONI Device
+        /// Addresses</see> to a corresponding set of <see
+        /// href="https://open-ephys.github.io/ONI/hw-spec/devices.html#dev-desc">ONI Device
+        /// Descriptors</see>. The value of this property is determined during hardware initialization.
         /// </remarks>
         public Dictionary<uint, oni.Device> DeviceTable { get; private set; }
 
         internal IObservable<IGroupedObservable<uint, oni.Frame>> GroupedFrames => groupedFrames;
 
         /// <summary>
-        /// Gets the sequence of <see cref="oni.Frame"/>s produced by a particular device.
+        /// Gets the sequence of <see
+        /// href="https://open-ephys.github.io/ONI/hw-spec/controller.html#data-frames">ONI Data Frames</see>
+        /// produced by a particular device.
         /// </summary>
-        /// <param name="deviceAddress">The fully qualified <see cref="oni.Device.Address"/> that will produce
-        /// the frame sequence.</param>
+        /// <param name="deviceAddress">The fully-qualified <see
+        /// href="https://open-ephys.github.io/ONI/hw-spec/dev_table.html#dev-address"> ONI Device
+        /// Address</see> that will produce the frame sequence.</param>
         /// <returns>The frame sequence produced by the device at address <paramref
         /// name="deviceAddress"/>.</returns>
         public IObservable<oni.Frame> GetDeviceFrames(uint deviceAddress)
         {
             return groupedFrames.Where(deviceFrames => deviceFrames.Key == deviceAddress).Merge();
         }
+
 
         void AssertConfigurationContext()
         {
@@ -388,12 +404,12 @@ namespace OpenEphys.Onix1
         #region oni.Context Properties
 
         /// <summary>
-        /// Gets the data acquisition state. 
+        /// Gets the data acquisition run state.
         /// </summary>
         /// <remarks>
-        /// A value of true indicates that data is being acquired by the host computer from the host controller.
-        /// False indicates that the host computer is not collecting data from the controller and that the controller
-        /// memory remains cleared.
+        /// A value of true indicates that data is being acquired by the host computer from the host
+        /// controller. False indicates that the host computer is not collecting data from the controller and
+        /// that the controller memory remains cleared.
         /// </remarks>
         internal bool Running => ctx.Running;
 
@@ -404,28 +420,15 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets the number of bytes read by the device driver access to the read channel.
+        /// Gets the number of bytes read per cycle of the <see cref="ContextTask"/>'s acquisition thread.
         /// </summary>
-        /// <remarks>
-        /// This option allows control over a fundamental trade-off between closed-loop response time and overall bandwidth. 
-        /// A minimal value, which is determined by <see cref="MaxReadFrameSize"/>, will provide the lowest response latency,
-        /// so long as data can be cleared from hardware memory fast enough to prevent buffering. Larger values will reduce system
-        /// call frequency, increase overall bandwidth, and may improve processing performance for high-bandwidth data sources.
-        /// The optimal value depends on the host computer and hardware configuration and must be determined via testing (e.g.
-        /// using <see cref="MemoryMonitorData"/>).
-        /// </remarks>
+        /// <inheritdoc cref = "StartAcquisition.ReadSize"/>
         public int BlockReadSize => ctx.BlockReadSize;
 
         /// <summary>
         /// Gets the number of bytes that are pre-allocated for writing data to hardware.
         /// </summary>
-        /// <remarks>
-        /// This value determines the amount of memory pre-allocated for calls to <see cref="oni.Context.Write(uint, IntPtr, int)"/>,
-        /// <see cref="oni.Context.Write{T}(uint, T)"/>, and <see cref="oni.Context.Write{T}(uint, T[])"/>. A larger size will reduce
-        /// the average amount of dynamic memory allocation system calls but increase the cost of each of those calls. The minimum
-        /// size of this option is determined by <see cref="MaxWriteFrameSize"/>. The effect on real-timer performance is not as
-        /// large as that of <see cref="BlockReadSize"/>.
-        /// </remarks>
+        /// <inheritdoc cref = "StartAcquisition.WriteSize"/>
         public int BlockWriteSize => ctx.BlockWriteSize;
 
         // Port A and Port B each have a bit in PORTFUNC
