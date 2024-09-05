@@ -10,14 +10,14 @@ namespace OpenEphys.Onix1
     /// Starts data acquisition and frame distribution on a <see cref="ContextTask"/>.
     /// </summary>
     /// <remarks>
-    /// The <see href="https://open-ephys.github.io/ONI/">open neuro interface (ONI)</see> hardware
+    /// The <see href="https://open-ephys.github.io/ONI/">Open Neuro Interface (ONI)</see> hardware
     /// specification and API describe a general purpose acquisition system architecture and programming
     /// interface for communication with a host PC. One requirement of ONI is a sequence of events that must
     /// occur in order to start synchronized data acquisition. <see cref="StartAcquisition"/> performs these
     /// required actions on one or more <see cref="ContextTask">ContextTasks</see> provided in its input
     /// sequence. Once acquisition is started, devices managed by a particular <see cref="ContextTask"/> will
     /// start to produce data in a format called an <see
-    /// href="https://open-ephys.github.io/ONI/api/liboni/oni.html#c.oni_frame_t">ONI frame</see>. The output
+    /// href="https://open-ephys.github.io/ONI/hw-spec/controller.html#data-frames">ONI Data Frame</see>. The output
     /// sequence of this operator is therefore a <see cref="IGroupedObservable{TKey, TElement}"/>, where
     /// <list type="table">
     /// <item>
@@ -34,9 +34,9 @@ namespace OpenEphys.Onix1
     /// </item>
     /// </list>
     /// These pre-sorted frame sequences can be interpreted by downstream Data I/O operators (e.g. <see
-    /// cref="BreakoutAnalogInput"/> or <see cref="Bno055Data"/>) that convert ONI frames, which consist of
-    /// byte arrays with a header and data block, into data types that are are more amenable to processing
-    /// within Bonsai workflows.
+    /// cref="BreakoutAnalogInput"/> or <see cref="Bno055Data"/>) that convert <see
+    /// href="https://open-ephys.github.io/ONI/hw-spec/controller.html#data-frames">ONI Data Frames</see> into
+    /// data types that are are more amenable to processing within Bonsai workflows.
     /// </remarks>
     [Description("Starts data acquisition and frame distribution on a ContextTask.")]
     public class StartAcquisition : Combinator<ContextTask, IGroupedObservable<uint, oni.Frame>>
