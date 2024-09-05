@@ -15,8 +15,8 @@ namespace OpenEphys.Onix1
     /// channel.</description></item>
     /// <item><description>8x digital inputs</description></item>
     /// <item><description>8x digital outputs</description></item>
-    /// <item><description>Time-stamped buttons for manual event logging</description></item>
-    /// <item><description>Dark mode for light-sensitive applications.</description></item>
+    /// <item><description>Hardware time-stamped buttons for manual event logging</description></item>
+    /// <item><description>Indicator LEDs with dark mode for light-sensitive applications.</description></item>
     /// </list>
     /// </remarks>
     [Description("Configures an ONIX breakout board.")]

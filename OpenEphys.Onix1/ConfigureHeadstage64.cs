@@ -9,8 +9,8 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// Headstage-64 is a 1.5g serialized, multifunction headstage for small animals. This headstage is
-    /// designed to function with tetrode microdrives. Alternatively it can be used with other passive probes
-    /// (e.g. silicon arrays, EEG/ECOG arrays, etc.). It provides the following features on the headstage:
+    /// designed to function with passive probes such as tetrode microdrives, silicon arrays, EEG/ECOG arrays,
+    /// etc. It provides the following features:
     /// <list type="bullet">
     /// <item><description>64 analog ephys channels and 3 auxiliary channels sampled at 30 kHz per
     /// channel.</description></item>

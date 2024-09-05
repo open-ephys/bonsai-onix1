@@ -7,11 +7,10 @@ namespace OpenEphys.Onix1
     /// Configures a NeuropixelsV2eBeta headstage on the specified port.
     /// </summary>
     /// <remarks>
-    /// Headstage-NeuropixelsV2e-Beta is a 0.64g serialized, multifunction headstage for small animals. This
-    /// headstage is designed to function with IMEC Neuropixels V2Beta probes. It provides the following features
-    /// on the headstage:
+    /// The NeuropixelsV2e-Beta Headstage is a 0.64g serialized, multifunction headstage for small animals. This
+    /// headstage is designed to function with IMEC Neuropixels V2Beta probes. It provides the following features:
     /// <list type="bullet">
-    /// <item><description>Dual IMEC Neuropixels 2.0-Beta probes, each of which features:
+    /// <item><description>Support for dual IMEC Neuropixels 2.0-Beta probes, each of which features:
     /// <list type="bullet">
     /// <item><description>4x silicon shanks with a 70 x 24 µm cross-section.</description></item>
     /// <item><description>1280 electrodes low-impedance TiN electrodes per shank.</description></item>
