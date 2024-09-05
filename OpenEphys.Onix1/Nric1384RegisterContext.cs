@@ -201,7 +201,6 @@ namespace OpenEphys.Onix1
 
                 for (int j = 0; j < 2; j++)
                 {
-
                     var baseBytes = BitArrayToBytes(BaseConfigs[i]);
 
                     WriteByte(Nric1384.SR_LENGTH1, (uint)baseBytes.Length % 0x100);

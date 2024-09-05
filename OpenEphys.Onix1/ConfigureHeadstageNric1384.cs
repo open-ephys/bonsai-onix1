@@ -5,20 +5,25 @@ using System.Threading;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that configures a Nric1384 headstage on the specified port.
+    /// Configures a Nric1384 headstage on the specified port.
     /// </summary>
     /// <remarks>
-    /// Headstage-Nric1384 is a 2.5g serialized, multifunction headstage for small animals built around the IMEC Nric1384 bioacquisition chip.
-    /// This headstage is designed to function with passive probes of the user's choosing (e.g. silicon probe arrays, high-density
-    /// tetrode drives, etc). It provides the following features:
+    /// The Nric1384 Headstage is a 2.5g serialized, multifunction headstage for small animals built around the
+    /// IMEC Nric1384 bioacquisition chip. This headstage is designed to function with passive probes of the
+    /// user's choosing (e.g. silicon probe arrays, high-density tetrode drives, etc). It provides the
+    /// following features:
     /// <list type="bullet">
-    /// <item><description>384 analog ephys channels sampled at 30 kHz per channel and exposed via an array of 12x ultra-high density Molex 203390-0323 quad-row connectors. </description></item>
-    /// <item><description>A BNO055 9-axis IMU for real-time, 3D orientation tracking at 100 Hz.</description></item>
-    /// <item><description>Two TS4231 light to digital converters for real-time, 3D position tracking with HTC Vive base stations.</description></item>
-    /// <item><description>A single electrical stimulator (current controlled, +/-15V compliance, automatic electrode discharge).</description></item>
+    /// <item><description>384 analog ephys channels sampled at 30 kHz per channel and exposed via an array of
+    /// 12x ultra-high density Molex 203390-0323 quad-row connectors. </description></item>
+    /// <item><description>A BNO055 9-axis IMU for real-time, 3D orientation tracking at 100
+    /// Hz.</description></item>
+    /// <item><description>Two TS4231 light to digital converters for real-time, 3D position tracking with HTC
+    /// Vive base stations.</description></item>
+    /// <item><description>A single electrical stimulator (current controlled, +/-15V compliance, automatic
+    /// electrode discharge).</description></item>
     /// </list>
     /// </remarks>
-    [Description("Configures a NeuropixelsV1e headstage.")]
+    [Description("Configures a Nric1384 Headstage headstage.")]
     public class ConfigureHeadstageNric1384 : MultiDeviceFactory
     {
         PortName port;
