@@ -47,7 +47,7 @@ namespace OpenEphys.Onix1
         /// <remarks>
         /// The device name provides a unique, human-readable identifier that is used to link software
         /// elements for configuration, control, and data streaming to hardware. For instance, it can be used
-        /// to link configuration operators to data streaming operators within a workflow.This value is
+        /// to link configuration operators to data IO operators within a workflow. This value is
         /// usually not set manually, but is assigned in a <see cref="MultiDeviceFactory"/> to correspond to a
         /// fixed address with a piece of hardware such as a headstage. This address is used for software
         /// communication.

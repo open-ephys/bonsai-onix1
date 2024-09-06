@@ -11,7 +11,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// This configuration operator can be linked to a data IO operator, such as <see cref="HeartbeatData"/>,
-    /// using a shared <see cref="SingleDeviceFactory.DeviceName"/>.
+    /// using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Configures a heartbeat device.")]
     public class ConfigureHeartbeat : SingleDeviceFactory

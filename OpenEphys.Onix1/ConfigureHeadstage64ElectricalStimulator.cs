@@ -7,9 +7,9 @@ namespace OpenEphys.Onix1
     /// Configures a headstage-64 onboard electrical stimulator.
     /// </summary>
     /// <remarks>
-    /// This configuration operator can be linked to a trigger operator, such as <see
-    /// cref="Headstage64ElectricalStimulatorTrigger"/>, using a shared <see
-    /// cref="SingleDeviceFactory.DeviceName"/>.
+    /// This configuration operator can be linked to a data IO operator, such as <see
+    /// cref="Headstage64ElectricalStimulatorTrigger"/>, using a shared
+    /// <c>DeviceName</c>.
     /// </remarks>
     [Description("Configures a headstage-64 onboard electrical stimulator.")]
     public class ConfigureHeadstage64ElectricalStimulator : SingleDeviceFactory

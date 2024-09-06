@@ -11,7 +11,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// This data IO operator must be linked to an appropriate configuration operator, such as a <see
-    /// cref="ConfigureBno055"/>, using a shared <see cref="DeviceName"/>.
+    /// cref="ConfigureBno055"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Produces a sequence of 3D orientation measurements produced by a Bno055 9-axis inertial measurement unit.")]
     public class Bno055Data : Source<Bno055DataFrame>

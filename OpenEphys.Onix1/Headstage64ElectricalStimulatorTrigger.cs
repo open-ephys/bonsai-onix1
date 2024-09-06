@@ -14,8 +14,8 @@ namespace OpenEphys.Onix1
     /// Controls a headstage-64 onboard electrical stimulus sequencer.
     /// </summary>
     /// <remarks>
-    /// This trigger operator must be linked to an appropriate configuration, such as a <see
-    /// cref="ConfigureHeadstage64ElectricalStimulator"/>, using a shared <see cref="DeviceName"/>.
+    /// This data IO operator must be linked to an appropriate configuration, such as a <see
+    /// cref="ConfigureHeadstage64ElectricalStimulator"/>, using a shared <c>DeviceName</c>.
     /// Headstage-64's onboard electrical stimulator can be used to deliver current controlled
     /// micro-stimulation through a contact on the probe connector on the bottom of the headstage or the
     /// corresponding contact on a compatible electrode interface board.

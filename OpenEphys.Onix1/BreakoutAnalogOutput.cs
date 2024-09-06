@@ -12,7 +12,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// This data IO operator must be linked to an appropriate configuration, such as a <see
-    /// cref="ConfigureBreakoutAnalogIO"/>, using a shared <see cref="DeviceName"/>.
+    /// cref="ConfigureBreakoutAnalogIO"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Sends analog output data to an ONIX breakout board.")]
     public class BreakoutAnalogOutput : Sink<Mat>

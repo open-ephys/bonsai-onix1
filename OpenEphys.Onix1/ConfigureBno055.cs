@@ -8,7 +8,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// This configuration operator can be linked to a data IO operator, such as <see cref="Bno055Data"/>,
-    /// using a shared <see cref="SingleDeviceFactory.DeviceName"/>.
+    /// using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Configures a Bosch Bno055 9-axis inertial measurement unit.")]
     [Editor("OpenEphys.Onix1.Design.Bno055Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]

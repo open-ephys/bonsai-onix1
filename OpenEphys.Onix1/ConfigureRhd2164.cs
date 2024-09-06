@@ -8,7 +8,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// This configuration operator can be linked to a data IO operator, such as <see
-    /// cref="Rhd2164Data"/>, using a shared <see cref="SingleDeviceFactory.DeviceName"/>.
+    /// cref="Rhd2164Data"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Configures a Rhd2164 device.")]
     public class ConfigureRhd2164 : SingleDeviceFactory

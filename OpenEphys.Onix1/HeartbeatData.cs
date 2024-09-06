@@ -11,7 +11,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// This data IO operator must be linked to an appropriate configuration, such as a <see
-    /// cref="ConfigureHeartbeat"/>, using a shared <see cref="DeviceName"/>.
+    /// cref="ConfigureHeartbeat"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Produces a sequence of heartbeat data frames.")]
     public class HeartbeatData : Source<HeartbeatDataFrame>

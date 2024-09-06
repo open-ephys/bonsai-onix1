@@ -9,8 +9,8 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// This configuration operator can be linked to data IO operators, such as <see
-    /// cref="BreakoutAnalogInput"/> and <see cref="BreakoutAnalogOutput"/>, using a shared <see
-    /// cref="SingleDeviceFactory.DeviceName"/>.
+    /// cref="BreakoutAnalogInput"/> and <see cref="BreakoutAnalogOutput"/>, using a shared
+    /// <c>DeviceName</c>.
     /// </remarks>
     [TypeConverter(typeof(SortedPropertyConverter))]
     [Description("Configures the ONIX breakout board's analog inputs and outputs.")]

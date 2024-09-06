@@ -9,7 +9,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// This configuration operator can be linked to a data IO operator, such as <see
-    /// cref="TS4231V1PositionData"/> using a shared <see cref="SingleDeviceFactory.DeviceName"/> to stream 3D
+    /// cref="TS4231V1PositionData"/>, using a shared <c>DeviceName</c> to stream 3D
     /// position data from light-house receivers when SteamVR V1 base stations have been installed above the
     /// arena.
     /// </remarks>

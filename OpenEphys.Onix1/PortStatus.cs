@@ -11,7 +11,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// This data IO operator must be linked to an appropriate headstage or miniscope configuration (e.g. <see
-    /// cref="ConfigureNeuropixelsV2eBeta"/>) using a shared <see cref="DeviceName"/>.
+    /// cref="ConfigureNeuropixelsV2eBeta"/>) using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Produces a sequence of port status information.")]
     public class PortStatus : Source<PortStatusFrame>

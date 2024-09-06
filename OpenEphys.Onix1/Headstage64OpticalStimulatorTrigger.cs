@@ -14,8 +14,8 @@ namespace OpenEphys.Onix1
     /// Controls a headstage-64 onboard optical stimulus sequencer.
     /// </summary>
     /// <remarks>
-    /// This trigger operator must be linked to an appropriate configuration, such as a <see
-    /// cref="ConfigureHeadstage64OpticalStimulator"/>, using a shared <see cref="DeviceName"/>.
+    /// This data IO operator must be linked to an appropriate configuration, such as a <see
+    /// cref="ConfigureHeadstage64OpticalStimulator"/>, using a shared <c>DeviceName</c>.
     /// Headstage-64's onboard optical stimulator can be used to drive current through laser diodes or LEDs
     /// connected to two contacts on the probe connector on the bottom of the headstage or the corresponding
     /// contacts on a compatible electrode interface board.

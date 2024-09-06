@@ -11,7 +11,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// This data IO operator must be linked to an appropriate configuration, such as a <see
-    /// cref="ConfigureMemoryMonitor"/>, using a shared <see cref="DeviceName"/>.
+    /// cref="ConfigureMemoryMonitor"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Produces a sequence of memory usage data frames.")]
     public class MemoryMonitorData : Source<MemoryMonitorDataFrame>

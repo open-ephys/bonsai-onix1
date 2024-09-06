@@ -11,7 +11,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// This data IO operator must be linked to an appropriate configuration, such as a <see
-    /// cref="ConfigureNeuropixelsV2eBno055"/>, using a shared <see cref="DeviceName"/>.
+    /// cref="ConfigureNeuropixelsV2eBno055"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Produces a sequence of Bno055DataFrame objects from a NeuropixelsV2e headstage.")]
     public class NeuropixelsV2eBno055Data : Source<Bno055DataFrame>

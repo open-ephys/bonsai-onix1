@@ -12,7 +12,7 @@ namespace OpenEphys.Onix1
     /// <remarks>
     /// <para>
     /// This data IO operator must be linked to an appropriate configuration, such as a <see
-    /// cref="ConfigureTS4231V1"/>, using a shared <see cref="DeviceName"/>.
+    /// cref="ConfigureTS4231V1"/>, using a shared <c>DeviceName</c>.
     /// </para>
     /// <para>
     /// The data produced by this class contains individual base station pulse/sweep codes and timing

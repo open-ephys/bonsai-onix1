@@ -8,7 +8,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// This configuration operator can be linked to a data IO operator, such as <see
-    /// cref="NeuropixelsV2eBno055Data"/>, using a shared <see cref="SingleDeviceFactory.DeviceName"/>.
+    /// cref="NeuropixelsV2eBno055Data"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eBno055Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a NeuropixelsV2eBno055 device.")]
