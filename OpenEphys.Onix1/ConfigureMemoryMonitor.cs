@@ -8,19 +8,24 @@ namespace OpenEphys.Onix1
     /// Configures a hardware memory monitor.
     /// </summary>
     /// <remarks>
-    /// The memory monitor produces periodic snapshots of the system's first in, first out (FIFO) data buffer.
-    /// This can be useful for:
+    /// This configuration operator can be linked to a data IO operator, such as <see
+    /// cref="MemoryMonitorData"/>, using a shared <c>DeviceName</c>.The memory
+    /// monitor produces periodic snapshots of the system's first in, first out (FIFO) data buffer. This can
+    /// be useful for:
     /// <list type="bullet">
     /// <item>
-    /// <description>Ensuring that data is being read by the host PC quickly enough to prevent real-time delays or overflows.
-    /// In the case that the PC is not keeping up with data collection, FIFO memory use will increase monotonically.</description>
+    /// <description>Ensuring that data is being read by the host PC quickly enough to prevent real-time
+    /// delays or overflows. In the case that the PC is not keeping up with data collection, FIFO memory use
+    /// will increase monotonically.</description>
     /// </item>
     /// <item>
-    /// <description>Tuning the value of <see cref="StartAcquisition.ReadSize"/> to optimize real-time performance.
-    /// For optimal real-time performance, <see cref="StartAcquisition.ReadSize"/> should be as small as possible and the FIFO should be bypassed
-    /// (memory usage should remain at 0). However, these requirements are in conflict. The memory monitor provides a way to find the minimal value of
-    /// value of <see cref="StartAcquisition.ReadSize"/> that does not result in excessive FIFO data buffering. This tradeoff will depend on the
-    /// bandwidth of data being acquired, the performance of the host PC, and downstream real-time processing.</description>
+    /// <description>Tuning the value of <see cref="StartAcquisition.ReadSize"/> to optimize real-time
+    /// performance. For optimal real-time performance, <see cref="StartAcquisition.ReadSize"/> should be as
+    /// small as possible and the FIFO should be bypassed (memory usage should remain at 0). However, these
+    /// requirements are in conflict. The memory monitor provides a way to find the minimal value of value of
+    /// <see cref="StartAcquisition.ReadSize"/> that does not result in excessive FIFO data buffering. This
+    /// tradeoff will depend on the bandwidth of data being acquired, the performance of the host PC, and
+    /// downstream real-time processing.</description>
     /// </item>
     /// </list>
     /// </remarks>

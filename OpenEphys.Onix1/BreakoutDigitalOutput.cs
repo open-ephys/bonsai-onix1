@@ -9,6 +9,10 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Sends digital output data to an ONIX breakout board.
     /// </summary>
+    /// <remarks>
+    /// This data IO operator must be linked to an appropriate configuration, such as a <see
+    /// cref="ConfigureBreakoutDigitalIO"/>, using a shared <c>DeviceName</c>.
+    /// </remarks>
     [Description("Sends digital output data to an ONIX breakout board.")]
     public class BreakoutDigitalOutput : Sink<BreakoutDigitalPortState>
     {

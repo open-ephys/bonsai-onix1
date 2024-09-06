@@ -7,7 +7,8 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Produces a sequence of Harp clock synchronization signals sent to the Harp input in the ONIX breakout board.
+    /// Produces a sequence of Harp clock synchronization signals sent to the Harp input in the ONIX breakout
+    /// board.
     /// </summary>
     /// <inheritdoc cref = "ConfigureHarpSyncInput"/>
     [Description("Produces a sequence of Harp clock synchronization signals sent to the Harp input in the ONIX breakout board.")]

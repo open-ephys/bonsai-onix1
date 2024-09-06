@@ -9,6 +9,10 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Configures a NeuropixelsV2eBeta device.
     /// </summary>
+    /// <remarks>
+    /// This configuration operator can be linked to a data IO operator, such as <see
+    /// cref="NeuropixelsV2eData"/>, using a shared <c>DeviceName</c>.
+    /// </remarks>
     [Description("Configures a NeuropixelsV2eBeta device.")]
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureNeuropixelsV2eBeta : SingleDeviceFactory, IConfigureNeuropixelsV2

@@ -42,8 +42,8 @@ namespace OpenEphys.Onix1
         /// Gets or sets a unique device group name.
         /// </summary>
         /// <remarks>
-        /// A human-readable identifier that is used as a prefix for 
-        /// the <see cref="SingleDeviceFactory.DeviceName"/> of each device in the the group. 
+        /// A human-readable identifier that is used as a prefix for the <see
+        /// cref="SingleDeviceFactory.DeviceName"/> of each device in the the group. 
         /// </remarks>
         [Description("The unique device group name.")]
         [Category(ConfigurationCategory)]

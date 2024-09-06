@@ -9,6 +9,10 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Produces a sequence of <see cref="Bno055DataFrame"/> objects from a NeuropixelsV1e headstage.
     /// </summary>
+    /// <remarks>
+    /// This data IO operator must be linked to an appropriate configuration, such as a <see
+    /// cref="ConfigureNeuropixelsV1eBno055"/>, using a shared <c>DeviceName</c>.
+    /// </remarks>
     [Description("Produces a sequence of Bno055DataFrame objects from a NeuropixelsV1e headstage.")]
     public class NeuropixelsV1eBno055Data : Source<Bno055DataFrame>
     {

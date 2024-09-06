@@ -7,12 +7,15 @@ using Bonsai;
 
 namespace OpenEphys.Onix1
 {
+    // TODO: Add data IO operators, update XML comment to link to them (<see cref="LoadTesterData"/>)
     /// <summary>
     /// Configures a load tester device.
     /// </summary>
     /// <remarks>
-    /// The load tester device can be configured to produce data at user-settable size and rate
-    /// to stress test various communication links and test closed-loop response latency.
+    /// This configuration operator can be linked to a data IO operator, such as LoadTesterData,
+    /// using a shared <c>DeviceName</c>. The load tester device can be configured
+    /// to produce data at user-settable size and rate to stress test various communication links and test
+    /// closed-loop response latency.
     /// </remarks>
     [Description("Configures a load testing device.")]
     public class ConfigureLoadTester : SingleDeviceFactory

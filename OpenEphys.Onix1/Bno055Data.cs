@@ -10,8 +10,8 @@ namespace OpenEphys.Onix1
     /// Produces a sequence of 3D orientation measurements produced by Bno055 9-axis inertial measurement unit.
     /// </summary>
     /// <remarks>
-    /// This data stream operator must be linked to an appropriate configuration, such as a <see cref="ConfigureBno055"/>,
-    /// in order to stream 3D orientation data.
+    /// This data IO operator must be linked to an appropriate configuration operator, such as a <see
+    /// cref="ConfigureBno055"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Produces a sequence of 3D orientation measurements produced by a Bno055 9-axis inertial measurement unit.")]
     public class Bno055Data : Source<Bno055DataFrame>

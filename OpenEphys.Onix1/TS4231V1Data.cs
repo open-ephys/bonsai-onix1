@@ -11,14 +11,15 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This data stream class must be linked to an appropriate configuration, such as a <see cref="ConfigureTS4231V1"/>,
-    /// in order to stream 3D position data.
+    /// This data IO operator must be linked to an appropriate configuration, such as a <see
+    /// cref="ConfigureTS4231V1"/>, using a shared <c>DeviceName</c>.
     /// </para>
     /// <para>
-    /// The data produced by this class contains individual base station pulse/sweep codes and timing information. These data provide
-    /// rapid updates that constrain the possible position of a sensor and therefore can be combined with orientation information
-    /// in a downstream predictive model (e.g. Kalman filter) for high-accuracy and robust position tracking. To produce naïve
-    /// position estimates, use the <see cref="TS4231V1PositionData"/> operator instead of this one.
+    /// The data produced by this class contains individual base station pulse/sweep codes and timing
+    /// information. These data provide rapid updates that constrain the possible position of a sensor and
+    /// therefore can be combined with orientation information in a downstream predictive model (e.g. Kalman
+    /// filter) for high-accuracy and robust position tracking. To produce naïve position estimates, use the
+    /// <see cref="TS4231V1PositionData"/> operator instead of this one.
     /// </para>
     /// </remarks>
     [Description("Produces a sequence of decoded optical signals produced by a pair of SteamVR V1 base stations.")]

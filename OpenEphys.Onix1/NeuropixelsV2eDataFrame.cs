@@ -39,9 +39,9 @@ namespace OpenEphys.Onix1
                 // The period of ADC data within data array is 36 words
                 var adcDataOffset = i * NeuropixelsV2e.FrameWords;
 
-                for (int k = 0; k < NeuropixelsV2e.ADCsPerProbe; k++)
+                for (int k = 0; k < NeuropixelsV2e.AdcsPerProbe; k++)
                 {
-                    amplifierBuffer[RawToChannel[k, i], index] = (ushort)(gainCorrection * amplifierData[ADCIndices[k] + adcDataOffset]);
+                    amplifierBuffer[RawToChannel[k, i], index] = (ushort)(gainCorrection * amplifierData[AdcIndicies[k] + adcDataOffset]);
                 }
             }
         }
@@ -50,7 +50,7 @@ namespace OpenEphys.Onix1
         // First dimension: data index
         // Second dimension: frame index within super frame
 
-        static readonly int[] ADCIndices = {
+        static readonly int[] AdcIndicies = {
             0, 1, 2,
             4, 5, 6,
             8, 9, 10,
