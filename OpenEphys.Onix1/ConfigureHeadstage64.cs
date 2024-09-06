@@ -81,6 +81,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets onboard electrical stimulator configuration.
         /// </summary>
+        /// <inheritdoc cref="ConfigureHeadstage64ElectricalStimulator"/>
         [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the ElectricalStimulator device in the headstage-64.")]
@@ -89,6 +90,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets onboard optical stimulator configuration.
         /// </summary>
+        /// <inheritdoc cref="ConfigureHeadstage64OpticalStimulator"/>
         [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the OpticalStimulator device in the headstage-64.")]
