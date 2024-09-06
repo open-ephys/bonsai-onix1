@@ -72,7 +72,7 @@ namespace OpenEphys.Onix1.Design
             {
                 NeuropixelsV2Probe.ProbeA => "Probe A",
                 NeuropixelsV2Probe.ProbeB => "Probe B",
-                _ => throw new ArgumentException("Invalid probe was specified.")
+                _ => "Invalid probe was specified."
             };
         }
 

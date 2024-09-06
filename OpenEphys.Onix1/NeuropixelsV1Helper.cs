@@ -20,14 +20,24 @@ namespace OpenEphys.Onix1
         /// <exception cref="InvalidOperationException"></exception>
         public static NeuropixelsV1eAdcCalibration ParseAdcCalibrationFile(StreamReader file)
         {
+            // TODO: "file" input argument should either be a FileStream or a path string. StreamReader is to
+            // general because cal data is always provided in a file and this function call expects to start
+            // from the beginning of the stream. This will require a change in the public API.
+
             if (file == null || file.EndOfStream)
             {
                 throw new ArgumentException("Incoming stream reader is not pointing to a valid ADC calibration file.");
             }
 
-            var adcSerialNumber = ulong.Parse(file.ReadLine());
+            string path = (file.BaseStream as FileStream)?.Name;
 
-            NeuropixelsV1eAdc[] adcs = new NeuropixelsV1eAdc[NeuropixelsV1e.AdcCount];
+            if (!ulong.TryParse(file.ReadLine(), out ulong adcSerialNumber))
+            {
+                throw new ArgumentException($"The calibration file {path} specified is " +
+                    $"incorrectly formatted.");
+            }
+
+            var adcs = new NeuropixelsV1eAdc[NeuropixelsV1e.AdcCount];
 
             for (var i = 0; i < NeuropixelsV1e.AdcCount; i++)
             {
@@ -64,12 +74,22 @@ namespace OpenEphys.Onix1
         /// <exception cref="InvalidOperationException"></exception>
         public static NeuropixelsV1eGainCorrection ParseGainCalibrationFile(StreamReader file, NeuropixelsV1Gain apGain, NeuropixelsV1Gain lfpGain)
         {
+            // TODO: "file" input argument should either be a FileStream or a path string. StreamReader is to
+            // general because cal data is always provided in a file and this function call expects to start
+            // from the beginning of the stream. This will require a change in the public API.
+
             if (file == null || file.EndOfStream)
             {
                 throw new ArgumentException("Incoming stream reader is not pointing to a valid gain calibration file.");
             }
 
-            var serialNumber = ulong.Parse(file.ReadLine());
+            string path = (file.BaseStream as FileStream)?.Name;
+
+            if (!ulong.TryParse(file.ReadLine(), out ulong serialNumber))
+            {
+                throw new ArgumentException($"The calibration file {path} specified is " +
+                    $"incorrectly formatted.");
+            }
 
             var gainCorrections = file.ReadLine().Split(',').Skip(1);
 

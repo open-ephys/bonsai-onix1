@@ -169,10 +169,10 @@ namespace OpenEphys.Onix1.Design
 
             public ProbeEdge(ZedGraphControl zedGraphControl)
             {
-                Left = GetProbeContourMinX(zedGraphControl.GraphPane.GraphObjList);
-                Right = GetProbeContourMaxX(zedGraphControl.GraphPane.GraphObjList);
-                Bottom = GetProbeContourMinY(zedGraphControl.GraphPane.GraphObjList);
-                Top = GetProbeContourMaxY(zedGraphControl.GraphPane.GraphObjList);
+                Left = GetProbeMinX(zedGraphControl.GraphPane.GraphObjList);
+                Right = GetProbeMaxX(zedGraphControl.GraphPane.GraphObjList);
+                Bottom = GetProbeMinY(zedGraphControl.GraphPane.GraphObjList);
+                Top = GetProbeMaxY(zedGraphControl.GraphPane.GraphObjList);
             }
         }
 
@@ -423,13 +423,13 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        internal virtual void OpenFile<T>() where T : ProbeGroup
+        internal virtual bool OpenFile<T>() where T : ProbeGroup
         {
             var newConfiguration = OpenAndParseConfigurationFile<T>();
 
             if (newConfiguration == null)
             {
-                return;
+                return false;
             }
 
             if (ChannelConfiguration.NumberOfContacts == newConfiguration.NumberOfContacts)
@@ -439,11 +439,15 @@ namespace OpenEphys.Onix1.Design
                 ChannelConfiguration = newConfiguration;
                 DrawProbeGroup();
                 RefreshZedGraph();
+
+                return true;
             }
             else
             {
-                throw new InvalidOperationException($"Number of contacts does not match; expected {ChannelConfiguration.NumberOfContacts} contacts" +
-                    $", but found {newConfiguration.NumberOfContacts} contacts");
+                MessageBox.Show($"Error: Number of contacts does not match; expected {ChannelConfiguration.NumberOfContacts} contacts" +
+                    $", but found {newConfiguration.NumberOfContacts} contacts", "Contact Number Mismatch");
+
+                return false;
             }
         }
 
@@ -460,7 +464,7 @@ namespace OpenEphys.Onix1.Design
             {
                 var newConfiguration = DesignHelper.DeserializeString<T>(File.ReadAllText(ofd.FileName));
 
-                return newConfiguration ?? throw new InvalidOperationException($"Unable to open {ofd.FileName}");
+                return newConfiguration;
             }
 
             return null;
@@ -471,9 +475,9 @@ namespace OpenEphys.Onix1.Design
             zedGraphChannels.GraphPane.GraphObjList.Clear();
 
             DrawProbeContour();
+            DrawContacts();
             SetEqualAspectRatio();
             SetZoomOutBoundaries();
-            DrawContacts();
             HighlightEnabledContacts();
             HighlightSelectedContacts();
             DrawContactLabels();
@@ -492,6 +496,8 @@ namespace OpenEphys.Onix1.Design
 
             foreach (var probe in ChannelConfiguration.Probes)
             {
+                if (probe == null || probe.ProbePlanarContour == null) continue;
+
                 PointD[] planarContours = ConvertFloatArrayToPointD(probe.ProbePlanarContour);
                 PolyObj contour = new(planarContours, Color.LightGray, Color.White)
                 {
@@ -521,10 +527,10 @@ namespace OpenEphys.Onix1.Design
             if (zedGraphChannels.GraphPane.GraphObjList.Count == 0)
                 return;
 
-            var minX = GetProbeContourMinX(zedGraphChannels.GraphPane.GraphObjList);
-            var minY = GetProbeContourMinY(zedGraphChannels.GraphPane.GraphObjList);
-            var maxX = GetProbeContourMaxX(zedGraphChannels.GraphPane.GraphObjList);
-            var maxY = GetProbeContourMaxY(zedGraphChannels.GraphPane.GraphObjList);
+            var minX = GetProbeMinX(zedGraphChannels.GraphPane.GraphObjList);
+            var minY = GetProbeMinY(zedGraphChannels.GraphPane.GraphObjList);
+            var maxX = GetProbeMaxX(zedGraphChannels.GraphPane.GraphObjList);
+            var maxY = GetProbeMaxY(zedGraphChannels.GraphPane.GraphObjList);
 
             var rangeX = maxX - minX;
             var rangeY = maxY - minY;
@@ -578,6 +584,8 @@ namespace OpenEphys.Onix1.Design
 
                         contactObj.Border.Width = borderWidth;
                         contactObj.Border.IsVisible = false;
+                        contactObj.Location.AlignV = AlignV.Center;
+                        contactObj.Location.AlignH = AlignH.Center;
 
                         zedGraphChannels.GraphPane.GraphObjList.Add(contactObj);
                     }
@@ -593,6 +601,8 @@ namespace OpenEphys.Onix1.Design
 
                         contactObj.Border.Width = borderWidth;
                         contactObj.Border.IsVisible = false;
+                        contactObj.Location.AlignV = AlignV.Bottom;
+                        contactObj.Location.AlignH = AlignH.Left;
 
                         zedGraphChannels.GraphPane.GraphObjList.Add(contactObj);
                     }
@@ -802,11 +812,51 @@ namespace OpenEphys.Onix1.Design
 
             return 1f;
         }
+        // TODO: Convert from MinX/MaxX/... to Left / Right / etc.
+        internal static double GetProbeMinX(GraphObjList graphObjs)
+        {
+            if (graphObjs == null || graphObjs.Count == 0) return 0f;
+
+            if (graphObjs.OfType<PolyObj>().Count() == 0)
+            {
+                return GetContactMinX(graphObjs);
+            }
+            else
+            {
+                return GetProbeContourMinX(graphObjs);
+            }
+        }
+
+        internal static double GetContactMinX(GraphObjList graphObjs)
+        {
+            return graphObjs.OfType<BoxObj>()
+                            .Min(obj => { return obj.Location.Rect.Left; });
+        }
 
         internal static double GetProbeContourMinX(GraphObjList graphObjs)
         {
             return graphObjs.OfType<PolyObj>()
                             .Min(obj => { return obj.Points.Min(p => p.X); });
+        }
+
+        internal static double GetProbeMinY(GraphObjList graphObjs)
+        {
+            if (graphObjs == null || graphObjs.Count == 0) return 0f;
+
+            if (graphObjs.OfType<PolyObj>().Count() == 0)
+            {
+                return GetContactMinY(graphObjs);
+            }
+            else
+            {
+                return GetProbeContourMinY(graphObjs);
+            }
+        }
+
+        internal static double GetContactMinY(GraphObjList graphObjs)
+        {
+            return graphObjs.OfType<BoxObj>()
+                            .Min(obj => { return obj.Location.Rect.Top - obj.Location.Height; });
         }
 
         internal static double GetProbeContourMinY(GraphObjList graphObjs)
@@ -815,10 +865,50 @@ namespace OpenEphys.Onix1.Design
                             .Min(obj => { return obj.Points.Min(p => p.Y); });
         }
 
+        internal static double GetProbeMaxX(GraphObjList graphObjs)
+        {
+            if (graphObjs == null || graphObjs.Count == 0) return 0f;
+
+            if (graphObjs.OfType<PolyObj>().Count() == 0)
+            {
+                return GetContactMaxX(graphObjs);
+            }
+            else
+            {
+                return GetProbeContourMaxX(graphObjs);
+            }
+        }
+
+        internal static double GetContactMaxX(GraphObjList graphObjs)
+        {
+            return graphObjs.OfType<BoxObj>()
+                            .Max(obj => { return obj.Location.Rect.Right; });
+        }
+
         internal static double GetProbeContourMaxX(GraphObjList graphObjs)
         {
             return graphObjs.OfType<PolyObj>()
                             .Max(obj => { return obj.Points.Max(p => p.X); });
+        }
+
+        internal static double GetProbeMaxY(GraphObjList graphObjs)
+        {
+            if (graphObjs == null || graphObjs.Count == 0) return 0f;
+
+            if (graphObjs.OfType<PolyObj>().Count() == 0)
+            {
+                return GetContactMaxY(graphObjs);
+            }
+            else
+            {
+                return GetProbeContourMaxY(graphObjs);
+            }
+        }
+
+        internal static double GetContactMaxY(GraphObjList graphObjs)
+        {
+            return graphObjs.OfType<BoxObj>()
+                            .Max(obj => { return obj.Location.Rect.Bottom - obj.Location.Height; });
         }
 
         internal static double GetProbeContourMaxY(GraphObjList graphObjs)
@@ -969,9 +1059,11 @@ namespace OpenEphys.Onix1.Design
 
         private void MenuItemOpenFile(object sender, EventArgs e)
         {
-            OpenFile<ProbeGroup>();
-            DrawProbeGroup();
-            RefreshZedGraph();
+            if (OpenFile<ProbeGroup>())
+            {
+                DrawProbeGroup();
+                RefreshZedGraph();
+            }
         }
 
         private void MenuItemLoadDefaultConfig(object sender, EventArgs e)
@@ -1009,13 +1101,14 @@ namespace OpenEphys.Onix1.Design
         {
             if (relativePosition < 0.0 || relativePosition > 1.0)
             {
-                throw new ArgumentOutOfRangeException(nameof(relativePosition));
+                MessageBox.Show($"Warning: Invalid relative position given while moving. Expected values between 0.0 and 1.0, but received {relativePosition}.", "Invalid Relative Position");
+                return;
             }
 
             var currentRange = zedGraphChannels.GraphPane.YAxis.Scale.Max - zedGraphChannels.GraphPane.YAxis.Scale.Min;
 
-            var minY = GetProbeContourMinY(zedGraphChannels.GraphPane.GraphObjList);
-            var maxY = GetProbeContourMaxY(zedGraphChannels.GraphPane.GraphObjList);
+            var minY = GetProbeMinY(zedGraphChannels.GraphPane.GraphObjList);
+            var maxY = GetProbeMaxY(zedGraphChannels.GraphPane.GraphObjList);
 
             var newMinY = (maxY - minY - currentRange) * relativePosition;
 
@@ -1025,8 +1118,8 @@ namespace OpenEphys.Onix1.Design
 
         internal float GetRelativeVerticalPosition()
         {
-            var minY = GetProbeContourMinY(zedGraphChannels.GraphPane.GraphObjList);
-            var maxY = GetProbeContourMaxY(zedGraphChannels.GraphPane.GraphObjList);
+            var minY = GetProbeMinY(zedGraphChannels.GraphPane.GraphObjList);
+            var maxY = GetProbeMaxY(zedGraphChannels.GraphPane.GraphObjList);
 
             var currentRange = zedGraphChannels.GraphPane.YAxis.Scale.Max - zedGraphChannels.GraphPane.YAxis.Scale.Min;
 
@@ -1200,7 +1293,9 @@ namespace OpenEphys.Onix1.Design
         private bool GetContactStatus(ContactTag tag)
         {
             if (tag == null)
-                throw new ArgumentNullException("Attempted to check contact status of an object that is not a contact.");
+            {
+                MessageBox.Show($"Error: Attempted to check status of an object that is not a contact.", "Invalid Object Selected");
+            }
 
             return SelectedContacts[tag.ContactIndex];
         }
