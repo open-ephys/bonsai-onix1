@@ -10,7 +10,7 @@ namespace OpenEphys.Onix1
     /// <remarks>
     /// <para>
     /// This configuration operator can be linked to a data IO operator, such as <see
-    /// cref="HarpSyncInput"/>, using a shared <c>DeviceName</c>.
+    /// cref="HarpSyncInputData"/>, using a shared <c>DeviceName</c>.
     /// </para>
     /// <para>
     /// Harp is a standard for asynchronous real-time data acquisition and experimental
