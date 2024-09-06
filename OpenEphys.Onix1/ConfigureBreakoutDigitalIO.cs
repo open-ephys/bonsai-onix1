@@ -11,7 +11,7 @@ namespace OpenEphys.Onix1
     /// cref="BreakoutDigitalInput"/> and <see cref="BreakoutDigitalOutput"/>, using a shared
     /// <c>DeviceName</c>.
     /// </remarks>
-    [Description("onfigures the ONIX breakout board's digital inputs and outputs.")]
+    [Description("Configures the ONIX breakout board's digital inputs and outputs.")]
     public class ConfigureBreakoutDigitalIO : SingleDeviceFactory
     {
         /// <summary>
@@ -27,7 +27,8 @@ namespace OpenEphys.Onix1
         /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>
-        /// If set to true, <see cref="BreakoutDigitalInput"/> will produce data. If set to false, <see cref="BreakoutDigitalInput"/> will not produce data.
+        /// If set to true, <see cref="BreakoutDigitalInput"/> will produce data. If set to false, <see
+        /// cref="BreakoutDigitalInput"/> will not produce data.
         /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Specifies whether the digital IO device is enabled.")]
@@ -37,12 +38,14 @@ namespace OpenEphys.Onix1
         /// Configures the digital input and output device in the ONIX breakout board.
         /// </summary>
         /// <remarks>
-        /// This will schedule digital IO hardware configuration actions that can be applied by a
-        /// <see cref="StartAcquisition"/> object prior to data collection.
+        /// This will schedule digital IO hardware configuration actions that can be applied by a <see
+        /// cref="StartAcquisition"/> object prior to data collection.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that hold configuration actions.</param>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that hold configuration
+        /// actions.</param>
         /// <returns>
-        /// The original sequence modified by adding additional configuration actions required to configure a digital IO device.
+        /// The original sequence modified by adding additional configuration actions required to configure a
+        /// digital IO device.
         /// </returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {

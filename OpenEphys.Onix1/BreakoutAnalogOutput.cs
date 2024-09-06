@@ -29,26 +29,29 @@ namespace OpenEphys.Onix1
         /// Gets or sets the data type used to represent analog samples.
         /// </summary>
         /// <remarks>
-        /// If <see cref="BreakoutAnalogIODataType.S16"/> is selected, each DAC value is represented by a signed, twos-complement encoded
-        /// 16-bit integer. In this case, the output voltage always corresponds to <see cref="BreakoutAnalogIOVoltageRange.TenVolts"/>.
-        /// When <see cref="BreakoutAnalogIODataType.Volts"/> is selected, 32-bit floating point voltages between -10 and 10 volts are sent
-        /// directly to the DACs.
+        /// If <see cref="BreakoutAnalogIODataType.S16"/> is selected, each DAC value is represented by a
+        /// signed, twos-complement encoded 16-bit integer. In this case, the output voltage always
+        /// corresponds to <see cref="BreakoutAnalogIOVoltageRange.TenVolts"/>. When <see
+        /// cref="BreakoutAnalogIODataType.Volts"/> is selected, 32-bit floating point voltages between -10
+        /// and 10 volts are sent directly to the DACs.
         /// </remarks>
         [Description("The data type used to represent analog samples.")]
         [Category(DeviceFactory.ConfigurationCategory)]
         public BreakoutAnalogIODataType DataType { get; set; } = BreakoutAnalogIODataType.S16;
 
         /// <summary>
-        /// Send a matrix of samples to analog outputs
+        /// Send an matrix of samples to all enabled analog outputs.
         /// </summary>
         /// <remarks>
-        /// If a matrix contains multiple samples, they will be written to hardware as quickly as communication allows.
-        /// The data within each input matrix must have <see cref="Depth.S16"/> when <see
-        /// cref="DataType"/> is set to <see cref="BreakoutAnalogIODataType.S16"/> or <see cref="Depth.F32"/>
-        /// when <see cref="DataType"/> is set to <see cref="BreakoutAnalogIODataType.Volts"/>.
+        /// If a matrix contains multiple samples, they will be written to hardware as quickly as
+        /// communication allows. The data within each input matrix must have <see cref="Depth.S16"/> when
+        /// <c>DataType</c> is set to <see cref="BreakoutAnalogIODataType.S16"/> or <see cref="Depth.F32"/>
+        /// when <c>DataType</c> is set to <see cref="BreakoutAnalogIODataType.Volts"/>.
         /// </remarks>
-        /// <param name="source"> A sequence of 12xN sample matrices containing the analog data to write to channels 0 to 11.</param>
-        /// <returns> A sequence of 12xN sample matrices containing the analog data that were written to channels 0 to 11.</returns>
+        /// <param name="source"> A sequence of 12xN sample matrices containing the analog data to write to
+        /// channels 0 to 11.</param>
+        /// <returns> A sequence of 12xN sample matrices containing the analog data that were written to
+        /// channels 0 to 11.</returns>
         public override unsafe IObservable<Mat> Process(IObservable<Mat> source)
         {
             var dataType = DataType;
@@ -109,15 +112,17 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Send an 12-element array of values to update all analog outputs.
+        /// Send an 12-element array of values to update all enabled analog outputs.
         /// </summary>
         /// <remarks>
-        /// This overload should be used when <see cref="DataType"/> is set to <see
+        /// This overload should be used when <c>DataType</c> is set to <see
         /// cref="BreakoutAnalogIODataType.S16"/> and values should be within -32,768 to 32,767, which
         /// correspond to -10.0 to 10.0 volts.
         /// </remarks>
-        /// <param name="source"> A sequence of 12x1 element arrays each containing the analog data to write to channels 0 to 11.</param>
-        /// <returns> A sequence of 12x1 element arrays each containing the analog data to write to channels 0 to 11.</returns>
+        /// <param name="source"> A sequence of 12x1 element arrays each containing the analog data to write
+        /// to channels 0 to 11.</param>
+        /// <returns> A sequence of 12x1 element arrays each containing the analog data to write to channels 0
+        /// to 11.</returns>
         public IObservable<short[]> Process(IObservable<short[]> source)
         {
             if (DataType != BreakoutAnalogIODataType.S16)
@@ -141,14 +146,16 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Send an 12-element array of values to update all analog outputs.
+        /// Send an 12-element array of values to update all enabled analog outputs.
         /// </summary>
         /// <remarks>
-        /// This overload should be used when <see cref="DataType"/> is set to <see
+        /// This overload should be used when <c>DataType</c> is set to <see
         /// cref="BreakoutAnalogIODataType.Volts"/> and values should be within -10.0 to 10.0 volts.
         /// </remarks>
-        /// <param name="source"> A sequence of 12x1 element arrays each containing the analog data to write to channels 0 to 11.</param>
-        /// <returns> A sequence of 12x1 element arrays each containing the analog data to write to channels 0 to 11.</returns>
+        /// <param name="source"> A sequence of 12x1 element arrays each containing the analog data to write
+        /// to channels 0 to 11.</param>
+        /// <returns> A sequence of 12x1 element arrays each containing the analog data to write to channels 0
+        /// to 11.</returns>
         public IObservable<float[]> Process(IObservable<float[]> source)
         {
             if (DataType != BreakoutAnalogIODataType.Volts)
