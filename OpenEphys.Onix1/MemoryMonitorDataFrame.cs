@@ -3,7 +3,7 @@
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that contains hardware memory use information.
+    /// Hardware memory use information.
     /// </summary>
     public class MemoryMonitorDataFrame : DataFrame
     {

@@ -7,19 +7,19 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class for configuring a heartbeat device.
-    /// <remarks>
-    /// This configuration class can be linked to a <see cref="HeartbeatData"/> instance to stream
-    /// heartbeats from the acquisition system.
-    /// </remarks>
+    /// Configures a heartbeat device.
     /// </summary>
+    /// <remarks>
+    /// This configuration operator can be linked to a data IO operator, such as <see cref="HeartbeatData"/>,
+    /// using a shared <c>DeviceName</c>.
+    /// </remarks>
     [Description("Configures a heartbeat device.")]
     public class ConfigureHeartbeat : SingleDeviceFactory
     {
         readonly BehaviorSubject<uint> beatsPerSecond = new(10);
 
         /// <summary>
-        /// Initializes and new instance of the <see cref="ConfigureHeartbeat"/> class.
+        /// Initializes a new instance of the <see cref="ConfigureHeartbeat"/> class.
         /// </summary>
         public ConfigureHeartbeat()
             : base(typeof(Heartbeat))

@@ -51,7 +51,9 @@ namespace OpenEphys.Onix1
                 var portShift = ((int)deviceAddress - 1) * 2;
                 var passthroughState = (hubConfiguration == HubConfiguration.Passthrough ? 1 : 0) << portShift;
                 context.HubState = (PassthroughState)(((int)context.HubState & ~(1 << portShift)) | passthroughState);
-                return Disposable.Empty;
+
+                // leave in standard mode when finished
+                return Disposable.Create(() => context.HubState = (PassthroughState)((int)context.HubState & ~(1 << portShift))); 
             })
             .ConfigureLink(context =>
             {

@@ -3,7 +3,7 @@
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that contains information about a single synchronization pulse or light sweep from a SteamVR V1 base station.
+    /// A single synchronization pulse or light sweep from a SteamVR V1 base station.
     /// </summary>
     public class TS4231V1DataFrame : DataFrame
     {

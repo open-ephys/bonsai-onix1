@@ -7,12 +7,11 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that produces a sequence of port status information frames.
+    /// Produces a sequence of port status information frames.
     /// </summary>
     /// <remarks>
-    /// This data stream class must be linked to an appropriate headstage,
-    /// miniscope, etc. configuration whose communication is dictated by
-    /// a PortController.
+    /// This data IO operator must be linked to an appropriate headstage or miniscope configuration (e.g. <see
+    /// cref="ConfigureNeuropixelsV2eBeta"/>) using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Produces a sequence of port status information.")]
     public class PortStatus : Source<PortStatusFrame>

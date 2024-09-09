@@ -4,9 +4,14 @@ using System.ComponentModel;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class for configuring the ONIX breakout board Harp sync input device.
+    /// Configures the ONIX breakout board's <see href="https://harp-tech.org/">Harp</see>
+    /// sync input.
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// This configuration operator can be linked to a data IO operator, such as <see
+    /// cref="HarpSyncInputData"/>, using a shared <c>DeviceName</c>.
+    /// </para>
     /// <para>
     /// Harp is a standard for asynchronous real-time data acquisition and experimental
     /// control in neuroscience. It includes a clock synchronization protocol which allows
@@ -26,7 +31,7 @@ namespace OpenEphys.Onix1
     /// <see href="https://harp-tech.org/"/>.
     /// </para>
     /// </remarks>
-    [Description("Configures a ONIX breakout board Harp sync input device.")]
+    [Description("Configures a ONIX breakout board Harp sync input.")]
     public class ConfigureHarpSyncInput : SingleDeviceFactory
     {
         /// <summary>

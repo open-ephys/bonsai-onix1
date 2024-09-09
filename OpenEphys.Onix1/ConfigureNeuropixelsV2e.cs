@@ -7,14 +7,14 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that configures a NeuropixelsV2e device.
+    /// Configures a NeuropixelsV2e device.
     /// </summary>
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a NeuropixelsV2e device.")]
-    public class ConfigureNeuropixelsV2e : SingleDeviceFactory
+    public class ConfigureNeuropixelsV2e : SingleDeviceFactory, IConfigureNeuropixelsV2
     {
         /// <summary>
-        /// Initialize a new instance of a <see cref="ConfigureNeuropixelsV2e"/> class.
+        /// Initializes a new instance of the <see cref="ConfigureNeuropixelsV2e"/> class.
         /// </summary>
         public ConfigureNeuropixelsV2e()
             : base(typeof(NeuropixelsV2e))
@@ -37,9 +37,7 @@ namespace OpenEphys.Onix1
             DeviceAddress = configureNode.DeviceAddress;
         }
 
-        /// <summary>
-        /// Gets or sets the device enable state.
-        /// </summary>
+        /// <inheritdoc/>
         /// <remarks>
         /// If set to true, <see cref="NeuropixelsV2eData"/> will produce data. If set to false, 
         /// <see cref="NeuropixelsV2eData"/> will not produce data.
@@ -48,9 +46,7 @@ namespace OpenEphys.Onix1
         [Description("Specifies whether the NeuropixelsV2 device is enabled.")]
         public bool Enable { get; set; } = true;
 
-        /// <summary>
-        /// Gets or sets the electrode configuration for Probe A.
-        /// </summary>
+        /// <inheritdoc/>
         /// <remarks>
         /// Configuration is accomplished using a GUI to aid in channel selection and relevant configuration properties.
         /// To open a probe configuration GUI, select the ellipses next the <see cref="ProbeConfigurationA"/> variable
@@ -62,9 +58,7 @@ namespace OpenEphys.Onix1
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new(NeuropixelsV2Probe.ProbeA);
 
-        /// <summary>
-        /// Gets or sets the path to the gain calibration file for Probe A.
-        /// </summary>
+        /// <inheritdoc/>
         /// <remarks>
         /// <para>
         /// Each probe is linked to a gain calibration file that contains gain adjustments determined by IMEC during
@@ -83,9 +77,7 @@ namespace OpenEphys.Onix1
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string GainCalibrationFileA { get; set; }
 
-        /// <summary>
-        /// Gets or sets the electrode configuration for Probe B.
-        /// </summary>
+        /// <inheritdoc/>
         /// <remarks>
         /// Configuration is accomplished using a GUI to aid in channel selection and relevant configuration properties.
         /// To open a probe configuration GUI, select the ellipses next the <see cref="ProbeConfigurationB"/> variable
@@ -97,9 +89,7 @@ namespace OpenEphys.Onix1
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new(NeuropixelsV2Probe.ProbeB);
 
-        /// <summary>
-        /// Gets or sets the path to the gain calibration file for Probe B.
-        /// </summary>
+        /// <inheritdoc/>
         /// <remarks>
         /// <para>
         /// Each probe is linked to a gain calibration file that contains gain adjustments determined by IMEC during
@@ -303,7 +293,7 @@ namespace OpenEphys.Onix1
         public const byte ProbeBSelected = 0b1001_1001;
 
         public const int FramesPerSuperFrame = 16;
-        public const int ADCsPerProbe = 24;
+        public const int AdcsPerProbe = 24;
         public const int ChannelCount = 384;
         public const int FrameWords = 36; // TRASH TRASH TRASH 0 ADC0 ADC8 ADC16 0 ADC1 ADC9 ADC17 0 ... ADC7 ADC15 ADC23 0
 

@@ -11,11 +11,14 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that controls a headstage-64 onboard optical stimulus sequencer.
+    /// Controls a headstage-64 onboard optical stimulus sequencer.
     /// </summary>
     /// <remarks>
-    /// This class must be linked to an appropriate configuration, such as a <see cref="ConfigureHeadstage64OpticalStimulator"/>,
-    /// in order to define and deliver optical stimulation sequences.
+    /// This data IO operator must be linked to an appropriate configuration, such as a <see
+    /// cref="ConfigureHeadstage64OpticalStimulator"/>, using a shared <c>DeviceName</c>.
+    /// Headstage-64's onboard optical stimulator can be used to drive current through laser diodes or LEDs
+    /// connected to two contacts on the probe connector on the bottom of the headstage or the corresponding
+    /// contacts on a compatible electrode interface board.
     /// </remarks>
     [Description("Controls a headstage-64 onboard optical stimulus sequencer.")]
     public class Headstage64OpticalStimulatorTrigger : Sink<bool>

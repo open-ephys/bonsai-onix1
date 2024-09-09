@@ -9,30 +9,33 @@ using OpenCV.Net;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class that produces a sequence of 3D positions from an array of Triad Semiconductor TS4231 receivers beneath
-    /// a pair of SteamVR V1 base stations.
+    /// Produces a sequence of 3D positions from an array of Triad Semiconductor TS4231 receivers beneath a
+    /// pair of SteamVR V1 base stations.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This data stream class must be linked to an appropriate configuration, such as a <see cref="ConfigureTS4231V1"/>,
-    /// in order to stream data.
+    /// This data IO operator must be linked to an appropriate configuration, such as a <see
+    /// cref="ConfigureTS4231V1"/>, using a shared <c>DeviceName</c>.
     /// </para>
     /// <para>
-    /// The data produced by this class contains naïve geometric estimates of positions of photodiodes attached to each TS4231 chip.
-    /// This operator makes the following assumptions about the setup:
+    /// The data produced by this class contains naïve geometric estimates of positions of photodiodes
+    /// attached to each TS4231 chip. This operator makes the following assumptions about the setup:
     /// <list type="bullet">
     /// <item><description>Two SteamVR V1 base stations are used.</description></item>
-    /// <item><description>The base stations have been synchronized with a patch cable and their modes set to ‘A’ and ‘b’, respectively.</description></item>
+    /// <item><description>The base stations have been synchronized with a patch cable and their modes set to
+    /// ‘A’ and ‘b’, respectively.</description></item>
     /// <item><description>The base stations are pointed in the same direction.</description></item>
-    /// <item><description>The Z-axis extends away the emitting face of lighthouses, X along the direction of the text on the back label,
-    /// and Y from bottom to top text on the back label.</description></item>
+    /// <item><description>The Z-axis extends away the emitting face of lighthouses, X along the direction of
+    /// the text on the back label, and Y from bottom to top text on the back label.</description></item>
     /// </list>
-    /// This operator collects a sequence of <see cref="oni.Frame"/> objects from each TS3231 receiver that are used to determine the ray from each
-    /// base station to the TS3231's photodiode. A simple geometric inversion is performed to determine the photodiodes 3D position from the values
-    /// <see cref="P"/> and <see cref="Q"/>. It does not use a predictive model or integrate data from an IMU and is therefore quite sensitive to
-    /// obstructions in and will require post-hoc processing to correct systematic errors due to optical aberrations and nonlinearities. The the
-    /// <see cref="TS4231V1Data"/> operator provides access to individual lighthouse signals that is useful for a creating more robust position
-    /// estimates using downstream processing.
+    /// This operator collects a sequence of <see cref="oni.Frame"/> objects from each TS3231 receiver that
+    /// are used to determine the ray from each base station to the TS3231's photodiode. A simple geometric
+    /// inversion is performed to determine the photodiodes 3D position from the values <see cref="P"/> and
+    /// <see cref="Q"/>. It does not use a predictive model or integrate data from an IMU and is therefore
+    /// quite sensitive to obstructions and will require post-hoc processing to correct systematic errors
+    /// due to optical aberrations and nonlinearities. The the <see cref="TS4231V1Data"/> operator provides
+    /// access to individual lighthouse signals that is useful for a creating more robust position estimates
+    /// using downstream processing.
     /// </para>
     /// </remarks>
     [Description("Produces a sequence of 3D positions from an array of Triad Semiconductor TS4231 receivers beneath a pair of SteamVR V1 base stations.")]
@@ -48,8 +51,9 @@ namespace OpenEphys.Onix1
         /// Gets or sets the position of the first base station in arbitrary units.
         /// </summary>
         /// <remarks>
-        /// The units used will determine the units of <see cref="TS4231V1PositionDataFrame.Position"/> and must match those used in <see cref="Q"/>.
-        /// Typically this value is used to define the origin and remains at (0, 0, 0).
+        /// The units used will determine the units of <see cref="TS4231V1PositionDataFrame.Position"/> and
+        /// must match those used in <see cref="Q"/>. Typically this value is used to define the origin and
+        /// remains at (0, 0, 0).
         /// </remarks>
         [Description("The position of the first base station in arbitrary units.")]
         [Category(DeviceFactory.ConfigurationCategory)]
@@ -59,14 +63,16 @@ namespace OpenEphys.Onix1
         /// Gets or sets the position of the second base station in arbitrary units.
         /// </summary>
         /// <remarks>
-        /// The units used will determine the units of <see cref="TS4231V1PositionDataFrame.Position"/> and must match those used in <see cref="P"/>.
+        /// The units used will determine the units of <see cref="TS4231V1PositionDataFrame.Position"/> and
+        /// must match those used in <see cref="P"/>.
         /// </remarks>
         [Description("The position of the second base station in arbitrary units.")]
         [Category(DeviceFactory.ConfigurationCategory)]
         public Point3d Q { get; set; } = new(1, 0, 0);
 
         /// <summary>
-        /// Generates a sequence of <see cref="TS4231V1PositionDataFrame"/> objects, each of which contains the 3D position of single photodiode.
+        /// Generates a sequence of <see cref="TS4231V1PositionDataFrame"/> objects, each of which contains
+        /// the 3D position of single photodiode.
         /// </summary>
         /// <returns>A sequence of <see cref="TS4231V1PositionDataFrame"/> objects.</returns>
         public unsafe override IObservable<TS4231V1PositionDataFrame> Generate()

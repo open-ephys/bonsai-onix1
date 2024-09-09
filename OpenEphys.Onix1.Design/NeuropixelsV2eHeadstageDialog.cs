@@ -22,7 +22,7 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <param name="configureNeuropixelsV2e">Configuration settings for a <see cref="ConfigureNeuropixelsV2e"/>.</param>
         /// <param name="configureBno055">Configuration settings for a <see cref="ConfigureNeuropixelsV2eBno055"/>.</param>
-        public NeuropixelsV2eHeadstageDialog(ConfigureNeuropixelsV2e configureNeuropixelsV2e, ConfigureNeuropixelsV2eBno055 configureBno055)
+        public NeuropixelsV2eHeadstageDialog(IConfigureNeuropixelsV2 configureNeuropixelsV2e, ConfigureNeuropixelsV2eBno055 configureBno055)
         {
             InitializeComponent();
 
@@ -35,7 +35,18 @@ namespace OpenEphys.Onix1.Design
             };
 
             panelNeuropixelsV2e.Controls.Add(DialogNeuropixelsV2e);
-            this.AddMenuItemsFromDialogToFileOption(DialogNeuropixelsV2e, "NeuropixelsV2e");
+
+            if (configureNeuropixelsV2e is ConfigureNeuropixelsV2e)
+            {
+                this.AddMenuItemsFromDialogToFileOption(DialogNeuropixelsV2e, "NeuropixelsV2e");
+            }
+            else if (configureNeuropixelsV2e is ConfigureNeuropixelsV2eBeta)
+            {
+                this.AddMenuItemsFromDialogToFileOption(DialogNeuropixelsV2e, "NeuropixelsV2eBeta");
+                Text = Text.Replace("NeuropixelsV2e ", "NeuropixelsV2eBeta ");
+                tabPageNeuropixelsV2e.Text = "NeuropixelsV2eBeta";
+            }
+
             DialogNeuropixelsV2e.Show();
 
             DialogBno055 = new(configureBno055)

@@ -54,38 +54,21 @@ namespace OpenEphys.Onix1.Design
             ProbeConfiguration = new(ProbeConfiguration.Probe, ProbeConfiguration.Reference);
             ChannelConfiguration = ProbeConfiguration.ChannelConfiguration;
 
-            DrawProbeGroup();
-            RefreshZedGraph();
-
             OnFileOpenHandler();
         }
 
-        internal override void OpenFile<T>()
+        internal override bool OpenFile<T>()
         {
-            var newConfiguration = OpenAndParseConfigurationFile<NeuropixelsV2eProbeGroup>();
-
-            if (newConfiguration == null)
+            if (base.OpenFile<NeuropixelsV2eProbeGroup>())
             {
-                return;
+                ProbeConfiguration = new((NeuropixelsV2eProbeGroup)ChannelConfiguration, ProbeConfiguration.Reference, ProbeConfiguration.Probe);
+
+                OnFileOpenHandler();
+
+                return true;
             }
 
-            if (ProbeConfiguration.ChannelConfiguration.NumberOfContacts == newConfiguration.NumberOfContacts)
-            {
-                newConfiguration.Validate();
-
-                ProbeConfiguration = new(newConfiguration, ProbeConfiguration.Reference, ProbeConfiguration.Probe);
-                ChannelConfiguration = ProbeConfiguration.ChannelConfiguration;
-
-                DrawProbeGroup();
-                RefreshZedGraph();
-            }
-            else
-            {
-                throw new InvalidOperationException($"Number of contacts does not match; expected {ProbeConfiguration.ChannelConfiguration.NumberOfContacts} contacts" +
-                    $", but found {newConfiguration.NumberOfContacts} contacts");
-            }
-
-            OnFileOpenHandler();
+            return false;
         }
 
         private void OnFileOpenHandler()
@@ -138,9 +121,11 @@ namespace OpenEphys.Onix1.Design
             var majorTickOffset = MajorTickLength + CalculateScaleRange(zedGraphChannels.GraphPane.XAxis.Scale) * 0.015;
             majorTickOffset = majorTickOffset > 50 ? 50 : majorTickOffset;
 
-            var x = GetProbeContourMaxX(zedGraphChannels.GraphPane.GraphObjList) + 50;
-            var minY = GetProbeContourMinY(zedGraphChannels.GraphPane.GraphObjList);
-            var maxY = GetProbeContourMaxY(zedGraphChannels.GraphPane.GraphObjList);
+            var x = GetProbeMaxX(zedGraphChannels.GraphPane.GraphObjList) + 50;
+            var minY = GetProbeMinY(zedGraphChannels.GraphPane.GraphObjList);
+            var maxY = GetProbeMaxY(zedGraphChannels.GraphPane.GraphObjList);
+
+            int textPosition = 0;
 
             PointPairList pointList = new();
 
@@ -154,15 +139,17 @@ namespace OpenEphys.Onix1.Design
                 pointList.Add(majorTickLocation);
                 pointList.Add(new PointPair(x, minY + MajorTickIncrement * countMajorTicks));
 
-                if (!zoomedOut || i % (5 * MajorTickIncrement) == 0)
+                if (!zoomedOut || countMajorTicks % 5 == 0)
                 {
-                    TextObj textObj = new($"{i} µm\n", majorTickLocation.X + 5, majorTickLocation.Y, CoordType.AxisXYScale, AlignH.Left, AlignV.Center)
+                    TextObj textObj = new($"{textPosition} µm\n", majorTickLocation.X + 5, majorTickLocation.Y, CoordType.AxisXYScale, AlignH.Left, AlignV.Center)
                     {
                         Tag = ScaleTextTag,
                     };
                     textObj.FontSpec.Border.IsVisible = false;
                     textObj.FontSpec.Size = fontSize;
                     zedGraphChannels.GraphPane.GraphObjList.Add(textObj);
+
+                    textPosition += zoomedOut ? 5 * MajorTickIncrement : MajorTickIncrement;
                 }
 
                 if (!zoomedOut)
@@ -182,13 +169,14 @@ namespace OpenEphys.Onix1.Design
                 countMajorTicks++;
             }
 
-            var curve = zedGraphChannels.GraphPane.AddCurve(ScalePointsTag, pointList, Color.Black, SymbolType.None);
+            var curve = zedGraphChannels.GraphPane.AddCurve("", pointList, Color.Black, SymbolType.None);
 
             const float scaleBarWidth = 1;
 
             curve.Line.Width = scaleBarWidth; 
             curve.Label.IsVisible = false;
             curve.Symbol.IsVisible = false;
+            curve.Tag = ScalePointsTag;
         }
 
         internal override void HighlightEnabledContacts()

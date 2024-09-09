@@ -4,12 +4,14 @@ using System.ComponentModel;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class for configuring an array of Triad Semiconductor TS4231 lighthouse receivers for 3D position tracking using
+    /// Configures an array of Triad Semiconductor TS4231 lighthouse receivers for 3D position tracking using
     /// a pair of SteamVR V1 base stations.
     /// </summary>
     /// <remarks>
-    /// This configuration class can be linked to a <see cref="TS4231V1PositionData"/> instance to stream 3D position data from
-    /// light-house receivers when SteamVR V1 base stations have been installed above the arena.
+    /// This configuration operator can be linked to a data IO operator, such as <see
+    /// cref="TS4231V1PositionData"/>, using a shared <c>DeviceName</c> to stream 3D
+    /// position data from light-house receivers when SteamVR V1 base stations have been installed above the
+    /// arena.
     /// </remarks>
     [Description("Configures a TS4231 receiver array.")]
     public class ConfigureTS4231V1 : SingleDeviceFactory

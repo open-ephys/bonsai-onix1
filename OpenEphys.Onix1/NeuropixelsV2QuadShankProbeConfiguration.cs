@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System.Text;
 using System.Xml.Serialization;
 using System.Linq;
+using OpenEphys.ProbeInterface.NET;
 
 namespace OpenEphys.Onix1
 {
@@ -124,8 +125,8 @@ namespace OpenEphys.Onix1
         public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2QuadShankProbeConfiguration probeConfiguration)
         {
             Reference = probeConfiguration.Reference;
-            ChannelConfiguration = new();
-            ChannelConfiguration.UpdateDeviceChannelIndices(probeConfiguration.ChannelMap);
+            var probes = probeConfiguration.ChannelConfiguration.Probes.ToList().Select(probe => new Probe(probe));
+            ChannelConfiguration = new(probeConfiguration.ChannelConfiguration.Specification, probeConfiguration.ChannelConfiguration.Version, probes.ToArray());
             ChannelMap = NeuropixelsV2eProbeGroup.ToChannelMap(ChannelConfiguration);
             Probe = probeConfiguration.Probe;
         }
@@ -142,8 +143,7 @@ namespace OpenEphys.Onix1
         public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2eProbeGroup channelConfiguration, NeuropixelsV2QuadShankReference reference, NeuropixelsV2Probe probe)
         {
             ChannelMap = NeuropixelsV2eProbeGroup.ToChannelMap(channelConfiguration);
-            ChannelConfiguration = new();
-            ChannelConfiguration.UpdateDeviceChannelIndices(ChannelMap);
+            ChannelConfiguration = channelConfiguration;
             Reference = reference;
             Probe = probe;
         }

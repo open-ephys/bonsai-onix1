@@ -4,12 +4,13 @@ using System.ComponentModel;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A class for configuring a Bosch BNO055 9-axis inertial measurement unit (IMU).
+    /// Configures a Bosch Bno055 9-axis inertial measurement unit (IMU).
     /// </summary>
     /// <remarks>
-    /// This configuration class can be linked to a <see cref="Bno055Data"/> instance to stream orientation data from the IMU.
+    /// This configuration operator can be linked to a data IO operator, such as <see cref="Bno055Data"/>,
+    /// using a shared <c>DeviceName</c>.
     /// </remarks>
-    [Description("Configures a Bosch BNO055 9-axis IMU device.")]
+    [Description("Configures a Bosch Bno055 9-axis inertial measurement unit.")]
     [Editor("OpenEphys.Onix1.Design.Bno055Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureBno055 : SingleDeviceFactory
     {
@@ -41,18 +42,18 @@ namespace OpenEphys.Onix1
         /// it will not produce data.
         /// </remarks>
         [Category(ConfigurationCategory)]
-        [Description("Specifies whether the BNO055 device is enabled.")]
+        [Description("Specifies whether the Bno055 device is enabled.")]
         public bool Enable { get; set; } = true;
 
         /// <summary>
-        /// Configures a Bosch BNO055 9-axis IMU device.
+        /// Configures a Bosch Bno055 9-axis IMU device.
         /// </summary>
         /// <remarks>
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance
         /// prior to data acquisition.
         /// </remarks>
         /// <param name="source">A sequence of <see cref="ContextTask"/> instances that holds configuration actions.</param>
-        /// <returns>The original sequence modified by adding additional configuration actions required to configure a BNO055 device.</returns>
+        /// <returns>The original sequence modified by adding additional configuration actions required to configure a Bno055 device.</returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var deviceName = DeviceName;

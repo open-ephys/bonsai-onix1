@@ -9,6 +9,10 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Produces a sequence of <see cref="Bno055DataFrame"/> objects from a NeuropixelsV1e headstage.
     /// </summary>
+    /// <remarks>
+    /// This data IO operator must be linked to an appropriate configuration, such as a <see
+    /// cref="ConfigureNeuropixelsV1eBno055"/>, using a shared <c>DeviceName</c>.
+    /// </remarks>
     [Description("Produces a sequence of Bno055DataFrame objects from a NeuropixelsV1e headstage.")]
     public class NeuropixelsV1eBno055Data : Source<Bno055DataFrame>
     {
@@ -19,13 +23,14 @@ namespace OpenEphys.Onix1
         public string DeviceName { get; set; }
 
         /// <summary>
-        /// Generates a sequence of <see cref="Bno055DataFrame"/> objects at approximately 100 Hz.
+        /// Generates a sequence of <see cref="Bno055DataFrame">Bno055DataFrames</see> at approximately 100
+        /// Hz.
         /// </summary>
-        /// <returns>A sequence of <see cref="Bno055DataFrame"/> objects.</returns>
         /// <remarks>
-        /// This will generate a sequence of <see cref="Bno055DataFrame"/> objects at approximately 100 Hz. This rate
-        /// may be limited by the I2C bus.
+        /// This will generate a sequence of <see cref="Bno055DataFrame">Bno055DataFrames</see> at approximately 100 Hz.
+        /// This rate may be limited by the hardware.
         /// </remarks>
+        /// <returns>A sequence of <see cref="Bno055DataFrame">Bno055DataFrames</see>.</returns>
         public override IObservable<Bno055DataFrame> Generate()
         {
             // Max of 100 Hz, but limited by I2C bus
@@ -34,8 +39,15 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Generates a sequence of <see cref="Bno055DataFrame"/> objects.
+        /// Generates a sequence of <see cref="Bno055DataFrame">Bno055DataFrames</see> that is driven by an
+        /// input sequence.
         /// </summary>
+        /// <remarks>
+        /// This will attempt to produce a sequence of <see cref="Bno055DataFrame">Bno055DataFrames</see> that is updated whenever
+        /// an item in the <paramref name="source"/> sequence is received. This rate is be limited by the
+        /// hardware and has a maximum meaningful rate of 100 Hz.
+        /// </remarks>
+        /// <param name="source">A sequence to drive sampling.</param>
         /// <returns>A sequence of <see cref="Bno055DataFrame"/> objects.</returns>
         public unsafe IObservable<Bno055DataFrame> Generate<TSource>(IObservable<TSource> source)
         {

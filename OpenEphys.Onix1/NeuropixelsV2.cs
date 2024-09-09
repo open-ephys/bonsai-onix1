@@ -35,7 +35,6 @@ namespace OpenEphys.Onix1
         public const int DummyRegisterCount = 4;
         public const int RegistersPerShank = ElectrodePerShank + ReferencePixelCount + DummyRegisterCount;
 
-
         internal static BitArray[] GenerateShankBits(NeuropixelsV2QuadShankProbeConfiguration probe)
         {
             BitArray[] shankBits =
@@ -124,7 +123,11 @@ namespace OpenEphys.Onix1
             }
 
             var gainFile = new StreamReader(gainCalibrationFile);
-            var sn = ulong.Parse(gainFile.ReadLine());
+            if(!ulong.TryParse(gainFile.ReadLine(), out ulong sn))
+            {
+                throw new ArgumentException($"The calibration file {gainCalibrationFile} specified for {probe} is " +
+                    $"incorrectly formatted.");
+            }
 
             if (probeSerialNumber != sn)
             {
