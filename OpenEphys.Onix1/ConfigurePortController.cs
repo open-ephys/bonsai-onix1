@@ -31,7 +31,7 @@ namespace OpenEphys.Onix1
 
         protected abstract bool ConfigurePortVoltage(DeviceContext device);
 
-        private bool ConfigurePortVoltageOverride(DeviceContext device, double voltage)
+        protected virtual bool ConfigurePortVoltageOverride(DeviceContext device, double voltage)
         {
             device.WriteRegister(PortController.PORTVOLTAGE, (uint)(voltage * 10));
             Thread.Sleep(500);

@@ -103,54 +103,64 @@ namespace OpenEphys.Onix1
         {
             protected override bool ConfigurePortVoltage(DeviceContext device)
             {
-                const uint MinVoltage = 50;
-                const uint MaxVoltage = 70;
-                const uint VoltageOffset = 02;
-                const uint VoltageIncrement = 02;
+                const double MinVoltage = 5.3;
+                const double MaxVoltage = 6.5;
+                const double VoltageOffset = 0.2;
+                const double VoltageIncrement = 0.1;
 
-                for (uint voltage = MinVoltage; voltage <= MaxVoltage; voltage += VoltageIncrement)
+                for (var voltage = MinVoltage; voltage <= MaxVoltage; voltage += VoltageIncrement)
                 {
                     SetPortVoltage(device, voltage);
                     if (CheckLinkState(device))
                     {
-                        SetPortVoltage(device, voltage + VoltageOffset);
-                        return CheckLinkState(device);
+                        return ConfigurePortVoltageOverride(device, voltage + VoltageOffset);
                     }
                 }
 
                 return false;
             }
 
-            private void SetPortVoltage(DeviceContext device, uint voltage)
+            private void SetPortVoltage(DeviceContext device, double voltage)
             {
                 const int WaitUntilVoltageSettles = 200;
                 device.WriteRegister(PortController.PORTVOLTAGE, 0);
                 Thread.Sleep(WaitUntilVoltageSettles);
-                device.WriteRegister(PortController.PORTVOLTAGE, voltage);
+                device.WriteRegister(PortController.PORTVOLTAGE, (uint)(10 * voltage));
                 Thread.Sleep(WaitUntilVoltageSettles);
             }
 
             override protected bool CheckLinkState(DeviceContext device)
             {
+                const int WaitUntilPllSettles = 200;
+                const int FailureToWriteRegister = -6;
                 try
                 {
                     var ds90ub9x = device.Context.GetPassthroughDeviceContext(DeviceAddress << 8, typeof(DS90UB9x));
                     ConfigureUclaMiniscopeV4Camera.ConfigureCameraSystem(ds90ub9x);
                 }
-                catch (oni.ONIException ex)
+                catch (oni.ONIException ex) when (ex.Number == FailureToWriteRegister)
                 {
-                    // this can occur if power is too low, so we need to be able to try again
-                    const int FailureToWriteRegister = -6;
-                    if (ex.Number != FailureToWriteRegister)
-                    {
-                        throw;
-                    }
+                    return false;
                 }
 
-                Thread.Sleep(200);
+                Thread.Sleep(WaitUntilPllSettles);
 
                 var linkState = device.ReadRegister(PortController.LINKSTATE);
                 return (linkState & PortController.LINKSTATE_SL) != 0;
+            }
+
+            override protected bool ConfigurePortVoltageOverride(DeviceContext device, double voltage)
+            {
+                SetPortVoltage(device, voltage);
+
+                const int TotalTries = 10;
+                for (int i = 0; i < TotalTries; i++)
+                {
+                    if (CheckLinkState(device))
+                        return true;
+                }
+
+                return false;
             }
         }
     }
