@@ -1,9 +1,4 @@
-﻿namespace System.Runtime.CompilerServices
-{
-    internal static class IsExternalInit { }
-}
-
-namespace OpenEphys.Onix1
+﻿namespace OpenEphys.Onix1
 {
     /// <summary>
     /// A struct to hold the gain correction value and the serial number from a Neuropixels 2.0 gain
