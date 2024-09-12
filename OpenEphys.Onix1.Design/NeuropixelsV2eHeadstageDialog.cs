@@ -62,17 +62,11 @@ namespace OpenEphys.Onix1.Design
             DialogBno055.Invalidate();
         }
 
-        private void ButtonClick(object sender, System.EventArgs e)
+        private void Okay_Click(object sender, System.EventArgs e)
         {
-            if (sender is Button button && button != null)
-            {
-                if (button.Name == nameof(buttonOkay))
-                {
-                    DialogNeuropixelsV2e.SaveVariables();
+            DialogNeuropixelsV2e.SaveVariables();
 
-                    DialogResult = DialogResult.OK;
-                }
-            }
+            DialogResult = DialogResult.OK;
         }
     }
 }

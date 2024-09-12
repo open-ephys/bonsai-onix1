@@ -70,7 +70,7 @@
             this.buttonOkay.TabIndex = 5;
             this.buttonOkay.Text = "OK";
             this.buttonOkay.UseVisualStyleBackColor = true;
-            this.buttonOkay.Click += new System.EventHandler(this.ButtonClick);
+            this.buttonOkay.Click += new System.EventHandler(this.Okay_Click);
             // 
             // menuStrip1
             // 
