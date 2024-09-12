@@ -243,14 +243,12 @@ namespace OpenEphys.Onix1.Design
             }
             catch (IOException ex)
             {
-                MessageBox.Show($"An I/O error occurred while parsing {ConfigureNode.AdcCalibrationFile}. Check the error log below." +
-                    $"\n\n" + ex.Message);
+                MessageBox.Show(ex.Message, "I/O error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             catch (UnauthorizedAccessException ex)
             {
-                MessageBox.Show($"An unauthorized access error occurred while parsing {ConfigureNode.AdcCalibrationFile}. Check the error log below." +
-                    $"\n\n" + ex.Message);
+                MessageBox.Show(ex.Message, "Unauthorized access error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -275,14 +273,12 @@ namespace OpenEphys.Onix1.Design
             }
             catch (IOException ex)
             {
-                MessageBox.Show($"An I/O error occurred while parsing {ConfigureNode.GainCalibrationFile}. Check the error log below." +
-                    $"\n\n" + ex.Message);
+                MessageBox.Show(ex.Message, "I/O error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             catch (UnauthorizedAccessException ex)
             {
-                MessageBox.Show($"An unauthorized access error occurred while parsing {ConfigureNode.GainCalibrationFile}. Check the error log below." +
-                    $"\n\n" + ex.Message);
+                MessageBox.Show(ex.Message, "Unauthorized access error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -330,7 +326,11 @@ namespace OpenEphys.Onix1.Design
             {
                 CheckFileExists = true,
                 Filter = "Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv|All Files|*.*",
-                FilterIndex = 0
+                FilterIndex = 0,
+                InitialDirectory = File.Exists(textBoxGainCalibrationFile.Text) ?
+                                   Path.GetDirectoryName(textBoxGainCalibrationFile.Text) :
+                                   ""
+
             };
 
             if (ofd.ShowDialog() == DialogResult.OK)
@@ -347,7 +347,10 @@ namespace OpenEphys.Onix1.Design
             {
                 CheckFileExists = true,
                 Filter = "ADC calibration files (*_ADCCalibration.csv)|*_ADCCalibration.csv|All Files|*.*",
-                FilterIndex = 0
+                FilterIndex = 0,
+                InitialDirectory = File.Exists(textBoxAdcCalibrationFile.Text) ?
+                                   Path.GetDirectoryName(textBoxAdcCalibrationFile.Text) :
+                                   ""
             };
 
             if (ofd.ShowDialog() == DialogResult.OK)
