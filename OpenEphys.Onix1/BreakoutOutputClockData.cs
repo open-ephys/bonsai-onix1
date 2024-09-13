@@ -27,7 +27,7 @@ namespace OpenEphys.Onix1
         /// Generates a sequence containing a single <see cref="BreakoutOutputClockParameters"/>.
         /// </summary>
         /// <returns>A sequence containing a single <see cref="BreakoutOutputClockParameters"/></returns>
-        public unsafe override IObservable<BreakoutOutputClockParameters> Generate()
+        public override IObservable<BreakoutOutputClockParameters> Generate()
         {
             return DeviceManager.GetDevice(DeviceName).SelectMany(
                 deviceInfo =>
