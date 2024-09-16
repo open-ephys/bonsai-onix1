@@ -36,7 +36,7 @@ namespace OpenEphys.Onix1
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the analog IO device in the ONIX breakout board.")]
         [Category(DevicesCategory)]
-        public ConfigureBreakoutAnalogIO AnalogIO { get; set; } = new();
+        public ConfigureAnalogIO AnalogIO { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the breakout board's digital IO configuration.
@@ -44,7 +44,7 @@ namespace OpenEphys.Onix1
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the digital IO device in the ONIX breakout board.")]
         [Category(DevicesCategory)]
-        public ConfigureBreakoutDigitalIO DigitalIO { get; set; } = new();
+        public ConfigureDigitalIO DigitalIO { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the breakout board's output clock configuration.

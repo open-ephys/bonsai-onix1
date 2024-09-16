@@ -34,7 +34,7 @@ namespace OpenEphys.Onix1
     /// </item>
     /// </list>
     /// These pre-sorted frame sequences can be interpreted by downstream Data I/O operators (e.g. <see
-    /// cref="BreakoutAnalogInput"/> or <see cref="Bno055Data"/>) that convert <see
+    /// cref="AnalogInput"/> or <see cref="Bno055Data"/>) that convert <see
     /// href="https://open-ephys.github.io/ONI/hw-spec/controller.html#data-frames">ONI Data Frames</see> into
     /// data types that are are more amenable to processing within Bonsai workflows.
     /// </remarks>

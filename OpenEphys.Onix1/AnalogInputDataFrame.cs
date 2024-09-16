@@ -6,15 +6,15 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Buffered analog data produced by the ONIX breakout board.
     /// </summary>
-    public class BreakoutAnalogInputDataFrame : BufferedDataFrame
+    public class AnalogInputDataFrame : BufferedDataFrame
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="BreakoutAnalogInputDataFrame"/> class.
+        /// Initializes a new instance of the <see cref="AnalogInputDataFrame"/> class.
         /// </summary>
         /// <param name="clock">A buffered array of <see cref="DataFrame.Clock"/> values.</param>
         /// <param name="hubClock"> A buffered array of hub clock counter values.</param>
         /// <param name="analogData">A buffered array of multi-channel analog data.</param>
-        public BreakoutAnalogInputDataFrame(ulong[] clock, ulong[] hubClock, Mat analogData)
+        public AnalogInputDataFrame(ulong[] clock, ulong[] hubClock, Mat analogData)
             : base(clock, hubClock)
         {
             AnalogData = analogData;
@@ -27,9 +27,9 @@ namespace OpenEphys.Onix1
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    unsafe struct BreakoutAnalogInputPayload
+    unsafe struct AnalogInputPayload
     {
         public ulong HubClock;
-        public fixed short AnalogData[BreakoutAnalogIO.ChannelCount];
+        public fixed short AnalogData[AnalogIO.ChannelCount];
     }
 }

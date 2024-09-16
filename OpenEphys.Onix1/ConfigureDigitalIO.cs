@@ -3,22 +3,25 @@ using System.ComponentModel;
 
 namespace OpenEphys.Onix1
 {
+    [Obsolete]
+    public class ConfigureBreakoutDigitalIO : ConfigureDigitalIO { }
+
     /// <summary>
     /// Configures the ONIX breakout board's digital inputs and outputs.
     /// </summary>
     /// <remarks>
     /// This configuration operator can be linked to data IO operators, such as <see
-    /// cref="BreakoutDigitalInput"/> and <see cref="BreakoutDigitalOutput"/>, using a shared
+    /// cref="DigitalInput"/> and <see cref="DigitalOutput"/>, using a shared
     /// <c>DeviceName</c>.
     /// </remarks>
     [Description("Configures the ONIX breakout board's digital inputs and outputs.")]
-    public class ConfigureBreakoutDigitalIO : SingleDeviceFactory
+    public class ConfigureDigitalIO : SingleDeviceFactory
     {
         /// <summary>
-        /// Initialize a new instance of the <see cref="ConfigureBreakoutDigitalIO"/> class.
+        /// Initialize a new instance of the <see cref="ConfigureDigitalIO"/> class.
         /// </summary>
-        public ConfigureBreakoutDigitalIO()
-            : base(typeof(BreakoutDigitalIO))
+        public ConfigureDigitalIO()
+            : base(typeof(DigitalIO))
         {
             DeviceAddress = 7;
         }
@@ -27,8 +30,8 @@ namespace OpenEphys.Onix1
         /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>
-        /// If set to true, <see cref="BreakoutDigitalInput"/> will produce data. If set to false, <see
-        /// cref="BreakoutDigitalInput"/> will not produce data.
+        /// If set to true, <see cref="DigitalInput"/> will produce data. If set to false, <see
+        /// cref="DigitalInput"/> will not produce data.
         /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Specifies whether the digital IO device is enabled.")]
@@ -54,13 +57,13 @@ namespace OpenEphys.Onix1
             return source.ConfigureDevice(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
-                device.WriteRegister(BreakoutDigitalIO.ENABLE, Enable ? 1u : 0);
+                device.WriteRegister(DigitalIO.ENABLE, Enable ? 1u : 0);
                 return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
             });
         }
     }
 
-    static class BreakoutDigitalIO
+    static class DigitalIO
     {
         public const int ID = 18;
 
@@ -70,7 +73,7 @@ namespace OpenEphys.Onix1
         internal class NameConverter : DeviceNameConverter
         {
             public NameConverter()
-                : base(typeof(BreakoutDigitalIO))
+                : base(typeof(DigitalIO))
             {
             }
         }
@@ -80,7 +83,7 @@ namespace OpenEphys.Onix1
     /// Specifies the state of the ONIX breakout board's digital input pins.
     /// </summary>
     [Flags]
-    public enum BreakoutDigitalPortState : ushort
+    public enum DigitalPortState : ushort
     {
         /// <summary>
         /// Specifies that pin 0 is high.
