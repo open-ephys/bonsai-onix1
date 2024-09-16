@@ -47,6 +47,13 @@ namespace OpenEphys.Onix1
         public ConfigureBreakoutDigitalIO DigitalIO { get; set; } = new();
 
         /// <summary>
+        /// Gets or sets the breakout board's output clock configuration.
+        /// </summary>
+        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
+        [Description("Specifies the configuration for the clock output in the ONIX breakout board.")]
+        [Category(DevicesCategory)]
+        public ConfigureOutputClock ClockOutput { get; set; } = new();
+
         /// Gets or sets the the Harp synchronization input configuration.
         /// </summary>
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
@@ -67,6 +74,7 @@ namespace OpenEphys.Onix1
             yield return Heartbeat;
             yield return AnalogIO;
             yield return DigitalIO;
+            yield return ClockOutput;
             yield return HarpInput;
             yield return MemoryMonitor;
         }
