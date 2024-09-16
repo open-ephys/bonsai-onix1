@@ -54,6 +54,13 @@ namespace OpenEphys.Onix1
         [Category(DevicesCategory)]
         public ConfigureOutputClock ClockOutput { get; set; } = new();
 
+        /// Gets or sets the the Harp synchronization input configuration.
+        /// </summary>
+        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
+        [Description("Specifies the configuration for the Harp synchronization input on the ONIX breakout board.")]
+        [Category(DevicesCategory)]
+        public ConfigureHarpSyncInput HarpInput { get; set; } = new();
+
         /// <summary>
         /// Gets or sets the hardware memory monitor configuration.
         /// </summary>
@@ -68,7 +75,8 @@ namespace OpenEphys.Onix1
             yield return AnalogIO;
             yield return DigitalIO;
             yield return ClockOutput;
-            yield return MemoryMonitor; 
+            yield return HarpInput;
+            yield return MemoryMonitor;
         }
     }
 }
