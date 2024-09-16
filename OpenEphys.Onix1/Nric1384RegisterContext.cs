@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections;
-using System.Linq;
+using System.IO;
 
 namespace OpenEphys.Onix1
 {
@@ -13,7 +13,6 @@ namespace OpenEphys.Onix1
         const byte ReferenceSource = 0b001; // All, hardcoded
         const int BaseConfigurationBitCount = 2448;
         const int BaseConfigurationConfigOffset = 576;
-        const int NumberOfGains = 8;
         const uint ShiftRegisterSuccess = 1 << 7;
 
         readonly DeviceContext device;
@@ -24,50 +23,41 @@ namespace OpenEphys.Onix1
         public Nric1384RegisterContext(DeviceContext deviceContext, NeuropixelsV1Gain apGain, NeuropixelsV1Gain lfpGain, bool apFilter, string gainCalibrationFile, string adcCalibrationFile)
             : base(deviceContext, Nric1384.I2cAddress)
         {
+
             device = deviceContext;
 
-            if (gainCalibrationFile == null || adcCalibrationFile == null)
+            if (!File.Exists(gainCalibrationFile))
             {
-                throw new ArgumentException("Calibration files must be specified.");
+                throw new ArgumentException("A gain calibration file must be specified for the Nric1384 chip.");
             }
 
-            System.IO.StreamReader gainFile = new(gainCalibrationFile);
-            var sn = UInt64.Parse(gainFile.ReadLine());
-
-            System.IO.StreamReader adcFile = new(adcCalibrationFile);
-            if (sn != UInt64.Parse(adcFile.ReadLine()))
-                throw new ArgumentException("Calibration file serial numbers do not match.");
-
-            // parse gain correction file
-            var gainCorrections = gainFile.ReadLine().Split(',').Skip(1);
-
-            if (gainCorrections.Count() != 2 * NumberOfGains)
-                throw new ArgumentException("Incorrectly formatted gain correction calibration file.");
-
-            ApGainCorrection = double.Parse(gainCorrections.ElementAt(Array.IndexOf(Enum.GetValues(typeof(NeuropixelsV1Gain)), apGain)));
-            LfpGainCorrection = double.Parse(gainCorrections.ElementAt(Array.IndexOf(Enum.GetValues(typeof(NeuropixelsV1Gain)), lfpGain) + 8));
-
-            // parse ADC calibration file
-            for (var i = 0; i < NeuropixelsV1e.AdcCount; i++)
+            if (!File.Exists(adcCalibrationFile))
             {
-                var adcCal = adcFile.ReadLine().Split(',').Skip(1);
-                if (adcCal.Count() != NumberOfGains)
-                {
-                    throw new ArgumentException("Incorrectly formatted ADC calibration file.");
-                }
-
-                Adcs[i] = new NeuropixelsV1eAdc
-                {
-                    CompP = int.Parse(adcCal.ElementAt(0)),
-                    CompN = int.Parse(adcCal.ElementAt(1)),
-                    Slope = int.Parse(adcCal.ElementAt(2)),
-                    Coarse = int.Parse(adcCal.ElementAt(3)),
-                    Fine = int.Parse(adcCal.ElementAt(4)),
-                    Cfix = int.Parse(adcCal.ElementAt(5)),
-                    Offset = int.Parse(adcCal.ElementAt(6)),
-                    Threshold = int.Parse(adcCal.ElementAt(7))
-                };
+                throw new ArgumentException("An ADC calibration file must be specified for the Nric1384 chip.");
             }
+
+            var adcCalibration = NeuropixelsV1Helper.TryParseAdcCalibrationFile(adcCalibrationFile);
+
+            if (!adcCalibration.HasValue)
+            {
+                throw new ArgumentException($"The calibration file \"{adcCalibrationFile}\" is invalid.");
+            }
+
+            var gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(gainCalibrationFile,apGain, lfpGain, Nric1384.ElectrodeCount);
+
+            if (!gainCorrection.HasValue)
+            {
+                throw new ArgumentException($"The calibration file \"{gainCalibrationFile}\" is invalid.");
+            }
+
+            if (adcCalibration.Value.SerialNumber != gainCorrection.Value.SerialNumber)
+            {
+                throw new ArgumentException($"The ADC calibration file's serial number ({adcCalibration.Value.SerialNumber}) " +
+                    $"does not match the gain calibration file's serial number ({gainCorrection.Value.SerialNumber}).");
+            }
+
+            ApGainCorrection = gainCorrection.Value.ApGainCorrectionFactor;
+            LfpGainCorrection = gainCorrection.Value.LfpGainCorrectionFactor;
 
             // create shift-register bit arrays
             for (int i = 0; i < NeuropixelsV1e.ChannelCount; i++)
@@ -99,6 +89,8 @@ namespace OpenEphys.Onix1
                 BaseConfigs[configIdx][chanOptsIdx + 7] = !apFilter; // Full bandwidth = 1, filter on = 0
 
             }
+
+            Adcs = adcCalibration.Value.Adcs;
 
             int k = 0;
             foreach (var adc in Adcs)
@@ -172,7 +164,6 @@ namespace OpenEphys.Onix1
                 BaseConfigs[configIdx][slopeOffset + 8] = cfix[1];
                 BaseConfigs[configIdx][slopeOffset + 9] = cfix[2];
                 BaseConfigs[configIdx][slopeOffset + 10] = cfix[3];
-
             }
         }
 
@@ -201,7 +192,7 @@ namespace OpenEphys.Onix1
 
                 for (int j = 0; j < 2; j++)
                 {
-                    var baseBytes = BitArrayToBytes(BaseConfigs[i]);
+                    var baseBytes = BitHelper.ToBitReversedBytes(BaseConfigs[i]);
 
                     WriteByte(Nric1384.SR_LENGTH1, (uint)baseBytes.Length % 0x100);
                     WriteByte(Nric1384.SR_LENGTH2, (uint)baseBytes.Length / 0x100);
@@ -218,30 +209,17 @@ namespace OpenEphys.Onix1
                 }
             }
 
+            // write adc thresholds and offsets
+            for (uint i = 0; i < Adcs.Length; i++)
+            {
+                var thresh = (uint)Adcs[i].Threshold;
+                var offset = (uint)Adcs[i].Offset;    
+                device.WriteRegister(Nric1384.ADC00_OFF_THRESH + i, offset << 10 | thresh);
+            }
+
             // gain corrections
             device.WriteRegister(Nric1384.LFP_GAIN, (uint)(LfpGainCorrection * (1 << 14)));
             device.WriteRegister(Nric1384.AP_GAIN, (uint)(ApGainCorrection * (1 << 14)));
-        }
-
-        // Bits go into the shift registers MSB first
-        // This creates a *bit-reversed* byte array from a bit array
-        private static byte[] BitArrayToBytes(BitArray bits)
-        {
-            if (bits.Length == 0)
-            {
-                throw new ArgumentException("Shift register data is empty", nameof(bits));
-            }
-
-            var bytes = new byte[(bits.Length - 1) / 8 + 1];
-            bits.CopyTo(bytes, 0);
-
-            for (int i = 0; i < bytes.Length; i++)
-            {
-                // NB: http://graphics.stanford.edu/~seander/bithacks.html
-                bytes[i] = (byte)((bytes[i] * 0x0202020202ul & 0x010884422010ul) % 1023);
-            }
-
-            return bytes;
         }
     }
 }

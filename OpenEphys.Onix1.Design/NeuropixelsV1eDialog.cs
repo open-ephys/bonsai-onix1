@@ -269,7 +269,8 @@ namespace OpenEphys.Onix1.Design
             {
                 gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(ConfigureNode.GainCalibrationFile, 
                                                                                  ConfigureNode.ProbeConfiguration.SpikeAmplifierGain,
-                                                                                 ConfigureNode.ProbeConfiguration.LfpAmplifierGain);
+                                                                                 ConfigureNode.ProbeConfiguration.LfpAmplifierGain,
+                                                                                 960);
             }
             catch (IOException ex)
             {

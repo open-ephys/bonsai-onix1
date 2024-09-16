@@ -5,7 +5,7 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Configures a Nric184 bioacquisition device.
+    /// Configures a Nric184 bioacquisition chip.
     /// </summary>
     public class ConfigureNric1384 : SingleDeviceFactory
     {
@@ -141,6 +141,8 @@ namespace OpenEphys.Onix1
         public const int ID = 33;
 
         public const int I2cAddress = 0x70;
+        public const int ChannelCount = 384;
+        public const int ElectrodeCount = 384;
 
         // managed registers
         public const uint ENABLE = 0x8000; // Enable or disable the data output stream
