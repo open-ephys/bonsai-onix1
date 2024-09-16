@@ -11,24 +11,24 @@ namespace OpenEphys.Onix1
     /// Configures the ONIX breakout board's output clock.
     /// </summary>
     /// <remarks>
-    /// The output clock provides physical, 3.3V logic level, 50 Ohm output impedance, frequency divided copy
+    /// The output clock provides a 3.3V logic level, 50 Ohm output impedance, frequency divided copy
     /// of the <see cref="ContextTask.AcquisitionClockHz">Acquisition Clock</see> that is used to generate
-    /// <see cref="DataFrame.Clock"/> values for all data streams within an ONIX system. This clock runs a
+    /// <see cref="DataFrame.Clock"/> values for all data streams within an ONIX system. This clock runs at a
     /// user defined rate, duty cycle, and start delay. It can be used to drive external hardware or can be
     /// logged by external recording systems for post-hoc synchronization with ONIX data.
     /// </remarks>
     [Description("Configures the ONIX breakout board's output clock.")]
-    public class ConfigureBreakoutOutputClock : SingleDeviceFactory
+    public class ConfigureOutputClock : SingleDeviceFactory
     {
         readonly BehaviorSubject<bool> gate = new(false);
         double frequencyHz = 1e6;
         double dutyCycle = 50;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigureBreakoutOutputClock"/> class.
+        /// Initializes a new instance of the <see cref="ConfigureOutputClock"/> class.
         /// </summary>
-        public ConfigureBreakoutOutputClock()
-            : base(typeof(BreakoutOutputClock))
+        public ConfigureOutputClock()
+            : base(typeof(OutputClock))
         {
             DeviceAddress = 5;
         }
@@ -37,7 +37,7 @@ namespace OpenEphys.Onix1
         /// Gets or sets a value specifying if the output clock is active.
         /// </summary>
         /// <remarks>
-        /// If set to true, the clock output will connected to the clock output line. If set to false, the
+        /// If set to true, the clock output will be connected to the clock output line. If set to false, the
         /// clock output line will be held low. This value can be toggled in real time to gate acquisition of
         /// external hardware.
         /// </remarks>
@@ -57,7 +57,7 @@ namespace OpenEphys.Onix1
         /// integer multiple of the <see cref="ContextTask.AcquisitionClockHz">Acquisition Clock</see>
         /// frequency. Therefore, the true clock frequency will be set to a value that is as close as possible
         /// to the requested setting while respecting this constraint. The value as actualized in hardware is
-        /// reported by <see cref="BreakoutOutputClockData"/>.
+        /// reported by <see cref="OutputClockData"/>.
         /// </remarks>
         [Range(0.1, 10e6)]
         [Category(ConfigurationCategory)]
@@ -79,7 +79,7 @@ namespace OpenEphys.Onix1
         /// multiple of the <see cref="ContextTask.AcquisitionClockHz">Acquisition Clock</see> frequency.
         /// Therefore, the true duty cycle will be set to a value that is as close as possible to the
         /// requested setting while respecting this constraint. The value as actualized in hardware is
-        /// reported by <see cref="BreakoutOutputClockData"/>.
+        /// reported by <see cref="OutputClockData"/>.
         /// </remarks>
         [Range(10, 90)]
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
@@ -103,14 +103,14 @@ namespace OpenEphys.Onix1
         /// <para>
         /// Valid values are between 0 and and 3600 seconds. Setting to a value greater than 0 can be useful
         /// for ensuring data sources that are driven by the output clock start significantly after ONIX has
-        /// begun aquisition for the purposes of ordering acquisition start times.
+        /// begun acquisition for the purposes of ordering acquisition start times.
         /// </para>
         /// <para>
-        /// The delay must each be an integer multiple of the <see
+        /// The delay must be an integer multiple of the <see
         /// cref="ContextTask.AcquisitionClockHz">Acquisition Clock</see> frequency. Therefore, the true delay
         /// cycle will be set to a value that is as close as possible to the requested setting while
         /// respecting this constraint. The value as actualized in hardware is reported by <see
-        /// cref="BreakoutOutputClockData"/>.
+        /// cref="OutputClockData"/>.
         /// </para>
         /// </remarks>
         [Category(ConfigurationCategory)]
@@ -137,53 +137,52 @@ namespace OpenEphys.Onix1
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
 
-            // TODO: Dispose action that turns clock off
             return source.ConfigureDevice((context, observer) =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
 
-                var baseFreqHz = device.ReadRegister(BreakoutOutputClock.BASE_FREQ_HZ);
+                var baseFreqHz = device.ReadRegister(OutputClock.BASE_FREQ_HZ);
                 var periodTicks = (uint)(baseFreqHz / clkFreqHz);
                 var h = (uint)(periodTicks * (dutyCycle / 100));
                 var l = periodTicks - h;
                 var delayTicks = (uint)(delaySeconds * baseFreqHz);
-                device.WriteRegister(BreakoutOutputClock.HIGH_CYCLES, h);
-                device.WriteRegister(BreakoutOutputClock.LOW_CYCLES, l);
-                device.WriteRegister(BreakoutOutputClock.DELAY_CYCLES, delayTicks);
+                device.WriteRegister(OutputClock.HIGH_CYCLES, h);
+                device.WriteRegister(OutputClock.LOW_CYCLES, l);
+                device.WriteRegister(OutputClock.DELAY_CYCLES, delayTicks);
 
-                var deviceInfo = new BreakoutOutputClockDeviceInfo(device, DeviceType,
-                    new(baseFreqHz / (h + l), 100 * h / periodTicks, delaySeconds, h + l, h, l, delayTicks));
+                var deviceInfo = new OutputClockDeviceInfo(device, DeviceType,
+                    new((double)baseFreqHz / periodTicks, 100.0 * h / periodTicks, delaySeconds, h + l, h, l, delayTicks));
 
                 var shutdown = Disposable.Create(() =>
                 {
-                    device.WriteRegister(BreakoutOutputClock.CLOCK_GATE, 0u);
+                    device.WriteRegister(OutputClock.CLOCK_GATE, 0u);
                 });
 
                 return new CompositeDisposable(
                     DeviceManager.RegisterDevice(deviceName, deviceInfo),
-                    gate.SubscribeSafe(observer, value => device.WriteRegister(BreakoutOutputClock.CLOCK_GATE, value ? 1u : 0u)),
+                    gate.SubscribeSafe(observer, value => device.WriteRegister(OutputClock.CLOCK_GATE, value ? 1u : 0u)),
                     shutdown
                 );
             });
         }
     }
 
-    static class BreakoutOutputClock
+    static class OutputClock
     {
         public const int ID = 20;
 
         public const uint NULL = 0; // No command
-        public const uint CLOCK_GATE = 1;  // Output enable. Bit 0 = 0 is disabled, Bit 0 = 1 is enabled.
+        public const uint CLOCK_GATE = 1;  // Output gate. Bit 0 = 0 is disabled, Bit 0 = 1 is enabled.
         public const uint HIGH_CYCLES = 2;  // Number of input clock cycles output clock should be high. Valid values are 1 or greater.
         public const uint LOW_CYCLES = 3; // Number of input clock cycles output clock should be low. Valid values are 1 or greater.
-        public const uint DELAY_CYCLES = 4; // Number of input clock cycles output clock should be low. Valid values are 1 or greater.
-        public const uint GATE_RUN = 5; // Number of input clock cycles output clock should be low. Valid values are 1 or greater.
-        public const uint BASE_FREQ_HZ = 6; // Number of input clock cycles output clock should be low. Valid values are 1 or greater.
+        public const uint DELAY_CYCLES = 4; // Delay, in input clock cycles, following reset before clock becomes active.
+        public const uint GATE_RUN = 5; // LSB sets the gate using run status. Bit 0 = 0: Clock runs whenever CLOCK_GATE(0) is 1.  Bit 0 = 1: Clock runs only when acquisition is in RUNNING state.
+        public const uint BASE_FREQ_HZ = 6; // Frequency of the input clock in Hz.
 
         internal class NameConverter : DeviceNameConverter
         {
             public NameConverter()
-                : base(typeof(BreakoutOutputClock))
+                : base(typeof(OutputClock))
             {
             }
         }
@@ -199,26 +198,26 @@ namespace OpenEphys.Onix1
     /// <param name="Delay">Gets the exact clock delay as actualized by the clock synthesizer in
     /// seconds.</param>
     /// <param name="PeriodTicks">Gets the exact clock period as actualized by the clock synthesizer in units
-    /// of ticks of the of the <see cref="ContextTask.AcquisitionClockHz">Acquisition Clock</see>.</param>
+    /// of ticks of the <see cref="ContextTask.AcquisitionClockHz">Acquisition Clock</see>.</param>
     /// <param name="HighTicks">Gets the exact clock high time per period as actualized by the clock
-    /// synthesizer in units of ticks of the of the <see cref="ContextTask.AcquisitionClockHz">Acquisition
+    /// synthesizer in units of ticks of the <see cref="ContextTask.AcquisitionClockHz">Acquisition
     /// Clock</see>.</param>
     /// <param name="LowTicks">Gets the exact clock low time per period as actualized by the clock synthesizer
-    /// in units of ticks of the of the <see cref="ContextTask.AcquisitionClockHz">Acquisition
+    /// in units of ticks of the <see cref="ContextTask.AcquisitionClockHz">Acquisition
     /// Clock</see>.</param>
     /// <param name="DelayTicks">Gets the exact clock delay as actualized by the clock synthesizer in units of
-    /// ticks of the of the <see cref="ContextTask.AcquisitionClockHz">Acquisition Clock</see>.</param>
-    public readonly record struct BreakoutOutputClockParameters(double Frequency,
+    /// ticks of the <see cref="ContextTask.AcquisitionClockHz">Acquisition Clock</see>.</param>
+    public readonly record struct OutputClockParameters(double Frequency,
         double DutyCycle, double Delay, uint PeriodTicks, uint HighTicks, uint LowTicks, uint DelayTicks);
 
-    class BreakoutOutputClockDeviceInfo : DeviceInfo
+    class OutputClockDeviceInfo : DeviceInfo
     {
-        public BreakoutOutputClockDeviceInfo(DeviceContext device, Type deviceType, BreakoutOutputClockParameters parameters)
+        public OutputClockDeviceInfo(DeviceContext device, Type deviceType, OutputClockParameters parameters)
             : base(device, deviceType)
         {
             Parameters = parameters;
         }
 
-        public BreakoutOutputClockParameters Parameters { get; }
+        public OutputClockParameters Parameters { get; }
     }
 }

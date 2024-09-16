@@ -52,7 +52,7 @@ namespace OpenEphys.Onix1
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the clock output in the ONIX breakout board.")]
         [Category(DevicesCategory)]
-        public ConfigureBreakoutOutputClock ClockOutput { get; set; } = new();
+        public ConfigureOutputClock ClockOutput { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the hardware memory monitor configuration.
