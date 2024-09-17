@@ -51,7 +51,8 @@ namespace OpenEphys.Onix1
                     $"match the ADC calibration file serial number: {adcCalibration.Value.SerialNumber}.");
             }
 
-            var gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(gainCalibrationFile, probeConfiguration.SpikeAmplifierGain, probeConfiguration.LfpAmplifierGain);
+            var gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(gainCalibrationFile, 
+                probeConfiguration.SpikeAmplifierGain, probeConfiguration.LfpAmplifierGain, NeuropixelsV1e.ElectrodeCount);
 
             if (!gainCorrection.HasValue)
             {

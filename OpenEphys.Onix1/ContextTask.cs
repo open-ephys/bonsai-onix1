@@ -106,7 +106,7 @@ namespace OpenEphys.Onix1
             DeviceTable = ctx.DeviceTable;
         }
 
-        private void Reset()
+        internal void Reset()
         {
             lock (disposeLock)
                 lock (regLock)

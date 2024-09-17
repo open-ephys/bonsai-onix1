@@ -63,7 +63,7 @@ namespace OpenEphys.Onix1
                                                    .Where(l => l.Ok)
                                                    .Select(l => l.Param);
 
-                           return calibrationValues.Count() == NumberOfAdcParameters
+                           return calibrationValues.Count() != NumberOfAdcParameters
                            ? null
                            : new NeuropixelsV1eAdc {
                                CompP = calibrationValues.ElementAt(0),
@@ -99,13 +99,13 @@ namespace OpenEphys.Onix1
         /// <param name="apGain">Current <see cref="NeuropixelsV1Gain"/> for the AP data.</param>
         /// <param name="lfpGain">Current <see cref="NeuropixelsV1Gain"/> for the LFP data.</param>
         /// <returns><see cref="NeuropixelsV1eGainCorrection"/> object that contains the AP and LFP gain correction values. This object is null if the file was not successfully parsed.</returns>
-        public static NeuropixelsV1eGainCorrection? TryParseGainCalibrationFile(string gainCalibrationFile, NeuropixelsV1Gain apGain, NeuropixelsV1Gain lfpGain)
+        public static NeuropixelsV1eGainCorrection? TryParseGainCalibrationFile(string gainCalibrationFile, NeuropixelsV1Gain apGain, NeuropixelsV1Gain lfpGain, int electrodeCount)
         {
             if (!File.Exists(gainCalibrationFile)) return null;
 
             var lines = File.ReadLines(gainCalibrationFile);
 
-            if (lines.Count() != NeuropixelsV1e.ElectrodeCount + 1) return null;
+            if (lines.Count() != electrodeCount + 1) return null;
             if (!ulong.TryParse(lines.ElementAt(0), out var serialNumber)) return null;
 
             if (!lines
@@ -117,7 +117,7 @@ namespace OpenEphys.Onix1
                 })
                 .Where(l => l.Ok)
                 .Select(l => l.Channel)
-                .SequenceEqual(Enumerable.Range(0, NeuropixelsV1e.ElectrodeCount))) return null;
+                .SequenceEqual(Enumerable.Range(0, electrodeCount))) return null;
 
             var apIndex = Array.IndexOf(Enum.GetValues(typeof(NeuropixelsV1Gain)), apGain);
             var apGainCorrections = lines
