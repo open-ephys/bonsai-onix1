@@ -54,6 +54,7 @@ namespace OpenEphys.Onix1
         [Category(DevicesCategory)]
         public ConfigureOutputClock ClockOutput { get; set; } = new();
 
+        /// <summary>
         /// Gets or sets the the Harp synchronization input configuration.
         /// </summary>
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
