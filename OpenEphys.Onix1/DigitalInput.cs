@@ -6,7 +6,8 @@ using Bonsai;
 
 namespace OpenEphys.Onix1
 {
-    [Obsolete]
+    /// <inheritdoc cref = "DigitalInput"/>
+    [Obsolete("Use DigitalInput instead. This operator will be removed in version 1.0.0")]
     public class BreakoutDigitalInput : DigitalInput { }
 
     /// <summary>

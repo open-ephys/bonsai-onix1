@@ -3,7 +3,8 @@ using System.ComponentModel;
 
 namespace OpenEphys.Onix1
 {
-    [Obsolete]
+    /// <inheritdoc cref = "ConfigureDigitalIO"/>
+    [Obsolete("Use ConfigureDigitalIO instead. This operator will be removed in version 1.0.0v")]
     public class ConfigureBreakoutDigitalIO : ConfigureDigitalIO { }
 
     /// <summary>

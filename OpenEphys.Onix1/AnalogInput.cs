@@ -9,7 +9,8 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix1
 {
-    [Obsolete]
+    /// <inheritdoc cref = "AnalogInput"/>
+    [Obsolete("Use AnalogInput instead. This operator will be removed in version 1.0.0")]
     public class BreakoutAnalogInput : AnalogInput { }
 
     /// <summary>

@@ -4,11 +4,12 @@ using System.Linq;
 
 namespace OpenEphys.Onix1
 {
-    [Obsolete]
+    /// <inheritdoc cref = "ConfigureAnalogIO"/>
+    [Obsolete("Use ConfigureAnalogIO instead. This operator will be removed in version 1.0.0")]
     public class ConfigureBreakoutAnalogIO : ConfigureAnalogIO { }
 
     /// <summary>
-    /// Configures the analog inputs and outputs.
+    /// Configures an analog inputs and output device.
     /// </summary>
     /// <remarks>
     /// This configuration operator can be linked to data IO operators, such as <see
@@ -16,7 +17,7 @@ namespace OpenEphys.Onix1
     /// <c>DeviceName</c>.
     /// </remarks>
     [TypeConverter(typeof(SortedPropertyConverter))]
-    [Description("Configures the ONIX breakout board's analog inputs and outputs.")]
+    [Description("Configures analog inputs and outputs.")]
     public class ConfigureAnalogIO : SingleDeviceFactory
     {
         /// <summary>
