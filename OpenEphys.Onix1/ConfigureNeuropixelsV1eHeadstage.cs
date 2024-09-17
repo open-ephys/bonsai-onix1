@@ -8,7 +8,7 @@ namespace OpenEphys.Onix1
     /// Configures a NeuropixelsV1e headstage on the specified port.
     /// </summary>
     /// <remarks>
-    /// The NeuropixeslV1e Headstage is a 0.68g serialized, multifunction headstage for small animals. This
+    /// The NeuropixelsV1e Headstage is a 0.68g serialized, multifunction headstage for small animals. This
     /// headstage is designed to function with IMEC Neuropixels V1 probes. It provides the following features:
     /// <list type="bullet">
     /// <item><description>Support for a single IMEC Neuropixels 1.0 probe that features:
@@ -43,7 +43,7 @@ namespace OpenEphys.Onix1
         [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the NeuropixelsV1e device.")]
-        public ConfigureNeuropixelsV1e NeuropixelsV1e { get; set; } = new();
+        public ConfigureNeuropixelsV1e NeuropixelsV1e { get; set; } = new(); 
 
         /// <summary>
         /// Gets or sets the Bno055 9-axis inertial measurement unit configuration.
@@ -51,8 +51,9 @@ namespace OpenEphys.Onix1
         [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the Bno055 device.")]
-        public ConfigureNeuropixelsV1eBno055 Bno055 { get; set; } = new();
-
+        public ConfigurePolledBno055 Bno055 { get; set; } = 
+            new ConfigurePolledBno055 { AxisMap = Bno055AxisMap.ZXY, AxisSign = Bno055AxisSign.NegZ | Bno055AxisSign.NegY }; // Axis map: X => -Z, Y => X, Z => -Y.
+        
         /// <summary>
         /// Gets or sets the port.
         /// </summary>

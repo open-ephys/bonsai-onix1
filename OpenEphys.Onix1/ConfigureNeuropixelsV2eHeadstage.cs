@@ -50,7 +50,8 @@ namespace OpenEphys.Onix1
         [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the Bno055 device.")]
-        public ConfigureNeuropixelsV2eBno055 Bno055 { get; set; } = new();
+        public ConfigurePolledBno055 Bno055 { get; set; } =
+            new ConfigurePolledBno055 { AxisMap = Bno055AxisMap.ZXY, AxisSign = Bno055AxisSign.Default }; // Axis map: X => Z, Y => X, Z => Y.
 
         /// <summary>
         /// Gets or sets the port.
