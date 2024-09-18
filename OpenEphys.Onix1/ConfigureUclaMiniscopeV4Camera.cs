@@ -3,6 +3,8 @@ using System.ComponentModel;
 using System.Drawing.Design;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
+using System.Threading;
+using System.Xml.Serialization;
 using Bonsai;
 
 namespace OpenEphys.Onix1
@@ -102,6 +104,13 @@ namespace OpenEphys.Onix1
             set => liquidLensVoltage.OnNext(value);
         }
 
+        // This is a hack. The hardware is quite unreliable and requires special assistance in order to
+        // operate. We do a lot of retries to make this happen. Once we have successful configuration, redoing
+        // it can cause failure. Therefore, we allow ConfigureMiniscopeV4 to set this variable in order to
+        // skip redundant configuration in Process(). This is not a great solution.
+        [XmlIgnore]
+        internal bool Configured { get; set; } = false;
+
         /// <summary>
         /// Configures the camera on a UCLA Miniscope V4.
         /// </summary>
@@ -120,54 +129,55 @@ namespace OpenEphys.Onix1
             var enable = Enable;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
-            uint shutterWidth = FrameRate switch
-            {
-                UclaMiniscopeV4FramesPerSecond.Fps10Hz => 10000,
-                UclaMiniscopeV4FramesPerSecond.Fps15Hz => 6667,
-                UclaMiniscopeV4FramesPerSecond.Fps20Hz => 5000,
-                UclaMiniscopeV4FramesPerSecond.Fps25Hz => 4000,
-                UclaMiniscopeV4FramesPerSecond.Fps30Hz => 3300,
-                _ => 3300
-            };
-            var interleaveLED = InterleaveLed;
+            var frameRate = FrameRate;
+            var interleaveLed = InterleaveLed;
 
             return source.ConfigureDevice(context =>
             {
-                // configure device via the DS90UB9x deserializer device
-                var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
-
-                // TODO: early exit if false?
-                device.WriteRegister(DS90UB9x.ENABLE, enable ? 1u : 0);
-
-                // configure deserializer, chip states, and camera PLL
-                ConfigureCameraSystem(device);
-
-                // configuration properties
-                var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
-                atMega.WriteByte(0x04, (uint)(interleaveLED ? 0x00 : 0x03));
-                WriteCameraRegister(atMega, 200, shutterWidth);
-
-                var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
-                var shutdown = Disposable.Create(() =>
+                try
                 {
-                    // turn off EWL
-                    var max14574 = new I2CRegisterContext(device, UclaMiniscopeV4.Max14574Address);
-                    max14574.WriteByte(0x03, 0x00);
+                    // configure device via the DS90UB9x deserializer device
+                    var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
 
-                    // turn off LED
-                    var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
-                    atMega.WriteByte(1, 0xFF);
-                });
-                return new CompositeDisposable(
-                    ledBrightness.Subscribe(value => SetLedBrightness(device, value)),
-                    sensorGain.Subscribe(value => SetSensorGain(device, value)),
-                    liquidLensVoltage.Subscribe(value => SetLiquidLensVoltage(device, value)),
-                    DeviceManager.RegisterDevice(deviceName, deviceInfo),
-                    shutdown);
+                    // TODO: early exit if false?
+                    device.WriteRegister(DS90UB9x.ENABLE, enable ? 1u : 0);
+
+                    // check if configuration was already performed on this object
+                    if (!Configured)
+                    {
+                        ConfigureDeserializer(device);
+                        ConfigureCameraSystem(device, frameRate, interleaveLed);
+                    }
+
+                    var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
+                    var shutdown = Disposable.Create(() =>
+                    {
+                        // turn off EWL
+                        var max14574 = new I2CRegisterContext(device, UclaMiniscopeV4.Max14574Address);
+                        max14574.WriteByte(0x03, 0x00);
+
+                        // turn off LED
+                        var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
+                        atMega.WriteByte(1, 0xFF);
+                    });
+                    return new CompositeDisposable(
+                        ledBrightness.Subscribe(value => SetLedBrightness(device, value)),
+                        sensorGain.Subscribe(value => SetSensorGain(device, value)),
+                        liquidLensVoltage.Subscribe(value => SetLiquidLensVoltage(device, value)),
+                        DeviceManager.RegisterDevice(deviceName, deviceInfo),
+                        shutdown);
+                }
+                finally
+                {
+                    // needs to be reconfigured past this point, cannot rely on putting this action in
+                    // shutdown disposable since any exception before this function returns will not enforce
+                    // this setting
+                    Configured = false;
+                }
             });
         }
 
-        internal static void ConfigureCameraSystem(DeviceContext device)
+        internal static void ConfigureDeserializer(DeviceContext device)
         {
             // configure deserializer
             device.WriteRegister(DS90UB9x.TRIGGEROFF, 0);
@@ -196,6 +206,21 @@ namespace OpenEphys.Onix1
             i2cAlias = UclaMiniscopeV4.Max14574Address << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID3, i2cAlias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias3, i2cAlias);
+        }
+
+        internal static void ConfigureCameraSystem(DeviceContext device, UclaMiniscopeV4FramesPerSecond frameRate, bool interleaveLed)
+        {
+            const int WaitUntilPllSettles = 200;
+
+            // set up Python480
+            var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
+            WriteCameraRegister(atMega, 16, 3); // Turn on PLL
+            Thread.Sleep(WaitUntilPllSettles);
+            WriteCameraRegister(atMega, 32, 0x7007); // Turn on clock management
+            Thread.Sleep(WaitUntilPllSettles);
+            WriteCameraRegister(atMega, 199, 666); // Defines granularity (unit = 1/PLL clock) of exposure and reset_length
+            WriteCameraRegister(atMega, 200, 3300); // Set frame rate to 30 Hz
+            WriteCameraRegister(atMega, 201, 3000); // Set Exposure
 
             // set up potentiometer
             var tpl0102 = new I2CRegisterContext(device, UclaMiniscopeV4.Tpl0102Address);
@@ -206,13 +231,19 @@ namespace OpenEphys.Onix1
             var max14574 = new I2CRegisterContext(device, UclaMiniscopeV4.Max14574Address);
             max14574.WriteByte(0x03, 0x03);
 
-            // turn on LED and setup Python480
-            var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
-            WriteCameraRegister(atMega, 16, 3); // Turn on PLL
-            WriteCameraRegister(atMega, 32, 0x7007); // Turn on clock management
-            WriteCameraRegister(atMega, 199, 666); // Defines granularity (unit = 1/PLL clock) of exposure and reset_length
-            WriteCameraRegister(atMega, 200, 3300); // Set frame rate to 30 Hz
-            WriteCameraRegister(atMega, 201, 3000); // Set Exposure
+            // configuration properties
+            uint shutterWidth = frameRate switch
+            {
+                UclaMiniscopeV4FramesPerSecond.Fps10Hz => 10000,
+                UclaMiniscopeV4FramesPerSecond.Fps15Hz => 6667,
+                UclaMiniscopeV4FramesPerSecond.Fps20Hz => 5000,
+                UclaMiniscopeV4FramesPerSecond.Fps25Hz => 4000,
+                UclaMiniscopeV4FramesPerSecond.Fps30Hz => 3300,
+                _ => 3300
+            };
+
+            atMega.WriteByte(0x04, (uint)(interleaveLed ? 0x00 : 0x03));
+            WriteCameraRegister(atMega, 200, shutterWidth);
         }
 
         static void WriteCameraRegister(I2CRegisterContext i2c, uint register, uint value)

@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
+using oni;
 
 namespace OpenEphys.Onix1
 {
@@ -20,6 +22,9 @@ namespace OpenEphys.Onix1
     /// </remarks>
     public class ConfigureUclaMiniscopeV4 : MultiDeviceFactory
     {
+
+        const double MaxVoltage = 5.6;
+
         PortName port;
         readonly ConfigureUclaMiniscopeV4PortController PortControl = new();
 
@@ -64,6 +69,12 @@ namespace OpenEphys.Onix1
                 PortControl.DeviceAddress = (uint)port;
                 Camera.DeviceAddress = offset + 0;
                 Bno055.DeviceAddress = offset + 1;
+
+                // Hack: we configure the camera using the port controller below. configuration is super
+                // unreliable, so we do a bunch of retries in the logic PortController logic. We don't want to
+                // reperform configuration in the Camera object after this. So we capture a reference to the
+                // camera here in order to inform it we have already performed configuration. 
+                PortControl.Camera = Camera;
             }
         }
 
@@ -79,12 +90,12 @@ namespace OpenEphys.Onix1
         /// port voltage.
         /// </para>
         /// <para>
-        /// Warning: this device requires 5.0V to 6.0V, measured at the miniscope, for proper operation. Supplying higher
+        /// Warning: this device requires 4.0 to 5.0V, measured at the miniscope, for proper operation. Supplying higher
         /// voltages may result in damage.
         /// </para>
         /// </remarks>
         [Description("If defined, it will override automated voltage discovery and apply the specified voltage" +
-                     "to the miniscope. Warning: this device requires 5.0V to 6.0V for proper operation." +
+                     "to the miniscope. Warning: this device requires 4.0 to 5.0V, measured at the scope, for proper operation." +
                      "Supplying higher voltages may result in damage to the miniscope.")]
         [Category(ConfigurationCategory)]
         public double? PortVoltage
@@ -99,30 +110,37 @@ namespace OpenEphys.Onix1
             yield return Camera;
             yield return Bno055;
         }
+
         class ConfigureUclaMiniscopeV4PortController : ConfigurePortController
         {
+            internal ConfigureUclaMiniscopeV4Camera Camera;
+
             protected override bool ConfigurePortVoltage(DeviceContext device)
             {
-                const double MinVoltage = 5.3;
-                const double MaxVoltage = 6.5;
-                const double VoltageOffset = 0.2;
-                const double VoltageIncrement = 0.1;
+                const double MinVoltage = 5.2;
+                const double VoltageIncrement = 0.05;
 
                 for (var voltage = MinVoltage; voltage <= MaxVoltage; voltage += VoltageIncrement)
                 {
                     SetPortVoltage(device, voltage);
-                    if (CheckLinkState(device))
+                    if (CheckLinkStateWithRetry(device))
                     {
-                        return ConfigurePortVoltageOverride(device, voltage + VoltageOffset);
+                        return true;
                     }
                 }
 
                 return false;
             }
 
-            private void SetPortVoltage(DeviceContext device, double voltage)
+            void SetPortVoltage(DeviceContext device, double voltage)
             {
-                const int WaitUntilVoltageSettles = 200;
+                if (voltage > MaxVoltage)
+                {
+                    throw new ArgumentException($"The port voltage must be set to a value less than {MaxVoltage} " +
+                        $"volts to prevent damage to the miniscope.");
+                }
+
+                const int WaitUntilVoltageSettles = 400;
                 device.WriteRegister(PortController.PORTVOLTAGE, 0);
                 Thread.Sleep(WaitUntilVoltageSettles);
                 device.WriteRegister(PortController.PORTVOLTAGE, (uint)(10 * voltage));
@@ -131,32 +149,45 @@ namespace OpenEphys.Onix1
 
             override protected bool CheckLinkState(DeviceContext device)
             {
-                const int WaitUntilPllSettles = 200;
+                var ds90ub9x = device.Context.GetPassthroughDeviceContext(DeviceAddress << 8, typeof(DS90UB9x));
+                ConfigureUclaMiniscopeV4Camera.ConfigureDeserializer(ds90ub9x);
+
                 const int FailureToWriteRegister = -6;
                 try
                 {
-                    var ds90ub9x = device.Context.GetPassthroughDeviceContext(DeviceAddress << 8, typeof(DS90UB9x));
-                    ConfigureUclaMiniscopeV4Camera.ConfigureCameraSystem(ds90ub9x);
+                    ConfigureUclaMiniscopeV4Camera.ConfigureCameraSystem(ds90ub9x, Camera.FrameRate, Camera.InterleaveLed);
                 }
-                catch (oni.ONIException ex) when (ex.Number == FailureToWriteRegister)
+                catch (ONIException ex) when (ex.Number == FailureToWriteRegister)
                 {
                     return false;
                 }
-
-                Thread.Sleep(WaitUntilPllSettles);
 
                 var linkState = device.ReadRegister(PortController.LINKSTATE);
                 return (linkState & PortController.LINKSTATE_SL) != 0;
             }
 
-            override protected bool ConfigurePortVoltageOverride(DeviceContext device, double voltage)
+            bool CheckLinkStateWithRetry(DeviceContext device)
             {
-                SetPortVoltage(device, voltage);
-
                 const int TotalTries = 10;
                 for (int i = 0; i < TotalTries; i++)
                 {
                     if (CheckLinkState(device))
+                    {
+                        Camera.Configured = true;
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            override protected bool ConfigurePortVoltageOverride(DeviceContext device, double voltage)
+            {
+                const int TotalTries = 3;
+                for (int i = 0; i < TotalTries; i++)
+                {
+                    SetPortVoltage(device, voltage);
+                    if (CheckLinkStateWithRetry(device))
                         return true;
                 }
 

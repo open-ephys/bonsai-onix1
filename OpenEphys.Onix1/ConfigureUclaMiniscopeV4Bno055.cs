@@ -63,10 +63,10 @@ namespace OpenEphys.Onix1
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias4, alias);
         }
 
+        // TODO: This can fail, pretty randomly, during configuration causing the failure to write
+        // register and workflow to terminate. Not sure why, likely due to hardware design.
         static void ConfigureBno055(DeviceContext device)
         {
-            // setup BNO055 device
-            // TODO: Correct orientation
             var i2c = new I2CRegisterContext(device, UclaMiniscopeV4Bno055.BNO055Address);
             i2c.WriteByte(0x3E, 0x00); // Power mode normal
             i2c.WriteByte(0x07, 0x00); // Page ID address 0
