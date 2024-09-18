@@ -19,6 +19,8 @@ namespace OpenEphys.Onix1.Design
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
                         configureBno055.Enable = editorDialog.ConfigureNode.Enable;
+                        configureBno055.DeviceAddress = editorDialog.ConfigureNode.DeviceAddress;
+                        configureBno055.DeviceName = editorDialog.ConfigureNode.DeviceName;
 
                         return true;
                     }

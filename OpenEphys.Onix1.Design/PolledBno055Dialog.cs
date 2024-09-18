@@ -34,8 +34,10 @@ namespace OpenEphys.Onix1.Design
         {
             if (!TopLevel)
             {
-                splitContainer1.Panel2Collapsed = true;
-                splitContainer1.Panel2.Hide();
+                tableLayoutPanel1.Controls.Remove(flowLayoutPanel1);
+                tableLayoutPanel1.RowCount = 1;
+
+                MaximumSize = new System.Drawing.Size(0, 0);
             }
         }
     }

@@ -43,7 +43,7 @@ namespace OpenEphys.Onix1
         [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the NeuropixelsV1e device.")]
-        public ConfigureNeuropixelsV1e NeuropixelsV1e { get; set; } = new(); 
+        public ConfigureNeuropixelsV1e NeuropixelsV1e { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the Bno055 9-axis inertial measurement unit configuration.

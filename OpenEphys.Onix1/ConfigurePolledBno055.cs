@@ -14,7 +14,6 @@ namespace OpenEphys.Onix1
     [Description("Configures a PolledBno055 device.")]
     public class ConfigurePolledBno055 : SingleDeviceFactory
     {
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigurePolledBno055"/> class.
         /// </summary>
@@ -140,7 +139,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// The axis of the device can be reconfigured to the new reference axis to account for
-    /// differences it its mounting position. The following values can be applied to the Bno055's
+    /// differences in its mounting position. The following values can be applied to the Bno055's
     /// AXIS_MAP_CONFIG register at address 0x41.
     /// </remarks>
     public enum Bno055AxisMap : uint
@@ -176,7 +175,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// The axis of the device can be reconfigured to the new reference axis to account for
-    /// differences it its mounting position. The following values can be applied to the Bno055's
+    /// differences in its mounting position. The following values can be applied to the Bno055's
     /// AXIS_MAP_SIGN register at address 0x42.
     /// </remarks>
     [Flags]
