@@ -98,6 +98,7 @@ namespace OpenEphys.Onix1
         /// <param name="gainCalibrationFile">String defining the path to the gain calibration file.</param>
         /// <param name="apGain">Current <see cref="NeuropixelsV1Gain"/> for the AP data.</param>
         /// <param name="lfpGain">Current <see cref="NeuropixelsV1Gain"/> for the LFP data.</param>
+        /// <param name="electrodeCount">Number of electrodes expected in the calibration file.</param>
         /// <returns><see cref="NeuropixelsV1eGainCorrection"/> object that contains the AP and LFP gain correction values. This object is null if the file was not successfully parsed.</returns>
         public static NeuropixelsV1eGainCorrection? TryParseGainCalibrationFile(string gainCalibrationFile, NeuropixelsV1Gain apGain, NeuropixelsV1Gain lfpGain, int electrodeCount)
         {
