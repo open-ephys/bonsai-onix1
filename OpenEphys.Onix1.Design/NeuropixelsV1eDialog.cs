@@ -13,6 +13,8 @@ namespace OpenEphys.Onix1.Design
     {
         readonly NeuropixelsV1eChannelConfigurationDialog ChannelConfiguration;
 
+        private NeuropixelsV1eAdc[] Adcs = null;
+
         private enum ChannelPreset
         {
             BankA,
@@ -62,18 +64,18 @@ namespace OpenEphys.Onix1.Design
 
             comboBoxApGain.DataSource = Enum.GetValues(typeof(NeuropixelsV1Gain));
             comboBoxApGain.SelectedItem = ConfigureNode.ProbeConfiguration.SpikeAmplifierGain;
-            comboBoxApGain.SelectedIndexChanged += SelectedIndexChanged;
+            comboBoxApGain.SelectedIndexChanged += SpikeAmplifierGainIndexChanged;
 
             comboBoxLfpGain.DataSource = Enum.GetValues(typeof(NeuropixelsV1Gain));
             comboBoxLfpGain.SelectedItem = ConfigureNode.ProbeConfiguration.LfpAmplifierGain;
-            comboBoxLfpGain.SelectedIndexChanged += SelectedIndexChanged;
+            comboBoxLfpGain.SelectedIndexChanged += LfpAmplifierGainIndexChanged;
 
             comboBoxReference.DataSource = Enum.GetValues(typeof(NeuropixelsV1ReferenceSource));
             comboBoxReference.SelectedItem = ConfigureNode.ProbeConfiguration.Reference;
-            comboBoxReference.SelectedIndexChanged += SelectedIndexChanged;
+            comboBoxReference.SelectedIndexChanged += ReferenceIndexChanged;
 
             checkBoxSpikeFilter.Checked = ConfigureNode.ProbeConfiguration.SpikeFilter;
-            checkBoxSpikeFilter.CheckedChanged += SelectedIndexChanged;
+            checkBoxSpikeFilter.CheckedChanged += SpikeFilterIndexChanged;
 
             textBoxAdcCalibrationFile.Text = ConfigureNode.AdcCalibrationFile;
 
@@ -81,7 +83,7 @@ namespace OpenEphys.Onix1.Design
 
             comboBoxChannelPresets.DataSource = Enum.GetValues(typeof(ChannelPreset));
             CheckForExistingChannelPreset();
-            comboBoxChannelPresets.SelectedIndexChanged += SelectedIndexChanged;
+            comboBoxChannelPresets.SelectedIndexChanged += ChannelPresetIndexChanged;
 
             CheckStatus();
         }
@@ -103,61 +105,52 @@ namespace OpenEphys.Onix1.Design
 
         private void ResizeTrackBar(object sender, EventArgs e)
         {
-            if (sender is ChannelConfigurationDialog dialog)
-            {
-                panelTrackBar.Height = dialog.zedGraphChannels.Size.Height;
-                panelTrackBar.Location = new Point(panelProbe.Size.Width - panelTrackBar.Width, ChannelConfiguration.zedGraphChannels.Location.Y);
-            }
+            panelTrackBar.Height = ((ChannelConfigurationDialog)sender).zedGraphChannels.Size.Height;
+            panelTrackBar.Location = new Point(panelProbe.Size.Width - panelTrackBar.Width, ChannelConfiguration.zedGraphChannels.Location.Y);
         }
 
-        private void FileTextChanged(object sender, EventArgs e)
+        private void GainCalibrationFileTextChanged(object sender, EventArgs e)
         {
-            if (sender is TextBox textBox && textBox != null)
-            {
-                if (textBox.Name == nameof(textBoxGainCalibrationFile))
-                {
-                    ConfigureNode.GainCalibrationFile = textBox.Text;
-                }
-                else if (textBox.Name == nameof(textBoxAdcCalibrationFile))
-                {
-                    ConfigureNode.AdcCalibrationFile = textBox.Text;
-                }
-            }
-
+            ConfigureNode.GainCalibrationFile = ((TextBox)sender).Text;
             CheckStatus();
         }
 
-        private void SelectedIndexChanged(object sender, EventArgs e)
+        private void AdcCalibrationFileTextChanged(object sender, EventArgs e)
         {
-            if (sender is ComboBox comboBox && comboBox != null)
+            ConfigureNode.AdcCalibrationFile = ((TextBox)sender).Text;
+            CheckStatus();
+        }
+
+        private void SpikeAmplifierGainIndexChanged(object sender, EventArgs e)
+        {
+            ConfigureNode.ProbeConfiguration.SpikeAmplifierGain = (NeuropixelsV1Gain)((ComboBox)sender).SelectedItem;
+            CheckStatus();
+        }
+
+        private void LfpAmplifierGainIndexChanged(object sender, EventArgs e)
+        {
+            ConfigureNode.ProbeConfiguration.LfpAmplifierGain = (NeuropixelsV1Gain)((ComboBox)sender).SelectedItem;
+            CheckStatus();
+        }
+
+        private void ReferenceIndexChanged(object sender, EventArgs e)
+        {
+            ConfigureNode.ProbeConfiguration.Reference = (NeuropixelsV1ReferenceSource)((ComboBox)sender).SelectedItem;
+        }
+
+        private void ChannelPresetIndexChanged(object sender, EventArgs e)
+        {
+            var channelPreset = (ChannelPreset)((ComboBox)sender).SelectedItem;
+
+            if (channelPreset != ChannelPreset.None)
             {
-                if (comboBox.Name == nameof(comboBoxApGain))
-                {
-                    ConfigureNode.ProbeConfiguration.SpikeAmplifierGain = (NeuropixelsV1Gain)comboBox.SelectedItem;
-                }
-                else if (comboBox.Name == nameof(comboBoxLfpGain))
-                {
-                    ConfigureNode.ProbeConfiguration.LfpAmplifierGain = (NeuropixelsV1Gain)comboBox.SelectedItem;
-                }
-                else if (comboBox.Name == nameof(comboBoxReference))
-                {
-                    ConfigureNode.ProbeConfiguration.Reference = (NeuropixelsV1ReferenceSource)comboBox.SelectedItem;
-                }
-                else if (comboBox.Name == nameof(comboBoxChannelPresets))
-                {
-                    if ((ChannelPreset)comboBox.SelectedItem != ChannelPreset.None)
-                    {
-                        SetChannelPreset((ChannelPreset)comboBox.SelectedItem);
-                    }
-                }
+                SetChannelPreset(channelPreset);
             }
-            else if (sender is CheckBox checkBox && checkBox != null)
-            {
-                if (checkBox.Name == nameof(checkBoxSpikeFilter))
-                {
-                    ConfigureNode.ProbeConfiguration.SpikeFilter = checkBox.Checked;
-                }
-            }
+        }
+
+        private void SpikeFilterIndexChanged(object sender, EventArgs e)
+        {
+            ConfigureNode.ProbeConfiguration.SpikeFilter = ((CheckBox)sender).Checked;
         }
 
         private void SetChannelPreset(ChannelPreset preset)
@@ -239,74 +232,187 @@ namespace OpenEphys.Onix1.Design
 
         private void CheckStatus()
         {
-            if (File.Exists(ConfigureNode.AdcCalibrationFile) && File.Exists(ConfigureNode.GainCalibrationFile))
+            const string NoFileSelected = "No file selected.";
+            const string InvalidFile = "Invalid file.";
+
+            NeuropixelsV1eAdcCalibration? adcCalibration;
+
+            try
             {
-                panelProbe.Visible = true;
+                adcCalibration = NeuropixelsV1Helper.TryParseAdcCalibrationFile(ConfigureNode.AdcCalibrationFile);
+            }
+            catch (IOException ex)
+            {
+                MessageBox.Show(ex.Message, "I/O error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Unauthorized access error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            Adcs = adcCalibration.HasValue
+                   ? adcCalibration.Value.Adcs
+                   : null;
+
+            buttonViewAdcs.Enabled = adcCalibration.HasValue;
+            toolStripAdcCalSN.Text = adcCalibration.HasValue
+                                     ? adcCalibration.Value.SerialNumber.ToString()
+                                     : string.IsNullOrEmpty(ConfigureNode.AdcCalibrationFile)
+                                       ? NoFileSelected
+                                       : InvalidFile;
+
+            NeuropixelsV1eGainCorrection? gainCorrection;
+
+            try
+            {
+                gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(ConfigureNode.GainCalibrationFile, 
+                                                                                 ConfigureNode.ProbeConfiguration.SpikeAmplifierGain,
+                                                                                 ConfigureNode.ProbeConfiguration.LfpAmplifierGain,
+                                                                                 960);
+            }
+            catch (IOException ex)
+            {
+                MessageBox.Show(ex.Message, "I/O error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Unauthorized access error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            toolStripGainCalSN.Text = gainCorrection.HasValue
+                                      ? gainCorrection.Value.SerialNumber.ToString()
+                                      : string.IsNullOrEmpty(ConfigureNode.GainCalibrationFile)
+                                        ? NoFileSelected
+                                        : InvalidFile;
+
+            textBoxApCorrection.Text = gainCorrection.HasValue
+                                       ? gainCorrection.Value.ApGainCorrectionFactor.ToString()
+                                       : "";
+
+            textBoxLfpCorrection.Text = gainCorrection.HasValue
+                                        ? gainCorrection.Value.LfpGainCorrectionFactor.ToString()
+                                        : "";
+
+            panelProbe.Visible = adcCalibration.HasValue && gainCorrection.HasValue;
+
+            if (toolStripAdcCalSN.Text == NoFileSelected || toolStripGainCalSN.Text == NoFileSelected)
+            {
+                toolStripStatus.Image = Properties.Resources.StatusRefreshImage;
+                toolStripStatus.Text = "Select files.";
+            }
+            else if (toolStripAdcCalSN.Text == InvalidFile || toolStripGainCalSN.Text == InvalidFile)
+            {
+                toolStripStatus.Image = Properties.Resources.StatusCriticalImage;
+                toolStripStatus.Text = "Invalid files.";
+            }
+            else if (toolStripAdcCalSN.Text != toolStripGainCalSN.Text)
+            {
+                toolStripStatus.Image = Properties.Resources.StatusBlockedImage;
+                toolStripStatus.Text = "Serial number mismatch.";
             }
             else
             {
-                panelProbe.Visible = false;
+                toolStripStatus.Image = Properties.Resources.StatusReadyImage;
+                toolStripStatus.Text = "Ready.";
             }
         }
 
-        private void ButtonClick(object sender, EventArgs e)
+        private void ChooseGainCalibrationFile_Click(object sender, EventArgs e)
         {
-            if (sender is Button button && button != null)
+            var ofd = new OpenFileDialog()
             {
-                if (button.Name == nameof(buttonOkay))
-                {
-                    DialogResult = DialogResult.OK;
-                }
-                else if (button.Name == nameof(buttonChooseGainCalibrationFile))
-                {
-                    var ofd = new OpenFileDialog()
-                    {
-                        CheckFileExists = true,
-                        Filter = "Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv|All Files|*.*",
-                        FilterIndex = 0
-                    };
+                CheckFileExists = true,
+                Filter = "Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv|All Files|*.*",
+                FilterIndex = 0,
+                InitialDirectory = File.Exists(textBoxGainCalibrationFile.Text) ?
+                                   Path.GetDirectoryName(textBoxGainCalibrationFile.Text) :
+                                   ""
 
-                    if (ofd.ShowDialog() == DialogResult.OK)
-                    {
-                        textBoxGainCalibrationFile.Text = ofd.FileName;
-                    }
-                }
-                else if (button.Name == nameof(buttonChooseAdcCalibrationFile))
-                {
-                    var ofd = new OpenFileDialog()
-                    {
-                        CheckFileExists = true,
-                        Filter = "ADC calibration files (*_ADCCalibration.csv)|*_ADCCalibration.csv|All Files|*.*",
-                        FilterIndex = 0
-                    };
+            };
 
-                    if (ofd.ShowDialog() == DialogResult.OK)
-                    {
-                        textBoxAdcCalibrationFile.Text = ofd.FileName;
-                    }
-                }
-                else if (button.Name == nameof(buttonResetZoom))
-                {
-                    ResetZoom();
-                }
-                else if (button.Name == nameof(buttonClearSelections))
-                {
-                    ChannelConfiguration.SetAllSelections(false);
-                    ChannelConfiguration.HighlightEnabledContacts();
-                    ChannelConfiguration.HighlightSelectedContacts();
-                    ChannelConfiguration.UpdateContactLabels();
-                    ChannelConfiguration.RefreshZedGraph();
-                }
-                else if (button.Name == nameof(buttonEnableContacts))
-                {
-                    EnableSelectedContacts();
-                    ChannelConfiguration.SetAllSelections(false);
-                    ChannelConfiguration.HighlightEnabledContacts();
-                    ChannelConfiguration.HighlightSelectedContacts();
-                    ChannelConfiguration.UpdateContactLabels();
-                    ChannelConfiguration.RefreshZedGraph();
-                }
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                textBoxGainCalibrationFile.Text = ofd.FileName;
             }
+
+            CheckStatus();
+        }
+
+        private void ChooseAdcCalibrationFile_Click(object sender, EventArgs e)
+        {
+            var ofd = new OpenFileDialog()
+            {
+                CheckFileExists = true,
+                Filter = "ADC calibration files (*_ADCCalibration.csv)|*_ADCCalibration.csv|All Files|*.*",
+                FilterIndex = 0,
+                InitialDirectory = File.Exists(textBoxAdcCalibrationFile.Text) ?
+                                   Path.GetDirectoryName(textBoxAdcCalibrationFile.Text) :
+                                   ""
+            };
+
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                textBoxAdcCalibrationFile.Text = ofd.FileName;
+            }
+
+            CheckStatus();
+        }
+
+        private void ResetZoom_Click(object sender, EventArgs e)
+        {
+            ResetZoom();
+        }
+
+        private void ClearSelection_Click(object sender, EventArgs e)
+        {
+            DeselectContacts();
+        }
+
+        private void EnableContacts_Click(object sender, EventArgs e)
+        {
+            EnableSelectedContacts();
+            DeselectContacts();
+        }
+
+        private void ViewAdcs_Click(object sender, EventArgs e)
+        {
+            if (Adcs == null)
+                return;
+
+            System.Resources.ResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(NeuropixelsV1eDialog));
+
+            var adcForm = new Form()
+            {
+                Size = new Size(600, 1000),
+                Text = "View ADC Correction Values",
+                Icon = (Icon)resources.GetObject("$this.Icon"),
+                StartPosition = FormStartPosition.CenterParent,
+            };
+
+            var dataGridView = new DataGridView
+            {
+                DataSource = Adcs,
+                AllowUserToAddRows = false,
+                AllowUserToDeleteRows = false,
+                AllowUserToOrderColumns = false,
+                ReadOnly = true,
+                ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize,
+                Dock = DockStyle.Fill,
+                Location = new Point(0, 0),
+                Margin = new Padding(2),
+                Name = "dataGridViewAdcs",
+                RowHeadersWidth = 62,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+            };
+            dataGridView.RowTemplate.Height = 28;
+
+            adcForm.Controls.Add(dataGridView);
+
+            adcForm.ShowDialog();
         }
 
         private void EnableSelectedContacts()
@@ -319,6 +425,15 @@ namespace OpenEphys.Onix1.Design
             ChannelConfiguration.EnableElectrodes(selectedElectrodes);
 
             CheckForExistingChannelPreset();
+        }
+
+        private void DeselectContacts()
+        {
+            ChannelConfiguration.SetAllSelections(false);
+            ChannelConfiguration.HighlightEnabledContacts();
+            ChannelConfiguration.HighlightSelectedContacts();
+            ChannelConfiguration.UpdateContactLabels();
+            ChannelConfiguration.RefreshZedGraph();
         }
 
         private void ResetZoom()
@@ -336,13 +451,7 @@ namespace OpenEphys.Onix1.Design
 
         private void TrackBarScroll(object sender, EventArgs e)
         {
-            if (sender is TrackBar trackBar && trackBar != null)
-            {
-                if (trackBar.Name == nameof(trackBarProbePosition))
-                {
-                    MoveToVerticalPosition(trackBar.Value / 100.0f);
-                }
-            }
+            MoveToVerticalPosition(((TrackBar)sender).Value / 100.0f);
         }
 
         private void UpdateTrackBarLocation(object sender, EventArgs e)

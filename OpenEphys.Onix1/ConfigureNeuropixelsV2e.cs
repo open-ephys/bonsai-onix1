@@ -51,7 +51,7 @@ namespace OpenEphys.Onix1
         /// Configuration is accomplished using a GUI to aid in channel selection and relevant configuration properties.
         /// To open a probe configuration GUI, select the ellipses next the <see cref="ProbeConfigurationA"/> variable
         /// in the property pane, or double-click <see cref="ConfigureNeuropixelsV2eHeadstage"/> to configure both
-        /// probes and the <see cref="ConfigureNeuropixelsV2eBno055"/> simultaneously.
+        /// probes and the <see cref="ConfigurePolledBno055"/> simultaneously.
         /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Probe A electrode configuration.")]
@@ -82,7 +82,7 @@ namespace OpenEphys.Onix1
         /// Configuration is accomplished using a GUI to aid in channel selection and relevant configuration properties.
         /// To open a probe configuration GUI, select the ellipses next the <see cref="ProbeConfigurationB"/> variable
         /// in the property pane, or double-click <see cref="ConfigureNeuropixelsV2eHeadstage"/> to configure both
-        /// probes and the <see cref="ConfigureNeuropixelsV2eBno055"/> simultaneously.
+        /// probes and the <see cref="ConfigurePolledBno055"/> simultaneously.
         /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Probe B electrode configuration.")]
@@ -161,8 +161,21 @@ namespace OpenEphys.Onix1
                 // configure probe A streaming
                 if (probeAMetadata.ProbeSerialNumber != null)
                 {
-                    gainCorrectionA = NeuropixelsV2.ReadGainCorrection(
-                        GainCalibrationFileA, (ulong)probeAMetadata.ProbeSerialNumber, NeuropixelsV2Probe.ProbeA);
+                    var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(GainCalibrationFileA);
+
+                    if (!gainCorrection.HasValue)
+                    {
+                        throw new ArgumentException($"{NeuropixelsV2Probe.ProbeA}'s calibration file \"{GainCalibrationFileA}\" is invalid.");
+                    }
+
+                    if (gainCorrection.Value.SerialNumber != probeAMetadata.ProbeSerialNumber)
+                    {
+                        throw new ArgumentException($"The probe serial number ({probeAMetadata.ProbeSerialNumber}) does not " +
+                            $"match the gain calibration file serial number: {gainCorrection.Value.SerialNumber}.");
+                    }
+
+                    gainCorrectionA = gainCorrection.Value.GainCorrectionFactor;
+
                     SelectProbe(serializer, NeuropixelsV2e.ProbeASelected);
                     probeControl.WriteConfiguration(ProbeConfigurationA);
                     ConfigureProbeStreaming(probeControl);
@@ -171,8 +184,21 @@ namespace OpenEphys.Onix1
                 // configure probe B streaming
                 if (probeBMetadata.ProbeSerialNumber != null)
                 {
-                    gainCorrectionB = NeuropixelsV2.ReadGainCorrection(
-                        GainCalibrationFileB, (ulong)probeBMetadata.ProbeSerialNumber, NeuropixelsV2Probe.ProbeB);
+                    var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(GainCalibrationFileB);
+
+                    if (!gainCorrection.HasValue)
+                    {
+                        throw new ArgumentException($"{NeuropixelsV2Probe.ProbeB}'s calibration file \"{GainCalibrationFileB}\" is invalid.");
+                    }
+
+                    if (gainCorrection.Value.SerialNumber != probeBMetadata.ProbeSerialNumber)
+                    {
+                        throw new ArgumentException($"The probe serial number ({probeBMetadata.ProbeSerialNumber}) does not " +
+                            $"match the gain calibration file serial number: {gainCorrection.Value.SerialNumber}.");
+                    }
+
+                    gainCorrectionB = gainCorrection.Value.GainCorrectionFactor;
+
                     SelectProbe(serializer, NeuropixelsV2e.ProbeBSelected);
                     probeControl.WriteConfiguration(ProbeConfigurationB);
                     ConfigureProbeStreaming(probeControl);

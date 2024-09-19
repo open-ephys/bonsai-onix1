@@ -13,16 +13,16 @@ namespace OpenEphys.Onix1.Design
         public readonly NeuropixelsV2eDialog DialogNeuropixelsV2e;
 
         /// <summary>
-        /// A <see cref="NeuropixelsV2eBno055Dialog"/> that configures a <see cref="ConfigureNeuropixelsV2eBno055"/>.
+        /// A <see cref="PolledBno055Dialog"/> that configures a <see cref="ConfigurePolledBno055"/>.
         /// </summary>
-        public readonly NeuropixelsV2eBno055Dialog DialogBno055;
+        public readonly PolledBno055Dialog DialogBno055;
 
         /// <summary>
         /// Initializes a new instance of a <see cref="NeuropixelsV2eHeadstageDialog"/>.
         /// </summary>
         /// <param name="configureNeuropixelsV2e">Configuration settings for a <see cref="ConfigureNeuropixelsV2e"/>.</param>
-        /// <param name="configureBno055">Configuration settings for a <see cref="ConfigureNeuropixelsV2eBno055"/>.</param>
-        public NeuropixelsV2eHeadstageDialog(IConfigureNeuropixelsV2 configureNeuropixelsV2e, ConfigureNeuropixelsV2eBno055 configureBno055)
+        /// <param name="configureBno055">Configuration settings for a <see cref="ConfigurePolledBno055"/>.</param>
+        public NeuropixelsV2eHeadstageDialog(IConfigureNeuropixelsV2 configureNeuropixelsV2e, ConfigurePolledBno055 configureBno055)
         {
             InitializeComponent();
 
@@ -62,17 +62,11 @@ namespace OpenEphys.Onix1.Design
             DialogBno055.Invalidate();
         }
 
-        private void ButtonClick(object sender, System.EventArgs e)
+        private void Okay_Click(object sender, System.EventArgs e)
         {
-            if (sender is Button button && button != null)
-            {
-                if (button.Name == nameof(buttonOkay))
-                {
-                    DialogNeuropixelsV2e.SaveVariables();
+            DialogNeuropixelsV2e.SaveVariables();
 
-                    DialogResult = DialogResult.OK;
-                }
-            }
+            DialogResult = DialogResult.OK;
         }
     }
 }

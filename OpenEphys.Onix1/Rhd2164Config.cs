@@ -252,11 +252,11 @@ namespace OpenEphys.Onix1
         /// </summary>
         Differential = 0,
         /// <summary>
-        /// Specifies 3310 Hz.
+        /// Specifies 3309 Hz.
         /// </summary>
         Dsp3309Hz,
         /// <summary>
-        /// Specifies 1370 Hz.
+        /// Specifies 1374 Hz.
         /// </summary>
         Dsp1374Hz,
         /// <summary>

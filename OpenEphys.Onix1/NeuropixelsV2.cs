@@ -113,30 +113,6 @@ namespace OpenEphys.Onix1
 
             return baseBits;
         }
-
-        internal static double ReadGainCorrection(string gainCalibrationFile, ulong probeSerialNumber, NeuropixelsV2Probe probe)
-        {
-            if (!File.Exists(gainCalibrationFile) )
-            {
-                throw new ArgumentException($"A calibration file must be specified for {probe} with serial number " +
-                    $"{probeSerialNumber}");
-            }
-
-            var gainFile = new StreamReader(gainCalibrationFile);
-            if(!ulong.TryParse(gainFile.ReadLine(), out ulong sn))
-            {
-                throw new ArgumentException($"The calibration file {gainCalibrationFile} specified for {probe} is " +
-                    $"incorrectly formatted.");
-            }
-
-            if (probeSerialNumber != sn)
-            {
-                throw new ArgumentException($"{probe}'s serial number ({probeSerialNumber}) does not " +
-                    $"match the calibration file serial number: {sn}.");
-            }
-
-            return double.Parse(gainFile.ReadLine());
-        }
     }
 }
 

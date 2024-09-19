@@ -36,7 +36,7 @@ namespace OpenEphys.Onix1
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the analog IO device in the ONIX breakout board.")]
         [Category(DevicesCategory)]
-        public ConfigureBreakoutAnalogIO AnalogIO { get; set; } = new();
+        public ConfigureAnalogIO AnalogIO { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the breakout board's digital IO configuration.
@@ -44,7 +44,23 @@ namespace OpenEphys.Onix1
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the digital IO device in the ONIX breakout board.")]
         [Category(DevicesCategory)]
-        public ConfigureBreakoutDigitalIO DigitalIO { get; set; } = new();
+        public ConfigureDigitalIO DigitalIO { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets the breakout board's output clock configuration.
+        /// </summary>
+        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
+        [Description("Specifies the configuration for the clock output in the ONIX breakout board.")]
+        [Category(DevicesCategory)]
+        public ConfigureOutputClock ClockOutput { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets the the Harp synchronization input configuration.
+        /// </summary>
+        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
+        [Description("Specifies the configuration for the Harp synchronization input on the ONIX breakout board.")]
+        [Category(DevicesCategory)]
+        public ConfigureHarpSyncInput HarpInput { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the hardware memory monitor configuration.
@@ -59,7 +75,9 @@ namespace OpenEphys.Onix1
             yield return Heartbeat;
             yield return AnalogIO;
             yield return DigitalIO;
-            yield return MemoryMonitor; 
+            yield return ClockOutput;
+            yield return HarpInput;
+            yield return MemoryMonitor;
         }
     }
 }

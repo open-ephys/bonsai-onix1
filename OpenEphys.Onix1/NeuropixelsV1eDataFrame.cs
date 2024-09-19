@@ -28,7 +28,7 @@ namespace OpenEphys.Onix1
         /// Gets the frame count value array.
         /// </summary>
         /// <remarks>
-        /// Frame count is a 20-bit counter on the probe that increments its value for every frame produced.
+        /// A 20-bit counter on the probe that increments its value for every frame produced.
         /// The value ranges from 0 to 1048575 (2^20-1), and should always increment by 1 until it wraps around back to 0.
         /// This can be used to detect dropped frames.
         /// </remarks>
@@ -39,7 +39,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <remarks>
         /// Spike-band data has 384 rows (channels) with columns representing the samples acquired at 30 kHz. Each sample is a
-        /// 10-bit offset binary encoded as an unsigned short value.
+        /// 10-bit, offset binary value encoded as a <see cref="ushort"/>.
         /// </remarks>
         public Mat SpikeData { get; }
 
@@ -48,7 +48,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <remarks>
         /// LFP data has 32 rows (channels) with columns representing the samples acquired at 2.5 kHz. Each sample is a
-        /// 10-bit offset binary encoded as an unsigned short value.
+        /// 10-bit, offset binary value encoded as a <see cref="ushort"/>.
         /// </remarks>
         public Mat LfpData { get; }
 
@@ -68,7 +68,6 @@ namespace OpenEphys.Onix1
                 var a = amplifierData[adcToFrameIndex[k]];
                 lfpBuffer[RawToChannel[k, lfpFrameIndex], lfpBufferIndex] = (ushort)(lfpGainCorrection * (a > thresholds[k] ? a - offsets[k] : a));
             }
-
 
             // Loop over 12 AP frames within each "super-frame"
             for (int i = 0; i < NeuropixelsV1e.FramesPerRoundRobin; i++)

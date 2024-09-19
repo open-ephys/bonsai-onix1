@@ -1,8 +1,8 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Drawing;
+using System.IO;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -78,18 +78,18 @@ namespace OpenEphys.Onix1.Design
             panelProbe.Controls.Add(ChannelConfiguration);
             this.AddMenuItemsFromDialogToFileOption(ChannelConfiguration);
 
-            panelProbe.Visible = IsProbeCalibrationFileValid(textBoxProbeCalibrationFile.Text);
-
             ChannelConfiguration.OnZoom += UpdateTrackBarLocation;
             ChannelConfiguration.OnFileLoad += OnFileLoadEvent;
 
             comboBoxReference.DataSource = Enum.GetValues(typeof(NeuropixelsV2QuadShankReference));
             comboBoxReference.SelectedItem = ProbeConfiguration.Reference;
-            comboBoxReference.SelectedIndexChanged += SelectedIndexChanged;
+            comboBoxReference.SelectedIndexChanged += SelectedReferenceChanged;
 
             comboBoxChannelPresets.DataSource = Enum.GetValues(typeof(ChannelPreset));
-            comboBoxChannelPresets.SelectedIndexChanged += SelectedIndexChanged;
+            comboBoxChannelPresets.SelectedIndexChanged += SelectedChannelPresetChanged;
             CheckForExistingChannelPreset();
+
+            CheckStatus();
 
             Text += ": " + ProbeConfiguration.Probe.ToString();
         }
@@ -118,20 +118,18 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        private void SelectedIndexChanged(object sender, EventArgs e)
+        private void SelectedReferenceChanged(object sender, EventArgs e)
         {
-            var comboBox = sender as ComboBox;
+            ProbeConfiguration.Reference = (NeuropixelsV2QuadShankReference)((ComboBox)sender).SelectedItem;
+        }
 
-            if (comboBox.Name == nameof(comboBoxReference))
+        private void SelectedChannelPresetChanged(object sender, EventArgs e)
+        {
+            var channelPreset = (ChannelPreset)((ComboBox)sender).SelectedItem;
+
+            if (channelPreset != ChannelPreset.None)
             {
-                ProbeConfiguration.Reference = (NeuropixelsV2QuadShankReference)comboBox.SelectedItem;
-            }
-            else if (comboBox.Name == nameof(comboBoxChannelPresets))
-            {
-                if ((ChannelPreset)comboBox.SelectedItem != ChannelPreset.None)
-                {
-                    SetChannelPreset((ChannelPreset)comboBox.SelectedItem);
-                }
+                SetChannelPreset(channelPreset);
             }
         }
 
@@ -505,76 +503,79 @@ namespace OpenEphys.Onix1.Design
         private void OnFileLoadEvent(object sender, EventArgs e)
         {
             // NB: Ensure that the newly loaded ProbeConfiguration in the ChannelConfigurationDialog is reflected here.
-            ProbeConfiguration = ChannelConfiguration.ProbeConfiguration; 
+            ProbeConfiguration = ChannelConfiguration.ProbeConfiguration;
             CheckForExistingChannelPreset();
         }
 
         private void FileTextChanged(object sender, EventArgs e)
         {
-            if (sender is TextBox textBox && textBox != null && textBox.Name == nameof(textBoxProbeCalibrationFile))
-            {
-                panelProbe.Visible = IsProbeCalibrationFileValid(textBoxProbeCalibrationFile.Text);
-            }
+            CheckStatus();
         }
 
-        private bool IsProbeCalibrationFileValid(string file)
+        private void CheckStatus()
         {
-            if (string.IsNullOrEmpty(file))
-                return false;
+            NeuropixelsV2GainCorrection? gainCorrection;
 
-            return File.Exists(file);
+            try
+            {
+                gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(textBoxProbeCalibrationFile.Text);
+            }
+            catch (IOException ex)
+            {
+                MessageBox.Show(ex.Message, "I/O error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Unauthorized access error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            panelProbe.Visible = gainCorrection.HasValue;
+
+            textBoxGainCorrection.Text = gainCorrection.HasValue
+                                         ? gainCorrection.Value.GainCorrectionFactor.ToString()
+                                         : "";
+
+            toolStripGainCalSN.Text = gainCorrection.HasValue
+                                     ? gainCorrection.Value.SerialNumber.ToString()
+                                     : string.IsNullOrEmpty(textBoxProbeCalibrationFile.Text) ? "No file found." : "Invalid file.";
         }
 
-        internal void ButtonClick(object sender, EventArgs e)
+        internal void ChooseCalibrationFile_Click(object sender, EventArgs e)
         {
-            if (sender is Button button && button != null)
+            var ofd = new OpenFileDialog()
             {
-                if (button.Name == nameof(buttonOkay))
-                {
-                    DialogResult = DialogResult.OK;
-                }
-                else if (button.Name == nameof(buttonChooseCalibrationFile))
-                {
-                    var ofd = new OpenFileDialog()
-                    {
-                        CheckFileExists = true,
-                        Filter = "Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv|All Files|*.*",
-                        FilterIndex = 0
-                    };
+                CheckFileExists = true,
+                Filter = "Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv|All Files|*.*",
+                FilterIndex = 0,
+                InitialDirectory = File.Exists(textBoxProbeCalibrationFile.Text) ? 
+                                   Path.GetDirectoryName(textBoxProbeCalibrationFile.Text) : 
+                                   ""
+            };
 
-                    if (ofd.ShowDialog() == DialogResult.OK)
-                    {
-                        textBoxProbeCalibrationFile.Text = ofd.FileName;
-                        panelProbe.Visible = IsProbeCalibrationFileValid(textBoxProbeCalibrationFile.Text);
-                    }
-                    else
-                    {
-                        panelProbe.Visible = IsProbeCalibrationFileValid(textBoxProbeCalibrationFile.Text);
-                    }
-                }
-                else if (button.Name == nameof(buttonResetZoom))
-                {
-                    ResetZoom();
-                }
-                else if (button.Name == nameof(buttonClearSelections))
-                {
-                    ChannelConfiguration.SetAllSelections(false);
-                    ChannelConfiguration.HighlightEnabledContacts();
-                    ChannelConfiguration.HighlightSelectedContacts();
-                    ChannelConfiguration.UpdateContactLabels();
-                    ChannelConfiguration.RefreshZedGraph();
-                }
-                else if (button.Name == nameof(buttonEnableContacts))
-                {
-                    EnableSelectedContacts();
-
-                    ChannelConfiguration.SetAllSelections(false);
-                    ChannelConfiguration.HighlightEnabledContacts();
-                    ChannelConfiguration.HighlightSelectedContacts();
-                    ChannelConfiguration.UpdateContactLabels();
-                    ChannelConfiguration.RefreshZedGraph();
-                }
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                textBoxProbeCalibrationFile.Text = ofd.FileName;
             }
+
+            CheckStatus();
+        }
+
+        internal void ResetZoom_Click(object sender, EventArgs e)
+        {
+            ResetZoom();
+        }
+
+        internal void ClearSelection_Click(object sender, EventArgs e)
+        {
+            DeselectContacts();
+        }
+
+        internal void EnableContacts_Click(object sender, EventArgs e)
+        {
+            EnableSelectedContacts();
+            DeselectContacts();
         }
 
         private void EnableSelectedContacts()
@@ -587,6 +588,15 @@ namespace OpenEphys.Onix1.Design
             ChannelConfiguration.EnableElectrodes(selectedElectrodes);
 
             CheckForExistingChannelPreset();
+        }
+
+        private void DeselectContacts()
+        {
+            ChannelConfiguration.SetAllSelections(false);
+            ChannelConfiguration.HighlightEnabledContacts();
+            ChannelConfiguration.HighlightSelectedContacts();
+            ChannelConfiguration.UpdateContactLabels();
+            ChannelConfiguration.RefreshZedGraph();
         }
 
         private void ResetZoom()
@@ -604,13 +614,8 @@ namespace OpenEphys.Onix1.Design
 
         private void TrackBarScroll(object sender, EventArgs e)
         {
-            if (sender is TrackBar trackBar && trackBar != null)
-            {
-                if (trackBar.Name == nameof(trackBarProbePosition))
-                {
-                    MoveToVerticalPosition((float)trackBar.Value / trackBar.Maximum);
-                }
-            }
+            var trackBar = (TrackBar)sender;
+            MoveToVerticalPosition((float)trackBar.Value / trackBar.Maximum);
         }
 
         private void UpdateTrackBarLocation(object sender, EventArgs e)

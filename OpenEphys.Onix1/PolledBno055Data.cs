@@ -7,17 +7,18 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Produces a sequence of <see cref="Bno055DataFrame"/> objects from a NeuropixelsV2e headstage.
+    /// Produces a sequence of <see cref="Bno055DataFrame">Bno055DataFrames</see> from Bosch Bno055
+    /// 9-axis inertial measurement unit (IMU) 
     /// </summary>
     /// <remarks>
     /// This data IO operator must be linked to an appropriate configuration, such as a <see
-    /// cref="ConfigureNeuropixelsV2eBno055"/>, using a shared <c>DeviceName</c>.
+    /// cref="ConfigurePolledBno055"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
-    [Description("Produces a sequence of Bno055DataFrame objects from a NeuropixelsV2e headstage.")]
-    public class NeuropixelsV2eBno055Data : Source<Bno055DataFrame>
+    [Description("Polls a Bno055 9-axis IMU to produce a sequence Bno055 data frames.")]
+    public class PolledBno055Data : Source<Bno055DataFrame>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
-        [TypeConverter(typeof(NeuropixelsV2eBno055.NameConverter))]
+        [TypeConverter(typeof(PolledBno055.NameConverter))]
         [Description(SingleDeviceFactory.DeviceNameDescription)]
         [Category(DeviceFactory.ConfigurationCategory)]
         public string DeviceName { get; set; }
@@ -54,20 +55,20 @@ namespace OpenEphys.Onix1
             return DeviceManager.GetDevice(DeviceName).SelectMany(
                 deviceInfo =>
                 {
-                    return !((NeuropixelsV2eBno055DeviceInfo)deviceInfo).Enable
+                    return !((PolledBno055DeviceInfo)deviceInfo).Enable
                         ? Observable.Empty<Bno055DataFrame>()
                         : Observable.Create<Bno055DataFrame>(observer =>
                         {
-                            var device = deviceInfo.GetDeviceContext(typeof(NeuropixelsV2eBno055));
+                            var device = deviceInfo.GetDeviceContext(typeof(PolledBno055));
                             var passthrough = device.GetPassthroughDeviceContext(typeof(DS90UB9x));
-                            var i2c = new I2CRegisterContext(passthrough, NeuropixelsV2eBno055.BNO055Address);
+                            var i2c = new I2CRegisterContext(passthrough, PolledBno055.BNO055Address);
 
                             return source.SubscribeSafe(observer, _ =>
                             {
                                 Bno055DataFrame frame = default;
                                 device.Context.EnsureContext(() =>
                                 {
-                                    var data = i2c.ReadBytes(NeuropixelsV2eBno055.DataAddress, sizeof(Bno055DataPayload));
+                                    var data = i2c.ReadBytes(PolledBno055.DataAddress, sizeof(Bno055DataPayload));
                                     ulong clock = passthrough.ReadRegister(DS90UB9x.LASTI2CL);
                                     clock += (ulong)passthrough.ReadRegister(DS90UB9x.LASTI2CH) << 32;
                                     fixed (byte* dataPtr = data)
@@ -85,4 +86,17 @@ namespace OpenEphys.Onix1
                 });
         }
     }
+
+    /// <inheritdoc cref = "PolledBno055Data"/>v
+    [Obsolete("This operator is obsolete. Use PolledBno055Data instead. Will be removed in version 1.0.0.")]
+    public class NeuropixelsV1eBno055Data : PolledBno055Data { }
+
+    /// <inheritdoc cref = "PolledBno055Data"/>v
+    [Obsolete("This operator is obsolete. Use PolledBno055Data instead. Will be removed in version 1.0.0.")]
+    public class NeuropixelsV2eBno055Data : PolledBno055Data { }
+
+    /// <inheritdoc cref = "PolledBno055Data"/>v
+    [Obsolete("This operator is obsolete. Use PolledBno055Data instead. Will be removed in version 1.0.0.")]
+    public class NeuropixelsV2eBetaBno055Data : PolledBno055Data { }
+
 }
