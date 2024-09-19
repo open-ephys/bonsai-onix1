@@ -10,7 +10,7 @@ namespace OpenEphys.Onix1
     /// Configures a UCLA Miniscope V4 on the specified port.
     /// </summary>
     /// <remarks>
-    /// The UCLA Miniscope V4 is a e miniaturized fluorescent microscope for performing single-photon calcium
+    /// The UCLA Miniscope V4 is a miniaturized fluorescent microscope for performing single-photon calcium
     /// imaging in freely moving animals. It has the following features:
     /// <list type="bullet">
     /// <item><description>A Python-480 0.48 Megapixel CMOS image sensor.</description></item>
@@ -97,8 +97,8 @@ namespace OpenEphys.Onix1
         /// voltages may result in damage.
         /// </para>
         /// </remarks>
-        [Description("If defined, it will override automated voltage discovery and apply the specified voltage" +
-                     "to the miniscope. Warning: this device requires 4.0 to 5.0V, measured at the scope, for proper operation." +
+        [Description("If defined, it will override automated voltage discovery and apply the specified voltage " +
+                     "to the miniscope. Warning: this device requires 4.0 to 5.0V, measured at the scope, for proper operation. " +
                      "Supplying higher voltages may result in damage to the miniscope.")]
         [Category(ConfigurationCategory)]
         public double? PortVoltage
