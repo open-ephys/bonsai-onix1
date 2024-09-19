@@ -48,8 +48,11 @@ namespace OpenEphys.Onix1
         /// Gets or sets the Bno055 9-axis inertial measurement unit configuration.
         /// </summary>
         [Category(DevicesCategory)]
-        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
-        public ConfigureUclaMiniscopeV4Bno055 Bno055 { get; set; } = new();
+        [TypeConverter(typeof(PolledBno055SingleDeviceFactoryConverter))]
+        [Description("Specifies the configuration for the Bno055 device.")]
+        public ConfigurePolledBno055 Bno055 { get; set; } =
+            new ConfigurePolledBno055 { AxisMap = Bno055AxisMap.ZYX, AxisSign = Bno055AxisSign.MirrorX | Bno055AxisSign.MirrorY | Bno055AxisSign.MirrorZ };
+
 
         /// <summary>
         /// Gets or sets the port.
