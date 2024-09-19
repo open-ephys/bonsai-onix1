@@ -1,10 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Linq;
 
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Configures a Bosch Bno055 9-axis inertial measurement unit (IMU) that is polled by the computer.
+    /// Configures a Bosch Bno055 9-axis inertial measurement unit (IMU) that is polled by the
+    /// computer.
     /// </summary>
     /// <remarks>
     /// This configuration operator can be linked to a data IO operator, such as <see
@@ -37,7 +39,7 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets or sets the device enable state.
+        /// Gets or sets a value specifying whether the Bno055 device is enabled.
         /// </summary>
         /// <remarks>
         /// If set to true, <see cref="PolledBno055Data"/> will produce data. If set to false, 
@@ -50,14 +52,26 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets the axis map that will be applied during configuration.
         /// </summary>
-        [Browsable(false)]
-        public Bno055AxisMap AxisMap { get; set; }
+        /// <remarks>
+        /// This value can be changed to compensate for the Bno055's mounting orientation.
+        /// Specifically, this value can be set to rotate the Bno055's coordinate system compared
+        /// to the default orientation presented on page 24 of the Bno055 datasheet.
+        /// </remarks>
+        [Category(ConfigurationCategory)]
+        [Description("Specifies the axis map that will be applied during configuration.")]
+        public Bno055AxisMap AxisMap { get; set; } = Bno055AxisMap.XYZ;
 
         /// <summary>
-        /// Gets or sets the axis map sign that will be applied during configuration
+        /// Gets or sets the axis sign that will be applied during configuration.
         /// </summary>
-        [Browsable(false)]
-        public Bno055AxisSign AxisSign { get; set; }
+        /// <remarks>
+        /// This value can be changed to compensate for the Bno055's mounting orientation.
+        /// Specifically, this value can be set to mirror specific axes in the Bno055's coordinate
+        /// system compared to the default orientation presented on page 24 of the Bno055 datasheet.
+        /// </remarks>
+        [Category(ConfigurationCategory)]
+        [Description("Specifies axis sign that will be applied during configuration.")]
+        public Bno055AxisSign AxisSign { get; set; } = Bno055AxisSign.Default;
 
         /// <summary>
         /// Configures a PolledBno055 device.
@@ -135,12 +149,14 @@ namespace OpenEphys.Onix1
     }
 
     /// <summary>
-    /// Specifies the axis map of a Bno055 IMU
+    /// Specifies the axis map of a Bno055 compared to the default orientation.
+    /// the datasheet.
     /// </summary>
     /// <remarks>
     /// The axis of the device can be reconfigured to the new reference axis to account for
     /// differences in its mounting position. The following values can be applied to the Bno055's
-    /// AXIS_MAP_CONFIG register at address 0x41.
+    /// AXIS_MAP_CONFIG register at address 0x41 in order to rotate the Bno055's coordinate system
+    /// compared to the default orientation presented on page 24 of the Bno055 datasheet.
     /// </remarks>
     public enum Bno055AxisMap : uint
     {
@@ -176,7 +192,8 @@ namespace OpenEphys.Onix1
     /// <remarks>
     /// The axis of the device can be reconfigured to the new reference axis to account for
     /// differences in its mounting position. The following values can be applied to the Bno055's
-    /// AXIS_MAP_SIGN register at address 0x42.
+    /// AXIS_MAP_SIGN register at address 0x42 to mirror specific axes in the Bno055's coordinate
+    /// system compared to the default orientation presented on page 24 of the Bno055 datasheet.
     /// </remarks>
     [Flags]
     public enum Bno055AxisSign : uint
@@ -188,27 +205,75 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Specifies that Z axis should be mirrored.
         /// </summary>
-        NegZ = 0b00000_001,
+        MirrorZ = 0b00000_001,
         /// <summary>
         /// Specifies that Y axis should be mirrored.
         /// </summary>
-        NegY = 0b00000_010,
+        MirrorY = 0b00000_010,
         /// <summary>
         /// Specifies that X axis should be mirrored.
         /// </summary>
-        NegX = 0b00000_100,
+        MirrorX = 0b00000_100,
+    }
+
+    // NB: Can be used to remove axis map and sign properties from MutliDeviceFactories that include a
+    // ConfigurePolledBno055 when having those options would cause confusion and potential
+    // commutator malfunction
+    internal class PolledBno055SingleDeviceFactoryConverter : SingleDeviceFactoryConverter
+    {
+        public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext context, object value, Attribute[] attributes)
+        {
+            var properties = (from property in base.GetProperties(context, value, attributes).Cast<PropertyDescriptor>()
+                              where !property.IsReadOnly &&
+                                    !(property.PropertyType == typeof(Bno055AxisMap)) &&
+                                    !(property.PropertyType == typeof(Bno055AxisSign)) &&
+                                    property.ComponentType != typeof(SingleDeviceFactory)
+                              select property)
+                              .ToArray();
+            return new PropertyDescriptorCollection(properties).Sort(properties.Select(p => p.Name).ToArray());
+        }
     }
 
     /// <inheritdoc cref = "ConfigurePolledBno055"/>
     [Obsolete("This operator is obsolete. Use ConfigurePolledBno055 instead. Will be removed in version 1.0.0.")]
-    public class ConfigureNeuropixelsV1eBno055 : ConfigurePolledBno055 { }
+    public class ConfigureNeuropixelsV1eBno055 : ConfigurePolledBno055
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ConfigureNeuropixelsV1eBno055"/> class.
+        /// </summary>
+        public ConfigureNeuropixelsV1eBno055()
+        {
+            AxisMap = Bno055AxisMap.ZXY;
+            AxisSign = Bno055AxisSign.MirrorZ | Bno055AxisSign.MirrorY;
+        }
+    }
 
     /// <inheritdoc cref = "ConfigurePolledBno055"/>
     [Obsolete("This operator is obsolete. Use ConfigurePolledBno055 instead. Will be removed in version 1.0.0.")]
-    public class ConfigureNeuropixelsV2eBno055 : ConfigurePolledBno055 { }
+    public class ConfigureNeuropixelsV2eBno055 : ConfigurePolledBno055
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ConfigureNeuropixelsV2eBno055"/> class.
+        /// </summary>
+        public ConfigureNeuropixelsV2eBno055()
+        {
+            AxisMap = Bno055AxisMap.ZXY;
+            AxisSign = Bno055AxisSign.Default;
+        }
+    }
 
     /// <inheritdoc cref = "ConfigurePolledBno055"/>
     [Obsolete("This operator is obsolete. Use ConfigurePolledBno055 instead. Will be removed in version 1.0.0.")]
-    public class ConfigureNeuropixelsV2eBetaBno055 : ConfigurePolledBno055 { }
+    public class ConfigureNeuropixelsV2eBetaBno055 : ConfigurePolledBno055
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ConfigureNeuropixelsV2eBetaBno055"/> class.
+        /// </summary>
+        public ConfigureNeuropixelsV2eBetaBno055()
+        {
+            AxisMap = Bno055AxisMap.ZXY;
+            AxisSign = Bno055AxisSign.Default;
+        }
+    }
 }
 
