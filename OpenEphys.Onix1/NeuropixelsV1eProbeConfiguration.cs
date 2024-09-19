@@ -176,7 +176,7 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets the <see cref="NeuropixelsV1eProbeGroup"/> channel configuration for this probe.
+        /// Gets or sets the <see cref="NeuropixelsV1eProbeGroup"/> channel configuration for this probe.
         /// </summary>
         [XmlIgnore]
         [Category("Configuration")]
