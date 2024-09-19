@@ -190,8 +190,12 @@ namespace OpenEphys.Onix1
             // acquisition. For this reason, the frame start needs to be marked.
             device.WriteRegister(DS90UB9x.MARK, (uint)DS90UB9xMarkMode.VsyncRising);
 
-            // configure deserializer I2C aliases
+            // set I2C clock rate to ~100 kHz
             var deserializer = new I2CRegisterContext(device, DS90UB9x.DES_ADDR);
+            deserializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.SCLHIGH, 0x7A);
+            deserializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.SCLLOW, 0x7A);
+
+            // configure deserializer I2C aliases
             uint coaxMode = 0x4 + (uint)DS90UB9xMode.Raw12BitLowFrequency; // 0x4 maintains coax mode
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.PortMode, coaxMode);
 
