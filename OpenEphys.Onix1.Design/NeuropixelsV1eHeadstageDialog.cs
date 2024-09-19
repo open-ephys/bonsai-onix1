@@ -7,7 +7,7 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     /// <remarks>
     /// Within the GUI, there is a tab for both devices encapsulated by a <see cref="ConfigureNeuropixelsV1eHeadstage"/>,
-    /// specifically a <see cref="ConfigureNeuropixelsV1e"/> and a <see cref="ConfigureNeuropixelsV1eBno055"/>. 
+    /// specifically a <see cref="ConfigureNeuropixelsV1e"/> and a <see cref="ConfigurePolledBno055"/>. 
     /// </remarks>
     public partial class NeuropixelsV1eHeadstageDialog : Form
     {
@@ -17,16 +17,16 @@ namespace OpenEphys.Onix1.Design
         public readonly NeuropixelsV1eDialog DialogNeuropixelsV1e;
 
         /// <summary>
-        /// Public method that provides access to the <see cref="NeuropixelsV1eBno055Dialog"/>.
+        /// Public method that provides access to the <see cref="PolledBno055Dialog"/>.
         /// </summary>
-        public readonly NeuropixelsV1eBno055Dialog DialogBno055;
+        public readonly PolledBno055Dialog DialogBno055;
 
         /// <summary>
         /// Initializes a new instance of a <see cref="NeuropixelsV1eHeadstageDialog"/>.
         /// </summary>
         /// <param name="configureNeuropixelsV1e">Configuration settings for a <see cref="ConfigureNeuropixelsV1e"/>.</param>
-        /// <param name="configureBno055">Configuration settings for a <see cref="ConfigureNeuropixelsV1eBno055"/>.</param>
-        public NeuropixelsV1eHeadstageDialog(ConfigureNeuropixelsV1e configureNeuropixelsV1e, ConfigureNeuropixelsV1eBno055 configureBno055)
+        /// <param name="configureBno055">Configuration settings for a <see cref="ConfigurePolledBno055"/>.</param>
+        public NeuropixelsV1eHeadstageDialog(ConfigureNeuropixelsV1e configureNeuropixelsV1e, ConfigurePolledBno055 configureBno055)
         {
             InitializeComponent();
 

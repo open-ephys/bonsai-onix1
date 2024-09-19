@@ -1,6 +1,6 @@
 ﻿namespace OpenEphys.Onix1.Design
 {
-    partial class NeuropixelsV2eBno055Dialog
+    partial class PolledBno055Dialog
     {
         /// <summary>
         /// Required designer variable.
@@ -31,7 +31,7 @@
             this.components = new System.ComponentModel.Container();
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Text = "NeuropixelsV2eBno055Dialog";
+            this.Text = "NeuropixelsV1eBno055Dialog";
         }
 
         #endregion
