@@ -39,8 +39,8 @@ namespace OpenEphys.Onix1
         public int SensorIndex { get; }
 
         /// <summary>
-        /// Gets rhe 3D position of the photodiode connected to the TS4231[<see cref="SensorIndex"/>] sensor with units determined by
-        /// <see cref="TS4231V1PositionData.P"/> and <see cref="TS4231V1PositionData.Q"/>.
+        /// Gets the 3D position of the photodiode connected to the TS4231 receiver with index <see cref="SensorIndex"/>  
+        //  in units determined by <see cref="TS4231V1PositionData.P"/> and <see cref="TS4231V1PositionData.Q"/>.
         /// </summary>
         public Vector3 Position { get; }
     }
