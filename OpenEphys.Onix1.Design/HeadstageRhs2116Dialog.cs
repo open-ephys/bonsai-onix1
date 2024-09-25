@@ -24,7 +24,7 @@ namespace OpenEphys.Onix1.Design
         /// <param name="sequence">Current stimulus sequence for a <see cref="Rhs2116StimulusSequenceDual"/>.</param>
         /// <param name="rhs2116">Current configuration settings for a single <see cref="ConfigureRhs2116"/>.</param>
         public HeadstageRhs2116Dialog(Rhs2116ProbeGroup probeGroup, Rhs2116StimulusSequenceDual sequence,
-            ConfigureRhs2116 rhs2116)
+            ConfigureRhs2116Pair rhs2116)
         {
             InitializeComponent();
 

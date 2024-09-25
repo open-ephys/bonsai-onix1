@@ -5,3 +5,4 @@
 .bonsai/*.exe.settings
 .bonsai/*.exe.WebView2/
 *.user
+/OpenEphys.Onix1/ConfigureHeadstageNric1384LoadTest.cs

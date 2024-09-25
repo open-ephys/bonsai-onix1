@@ -7,16 +7,11 @@ using System.Reactive.Subjects;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Configures an ONIX RHS2116 device.
+    /// Configures an Intan Rhs2116 bioamplifier and stimulator chip.
     /// </summary>
     /// <remarks>
-    /// The RHS2116 device acquires data and controls stimulation from an Intan RHS2116 bioamplifier and 
-    /// stimulator chip. It provides the following features:
-    /// <list type="bullet">
-    /// <item><description>Fixed sampling rate: 30193.236714975847 kHz/channel.</description></item>
-    /// <item><description>Real-time control of stimulation sequences.</description></item>
-    /// <item><description>Real-time control of many acquisition registers (e.g. filter settings, artifact recovery parameters, etc.).</description></item>
-    /// </list>
+    /// This configuration operator can be linked to a data IO operator, such as <see cref="Rhs2116Data"/>,
+    /// using a shared <c>DeviceName</c>.
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.Rhs2116Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureRhs2116 : SingleDeviceFactory
@@ -59,7 +54,7 @@ namespace OpenEphys.Onix1
         /// <see cref="Rhs2116Data"/> will not produce data.
         /// </remarks>
         [Category(ConfigurationCategory)]
-        [Description("Specifies whether the RHS2116 device is enabled.")]
+        [Description("Specifies whether the Rhs2116 device is enabled.")]
         public bool Enable { get; set; } = true;
 
         /// <summary>
@@ -120,12 +115,12 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <remarks>
         /// If true, this device will apply AnalogLowCutoffRecovery if stimulation occurs 
-        /// via any RHS chip the same headstage or others that are connected
+        /// via any Rhs2116 chip the same headstage or others that are connected
         /// using StimActive pin. If false, this device will only apply AnalogLowCutoffRecovery during its own stimuli.
         /// </remarks>
         [Category(AcquisitionCategory)]
         [Description("If true, this device will apply AnalogLowCutoffRecovery " +
-            "if stimulation occurs via any RHS chip the same headstage or others that are connected" +
+            "if stimulation occurs via any Rhs2116 chip the same headstage or others that are connected" +
             "using StimActive pin. If false, this device will apply AnalogLowCutoffRecovery during its" +
             "own stimuli.")]
         public bool RespectExternalActiveStim
@@ -135,7 +130,7 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Configures an RHS2116 device.
+        /// Configures an Rhs2116 device.
         /// </summary>
         /// <remarks>
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
@@ -144,7 +139,7 @@ namespace OpenEphys.Onix1
         /// <param name="source">A sequence of <see cref="ContextTask"/> that holds all configuration actions.</param>
         /// <returns>
         /// The original sequence with the side effect of an additional configuration action to configure
-        /// an RHS2116 device.
+        /// an Rhs2116 device.
         /// </returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
@@ -153,7 +148,7 @@ namespace OpenEphys.Onix1
             var deviceAddress = DeviceAddress;
             return source.ConfigureDevice(context =>
             {
-                // config register format following RHS2116 datasheet
+                // config register format following Rhs2116 datasheet
                 // https://www.intantech.com/files/Intan_RHS2116_datasheet.pdf
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
 
@@ -170,7 +165,6 @@ namespace OpenEphys.Onix1
                     format |= (uint)dspCutoff;
                 }
 
-                device.WriteRegister(Rhs2116.FORMAT, format); // NB: DC data only provided in unsigned. Force amplifier data to use unsigned for consistency
                 device.WriteRegister(Rhs2116.FORMAT, format); // NB: DC data only provided in unsigned. Force amplifier data to use unsigned for consistency
                 device.WriteRegister(Rhs2116.ENABLE, enable ? 1u : 0);
 

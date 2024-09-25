@@ -16,7 +16,7 @@ namespace OpenEphys.Onix1.Design
             if (provider != null)
             {
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
-                if (editorState != null && !editorState.WorkflowRunning && component is ConfigureRhs2116 configureNode)
+                if (editorState != null && !editorState.WorkflowRunning && component is ConfigureRhs2116Pair configureNode)
                 {
                     using var editorDialog = new Rhs2116Dialog(configureNode);
 
@@ -27,7 +27,6 @@ namespace OpenEphys.Onix1.Design
                         configureNode.AnalogLowCutoffRecovery = editorDialog.ConfigureNode.AnalogLowCutoffRecovery;
                         configureNode.DspCutoff = editorDialog.ConfigureNode.DspCutoff;
                         configureNode.Enable = editorDialog.ConfigureNode.Enable;
-                        configureNode.RespectExternalActiveStim = editorDialog.ConfigureNode.RespectExternalActiveStim;
 
                         return true;
                     }

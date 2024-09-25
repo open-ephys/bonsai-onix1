@@ -1,29 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
-using System.Text;
 using System.Threading;
-using Bonsai;
-using Newtonsoft.Json;
-using System.Xml.Serialization;
 
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Configures an ONIX RHS2116 Headstage on the specified port.
+    /// Configures an ONIX Rhs2116 Headstage on the specified port.
     /// </summary>
     /// <remarks>
-    /// The RHS2116 Headstage is a serialized headstage for small animals with 32 bi-directional channels 
-    /// which each can be used to deliver electrical stimuli. The RHS2116 Headstage can be used with passive 
+    /// The Rhs2116 Headstage is a serialized headstage for small animals with 32 bi-directional channels 
+    /// which each can be used to deliver electrical stimuli. The Rhs2116 Headstage can be used with passive 
     /// probes (e.g. silicon arrays, EEG/ECOG arrays, etc) using a 36-Channel Omnetics EIB. It provides the
     /// following features:
     /// <list type="bullet">
-    /// <item><description>Two RHS2116 ICs for a combined 32 bi-directional ephys channels.</description></item>
+    /// <item><description>Two, synchronized Rhs2116 ICs for a combined 32 bidirectional ephys channels.</description></item>
+    /// <item><description>Real-time control of stimulation sequences.</description></item>
+    /// <item><description>Real-time control of filter settings and artifact recovery parameters.</description></item>
     /// <item><description>~1 millisecond active stimulus artifact recovery.</description></item>
     /// <item><description>Max stimulator current: 2.55mA @ +/-7V compliance.</description></item>
     /// <item><description>Sample rate: 30193.2367 Hz.</description></item>
     /// <item><description>Stimulus active and stimulus trigger pins.</description></item>
-    /// <item><description>On-board Lattice Crosslink™ FPGA for real-time data arbitration.</description></item>
+    /// <item><description>On-board Lattice Crosslink FPGA for real-time data arbitration.</description></item>
     /// </list>
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.HeadstageRhs2116Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
@@ -35,20 +32,6 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureHeadstageRhs2116"/> class.
         /// </summary>
-        /// <remarks>
-        /// The RHS2116 Headstage is a serialized headstage for small animals with 32 bi-directional channels 
-        /// which each can be used to deliver electrical stimuli. The RHS2116 Headstage can be used with passive 
-        /// probes (e.g. silicon arrays, EEG/ECOG arrays, etc) using a 36-Channel Omnetics EIB. It provides the
-        /// following features:
-        /// <list type="bullet">
-        /// <item><description>Two RHS2116 ICs for a combined 32 bi-directional ephys channels.</description></item>
-        /// <item><description>~1 millisecond active stimulus artifact recovery.</description></item>
-        /// <item><description>Max stimulator current: 2.55mA @ +/-7V compliance.</description></item>
-        /// <item><description>Sample rate: 30193.2367 Hz.</description></item>
-        /// <item><description>Stimulus active and stimulus trigger pins.</description></item>
-        /// <item><description>On-board Lattice Crosslink™ FPGA for real-time data arbitration.</description></item>
-        /// </list>
-        /// </remarks>
         public ConfigureHeadstageRhs2116()
         {
             Port = PortName.PortA;
@@ -56,18 +39,11 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets or sets the Rhs2116A configuration.
+        /// Gets or sets the Rhs2116Pair configuration.
         /// </summary>
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
-        public ConfigureRhs2116 Rhs2116A { get; set; } = new();
-
-        /// <summary>
-        /// Gets or sets the Rhs2116B configuration.
-        /// </summary>
-        [Category(ConfigurationCategory)]
-        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
-        public ConfigureRhs2116 Rhs2116B { get; set; } = new();
+        public ConfigureRhs2116Pair Rhs2116Pair { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the Stimulus Trigger configuration.
@@ -79,8 +55,7 @@ namespace OpenEphys.Onix1
         internal override void UpdateDeviceNames()
         {
             LinkController.DeviceName = GetFullDeviceName(nameof(LinkController));
-            Rhs2116A.DeviceName = GetFullDeviceName(nameof(Rhs2116A));
-            Rhs2116B.DeviceName = GetFullDeviceName(nameof(Rhs2116B));
+            Rhs2116Pair.DeviceName = GetFullDeviceName(nameof(Rhs2116Pair));
             StimulusTrigger.DeviceName = GetFullDeviceName(nameof(StimulusTrigger));
         }
 
@@ -100,8 +75,7 @@ namespace OpenEphys.Onix1
                 port = value;
                 var offset = (uint)port << 8;
                 LinkController.DeviceAddress = (uint)port;
-                Rhs2116A.DeviceAddress = HeadstageRhs2116.GetRhs2116ADeviceAddress(offset);
-                Rhs2116B.DeviceAddress = HeadstageRhs2116.GetRhs2116BDeviceAddress(offset);
+                Rhs2116Pair.DeviceAddress = HeadstageRhs2116.GetRhs2116ADeviceAddress(offset);
                 StimulusTrigger.DeviceAddress = HeadstageRhs2116.GetRhs2116StimulusTriggerDeviceAddress(offset);
             }
         }
@@ -135,8 +109,7 @@ namespace OpenEphys.Onix1
         internal override IEnumerable<IDeviceConfiguration> GetDevices()
         {
             yield return LinkController;
-            yield return Rhs2116A;
-            yield return Rhs2116B;
+            yield return Rhs2116Pair;
             yield return StimulusTrigger;
         }
 
@@ -172,7 +145,7 @@ namespace OpenEphys.Onix1
 
             protected override bool CheckLinkState(DeviceContext device)
             {
-                // NB: The RHS2116 headstage needs an additional reset after power on to provide its device table.
+                // NB: The Rhs2116 headstage needs an additional reset after power on to provide its device table.
                 device.Context.Reset();
                 var linkState = device.ReadRegister(PortController.LINKSTATE);
                 return (linkState & PortController.LINKSTATE_SL) != 0;

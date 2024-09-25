@@ -7,9 +7,9 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     public partial class Rhs2116Dialog : GenericDeviceDialog
     {
-        internal ConfigureRhs2116 ConfigureNode
+        internal ConfigureRhs2116Pair ConfigureNode
         {
-            get => (ConfigureRhs2116)propertyGrid.SelectedObject;
+            get => (ConfigureRhs2116Pair)propertyGrid.SelectedObject;
             set => propertyGrid.SelectedObject = value;
         }
 
@@ -17,7 +17,7 @@ namespace OpenEphys.Onix1.Design
         /// Initializes a new instance of the <see cref="Rhs2116Dialog"/>.
         /// </summary>
         /// <param name="configureRhs2116">Existing <see cref="ConfigureRhs2116"/> device configuration.</param>
-        public Rhs2116Dialog(ConfigureRhs2116 configureRhs2116)
+        public Rhs2116Dialog(ConfigureRhs2116Pair configureRhs2116)
         {
             InitializeComponent();
             Shown += FormShown;

@@ -28,6 +28,11 @@ namespace OpenEphys.Onix1
         /// <remarks>
         /// Each row corresponds to a channel. Each column corresponds to a sample whose time is indicated by
         /// the corresponding element <see cref="DataFrame.Clock"/> and <see cref="DataFrame.HubClock"/>.
+        /// Samples are 16-bits each and are represented using unsigned 16-bit integers. To convert to
+        /// micro-volts, the following equation can be used:
+        /// <code>
+        /// V_electrode (uV) = 0.195 µV × (ADC result – 32768)
+        /// </code>
         /// </remarks>
         public Mat AmplifierData { get; }
 
