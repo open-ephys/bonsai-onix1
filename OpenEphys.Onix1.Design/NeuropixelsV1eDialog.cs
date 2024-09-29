@@ -13,7 +13,7 @@ namespace OpenEphys.Onix1.Design
     {
         readonly NeuropixelsV1eChannelConfigurationDialog ChannelConfiguration;
 
-        private NeuropixelsV1eAdc[] Adcs = null;
+        private NeuropixelsV1Adc[] Adcs = null;
 
         private enum ChannelPreset
         {
@@ -235,7 +235,7 @@ namespace OpenEphys.Onix1.Design
             const string NoFileSelected = "No file selected.";
             const string InvalidFile = "Invalid file.";
 
-            NeuropixelsV1eAdcCalibration? adcCalibration;
+            NeuropixelsV1AdcCalibration? adcCalibration;
 
             try
             {

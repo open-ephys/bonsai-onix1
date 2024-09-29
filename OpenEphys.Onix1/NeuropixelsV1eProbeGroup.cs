@@ -22,14 +22,14 @@ namespace OpenEphys.Onix1
                           ProbeSiUnits.um,
                           new ProbeAnnotations("Neuropixels 1.0", "IMEC"),
                           new ContactAnnotations(new string[0]),
-                          DefaultContactPositions(NeuropixelsV1e.ElectrodeCount),
-                          Probe.DefaultContactPlaneAxes(NeuropixelsV1e.ElectrodeCount),
-                          Probe.DefaultContactShapes(NeuropixelsV1e.ElectrodeCount, ContactShape.Square),
-                          Probe.DefaultSquareParams(NeuropixelsV1e.ElectrodeCount, 12.0f),
+                          DefaultContactPositions(NeuropixelsV1.ElectrodeCount),
+                          Probe.DefaultContactPlaneAxes(NeuropixelsV1.ElectrodeCount),
+                          Probe.DefaultContactShapes(NeuropixelsV1.ElectrodeCount, ContactShape.Square),
+                          Probe.DefaultSquareParams(NeuropixelsV1.ElectrodeCount, 12.0f),
                           DefaultProbePlanarContour(),
-                          DefaultDeviceChannelIndices(NeuropixelsV1e.ChannelCount, NeuropixelsV1e.ElectrodeCount),
-                          Probe.DefaultContactIds(NeuropixelsV1e.ElectrodeCount),
-                          DefaultShankIds(NeuropixelsV1e.ElectrodeCount))
+                          DefaultDeviceChannelIndices(NeuropixelsV1.ChannelCount, NeuropixelsV1.ElectrodeCount),
+                          Probe.DefaultContactIds(NeuropixelsV1.ElectrodeCount),
+                          DefaultShankIds(NeuropixelsV1.ElectrodeCount))
                   }.ToArray())
         {
         }
@@ -166,8 +166,8 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Updates the <see cref="Probe.DeviceChannelIndices"/> based on the given channel map.
         /// </summary>
-        /// <param name="channelMap">Existing <see cref="NeuropixelsV1eProbeConfiguration.ChannelMap"/>.</param>
-        internal void UpdateDeviceChannelIndices(List<NeuropixelsV1eElectrode> channelMap)
+        /// <param name="channelMap">Existing <see cref="NeuropixelsV1ProbeConfiguration.ChannelMap"/>.</param>
+        internal void UpdateDeviceChannelIndices(List<NeuropixelsV1Electrode> channelMap)
         {
             var numberOfContacts = NumberOfContacts;
 
@@ -190,23 +190,23 @@ namespace OpenEphys.Onix1
         /// Convert a <see cref="NeuropixelsV1eProbeGroup"/> object to a list of electrodes, which only includes currently enabled electrodes
         /// </summary>
         /// <param name="channelConfiguration">A <see cref="NeuropixelsV1eProbeGroup"/> object</param>
-        /// <returns>List of <see cref="NeuropixelsV1eElectrode"/>'s that are enabled</returns>
-        public static List<NeuropixelsV1eElectrode> ToChannelMap(NeuropixelsV1eProbeGroup channelConfiguration)
+        /// <returns>List of <see cref="NeuropixelsV1Electrode"/>'s that are enabled</returns>
+        public static List<NeuropixelsV1Electrode> ToChannelMap(NeuropixelsV1eProbeGroup channelConfiguration)
         {
-            List<NeuropixelsV1eElectrode> channelMap = new();
+            List<NeuropixelsV1Electrode> channelMap = new();
 
             var enabledContacts = channelConfiguration.GetContacts().Where(c => c.DeviceId != -1);
 
-            if (enabledContacts.Count() != NeuropixelsV1e.ChannelCount)
+            if (enabledContacts.Count() != NeuropixelsV1.ChannelCount)
             {
-                throw new InvalidOperationException($"Channel configuration must have {NeuropixelsV1e.ChannelCount} contacts enabled." +
+                throw new InvalidOperationException($"Channel configuration must have {NeuropixelsV1.ChannelCount} contacts enabled." +
                     $"Instead there are {enabledContacts.Count()} contacts enabled. Enabled contacts are designated by a device channel" +
                     $"index >= 0.");
             }
 
             foreach (var c in enabledContacts)
             {
-                channelMap.Add(new NeuropixelsV1eElectrode(c.Index));
+                channelMap.Add(new NeuropixelsV1Electrode(c.Index));
             }
 
             return channelMap.OrderBy(e => e.Channel).ToList();
@@ -216,14 +216,14 @@ namespace OpenEphys.Onix1
         /// Convert a ProbeInterface object to a list of electrodes, which includes all possible electrodes.
         /// </summary>
         /// <param name="channelConfiguration">A <see cref="NeuropixelsV1eProbeGroup"/> object.</param>
-        /// <returns>List of <see cref="NeuropixelsV1eElectrode"/> electrodes.</returns>
-        public static List<NeuropixelsV1eElectrode> ToElectrodes(NeuropixelsV1eProbeGroup channelConfiguration)
+        /// <returns>List of <see cref="NeuropixelsV1Electrode"/> electrodes.</returns>
+        public static List<NeuropixelsV1Electrode> ToElectrodes(NeuropixelsV1eProbeGroup channelConfiguration)
         {
-            List<NeuropixelsV1eElectrode> electrodes = new();
+            List<NeuropixelsV1Electrode> electrodes = new();
 
             foreach (var c in channelConfiguration.GetContacts())
             {
-                electrodes.Add(new NeuropixelsV1eElectrode(c.Index));
+                electrodes.Add(new NeuropixelsV1Electrode(c.Index));
             }
 
             return electrodes;

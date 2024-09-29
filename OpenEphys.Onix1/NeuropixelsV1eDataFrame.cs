@@ -55,7 +55,7 @@ namespace OpenEphys.Onix1
         internal static unsafe void CopyAmplifierBuffer(ushort* amplifierData, int[] frameCountBuffer, ushort[,] spikeBuffer, ushort[,] lfpBuffer, int index, double apGainCorrection, double lfpGainCorrection, ushort[] thresholds, ushort[] offsets)
         {
 
-            var frameCountStartIndex = index * NeuropixelsV1e.FramesPerSuperFrame;
+            var frameCountStartIndex = index * NeuropixelsV1.FramesPerSuperFrame;
             frameCountBuffer[frameCountStartIndex] =   (amplifierData[31] << 10) | (amplifierData[39] << 0);
 
             // Single LFP frame
@@ -63,19 +63,19 @@ namespace OpenEphys.Onix1
             var lfpBufferIndex = index / 12;
             var lfpFrameIndex = index % 12;
 
-            for (int k = 0; k < NeuropixelsV1e.AdcCount; k++)
+            for (int k = 0; k < NeuropixelsV1.AdcCount; k++)
             {
                 var a = amplifierData[adcToFrameIndex[k]];
                 lfpBuffer[RawToChannel[k, lfpFrameIndex], lfpBufferIndex] = (ushort)(lfpGainCorrection * (a > thresholds[k] ? a - offsets[k] : a));
             }
 
             // Loop over 12 AP frames within each "super-frame"
-            for (int i = 0; i < NeuropixelsV1e.FramesPerRoundRobin; i++)
+            for (int i = 0; i < NeuropixelsV1.FramesPerRoundRobin; i++)
             {
                 // The period of ADC data within data array is 36 words
-                var adcDataOffset = (i + 1) * NeuropixelsV1e.FrameWords;
+                var adcDataOffset = (i + 1) * NeuropixelsV1.FrameWords;
 
-                for (int k = 0; k < NeuropixelsV1e.AdcCount; k++)
+                for (int k = 0; k < NeuropixelsV1.AdcCount; k++)
                 {
                     var a = amplifierData[adcToFrameIndex[k] + adcDataOffset];
                     spikeBuffer[RawToChannel[k, i], index] = (ushort)(apGainCorrection * (a > thresholds[k] ? a - offsets[k] : a));
@@ -140,6 +140,6 @@ namespace OpenEphys.Onix1
     {
         public ulong HubClock;
         public ushort ProbeIndex;
-        public fixed ushort AmplifierData[NeuropixelsV1e.FrameWords * NeuropixelsV1e.FramesPerSuperFrame];
+        public fixed ushort AmplifierData[NeuropixelsV1.FrameWords * NeuropixelsV1.FramesPerSuperFrame];
     }
 }
