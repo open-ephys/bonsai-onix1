@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections;
+using System.IO;
 using System.Linq;
 using Bonsai;
-using System.IO;
 
 namespace OpenEphys.Onix1
 {
@@ -135,14 +135,18 @@ namespace OpenEphys.Onix1
             }
 
             // Adc correction parameters
-            for (uint i = 0; i < Adcs.Length; i+=2)
+            for (uint i = 0; i < Adcs.Length; i += 2)
             {
-                device.WriteRegister(NeuropixelsV1f.ADC01_00_OFF_THRESH + i, (uint)(Adcs[i+1].Offset << 26 | Adcs[i+1].Threshold << 16 | Adcs[i].Offset << 10 | Adcs[i].Threshold));
+                device.WriteRegister(NeuropixelsV1f.ADC01_00_OFF_THRESH + i, (uint)(Adcs[i + 1].Offset << 26 | Adcs[i + 1].Threshold << 16 | Adcs[i].Offset << 10 | Adcs[i].Threshold));
             }
-            for (uint i = 0; i < NeuropixelsV1.ChannelCount; i++)
+
+            var fixedPointLfPGain = (uint)(LfpGainCorrection * (1 << 14)) & 0xFFFF;
+            var fixedPointApGain = (uint)(ApGainCorrection * (1 << 14)) & 0xFFFF;
+
+            for (uint i = 0; i < NeuropixelsV1.ChannelCount / 2; i++)
             {
-                device.WriteRegister(NeuropixelsV1f.CHAN001_000_LFPGAIN, (uint)(LfpGainCorrection * (1 << 14)));
-                device.WriteRegister(NeuropixelsV1f.CHAN001_000_APGAIN, (uint)(ApGainCorrection * (1 << 14)));
+                device.WriteRegister(NeuropixelsV1f.CHAN001_000_LFPGAIN + i, fixedPointLfPGain << 16 | fixedPointLfPGain);
+                device.WriteRegister(NeuropixelsV1f.CHAN001_000_APGAIN + i, fixedPointApGain << 16 | fixedPointApGain);
             }
         }
     }

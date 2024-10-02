@@ -79,10 +79,10 @@ namespace OpenEphys.Onix1
         /// Gets or sets the port voltage.
         /// </summary>
         /// <remarks>
-        /// If a port voltage is defined this will override the automated voltage discovery and applies
-        /// the specified voltage to the headstage. To enable automated voltage discovery, leave this field 
-        /// empty. Warning: This device requires 3.8V to 5.0V for proper operation. Voltages higher than 5.0V can 
-        /// damage the headstage
+        /// If a port voltage is defined this will override the automated voltage discovery and applies the
+        /// specified voltage to the headstage. To enable automated voltage discovery, leave this field empty.
+        /// Warning: This device requires 3.8V to 5.0V, measured at the headstage, for proper operation.
+        /// Voltages higher than 5.0V can damage the headstage.
         /// </remarks>
         [Description("If defined, overrides automated voltage discovery and applies " +
             "the specified voltage to the headstage. Warning: this device requires 3.8V to 5.0V " +

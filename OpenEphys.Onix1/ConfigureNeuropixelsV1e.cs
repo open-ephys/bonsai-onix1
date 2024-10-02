@@ -7,15 +7,15 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Configures a NeuropixelsV1e device.
+    /// Configures a NeuropixelsV1 device attached to an ONIX NeuropixelsV1e headstage
     /// </summary>
     /// <remarks>
     /// This configuration operator can be linked to a data IO operator, such as <see cref="NeuropixelsV1eData"/>,
     /// using a shared <c>DeviceName</c>.
     /// </remarks>
-    [Description("Configures a NeuropixelsV1e device.")]
+    [Description("Configures a NeuropixelsV1 device attached to an ONIX NeuropixelsV1e headstage.")]
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV1eEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
-    public class ConfigureNeuropixelsV1e : SingleDeviceFactory
+    public class ConfigureNeuropixelsV1e : SingleDeviceFactory, IConfigureNeuropixelsV1
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureNeuropixelsV1e"/> class.
@@ -26,7 +26,8 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Copy constructor for the <see cref="ConfigureNeuropixelsV1e"/> class.
+        ///  Initializes a new instance of the <see cref="ConfigureNeuropixelsV1e"/> class with public
+        ///  properties copied from the specified configuration.
         /// </summary>
         /// <param name="configureNeuropixelsV1e">Existing <see cref="ConfigureNeuropixelsV1e"/> instance.</param>
         public ConfigureNeuropixelsV1e(ConfigureNeuropixelsV1e configureNeuropixelsV1e)
@@ -152,7 +153,7 @@ namespace OpenEphys.Onix1
                 ResetProbe(serializer, gpo10Config);
 
                 // program shift registers
-                var probeControl = new NeuropixelsV1eRegisterContext(device, NeuropixelsV1.ProbeI2CAddress, 
+                var probeControl = new NeuropixelsV1eRegisterContext(device, NeuropixelsV1.ProbeI2CAddress,
                                         probeMetadata.ProbeSerialNumber, ProbeConfiguration, GainCalibrationFile, AdcCalibrationFile);
                 probeControl.InitializeProbe();
                 probeControl.WriteConfiguration();

@@ -9,22 +9,23 @@ using OpenCV.Net;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Produces a sequence of <see cref="NeuropixelsV1eDataFrame"/>s from a NeuropixelsV1e headstage.
+    /// Produces a sequence of <see cref="NeuropixelsV1DataFrame">NeuropixelsV1DataFrames</see> from a
+    /// NeuropixelsV1e headstage.
     /// </summary>
     /// <remarks>
     /// This data IO operator must be linked to an appropriate configuration, such as a <see
     /// cref="ConfigureNeuropixelsV1e"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Produces a sequence of NeuropixelsV1eDataFrame objects from a NeuropixelsV1e headstage.")]
-    public class NeuropixelsV1eData : Source<NeuropixelsV1eDataFrame>
+    public class NeuropixelsV1eData : Source<NeuropixelsV1DataFrame>
     {
+        int bufferSize = 36;
+
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(NeuropixelsV1e.NameConverter))]
         [Description(SingleDeviceFactory.DeviceNameDescription)]
         [Category(DeviceFactory.ConfigurationCategory)]
         public string DeviceName { get; set; }
-
-        int bufferSize = 36;
 
         /// <summary>
         /// Gets or sets the buffer size.
@@ -44,10 +45,10 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Generates a sequence of <see cref="NeuropixelsV1eDataFrame"/> objects.
+        /// Generates a sequence of <see cref="NeuropixelsV1DataFrame"/> objects.
         /// </summary>
-        /// <returns>A sequence of <see cref="NeuropixelsV1eDataFrame"/> objects.</returns>
-        public unsafe override IObservable<NeuropixelsV1eDataFrame> Generate()
+        /// <returns>A sequence of <see cref="NeuropixelsV1DataFrame"/> objects.</returns>
+        public unsafe override IObservable<NeuropixelsV1DataFrame> Generate()
         {
             var spikeBufferSize = BufferSize;
             var lfpBufferSize = spikeBufferSize / NeuropixelsV1.FramesPerRoundRobin;
@@ -59,7 +60,7 @@ namespace OpenEphys.Onix1
                 var passthrough = device.GetPassthroughDeviceContext(typeof(DS90UB9x));
                 var probeData = device.Context.GetDeviceFrames(passthrough.Address);
 
-                return Observable.Create<NeuropixelsV1eDataFrame>(observer =>
+                return Observable.Create<NeuropixelsV1DataFrame>(observer =>
                 {
                     var sampleIndex = 0;
                     var spikeBuffer = new ushort[NeuropixelsV1.ChannelCount, spikeBufferSize];
@@ -79,7 +80,7 @@ namespace OpenEphys.Onix1
                             {
                                 var spikeData = Mat.FromArray(spikeBuffer);
                                 var lfpData = Mat.FromArray(lfpBuffer);
-                                observer.OnNext(new NeuropixelsV1eDataFrame(clockBuffer, hubClockBuffer, frameCountBuffer, spikeData, lfpData));
+                                observer.OnNext(new NeuropixelsV1DataFrame(clockBuffer, hubClockBuffer, frameCountBuffer, spikeData, lfpData));
                                 frameCountBuffer = new int[spikeBufferSize * NeuropixelsV1.FramesPerSuperFrame];
                                 hubClockBuffer = new ulong[spikeBufferSize];
                                 clockBuffer = new ulong[spikeBufferSize];

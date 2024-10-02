@@ -5,13 +5,14 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Configures a NeuropixelsV1f device.
+    /// Configures a NeuropixelsV1 device attached to an ONIX NeuropixelsV1f headstage.
     /// </summary>
     /// <remarks>
     /// This configuration operator can be linked to a data IO operator, such as <see cref="NeuropixelsV1fData"/>,
     /// using a shared <c>DeviceName</c>.
     /// </remarks>
-    public class ConfigureNeuropixelsV1f : SingleDeviceFactory
+    [Description("Configures a NeuropixelsV1 device attached to an ONIX NeuropixelsV1f headstage.")]
+    public class ConfigureNeuropixelsV1f : SingleDeviceFactory, IConfigureNeuropixelsV1
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureNeuropixelsV1f"/> class.
@@ -19,6 +20,22 @@ namespace OpenEphys.Onix1
         public ConfigureNeuropixelsV1f()
             : base(typeof(NeuropixelsV1f))
         {
+        }
+
+        /// <summary>
+        ///  Initializes a new instance of the <see cref="ConfigureNeuropixelsV1f"/> class with public
+        ///  properties copied from the specified configuration.
+        /// </summary>
+        /// <param name="configureNeuropixelsV1f">Existing <see cref="ConfigureNeuropixelsV1f"/> instance.</param>
+        public ConfigureNeuropixelsV1f(ConfigureNeuropixelsV1e configureNeuropixelsV1f)
+            : base(typeof(NeuropixelsV1f))
+        {
+            Enable = configureNeuropixelsV1f.Enable;
+            GainCalibrationFile = configureNeuropixelsV1f.GainCalibrationFile;
+            AdcCalibrationFile = configureNeuropixelsV1f.AdcCalibrationFile;
+            ProbeConfiguration = new(configureNeuropixelsV1f.ProbeConfiguration);
+            DeviceName = configureNeuropixelsV1f.DeviceName;
+            DeviceAddress = configureNeuropixelsV1f.DeviceAddress;
         }
 
         /// <summary>
@@ -31,7 +48,6 @@ namespace OpenEphys.Onix1
         [Category(ConfigurationCategory)]
         [Description("Specifies whether the Neuro data stream is enabled.")]
         public bool Enable { get; set; } = true;
-
 
         /// <summary>
         /// Gets or sets the NeuropixelsV1 probe configuration.
@@ -83,6 +99,18 @@ namespace OpenEphys.Onix1
         [Category(ConfigurationCategory)]
         public string AdcCalibrationFile { get; set; }
 
+        /// <summary>
+        /// Configures a NeuropixelsV1 device on an ONIX NeuropixelsV1f headstage.
+        /// </summary>
+        /// <remarks>
+        /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
+        /// prior to data acquisition.
+        /// </remarks>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> that holds all configuration actions.</param>
+        /// <returns>
+        /// The original sequence with the side effect of an additional configuration action to configure
+        /// a NeuropixelsV1 device.
+        /// </returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;

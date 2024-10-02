@@ -1,33 +1,10 @@
 ﻿using System.Runtime.InteropServices;
-using OpenCV.Net;
-
 namespace OpenEphys.Onix1
 {
-    public class NeuropixelsV1fDataFrame
+    class NeuropixelsV1fDataFrame
     {
-        public NeuropixelsV1fDataFrame(ulong[] clock, ulong[] hubClock, int[] frameCount, Mat spikeData, Mat lfpData)
-        {
-            Clock = clock;
-            HubClock = hubClock;
-            FrameCount = frameCount;
-            SpikeData = spikeData;
-            LfpData = lfpData;
-        }
-
-        public ulong[] Clock { get; }
-
-        public ulong[] HubClock { get; }
-
-        public int[] FrameCount { get; }
-
-        public Mat SpikeData { get; }
-
-        public Mat LfpData { get; }
-
-
         internal static unsafe void CopyAmplifierBuffer(ushort* amplifierData, int[] frameCountBuffer, ushort[,] spikeBuffer, ushort[,] lfpBuffer, int index)
         {
-
             var frameCountStartIndex = index * NeuropixelsV1.FramesPerSuperFrame;
             frameCountBuffer[frameCountStartIndex] = (amplifierData[FrameCounterMsbIndex] << 10) | (amplifierData[FrameCounterLsbIndex] << 0);
 
@@ -53,7 +30,8 @@ namespace OpenEphys.Onix1
                     spikeBuffer[RawToChannel[k, i], index] = (ushort)(amplifierData[AdcToFrameIndex[k] + adcDataOffset] >> 5); // Q11.5 -> Q11.0
                 }
 
-                frameCountBuffer[frameCountStartIndex + i + 1] = (amplifierData[adcDataOffset + FrameCounterMsbIndex] << 10) | (amplifierData[adcDataOffset + FrameCounterLsbIndex] << 0);
+                frameCountBuffer[frameCountStartIndex + i + 1] =
+                    (amplifierData[adcDataOffset + FrameCounterMsbIndex] << 10) | (amplifierData[adcDataOffset + FrameCounterLsbIndex] << 0);
             }
         }
 
