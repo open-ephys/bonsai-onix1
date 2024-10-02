@@ -12,9 +12,9 @@ namespace OpenEphys.Onix1.Design
     public partial class NeuropixelsV1eHeadstageDialog : Form
     {
         /// <summary>
-        /// Public method that provides access to the <see cref="NeuropixelsV1eDialog"/>.
+        /// Public method that provides access to the <see cref="NeuropixelsV1Dialog"/>.
         /// </summary>
-        public readonly NeuropixelsV1eDialog DialogNeuropixelsV1e;
+        public readonly NeuropixelsV1Dialog DialogNeuropixelsV1e;
 
         /// <summary>
         /// Public method that provides access to the <see cref="PolledBno055Dialog"/>.
@@ -53,6 +53,13 @@ namespace OpenEphys.Onix1.Design
             panelBno055.Controls.Add(DialogBno055);
             DialogBno055.Show();
             DialogBno055.Invalidate();
+        }
+
+        private void Okay_Click(object sender, System.EventArgs e)
+        {
+            DialogNeuropixelsV1e.SaveVariables();
+
+            DialogResult = DialogResult.OK;
         }
     }
 }

@@ -4,6 +4,21 @@ using System.Collections;
 
 namespace OpenEphys.Onix1
 {
+    /// <summary>
+    /// Specifies the probe as A or B.
+    /// </summary>
+    public enum NeuropixelsV1Probe
+    {
+        /// <summary>
+        /// Specifies that this is Probe A.
+        /// </summary>
+        ProbeA = 0,
+        /// <summary>
+        /// Specifies that this is Probe B.
+        /// </summary>
+        ProbeB = 1
+    }
+
     // Probe constants
     static class NeuropixelsV1
     {

@@ -11,7 +11,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Partial class to create a channel configuration GUI for the <see cref="ConfigureNeuropixelsV2e"/> class.
     /// </summary>
-    public partial class NeuropixelsV1eChannelConfigurationDialog : ChannelConfigurationDialog
+    public partial class NeuropixelsV1ChannelConfigurationDialog : ChannelConfigurationDialog
     {
         internal event EventHandler OnZoom;
         internal event EventHandler OnFileLoad;
@@ -20,15 +20,15 @@ namespace OpenEphys.Onix1.Design
 
         /// <summary>
         /// Public <see cref="NeuropixelsV1ProbeConfiguration"/> object that is modified by
-        /// <see cref="NeuropixelsV1eChannelConfigurationDialog"/>.
+        /// <see cref="NeuropixelsV1ChannelConfigurationDialog"/>.
         /// </summary>
         public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of <see cref="NeuropixelsV1eChannelConfigurationDialog"/>.
+        /// Initializes a new instance of <see cref="NeuropixelsV1ChannelConfigurationDialog"/>.
         /// </summary>
         /// <param name="probeConfiguration">A <see cref="NeuropixelsV1ProbeConfiguration"/> object holding the current configuration settings.</param>
-        public NeuropixelsV1eChannelConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration)
+        public NeuropixelsV1ChannelConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration)
             : base(probeConfiguration.ChannelConfiguration)
         {
             zedGraphChannels.ZoomButtons = MouseButtons.None;

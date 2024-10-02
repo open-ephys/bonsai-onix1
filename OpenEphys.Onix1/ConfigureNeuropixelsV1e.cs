@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1
     /// using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Configures a NeuropixelsV1 device attached to an ONIX NeuropixelsV1e headstage.")]
-    [Editor("OpenEphys.Onix1.Design.NeuropixelsV1eEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
+    [Editor("OpenEphys.Onix1.Design.NeuropixelsV1Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureNeuropixelsV1e : SingleDeviceFactory, IConfigureNeuropixelsV1
     {
         /// <summary>

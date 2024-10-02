@@ -23,6 +23,7 @@ namespace OpenEphys.Onix1
     /// HTC Vive base stations.</description></item>
     /// </list>
     /// </remarks>
+    [Editor("OpenEphys.Onix1.Design.NeuropixelsV1fHeadstageEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a NeuropixelsV1f headstage.")]
     public class ConfigureNeuropixelsV1fHeadstage : MultiDeviceFactory
     {
@@ -44,7 +45,7 @@ namespace OpenEphys.Onix1
         [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the NeuropixelsV1 in connector A.")]
-        public ConfigureNeuropixelsV1f NeuropixelsV1A { get; set; } = new();
+        public ConfigureNeuropixelsV1f NeuropixelsV1A { get; set; } = new(NeuropixelsV1Probe.ProbeA);
 
         /// <summary>
         /// Gets or sets the NeuropixelsV1 probe B configuration.
@@ -52,7 +53,7 @@ namespace OpenEphys.Onix1
         [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the NeuropixelsV1 in connector B.")]
-        public ConfigureNeuropixelsV1f NeuropixelsV1B { get; set; } = new();
+        public ConfigureNeuropixelsV1f NeuropixelsV1B { get; set; } = new(NeuropixelsV1Probe.ProbeB);
 
         /// <summary>
         /// Gets or sets the Bno055 9-axis inertial measurement unit configuration.
