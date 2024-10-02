@@ -18,7 +18,7 @@ namespace OpenEphys.Onix1
         {
             var payload = (HarpSyncInputPayload*)frame.Data.ToPointer();
             HubClock = payload->HubClock;
-            HarpTime = payload->HarpTime;
+            HarpTime = payload->HarpTime + 1;
         }
 
         /// <summary>
