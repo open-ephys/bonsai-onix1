@@ -21,9 +21,9 @@ namespace OpenEphys.Onix1.Design
         /// Initializes a new instance of a <see cref="HeadstageRhs2116Dialog"/>.
         /// </summary>
         /// <param name="probeGroup">Current channel configuration settings for a <see cref="Rhs2116ProbeGroup"/>.</param>
-        /// <param name="sequence">Current stimulus sequence for a <see cref="Rhs2116StimulusSequenceDual"/>.</param>
+        /// <param name="sequence">Current stimulus sequence for a <see cref="Rhs2116StimulusSequencePair"/>.</param>
         /// <param name="rhs2116">Current configuration settings for a single <see cref="ConfigureRhs2116"/>.</param>
-        public HeadstageRhs2116Dialog(Rhs2116ProbeGroup probeGroup, Rhs2116StimulusSequenceDual sequence,
+        public HeadstageRhs2116Dialog(Rhs2116ProbeGroup probeGroup, Rhs2116StimulusSequencePair sequence,
             ConfigureRhs2116Pair rhs2116)
         {
             InitializeComponent();

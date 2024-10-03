@@ -10,7 +10,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     public class Rhs2116ProbeGroup : ProbeGroup
     {
-        internal const int NumberOfChannelsPerProbe = 16;
+        const int DefaultNumberOfChannelsPerProbe = 16;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Rhs2116ProbeGroup"/> class.
@@ -28,27 +28,27 @@ namespace OpenEphys.Onix1
                         ProbeSiUnits.mm,
                         new ProbeAnnotations("Rhs2116A", ""),
                         new ContactAnnotations(new string[0]),
-                        DefaultContactPositions(NumberOfChannelsPerProbe, 0),
-                        Probe.DefaultContactPlaneAxes(NumberOfChannelsPerProbe),
-                        Probe.DefaultContactShapes(NumberOfChannelsPerProbe, ContactShape.Circle),
-                        Probe.DefaultCircleParams(NumberOfChannelsPerProbe, 0.3f),
+                        DefaultContactPositions(DefaultNumberOfChannelsPerProbe, 0),
+                        Probe.DefaultContactPlaneAxes(DefaultNumberOfChannelsPerProbe),
+                        Probe.DefaultContactShapes(DefaultNumberOfChannelsPerProbe, ContactShape.Circle),
+                        Probe.DefaultCircleParams(DefaultNumberOfChannelsPerProbe, 0.3f),
                         DefaultProbePlanarContour(0),
-                        Probe.DefaultDeviceChannelIndices(NumberOfChannelsPerProbe, 0),
-                        Probe.DefaultContactIds(NumberOfChannelsPerProbe),
-                        Probe.DefaultShankIds(NumberOfChannelsPerProbe)),
+                        Probe.DefaultDeviceChannelIndices(DefaultNumberOfChannelsPerProbe, 0),
+                        Probe.DefaultContactIds(DefaultNumberOfChannelsPerProbe),
+                        Probe.DefaultShankIds(DefaultNumberOfChannelsPerProbe)),
                     new(
                         ProbeNdim.Two,
                         ProbeSiUnits.mm,
                         new ProbeAnnotations("Rhs2116B", ""),
                         new ContactAnnotations(new string[0]),
-                        DefaultContactPositions(NumberOfChannelsPerProbe, 1),
-                        Probe.DefaultContactPlaneAxes(NumberOfChannelsPerProbe),
-                        Probe.DefaultContactShapes(NumberOfChannelsPerProbe, ContactShape.Circle),
-                        Probe.DefaultCircleParams(NumberOfChannelsPerProbe, 0.3f),
+                        DefaultContactPositions(DefaultNumberOfChannelsPerProbe, 1),
+                        Probe.DefaultContactPlaneAxes(DefaultNumberOfChannelsPerProbe),
+                        Probe.DefaultContactShapes(DefaultNumberOfChannelsPerProbe, ContactShape.Circle),
+                        Probe.DefaultCircleParams(DefaultNumberOfChannelsPerProbe, 0.3f),
                         DefaultProbePlanarContour(1),
-                        Probe.DefaultDeviceChannelIndices(NumberOfChannelsPerProbe, NumberOfChannelsPerProbe),
-                        Probe.DefaultContactIds(NumberOfChannelsPerProbe),
-                        Probe.DefaultShankIds(NumberOfChannelsPerProbe))
+                        Probe.DefaultDeviceChannelIndices(DefaultNumberOfChannelsPerProbe, DefaultNumberOfChannelsPerProbe),
+                        Probe.DefaultContactIds(DefaultNumberOfChannelsPerProbe),
+                        Probe.DefaultShankIds(DefaultNumberOfChannelsPerProbe))
                 }.ToArray())
         {
         }
@@ -70,7 +70,7 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Copy constructor that initializes a copied instance of the <see cref="Rhs2116ProbeGroup"/> class.
+        /// Initializes a new instance of the <see cref="Rhs2116ProbeGroup"/> class from an existing instance.
         /// </summary>
         /// <param name="probeGroup">An existing <see cref="Rhs2116ProbeGroup"/> object.</param>
         public Rhs2116ProbeGroup(Rhs2116ProbeGroup probeGroup)

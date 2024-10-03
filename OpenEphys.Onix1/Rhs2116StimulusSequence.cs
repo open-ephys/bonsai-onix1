@@ -7,14 +7,15 @@ using System.Xml.Serialization;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Defines a class that holds the Stimulus Sequence for an Rhs2116 device.
+    /// A stimulus sequence for a Rhs2116 device.
     /// </summary>
     public class Rhs2116StimulusSequence
     {
         const int NumberOfChannelsPerDevice = 16;
 
         /// <summary>
-        /// Default constructor for Rhs2116StimulusSequence. Initializes with 16 stimuli
+        /// Initializes a new instance of the <see cref="Rhs2116StimulusSequence"/> class with 16 default
+        /// stimuli.
         /// </summary>
         public Rhs2116StimulusSequence()
         {
@@ -27,9 +28,10 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Copy constructor for Rhs2116StimulusSequence; performs a shallow copy using MemberwiseClone()
+        /// Initializes a new instance of the <see cref="Rhs2116StimulusSequence"/> by performing a
+        /// shallow copy of a reference sequence.
         /// </summary>
-        /// <param name="sequence">Existing Stimulus Sequence</param>
+        /// <param name="sequence">Existing <see cref="Rhs2116StimulusSequence"/> to copy.</param>
         public Rhs2116StimulusSequence(Rhs2116StimulusSequence sequence)
         {
             Stimuli = Array.ConvertAll(sequence.Stimuli, stimulus => stimulus.Clone());
@@ -148,8 +150,9 @@ namespace OpenEphys.Onix1
         internal IEnumerable<byte> CathodicAmplitudes => Stimuli.ToList().Select(x => x.CathodicAmplitudeSteps);
 
         /// <summary>
-        /// Generate the delta-table representation of this stimulus sequence that can be uploaded to the RHS2116 device.
-        /// The resultant dictionary has a time, in samples, as the key and a combined [polarity, enable] bit field as the value.
+        /// Generate the delta-table representation of this stimulus sequence that can be uploaded to the
+        /// RHS2116 device. The resultant dictionary has a time, in samples, as the key and a combined
+        /// [polarity, enable] bit field as the value.
         /// </summary>
         [XmlIgnore]
         internal Dictionary<uint, uint> DeltaTable
@@ -173,7 +176,7 @@ namespace OpenEphys.Onix1
 
                 var t0 = s.DelaySamples;
 
-                for (int j = 0; j<s.NumberOfStimuli; j++)
+                for (int j = 0; j < s.NumberOfStimuli; j++)
                 {
                     AddOrInsert(ref table, i, t0, s.AnodicFirst, e0);
                     AddOrInsert(ref table, i, t0 + d0, s.AnodicFirst, false);

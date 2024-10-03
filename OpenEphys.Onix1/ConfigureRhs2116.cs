@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
 namespace OpenEphys.Onix1
@@ -146,7 +145,7 @@ namespace OpenEphys.Onix1
             var enable = Enable;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
-            return source.ConfigureDevice(context =>
+            return source.ConfigureDevice((context, observer) =>
             {
                 // config register format following Rhs2116 datasheet
                 // https://www.intantech.com/files/Intan_RHS2116_datasheet.pdf
@@ -169,26 +168,26 @@ namespace OpenEphys.Onix1
                 device.WriteRegister(Rhs2116.ENABLE, enable ? 1u : 0);
 
                 return new CompositeDisposable(
-                    DeviceManager.RegisterDevice(deviceName, device, DeviceType),
-                    analogLowCutoff.Subscribe(newValue =>
+                    analogLowCutoff.SubscribeSafe(observer, newValue =>
                     {
                         var regs = Rhs2116Config.AnalogLowCutoffToRegisters[newValue];
                         var reg = regs[2] << 13 | regs[1] << 7 | regs[0];
                         device.WriteRegister(Rhs2116.BW2, reg);
                     }),
-                    analogLowCutoffRecovery.Subscribe(newValue =>
+                    analogLowCutoffRecovery.SubscribeSafe(observer, newValue =>
                     {
                         var regs = Rhs2116Config.AnalogLowCutoffToRegisters[newValue];
                         var reg = regs[2] << 13 | regs[1] << 7 | regs[0];
                         device.WriteRegister(Rhs2116.BW3, reg);
                     }),
-                    analogHighCutoff.Subscribe(newValue =>
+                    analogHighCutoff.SubscribeSafe(observer, newValue =>
                     {
                         var regs = Rhs2116Config.AnalogHighCutoffToRegisters[newValue];
                         device.WriteRegister(Rhs2116.BW0, regs[1] << 6 | regs[0]);
                         device.WriteRegister(Rhs2116.BW1, regs[3] << 6 | regs[2]);
                         device.WriteRegister(Rhs2116.FASTSETTLESAMPLES, Rhs2116Config.AnalogHighCutoffToFastSettleSamples[newValue]);
-                    })
+                    }),
+                    DeviceManager.RegisterDevice(deviceName, device, DeviceType)
                 );
             });
         }

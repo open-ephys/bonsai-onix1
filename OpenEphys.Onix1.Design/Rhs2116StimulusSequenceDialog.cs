@@ -12,7 +12,7 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     public partial class Rhs2116StimulusSequenceDialog : Form
     {
-        internal Rhs2116StimulusSequenceDual Sequence { get; set; }
+        internal Rhs2116StimulusSequencePair Sequence { get; set; }
 
         internal readonly Rhs2116ChannelConfigurationDialog ChannelDialog;
 
@@ -23,12 +23,12 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <param name="sequence"></param>
         /// <param name="probeGroup"></param>
-        public Rhs2116StimulusSequenceDialog(Rhs2116StimulusSequenceDual sequence, Rhs2116ProbeGroup probeGroup)
+        public Rhs2116StimulusSequenceDialog(Rhs2116StimulusSequencePair sequence, Rhs2116ProbeGroup probeGroup)
         {
             InitializeComponent();
             Shown += FormShown;
 
-            Sequence = new Rhs2116StimulusSequenceDual(sequence);
+            Sequence = new Rhs2116StimulusSequencePair(sequence);
 
             ChannelDialog = new(probeGroup)
             {
@@ -92,7 +92,7 @@ namespace OpenEphys.Onix1.Design
         /// <param name="sequence">Rhs2116 Stimulus Sequence</param>
         /// <param name="result">DialogResult, used to set the DialogResult of the form before closing</param>
         /// <returns></returns>
-        public static bool CanCloseForm(Rhs2116StimulusSequenceDual sequence, out DialogResult result)
+        public static bool CanCloseForm(Rhs2116StimulusSequencePair sequence, out DialogResult result)
         {
             if (sequence != null)
             {
@@ -794,7 +794,7 @@ namespace OpenEphys.Onix1.Design
                     return;
                 }
 
-                var sequence = DesignHelper.DeserializeString<Rhs2116StimulusSequenceDual>(File.ReadAllText(ofd.FileName));
+                var sequence = DesignHelper.DeserializeString<Rhs2116StimulusSequencePair>(File.ReadAllText(ofd.FileName));
 
                 if (sequence != null && sequence.Stimuli.Length == 32)
                 {

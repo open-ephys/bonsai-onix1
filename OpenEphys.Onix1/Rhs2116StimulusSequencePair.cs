@@ -5,27 +5,29 @@ using System.Xml.Serialization;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Defines a class that holds the Stimulus Sequence for two Rhs2116 devices.
+    /// A pair of stimulus sequences for two Rhs2116 devices.
     /// </summary>
-    public class Rhs2116StimulusSequenceDual
+    public class Rhs2116StimulusSequencePair
     {
         internal readonly Rhs2116StimulusSequence StimulusSequenceA;
         internal readonly Rhs2116StimulusSequence StimulusSequenceB;
 
         /// <summary>
-        /// Default constructor for Rhs2116StimulusSequenceDual. Initializes with 16 stimuli per sequence
+        /// Initializes a new instance of the <see cref="Rhs2116StimulusSequencePair"/> class with 16 default
+        /// stimuli per sequence.
         /// </summary>
-        public Rhs2116StimulusSequenceDual()
+        public Rhs2116StimulusSequencePair()
         {
             StimulusSequenceA = new Rhs2116StimulusSequence();
             StimulusSequenceB = new Rhs2116StimulusSequence();
         }
 
         /// <summary>
-        /// Copy constructor for Rhs2116StimulusSequenceDual. Performs a shallow copy using MemberwiseClone().
+        /// Initializes a new instance of the <see cref="Rhs2116StimulusSequencePair"/> by performing a
+        /// shallow copy of a reference sequence.
         /// </summary>
-        /// <param name="stimulusSequenceDual">Existing Dual Stimulus Sequence</param>
-        public Rhs2116StimulusSequenceDual(Rhs2116StimulusSequenceDual stimulusSequenceDual)
+        /// <param name="stimulusSequenceDual">Existing <see cref="Rhs2116StimulusSequencePair"/> to copy.</param>
+        public Rhs2116StimulusSequencePair(Rhs2116StimulusSequencePair stimulusSequenceDual)
         {
             StimulusSequenceA = new Rhs2116StimulusSequence(stimulusSequenceDual.StimulusSequenceA);
             StimulusSequenceB = new Rhs2116StimulusSequence(stimulusSequenceDual.StimulusSequenceB);

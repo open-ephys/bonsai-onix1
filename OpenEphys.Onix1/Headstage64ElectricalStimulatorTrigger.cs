@@ -21,7 +21,7 @@ namespace OpenEphys.Onix1
     /// corresponding contact on a compatible electrode interface board.
     /// </remarks>
     [Description("Controls a headstage-64 onboard electrical stimulus sequencer.")]
-    public class Headstage64ElectricalStimulatorTrigger: Sink<bool>
+    public class Headstage64ElectricalStimulatorTrigger : Sink<bool>
     {
         readonly BehaviorSubject<bool> enable = new(true);
         readonly BehaviorSubject<double> phaseOneCurrent = new(0);

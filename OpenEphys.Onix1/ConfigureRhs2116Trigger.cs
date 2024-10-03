@@ -1,11 +1,11 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Reactive.Subjects;
-using Bonsai;
 using System.Reactive.Disposables;
-using System.Xml.Serialization;
-using Newtonsoft.Json;
+using System.Reactive.Subjects;
 using System.Text;
+using System.Xml.Serialization;
+using Bonsai;
+using Newtonsoft.Json;
 
 namespace OpenEphys.Onix1
 {
@@ -20,7 +20,7 @@ namespace OpenEphys.Onix1
     [Editor("OpenEphys.Onix1.Design.Rhs2116StimulusSequenceEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureRhs2116Trigger : SingleDeviceFactory
     {
-        readonly BehaviorSubject<Rhs2116StimulusSequenceDual> stimulusSequence = new(new Rhs2116StimulusSequenceDual());
+        readonly BehaviorSubject<Rhs2116StimulusSequencePair> stimulusSequence = new(new Rhs2116StimulusSequencePair());
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureRhs2116Trigger"/> class.
@@ -54,9 +54,11 @@ namespace OpenEphys.Onix1
 
         /// <summary>
         /// Gets or sets a string defining the <see cref="ProbeGroup"/> in Base64.
+        /// </summary>
+        /// <remarks>
         /// This variable is needed to properly save a workflow in Bonsai, but it is not
         /// directly accessible in the Bonsai editor.
-        /// </summary>
+        /// </remarks>
         [Browsable(false)]
         [Externalizable(false)]
         [XmlElement(nameof(ProbeGroup))]
@@ -79,7 +81,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Category(AcquisitionCategory)]
         [Description("Stimulus sequence.")]
-        public Rhs2116StimulusSequenceDual StimulusSequence
+        public Rhs2116StimulusSequencePair StimulusSequence
         {
             get => stimulusSequence.Value;
             set => stimulusSequence.OnNext(value);
@@ -103,7 +105,7 @@ namespace OpenEphys.Onix1
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
 
-            return source.ConfigureDevice(context =>
+            return source.ConfigureDevice((context, observer) =>
             {
                 var rhs2116AAddress = HeadstageRhs2116.GetRhs2116ADeviceAddress(GenericHelper.GetHubAddressFromDeviceAddress(deviceAddress));
                 var rhs2116A = context.GetDeviceContext(rhs2116AAddress, typeof(Rhs2116));
@@ -157,7 +159,7 @@ namespace OpenEphys.Onix1
                 }
 
                 return new CompositeDisposable(
-                    stimulusSequence.Subscribe(newValue =>
+                    stimulusSequence.SubscribeSafe(observer, newValue =>
                     {
                         WriteStimulusSequence(rhs2116A, newValue.StimulusSequenceA);
                         WriteStimulusSequence(rhs2116B, newValue.StimulusSequenceB);
