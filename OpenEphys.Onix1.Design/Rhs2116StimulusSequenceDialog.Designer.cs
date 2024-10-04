@@ -29,12 +29,14 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Rhs2116StimulusSequenceDialog));
             this.buttonCancel = new System.Windows.Forms.Button();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusIsValid = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusSlotsUsed = new System.Windows.Forms.ToolStripStatusLabel();
             this.buttonOk = new System.Windows.Forms.Button();
             this.panelParameters = new System.Windows.Forms.Panel();
+            this.textBoxStepSize = new System.Windows.Forms.TextBox();
             this.groupBoxCathode = new System.Windows.Forms.GroupBox();
             this.labelAmplitudeCathodic = new System.Windows.Forms.Label();
             this.labelPulseWidthCathodic = new System.Windows.Forms.Label();
@@ -45,7 +47,6 @@
             this.labelPulseWidthAnodic = new System.Windows.Forms.Label();
             this.textboxPulseWidthAnodic = new System.Windows.Forms.TextBox();
             this.textboxAmplitudeAnodic = new System.Windows.Forms.TextBox();
-            this.comboBoxStepSize = new System.Windows.Forms.ComboBox();
             this.buttonClearPulses = new System.Windows.Forms.Button();
             this.buttonReadPulses = new System.Windows.Forms.Button();
             this.textboxInterPulseInterval = new System.Windows.Forms.TextBox();
@@ -72,8 +73,8 @@
             this.openFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.statusStrip.SuspendLayout();
             this.panelParameters.SuspendLayout();
             this.groupBoxCathode.SuspendLayout();
@@ -146,9 +147,9 @@
             // panelParameters
             // 
             this.panelParameters.AutoScroll = true;
+            this.panelParameters.Controls.Add(this.textBoxStepSize);
             this.panelParameters.Controls.Add(this.groupBoxCathode);
             this.panelParameters.Controls.Add(this.groupBoxAnode);
-            this.panelParameters.Controls.Add(this.comboBoxStepSize);
             this.panelParameters.Controls.Add(this.buttonClearPulses);
             this.panelParameters.Controls.Add(this.buttonReadPulses);
             this.panelParameters.Controls.Add(this.textboxInterPulseInterval);
@@ -169,6 +170,16 @@
             this.panelParameters.Name = "panelParameters";
             this.panelParameters.Size = new System.Drawing.Size(444, 261);
             this.panelParameters.TabIndex = 0;
+            // 
+            // textBoxStepSize
+            // 
+            this.textBoxStepSize.Enabled = false;
+            this.textBoxStepSize.Location = new System.Drawing.Point(259, 36);
+            this.textBoxStepSize.Name = "textBoxStepSize";
+            this.textBoxStepSize.ReadOnly = true;
+            this.textBoxStepSize.Size = new System.Drawing.Size(132, 22);
+            this.textBoxStepSize.TabIndex = 34;
+            this.textBoxStepSize.TabStop = false;
             // 
             // groupBoxCathode
             // 
@@ -191,9 +202,9 @@
             this.labelAmplitudeCathodic.AutoSize = true;
             this.labelAmplitudeCathodic.Location = new System.Drawing.Point(11, 19);
             this.labelAmplitudeCathodic.Name = "labelAmplitudeCathodic";
-            this.labelAmplitudeCathodic.Size = new System.Drawing.Size(98, 16);
+            this.labelAmplitudeCathodic.Size = new System.Drawing.Size(94, 16);
             this.labelAmplitudeCathodic.TabIndex = 23;
-            this.labelAmplitudeCathodic.Text = "Amplitude [mA]";
+            this.labelAmplitudeCathodic.Text = "Amplitude [µA]";
             // 
             // labelPulseWidthCathodic
             // 
@@ -244,9 +255,9 @@
             this.labelAmplitudeAnodic.AutoSize = true;
             this.labelAmplitudeAnodic.Location = new System.Drawing.Point(8, 19);
             this.labelAmplitudeAnodic.Name = "labelAmplitudeAnodic";
-            this.labelAmplitudeAnodic.Size = new System.Drawing.Size(98, 16);
+            this.labelAmplitudeAnodic.Size = new System.Drawing.Size(94, 16);
             this.labelAmplitudeAnodic.TabIndex = 4;
-            this.labelAmplitudeAnodic.Text = "Amplitude [mA]";
+            this.labelAmplitudeAnodic.Text = "Amplitude [µA]";
             // 
             // labelPulseWidthAnodic
             // 
@@ -276,17 +287,6 @@
             this.textboxAmplitudeAnodic.TabIndex = 3;
             this.textboxAmplitudeAnodic.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress_Amplitude);
             this.textboxAmplitudeAnodic.Leave += new System.EventHandler(this.Amplitude_TextChanged);
-            // 
-            // comboBoxStepSize
-            // 
-            this.comboBoxStepSize.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxStepSize.FormattingEnabled = true;
-            this.comboBoxStepSize.Location = new System.Drawing.Point(256, 34);
-            this.comboBoxStepSize.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.comboBoxStepSize.Name = "comboBoxStepSize";
-            this.comboBoxStepSize.Size = new System.Drawing.Size(145, 24);
-            this.comboBoxStepSize.TabIndex = 34;
-            this.comboBoxStepSize.TabStop = false;
             // 
             // buttonClearPulses
             // 
@@ -472,10 +472,9 @@
             // 
             // zedGraphWaveform
             // 
-            this.zedGraphWaveform.AutoScroll = true;
             this.zedGraphWaveform.Dock = System.Windows.Forms.DockStyle.Fill;
             this.zedGraphWaveform.Location = new System.Drawing.Point(3, 2);
-            this.zedGraphWaveform.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+            this.zedGraphWaveform.Margin = new System.Windows.Forms.Padding(0);
             this.zedGraphWaveform.Name = "zedGraphWaveform";
             this.zedGraphWaveform.ScrollGrace = 0D;
             this.zedGraphWaveform.ScrollMaxX = 0D;
@@ -495,7 +494,7 @@
             this.tabPageTable.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tabPageTable.Name = "tabPageTable";
             this.tabPageTable.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPageTable.Size = new System.Drawing.Size(1034, 632);
+            this.tabPageTable.Size = new System.Drawing.Size(1048, 618);
             this.tabPageTable.TabIndex = 1;
             this.tabPageTable.Text = "Table";
             this.tabPageTable.UseVisualStyleBackColor = true;
@@ -513,10 +512,11 @@
             this.dataGridViewStimulusTable.Name = "dataGridViewStimulusTable";
             this.dataGridViewStimulusTable.RowHeadersWidth = 62;
             this.dataGridViewStimulusTable.RowTemplate.Height = 28;
-            this.dataGridViewStimulusTable.Size = new System.Drawing.Size(1028, 628);
+            this.dataGridViewStimulusTable.Size = new System.Drawing.Size(1042, 614);
             this.dataGridViewStimulusTable.TabIndex = 0;
             this.dataGridViewStimulusTable.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridViewStimulusTable_CellEndEdit);
             this.dataGridViewStimulusTable.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.DataGridViewStimulusTable_DataBindingComplete);
+            this.dataGridViewStimulusTable.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.DataGridViewStimulusTable_DataError);
             // 
             // panelProbe
             // 
@@ -553,20 +553,20 @@
             this.openFileToolStripMenuItem,
             this.saveFileToolStripMenuItem});
             this.stimulusWaveformToolStripMenuItem.Name = "stimulusWaveformToolStripMenuItem";
-            this.stimulusWaveformToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.stimulusWaveformToolStripMenuItem.Size = new System.Drawing.Size(220, 26);
             this.stimulusWaveformToolStripMenuItem.Text = "Stimulus Waveform";
             // 
             // openFileToolStripMenuItem
             // 
             this.openFileToolStripMenuItem.Name = "openFileToolStripMenuItem";
-            this.openFileToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.openFileToolStripMenuItem.Size = new System.Drawing.Size(155, 26);
             this.openFileToolStripMenuItem.Text = "Open File";
             this.openFileToolStripMenuItem.Click += new System.EventHandler(this.MenuItemLoadFile_Click);
             // 
             // saveFileToolStripMenuItem
             // 
             this.saveFileToolStripMenuItem.Name = "saveFileToolStripMenuItem";
-            this.saveFileToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.saveFileToolStripMenuItem.Size = new System.Drawing.Size(155, 26);
             this.saveFileToolStripMenuItem.Text = "Save File";
             this.saveFileToolStripMenuItem.Click += new System.EventHandler(this.MenuItemSaveFile_Click);
             // 
@@ -611,6 +611,7 @@
             this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.menuStrip);
             this.Controls.Add(this.statusStrip);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip;
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.MinimumSize = new System.Drawing.Size(132, 54);
@@ -670,7 +671,6 @@
         private System.Windows.Forms.Label labelInterPulseInterval;
         private System.Windows.Forms.Button buttonClearPulses;
         private System.Windows.Forms.Button buttonReadPulses;
-        private System.Windows.Forms.ComboBox comboBoxStepSize;
         private System.Windows.Forms.GroupBox groupBoxCathode;
         private System.Windows.Forms.GroupBox groupBoxAnode;
         private System.Windows.Forms.MenuStrip menuStrip;
@@ -683,5 +683,6 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
+        private System.Windows.Forms.TextBox textBoxStepSize;
     }
 }

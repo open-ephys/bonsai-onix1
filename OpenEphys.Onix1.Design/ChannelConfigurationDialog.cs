@@ -144,10 +144,10 @@ namespace OpenEphys.Onix1.Design
 
             var currentMousePosition = TransformPixelsToCoordinates(mouseClientPosition, zedGraphControl.GraphPane);
 
-            var centerX = CalculateScaleRange(zedGraphChannels.GraphPane.XAxis.Scale) / 2 +
+            var centerX = CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale) / 2 +
                 zedGraphControl.GraphPane.XAxis.Scale.Min;
 
-            var centerY = CalculateScaleRange(zedGraphChannels.GraphPane.YAxis.Scale) / 2 +
+            var centerY = CalculateScaleRange(zedGraphControl.GraphPane.YAxis.Scale) / 2 +
                 zedGraphControl.GraphPane.YAxis.Scale.Min;
 
             var diffX = centerX - currentMousePosition.X;

@@ -120,23 +120,31 @@ namespace OpenEphys.Onix1
         [XmlIgnore]
         public double CurrentStepSizeuA
         {
-            get
+            get => GetStepSizeuA(CurrentStepSize);
+        }
+
+        /// <summary>
+        /// Gets the step size in microamps of a given <see cref="Rhs2116StepSize"/>.
+        /// </summary>
+        /// <param name="stepSize">The <see cref="Rhs2116StepSize"/> value to convert to microamps.</param>
+        /// <returns>Returns a double corresponding to the given step size in microamps.</returns>
+        /// <exception cref="ArgumentException">Invalid stimulus step size selection.</exception>
+        public static double GetStepSizeuA(Rhs2116StepSize stepSize)
+        {
+            return stepSize switch
             {
-                return CurrentStepSize switch
-                {
-                    Rhs2116StepSize.Step10nA => 0.01,
-                    Rhs2116StepSize.Step20nA => 0.02,
-                    Rhs2116StepSize.Step50nA => 0.05,
-                    Rhs2116StepSize.Step100nA => 0.1,
-                    Rhs2116StepSize.Step200nA => 0.2,
-                    Rhs2116StepSize.Step500nA => 0.5,
-                    Rhs2116StepSize.Step1000nA => 1.0,
-                    Rhs2116StepSize.Step2000nA => 2.0,
-                    Rhs2116StepSize.Step5000nA => 5.0,
-                    Rhs2116StepSize.Step10000nA => 10.0,
-                    _ => throw new ArgumentException("Invalid stimulus step size selection."),
-                };
-            }
+                Rhs2116StepSize.Step10nA => 0.01,
+                Rhs2116StepSize.Step20nA => 0.02,
+                Rhs2116StepSize.Step50nA => 0.05,
+                Rhs2116StepSize.Step100nA => 0.1,
+                Rhs2116StepSize.Step200nA => 0.2,
+                Rhs2116StepSize.Step500nA => 0.5,
+                Rhs2116StepSize.Step1000nA => 1.0,
+                Rhs2116StepSize.Step2000nA => 2.0,
+                Rhs2116StepSize.Step5000nA => 5.0,
+                Rhs2116StepSize.Step10000nA => 10.0,
+                _ => throw new ArgumentException("Invalid stimulus step size selection."),
+            };
         }
 
         /// <summary>

@@ -14,6 +14,8 @@ namespace OpenEphys.Onix1.Design
     {
         internal Rhs2116StimulusSequencePair Sequence { get; set; }
 
+        private Rhs2116StepSize StepSize { get; set; }
+
         internal readonly Rhs2116ChannelConfigurationDialog ChannelDialog;
 
         private const double SamplePeriodMicroSeconds = 1e6 / 30.1932367151e3;
@@ -29,6 +31,7 @@ namespace OpenEphys.Onix1.Design
             Shown += FormShown;
 
             Sequence = new Rhs2116StimulusSequencePair(sequence);
+            StepSize = Sequence.CurrentStepSize;
 
             ChannelDialog = new(probeGroup)
             {
@@ -46,9 +49,7 @@ namespace OpenEphys.Onix1.Design
 
             ChannelDialog.Show();
 
-            comboBoxStepSize.DataSource = Enum.GetValues(typeof(Rhs2116StepSize));
-            comboBoxStepSize.SelectedIndex = (int)Sequence.CurrentStepSize;
-            comboBoxStepSize.SelectedIndexChanged += ComboBoxStepSize_SelectedIndexChanged;
+            textBoxStepSize.Text = GetStepSizeStringuA(StepSize);
 
             if (probeGroup.NumberOfContacts != 32)
             {
@@ -58,9 +59,9 @@ namespace OpenEphys.Onix1.Design
             InitializeZedGraphWaveform();
             DrawStimulusWaveform();
 
-            dataGridViewStimulusTable.DataSource = Sequence.Stimuli;
+            zedGraphWaveform.ZoomEvent += OnZoom_Waveform;
 
-            zedGraphWaveform.Refresh();
+            dataGridViewStimulusTable.DataSource = Sequence.Stimuli;
         }
 
         private void FormShown(object sender, EventArgs e)
@@ -137,6 +138,25 @@ namespace OpenEphys.Onix1.Design
             ChannelDialog.UpdateFontSize();
         }
 
+        private void OnZoom_Waveform(ZedGraphControl sender, ZoomState oldState, ZoomState newState)
+        {
+            if (newState.Type == ZoomState.StateType.WheelZoom)
+            {
+                if (CheckZoomBoundaries(sender))
+                {
+                    CenterAxesOnCursor(sender);
+                }
+                else
+                {
+                    sender.ZoomOut(sender.GraphPane);
+                }
+            }
+            else if (newState.Type == ZoomState.StateType.Zoom)
+            {
+                CheckZoomBoundaries(sender);
+            }
+        }
+
         private void HighlightInvalidContacts()
         {
             var contactObjects = ChannelDialog.zedGraphChannels.GraphPane.GraphObjList
@@ -166,12 +186,6 @@ namespace OpenEphys.Onix1.Design
             ChannelDialog.RefreshZedGraph();
         }
 
-        private void PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
-        {
-            ChannelDialog.HighlightEnabledContacts();
-            DrawStimulusWaveform();
-        }
-
         private void DrawStimulusWaveform()
         {
             bool plotAllContacts = ChannelDialog.SelectedContacts.All(x => x == false);
@@ -180,16 +194,18 @@ namespace OpenEphys.Onix1.Design
             zedGraphWaveform.GraphPane.GraphObjList.Clear();
             zedGraphWaveform.ZoomOutAll(zedGraphWaveform.GraphPane);
 
-            double peakToPeak = (Sequence.MaximumPeakToPeakAmplitudeSteps > 0 
-                                ? Sequence.CurrentStepSizeuA * Sequence.MaximumPeakToPeakAmplitudeSteps 
+            double peakToPeak = (Sequence.MaximumPeakToPeakAmplitudeSteps > 0
+                                ? Sequence.CurrentStepSizeuA * Sequence.MaximumPeakToPeakAmplitudeSteps
                                 : Sequence.CurrentStepSizeuA * 1) * 1.1;
+
+            ZoomInBoundaryY = 2 * peakToPeak;
 
             var stimuli = Sequence.Stimuli;
 
             zedGraphWaveform.GraphPane.XAxis.Scale.Max = (Sequence.SequenceLengthSamples > 0 ? Sequence.SequenceLengthSamples : 1) * SamplePeriodMicroSeconds;
             zedGraphWaveform.GraphPane.XAxis.Scale.Min = -zedGraphWaveform.GraphPane.XAxis.Scale.Max * 0.03;
-            zedGraphWaveform.GraphPane.YAxis.Scale.Min = -peakToPeak * stimuli.Length;
-            zedGraphWaveform.GraphPane.YAxis.Scale.Max = peakToPeak;
+            zedGraphWaveform.GraphPane.YAxis.Scale.Min = 0;
+            zedGraphWaveform.GraphPane.YAxis.Scale.Max = peakToPeak * (stimuli.Length + 1);
 
             var contactTextLocation = zedGraphWaveform.GraphPane.XAxis.Scale.Min / 2;
 
@@ -197,7 +213,7 @@ namespace OpenEphys.Onix1.Design
             {
                 if (ChannelDialog.SelectedContacts[i] || plotAllContacts)
                 {
-                    PointPairList pointPairs = CreateStimulusWaveform(stimuli[i], -peakToPeak * i);
+                    PointPairList pointPairs = CreateStimulusWaveform(stimuli[i], peakToPeak * (i + 0.5));
 
                     Color color;
                     if (stimuli[i].IsValid())
@@ -235,6 +251,8 @@ namespace OpenEphys.Onix1.Design
 
             zedGraphWaveform.AxisChange();
             zedGraphWaveform.Refresh();
+
+            SetZoomOutBoundaries(zedGraphWaveform);
         }
 
         private PointPairList CreateStimulusWaveform(Rhs2116Stimulus stimulus, double yOffset)
@@ -273,6 +291,8 @@ namespace OpenEphys.Onix1.Design
 
         private void InitializeZedGraphWaveform()
         {
+            zedGraphWaveform.IsZoomOnMouseCenter = true;
+
             zedGraphWaveform.GraphPane.Title.IsVisible = false;
             zedGraphWaveform.GraphPane.TitleGap = 0;
             zedGraphWaveform.GraphPane.Border.IsVisible = false;
@@ -293,6 +313,128 @@ namespace OpenEphys.Onix1.Design
             zedGraphWaveform.IsAutoScrollRange = true;
 
             zedGraphWaveform.ZoomStepFraction = 0.5;
+        }
+
+        private double ZoomOutBoundaryLeft = default;
+        private double ZoomOutBoundaryRight = default;
+        private double ZoomOutBoundaryBottom = default;
+        private double ZoomOutBoundaryTop = default;
+        private readonly double? ZoomInBoundaryX = null;
+        private double? ZoomInBoundaryY = 20;
+
+        private void SetZoomOutBoundaries(ZedGraphControl zedGraphControl)
+        {
+            var rangeX = CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale);
+            var rangeY = CalculateScaleRange(zedGraphControl.GraphPane.YAxis.Scale);
+
+            var margin = Math.Min(rangeX, rangeY) * 0.1;
+
+            ZoomOutBoundaryLeft = zedGraphControl.GraphPane.XAxis.Scale.Min - margin;
+            ZoomOutBoundaryBottom = zedGraphControl.GraphPane.YAxis.Scale.Min - margin;
+            ZoomOutBoundaryRight = zedGraphControl.GraphPane.XAxis.Scale.Max + margin;
+            ZoomOutBoundaryTop = zedGraphControl.GraphPane.YAxis.Scale.Max + margin;
+        }
+
+        internal static double CalculateScaleRange(Scale scale)
+        {
+            return scale.Max - scale.Min;
+        }
+
+        private static PointD TransformPixelsToCoordinates(Point pixels, GraphPane graphPane)
+        {
+            graphPane.ReverseTransform(pixels, out double x, out double y);
+            y += CalculateScaleRange(graphPane.YAxis.Scale) * 0.1;
+
+            return new PointD(x, y);
+        }
+
+        private void CenterAxesOnCursor(ZedGraphControl zedGraphControl)
+        {
+            if ((zedGraphControl.GraphPane.XAxis.Scale.Min == ZoomOutBoundaryLeft &&
+                zedGraphControl.GraphPane.XAxis.Scale.Max == ZoomOutBoundaryRight &&
+                zedGraphControl.GraphPane.YAxis.Scale.Min == ZoomOutBoundaryBottom &&
+                zedGraphControl.GraphPane.YAxis.Scale.Max == ZoomOutBoundaryTop) ||
+                ZoomInBoundaryX.HasValue && CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale) == ZoomInBoundaryX.Value ||
+                ZoomInBoundaryY.HasValue && CalculateScaleRange(zedGraphControl.GraphPane.YAxis.Scale) == ZoomInBoundaryY.Value)
+            {
+                return;
+            }
+
+            var mouseClientPosition = PointToClient(Cursor.Position);
+            mouseClientPosition.X -= (zedGraphControl.Parent.Width - zedGraphControl.Width) / 2;
+            mouseClientPosition.Y += (zedGraphControl.Parent.Height - zedGraphControl.Height) / 2;
+
+            var currentMousePosition = TransformPixelsToCoordinates(mouseClientPosition, zedGraphControl.GraphPane);
+            //currentMousePosition.Y += ZoomInBoundaryY.Value;
+
+            var centerX = CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale) / 2 + zedGraphControl.GraphPane.XAxis.Scale.Min;
+
+            var centerY = CalculateScaleRange(zedGraphControl.GraphPane.YAxis.Scale) / 2 + zedGraphControl.GraphPane.YAxis.Scale.Min;
+
+            var diffX = centerX - currentMousePosition.X;
+            var diffY = centerY - currentMousePosition.Y;
+
+            zedGraphControl.GraphPane.XAxis.Scale.Min += diffX;
+            zedGraphControl.GraphPane.XAxis.Scale.Max += diffX;
+
+            zedGraphControl.GraphPane.YAxis.Scale.Min += diffY;
+            zedGraphControl.GraphPane.YAxis.Scale.Max += diffY;
+        }
+
+        /// <summary>
+        /// Checks if the <see cref="ZedGraphControl"/> is too zoomed in or out. If the graph is too zoomed in,
+        /// reset the boundaries to match <see cref="ZoomInBoundaryX"/> and <see cref="ZoomInBoundaryY"/>. If the graph is too zoomed out,
+        /// reset the boundaries to match the automatically generated boundaries based on the size of the waveforms.
+        /// </summary>
+        /// <param name="zedGraphControl">A <see cref="ZedGraphControl"/> object.</param>
+        /// <returns>True if the zoom boundary has been correctly handled, False if the previous zoom state should be reinstated.</returns>
+        private bool CheckZoomBoundaries(ZedGraphControl zedGraphControl)
+        {
+            var rangeX = CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale);
+            var rangeY = CalculateScaleRange(zedGraphControl.GraphPane.YAxis.Scale);
+
+            if ((ZoomInBoundaryX.HasValue && rangeX < ZoomInBoundaryX) || (ZoomInBoundaryY.HasValue && rangeY < ZoomInBoundaryY))
+            {
+                if ((ZoomInBoundaryX.HasValue && rangeX / ZoomInBoundaryX == zedGraphControl.ZoomStepFraction) ||
+                    (ZoomInBoundaryY.HasValue && rangeY / ZoomInBoundaryY == zedGraphControl.ZoomStepFraction))
+                    return false;
+                else
+                {
+                    if (ZoomInBoundaryX.HasValue && ZoomInBoundaryX.Value > 0)
+                    {
+                        var diffX = (ZoomInBoundaryX.Value - rangeX) / 2;
+                        zedGraphControl.GraphPane.XAxis.Scale.Min -= diffX;
+                        zedGraphControl.GraphPane.XAxis.Scale.Max += diffX;
+                    }
+
+                    if (ZoomInBoundaryY.HasValue && ZoomInBoundaryY.Value > 0)
+                    {
+                        var diffY = (ZoomInBoundaryY.Value - rangeY) / 2;
+                        zedGraphControl.GraphPane.YAxis.Scale.Min -= diffY;
+                        zedGraphControl.GraphPane.YAxis.Scale.Max += diffY;
+                    }
+
+                    return true;
+                }
+            }
+            else
+            {
+                if (zedGraphControl.GraphPane.XAxis.Scale.Min < ZoomOutBoundaryLeft && zedGraphControl.GraphPane.XAxis.Scale.Max > ZoomOutBoundaryRight ||
+                    CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale) >= ZoomOutBoundaryRight - ZoomOutBoundaryLeft)
+                {
+                    zedGraphControl.GraphPane.XAxis.Scale.Min = ZoomOutBoundaryLeft;
+                    zedGraphControl.GraphPane.XAxis.Scale.Max = ZoomOutBoundaryRight;
+                }
+
+                if (zedGraphControl.GraphPane.YAxis.Scale.Min < ZoomOutBoundaryBottom && zedGraphControl.GraphPane.YAxis.Scale.Max > ZoomOutBoundaryTop ||
+                    CalculateScaleRange(zedGraphControl.GraphPane.YAxis.Scale) >= ZoomOutBoundaryTop - ZoomOutBoundaryBottom)
+                {
+                    zedGraphControl.GraphPane.YAxis.Scale.Min = ZoomOutBoundaryBottom;
+                    zedGraphControl.GraphPane.YAxis.Scale.Max = ZoomOutBoundaryTop;
+                }
+
+                return true;
+            }
         }
 
         private void SetStatusValidity()
@@ -346,8 +488,51 @@ namespace OpenEphys.Onix1.Design
 
             if (ChannelDialog.SelectedContacts.All(x => x == false))
             {
-                MessageBox.Show("No contacts selected. Please select the contacts before trying to add pulses.");
+                MessageBox.Show("No contacts selected. Please select contact(s) before trying to add pulses.");
                 return;
+            }
+
+            if (StepSize != Sequence.CurrentStepSize)
+            {
+                var stimuli = Sequence.Stimuli
+                              .Select((s, ind) => { return (Index: ind, Stimulus: s); })
+                              .Where(s => s.Stimulus.IsValid() && (s.Stimulus.AnodicAmplitudeSteps != 0 || s.Stimulus.CathodicAmplitudeSteps != 0) && !ChannelDialog.SelectedContacts[s.Index])
+                              .Select(s =>
+                              {
+                                  var currentAnodicAmplitude = GetAmplitudeFromSample(s.Stimulus.AnodicAmplitudeSteps, Sequence.CurrentStepSize);
+                                  var currentCathodicAmplitude = GetAmplitudeFromSample(s.Stimulus.CathodicAmplitudeSteps, Sequence.CurrentStepSize);
+
+                                  var validAnodicAmplitude = GetSampleFromAmplitude(currentAnodicAmplitude, out var newAnodicSamples);
+                                  var validCathodicAmplitude = GetSampleFromAmplitude(currentAnodicAmplitude, out var newCathodicSamples);
+
+                                  return (ValidAmplitudes: validAnodicAmplitude && newAnodicSamples != 0 && validCathodicAmplitude && newCathodicSamples != 0,
+                                          s.Index,
+                                          NewAnodicSamples: newAnodicSamples,
+                                          NewCathodicSamples: newCathodicSamples);
+                              });
+
+                foreach (var (ValidAmplitudes, Index, NewAnodicSamples, NewCathodicSamples) in stimuli)
+                {
+                    if (ValidAmplitudes)
+                    {
+                        Sequence.Stimuli[Index].AnodicAmplitudeSteps = NewAnodicSamples;
+                        Sequence.Stimuli[Index].CathodicAmplitudeSteps = NewCathodicSamples;
+                    }
+                    else
+                    {
+                        var result = MessageBox.Show($"The stimulus for channel {Index} is incompatible with the newly selected step size. " +
+                        "Moving forward will remove the stimulus for this channel. " +
+                        "Press Ok to remove the stimulus, or Cancel to keep the current parameters.",
+                        "Invalid Stimulus", MessageBoxButtons.OKCancel);
+
+                        if (result == DialogResult.Cancel)
+                        {
+                            return;
+                        }
+
+                        Sequence.Stimuli[Index].Clear();
+                    }
+                }
             }
 
             for (int i = 0; i < ChannelDialog.SelectedContacts.Length; i++)
@@ -420,6 +605,8 @@ namespace OpenEphys.Onix1.Design
                 }
             }
 
+            Sequence.CurrentStepSize = StepSize;
+
             ChannelDialog.HighlightEnabledContacts();
             DrawStimulusWaveform();
         }
@@ -471,32 +658,36 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        private void ComboBoxStepSize_SelectedIndexChanged(object sender, EventArgs e)
+        private string GetStepSizeStringuA(Rhs2116StepSize stepSize)
         {
-            Sequence.CurrentStepSize = (Rhs2116StepSize)comboBoxStepSize.SelectedItem;
-            DrawStimulusWaveform();
-            UpdateAmplitudeLabelUnits();
+            return Rhs2116StimulusSequence.GetStepSizeuA(stepSize).ToString() + " µA";
+        }
 
-            if (textboxAmplitudeAnodic.Tag != null)
+        private double GetStepSizeuA(Rhs2116StepSize stepSize)
+        {
+            return stepSize switch
             {
-                textboxAmplitudeAnodic.Text = GetAmplitudeString((byte)textboxAmplitudeAnodic.Tag);
-            }
-
-            if (textboxAmplitudeCathodic.Tag != null)
-            {
-                textboxAmplitudeCathodic.Text = GetAmplitudeString((byte)textboxAmplitudeCathodic.Tag);
-            }
+                Rhs2116StepSize.Step10nA => 0.01,
+                Rhs2116StepSize.Step20nA => 0.02,
+                Rhs2116StepSize.Step50nA => 0.05,
+                Rhs2116StepSize.Step100nA => 0.1,
+                Rhs2116StepSize.Step200nA => 0.2,
+                Rhs2116StepSize.Step500nA => 0.5,
+                Rhs2116StepSize.Step1000nA => 1.0,
+                Rhs2116StepSize.Step2000nA => 2.0,
+                Rhs2116StepSize.Step5000nA => 5.0,
+                Rhs2116StepSize.Step10000nA => 10.0,
+                _ => throw new ArgumentException("Invalid stimulus step size selection."),
+            };
         }
 
         private string GetAmplitudeString(byte amplitude)
         {
-            string format = Sequence.CurrentStepSize switch
+            string format = StepSize switch
             {
                 Rhs2116StepSize.Step10nA or Rhs2116StepSize.Step20nA or Rhs2116StepSize.Step50nA => "{0:F2}",
                 Rhs2116StepSize.Step100nA or Rhs2116StepSize.Step200nA or Rhs2116StepSize.Step500nA => "{0:F1}",
-                Rhs2116StepSize.Step1000nA or Rhs2116StepSize.Step2000nA => "{0:F0}",
-                Rhs2116StepSize.Step5000nA => "{0:F3}",
-                Rhs2116StepSize.Step10000nA => "{0:F2}",
+                Rhs2116StepSize.Step1000nA or Rhs2116StepSize.Step2000nA or Rhs2116StepSize.Step5000nA or Rhs2116StepSize.Step10000nA => "{0:F0}",
                 _ => "{0:F3}",
             };
             return string.Format(format, GetAmplitudeFromSample(amplitude));
@@ -505,47 +696,6 @@ namespace OpenEphys.Onix1.Design
         private string GetTimeString(uint time)
         {
             return string.Format("{0:F2}", GetTimeFromSample(time));
-        }
-
-        private double GetUnitConversion()
-        {
-            return Sequence.CurrentStepSize switch
-            {
-                Rhs2116StepSize.Step10nA or Rhs2116StepSize.Step20nA or Rhs2116StepSize.Step50nA or
-                Rhs2116StepSize.Step100nA or Rhs2116StepSize.Step200nA or Rhs2116StepSize.Step500nA or
-                Rhs2116StepSize.Step1000nA or Rhs2116StepSize.Step2000nA => 1,
-                Rhs2116StepSize.Step5000nA or Rhs2116StepSize.Step10000nA => 1e3,
-                _ => 1e6,
-            };
-        }
-
-        private void UpdateAmplitudeLabelUnits()
-        {
-            switch (Sequence.CurrentStepSize)
-            {
-                case Rhs2116StepSize.Step10nA:
-                case Rhs2116StepSize.Step20nA:
-                case Rhs2116StepSize.Step50nA:
-                case Rhs2116StepSize.Step100nA:
-                case Rhs2116StepSize.Step200nA:
-                case Rhs2116StepSize.Step500nA:
-                case Rhs2116StepSize.Step1000nA:
-                case Rhs2116StepSize.Step2000nA:
-                    labelAmplitudeAnodic.Text = "Amplitude [μA]";
-                    labelAmplitudeCathodic.Text = "Amplitude [μA]";
-                    break;
-
-                case Rhs2116StepSize.Step5000nA:
-                case Rhs2116StepSize.Step10000nA:
-                    labelAmplitudeAnodic.Text = "Amplitude [mA]";
-                    labelAmplitudeCathodic.Text = "Amplitude [mA]";
-                    break;
-
-                default:
-                    labelAmplitudeAnodic.Text = "Amplitude [μA]";
-                    labelAmplitudeCathodic.Text = "Amplitude [μA]";
-                    break;
-            }
         }
 
         private void Samples_TextChanged(object sender, EventArgs e)
@@ -613,9 +763,15 @@ namespace OpenEphys.Onix1.Design
             return !(ratio > uint.MaxValue || ratio < uint.MinValue);
         }
 
+        /// <summary>
+        /// Get the number of samples needed at the current step size to represent a given amplitude.
+        /// </summary>
+        /// <param name="value">Double value defining the amplitude in microamps.</param>
+        /// <param name="samples">Output returning the number of samples as a byte.</param>
+        /// <returns>Returns true if the number of samples is a valid byte value (between 0 and 255). Returns false if the number of samples cannot be represented in byte format.</returns>
         private bool GetSampleFromAmplitude(double value, out byte samples)
         {
-            var ratio = value * GetUnitConversion() / Sequence.CurrentStepSizeuA;
+            var ratio = value / Rhs2116StimulusSequence.GetStepSizeuA(StepSize);
             samples = (byte)Math.Round(ratio);
 
             return !(ratio > byte.MaxValue || ratio < 0);
@@ -628,7 +784,12 @@ namespace OpenEphys.Onix1.Design
 
         private double GetAmplitudeFromSample(byte value)
         {
-            return value * Sequence.CurrentStepSizeuA / GetUnitConversion();
+            return GetAmplitudeFromSample(value, StepSize);
+        }
+
+        private double GetAmplitudeFromSample(byte value, Rhs2116StepSize stepSize)
+        {
+            return value * Rhs2116StimulusSequence.GetStepSizeuA(stepSize);
         }
 
         private void Amplitude_TextChanged(object sender, EventArgs e)
@@ -636,17 +797,21 @@ namespace OpenEphys.Onix1.Design
             TextBox textBox = (TextBox)sender;
 
             if (textBox.Text == "")
+            {
+                textBox.Tag = null;
                 return;
+            }
 
             if (double.TryParse(textBox.Text, out double result))
             {
-                if (!GetSampleFromAmplitude(result, out byte sampleAmplitude))
+                if (!UpdateStepSizeFromAmplitude(result))
                 {
-                    sampleAmplitude = byte.MaxValue;
-
-                    MessageBox.Show("Warning: Amplitude is too high for the given step-size. " +
-                        "Please increase the amplitude step-size and try again.");
+                    textBox.Text = "";
+                    textBox.Tag = null;
+                    return;
                 }
+
+                GetSampleFromAmplitude(result, out byte sampleAmplitude);
 
                 textBox.Text = GetAmplitudeString(sampleAmplitude);
                 textBox.Tag = sampleAmplitude;
@@ -658,16 +823,99 @@ namespace OpenEphys.Onix1.Design
                 textBox.Tag = null;
             }
 
-            if (textBox.Name == nameof(textboxAmplitudeAnodic) && checkboxBiphasicSymmetrical.Checked)
+            if (checkboxBiphasicSymmetrical.Checked)
             {
-                textboxAmplitudeCathodic.Text = textBox.Text;
-                textboxAmplitudeCathodic.Tag = textBox.Tag;
+                if (textBox.Name == nameof(textboxAmplitudeAnodic))
+                {
+                    textboxAmplitudeCathodic.Text = textBox.Text;
+                    textboxAmplitudeCathodic.Tag = textBox.Tag;
+                }
+                else if (textBox.Name == nameof(textboxAmplitudeCathodic))
+                {
+                    textboxAmplitudeAnodic.Text = textBox.Text;
+                    textboxAmplitudeAnodic.Tag = textBox.Tag;
+                }
             }
-            else if (textBox.Name == nameof(textboxAmplitudeCathodic) && checkboxBiphasicSymmetrical.Checked)
+            else
             {
-                textboxAmplitudeAnodic.Text = textBox.Text;
-                textboxAmplitudeAnodic.Tag = textBox.Tag;
+                if (textBox.Name == nameof(textboxAmplitudeAnodic) && double.TryParse(textboxAmplitudeCathodic.Text, out var cathodicAmplitude))
+                {
+                    if (!GetSampleFromAmplitude(cathodicAmplitude, out var samples) || samples == 0)
+                    {
+                        MessageBox.Show("Invalid amplitude chosen for the anodic pulse. The step-size required " +
+                            "for this amplitude is incompatible with the step-size required for the cathodic pulse.", "Invalid Anodic Amplitude");
+                        textBox.Text = "";
+                        textBox.Tag = null;
+
+                        textboxAmplitudeCathodic.Text = "";
+                        textboxAmplitudeCathodic.Tag = null;
+                        return;
+                    }
+                    else
+                    {
+                        textboxAmplitudeCathodic.Text = GetAmplitudeString(samples);
+                        textboxAmplitudeCathodic.Tag = samples;
+                    }
+                }
+                else if (textBox.Name == nameof(textboxAmplitudeCathodic) && double.TryParse(textboxAmplitudeAnodic.Text, out var anodicAmplitude))
+                {
+                    if (!GetSampleFromAmplitude(anodicAmplitude, out var samples) || samples == 0)
+                    {
+                        MessageBox.Show("Invalid amplitude chosen for the cathodic pulse. The step-size required " +
+                            "for this amplitude is incompatible with the step-size required for the anodic pulse.", "Invalid Cathodic Amplitude");
+                        textBox.Text = "";
+                        textBox.Tag = null;
+
+                        textboxAmplitudeAnodic.Text = "";
+                        textboxAmplitudeAnodic.Tag = null;
+                        return;
+                    }
+                    else
+                    {
+                        textboxAmplitudeAnodic.Text = GetAmplitudeString(samples);
+                        textboxAmplitudeAnodic.Tag = samples;
+                    }
+                }
             }
+        }
+
+        private bool UpdateStepSizeFromAmplitude(double amplitude)
+        {
+            const double minAmplitudeuA = 0.01; // NB: Minimum possible amplitude is 10 nA (0.01 µA)
+            const double maxAmplitudeuA = 2550; // NB: Maximum possible amplitude is 2550000 nA (2550 µA)
+
+            const string InvalidAmplitudeString = "Invalid Amplitude";
+
+            bool result = true;
+
+            if (amplitude > maxAmplitudeuA)
+            {
+                MessageBox.Show($"Warning: Amplitude is too high. Amplitude must be less than {maxAmplitudeuA} µA.", InvalidAmplitudeString);
+                result = false;
+            }
+            else if (amplitude < 0)
+            {
+                MessageBox.Show("Warning: Amplitude cannot be a negative value.", InvalidAmplitudeString);
+                result = false;
+            }
+            else if (amplitude < minAmplitudeuA && amplitude > 0)
+            {
+                MessageBox.Show($"Amplitude is too small to be resolved. Amplitude must be at least {minAmplitudeuA} µA.", InvalidAmplitudeString);
+            }
+
+            // NB: Update step size to a value that supports the requested amplitude.
+            StepSize = Enum.GetValues(typeof(Rhs2116StepSize))
+                                       .Cast<Rhs2116StepSize>()
+                                       .Where(s =>
+                                       {
+                                           var numSteps = (int)(amplitude / GetStepSizeuA(s));
+                                           return numSteps > 0 && numSteps <= 255;
+                                       })
+                                       .FirstOrDefault();
+
+            textBoxStepSize.Text = GetStepSizeStringuA(StepSize);
+
+            return result;
         }
 
         private void Checkbox_CheckedChanged(object sender, EventArgs e)
@@ -807,6 +1055,27 @@ namespace OpenEphys.Onix1.Design
                 }
 
                 DrawStimulusWaveform();
+            }
+        }
+
+        private void DataGridViewStimulusTable_DataError(object sender, DataGridViewDataErrorEventArgs e)
+        {
+            if ((e.Context & DataGridViewDataErrorContexts.Parsing) == DataGridViewDataErrorContexts.Parsing)
+            {
+                DataGridView view = (DataGridView)sender;
+
+                var cell = view.Rows[e.RowIndex].Cells[e.ColumnIndex];
+
+                if (cell.Value is byte)
+                {
+                    if (int.TryParse((string)cell.GetEditedFormattedValue(e.RowIndex, e.Context), out int result))
+                    {
+                        if (result > byte.MaxValue || result < byte.MinValue)
+                        {
+                            MessageBox.Show("Warning: Entered value must be between 0 and 255.", "Invalid Value");
+                        }
+                    }
+                }
             }
         }
     }
