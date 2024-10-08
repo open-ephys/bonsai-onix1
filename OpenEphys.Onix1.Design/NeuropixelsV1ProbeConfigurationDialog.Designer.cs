@@ -232,16 +232,14 @@
             // 
             // toolStripAdcCalSN
             // 
-            this.toolStripAdcCalSN.AutoSize = false;
             this.toolStripAdcCalSN.Name = "toolStripAdcCalSN";
-            this.toolStripAdcCalSN.Size = new System.Drawing.Size(120, 20);
+            this.toolStripAdcCalSN.Size = new System.Drawing.Size(0, 20);
             this.toolStripAdcCalSN.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // toolStripGainCalSN
             // 
-            this.toolStripGainCalSN.AutoSize = false;
             this.toolStripGainCalSN.Name = "toolStripGainCalSN";
-            this.toolStripGainCalSN.Size = new System.Drawing.Size(120, 20);
+            this.toolStripGainCalSN.Size = new System.Drawing.Size(0, 20);
             this.toolStripGainCalSN.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // toolStripStatus
@@ -261,14 +259,14 @@
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
             this.menuStrip.Padding = new System.Windows.Forms.Padding(5, 1, 0, 1);
-            this.menuStrip.Size = new System.Drawing.Size(1320, 26);
+            this.menuStrip.Size = new System.Drawing.Size(1320, 30);
             this.menuStrip.TabIndex = 36;
             this.menuStrip.Text = "menuStrip1";
             // 
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(46, 24);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(46, 28);
             this.fileToolStripMenuItem.Text = "File";
             // 
             // tableLayoutPanel1
@@ -280,13 +278,13 @@
             this.tableLayoutPanel1.Controls.Add(this.panelOptions, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 0, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 26);
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 30);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 42F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(1320, 744);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(1320, 740);
             this.tableLayoutPanel1.TabIndex = 37;
             // 
             // panelProbe
@@ -297,7 +295,7 @@
             this.panelProbe.Location = new System.Drawing.Point(4, 4);
             this.panelProbe.Margin = new System.Windows.Forms.Padding(4);
             this.panelProbe.Name = "panelProbe";
-            this.panelProbe.Size = new System.Drawing.Size(982, 694);
+            this.panelProbe.Size = new System.Drawing.Size(982, 690);
             this.panelProbe.TabIndex = 0;
             // 
             // panelTrackBar
@@ -306,7 +304,7 @@
             this.panelTrackBar.Controls.Add(label1);
             this.panelTrackBar.Controls.Add(label3);
             this.panelTrackBar.Controls.Add(this.trackBarProbePosition);
-            this.panelTrackBar.Location = new System.Drawing.Point(916, 4);
+            this.panelTrackBar.Location = new System.Drawing.Point(916, 2);
             this.panelTrackBar.Margin = new System.Windows.Forms.Padding(4);
             this.panelTrackBar.Name = "panelTrackBar";
             this.panelTrackBar.Size = new System.Drawing.Size(61, 686);
@@ -361,7 +359,7 @@
             this.panelOptions.Location = new System.Drawing.Point(993, 2);
             this.panelOptions.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panelOptions.Name = "panelOptions";
-            this.panelOptions.Size = new System.Drawing.Size(324, 698);
+            this.panelOptions.Size = new System.Drawing.Size(324, 694);
             this.panelOptions.TabIndex = 2;
             // 
             // textBoxLfpCorrection
@@ -551,7 +549,7 @@
             this.flowLayoutPanel1.Controls.Add(this.buttonOkay);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(2, 704);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(2, 700);
             this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(2);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(1316, 38);

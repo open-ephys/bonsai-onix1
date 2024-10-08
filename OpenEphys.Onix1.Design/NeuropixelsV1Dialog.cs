@@ -32,7 +32,6 @@ namespace OpenEphys.Onix1.Design
             else if (configureNode is ConfigureNeuropixelsV1f configureV1f)
             {
                 ConfigureNode = new ConfigureNeuropixelsV1f(configureV1f);
-                Text += ": " + GetProbeName(configureV1f.ProbeName);
             }
 
             ProbeConfigurationDialog = new(ConfigureNode.ProbeConfiguration, ConfigureNode.AdcCalibrationFile, ConfigureNode.GainCalibrationFile)
@@ -46,16 +45,6 @@ namespace OpenEphys.Onix1.Design
             panelProbe.Controls.Add(ProbeConfigurationDialog);
 
             this.AddMenuItemsFromDialogToFileOption(ProbeConfigurationDialog);
-        }
-
-        private string GetProbeName(NeuropixelsV1Probe probe)
-        {
-            return probe switch
-            {
-                NeuropixelsV1Probe.ProbeA => "Probe A",
-                NeuropixelsV1Probe.ProbeB => "Probe B",
-                _ => "Invalid probe was specified."
-            };
         }
 
         private void FormShown(object sender, EventArgs e)

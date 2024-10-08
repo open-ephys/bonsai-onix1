@@ -305,7 +305,7 @@ namespace OpenEphys.Onix1.Design
 
             if (toolStripAdcCalSN.Text == NoFileSelected || toolStripGainCalSN.Text == NoFileSelected)
             {
-                toolStripStatus.Image = Properties.Resources.StatusRefreshImage;
+                toolStripStatus.Image = Properties.Resources.StatusWarningImage;
                 toolStripStatus.Text = "Select files.";
             }
             else if (toolStripAdcCalSN.Text == InvalidFile || toolStripGainCalSN.Text == InvalidFile)
