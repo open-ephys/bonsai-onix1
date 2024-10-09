@@ -133,7 +133,6 @@ namespace OpenEphys.Onix1
             // TODO: Needs more testing
             protected override bool ConfigurePortVoltage(DeviceContext device)
             {
-
                 if (PortVoltage == null)
                 {
                     const double MinVoltage = 5.0;

@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections;
 
 namespace OpenEphys.Onix1
@@ -109,7 +108,6 @@ namespace OpenEphys.Onix1
 
                 BaseConfigs[configIdx][chanOptsIdx + 6] = false;
                 BaseConfigs[configIdx][chanOptsIdx + 7] = !probeConfiguration.SpikeFilter; ; // Full bandwidth = 1, filter on = 0
-
             }
 
             int k = 0;
@@ -155,7 +153,7 @@ namespace OpenEphys.Onix1
                 var compN = new BitArray(new byte[] { (byte)adc.CompN });
                 var cfix = new BitArray(new byte[] { (byte)adc.Cfix });
                 var slope = new BitArray(new byte[] { (byte)adc.Slope });
-                var coarse = (new BitArray(new byte[] { (byte)adc.Coarse }));
+                var coarse = new BitArray(new byte[] { (byte)adc.Coarse });
                 var fine = new BitArray(new byte[] { (byte)adc.Fine });
 
                 BaseConfigs[configIdx][compOffset + 0] = compP[0];
