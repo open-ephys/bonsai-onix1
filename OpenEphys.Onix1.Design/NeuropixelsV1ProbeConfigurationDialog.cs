@@ -303,26 +303,23 @@ namespace OpenEphys.Onix1.Design
 
             panelProbe.Visible = adcCalibration.HasValue && gainCorrection.HasValue;
 
-            if (toolStripAdcCalSN.Text == NoFileSelected || toolStripGainCalSN.Text == NoFileSelected)
-            {
-                toolStripStatus.Image = Properties.Resources.StatusWarningImage;
-                toolStripStatus.Text = "Select files.";
-            }
-            else if (toolStripAdcCalSN.Text == InvalidFile || toolStripGainCalSN.Text == InvalidFile)
-            {
-                toolStripStatus.Image = Properties.Resources.StatusCriticalImage;
-                toolStripStatus.Text = "Invalid files.";
-            }
-            else if (toolStripAdcCalSN.Text != toolStripGainCalSN.Text)
-            {
-                toolStripStatus.Image = Properties.Resources.StatusBlockedImage;
-                toolStripStatus.Text = "Serial number mismatch.";
-            }
-            else
-            {
-                toolStripStatus.Image = Properties.Resources.StatusReadyImage;
-                toolStripStatus.Text = "Ready.";
-            }
+            if (toolStripAdcCalSN.Text == NoFileSelected) 
+                toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusWarningImage;
+            else if (toolStripAdcCalSN.Text == InvalidFile) 
+                toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusCriticalImage;
+            else if (toolStripGainCalSN.Text != NoFileSelected && toolStripGainCalSN.Text != InvalidFile && toolStripAdcCalSN.Text != toolStripGainCalSN.Text)
+                toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusBlockedImage;
+            else 
+                toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusReadyImage;
+
+            if (toolStripGainCalSN.Text == NoFileSelected) 
+                toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusWarningImage;
+            else if (toolStripGainCalSN.Text == InvalidFile) 
+                toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusCriticalImage;
+            else if (toolStripAdcCalSN.Text != NoFileSelected && toolStripAdcCalSN.Text != InvalidFile && toolStripAdcCalSN.Text != toolStripGainCalSN.Text)
+                toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusBlockedImage;
+            else 
+                toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusReadyImage;
         }
 
         private void ChooseGainCalibrationFile_Click(object sender, EventArgs e)
