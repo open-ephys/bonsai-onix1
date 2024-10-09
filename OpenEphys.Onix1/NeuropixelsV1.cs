@@ -108,7 +108,7 @@ namespace OpenEphys.Onix1
                 BaseConfigs[configIdx][chanOptsIdx + 5] = ((byte)probeConfiguration.LfpAmplifierGain >> 2 & 0x1) == 1;
 
                 BaseConfigs[configIdx][chanOptsIdx + 6] = false;
-                BaseConfigs[configIdx][chanOptsIdx + 7] = !!probeConfiguration.SpikeFilter; ; // Full bandwidth = 1, filter on = 0
+                BaseConfigs[configIdx][chanOptsIdx + 7] = !probeConfiguration.SpikeFilter; ; // Full bandwidth = 1, filter on = 0
 
             }
 
