@@ -35,8 +35,8 @@
             System.Windows.Forms.Label Reference;
             System.Windows.Forms.Label labelPresets;
             System.Windows.Forms.Label label1;
-            System.Windows.Forms.ToolStripStatusLabel toolStripLabelGainCalibrationSN;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(NeuropixelsV2eProbeConfigurationDialog));
+            this.toolStripLabelGainCalibrationSN = new System.Windows.Forms.ToolStripStatusLabel();
             this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
@@ -64,7 +64,6 @@
             Reference = new System.Windows.Forms.Label();
             labelPresets = new System.Windows.Forms.Label();
             label1 = new System.Windows.Forms.Label();
-            toolStripLabelGainCalibrationSN = new System.Windows.Forms.ToolStripStatusLabel();
             this.menuStrip.SuspendLayout();
             this.panelProbe.SuspendLayout();
             this.panelTrackBar.SuspendLayout();
@@ -135,10 +134,12 @@
             // 
             // toolStripLabelGainCalibrationSN
             // 
-            toolStripLabelGainCalibrationSN.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            toolStripLabelGainCalibrationSN.Name = "toolStripLabelGainCalibrationSN";
-            toolStripLabelGainCalibrationSN.Size = new System.Drawing.Size(153, 20);
-            toolStripLabelGainCalibrationSN.Text = "Gain Calibration SN: ";
+            this.toolStripLabelGainCalibrationSN.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.toolStripLabelGainCalibrationSN.Image = global::OpenEphys.Onix1.Design.Properties.Resources.StatusWarningImage;
+            this.toolStripLabelGainCalibrationSN.Name = "toolStripLabelGainCalibrationSN";
+            this.toolStripLabelGainCalibrationSN.Size = new System.Drawing.Size(173, 20);
+            this.toolStripLabelGainCalibrationSN.Text = "Gain Calibration SN: ";
+            this.toolStripLabelGainCalibrationSN.TextImageRelation = System.Windows.Forms.TextImageRelation.TextBeforeImage;
             // 
             // menuStrip
             // 
@@ -148,14 +149,14 @@
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
             this.menuStrip.Padding = new System.Windows.Forms.Padding(5, 1, 0, 1);
-            this.menuStrip.Size = new System.Drawing.Size(1112, 26);
+            this.menuStrip.Size = new System.Drawing.Size(1112, 30);
             this.menuStrip.TabIndex = 0;
             this.menuStrip.Text = "menuStripNeuropixelsV2e";
             // 
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(46, 24);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(46, 28);
             this.fileToolStripMenuItem.Text = "File";
             // 
             // buttonEnableContacts
@@ -223,7 +224,7 @@
             this.panelProbe.Location = new System.Drawing.Point(3, 2);
             this.panelProbe.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panelProbe.Name = "panelProbe";
-            this.panelProbe.Size = new System.Drawing.Size(828, 555);
+            this.panelProbe.Size = new System.Drawing.Size(828, 551);
             this.panelProbe.TabIndex = 1;
             // 
             // panelTrackBar
@@ -232,7 +233,7 @@
             this.panelTrackBar.Controls.Add(label6);
             this.panelTrackBar.Controls.Add(label7);
             this.panelTrackBar.Controls.Add(this.trackBarProbePosition);
-            this.panelTrackBar.Location = new System.Drawing.Point(775, -1);
+            this.panelTrackBar.Location = new System.Drawing.Point(775, -3);
             this.panelTrackBar.Margin = new System.Windows.Forms.Padding(4);
             this.panelTrackBar.Name = "panelTrackBar";
             this.panelTrackBar.Size = new System.Drawing.Size(49, 559);
@@ -276,7 +277,7 @@
             this.panelChannelOptions.Location = new System.Drawing.Point(837, 2);
             this.panelChannelOptions.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panelChannelOptions.Name = "panelChannelOptions";
-            this.panelChannelOptions.Size = new System.Drawing.Size(272, 555);
+            this.panelChannelOptions.Size = new System.Drawing.Size(272, 551);
             this.panelChannelOptions.TabIndex = 1;
             // 
             // textBoxGainCorrection
@@ -362,14 +363,14 @@
             this.tableLayoutPanel1.Controls.Add(this.panelProbe, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 0, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 26);
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 30);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 45F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(1112, 604);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(1112, 600);
             this.tableLayoutPanel1.TabIndex = 3;
             // 
             // flowLayoutPanel1
@@ -379,7 +380,7 @@
             this.flowLayoutPanel1.Controls.Add(this.buttonOkay);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(4, 563);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(4, 559);
             this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(4);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(1104, 37);
@@ -389,7 +390,7 @@
             // 
             this.statusStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            toolStripLabelGainCalibrationSN,
+            this.toolStripLabelGainCalibrationSN,
             this.toolStripGainCalSN});
             this.statusStrip1.Location = new System.Drawing.Point(0, 630);
             this.statusStrip1.Name = "statusStrip1";
@@ -399,9 +400,9 @@
             // 
             // toolStripGainCalSN
             // 
-            this.toolStripGainCalSN.AutoSize = false;
             this.toolStripGainCalSN.Name = "toolStripGainCalSN";
-            this.toolStripGainCalSN.Size = new System.Drawing.Size(120, 20);
+            this.toolStripGainCalSN.Size = new System.Drawing.Size(116, 20);
+            this.toolStripGainCalSN.Text = "No file selected.";
             this.toolStripGainCalSN.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // NeuropixelsV2eProbeConfigurationDialog
@@ -460,5 +461,6 @@
         private System.Windows.Forms.TextBox textBoxGainCorrection;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripGainCalSN;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripLabelGainCalibrationSN;
     }
 }
