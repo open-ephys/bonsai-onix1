@@ -150,12 +150,11 @@ namespace OpenEphys.Onix1
                 var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
                 var gpo10Config = NeuropixelsV2eBeta.DefaultGPO10Config;
                 var gpo32Config = NeuropixelsV2eBeta.DefaultGPO32Config;
-                serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO10, gpo10Config);
-                serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO32, gpo32Config);
+                serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.GPIO10, gpo10Config);
+                serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.GPIO32, gpo32Config);
 
                 // set I2C clock rate to ~400 kHz
-                serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.SCLHIGH, 20);
-                serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.SCLLOW, 20);
+                DS90UB9x.Set933I2CRate(device, 400e3);
 
                 // read probe metadata
                 var probeAMetadata = ReadProbeMetadata(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeA);
@@ -170,7 +169,7 @@ namespace OpenEphys.Onix1
                 // REC_NRESET and NRESET go high on both probes to take the ASIC out of reset
                 // TODO: not sure if REC_NRESET and NRESET are tied together on flex
                 gpo10Config |= NeuropixelsV2eBeta.GPO10ResetMask | NeuropixelsV2eBeta.GPO10NResetMask;
-                serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO10, gpo10Config);
+                serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.GPIO10, gpo10Config);
                 System.Threading.Thread.Sleep(20);
 
                 // configure probe streaming
@@ -227,7 +226,7 @@ namespace OpenEphys.Onix1
 
                 // toggle probe LED
                 gpo32Config = (gpo32Config & ~NeuropixelsV2eBeta.GPO32LedMask) | (EnableLed ? 0 : NeuropixelsV2eBeta.GPO32LedMask);
-                serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO32, gpo32Config);
+                serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.GPIO32, gpo32Config);
 
                 // Both probes are now streaming, hit them with a mux reset to (roughly) sync.
                 // NB: We have found that this gives PCLK-level synchronization MOST of the time.
@@ -238,8 +237,8 @@ namespace OpenEphys.Onix1
                 var deviceInfo = new NeuropixelsV2eDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB);
                 var shutdown = Disposable.Create(() =>
                 {
-                    serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO10, NeuropixelsV2eBeta.DefaultGPO10Config);
-                    serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO32, NeuropixelsV2eBeta.DefaultGPO32Config);
+                    serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.GPIO10, NeuropixelsV2eBeta.DefaultGPO10Config);
+                    serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.GPIO32, NeuropixelsV2eBeta.DefaultGPO32Config);
                 });
                 return new CompositeDisposable(
                     DeviceManager.RegisterDevice(deviceName, deviceInfo),
@@ -265,10 +264,10 @@ namespace OpenEphys.Onix1
             device.WriteRegister(DS90UB9x.DATALINES0, 0x00007654); // NP A
             device.WriteRegister(DS90UB9x.DATALINES1, 0x00000123); // NP B
 
+            DS90UB9x.Initialize933SerDesLink(device, DS90UB9xMode.Raw12BitHighFrequency);
+
             // configure deserializer I2C aliases
             var deserializer = new I2CRegisterContext(device, DS90UB9x.DES_ADDR);
-            uint coaxMode = 0x4 + (uint)DS90UB9xMode.Raw12BitHighFrequency; // 0x4 maintains coax mode
-            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.PortMode, coaxMode);
 
             uint alias = NeuropixelsV2eBeta.ProbeAddress << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID1, alias);
@@ -293,17 +292,17 @@ namespace OpenEphys.Onix1
                 NeuropixelsV2eBeta.SelectProbeB => gpo32Config & ~NeuropixelsV2eBeta.ProbeSelectMask,
                 _ => gpo32Config
             };
-            serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO32, gpo32Config);
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.GPIO32, gpo32Config);
             System.Threading.Thread.Sleep(20);
         }
 
         static void SyncProbes(I2CRegisterContext serializer, uint gpo10Config)
         {
             gpo10Config &= ~NeuropixelsV2eBeta.GPO10NResetMask;
-            serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO10, gpo10Config);
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.GPIO10, gpo10Config);
 
             gpo10Config |= NeuropixelsV2eBeta.GPO10NResetMask;
-            serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO10, gpo10Config);
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.GPIO10, gpo10Config);
         }
 
         static void ConfigureProbeStreaming(I2CRegisterContext i2cNP)
