@@ -35,13 +35,13 @@ namespace OpenEphys.Onix1
         internal static void Initialize933SerDesLink(DeviceContext device, DS90UB9xMode dataMode) //also valid for 913
         {
             var deserializer = new I2CRegisterContext(device, DES_ADDR);
-            deserializer.WriteByte((uint)DS90UB934DeserializerI2CRegister.PortSel, 0x01); //Enable port 0
-            deserializer.WriteByte((uint)DS90UB934DeserializerI2CRegister.PortMode, 0x4 + (uint)dataMode); //0x4 maintains coax mode
-            deserializer.WriteByte((uint)DS90UB934DeserializerI2CRegister.I2CConfig, 0b01011000); //7: i2c pass all (0), 6: i2c pass (1), 5: auto_ack (0), 4: BC enable (1), 3: BC crc en (1), 2: reserved (0) 1:0: bc freq (00) 2.5Mbps
-            deserializer.WriteByte((uint)DS90UB934DeserializerI2CRegister.SerAlias, SER_ADDR << 1);
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.PortSel, 0x01); //Enable port 0
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.PortMode, 0x4 + (uint)dataMode); //0x4 maintains coax mode
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.I2CConfig, 0b01011000); //7: i2c pass all (0), 6: i2c pass (1), 5: auto_ack (0), 4: BC enable (1), 3: BC crc en (1), 2: reserved (0) 1:0: bc freq (00) 2.5Mbps
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SerAlias, SER_ADDR << 1);
             //Enable backchannel GPIO on deserializer. It is then the serializer task to decide if using them or use manual output
-            deserializer.WriteByte((uint)DS90UB934DeserializerI2CRegister.GpioCtrl0, 0x10);
-            deserializer.WriteByte((uint)DS90UB934DeserializerI2CRegister.GpioCtrl0, 0x32);
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.GpioCtrl0, 0x10);
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.GpioCtrl0, 0x32);
         }
 
         internal static void Set933I2CRate(DeviceContext device, double i2cRate)
