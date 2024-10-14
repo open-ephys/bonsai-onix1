@@ -205,11 +205,6 @@ namespace OpenEphys.Onix1
             i2cAlias = UclaMiniscopeV4.Max14574Address << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID3, i2cAlias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias3, i2cAlias);
-
-            // set I2C clock rate to ~100 kHz
-            var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
-            serializer.WriteByte((uint)0x11, 0x7A);
-            serializer.WriteByte((uint)0x12, 0x7A);
         }
 
         internal static void ConfigureSerializer(DeviceContext device)
