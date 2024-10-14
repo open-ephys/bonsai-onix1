@@ -22,19 +22,19 @@ namespace OpenEphys.Onix1
         /// </para>
         /// <para>
         /// 2) All remaining lines (32 lines) contain the ADC correction values for each ADC. First is the ADC number,
-        /// followed by the <see cref="NeuropixelsV1eAdc"/> values. All elements are separated by commas, and each element is a valid 
+        /// followed by the <see cref="NeuropixelsV1Adc"/> values. All elements are separated by commas, and each element is a valid 
         /// integer value.
         /// </para>
         /// </remarks>
         /// <param name="adcCalibrationFile">String defining the path to the ADC calibration file.</param>
-        /// <returns><see cref="NeuropixelsV1eAdcCalibration"/> object that contains the ADC calibration values. This object is null if the file was not successfully parsed.</returns>
-        public static NeuropixelsV1eAdcCalibration? TryParseAdcCalibrationFile(string adcCalibrationFile)
+        /// <returns><see cref="NeuropixelsV1AdcCalibration"/> object that contains the ADC calibration values. This object is null if the file was not successfully parsed.</returns>
+        public static NeuropixelsV1AdcCalibration? TryParseAdcCalibrationFile(string adcCalibrationFile)
         {
             if (!File.Exists(adcCalibrationFile)) return null;
 
             var lines = File.ReadLines(adcCalibrationFile);
 
-            if (lines.Count() != NeuropixelsV1e.AdcCount + 1) return null;
+            if (lines.Count() != NeuropixelsV1.AdcCount + 1) return null;
             if (!ulong.TryParse(lines.ElementAt(0), out var serialNumber)) return null;
 
             if (!lines
@@ -46,7 +46,7 @@ namespace OpenEphys.Onix1
                 })
                 .Where(l => l.Ok)
                 .Select(l => l.AdcNumber)
-                .SequenceEqual(Enumerable.Range(0, NeuropixelsV1e.AdcCount))) return null;
+                .SequenceEqual(Enumerable.Range(0, NeuropixelsV1.AdcCount))) return null;
 
             var adcs = lines
                        .Skip(1)
@@ -65,7 +65,7 @@ namespace OpenEphys.Onix1
 
                            return calibrationValues.Count() != NumberOfAdcParameters
                            ? null
-                           : new NeuropixelsV1eAdc {
+                           : new NeuropixelsV1Adc {
                                CompP = calibrationValues.ElementAt(0),
                                CompN = calibrationValues.ElementAt(1),
                                Slope = calibrationValues.ElementAt(2),
@@ -173,11 +173,11 @@ namespace OpenEphys.Onix1
         /// Returns the ADC values and serial number from an ADC calibration file for a specific probe.
         /// </summary>
         /// <param name="file">Incoming <see cref="StreamReader"/> that is reading from the ADC calibration file.</param>
-        /// <returns>Array of <see cref="NeuropixelsV1eAdc"/> values.</returns>
+        /// <returns>Array of <see cref="NeuropixelsV1Adc"/> values.</returns>
         /// <exception cref="ArgumentException"></exception>
         /// <exception cref="InvalidOperationException"></exception>
         [Obsolete("Use TryParseAdcCalibrationFile instead for better validation and parsing.")]
-        public static NeuropixelsV1eAdcCalibration ParseAdcCalibrationFile(StreamReader file)
+        public static NeuropixelsV1AdcCalibration ParseAdcCalibrationFile(StreamReader file)
         {
             // TODO: "file" input argument should either be a FileStream or a path string. StreamReader is to
             // general because cal data is always provided in a file and this function call expects to start
@@ -196,9 +196,9 @@ namespace OpenEphys.Onix1
                     $"incorrectly formatted.");
             }
 
-            var adcs = new NeuropixelsV1eAdc[NeuropixelsV1e.AdcCount];
+            var adcs = new NeuropixelsV1Adc[NeuropixelsV1.AdcCount];
 
-            for (var i = 0; i < NeuropixelsV1e.AdcCount; i++)
+            for (var i = 0; i < NeuropixelsV1.AdcCount; i++)
             {
                 var adcCal = file.ReadLine().Split(',').Skip(1);
                 if (adcCal.Count() != NumberOfAdcParameters)
@@ -206,7 +206,7 @@ namespace OpenEphys.Onix1
                     throw new InvalidOperationException("Incorrectly formatted ADC calibration file.");
                 }
 
-                adcs[i] = new NeuropixelsV1eAdc
+                adcs[i] = new NeuropixelsV1Adc
                 {
                     CompP = int.Parse(adcCal.ElementAt(0)),
                     CompN = int.Parse(adcCal.ElementAt(1)),

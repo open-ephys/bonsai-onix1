@@ -7,15 +7,15 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Configures a NeuropixelsV1e device.
+    /// Configures a NeuropixelsV1 device attached to an ONIX NeuropixelsV1e headstage
     /// </summary>
     /// <remarks>
     /// This configuration operator can be linked to a data IO operator, such as <see cref="NeuropixelsV1eData"/>,
     /// using a shared <c>DeviceName</c>.
     /// </remarks>
-    [Description("Configures a NeuropixelsV1e device.")]
-    [Editor("OpenEphys.Onix1.Design.NeuropixelsV1eEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
-    public class ConfigureNeuropixelsV1e : SingleDeviceFactory
+    [Description("Configures a NeuropixelsV1 device attached to an ONIX NeuropixelsV1e headstage.")]
+    [Editor("OpenEphys.Onix1.Design.NeuropixelsV1Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
+    public class ConfigureNeuropixelsV1e : SingleDeviceFactory, IConfigureNeuropixelsV1
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureNeuropixelsV1e"/> class.
@@ -26,7 +26,8 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Copy constructor for the <see cref="ConfigureNeuropixelsV1e"/> class.
+        ///  Initializes a new instance of the <see cref="ConfigureNeuropixelsV1e"/> class with public
+        ///  properties copied from the specified configuration.
         /// </summary>
         /// <param name="configureNeuropixelsV1e">Existing <see cref="ConfigureNeuropixelsV1e"/> instance.</param>
         public ConfigureNeuropixelsV1e(ConfigureNeuropixelsV1e configureNeuropixelsV1e)
@@ -106,11 +107,11 @@ namespace OpenEphys.Onix1
         public string AdcCalibrationFile { get; set; }
 
         /// <summary>
-        /// Gets or sets the NeuropixelsV1e probe configuration.
+        /// Gets or sets the NeuropixelsV1 probe configuration.
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Neuropixels 1.0e probe configuration")]
-        public NeuropixelsV1eProbeConfiguration ProbeConfiguration { get; set; } = new();
+        public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; set; } = new();
 
         /// <summary>
         /// Configures a NeuropixelsV1e device.
@@ -152,7 +153,7 @@ namespace OpenEphys.Onix1
                 ResetProbe(serializer, gpo10Config);
 
                 // program shift registers
-                var probeControl = new NeuropixelsV1eRegisterContext(device, NeuropixelsV1e.ProbeAddress, 
+                var probeControl = new NeuropixelsV1eRegisterContext(device, NeuropixelsV1.ProbeI2CAddress,
                                         probeMetadata.ProbeSerialNumber, ProbeConfiguration, GainCalibrationFile, AdcCalibrationFile);
                 probeControl.InitializeProbe();
                 probeControl.WriteConfiguration();
@@ -199,11 +200,11 @@ namespace OpenEphys.Onix1
             uint coaxMode = 0x4 + (uint)DS90UB9xMode.Raw12BitHighFrequency; // 0x4 maintains coax mode
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.PortMode, coaxMode);
 
-            uint alias = NeuropixelsV1e.ProbeAddress << 1;
+            uint alias = NeuropixelsV1.ProbeI2CAddress << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID1, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias1, alias);
 
-            alias = NeuropixelsV1e.FlexEEPROMAddress << 1;
+            alias = NeuropixelsV1.FlexEepromI2CAddress << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID2, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias2, alias);
         }
@@ -228,20 +229,10 @@ namespace OpenEphys.Onix1
 
     static class NeuropixelsV1e
     {
-        public const int ProbeAddress = 0x70;
-        public const int FlexEEPROMAddress = 0x50;
-
         public const byte DefaultGPO10Config = 0b0001_0001; // GPIO0 Low, NP in MUX reset
         public const byte DefaultGPO32Config = 0b1001_0001; // LED off, GPIO1 Low
         public const uint Gpo10ResetMask = 1 << 3; // Used to issue mux reset command to probe
         public const uint Gpo32LedMask = 1 << 7; // Used to turn on and off LED
-
-        public const int FramesPerSuperFrame = 13;
-        public const int FramesPerRoundRobin = 12;
-        public const int AdcCount = 32;
-        public const int ChannelCount = 384;
-        public const int ElectrodeCount = 960;
-        public const int FrameWords = 40;
 
         // unmanaged registers
         public const uint OP_MODE = 0X00;

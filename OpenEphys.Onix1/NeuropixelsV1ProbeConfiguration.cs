@@ -37,25 +37,25 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Defines a configuration for NeuropixelsV1e.
     /// </summary>
-    public class NeuropixelsV1eProbeConfiguration
+    public class NeuropixelsV1ProbeConfiguration
     {
         /// <summary>
-        /// Initializes a new instance of <see cref="NeuropixelsV1eProbeConfiguration"/> using default values.
+        /// Initializes a new instance of <see cref="NeuropixelsV1ProbeConfiguration"/> using default values.
         /// </summary>
-        public NeuropixelsV1eProbeConfiguration()
+        public NeuropixelsV1ProbeConfiguration()
         {
             ChannelMap = NeuropixelsV1eProbeGroup.ToChannelMap(ChannelConfiguration);
         }
 
         /// <summary>
-        /// Initializes a new instance of <see cref="NeuropixelsV1eProbeConfiguration"/> using default <see cref="NeuropixelsV1eProbeGroup"/>
+        /// Initializes a new instance of <see cref="NeuropixelsV1ProbeConfiguration"/> using default <see cref="NeuropixelsV1eProbeGroup"/>
         /// values and the given gain / reference / filter settings.
         /// </summary>
         /// <param name="spikeAmplifierGain">Desired or current <see cref="NeuropixelsV1Gain"/> for the spike-band.</param>
         /// <param name="lfpAmplifierGain">Desired or current <see cref="NeuropixelsV1Gain"/> for the LFP-band.</param>
         /// <param name="reference">Desired or current <see cref="NeuropixelsV1ReferenceSource"/>.</param>
         /// <param name="spikeFilter">Desired or current option to filer the spike-band.</param>
-        public NeuropixelsV1eProbeConfiguration(NeuropixelsV1Gain spikeAmplifierGain, NeuropixelsV1Gain lfpAmplifierGain, NeuropixelsV1ReferenceSource reference, bool spikeFilter)
+        public NeuropixelsV1ProbeConfiguration(NeuropixelsV1Gain spikeAmplifierGain, NeuropixelsV1Gain lfpAmplifierGain, NeuropixelsV1ReferenceSource reference, bool spikeFilter)
         {
             SpikeAmplifierGain = spikeAmplifierGain;
             LfpAmplifierGain = lfpAmplifierGain;
@@ -66,7 +66,7 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Copy constructor initializes a new instance of <see cref="NeuropixelsV1eProbeConfiguration"/> using the given <see cref="NeuropixelsV1eProbeGroup"/>
+        /// Copy constructor initializes a new instance of <see cref="NeuropixelsV1ProbeConfiguration"/> using the given <see cref="NeuropixelsV1eProbeGroup"/>
         /// values and the given gain / reference / filter settings.
         /// </summary>
         /// <param name="channelConfiguration">Desired or current <see cref="NeuropixelsV1eProbeGroup"/> variable.</param>
@@ -74,7 +74,7 @@ namespace OpenEphys.Onix1
         /// <param name="lfpAmplifierGain">Desired or current <see cref="NeuropixelsV1Gain"/> for the LFP-band.</param>
         /// <param name="reference">Desired or current <see cref="NeuropixelsV1ReferenceSource"/>.</param>
         /// <param name="spikeFilter">Desired or current option to filer the spike-band.</param>
-        public NeuropixelsV1eProbeConfiguration(NeuropixelsV1eProbeGroup channelConfiguration, NeuropixelsV1Gain spikeAmplifierGain, NeuropixelsV1Gain lfpAmplifierGain, NeuropixelsV1ReferenceSource reference, bool spikeFilter)
+        public NeuropixelsV1ProbeConfiguration(NeuropixelsV1eProbeGroup channelConfiguration, NeuropixelsV1Gain spikeAmplifierGain, NeuropixelsV1Gain lfpAmplifierGain, NeuropixelsV1ReferenceSource reference, bool spikeFilter)
         {
             SpikeAmplifierGain = spikeAmplifierGain;
             LfpAmplifierGain = lfpAmplifierGain;
@@ -86,11 +86,11 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Copy constructor initializes a new instance of <see cref="NeuropixelsV1eProbeConfiguration"/> using the given <see cref="NeuropixelsV1eProbeConfiguration"/>
+        /// Copy constructor initializes a new instance of <see cref="NeuropixelsV1ProbeConfiguration"/> using the given <see cref="NeuropixelsV1ProbeConfiguration"/>
         /// values.
         /// </summary>
-        /// <param name="probeConfiguration">Existing <see cref="NeuropixelsV1eProbeConfiguration"/> instance.</param>
-        public NeuropixelsV1eProbeConfiguration(NeuropixelsV1eProbeConfiguration probeConfiguration)
+        /// <param name="probeConfiguration">Existing <see cref="NeuropixelsV1ProbeConfiguration"/> instance.</param>
+        public NeuropixelsV1ProbeConfiguration(NeuropixelsV1ProbeConfiguration probeConfiguration)
         {
             SpikeAmplifierGain = probeConfiguration.SpikeAmplifierGain;
             LfpAmplifierGain = probeConfiguration.LfpAmplifierGain;
@@ -153,23 +153,23 @@ namespace OpenEphys.Onix1
         /// The channel map will always be 384 channels, and will return the 384 enabled electrodes.
         /// </remarks>
         [XmlIgnore]
-        public List<NeuropixelsV1eElectrode> ChannelMap { get; }
+        public List<NeuropixelsV1Electrode> ChannelMap { get; }
 
         /// <summary>
         /// Update the <see cref="ChannelMap"/> with the selected electrodes.
         /// </summary>
         /// <param name="electrodes">List of selected electrodes that are being added to the <see cref="ChannelMap"/></param>
-        public void SelectElectrodes(List<NeuropixelsV1eElectrode> electrodes)
+        public void SelectElectrodes(List<NeuropixelsV1Electrode> electrodes)
         {
             foreach (var e in electrodes)
             {
                 ChannelMap[e.Channel] = e;
             }
 
-            if (ChannelMap.Count != NeuropixelsV1e.ChannelCount)
+            if (ChannelMap.Count != NeuropixelsV1.ChannelCount)
             {
                 throw new InvalidOperationException($"Channel map does not match the expected number of active channels " +
-                    $"for a NeuropixelsV2 probe. Expected {NeuropixelsV1e.ChannelCount}, but there are {ChannelMap.Count} values.");
+                    $"for a NeuropixelsV2 probe. Expected {NeuropixelsV1.ChannelCount}, but there are {ChannelMap.Count} values.");
             }
 
             ChannelConfiguration.UpdateDeviceChannelIndices(ChannelMap);

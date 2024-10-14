@@ -7,13 +7,13 @@ using System.Windows.Forms;
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Partial class to create a GUI for <see cref="ConfigureNeuropixelsV1e"/>.
+    /// Partial class to create a GUI for <see cref="NeuropixelsV1ProbeConfiguration"/>.
     /// </summary>
-    public partial class NeuropixelsV1eDialog : Form
+    public partial class NeuropixelsV1ProbeConfigurationDialog : Form
     {
-        readonly NeuropixelsV1eChannelConfigurationDialog ChannelConfiguration;
+        readonly NeuropixelsV1ChannelConfigurationDialog ChannelConfiguration;
 
-        private NeuropixelsV1eAdc[] Adcs = null;
+        private NeuropixelsV1Adc[] Adcs = null;
 
         private enum ChannelPreset
         {
@@ -26,29 +26,31 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// Public <see cref="ConfigureNeuropixelsV1e"/> instance that is manipulated by
-        /// <see cref="NeuropixelsV1eDialog"/>.
+        /// Public <see cref="IConfigureNeuropixelsV2"/> interface that is manipulated by
+        /// <see cref="NeuropixelsV2eDialog"/>.
         /// </summary>
         /// <remarks>
-        /// When a <see cref="ConfigureNeuropixelsV1e"/> is passed to 
-        /// <see cref="NeuropixelsV1eDialog"/>, it is copied and stored in this
+        /// When a <see cref="IConfigureNeuropixelsV2"/> is passed to 
+        /// <see cref="NeuropixelsV1Dialog"/>, it is copied and stored in this
         /// variable so that any modifications made to configuration settings can be easily reversed
         /// by not copying the new settings back to the original instance.
         /// </remarks>
-        public ConfigureNeuropixelsV1e ConfigureNode { get; set; }
+        public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of <see cref="NeuropixelsV1eDialog"/>.
+        /// Initializes a new instance of <see cref="NeuropixelsV1Dialog"/>.
         /// </summary>
-        /// <param name="configureNode">A <see cref="ConfigureNeuropixelsV1e"/> object holding the current configuration settings.</param>
-        public NeuropixelsV1eDialog(ConfigureNeuropixelsV1e configureNode)
+        /// <param name="probeConfiguration">A <see cref="NeuropixelsV1ProbeConfiguration"/> object holding the current configuration settings.</param>
+        /// <param name="adcCalibrationFile">String defining the path to the ADC calibration file.</param>
+        /// <param name="gainCalibrationFile">String defining the path to the gain calibration file.</param>
+        public NeuropixelsV1ProbeConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration, string adcCalibrationFile, string gainCalibrationFile)
         {
             InitializeComponent();
             Shown += FormShown;
 
-            ConfigureNode = new(configureNode);
+            ProbeConfiguration = new(probeConfiguration);
 
-            ChannelConfiguration = new(ConfigureNode.ProbeConfiguration)
+            ChannelConfiguration = new(ProbeConfiguration)
             {
                 TopLevel = false,
                 FormBorderStyle = FormBorderStyle.None,
@@ -63,23 +65,23 @@ namespace OpenEphys.Onix1.Design
             ChannelConfiguration.OnFileLoad += OnFileLoadEvent;
 
             comboBoxApGain.DataSource = Enum.GetValues(typeof(NeuropixelsV1Gain));
-            comboBoxApGain.SelectedItem = ConfigureNode.ProbeConfiguration.SpikeAmplifierGain;
+            comboBoxApGain.SelectedItem = ProbeConfiguration.SpikeAmplifierGain;
             comboBoxApGain.SelectedIndexChanged += SpikeAmplifierGainIndexChanged;
 
             comboBoxLfpGain.DataSource = Enum.GetValues(typeof(NeuropixelsV1Gain));
-            comboBoxLfpGain.SelectedItem = ConfigureNode.ProbeConfiguration.LfpAmplifierGain;
+            comboBoxLfpGain.SelectedItem = ProbeConfiguration.LfpAmplifierGain;
             comboBoxLfpGain.SelectedIndexChanged += LfpAmplifierGainIndexChanged;
 
             comboBoxReference.DataSource = Enum.GetValues(typeof(NeuropixelsV1ReferenceSource));
-            comboBoxReference.SelectedItem = ConfigureNode.ProbeConfiguration.Reference;
+            comboBoxReference.SelectedItem = ProbeConfiguration.Reference;
             comboBoxReference.SelectedIndexChanged += ReferenceIndexChanged;
 
-            checkBoxSpikeFilter.Checked = ConfigureNode.ProbeConfiguration.SpikeFilter;
+            checkBoxSpikeFilter.Checked = ProbeConfiguration.SpikeFilter;
             checkBoxSpikeFilter.CheckedChanged += SpikeFilterIndexChanged;
 
-            textBoxAdcCalibrationFile.Text = ConfigureNode.AdcCalibrationFile;
+            textBoxAdcCalibrationFile.Text = adcCalibrationFile;
 
-            textBoxGainCalibrationFile.Text = ConfigureNode.GainCalibrationFile;
+            textBoxGainCalibrationFile.Text = gainCalibrationFile;
 
             comboBoxChannelPresets.DataSource = Enum.GetValues(typeof(ChannelPreset));
             CheckForExistingChannelPreset();
@@ -111,31 +113,29 @@ namespace OpenEphys.Onix1.Design
 
         private void GainCalibrationFileTextChanged(object sender, EventArgs e)
         {
-            ConfigureNode.GainCalibrationFile = ((TextBox)sender).Text;
             CheckStatus();
         }
 
         private void AdcCalibrationFileTextChanged(object sender, EventArgs e)
         {
-            ConfigureNode.AdcCalibrationFile = ((TextBox)sender).Text;
             CheckStatus();
         }
 
         private void SpikeAmplifierGainIndexChanged(object sender, EventArgs e)
         {
-            ConfigureNode.ProbeConfiguration.SpikeAmplifierGain = (NeuropixelsV1Gain)((ComboBox)sender).SelectedItem;
+            ProbeConfiguration.SpikeAmplifierGain = (NeuropixelsV1Gain)((ComboBox)sender).SelectedItem;
             CheckStatus();
         }
 
         private void LfpAmplifierGainIndexChanged(object sender, EventArgs e)
         {
-            ConfigureNode.ProbeConfiguration.LfpAmplifierGain = (NeuropixelsV1Gain)((ComboBox)sender).SelectedItem;
+            ProbeConfiguration.LfpAmplifierGain = (NeuropixelsV1Gain)((ComboBox)sender).SelectedItem;
             CheckStatus();
         }
 
         private void ReferenceIndexChanged(object sender, EventArgs e)
         {
-            ConfigureNode.ProbeConfiguration.Reference = (NeuropixelsV1ReferenceSource)((ComboBox)sender).SelectedItem;
+            ProbeConfiguration.Reference = (NeuropixelsV1ReferenceSource)((ComboBox)sender).SelectedItem;
         }
 
         private void ChannelPresetIndexChanged(object sender, EventArgs e)
@@ -150,7 +150,7 @@ namespace OpenEphys.Onix1.Design
 
         private void SpikeFilterIndexChanged(object sender, EventArgs e)
         {
-            ConfigureNode.ProbeConfiguration.SpikeFilter = ((CheckBox)sender).Checked;
+            ProbeConfiguration.SpikeFilter = ((CheckBox)sender).Checked;
         }
 
         private void SetChannelPreset(ChannelPreset preset)
@@ -226,7 +226,7 @@ namespace OpenEphys.Onix1.Design
         private void OnFileLoadEvent(object sender, EventArgs e)
         {
             // NB: Ensure that the newly loaded ProbeConfiguration in the ChannelConfigurationDialog is reflected here.
-            ConfigureNode.ProbeConfiguration = ChannelConfiguration.ProbeConfiguration;
+            ProbeConfiguration = ChannelConfiguration.ProbeConfiguration;
             CheckForExistingChannelPreset();
         }
 
@@ -235,11 +235,13 @@ namespace OpenEphys.Onix1.Design
             const string NoFileSelected = "No file selected.";
             const string InvalidFile = "Invalid file.";
 
-            NeuropixelsV1eAdcCalibration? adcCalibration;
+            NeuropixelsV1AdcCalibration? adcCalibration;
+
+            string adcCalibrationFile = textBoxAdcCalibrationFile.Text;
 
             try
             {
-                adcCalibration = NeuropixelsV1Helper.TryParseAdcCalibrationFile(ConfigureNode.AdcCalibrationFile);
+                adcCalibration = NeuropixelsV1Helper.TryParseAdcCalibrationFile(adcCalibrationFile);
             }
             catch (IOException ex)
             {
@@ -259,17 +261,19 @@ namespace OpenEphys.Onix1.Design
             buttonViewAdcs.Enabled = adcCalibration.HasValue;
             toolStripAdcCalSN.Text = adcCalibration.HasValue
                                      ? adcCalibration.Value.SerialNumber.ToString()
-                                     : string.IsNullOrEmpty(ConfigureNode.AdcCalibrationFile)
+                                     : string.IsNullOrEmpty(adcCalibrationFile)
                                        ? NoFileSelected
                                        : InvalidFile;
 
             NeuropixelsV1eGainCorrection? gainCorrection;
 
+            string gainCalibrationFile = textBoxGainCalibrationFile.Text;
+
             try
             {
-                gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(ConfigureNode.GainCalibrationFile, 
-                                                                                 ConfigureNode.ProbeConfiguration.SpikeAmplifierGain,
-                                                                                 ConfigureNode.ProbeConfiguration.LfpAmplifierGain,
+                gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(gainCalibrationFile,
+                                                                                 ProbeConfiguration.SpikeAmplifierGain,
+                                                                                 ProbeConfiguration.LfpAmplifierGain,
                                                                                  960);
             }
             catch (IOException ex)
@@ -285,7 +289,7 @@ namespace OpenEphys.Onix1.Design
 
             toolStripGainCalSN.Text = gainCorrection.HasValue
                                       ? gainCorrection.Value.SerialNumber.ToString()
-                                      : string.IsNullOrEmpty(ConfigureNode.GainCalibrationFile)
+                                      : string.IsNullOrEmpty(gainCalibrationFile)
                                         ? NoFileSelected
                                         : InvalidFile;
 
@@ -299,26 +303,23 @@ namespace OpenEphys.Onix1.Design
 
             panelProbe.Visible = adcCalibration.HasValue && gainCorrection.HasValue;
 
-            if (toolStripAdcCalSN.Text == NoFileSelected || toolStripGainCalSN.Text == NoFileSelected)
-            {
-                toolStripStatus.Image = Properties.Resources.StatusRefreshImage;
-                toolStripStatus.Text = "Select files.";
-            }
-            else if (toolStripAdcCalSN.Text == InvalidFile || toolStripGainCalSN.Text == InvalidFile)
-            {
-                toolStripStatus.Image = Properties.Resources.StatusCriticalImage;
-                toolStripStatus.Text = "Invalid files.";
-            }
-            else if (toolStripAdcCalSN.Text != toolStripGainCalSN.Text)
-            {
-                toolStripStatus.Image = Properties.Resources.StatusBlockedImage;
-                toolStripStatus.Text = "Serial number mismatch.";
-            }
-            else
-            {
-                toolStripStatus.Image = Properties.Resources.StatusReadyImage;
-                toolStripStatus.Text = "Ready.";
-            }
+            if (toolStripAdcCalSN.Text == NoFileSelected) 
+                toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusWarningImage;
+            else if (toolStripAdcCalSN.Text == InvalidFile) 
+                toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusCriticalImage;
+            else if (toolStripGainCalSN.Text != NoFileSelected && toolStripGainCalSN.Text != InvalidFile && toolStripAdcCalSN.Text != toolStripGainCalSN.Text)
+                toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusBlockedImage;
+            else 
+                toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusReadyImage;
+
+            if (toolStripGainCalSN.Text == NoFileSelected) 
+                toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusWarningImage;
+            else if (toolStripGainCalSN.Text == InvalidFile) 
+                toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusCriticalImage;
+            else if (toolStripAdcCalSN.Text != NoFileSelected && toolStripAdcCalSN.Text != InvalidFile && toolStripAdcCalSN.Text != toolStripGainCalSN.Text)
+                toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusBlockedImage;
+            else 
+                toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusReadyImage;
         }
 
         private void ChooseGainCalibrationFile_Click(object sender, EventArgs e)
@@ -383,7 +384,7 @@ namespace OpenEphys.Onix1.Design
             if (Adcs == null)
                 return;
 
-            System.Resources.ResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(NeuropixelsV1eDialog));
+            System.Resources.ResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(NeuropixelsV1Dialog));
 
             var adcForm = new Form()
             {

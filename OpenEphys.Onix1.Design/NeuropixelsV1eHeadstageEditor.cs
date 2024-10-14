@@ -16,6 +16,7 @@ namespace OpenEphys.Onix1.Design
             if (provider != null)
             {
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
+
                 if (editorState != null && !editorState.WorkflowRunning && component is ConfigureNeuropixelsV1eHeadstage configureHeadstage)
                 {
                     using var editorDialog = new NeuropixelsV1eHeadstageDialog(configureHeadstage.NeuropixelsV1e, configureHeadstage.Bno055);
@@ -27,7 +28,6 @@ namespace OpenEphys.Onix1.Design
                         configureHeadstage.NeuropixelsV1e.AdcCalibrationFile = editorDialog.DialogNeuropixelsV1e.ConfigureNode.AdcCalibrationFile;
                         configureHeadstage.NeuropixelsV1e.GainCalibrationFile = editorDialog.DialogNeuropixelsV1e.ConfigureNode.GainCalibrationFile;
                         configureHeadstage.NeuropixelsV1e.Enable = editorDialog.DialogNeuropixelsV1e.ConfigureNode.Enable;
-                        configureHeadstage.NeuropixelsV1e.EnableLed = editorDialog.DialogNeuropixelsV1e.ConfigureNode.EnableLed;
                         configureHeadstage.NeuropixelsV1e.ProbeConfiguration = editorDialog.DialogNeuropixelsV1e.ConfigureNode.ProbeConfiguration;
 
                         return true;

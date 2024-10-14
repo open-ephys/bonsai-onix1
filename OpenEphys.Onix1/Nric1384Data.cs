@@ -36,7 +36,7 @@ namespace OpenEphys.Onix1
         public int BufferSize
         {
             get => bufferSize;
-            set => bufferSize = (int)(Math.Ceiling((double)value / NeuropixelsV1e.FramesPerRoundRobin) * NeuropixelsV1e.FramesPerRoundRobin);
+            set => bufferSize = (int)(Math.Ceiling((double)value / NeuropixelsV1.FramesPerRoundRobin) * NeuropixelsV1.FramesPerRoundRobin);
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace OpenEphys.Onix1
         public unsafe override IObservable<Nric1384DataFrame> Generate()
         {
             var spikeBufferSize = BufferSize;
-            var lfpBufferSize = spikeBufferSize / NeuropixelsV1e.FramesPerRoundRobin;
+            var lfpBufferSize = spikeBufferSize / NeuropixelsV1.FramesPerRoundRobin;
 
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
@@ -55,8 +55,8 @@ namespace OpenEphys.Onix1
                 return Observable.Create<Nric1384DataFrame>(observer =>
                 {
                     var sampleIndex = 0;
-                    var spikeBuffer = new short[NeuropixelsV1e.ChannelCount * spikeBufferSize];
-                    var lfpBuffer = new short[NeuropixelsV1e.ChannelCount * lfpBufferSize];
+                    var spikeBuffer = new short[NeuropixelsV1.ChannelCount * spikeBufferSize];
+                    var lfpBuffer = new short[NeuropixelsV1.ChannelCount * lfpBufferSize];
                     var frameCountBuffer = new int[spikeBufferSize];
                     var hubClockBuffer = new ulong[spikeBufferSize];
                     var clockBuffer = new ulong[spikeBufferSize];
@@ -64,15 +64,15 @@ namespace OpenEphys.Onix1
                     var frameObserver = Observer.Create<oni.Frame>(frame =>
                     {
                         var payload = (Nric1384Payload*)frame.Data.ToPointer();
-                        Marshal.Copy(new IntPtr(payload->LfpData), lfpBuffer, sampleIndex * NeuropixelsV1e.AdcCount, NeuropixelsV1e.AdcCount);
-                        Marshal.Copy(new IntPtr(payload->ApData), spikeBuffer, sampleIndex * NeuropixelsV1e.ChannelCount, NeuropixelsV1e.ChannelCount);
+                        Marshal.Copy(new IntPtr(payload->LfpData), lfpBuffer, sampleIndex * NeuropixelsV1.AdcCount, NeuropixelsV1.AdcCount);
+                        Marshal.Copy(new IntPtr(payload->ApData), spikeBuffer, sampleIndex * NeuropixelsV1.ChannelCount, NeuropixelsV1.ChannelCount);
                         frameCountBuffer[sampleIndex] = payload->FrameCount;
                         hubClockBuffer[sampleIndex] = payload->HubClock;
                         clockBuffer[sampleIndex] = frame.Clock;
                         if (++sampleIndex >= spikeBufferSize)
                         {
-                            var lfpData = BufferHelper.CopyTranspose(lfpBuffer, lfpBufferSize, NeuropixelsV1e.ChannelCount, Depth.U16);
-                            var apData = BufferHelper.CopyTranspose(spikeBuffer, spikeBufferSize, NeuropixelsV1e.ChannelCount, Depth.U16);
+                            var lfpData = BufferHelper.CopyTranspose(lfpBuffer, lfpBufferSize, NeuropixelsV1.ChannelCount, Depth.U16);
+                            var apData = BufferHelper.CopyTranspose(spikeBuffer, spikeBufferSize, NeuropixelsV1.ChannelCount, Depth.U16);
                             observer.OnNext(new Nric1384DataFrame(clockBuffer, hubClockBuffer, frameCountBuffer, apData, lfpData));
                             frameCountBuffer = new int[spikeBufferSize];
                             hubClockBuffer = new ulong[spikeBufferSize];
