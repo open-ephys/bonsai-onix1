@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.Drawing.Design;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
-using System.Threading;
 using System.Xml.Serialization;
 using Bonsai;
 

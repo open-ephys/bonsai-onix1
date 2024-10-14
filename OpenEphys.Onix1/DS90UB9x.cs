@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 
 namespace OpenEphys.Onix1
 {
@@ -34,12 +35,14 @@ namespace OpenEphys.Onix1
 
         internal static void Initialize933SerDesLink(DeviceContext device, DS90UB9xMode dataMode) //also valid for 913
         {
+            Thread.Sleep(100); // Empirical. The gateware seems to need some milliseconds to get i2c initialized.
+
             var deserializer = new I2CRegisterContext(device, DES_ADDR);
-            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.PortSel, 0x01); //Enable port 0
-            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.PortMode, 0x4 + (uint)dataMode); //0x4 maintains coax mode
-            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.I2CConfig, 0b01011000); //7: i2c pass all (0), 6: i2c pass (1), 5: auto_ack (0), 4: BC enable (1), 3: BC crc en (1), 2: reserved (0) 1:0: bc freq (00) 2.5Mbps
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.PortSel, 0x01); // Enable port 0
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.PortMode, 0x4 + (uint)dataMode); // 0x4 maintains coax mode
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.I2CConfig, 0b01011000); // 7: i2c pass all (0), 6: i2c pass (1), 5: auto_ack (0), 4: BC enable (1), 3: BC crc en (1), 2: reserved (0) 1:0: bc freq (00) 2.5Mbps
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SerAlias, SER_ADDR << 1);
-            //Enable backchannel GPIO on deserializer. It is then the serializer task to decide if using them or use manual output
+            // Enable backchannel GPIO on deserializer. It is then the serializer task to decide if using them or use manual output
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.GpioCtrl0, 0x10);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.GpioCtrl0, 0x32);
         }
@@ -49,10 +52,9 @@ namespace OpenEphys.Onix1
             var serializer = new I2CRegisterContext(device, SER_ADDR);
             double SCLtimes = (1.0 / (100e-9 * i2cRate));
             uint SCLvalir = (uint)Math.Round(SCLtimes);
-            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.SCLHIGH, SCLvalir);
-            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.SCLLOW, SCLvalir);
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.SclHigh, SCLvalir);
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.SclLow, SCLvalir);
         }
-
     }
 
     enum DS90UB9xTriggerMode : uint
@@ -113,28 +115,20 @@ namespace OpenEphys.Onix1
         SlaveAlias7 = 0x6C,
     }
 
-//    enum DS90UB9xSerializerI2CRegister
-//    {
-//        GPIO10 = 0x0D,
-//        GPIO32 = 0x0E,
-//        SCLHIGH = 0x0A,
-//        SCLLOW = 0x0B
-//    }
-
     enum DS90UB933SerializerI2CRegister
     {
-        GPIO10 = 0x0D,
-        GPIO32 = 0x0E,
-        SCLHIGH = 0x11,
-        SCLLOW = 0x12
+        Gpio10 = 0x0D,
+        Gpio32 = 0x0E,
+        SclHigh = 0x11,
+        SclLow = 0x12
     }
 
     enum DS90UB953SerializerI2CRegister
     {
-        GPIO_DATA = 0x0D,
-        GPIO_IO_CTRL = 0x0E,
-        SCLHIGH = 0x0B,
-        SCLLOW = 0x0C
+        GpioData = 0x0D,
+        GpioIOControl = 0x0E,
+        SclHigh = 0x0B,
+        SclLow = 0x0C
     }
 
     enum DS90UB9xMode
@@ -149,6 +143,4 @@ namespace OpenEphys.Onix1
         Input = 0,
         Output = 1
     }  
-
-
 }

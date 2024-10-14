@@ -209,7 +209,7 @@ namespace OpenEphys.Onix1
                 var deviceInfo = new NeuropixelsV2eDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB);
                 var shutdown = Disposable.Create(() =>
                 {
-                    serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.GPIO10, NeuropixelsV2e.DefaultGPO10Config);
+                    serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, NeuropixelsV2e.DefaultGPO10Config);
                     SelectProbe(serializer, NeuropixelsV2e.NoProbeSelected);
                 });
                 return new CompositeDisposable(
@@ -256,7 +256,7 @@ namespace OpenEphys.Onix1
             SelectProbe(serializer, NeuropixelsV2e.NoProbeSelected);
 
             // turn on analog supply and wait for boot
-            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.GPIO10, gpo10Config);
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, gpo10Config);
             System.Threading.Thread.Sleep(20);
             return gpo10Config;
         }
@@ -268,16 +268,16 @@ namespace OpenEphys.Onix1
         }
         static void SelectProbe(I2CRegisterContext serializer, byte probeSelect)
         {
-            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.GPIO32, probeSelect);
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, probeSelect);
             System.Threading.Thread.Sleep(20);
         }
 
         static void ResetProbes(I2CRegisterContext serializer, uint gpo10Config)
         {
             gpo10Config &= ~NeuropixelsV2e.GPO10ResetMask;
-            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.GPIO10, gpo10Config);
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, gpo10Config);
             gpo10Config |= NeuropixelsV2e.GPO10ResetMask;
-            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.GPIO10, gpo10Config);
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, gpo10Config);
         }
 
         static void ConfigureProbeStreaming(I2CRegisterContext i2cNP)

@@ -166,8 +166,8 @@ namespace OpenEphys.Onix1
                 var deviceInfo = new NeuropixelsV1eDeviceInfo(context, DeviceType, deviceAddress, probeControl);
                 var shutdown = Disposable.Create(() =>
                 {
-                    serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.GPIO10, NeuropixelsV1e.DefaultGPO10Config);
-                    serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.GPIO32, NeuropixelsV1e.DefaultGPO32Config);
+                    serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, NeuropixelsV1e.DefaultGPO10Config);
+                    serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, NeuropixelsV1e.DefaultGPO32Config);
                 });
                 return new CompositeDisposable(
                     DeviceManager.RegisterDevice(deviceName, deviceInfo),
@@ -210,16 +210,16 @@ namespace OpenEphys.Onix1
         static void ResetProbe(I2CRegisterContext serializer, uint gpo10Config)
         {
             gpo10Config &= ~NeuropixelsV1e.Gpo10ResetMask;
-            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.GPIO10, gpo10Config);
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, gpo10Config);
             Thread.Sleep(1);
             gpo10Config |= NeuropixelsV1e.Gpo10ResetMask;
-            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.GPIO10, gpo10Config);
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, gpo10Config);
         }
 
         static uint TurnOnLed(I2CRegisterContext serializer, uint gpo23Config)
         {
             gpo23Config &= ~NeuropixelsV1e.Gpo32LedMask;
-            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.GPIO32, gpo23Config);
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, gpo23Config);
 
             return gpo23Config;
         }
