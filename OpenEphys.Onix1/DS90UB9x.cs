@@ -50,10 +50,9 @@ namespace OpenEphys.Onix1
         internal static void Set933I2CRate(DeviceContext device, double i2cRate)
         {
             var serializer = new I2CRegisterContext(device, SER_ADDR);
-            double SCLtimes = (1.0 / (100e-9 * i2cRate));
-            uint SCLvalir = (uint)Math.Round(SCLtimes);
-            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.SclHigh, SCLvalir);
-            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.SclLow, SCLvalir);
+            var sclTimes = (uint)Math.Round(1.0 / (100e-9 * i2cRate));
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.SclHigh, sclTimes);
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.SclLow, sclTimes);
         }
     }
 
