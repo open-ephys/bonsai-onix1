@@ -142,8 +142,7 @@ namespace OpenEphys.Onix1
                 var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
 
                 // set I2C clock rate to ~400 kHz
-                serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.SCLHIGH, 20);
-                serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.SCLLOW, 20);
+                DS90UB9x.Set933I2CRate(device, 400e3);
 
                 // read probe metadata
                 var probeMetadata = new NeuropixelsV1eMetadata(serializer);
@@ -168,8 +167,8 @@ namespace OpenEphys.Onix1
                 var deviceInfo = new NeuropixelsV1eDeviceInfo(context, DeviceType, deviceAddress, probeControl);
                 var shutdown = Disposable.Create(() =>
                 {
-                    serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO10, NeuropixelsV1e.DefaultGPO10Config);
-                    serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO32, NeuropixelsV1e.DefaultGPO32Config);
+                    serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, NeuropixelsV1e.DefaultGPO10Config);
+                    serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, NeuropixelsV1e.DefaultGPO32Config);
                 });
                 return new CompositeDisposable(
                     DeviceManager.RegisterDevice(deviceName, deviceInfo),
@@ -195,10 +194,10 @@ namespace OpenEphys.Onix1
             device.WriteRegister(DS90UB9x.DATALINES0, 0x3245106B); // Sync, psb[0], psb[1], psb[2], psb[3], psb[4], psb[5], psb[6],
             device.WriteRegister(DS90UB9x.DATALINES1, 0xFFFFFFFF);
 
+            DS90UB9x.Initialize933SerDesLink(device, DS90UB9xMode.Raw12BitHighFrequency);
+
             // configure deserializer I2C aliases
             var deserializer = new I2CRegisterContext(device, DS90UB9x.DES_ADDR);
-            uint coaxMode = 0x4 + (uint)DS90UB9xMode.Raw12BitHighFrequency; // 0x4 maintains coax mode
-            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.PortMode, coaxMode);
 
             uint alias = NeuropixelsV1.ProbeI2CAddress << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID1, alias);
@@ -212,16 +211,16 @@ namespace OpenEphys.Onix1
         static void ResetProbe(I2CRegisterContext serializer, uint gpo10Config)
         {
             gpo10Config &= ~NeuropixelsV1e.Gpo10ResetMask;
-            serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO10, gpo10Config);
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, gpo10Config);
             Thread.Sleep(1);
             gpo10Config |= NeuropixelsV1e.Gpo10ResetMask;
-            serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO10, gpo10Config);
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, gpo10Config);
         }
 
         static uint TurnOnLed(I2CRegisterContext serializer, uint gpo23Config)
         {
             gpo23Config &= ~NeuropixelsV1e.Gpo32LedMask;
-            serializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.GPIO32, gpo23Config);
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, gpo23Config);
 
             return gpo23Config;
         }

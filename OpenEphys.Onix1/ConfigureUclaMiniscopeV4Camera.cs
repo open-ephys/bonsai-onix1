@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.Drawing.Design;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
-using System.Threading;
 using System.Xml.Serialization;
 using Bonsai;
 
@@ -190,15 +189,10 @@ namespace OpenEphys.Onix1
             // acquisition. For this reason, the frame start needs to be marked.
             device.WriteRegister(DS90UB9x.MARK, (uint)DS90UB9xMarkMode.VsyncRising);
 
-            // set I2C clock rate to ~100 kHz
+            DS90UB9x.Initialize933SerDesLink(device, DS90UB9xMode.Raw12BitLowFrequency);
+
             var deserializer = new I2CRegisterContext(device, DS90UB9x.DES_ADDR);
-            deserializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.SCLHIGH, 0x7A);
-            deserializer.WriteByte((uint)DS90UB9xSerializerI2CRegister.SCLLOW, 0x7A);
-
-            // configure deserializer I2C aliases
-            uint coaxMode = 0x4 + (uint)DS90UB9xMode.Raw12BitLowFrequency; // 0x4 maintains coax mode
-            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.PortMode, coaxMode);
-
+     
             uint i2cAlias = UclaMiniscopeV4.AtMegaAddress << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID1, i2cAlias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias1, i2cAlias);
@@ -212,6 +206,11 @@ namespace OpenEphys.Onix1
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias3, i2cAlias);
         }
 
+        internal static void ConfigureSerializer(DeviceContext device)
+        {
+            DS90UB9x.Set933I2CRate(device, 80e3); //This is an arbitrary value that is proven to work, we need to test speed vs reliability vs bno sampling speed
+        }
+
         internal static void ConfigureCameraSystem(DeviceContext device, UclaMiniscopeV4FramesPerSecond frameRate, bool interleaveLed)
         {
             const int WaitUntilPllSettles = 200;
@@ -219,9 +218,9 @@ namespace OpenEphys.Onix1
             // set up Python480
             var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
             WriteCameraRegister(atMega, 16, 3); // Turn on PLL
-            Thread.Sleep(WaitUntilPllSettles);
+            //Thread.Sleep(WaitUntilPllSettles); //This sometimes has good effects, sometimes adverse, we just might want to redo this entire section (see issue #331 )
             WriteCameraRegister(atMega, 32, 0x7007); // Turn on clock management
-            Thread.Sleep(WaitUntilPllSettles);
+            //Thread.Sleep(WaitUntilPllSettles);
             WriteCameraRegister(atMega, 199, 666); // Defines granularity (unit = 1/PLL clock) of exposure and reset_length
             WriteCameraRegister(atMega, 200, 3300); // Set frame rate to 30 Hz
             WriteCameraRegister(atMega, 201, 3000); // Set Exposure

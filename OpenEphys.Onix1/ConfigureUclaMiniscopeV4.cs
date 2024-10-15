@@ -158,6 +158,7 @@ namespace OpenEphys.Onix1
                 const int FailureToWriteRegister = -6;
                 try
                 {
+                    ConfigureUclaMiniscopeV4Camera.ConfigureSerializer(ds90ub9x);
                     ConfigureUclaMiniscopeV4Camera.ConfigureCameraSystem(ds90ub9x, Camera.FrameRate, Camera.InterleaveLed);
                 }
                 catch (ONIException ex) when (ex.Number == FailureToWriteRegister)
@@ -165,6 +166,7 @@ namespace OpenEphys.Onix1
                     return false;
                 }
 
+                Thread.Sleep(150);
                 var linkState = device.ReadRegister(PortController.LINKSTATE);
                 return (linkState & PortController.LINKSTATE_SL) != 0;
             }
