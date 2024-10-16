@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing.Design;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
+using System.Threading;
 using System.Xml.Serialization;
 using Bonsai;
 
@@ -158,6 +159,9 @@ namespace OpenEphys.Onix1
                         // turn off LED
                         var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
                         atMega.WriteByte(1, 0xFF);
+
+                        //Turn off image sensor, recommended by the datasheet to avoid transients at power off
+                        ShutDownCamera(device);
                     });
                     return new CompositeDisposable(
                         ledBrightness.Subscribe(value => SetLedBrightness(device, value)),
@@ -213,17 +217,10 @@ namespace OpenEphys.Onix1
 
         internal static void ConfigureCameraSystem(DeviceContext device, UclaMiniscopeV4FramesPerSecond frameRate, bool interleaveLed)
         {
-            const int WaitUntilPllSettles = 200;
-
+            
             // set up Python480
-            var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
-            WriteCameraRegister(atMega, 16, 3); // Turn on PLL
-            //Thread.Sleep(WaitUntilPllSettles); //This sometimes has good effects, sometimes adverse, we just might want to redo this entire section (see issue #331 )
-            WriteCameraRegister(atMega, 32, 0x7007); // Turn on clock management
-            //Thread.Sleep(WaitUntilPllSettles);
-            WriteCameraRegister(atMega, 199, 666); // Defines granularity (unit = 1/PLL clock) of exposure and reset_length
-            WriteCameraRegister(atMega, 200, 3300); // Set frame rate to 30 Hz
-            WriteCameraRegister(atMega, 201, 3000); // Set Exposure
+            ShutDownCamera(device);
+            StartUpCamera(device);                        
 
             // set up potentiometer
             var tpl0102 = new I2CRegisterContext(device, UclaMiniscopeV4.Tpl0102Address);
@@ -244,9 +241,75 @@ namespace OpenEphys.Onix1
                 UclaMiniscopeV4FramesPerSecond.Fps30Hz => 3300,
                 _ => 3300
             };
+            var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress)
 
             atMega.WriteByte(0x04, (uint)(interleaveLed ? 0x00 : 0x03));
             WriteCameraRegister(atMega, 200, shutterWidth);
+        }
+
+        internal static void ShutDownCamera(DeviceContext device)
+        {
+            var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
+            //disable sequencer
+            WriteCameraRegister(atMega, 192, 0x0802);
+            //soft power down
+            WriteCameraRegister(atMega, 112, 0x0000); // Disable LVDS transmitters
+            WriteCameraRegister(atMega, 72, 0x0010); // Disable charge pump
+            WriteCameraRegister(atMega, 64, 0x0000); // Disable biasing block
+            WriteCameraRegister(atMega, 48, 0x0000); // Disable AFE
+            WriteCameraRegister(atMega, 42, 0x4110); // Configure image core for shutdown          
+            WriteCameraRegister(atMega, 40, 0x0000); // Disable column multiplexer
+            WriteCameraRegister(atMega, 32, 0x7006); // Disable analog clock
+            WriteCameraRegister(atMega, 10, 0x0999); // Soft reset
+
+            //disable clock mgmt 2
+            WriteCameraRegister(atMega, 34, 0x0000); // Disable logic blocks
+            WriteCameraRegister(atMega, 32, 0x7004); // Disable logic clock
+            WriteCameraRegister(atMega, 9, 0x0009); // Soft reset clock generator
+            
+            //disable clock mgmt 1
+            WriteCameraRegister(atMega, 16, 0x0000); // Disable PLL
+            WriteCameraRegister(atMega, 8, 0x0099); // Soft reset PLL
+
+           
+        }
+
+        internal static void StartUpCamera(DeviceContext device)
+        {
+            var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
+            //enable clock mgmt 1
+            WriteCameraRegister(atMega, 2, 0x0000); // Set Monochrome sensor
+            WriteCameraRegister(atMega, 8, 0x0000); // Release PLL soft reset
+            WriteCameraRegister(atMega, 16, 0x0003); // Enable PLL
+            WriteCameraRegister(atMega, 17, 0x2113); // Configure PLL
+            WriteCameraRegister(atMega, 20, 0x0000); // Configure clock management
+            WriteCameraRegister(atMega, 26, 0x2280); // Configure PLL lock detector
+            WriteCameraRegister(atMega, 27, 0x3D2D); // Configure PLL lock detector
+            WriteCameraRegister(atMega, 32, 0x7014); // Configure clock management
+            Thread.Sleep(10); //This might not be needed, remove if it hurts
+            
+            //enable clock mgmt 2
+            WriteCameraRegister(atMega, 9, 0x0000); // Rlease clock generator reset
+            WriteCameraRegister(atMega, 32, 0x7006); // Enable logic clock
+            WriteCameraRegister(atMega, 34, 0x0001); // Enable logic blocks
+
+            //set format data
+            WriteCameraRegister(atMega, 199, 666); // Defines granularity (unit = 1/PLL clock) of exposure and reset_length. PLL clock is 66.666MHz. The 480 docs says it should be 68MHz. Oh, well...
+            WriteCameraRegister(atMega, 200, 3300); // Set frame rate to 30 Hz
+            WriteCameraRegister(atMega, 201, 3000); // Set Exposure. This is a parameter we might want to play with to tune image quality
+
+            //soft power up
+            WriteCameraRegister(atMega, 10, 0x0000); // Release soft reset
+            WriteCameraRegister(atMega, 32, 0x7007); // Enable analog clock
+            WriteCameraRegister(atMega, 40, 0x0007); // Enable column multiplexer. This is the value used by UCLA, which enables column multiplexer bias. On a reference document I found is set to 0x0003, so not sure what the best setting is
+            WriteCameraRegister(atMega, 42, 0x4113); // Configure image core
+            WriteCameraRegister(atMega, 48, 0x0001); // Enable AFE
+            WriteCameraRegister(atMega, 64, 0x0001); // Enable biasing block
+            WriteCameraRegister(atMega, 72, 0x0017); // Enable charge pump
+            WriteCameraRegister(atMega, 112, 0x0000); // Disable LVDS transmitters
+
+            //enable sequencer
+            WriteCameraRegister(atMega, 192, 0x0803);
         }
 
         static void WriteCameraRegister(I2CRegisterContext i2c, uint register, uint value)
