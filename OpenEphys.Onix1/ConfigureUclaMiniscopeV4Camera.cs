@@ -192,7 +192,7 @@ namespace OpenEphys.Onix1
             DS90UB9x.Initialize933SerDesLink(device, DS90UB9xMode.Raw12BitLowFrequency);
 
             var deserializer = new I2CRegisterContext(device, DS90UB9x.DES_ADDR);
-     
+
             uint i2cAlias = UclaMiniscopeV4.AtMegaAddress << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID1, i2cAlias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias1, i2cAlias);
@@ -213,14 +213,10 @@ namespace OpenEphys.Onix1
 
         internal static void ConfigureCameraSystem(DeviceContext device, UclaMiniscopeV4FramesPerSecond frameRate, bool interleaveLed)
         {
-            const int WaitUntilPllSettles = 200;
-
             // set up Python480
             var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
             WriteCameraRegister(atMega, 16, 3); // Turn on PLL
-            //Thread.Sleep(WaitUntilPllSettles); //This sometimes has good effects, sometimes adverse, we just might want to redo this entire section (see issue #331 )
             WriteCameraRegister(atMega, 32, 0x7007); // Turn on clock management
-            //Thread.Sleep(WaitUntilPllSettles);
             WriteCameraRegister(atMega, 199, 666); // Defines granularity (unit = 1/PLL clock) of exposure and reset_length
             WriteCameraRegister(atMega, 200, 3300); // Set frame rate to 30 Hz
             WriteCameraRegister(atMega, 201, 3000); // Set Exposure
