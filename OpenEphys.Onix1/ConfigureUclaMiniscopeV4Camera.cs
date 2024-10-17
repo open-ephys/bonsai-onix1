@@ -213,8 +213,6 @@ namespace OpenEphys.Onix1
 
         internal static void ConfigureCameraSystem(DeviceContext device, UclaMiniscopeV4FramesPerSecond frameRate, bool interleaveLed)
         {
-            const int WaitUntilPllSettles = 200;
-
             // set up Python480
             var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
             WriteCameraRegister(atMega, 16, 3); // Turn on PLL

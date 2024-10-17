@@ -207,7 +207,6 @@ namespace OpenEphys.Onix1
         All = EulerAngle | Quaternion | Acceleration | Gravity | Temperature | Calibration,
     }
 
-
     /// <inheritdoc cref = "PolledBno055Data"/>v
     [Obsolete("This operator is obsolete. Use PolledBno055Data instead. Will be removed in version 1.0.0.")]
     public class NeuropixelsV1eBno055Data : PolledBno055Data { }
@@ -219,5 +218,4 @@ namespace OpenEphys.Onix1
     /// <inheritdoc cref = "PolledBno055Data"/>v
     [Obsolete("This operator is obsolete. Use PolledBno055Data instead. Will be removed in version 1.0.0.")]
     public class NeuropixelsV2eBetaBno055Data : PolledBno055Data { }
-
 }
