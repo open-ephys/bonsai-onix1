@@ -11,7 +11,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Partial class to create a channel configuration GUI for the <see cref="ConfigureNeuropixelsV2e"/> class.
     /// </summary>
-    public partial class NeuropixelsV1eChannelConfigurationDialog : ChannelConfigurationDialog
+    public partial class NeuropixelsV1ChannelConfigurationDialog : ChannelConfigurationDialog
     {
         internal event EventHandler OnZoom;
         internal event EventHandler OnFileLoad;
@@ -19,16 +19,16 @@ namespace OpenEphys.Onix1.Design
         readonly IReadOnlyList<int> ReferenceContactsList = new List<int> { 191, 575, 959 };
 
         /// <summary>
-        /// Public <see cref="NeuropixelsV1eProbeConfiguration"/> object that is modified by
-        /// <see cref="NeuropixelsV1eChannelConfigurationDialog"/>.
+        /// Public <see cref="NeuropixelsV1ProbeConfiguration"/> object that is modified by
+        /// <see cref="NeuropixelsV1ChannelConfigurationDialog"/>.
         /// </summary>
-        public NeuropixelsV1eProbeConfiguration ProbeConfiguration { get; set; }
+        public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of <see cref="NeuropixelsV1eChannelConfigurationDialog"/>.
+        /// Initializes a new instance of <see cref="NeuropixelsV1ChannelConfigurationDialog"/>.
         /// </summary>
-        /// <param name="probeConfiguration">A <see cref="NeuropixelsV1eProbeConfiguration"/> object holding the current configuration settings.</param>
-        public NeuropixelsV1eChannelConfigurationDialog(NeuropixelsV1eProbeConfiguration probeConfiguration)
+        /// <param name="probeConfiguration">A <see cref="NeuropixelsV1ProbeConfiguration"/> object holding the current configuration settings.</param>
+        public NeuropixelsV1ChannelConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration)
             : base(probeConfiguration.ChannelConfiguration)
         {
             zedGraphChannels.ZoomButtons = MouseButtons.None;
@@ -202,7 +202,7 @@ namespace OpenEphys.Onix1.Design
             var contactsToEnable = contactObjects.Where(c =>
             {
                 var tag = c.Tag as ContactTag;
-                var channel = NeuropixelsV1eElectrode.GetChannelNumber(tag.ContactIndex);
+                var channel = NeuropixelsV1Electrode.GetChannelNumber(tag.ContactIndex);
                 return ProbeConfiguration.ChannelMap[channel].Index == tag.ContactIndex;
             });
 
@@ -232,7 +232,7 @@ namespace OpenEphys.Onix1.Design
             textObjsToUpdate = textObjs.Where(c =>
             {
                 var tag = c.Tag as ContactTag;
-                var channel = NeuropixelsV1eElectrode.GetChannelNumber(tag.ContactIndex);
+                var channel = NeuropixelsV1Electrode.GetChannelNumber(tag.ContactIndex);
                 return ProbeConfiguration.ChannelMap[channel].Index == tag.ContactIndex;
             });
 
@@ -247,7 +247,7 @@ namespace OpenEphys.Onix1.Design
             return index.ToString();
         }
 
-        internal void EnableElectrodes(List<NeuropixelsV1eElectrode> electrodes)
+        internal void EnableElectrodes(List<NeuropixelsV1Electrode> electrodes)
         {
             ProbeConfiguration.SelectElectrodes(electrodes);
         }

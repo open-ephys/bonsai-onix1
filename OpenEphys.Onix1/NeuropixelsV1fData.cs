@@ -10,19 +10,18 @@ namespace OpenEphys.Onix1
 {
     /// <summary>
     /// Produces a sequence of <see cref="NeuropixelsV1DataFrame">NeuropixelsV1DataFrames</see> from a
-    /// NeuropixelsV1e headstage.
+    /// NeuropixelsV1f headstage.
     /// </summary>
     /// <remarks>
     /// This data IO operator must be linked to an appropriate configuration, such as a <see
-    /// cref="ConfigureNeuropixelsV1e"/>, using a shared <c>DeviceName</c>.
+    /// cref="ConfigureNeuropixelsV1f"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
-    [Description("Produces a sequence of NeuropixelsV1eDataFrame objects from a NeuropixelsV1e headstage.")]
-    public class NeuropixelsV1eData : Source<NeuropixelsV1DataFrame>
+    public class NeuropixelsV1fData : Source<NeuropixelsV1DataFrame>
     {
         int bufferSize = 36;
 
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
-        [TypeConverter(typeof(NeuropixelsV1e.NameConverter))]
+        [TypeConverter(typeof(NeuropixelsV1f.NameConverter))]
         [Description(SingleDeviceFactory.DeviceNameDescription)]
         [Category(DeviceFactory.ConfigurationCategory)]
         public string DeviceName { get; set; }
@@ -37,7 +36,6 @@ namespace OpenEphys.Onix1
         /// </remarks>
         [Description("Number of super-frames (384 channels from spike band and 32 channels from " +
             "LFP band) to buffer before propagating data. Must be a multiple of 12.")]
-        [Category(DeviceFactory.ConfigurationCategory)]
         public int BufferSize
         {
             get => bufferSize;
@@ -53,16 +51,12 @@ namespace OpenEphys.Onix1
             var spikeBufferSize = BufferSize;
             var lfpBufferSize = spikeBufferSize / NeuropixelsV1.FramesPerRoundRobin;
 
-            return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
-            {
-                var info = (NeuropixelsV1eDeviceInfo)deviceInfo;
-                var device = info.GetDeviceContext(typeof(NeuropixelsV1e));
-                var passthrough = device.GetPassthroughDeviceContext(typeof(DS90UB9x));
-                var probeData = device.Context.GetDeviceFrames(passthrough.Address);
-
-                return Observable.Create<NeuropixelsV1DataFrame>(observer =>
+            var bufferSize = BufferSize;
+            return DeviceManager.GetDevice(DeviceName).SelectMany(
+                deviceInfo => Observable.Create<NeuropixelsV1DataFrame>(observer =>
                 {
                     var sampleIndex = 0;
+                    var device = deviceInfo.GetDeviceContext(typeof(NeuropixelsV1f));
                     var spikeBuffer = new ushort[NeuropixelsV1.ChannelCount, spikeBufferSize];
                     var lfpBuffer = new ushort[NeuropixelsV1.ChannelCount, lfpBufferSize];
                     var frameCountBuffer = new int[spikeBufferSize * NeuropixelsV1.FramesPerSuperFrame];
@@ -72,10 +66,11 @@ namespace OpenEphys.Onix1
                     var frameObserver = Observer.Create<oni.Frame>(
                         frame =>
                         {
-                            var payload = (NeuropixelsV1ePayload*)frame.Data.ToPointer();
-                            NeuropixelsV1eDataFrame.CopyAmplifierBuffer(payload->AmplifierData, frameCountBuffer, spikeBuffer, lfpBuffer, sampleIndex, info.ApGainCorrection, info.LfpGainCorrection, info.AdcThresholds, info.AdcOffsets);
+                            var payload = (NeuropixelsV1fPayload*)frame.Data.ToPointer();
+                            NeuropixelsV1fDataFrame.CopyAmplifierBuffer(payload->AmplifierData, frameCountBuffer, spikeBuffer, lfpBuffer, sampleIndex);
                             hubClockBuffer[sampleIndex] = payload->HubClock;
                             clockBuffer[sampleIndex] = frame.Clock;
+
                             if (++sampleIndex >= spikeBufferSize)
                             {
                                 var spikeData = Mat.FromArray(spikeBuffer);
@@ -89,9 +84,10 @@ namespace OpenEphys.Onix1
                         },
                         observer.OnError,
                         observer.OnCompleted);
-                    return probeData.SubscribeSafe(frameObserver);
-                });
-            });
+                    return deviceInfo.Context
+                        .GetDeviceFrames(device.Address)
+                        .SubscribeSafe(frameObserver);
+                }));
         }
     }
 }

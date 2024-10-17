@@ -3,7 +3,7 @@
     /// <summary>
     /// ADC calibration values for a NeuropixelsV1e device.
     /// </summary>
-    public class NeuropixelsV1eAdc
+    public class NeuropixelsV1Adc
     {
         /// <summary>
         /// Gets or sets a Neuropixels 1.0 CompP calibration setting

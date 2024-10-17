@@ -514,6 +514,9 @@ namespace OpenEphys.Onix1.Design
 
         private void CheckStatus()
         {
+            const string NoFileSelected = "No file selected.";
+            const string InvalidFile = "Invalid file.";
+
             NeuropixelsV2GainCorrection? gainCorrection;
 
             try
@@ -539,7 +542,14 @@ namespace OpenEphys.Onix1.Design
 
             toolStripGainCalSN.Text = gainCorrection.HasValue
                                      ? gainCorrection.Value.SerialNumber.ToString()
-                                     : string.IsNullOrEmpty(textBoxProbeCalibrationFile.Text) ? "No file found." : "Invalid file.";
+                                     : string.IsNullOrEmpty(textBoxProbeCalibrationFile.Text) ? NoFileSelected : InvalidFile;
+
+            if (toolStripGainCalSN.Text == NoFileSelected)
+                toolStripLabelGainCalibrationSN.Image = Properties.Resources.StatusWarningImage;
+            else if (toolStripGainCalSN.Text == InvalidFile)
+                toolStripLabelGainCalibrationSN.Image = Properties.Resources.StatusCriticalImage;
+            else
+                toolStripLabelGainCalibrationSN.Image = Properties.Resources.StatusReadyImage;
         }
 
         internal void ChooseCalibrationFile_Click(object sender, EventArgs e)

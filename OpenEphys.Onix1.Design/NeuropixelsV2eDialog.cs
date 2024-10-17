@@ -12,7 +12,7 @@ namespace OpenEphys.Onix1.Design
         readonly IReadOnlyList<NeuropixelsV2eProbeConfigurationDialog> ProbeConfigurations;
 
         /// <summary>
-        /// Public <see cref="ConfigureNeuropixelsV2e"/> object that is manipulated by
+        /// Public <see cref="IConfigureNeuropixelsV2"/> interface that is manipulated by
         /// <see cref="NeuropixelsV2eDialog"/>.
         /// </summary>
         public IConfigureNeuropixelsV2 ConfigureNode { get; set; }

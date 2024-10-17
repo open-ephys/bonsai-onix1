@@ -8,7 +8,7 @@ namespace OpenEphys.Onix1
     {
         readonly double ApGainCorrection;
         readonly double LfpGainCorrection;
-        readonly NeuropixelsV1eAdc[] Adcs = new NeuropixelsV1eAdc[NeuropixelsV1e.AdcCount];
+        readonly NeuropixelsV1Adc[] Adcs = new NeuropixelsV1Adc[NeuropixelsV1.AdcCount];
 
         const byte ReferenceSource = 0b001; // All, hardcoded
         const int BaseConfigurationBitCount = 2448;
@@ -60,7 +60,7 @@ namespace OpenEphys.Onix1
             LfpGainCorrection = gainCorrection.Value.LfpGainCorrectionFactor;
 
             // create shift-register bit arrays
-            for (int i = 0; i < NeuropixelsV1e.ChannelCount; i++)
+            for (int i = 0; i < NeuropixelsV1.ChannelCount; i++)
             {
                 var configIdx = i % 2;
 

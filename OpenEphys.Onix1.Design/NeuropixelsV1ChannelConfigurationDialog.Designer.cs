@@ -1,6 +1,6 @@
 ﻿namespace OpenEphys.Onix1.Design
 {
-    partial class NeuropixelsV1eChannelConfigurationDialog
+    partial class NeuropixelsV1ChannelConfigurationDialog
     {
         /// <summary>
         /// Required designer variable.
