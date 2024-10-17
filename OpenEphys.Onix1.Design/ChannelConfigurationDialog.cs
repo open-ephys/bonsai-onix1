@@ -760,6 +760,7 @@ namespace OpenEphys.Onix1.Design
             textObj.FontSpec.IsBold = true;
             textObj.FontSpec.Border.IsVisible = false;
             textObj.FontSpec.Fill.IsVisible = false;
+            textObj.FontSpec.Fill.IsVisible = false;
             textObj.FontSpec.Size = fontSize;
         }
 

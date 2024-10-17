@@ -120,8 +120,9 @@
             this.toolStripStatusIsValid.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Right;
             this.toolStripStatusIsValid.BorderStyle = System.Windows.Forms.Border3DStyle.Raised;
             this.toolStripStatusIsValid.Image = global::OpenEphys.Onix1.Design.Properties.Resources.StatusReadyImage;
+            this.toolStripStatusIsValid.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.toolStripStatusIsValid.Name = "toolStripStatusIsValid";
-            this.toolStripStatusIsValid.Size = new System.Drawing.Size(194, 20);
+            this.toolStripStatusIsValid.Size = new System.Drawing.Size(186, 20);
             this.toolStripStatusIsValid.Text = "Valid stimulus sequence";
             this.toolStripStatusIsValid.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -616,6 +617,7 @@
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.MinimumSize = new System.Drawing.Size(132, 54);
             this.Name = "Rhs2116StimulusSequenceDialog";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Rhs2116StimulusSequenceDialog";
             this.statusStrip.ResumeLayout(false);
             this.statusStrip.PerformLayout();

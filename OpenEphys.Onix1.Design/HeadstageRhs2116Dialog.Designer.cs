@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(HeadstageRhs2116Dialog));
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabPageStimulusSequence = new System.Windows.Forms.TabPage();
             this.tabPageRhs2116A = new System.Windows.Forms.TabPage();
@@ -61,7 +62,7 @@
             this.tabPageStimulusSequence.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tabPageStimulusSequence.Name = "tabPageStimulusSequence";
             this.tabPageStimulusSequence.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPageStimulusSequence.Size = new System.Drawing.Size(1586, 707);
+            this.tabPageStimulusSequence.Size = new System.Drawing.Size(1580, 711);
             this.tabPageStimulusSequence.TabIndex = 1;
             this.tabPageStimulusSequence.Text = "Stimulus Sequence";
             this.tabPageStimulusSequence.UseVisualStyleBackColor = true;
@@ -151,9 +152,11 @@
             this.ClientSize = new System.Drawing.Size(1594, 816);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.menuStrip);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip;
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "HeadstageRhs2116Dialog";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "HeadstageRhs2116Dialog";
             this.tabControl.ResumeLayout(false);
             this.menuStrip.ResumeLayout(false);
