@@ -57,7 +57,7 @@ namespace OpenEphys.Onix1.Design
         internal override void LoadDefaultChannelLayout()
         {
             ProbeConfiguration = new(ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain, ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter);
-            ChannelConfiguration = ProbeConfiguration.ChannelConfiguration;
+            ProbeGroup = ProbeConfiguration.ChannelConfiguration;
 
             OnFileOpenHandler();
         }
@@ -66,8 +66,8 @@ namespace OpenEphys.Onix1.Design
         {
             if (base.OpenFile<NeuropixelsV1eProbeGroup>())
             {
-                ProbeConfiguration = new((NeuropixelsV1eProbeGroup)ChannelConfiguration, ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain, ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter);
-                ChannelConfiguration = ProbeConfiguration.ChannelConfiguration;
+                ProbeConfiguration = new((NeuropixelsV1eProbeGroup)ProbeGroup, ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain, ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter);
+                ProbeGroup = ProbeConfiguration.ChannelConfiguration;
 
                 OnFileOpenHandler();
 
@@ -127,9 +127,9 @@ namespace OpenEphys.Onix1.Design
             var majorTickOffset = MajorTickLength + CalculateScaleRange(zedGraphChannels.GraphPane.XAxis.Scale) * 0.015;
             majorTickOffset = majorTickOffset > 50 ? 50 : majorTickOffset;
 
-            var x = GetProbeMaxX(zedGraphChannels.GraphPane.GraphObjList) + 40;
-            var minY = GetProbeMinY(zedGraphChannels.GraphPane.GraphObjList);
-            var maxY = GetProbeMaxY(zedGraphChannels.GraphPane.GraphObjList);
+            var x = GetProbeRight(zedGraphChannels.GraphPane.GraphObjList) + 40;
+            var minY = GetProbeBottom(zedGraphChannels.GraphPane.GraphObjList);
+            var maxY = GetProbeTop(zedGraphChannels.GraphPane.GraphObjList);
 
             int textPosition = 0;
 
