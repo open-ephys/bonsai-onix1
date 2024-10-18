@@ -5,8 +5,7 @@ using System.Linq;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Configures a Bosch Bno055 9-axis inertial measurement unit (IMU) that is polled by the
-    /// computer.
+    /// Configures a Bosch Bno055 9-axis inertial measurement unit (IMU) that is polled by the host computer.
     /// </summary>
     /// <remarks>
     /// This configuration operator can be linked to a data IO operator, such as <see
@@ -25,7 +24,8 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Copy constructor for the <see cref="ConfigurePolledBno055"/> class.
+        /// Initializes a new instance of <see cref="ConfigurePolledBno055"/> with its properties copied from an
+        /// existing instance.
         /// </summary>
         /// <param name="configurePolledBno055">A pre-existing <see cref="ConfigurePolledBno055"/> object.</param>
         public ConfigurePolledBno055(ConfigurePolledBno055 configurePolledBno055)
@@ -126,7 +126,7 @@ namespace OpenEphys.Onix1
     static class PolledBno055
     {
         public const int BNO055Address = 0x28;
-        public const int DataAddress = 0x1A;
+        public const int EulerHeadingLsbAddress = 0x1A;
 
         internal class NameConverter : DeviceNameConverter
         {
@@ -216,7 +216,7 @@ namespace OpenEphys.Onix1
         MirrorX = 0b00000_100,
     }
 
-    // NB: Can be used to remove axis map and sign properties from MutliDeviceFactories that include a
+    // NB: Can be used to remove axis map and sign properties from MultiDeviceFactories that include a
     // ConfigurePolledBno055 when having those options would cause confusion and potential
     // commutator malfunction
     internal class PolledBno055SingleDeviceFactoryConverter : SingleDeviceFactoryConverter

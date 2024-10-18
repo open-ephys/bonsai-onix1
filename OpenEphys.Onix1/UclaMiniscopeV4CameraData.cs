@@ -25,12 +25,13 @@ namespace OpenEphys.Onix1
         /// Gets or sets the data type used to represent pixel intensity values.
         /// </summary>
         /// <remarks>
-        /// The UCLA Miniscope V4 uses a 10-bit image sensor. To capture images that use the full
-        /// ADC resolution, this value can be set to <see cref="UclaMiniscopeV4ImageDepth.U10"/>.
-        /// This comes at the cost of limited codec support and larger file sizes. If <see
-        /// cref="UclaMiniscopeV4ImageDepth.U8"/> is selected, the two least significant bits of
-        /// each pixel sample will be discarded, which greatly increases codec options and reduces
-        /// file sizes.
+        /// The UCLA Miniscope V4 uses a 10-bit image sensor. To capture images that use the full ADC
+        /// resolution, this value can be set to <see cref="UclaMiniscopeV4ImageDepth.U10"/>. This comes at
+        /// the cost of limited codec support and larger file sizes. If <see
+        /// cref="UclaMiniscopeV4ImageDepth.U8"/> is selected, the two least significant bits of each pixel
+        /// sample will be discarded, which greatly increases codec options and reduces file sizes. Further,
+        /// we have noticed that Bonsai introduces flickering in the real-time video visualizer when using
+        /// 10-bit data. These artifacts are not present in the data itself, only in the real-time visualizer.
         /// </remarks>
         [Description("The bit-depth used to represent pixel intensity values.")]
         [Category(DeviceFactory.ConfigurationCategory)]
