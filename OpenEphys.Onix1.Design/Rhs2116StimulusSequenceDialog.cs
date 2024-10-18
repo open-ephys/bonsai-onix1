@@ -248,7 +248,7 @@ namespace OpenEphys.Onix1.Design
 
             for (int i = 0; i < stimuli.Length; i++)
             {
-                var channelOffset = peakToPeak * (i + 1);
+                var channelOffset = peakToPeak * i;
 
                 if (ChannelDialog.SelectedContacts[i] || plotAllContacts)
                 {
@@ -274,7 +274,7 @@ namespace OpenEphys.Onix1.Design
             }
 
             zedGraphWaveform.GraphPane.YAxis.Scale.MajorStep = 1;
-            zedGraphWaveform.GraphPane.YAxis.Scale.BaseTic = 1;
+            zedGraphWaveform.GraphPane.YAxis.Scale.BaseTic = 0;
 
             HighlightInvalidContacts();
 
@@ -283,8 +283,8 @@ namespace OpenEphys.Onix1.Design
 
             zedGraphWaveform.GraphPane.XAxis.Scale.Max = maxLength;
             zedGraphWaveform.GraphPane.XAxis.Scale.Min = -(maxLength * 0.02);
-            zedGraphWaveform.GraphPane.YAxis.Scale.Min = -1;
-            zedGraphWaveform.GraphPane.YAxis.Scale.Max = stimuli.Length + 1;
+            zedGraphWaveform.GraphPane.YAxis.Scale.Min = -2;
+            zedGraphWaveform.GraphPane.YAxis.Scale.Max = stimuli.Length - 0.2;
 
             DrawScale();
 
@@ -351,6 +351,8 @@ namespace OpenEphys.Onix1.Design
                 < 1 => Math.Round(time, 2),
                 < 10 => Math.Round(time, 1),
                 < 100 => Math.Round(time / 10, 1) * 10,
+                < 1000 => Math.Round(time / 100, 1) * 100,
+                < 10000 => Math.Round(time / 1000, 1) * 1000,
                 _ => time
             };
         }
@@ -639,28 +641,28 @@ namespace OpenEphys.Onix1.Design
                                   var currentAnodicAmplitude = GetAmplitudeFromSample(s.Stimulus.AnodicAmplitudeSteps, Sequence.CurrentStepSize);
                                   var currentCathodicAmplitude = GetAmplitudeFromSample(s.Stimulus.CathodicAmplitudeSteps, Sequence.CurrentStepSize);
 
-                                  var validAnodicAmplitude = GetSampleFromAmplitude(currentAnodicAmplitude, out var newAnodicSamples);
-                                  var validCathodicAmplitude = GetSampleFromAmplitude(currentAnodicAmplitude, out var newCathodicSamples);
+                                  var validAnodicAmplitude = GetSampleFromAmplitude(currentAnodicAmplitude, out var newAnodicSteps);
+                                  var validCathodicAmplitude = GetSampleFromAmplitude(currentAnodicAmplitude, out var newCathodicSteps);
 
-                                  return (ValidAmplitudes: validAnodicAmplitude && newAnodicSamples != 0 && validCathodicAmplitude && newCathodicSamples != 0,
+                                  return (ValidAmplitudes: validAnodicAmplitude && newAnodicSteps != 0 && validCathodicAmplitude && newCathodicSteps != 0,
                                           s.Index,
-                                          NewAnodicSamples: newAnodicSamples,
-                                          NewCathodicSamples: newCathodicSamples);
+                                          NewAnodicSteps: newAnodicSteps,
+                                          NewCathodicSteps: newCathodicSteps);
                               });
 
-                foreach (var (ValidAmplitudes, Index, NewAnodicSamples, NewCathodicSamples) in stimuli)
+                foreach (var (ValidAmplitudes, Index, NewAnodicSteps, NewCathodicSteps) in stimuli)
                 {
                     if (ValidAmplitudes)
                     {
-                        Sequence.Stimuli[Index].AnodicAmplitudeSteps = NewAnodicSamples;
-                        Sequence.Stimuli[Index].CathodicAmplitudeSteps = NewCathodicSamples;
+                        Sequence.Stimuli[Index].AnodicAmplitudeSteps = NewAnodicSteps;
+                        Sequence.Stimuli[Index].CathodicAmplitudeSteps = NewCathodicSteps;
                     }
                     else
                     {
-                        var result = MessageBox.Show($"The stimulus for channel {Index} is incompatible with the newly selected step size. " +
-                        "Moving forward will remove the stimulus for this channel. " +
-                        "Press Ok to remove the stimulus, or Cancel to keep the current parameters.",
-                        "Invalid Stimulus", MessageBoxButtons.OKCancel);
+                        var newStepSizeIsToo = NewAnodicSteps == 0 || NewCathodicSteps == 0 ? "large" : "small";
+                        var result = MessageBox.Show($"The newly added stimuli requires a step size that is too {newStepSizeIsToo} for channel {Index}. " +
+                        $"Press Ok to clear the stimulus from channel {Index}, or Cancel to keep the current stimulus and discard the requested stimulus.",
+                        "Invalid Step Size", MessageBoxButtons.OKCancel);
 
                         if (result == DialogResult.Cancel)
                         {
@@ -1132,6 +1134,9 @@ namespace OpenEphys.Onix1.Design
             {
                 checkboxBiphasicSymmetrical.Checked = false;
             }
+
+            StepSize = Sequence.CurrentStepSize;
+            textBoxStepSize.Text = GetStepSizeStringuA(StepSize);
 
             checkBoxAnodicFirst.Checked = Sequence.Stimuli[index].AnodicFirst;
 
