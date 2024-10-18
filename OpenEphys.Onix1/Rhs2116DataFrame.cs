@@ -4,26 +4,26 @@ using OpenCV.Net;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Electrophysiology data produced by an Rhd2164 bioamplifier chip.
+    /// Buffered data from an RHS2116 device.
     /// </summary>
-    public class Rhd2164DataFrame : BufferedDataFrame
+    public class Rhs2116DataFrame : BufferedDataFrame
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="Rhd2164DataFrame"/> class.
+        /// Initializes a new instance of the <see cref="Rhs2116DataFrame"/> class.
         /// </summary>
         /// <param name="clock">An array of <see cref="DataFrame.Clock"/> values.</param>
-        /// <param name="hubClock"> An array of hub clock counter values.</param>
-        /// <param name="amplifierData">An array of Rhd2164 multi-channel electrophysiology data.</param>
-        /// <param name="auxData">An array of Rhd2164 auxiliary channel data.</param>
-        public Rhd2164DataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData, Mat auxData)
+        /// <param name="hubClock">An array of hub clock counter values.</param>
+        /// <param name="amplifierData">An array of multi-channel amplifier data.</param>
+        /// <param name="dcData">An array of multi-channel DC data.</param>
+        public Rhs2116DataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData, Mat dcData)
             : base(clock, hubClock)
         {
             AmplifierData = amplifierData;
-            AuxData = auxData;
+            DCData = dcData;
         }
 
         /// <summary>
-        /// Gets the buffered electrophysiology data array.
+        /// Gets the high-gain AC-coupled ephys amplifier data.
         /// </summary>
         /// <remarks>
         /// Each row corresponds to a channel. Each column corresponds to a sample whose time is indicated by
@@ -37,20 +37,26 @@ namespace OpenEphys.Onix1
         public Mat AmplifierData { get; }
 
         /// <summary>
-        /// Gets the buffered auxiliary data array.
+        /// Gets the DC-coupled low-gain amplifier data for monitoring stimulation waveforms.
         /// </summary>
         /// <remarks>
         /// Each row corresponds to a channel. Each column corresponds to a sample whose time is indicated by
         /// the corresponding element <see cref="DataFrame.Clock"/> and <see cref="DataFrame.HubClock"/>.
+        /// Samples are 10-bits each and are represented using unsigned 16-bit integers. To convert to
+        /// micro-volts, the following equation can be used:
+        /// <code>
+        /// V_electrode (mV) = -19.23 mV × (ADC result – 512)
+        /// </code>
         /// </remarks>
-        public Mat AuxData { get; }
+        public Mat DCData { get; }
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    unsafe struct Rhd2164Payload
+    unsafe struct Rhs2116Payload
     {
         public ulong HubClock;
-        public fixed ushort AmplifierData[Rhd2164.AmplifierChannelCount];
-        public fixed ushort AuxData[Rhd2164.AuxChannelCount];
+        public fixed ushort AmplifierData[Rhs2116.AmplifierChannelCount];
+        public fixed ushort DCData[Rhs2116.AmplifierChannelCount];
+        public short Pad;
     }
 }

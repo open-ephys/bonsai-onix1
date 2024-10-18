@@ -13,10 +13,10 @@ namespace OpenEphys.Onix1.Design
         /// Given a string with a valid JSON structure, deserialize the string to the given type.
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="channelLayout"></param>
+        /// <param name="jsonString"></param>
         /// <returns></returns>
         #nullable enable
-        public static T? DeserializeString<T>(string channelLayout)
+        public static T? DeserializeString<T>(string jsonString)
         {
             var errors = new List<string>();
 
@@ -29,7 +29,7 @@ namespace OpenEphys.Onix1.Design
                 }
             };
 
-            var obj = JsonConvert.DeserializeObject<T>(channelLayout, serializerSettings);
+            var obj = JsonConvert.DeserializeObject<T>(jsonString, serializerSettings);
 
             if (errors.Count > 0)
             {
