@@ -69,7 +69,7 @@ namespace OpenEphys.Onix1
         [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the TS4231 device in the headstage-64.")]
-        public ConfigureTS4231V1 TS4231 { get; set; } = new() { Enable = false };
+        public ConfigureTS4231V1 TS4231 { get; set; } = new();
 
         internal override void UpdateDeviceNames()
         {
