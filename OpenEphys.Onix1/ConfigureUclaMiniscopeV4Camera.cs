@@ -204,15 +204,26 @@ namespace OpenEphys.Onix1
             i2cAlias = UclaMiniscopeV4.Max14574Address << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID3, i2cAlias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias3, i2cAlias);
+
+            // Nominal I2C rate for miniscope
+            Set200kHzI2C(device);
         }
 
-        internal static void ConfigureSerializer(DeviceContext device)
+        static void Set80kHzI2C(DeviceContext device)
         {
-            DS90UB9x.Set933I2CRate(device, 80e3); //This is an arbitrary value that is proven to work, we need to test speed vs reliability vs bno sampling speed
+            DS90UB9x.Set933I2CRate(device, 80e3); // Empirical data for reliably communication with atMega 
+        }
+
+        static void Set200kHzI2C(DeviceContext device)
+        {
+            DS90UB9x.Set933I2CRate(device, 200e3); // This allows maximum rate bno sampling
         }
 
         internal static void ConfigureCameraSystem(DeviceContext device, UclaMiniscopeV4FramesPerSecond frameRate, bool interleaveLed)
         {
+            // NB: atMega (bit-banded i2c to SPI) requires that we talk slowly
+            Set80kHzI2C(device);
+
             // set up Python480
             var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
             WriteCameraRegister(atMega, 16, 3); // Turn on PLL
@@ -243,6 +254,10 @@ namespace OpenEphys.Onix1
 
             atMega.WriteByte(0x04, (uint)(interleaveLed ? 0x00 : 0x03));
             WriteCameraRegister(atMega, 200, shutterWidth);
+
+            // NB: interaction with the atMega (bit-banded i2c to SPI) requires that we talk slowly, reset to
+            // talk to normal chips
+            Set200kHzI2C(device);
         }
 
         static void WriteCameraRegister(I2CRegisterContext i2c, uint register, uint value)
@@ -260,17 +275,23 @@ namespace OpenEphys.Onix1
 
         internal static void SetLedBrightness(DeviceContext device, double percent)
         {
+            // NB: atMega (bit-banded i2c to SPI) requires that we talk slowly
+            Set80kHzI2C(device);
             var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
             atMega.WriteByte(0x01, (uint)((percent == 0) ? 0xFF : 0x08));
 
             var tpl0102 = new I2CRegisterContext(device, UclaMiniscopeV4.Tpl0102Address);
             tpl0102.WriteByte(0x01, (uint)(255 * ((100 - percent) / 100.0)));
+            Set200kHzI2C(device);
         }
 
         internal static void SetSensorGain(DeviceContext device, UclaMiniscopeV4SensorGain gain)
         {
+            // NB: atMega (bit-banded i2c to SPI) requires that we talk slowly
+            Set80kHzI2C(device);
             var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
             WriteCameraRegister(atMega, 204, (uint)gain);
+            Set200kHzI2C(device);
         }
 
         internal static void SetLiquidLensVoltage(DeviceContext device, double voltage)

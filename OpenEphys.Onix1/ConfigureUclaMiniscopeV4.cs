@@ -22,8 +22,7 @@ namespace OpenEphys.Onix1
     /// </remarks>
     public class ConfigureUclaMiniscopeV4 : MultiDeviceFactory
     {
-
-        const double MaxVoltage = 5.6;
+        const double MaxVoltage = 5.7;
 
         PortName port;
         readonly ConfigureUclaMiniscopeV4PortController PortControl = new();
@@ -158,7 +157,6 @@ namespace OpenEphys.Onix1
                 const int FailureToWriteRegister = -6;
                 try
                 {
-                    ConfigureUclaMiniscopeV4Camera.ConfigureSerializer(ds90ub9x);
                     ConfigureUclaMiniscopeV4Camera.ConfigureCameraSystem(ds90ub9x, Camera.FrameRate, Camera.InterleaveLed);
                 }
                 catch (ONIException ex) when (ex.Number == FailureToWriteRegister)
@@ -173,7 +171,7 @@ namespace OpenEphys.Onix1
 
             bool CheckLinkStateWithRetry(DeviceContext device)
             {
-                const int TotalTries = 10;
+                const int TotalTries = 5;
                 for (int i = 0; i < TotalTries; i++)
                 {
                     if (CheckLinkState(device))
