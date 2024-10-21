@@ -1,4 +1,4 @@
-namespace OpenEphys.Onix1.Design
+﻿namespace OpenEphys.Onix1.Design
 {
     /// <summary>
     /// Public class used to create tags for contacts in their respective GUIs.
@@ -49,5 +49,4 @@ namespace OpenEphys.Onix1.Design
             return string.Format(TextStringFormat, probeNumber, contactNumber);
         }
     }
-
 }

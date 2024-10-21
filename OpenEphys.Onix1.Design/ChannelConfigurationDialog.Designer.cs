@@ -51,8 +51,8 @@
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
             this.splitContainer1.IsSplitterFixed = true;
-            this.splitContainer1.Location = new System.Drawing.Point(0, 24);
-            this.splitContainer1.Margin = new System.Windows.Forms.Padding(2);
+            this.splitContainer1.Location = new System.Drawing.Point(0, 30);
+            this.splitContainer1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.splitContainer1.Name = "splitContainer1";
             this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
@@ -64,9 +64,8 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.buttonCancel);
             this.splitContainer1.Panel2.Controls.Add(this.buttonOK);
-            this.splitContainer1.Size = new System.Drawing.Size(457, 442);
-            this.splitContainer1.SplitterDistance = 405;
-            this.splitContainer1.SplitterWidth = 3;
+            this.splitContainer1.Size = new System.Drawing.Size(609, 544);
+            this.splitContainer1.SplitterDistance = 507;
             this.splitContainer1.TabIndex = 0;
             // 
             // zedGraphChannels
@@ -74,7 +73,7 @@
             this.zedGraphChannels.AutoSize = true;
             this.zedGraphChannels.Dock = System.Windows.Forms.DockStyle.Fill;
             this.zedGraphChannels.Location = new System.Drawing.Point(0, 0);
-            this.zedGraphChannels.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.zedGraphChannels.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
             this.zedGraphChannels.Name = "zedGraphChannels";
             this.zedGraphChannels.ScrollGrace = 0D;
             this.zedGraphChannels.ScrollMaxX = 0D;
@@ -83,7 +82,7 @@
             this.zedGraphChannels.ScrollMinX = 0D;
             this.zedGraphChannels.ScrollMinY = 0D;
             this.zedGraphChannels.ScrollMinY2 = 0D;
-            this.zedGraphChannels.Size = new System.Drawing.Size(457, 405);
+            this.zedGraphChannels.Size = new System.Drawing.Size(609, 507);
             this.zedGraphChannels.TabIndex = 4;
             this.zedGraphChannels.UseExtendedPrintDialog = true;
             this.zedGraphChannels.ZoomEvent += new ZedGraph.ZedGraphControl.ZoomEventHandler(this.ZoomEvent);
@@ -92,10 +91,10 @@
             // 
             this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.buttonCancel.Location = new System.Drawing.Point(339, 7);
-            this.buttonCancel.Margin = new System.Windows.Forms.Padding(2);
+            this.buttonCancel.Location = new System.Drawing.Point(452, 1);
+            this.buttonCancel.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonCancel.Name = "buttonCancel";
-            this.buttonCancel.Size = new System.Drawing.Size(108, 26);
+            this.buttonCancel.Size = new System.Drawing.Size(144, 32);
             this.buttonCancel.TabIndex = 4;
             this.buttonCancel.Text = "Cancel";
             this.buttonCancel.UseVisualStyleBackColor = true;
@@ -103,10 +102,10 @@
             // buttonOK
             // 
             this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOK.Location = new System.Drawing.Point(217, 7);
-            this.buttonOK.Margin = new System.Windows.Forms.Padding(2);
+            this.buttonOK.Location = new System.Drawing.Point(289, 1);
+            this.buttonOK.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonOK.Name = "buttonOK";
-            this.buttonOK.Size = new System.Drawing.Size(108, 26);
+            this.buttonOK.Size = new System.Drawing.Size(144, 32);
             this.buttonOK.TabIndex = 3;
             this.buttonOK.Text = "OK";
             this.buttonOK.UseVisualStyleBackColor = true;
@@ -119,8 +118,8 @@
             this.fileMenuItem});
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
-            this.menuStrip.Padding = new System.Windows.Forms.Padding(4, 1, 0, 1);
-            this.menuStrip.Size = new System.Drawing.Size(457, 24);
+            this.menuStrip.Padding = new System.Windows.Forms.Padding(5, 1, 0, 1);
+            this.menuStrip.Size = new System.Drawing.Size(609, 30);
             this.menuStrip.TabIndex = 5;
             this.menuStrip.Text = "menuStripChannelConfiguration";
             // 
@@ -131,40 +130,40 @@
             this.dropDownSaveFile,
             this.dropDownLoadDefault});
             this.fileMenuItem.Name = "fileMenuItem";
-            this.fileMenuItem.Size = new System.Drawing.Size(37, 22);
+            this.fileMenuItem.Size = new System.Drawing.Size(46, 28);
             this.fileMenuItem.Text = "File";
             // 
             // dropDownOpenFile
             // 
             this.dropDownOpenFile.Name = "dropDownOpenFile";
-            this.dropDownOpenFile.Size = new System.Drawing.Size(265, 22);
+            this.dropDownOpenFile.Size = new System.Drawing.Size(330, 26);
             this.dropDownOpenFile.Text = "Open Channel Configuration";
             this.dropDownOpenFile.Click += new System.EventHandler(this.MenuItemOpenFile);
             // 
             // dropDownSaveFile
             // 
             this.dropDownSaveFile.Name = "dropDownSaveFile";
-            this.dropDownSaveFile.Size = new System.Drawing.Size(265, 22);
+            this.dropDownSaveFile.Size = new System.Drawing.Size(330, 26);
             this.dropDownSaveFile.Text = "Save Channel Configuration";
             this.dropDownSaveFile.Click += new System.EventHandler(this.MenuItemSaveFile);
             // 
             // dropDownLoadDefault
             // 
             this.dropDownLoadDefault.Name = "dropDownLoadDefault";
-            this.dropDownLoadDefault.Size = new System.Drawing.Size(265, 22);
+            this.dropDownLoadDefault.Size = new System.Drawing.Size(330, 26);
             this.dropDownLoadDefault.Text = "Load Default Channel Configuration";
             this.dropDownLoadDefault.Click += new System.EventHandler(this.MenuItemLoadDefaultConfig);
             // 
             // ChannelConfigurationDialog
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(457, 466);
+            this.ClientSize = new System.Drawing.Size(609, 574);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.menuStrip);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip;
-            this.Margin = new System.Windows.Forms.Padding(2);
+            this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "ChannelConfigurationDialog";
             this.Text = "Channel Configuration";
             this.splitContainer1.Panel1.ResumeLayout(false);
