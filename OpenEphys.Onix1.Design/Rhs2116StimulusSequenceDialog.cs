@@ -14,11 +14,17 @@ namespace OpenEphys.Onix1.Design
     {
         internal Rhs2116StimulusSequencePair Sequence { get; set; }
 
+        /// <summary>
+        /// Holds the step size that is displayed in the text box of the GUI. This is not the step size that is saved for the stimulus sequence object.
+        /// </summary>
         private Rhs2116StepSize StepSize { get; set; }
 
         internal readonly Rhs2116ChannelConfigurationDialog ChannelDialog;
 
         private const double SamplePeriodMilliSeconds = 1e3 / 30.1932367151e3;
+        const double MinAmplitudeuA = 0.01; // NB: Minimum possible amplitude is 10 nA (0.01 µA)
+        const double MaxAmplitudeuA = 2550; // NB: Maximum possible amplitude is 2550000 nA (2550 µA)
+
 
         /// <summary>
         /// Opens a dialog allowing for easy changing of stimulus sequence parameters, with visual feedback on what the resulting stimulus sequence looks like.
@@ -659,10 +665,10 @@ namespace OpenEphys.Onix1.Design
                     }
                     else
                     {
-                        var newStepSizeIsToo = NewAnodicSteps == 0 || NewCathodicSteps == 0 ? "large" : "small";
-                        var result = MessageBox.Show($"The newly added stimuli requires a step size that is too {newStepSizeIsToo} for channel {Index}. " +
-                        $"Press Ok to clear the stimulus from channel {Index}, or Cancel to keep the current stimulus and discard the requested stimulus.",
-                        "Invalid Step Size", MessageBoxButtons.OKCancel);
+                        var result = MessageBox.Show($"To produce this new sequence, the step size needs to be {GetStepSizeStringuA(StepSize)}," +
+                            $" but the stimulus on channel {Index} cannot be defined with this step size. " +
+                            $"Press Ok to clear the stimulus from channel {Index}, or Cancel to stop adding this sequence.",
+                            "Amplitude Out of Range", MessageBoxButtons.OKCancel);
 
                         if (result == DialogResult.Cancel)
                         {
@@ -945,8 +951,8 @@ namespace OpenEphys.Onix1.Design
             {
                 if (!UpdateStepSizeFromAmplitude(result))
                 {
-                    textBox.Text = "";
-                    textBox.Tag = null;
+                    textBox.Text = result > MaxAmplitudeuA ? MaxAmplitudeuA.ToString() : "0";
+                    textBox.Tag = result > MaxAmplitudeuA ? 255 : 0;
                     return;
                 }
 
@@ -1018,43 +1024,59 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
+        /// <summary>
+        /// Updates the current step size based on the given amplitude
+        /// </summary>
+        /// <param name="amplitude">New amplitude value.</param>
+        /// <returns>True if the amplitude is a valid value and the step size has been updated. False if something went wrong, the step size has not been changed.</returns>
         private bool UpdateStepSizeFromAmplitude(double amplitude)
         {
-            const double minAmplitudeuA = 0.01; // NB: Minimum possible amplitude is 10 nA (0.01 µA)
-            const double maxAmplitudeuA = 2550; // NB: Maximum possible amplitude is 2550000 nA (2550 µA)
-
             const string InvalidAmplitudeString = "Invalid Amplitude";
 
-            bool result = true;
-
-            if (amplitude > maxAmplitudeuA)
+            if (amplitude > MaxAmplitudeuA)
             {
-                MessageBox.Show($"Warning: Amplitude is too high. Amplitude must be less than {maxAmplitudeuA} µA.", InvalidAmplitudeString);
-                result = false;
+                MessageBox.Show($"Warning: Amplitude is too high. Amplitude must be less than or equal to {MaxAmplitudeuA} µA.", InvalidAmplitudeString);
+                return false;
             }
             else if (amplitude < 0)
             {
                 MessageBox.Show("Warning: Amplitude cannot be a negative value.", InvalidAmplitudeString);
-                result = false;
+                return false;
             }
-            else if (amplitude < minAmplitudeuA && amplitude > 0)
+            else if (amplitude < MinAmplitudeuA && amplitude > 0)
             {
-                MessageBox.Show($"Amplitude is too small to be resolved. Amplitude must be at least {minAmplitudeuA} µA.", InvalidAmplitudeString);
+                MessageBox.Show($"Amplitude is too small to be resolved. Amplitude must be greater than or equal to {MinAmplitudeuA} µA.", InvalidAmplitudeString);
+                return false;
             }
 
             // NB: Update step size to a value that supports the requested amplitude.
-            StepSize = Enum.GetValues(typeof(Rhs2116StepSize))
-                                       .Cast<Rhs2116StepSize>()
-                                       .Where(s =>
-                                       {
-                                           var numSteps = (int)(amplitude / GetStepSizeuA(s));
-                                           return numSteps > 0 && numSteps <= 255;
-                                       })
-                                       .FirstOrDefault();
+            var possibleStepSizes = Enum.GetValues(typeof(Rhs2116StepSize))
+                                        .Cast<Rhs2116StepSize>()
+                                        .Where(s =>
+                                        {
+                                            var numSteps = (int)(amplitude / GetStepSizeuA(s));
+                                            return numSteps > 0 && numSteps <= 255;
+                                        });
+
+            if (possibleStepSizes.Count() == 1)
+            {
+                StepSize = possibleStepSizes.First();
+            }
+            else
+            {
+                if (possibleStepSizes.Contains(Sequence.CurrentStepSize))
+                {
+                    StepSize = Sequence.CurrentStepSize;
+                }
+                else
+                {
+                    StepSize = possibleStepSizes.First();
+                }
+            }
 
             textBoxStepSize.Text = GetStepSizeStringuA(StepSize);
 
-            return result;
+            return true;
         }
 
         private void Checkbox_CheckedChanged(object sender, EventArgs e)
@@ -1142,13 +1164,27 @@ namespace OpenEphys.Onix1.Design
 
             Checkbox_CheckedChanged(checkboxBiphasicSymmetrical, e);
 
-            textboxDelay.Text = GetTimeString(Sequence.Stimuli[index].DelaySamples); Samples_TextChanged(textboxDelay, e);
-            textboxAmplitudeAnodic.Text = GetAmplitudeString(Sequence.Stimuli[index].AnodicAmplitudeSteps); Amplitude_TextChanged(textboxAmplitudeAnodic, e);
-            textboxPulseWidthAnodic.Text = GetTimeString(Sequence.Stimuli[index].AnodicWidthSamples); Samples_TextChanged(textboxPulseWidthAnodic, e);
-            textboxAmplitudeCathodic.Text = GetAmplitudeString(Sequence.Stimuli[index].CathodicAmplitudeSteps); Amplitude_TextChanged(textboxAmplitudeCathodic, e);
-            textboxPulseWidthCathodic.Text = GetTimeString(Sequence.Stimuli[index].CathodicWidthSamples); Samples_TextChanged(textboxPulseWidthCathodic, e);
-            textboxInterPulseInterval.Text = GetTimeString(Sequence.Stimuli[index].DwellSamples); Samples_TextChanged(textboxInterPulseInterval, e);
-            textboxInterStimulusInterval.Text = GetTimeString(Sequence.Stimuli[index].InterStimulusIntervalSamples); Samples_TextChanged(textboxInterStimulusInterval, e);
+            textboxDelay.Text = GetTimeString(Sequence.Stimuli[index].DelaySamples);
+            textboxDelay.Tag = Sequence.Stimuli[index].DelaySamples;
+
+            textboxAmplitudeAnodic.Text = GetAmplitudeString(Sequence.Stimuli[index].AnodicAmplitudeSteps);
+            textboxAmplitudeAnodic.Tag = Sequence.Stimuli[index].AnodicAmplitudeSteps;
+
+            textboxPulseWidthAnodic.Text = GetTimeString(Sequence.Stimuli[index].AnodicWidthSamples);
+            textboxPulseWidthAnodic.Tag = Sequence.Stimuli[index].AnodicWidthSamples;
+
+            textboxAmplitudeCathodic.Text = GetAmplitudeString(Sequence.Stimuli[index].CathodicAmplitudeSteps);
+            textboxAmplitudeCathodic.Tag = Sequence.Stimuli[index].CathodicAmplitudeSteps;
+
+            textboxPulseWidthCathodic.Text = GetTimeString(Sequence.Stimuli[index].CathodicWidthSamples);
+            textboxPulseWidthCathodic.Tag = Sequence.Stimuli[index].CathodicWidthSamples;
+
+            textboxInterPulseInterval.Text = GetTimeString(Sequence.Stimuli[index].DwellSamples);
+            textboxInterPulseInterval.Tag = Sequence.Stimuli[index].DwellSamples;
+
+            textboxInterStimulusInterval.Text = GetTimeString(Sequence.Stimuli[index].InterStimulusIntervalSamples);
+            textboxInterStimulusInterval.Tag = Sequence.Stimuli[index].InterStimulusIntervalSamples;
+
             textboxNumberOfStimuli.Text = Sequence.Stimuli[index].NumberOfStimuli.ToString();
         }
 
