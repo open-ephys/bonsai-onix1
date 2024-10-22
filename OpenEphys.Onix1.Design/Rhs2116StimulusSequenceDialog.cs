@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows.Forms;
 using ZedGraph;
 using System.IO;
+using System.Collections.Generic;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -258,22 +259,24 @@ namespace OpenEphys.Onix1.Design
 
                 if (ChannelDialog.SelectedContacts[i] || plotAllContacts)
                 {
+                    List<PointPairList> pulses = CreatePulses(stimuli[i], channelOffset, peakToPeak);
+
+                    foreach (var pulse in pulses)
+                    {
+                        var pulseCurve = zedGraphWaveform.GraphPane.AddCurve("", pulse, Color.Red, SymbolType.None);
+
+                        pulseCurve.Label.IsVisible = false;
+                        pulseCurve.Line.Width = 3;
+                    }
+
                     PointPairList pointPairs = CreateStimulusWaveform(stimuli[i], channelOffset, peakToPeak);
 
-                    Color color;
-                    if (stimuli[i].IsValid())
-                    {
-                        color = Color.CornflowerBlue;
-                    }
-                    else
-                    {
-                        color = Color.Red;
-                    }
+                    Color color = stimuli[i].IsValid() ? Color.CornflowerBlue : Color.DarkRed;
 
-                    var curve = zedGraphWaveform.GraphPane.AddCurve("", pointPairs, color, SymbolType.None);
+                    var waveformCurve = zedGraphWaveform.GraphPane.AddCurve("", pointPairs, color, SymbolType.None);
 
-                    curve.Label.IsVisible = false;
-                    curve.Line.Width = 3;
+                    waveformCurve.Label.IsVisible = false;
+                    waveformCurve.Line.Width = 3;
 
                     maxLength = pointPairs.Last().X > maxLength ? pointPairs.Last().X : maxLength;
                 }
@@ -296,7 +299,7 @@ namespace OpenEphys.Onix1.Design
 
             SetZoomOutBoundaries(zedGraphWaveform);
 
-            ZoomInBoundaryX = (ZoomOutBoundaryRight - ZoomOutBoundaryLeft) * 0.05;
+            ZoomInBoundaryX = (ZoomOutBoundaryRight - ZoomOutBoundaryLeft) * 0.01;
 
             dataGridViewStimulusTable.Refresh();
 
@@ -375,21 +378,17 @@ namespace OpenEphys.Onix1.Design
 
             for (int i = 0; i < stimulus.NumberOfStimuli; i++)
             {
-                double amplitude = (stimulus.AnodicFirst ? stimulus.AnodicAmplitudeSteps : -stimulus.CathodicAmplitudeSteps) * Sequence.CurrentStepSizeuA / peakToPeak + yOffset;
-                double width = (stimulus.AnodicFirst ? stimulus.AnodicWidthSamples : stimulus.CathodicWidthSamples) * SamplePeriodMilliSeconds;
+                double amplitude = CalculateFirstPulseAmplitude(stimulus.AnodicFirst, stimulus.AnodicAmplitudeSteps, stimulus.CathodicAmplitudeSteps, peakToPeak, yOffset);
+                double width = CalculateFirstPulseWidth(stimulus.AnodicFirst, stimulus.AnodicWidthSamples, stimulus.CathodicWidthSamples);
 
-                points.Add(points[points.Count - 1].X, amplitude);
-                points.Add(points[points.Count - 1].X + width, amplitude);
-                points.Add(points[points.Count - 1].X, yOffset);
+                points.AddRange(CreatePulse(points[points.Count - 1].X, amplitude, width, yOffset));
 
                 points.Add(points[points.Count - 1].X + stimulus.DwellSamples * SamplePeriodMilliSeconds, yOffset);
 
-                amplitude = (stimulus.AnodicFirst ? -stimulus.CathodicAmplitudeSteps : stimulus.AnodicAmplitudeSteps) * Sequence.CurrentStepSizeuA / peakToPeak + yOffset;
-                width = (stimulus.AnodicFirst ? stimulus.CathodicWidthSamples : stimulus.AnodicWidthSamples) * SamplePeriodMilliSeconds;
+                amplitude = CalculateSecondPulseAmplitude(stimulus.AnodicFirst, stimulus.AnodicAmplitudeSteps, stimulus.CathodicAmplitudeSteps, peakToPeak, yOffset);
+                width = CalculateSecondPulseWidth(stimulus.AnodicFirst, stimulus.AnodicWidthSamples, stimulus.CathodicWidthSamples);
 
-                points.Add(points[points.Count - 1].X, amplitude);
-                points.Add(points[points.Count - 1].X + width, amplitude);
-                points.Add(points[points.Count - 1].X, yOffset);
+                points.AddRange(CreatePulse(points[points.Count - 1].X, amplitude, width, yOffset));
 
                 points.Add(points[points.Count - 1].X + stimulus.InterStimulusIntervalSamples * SamplePeriodMilliSeconds, yOffset);
             }
@@ -397,6 +396,76 @@ namespace OpenEphys.Onix1.Design
             points.Add(Sequence.SequenceLengthSamples * SamplePeriodMilliSeconds, yOffset);
 
             return points;
+        }
+
+        /// <summary>
+        /// Only create the pulses, so that they can be plotted as an overlay on top of the full waveform to highlight individual pulses
+        /// </summary>
+        /// <param name="stimulus"></param>
+        /// <param name="yOffset"></param>
+        /// <param name="peakToPeak"></param>
+        /// <returns></returns>
+        private List<PointPairList> CreatePulses(Rhs2116Stimulus stimulus, double yOffset, double peakToPeak)
+        {
+            yOffset /= peakToPeak;
+
+            var pulses = new List<PointPairList>();
+
+            for (int i = 0; i < stimulus.NumberOfStimuli; i++)
+            {
+                PointPairList pulse = new();
+
+                if (i == 0)
+                    pulse.Add(stimulus.DelaySamples * SamplePeriodMilliSeconds, yOffset);
+                else
+                    pulse.Add(pulses[pulses.Count - 1][0].X + stimulus.InterStimulusIntervalSamples * SamplePeriodMilliSeconds, yOffset);
+
+                double amplitude = CalculateFirstPulseAmplitude(stimulus.AnodicFirst, stimulus.AnodicAmplitudeSteps, stimulus.CathodicAmplitudeSteps, peakToPeak, yOffset);
+                double width = CalculateFirstPulseWidth(stimulus.AnodicFirst, stimulus.AnodicWidthSamples, stimulus.CathodicWidthSamples);
+
+                pulse.AddRange(CreatePulse(pulse[pulse.Count - 1].X, amplitude, width, yOffset));
+
+                pulse.Add(pulse[pulse.Count - 1].X + stimulus.DwellSamples * SamplePeriodMilliSeconds, yOffset);
+
+                amplitude = CalculateSecondPulseAmplitude(stimulus.AnodicFirst, stimulus.AnodicAmplitudeSteps, stimulus.CathodicAmplitudeSteps, peakToPeak, yOffset);
+                width = CalculateSecondPulseWidth(stimulus.AnodicFirst, stimulus.AnodicWidthSamples, stimulus.CathodicWidthSamples);
+
+                pulse.AddRange(CreatePulse(pulse[pulse.Count - 1].X, amplitude, width, yOffset));
+
+                pulses.Add(pulse);
+            }
+
+            return pulses;
+        }
+
+        private double CalculateSecondPulseWidth(bool anodicFirst, uint anodicWidthSamples, uint cathodicWidthSamples)
+        {
+            return (anodicFirst ? cathodicWidthSamples : anodicWidthSamples) * SamplePeriodMilliSeconds;
+        }
+
+        private double CalculateSecondPulseAmplitude(bool anodicFirst, byte anodicAmplitudeSteps, byte cathodicAmplitudeSteps, double peakToPeak, double yOffset)
+        {
+            return (anodicFirst ? -cathodicAmplitudeSteps : anodicAmplitudeSteps) * Sequence.CurrentStepSizeuA / peakToPeak + yOffset;
+        }
+
+        private List<PointPair> CreatePulse(double x, double amplitude, double width, double yOffset)
+        {
+            return new List<PointPair>()
+            {
+                { new PointPair(x, amplitude) },
+                { new PointPair(x + width, amplitude) },
+                { new PointPair(x + width, yOffset) },
+            };
+        }
+
+        private double CalculateFirstPulseWidth(bool anodicFirst, uint anodicWidthSamples, uint cathodicWidthSamples)
+        {
+            return (anodicFirst ? anodicWidthSamples : cathodicWidthSamples) * SamplePeriodMilliSeconds;
+        }
+
+        private double CalculateFirstPulseAmplitude(bool anodicFirst, byte anodicAmplitudeSteps, byte cathodicAmplitudeSteps, double peakToPeak, double yOffset)
+        {
+            return (anodicFirst ? anodicAmplitudeSteps : -cathodicAmplitudeSteps) * Sequence.CurrentStepSizeuA / peakToPeak + yOffset;
         }
 
         private void InitializeZedGraphWaveform()
