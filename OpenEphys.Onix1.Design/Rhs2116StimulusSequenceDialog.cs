@@ -652,11 +652,12 @@ namespace OpenEphys.Onix1.Design
 
                                   return (ValidAmplitudes: validAnodicAmplitude && newAnodicSteps != 0 && validCathodicAmplitude && newCathodicSteps != 0,
                                           s.Index,
+                                          s.Stimulus,
                                           NewAnodicSteps: newAnodicSteps,
                                           NewCathodicSteps: newCathodicSteps);
                               });
 
-                foreach (var (ValidAmplitudes, Index, NewAnodicSteps, NewCathodicSteps) in stimuli)
+                foreach (var (ValidAmplitudes, Index, Stimulus, NewAnodicSteps, NewCathodicSteps) in stimuli)
                 {
                     if (ValidAmplitudes)
                     {
@@ -665,9 +666,9 @@ namespace OpenEphys.Onix1.Design
                     }
                     else
                     {
-                        var result = MessageBox.Show($"To produce this new sequence, the step size needs to be {GetStepSizeStringuA(StepSize)}," +
-                            $" but the stimulus on channel {Index} cannot be defined with this step size. " +
-                            $"Press Ok to clear the stimulus from channel {Index}, or Cancel to stop adding this sequence.",
+                        var result = MessageBox.Show($"The new amplitude ({GetAmplitudeString((byte)textboxAmplitudeAnodic.Tag) + " µA"}) is using a step size of {GetStepSizeStringuA(StepSize)}," +
+                            $" but channel {Index} ({GetAmplitudeString(Stimulus.AnodicAmplitudeSteps, Sequence.CurrentStepSize) + " µA"}) cannot be defined with this step size. " +
+                            $"Press Ok to clear channel {Index}, or Cancel to stop adding this sequence.",
                             "Amplitude Out of Range", MessageBoxButtons.OKCancel);
 
                         if (result == DialogResult.Cancel)
@@ -764,14 +765,6 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        private void ParameterKeyPress_Amplitude(object sender, KeyPressEventArgs e)
-        {
-            if (e.KeyChar == '\r')
-            {
-                Amplitude_TextChanged(sender, e);
-            }
-        }
-
         private void DataGridViewStimulusTable_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             dataGridViewStimulusTable.BindingContext[dataGridViewStimulusTable.DataSource].EndCurrentEdit();
@@ -808,34 +801,21 @@ namespace OpenEphys.Onix1.Design
             return Rhs2116StimulusSequence.GetStepSizeuA(stepSize).ToString() + " µA";
         }
 
-        private double GetStepSizeuA(Rhs2116StepSize stepSize)
-        {
-            return stepSize switch
-            {
-                Rhs2116StepSize.Step10nA => 0.01,
-                Rhs2116StepSize.Step20nA => 0.02,
-                Rhs2116StepSize.Step50nA => 0.05,
-                Rhs2116StepSize.Step100nA => 0.1,
-                Rhs2116StepSize.Step200nA => 0.2,
-                Rhs2116StepSize.Step500nA => 0.5,
-                Rhs2116StepSize.Step1000nA => 1.0,
-                Rhs2116StepSize.Step2000nA => 2.0,
-                Rhs2116StepSize.Step5000nA => 5.0,
-                Rhs2116StepSize.Step10000nA => 10.0,
-                _ => throw new ArgumentException("Invalid stimulus step size selection."),
-            };
-        }
-
         private string GetAmplitudeString(byte amplitude)
         {
-            string format = StepSize switch
+            return GetAmplitudeString(amplitude, StepSize);
+        }
+
+        private string GetAmplitudeString(byte amplitude, Rhs2116StepSize stepSize)
+        {
+            string format = stepSize switch
             {
                 Rhs2116StepSize.Step10nA or Rhs2116StepSize.Step20nA or Rhs2116StepSize.Step50nA => "{0:F2}",
                 Rhs2116StepSize.Step100nA or Rhs2116StepSize.Step200nA or Rhs2116StepSize.Step500nA => "{0:F1}",
                 Rhs2116StepSize.Step1000nA or Rhs2116StepSize.Step2000nA or Rhs2116StepSize.Step5000nA or Rhs2116StepSize.Step10000nA => "{0:F0}",
                 _ => "{0:F3}",
             };
-            return string.Format(format, GetAmplitudeFromSample(amplitude));
+            return string.Format(format, GetAmplitudeFromSample(amplitude, stepSize));
         }
 
         private string GetTimeString(uint time)
@@ -925,11 +905,6 @@ namespace OpenEphys.Onix1.Design
         private double GetTimeFromSample(uint value)
         {
             return value * SamplePeriodMilliSeconds;
-        }
-
-        private double GetAmplitudeFromSample(byte value)
-        {
-            return GetAmplitudeFromSample(value, StepSize);
         }
 
         private double GetAmplitudeFromSample(byte value, Rhs2116StepSize stepSize)
@@ -1054,8 +1029,7 @@ namespace OpenEphys.Onix1.Design
                                         .Cast<Rhs2116StepSize>()
                                         .Where(s =>
                                         {
-                                            var numSteps = (int)(amplitude / GetStepSizeuA(s));
-                                            return numSteps > 0 && numSteps <= 255;
+                                            return IsValidNumberOfSteps(GetNumberOfSteps(amplitude, s));
                                         });
 
             if (possibleStepSizes.Count() == 1)
@@ -1070,13 +1044,49 @@ namespace OpenEphys.Onix1.Design
                 }
                 else
                 {
-                    StepSize = possibleStepSizes.First();
+                    // NB: Search through the possible step sizes and try to find one that matches all current amplitudes
+                    var validStepSizes = possibleStepSizes.Where(s =>
+                                         {
+                                             var numberOfStimuli = Sequence.Stimuli.Length;
+
+                                             bool[] isValid = new bool[numberOfStimuli];
+
+                                             for (int i = 0; i < numberOfStimuli; i++)
+                                             {
+                                                 isValid[i] = IsValidNumberOfSteps(GetNumberOfSteps(GetAmplitudeFromSample(Sequence.Stimuli[i].AnodicAmplitudeSteps, Sequence.CurrentStepSize), s));
+                                             }
+
+                                             return isValid.All(i => i);
+                                         });
+
+                    if (!validStepSizes.Any())
+                    {
+                        MessageBox.Show("No step size found that fits all existing and new amplitudes. " +
+                            "Either clear existing stimuli that fall outside the range of the new step size, or modify " +
+                            "the new amplitude.", "Invalid Amplitude");
+
+                        StepSize = possibleStepSizes.First();
+                    }
+                    else
+                    {
+                        StepSize = validStepSizes.First();
+                    }
                 }
             }
 
             textBoxStepSize.Text = GetStepSizeStringuA(StepSize);
 
             return true;
+        }
+
+        private bool IsValidNumberOfSteps(int numberOfSteps)
+        {
+            return numberOfSteps > 0 && numberOfSteps <= 255;
+        }
+
+        private int GetNumberOfSteps(double amplitude, Rhs2116StepSize stepSize)
+        {
+            return (int)(amplitude / Rhs2116StimulusSequence.GetStepSizeuA(stepSize));
         }
 
         private void Checkbox_CheckedChanged(object sender, EventArgs e)
@@ -1144,9 +1154,6 @@ namespace OpenEphys.Onix1.Design
                         .Select(c => c.Ind)
                         .First();
 
-            if (Sequence.Stimuli[index].NumberOfStimuli == 0 || !Sequence.Stimuli[index].IsValid())
-                return;
-
             if (Sequence.Stimuli[index].AnodicAmplitudeSteps == Sequence.Stimuli[index].CathodicAmplitudeSteps &&
                 Sequence.Stimuli[index].AnodicWidthSamples == Sequence.Stimuli[index].CathodicWidthSamples)
             {
@@ -1190,6 +1197,14 @@ namespace OpenEphys.Onix1.Design
 
         private void MenuItemSaveFile_Click(object sender, EventArgs e)
         {
+            if (!Sequence.Valid)
+            {
+                var result = MessageBox.Show("Warning: Not all stimuli are valid; are you sure you want to save this file?", 
+                    "Invalid Stimuli", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
+
+                if (result == DialogResult.No) return;
+            }
+
             using SaveFileDialog sfd = new();
             sfd.Filter = "Stimulus Sequence Files (*.json)|*.json";
             sfd.FilterIndex = 1;
@@ -1226,10 +1241,16 @@ namespace OpenEphys.Onix1.Design
                 {
                     Sequence = sequence;
                     dataGridViewStimulusTable.DataSource = Sequence.Stimuli;
+
+                    if (!Sequence.Valid)
+                    {
+                        MessageBox.Show("Warning: Invalid stimuli found in the recently opened file. Check all values to ensure they are what is expected.",
+                            "Invalid Stimuli", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
                 else
                 {
-                    MessageBox.Show("Incoming sequence is not valid. Check file for validity.");
+                    MessageBox.Show("Incoming file is not valid. Check file for validity.");
                 }
 
                 DrawStimulusWaveform();
