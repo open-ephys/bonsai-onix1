@@ -1043,7 +1043,7 @@ namespace OpenEphys.Onix1.Design
                 MessageBox.Show("Warning: Amplitude cannot be a negative value.", InvalidAmplitudeString);
                 return false;
             }
-            else if (amplitude < MinAmplitudeuA && amplitude > 0)
+            else if (amplitude < MinAmplitudeuA && amplitude >= 0)
             {
                 MessageBox.Show($"Amplitude is too small to be resolved. Amplitude must be greater than or equal to {MinAmplitudeuA} µA.", InvalidAmplitudeString);
                 return false;
