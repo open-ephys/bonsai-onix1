@@ -192,9 +192,9 @@
             this.groupBoxCathode.Controls.Add(this.textboxPulseWidthCathodic);
             this.groupBoxCathode.Controls.Add(this.textboxAmplitudeCathodic);
             this.groupBoxCathode.Location = new System.Drawing.Point(231, 94);
-            this.groupBoxCathode.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.groupBoxCathode.Margin = new System.Windows.Forms.Padding(4);
             this.groupBoxCathode.Name = "groupBoxCathode";
-            this.groupBoxCathode.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.groupBoxCathode.Padding = new System.Windows.Forms.Padding(4);
             this.groupBoxCathode.Size = new System.Drawing.Size(195, 69);
             this.groupBoxCathode.TabIndex = 3;
             this.groupBoxCathode.TabStop = false;
@@ -236,7 +236,6 @@
             this.textboxAmplitudeCathodic.Name = "textboxAmplitudeCathodic";
             this.textboxAmplitudeCathodic.Size = new System.Drawing.Size(55, 22);
             this.textboxAmplitudeCathodic.TabIndex = 5;
-            this.textboxAmplitudeCathodic.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress_Amplitude);
             this.textboxAmplitudeCathodic.Leave += new System.EventHandler(this.Amplitude_TextChanged);
             // 
             // groupBoxAnode
@@ -246,9 +245,9 @@
             this.groupBoxAnode.Controls.Add(this.textboxPulseWidthAnodic);
             this.groupBoxAnode.Controls.Add(this.textboxAmplitudeAnodic);
             this.groupBoxAnode.Location = new System.Drawing.Point(13, 94);
-            this.groupBoxAnode.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.groupBoxAnode.Margin = new System.Windows.Forms.Padding(4);
             this.groupBoxAnode.Name = "groupBoxAnode";
-            this.groupBoxAnode.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.groupBoxAnode.Padding = new System.Windows.Forms.Padding(4);
             this.groupBoxAnode.Size = new System.Drawing.Size(195, 69);
             this.groupBoxAnode.TabIndex = 2;
             this.groupBoxAnode.TabStop = false;
@@ -289,7 +288,6 @@
             this.textboxAmplitudeAnodic.Name = "textboxAmplitudeAnodic";
             this.textboxAmplitudeAnodic.Size = new System.Drawing.Size(55, 22);
             this.textboxAmplitudeAnodic.TabIndex = 3;
-            this.textboxAmplitudeAnodic.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress_Amplitude);
             this.textboxAmplitudeAnodic.Leave += new System.EventHandler(this.Amplitude_TextChanged);
             // 
             // buttonClearPulses
@@ -501,7 +499,7 @@
             this.tabPageTable.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tabPageTable.Name = "tabPageTable";
             this.tabPageTable.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPageTable.Size = new System.Drawing.Size(1083, 644);
+            this.tabPageTable.Size = new System.Drawing.Size(1082, 646);
             this.tabPageTable.TabIndex = 1;
             this.tabPageTable.Text = "Table";
             this.tabPageTable.UseVisualStyleBackColor = true;
@@ -519,7 +517,7 @@
             this.dataGridViewStimulusTable.Name = "dataGridViewStimulusTable";
             this.dataGridViewStimulusTable.RowHeadersWidth = 62;
             this.dataGridViewStimulusTable.RowTemplate.Height = 28;
-            this.dataGridViewStimulusTable.Size = new System.Drawing.Size(1077, 640);
+            this.dataGridViewStimulusTable.Size = new System.Drawing.Size(1076, 642);
             this.dataGridViewStimulusTable.TabIndex = 0;
             this.dataGridViewStimulusTable.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridViewStimulusTable_CellEndEdit);
             this.dataGridViewStimulusTable.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.DataGridViewStimulusTable_DataBindingComplete);
