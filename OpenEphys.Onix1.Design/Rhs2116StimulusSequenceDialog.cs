@@ -266,7 +266,7 @@ namespace OpenEphys.Onix1.Design
                         var pulseCurve = zedGraphWaveform.GraphPane.AddCurve("", pulse, Color.Red, SymbolType.None);
 
                         pulseCurve.Label.IsVisible = false;
-                        pulseCurve.Line.Width = 3;
+                        pulseCurve.Line.Width = 4;
                     }
 
                     PointPairList pointPairs = CreateStimulusWaveform(stimuli[i], channelOffset, peakToPeak);
@@ -276,7 +276,7 @@ namespace OpenEphys.Onix1.Design
                     var waveformCurve = zedGraphWaveform.GraphPane.AddCurve("", pointPairs, color, SymbolType.None);
 
                     waveformCurve.Label.IsVisible = false;
-                    waveformCurve.Line.Width = 3;
+                    waveformCurve.Line.Width = 2;
 
                     maxLength = pointPairs.Last().X > maxLength ? pointPairs.Last().X : maxLength;
                 }
@@ -383,14 +383,14 @@ namespace OpenEphys.Onix1.Design
 
                 points.AddRange(CreatePulse(points[points.Count - 1].X, amplitude, width, yOffset));
 
-                points.Add(points[points.Count - 1].X + stimulus.DwellSamples * SamplePeriodMilliSeconds, yOffset);
+                points.Add(points.Last().X + stimulus.DwellSamples * SamplePeriodMilliSeconds, yOffset);
 
                 amplitude = CalculateSecondPulseAmplitude(stimulus.AnodicFirst, stimulus.AnodicAmplitudeSteps, stimulus.CathodicAmplitudeSteps, peakToPeak, yOffset);
                 width = CalculateSecondPulseWidth(stimulus.AnodicFirst, stimulus.AnodicWidthSamples, stimulus.CathodicWidthSamples);
 
                 points.AddRange(CreatePulse(points[points.Count - 1].X, amplitude, width, yOffset));
 
-                points.Add(points[points.Count - 1].X + stimulus.InterStimulusIntervalSamples * SamplePeriodMilliSeconds, yOffset);
+                points.Add(points.Last().X + stimulus.InterStimulusIntervalSamples * SamplePeriodMilliSeconds, yOffset);
             }
 
             points.Add(Sequence.SequenceLengthSamples * SamplePeriodMilliSeconds, yOffset);
@@ -418,7 +418,7 @@ namespace OpenEphys.Onix1.Design
                 if (i == 0)
                     pulse.Add(stimulus.DelaySamples * SamplePeriodMilliSeconds, yOffset);
                 else
-                    pulse.Add(pulses[pulses.Count - 1][0].X + stimulus.InterStimulusIntervalSamples * SamplePeriodMilliSeconds, yOffset);
+                    pulse.Add(pulses.Last().Last().X + stimulus.InterStimulusIntervalSamples * SamplePeriodMilliSeconds, yOffset);
 
                 double amplitude = CalculateFirstPulseAmplitude(stimulus.AnodicFirst, stimulus.AnodicAmplitudeSteps, stimulus.CathodicAmplitudeSteps, peakToPeak, yOffset);
                 double width = CalculateFirstPulseWidth(stimulus.AnodicFirst, stimulus.AnodicWidthSamples, stimulus.CathodicWidthSamples);
