@@ -684,67 +684,45 @@ namespace OpenEphys.Onix1.Design
             {
                 if (ChannelDialog.SelectedContacts[i])
                 {
-                    if (textboxDelay.Tag == null)
+                    if (textboxDelay.Tag != null)
                     {
-                        MessageBox.Show("Unable to parse delay.");
-                        return;
+                        Sequence.Stimuli[i].DelaySamples = (uint)textboxDelay.Tag;
                     }
 
-                    if (textboxAmplitudeAnodic.Tag == null)
+                    if (textboxAmplitudeAnodic.Tag != null)
                     {
-                        MessageBox.Show("Unable to parse anodic amplitude.");
-                        return;
+                        Sequence.Stimuli[i].AnodicAmplitudeSteps = (byte)textboxAmplitudeAnodic.Tag;
                     }
 
-                    if (textboxPulseWidthAnodic.Tag == null)
+                    if (textboxPulseWidthAnodic.Tag != null)
                     {
-                        MessageBox.Show("Unable to parse anodic pulse width.");
-                        return;
+                        Sequence.Stimuli[i].AnodicWidthSamples = (uint)textboxPulseWidthAnodic.Tag;
                     }
 
-                    if (textboxInterPulseInterval.Tag == null)
+                    if (textboxInterPulseInterval.Tag != null)
                     {
-                        MessageBox.Show("Unable to parse inter-pulse interval.");
-                        return;
+                        Sequence.Stimuli[i].DwellSamples = (uint)textboxInterPulseInterval.Tag;
                     }
 
-                    if (textboxAmplitudeCathodic.Tag == null)
+                    if (textboxAmplitudeCathodic.Tag != null)
                     {
-                        MessageBox.Show("Unable to parse cathodic amplitude.");
-                        return;
+                        Sequence.Stimuli[i].CathodicAmplitudeSteps = (byte)textboxAmplitudeCathodic.Tag;
                     }
 
-                    if (textboxPulseWidthCathodic.Tag == null)
+                    if (textboxPulseWidthCathodic.Tag != null)
                     {
-                        MessageBox.Show("Unable to parse cathodic pulse width.");
-                        return;
+                        Sequence.Stimuli[i].CathodicWidthSamples = (uint)textboxPulseWidthCathodic.Tag;
                     }
 
-                    if (textboxInterStimulusInterval.Tag == null)
+                    if (textboxInterStimulusInterval.Tag != null)
                     {
-                        MessageBox.Show("Unable to parse inter-stimulus interval.");
-                        return;
+                        Sequence.Stimuli[i].InterStimulusIntervalSamples = (uint)textboxInterStimulusInterval.Tag;
                     }
 
-                    if (!uint.TryParse(textboxNumberOfStimuli.Text, out uint numberOfStimuliValue))
+                    if (uint.TryParse(textboxNumberOfStimuli.Text, out uint numberOfStimuliValue))
                     {
-                        MessageBox.Show("Unable to parse number of stimuli.");
-                        return;
+                        Sequence.Stimuli[i].NumberOfStimuli = numberOfStimuliValue;
                     }
-
-                    Sequence.Stimuli[i].DelaySamples = (uint)textboxDelay.Tag;
-
-                    Sequence.Stimuli[i].AnodicAmplitudeSteps = (byte)textboxAmplitudeAnodic.Tag;
-                    Sequence.Stimuli[i].AnodicWidthSamples = (uint)textboxPulseWidthAnodic.Tag;
-
-                    Sequence.Stimuli[i].CathodicAmplitudeSteps = (byte)textboxAmplitudeCathodic.Tag;
-                    Sequence.Stimuli[i].CathodicWidthSamples = (uint)textboxPulseWidthCathodic.Tag;
-
-                    Sequence.Stimuli[i].DwellSamples = (uint)textboxInterPulseInterval.Tag;
-
-                    Sequence.Stimuli[i].InterStimulusIntervalSamples = (uint)textboxInterStimulusInterval.Tag;
-
-                    Sequence.Stimuli[i].NumberOfStimuli = numberOfStimuliValue;
 
                     Sequence.Stimuli[i].AnodicFirst = checkBoxAnodicFirst.Checked;
                 }
@@ -853,6 +831,18 @@ namespace OpenEphys.Onix1.Design
             else if (textBox.Text == "")
             {
                 textBox.Tag = null;
+
+                if (textBox.Name == nameof(textboxPulseWidthAnodic) && checkboxBiphasicSymmetrical.Checked)
+                {
+                    textboxPulseWidthCathodic.Text = "";
+                    textboxPulseWidthCathodic.Tag = null;
+                }
+                else if (textBox.Name == nameof(textboxPulseWidthCathodic) && checkboxBiphasicSymmetrical.Checked)
+                {
+                    textboxPulseWidthAnodic.Text = "";
+                    textboxPulseWidthAnodic.Tag = null;
+                }
+
                 return;
             }
 
@@ -944,6 +934,21 @@ namespace OpenEphys.Onix1.Design
             if (textBox.Text == "")
             {
                 textBox.Tag = null;
+
+                if (checkboxBiphasicSymmetrical.Checked)
+                {
+                    if (textBox.Name == nameof(textboxAmplitudeAnodic))
+                    {
+                        textboxAmplitudeCathodic.Text = "";
+                        textboxAmplitudeCathodic.Tag = null;
+                    }
+                    else if (textBox.Name == nameof(textboxAmplitudeCathodic))
+                    {
+                        textboxAmplitudeAnodic.Text = "";
+                        textboxAmplitudeAnodic.Tag = null;
+                    }
+                }
+
                 return;
             }
 
@@ -979,47 +984,6 @@ namespace OpenEphys.Onix1.Design
                 {
                     textboxAmplitudeAnodic.Text = textBox.Text;
                     textboxAmplitudeAnodic.Tag = textBox.Tag;
-                }
-            }
-            else
-            {
-                if (textBox.Name == nameof(textboxAmplitudeAnodic) && double.TryParse(textboxAmplitudeCathodic.Text, out var cathodicAmplitude))
-                {
-                    if (!GetSampleFromAmplitude(cathodicAmplitude, out var samples) || samples == 0)
-                    {
-                        MessageBox.Show("Invalid amplitude chosen for the anodic pulse. The step-size required " +
-                            "for this amplitude is incompatible with the step-size required for the cathodic pulse.", "Invalid Anodic Amplitude");
-                        textBox.Text = "";
-                        textBox.Tag = null;
-
-                        textboxAmplitudeCathodic.Text = "";
-                        textboxAmplitudeCathodic.Tag = null;
-                        return;
-                    }
-                    else
-                    {
-                        textboxAmplitudeCathodic.Text = GetAmplitudeString(samples);
-                        textboxAmplitudeCathodic.Tag = samples;
-                    }
-                }
-                else if (textBox.Name == nameof(textboxAmplitudeCathodic) && double.TryParse(textboxAmplitudeAnodic.Text, out var anodicAmplitude))
-                {
-                    if (!GetSampleFromAmplitude(anodicAmplitude, out var samples) || samples == 0)
-                    {
-                        MessageBox.Show("Invalid amplitude chosen for the cathodic pulse. The step-size required " +
-                            "for this amplitude is incompatible with the step-size required for the anodic pulse.", "Invalid Cathodic Amplitude");
-                        textBox.Text = "";
-                        textBox.Tag = null;
-
-                        textboxAmplitudeAnodic.Text = "";
-                        textboxAmplitudeAnodic.Tag = null;
-                        return;
-                    }
-                    else
-                    {
-                        textboxAmplitudeAnodic.Text = GetAmplitudeString(samples);
-                        textboxAmplitudeAnodic.Tag = samples;
-                    }
                 }
             }
         }
@@ -1087,11 +1051,23 @@ namespace OpenEphys.Onix1.Design
                 {
                     groupBoxCathode.Visible = false;
                     groupBoxAnode.Visible = true;
+
+                    textboxPulseWidthCathodic.Text = textboxPulseWidthAnodic.Text;
+                    textboxPulseWidthCathodic.Tag = textboxPulseWidthAnodic.Tag;
+
+                    textboxAmplitudeCathodic.Text = textboxAmplitudeAnodic.Text;
+                    textboxAmplitudeCathodic.Tag = textboxAmplitudeAnodic.Tag;
                 }
                 else
                 {
                     groupBoxCathode.Visible = true;
                     groupBoxAnode.Visible = false;
+
+                    textboxPulseWidthAnodic.Text = textboxPulseWidthCathodic.Text;
+                    textboxPulseWidthAnodic.Tag = textboxPulseWidthCathodic.Tag;
+
+                    textboxAmplitudeAnodic.Text = textboxAmplitudeCathodic.Text;
+                    textboxAmplitudeAnodic.Tag = textboxAmplitudeCathodic.Tag;
                 }
             }
             else
