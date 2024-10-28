@@ -3,7 +3,7 @@
 Acquisition System](https://open-ephys.github.io/onix-docs).
 
 - Open Ephys store: https://open-ephys.org/onix
-- Library documentation: https://open-ephys.github.io/onix1-bonsai-docs
+- Library documentation: https://open-ephys.github.io/bonsai-onix1-docs
 - Hardware documentation: https://open-ephys.github.io/onix-docs
 
 ### Run in visual studio
