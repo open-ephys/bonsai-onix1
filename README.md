@@ -18,4 +18,17 @@ Acquisition System](https://open-ephys.github.io/onix-docs).
    - Run the Bonsai application installed in step 1
    - Instruct Bonsai to load the compiled library
 
-<img alt="Select which library to compile" src="./.bonsai/build-and-run.png" width="60%" />
+<img alt="Select which library to compile" src="./images/build-and-run.png" width="60%" />
+
+### Enable breakpoints
+
+1. Enable child process debugging
+   -  Navigate to child process debugging settings
+      ![Navigate to child process menu](./images/enable-child-process-navigation.png)
+   -  Confirm the following option is checked: 
+      ![Enable child process](./images/enable-child-process-checkbox.png)
+1. Enable mixed debugging
+   -  Navigate to debug properties
+      ![Navigate to debug properties](./images/enable-native-code-debugging-navigation.png)
+   -  Confirm the following option is checked: 
+      ![Enable native code debugging](./images/enable-native-code-debugging-checkbox.png)
