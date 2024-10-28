@@ -22,22 +22,17 @@ Acquisition System](https://open-ephys.github.io/onix-docs).
 
 ### Enable debugging
 
-1. Download and install [Microsoft Child Process Debugging Power Tool 2022](https://marketplace.visualstudio.com/items?itemName=vsdbgplat.MicrosoftChildProcessDebuggingPowerTool2022), or find the version of the power tool for the version of Visual Studio used
-1. Enable child process debugging
-   -  Navigate to child process debugging settings
+- Enable child process debugging
+   1. Download and install [Microsoft Child Process Debugging Power Tool 2022](https://marketplace.visualstudio.com/items?itemName=vsdbgplat.MicrosoftChildProcessDebuggingPowerTool2022), or find the version of the power tool for the version of Visual Studio used
+   1. Navigate to child process debugging settings
+   1. Check `Enable child process debugging`
+   1. Click <kbd>Save</kbd>
 
-      ![Navigate to child process menu](./images/enable-child-process-navigation.png)
+   ![Child process debugging](./images/child-process-debugging.webp)
 
-   -  Confirm `Enable child process debugging` is checked, then press <kbd>Save</kbd>: 
+- Enable native code debugging
+   1.  Navigate to debug properties
+   1.  Check `Enabled native code debugging`
 
-      ![Child process debug settings](./images/child-process-debug-settings.png)
-
-1. Enable native code debugging
-   -  Navigate to debug properties
-
-      ![Navigate to debug properties](./images/enable-native-code-debugging-navigation.png)
-
-   -  Confirm the `Enabled native code debugging` option is checked: 
-
-      ![Enable native code debugging](./images/native-code-debugging.png)
+   ![Enable native code debugging](./images/native-code-debugging.webp)
 
