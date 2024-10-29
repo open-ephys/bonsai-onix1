@@ -32,7 +32,7 @@ Enable child process debugging
 
 Enable native code debugging
 1.  Navigate to debug properties
-1.  Check `Enabled native code debugging`
+1.  Check `Enable native code debugging`
 
 ![Enable native code debugging](./images/native-code-debugging.webp)
 
