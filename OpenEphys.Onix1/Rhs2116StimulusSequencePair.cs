@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Xml.Serialization;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("OpenEphys.Onix1.Design")]
 
 namespace OpenEphys.Onix1
 {
@@ -9,8 +12,8 @@ namespace OpenEphys.Onix1
     /// </summary>
     public class Rhs2116StimulusSequencePair
     {
-        internal readonly Rhs2116StimulusSequence StimulusSequenceA;
-        internal readonly Rhs2116StimulusSequence StimulusSequenceB;
+        internal Rhs2116StimulusSequence StimulusSequenceA { get; }
+        internal Rhs2116StimulusSequence StimulusSequenceB { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Rhs2116StimulusSequencePair"/> class with 16 default
@@ -34,6 +37,18 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="Rhs2116StimulusSequencePair"/> by performing a
+        /// shallow copy of the reference sequences.
+        /// </summary>
+        /// <param name="stimulusSequenceA">Existing <see cref="Rhs2116StimulusSequence"/> for sequence A.</param>
+        /// <param name="stimulusSequenceB">Existing <see cref="Rhs2116StimulusSequence"/> for sequence B.</param>
+        public Rhs2116StimulusSequencePair(Rhs2116StimulusSequence stimulusSequenceA, Rhs2116StimulusSequence stimulusSequenceB)
+        {
+            StimulusSequenceA = new Rhs2116StimulusSequence(stimulusSequenceA);
+            StimulusSequenceB = new Rhs2116StimulusSequence(stimulusSequenceB);
+        }
+
+        /// <summary>
         /// Gets or sets the <see cref="Rhs2116Stimulus"/> array of stimuli.
         /// </summary>
         public Rhs2116Stimulus[] Stimuli
@@ -43,6 +58,34 @@ namespace OpenEphys.Onix1
             {
                 StimulusSequenceA.Stimuli = value.Take(16).ToArray();
                 StimulusSequenceB.Stimuli = value.Skip(16).Take(16).ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Updates the stimulus at the given index.
+        /// </summary>
+        /// <remarks>
+        /// This is necessary to change the values of individual stimuli, since the implementation for getting <see cref="Stimuli"/> does not 
+        /// allow for the underlying <see cref="Rhs2116StimulusSequence.Stimuli"/> to be updated.
+        /// </remarks>
+        /// <param name="stimulus">Current <see cref="Rhs2116Stimulus"/> to copy.</param>
+        /// <param name="index">Zero-indexed value of the channel to update.</param>
+        /// <exception cref="IndexOutOfRangeException">Index must be between 0 and the sum of the number of elements in
+        /// <see cref="StimulusSequenceA"/> and <see cref="StimulusSequenceB"/>.</exception>
+        internal void UpdateStimulus(Rhs2116Stimulus stimulus, int index)
+        {
+            if (index >= Stimuli.Length || index < 0)
+            {
+                throw new IndexOutOfRangeException("Index is outside of the range of stimuli. Must be less than " + Stimuli.Length.ToString() + ", and greater than zero.");
+            }
+
+            if (index < StimulusSequenceA.Stimuli.Length)
+            {
+                StimulusSequenceA.Stimuli[index] = stimulus.Clone();
+            }
+            else
+            {
+                StimulusSequenceB.Stimuli[index - StimulusSequenceA.Stimuli.Length] = stimulus.Clone();
             }
         }
 
@@ -99,5 +142,14 @@ namespace OpenEphys.Onix1
         /// </summary>
         [XmlIgnore]
         public double CurrentStepSizeuA => StimulusSequenceA.CurrentStepSizeuA;
+
+        /// <summary>
+        /// Gets the maximum peak-to-peak amplitude across all stimuli.
+        /// </summary>
+        /// <returns>Double containing the maximum peak-to-peak amplitude in µA.</returns>
+        public double GetMaxPeakToPeakAmplitudeuA()
+        {
+            return Math.Max(StimulusSequenceA.GetMaxPeakToPeakAmplitudeuA(), StimulusSequenceB.GetMaxPeakToPeakAmplitudeuA());
+        }
     }
 }

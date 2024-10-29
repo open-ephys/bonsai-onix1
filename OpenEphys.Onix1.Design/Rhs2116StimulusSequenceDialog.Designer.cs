@@ -41,12 +41,12 @@
             this.labelAmplitudeCathodic = new System.Windows.Forms.Label();
             this.labelPulseWidthCathodic = new System.Windows.Forms.Label();
             this.textboxPulseWidthCathodic = new System.Windows.Forms.TextBox();
-            this.textboxAmplitudeCathodic = new System.Windows.Forms.TextBox();
+            this.textboxAmplitudeCathodicRequested = new System.Windows.Forms.TextBox();
             this.groupBoxAnode = new System.Windows.Forms.GroupBox();
             this.labelAmplitudeAnodic = new System.Windows.Forms.Label();
             this.labelPulseWidthAnodic = new System.Windows.Forms.Label();
             this.textboxPulseWidthAnodic = new System.Windows.Forms.TextBox();
-            this.textboxAmplitudeAnodic = new System.Windows.Forms.TextBox();
+            this.textboxAmplitudeAnodicRequested = new System.Windows.Forms.TextBox();
             this.buttonClearPulses = new System.Windows.Forms.Button();
             this.buttonReadPulses = new System.Windows.Forms.Button();
             this.textboxInterPulseInterval = new System.Windows.Forms.TextBox();
@@ -76,6 +76,8 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.textboxAmplitudeAnodic = new System.Windows.Forms.TextBox();
+            this.textboxAmplitudeCathodic = new System.Windows.Forms.TextBox();
             this.statusStrip.SuspendLayout();
             this.panelParameters.SuspendLayout();
             this.groupBoxCathode.SuspendLayout();
@@ -171,7 +173,7 @@
             this.panelParameters.Location = new System.Drawing.Point(3, 17);
             this.panelParameters.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panelParameters.Name = "panelParameters";
-            this.panelParameters.Size = new System.Drawing.Size(439, 251);
+            this.panelParameters.Size = new System.Drawing.Size(439, 285);
             this.panelParameters.TabIndex = 0;
             // 
             // textBoxStepSize
@@ -187,15 +189,16 @@
             // 
             // groupBoxCathode
             // 
+            this.groupBoxCathode.Controls.Add(this.textboxAmplitudeCathodic);
             this.groupBoxCathode.Controls.Add(this.labelAmplitudeCathodic);
             this.groupBoxCathode.Controls.Add(this.labelPulseWidthCathodic);
             this.groupBoxCathode.Controls.Add(this.textboxPulseWidthCathodic);
-            this.groupBoxCathode.Controls.Add(this.textboxAmplitudeCathodic);
+            this.groupBoxCathode.Controls.Add(this.textboxAmplitudeCathodicRequested);
             this.groupBoxCathode.Location = new System.Drawing.Point(231, 94);
             this.groupBoxCathode.Margin = new System.Windows.Forms.Padding(4);
             this.groupBoxCathode.Name = "groupBoxCathode";
             this.groupBoxCathode.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBoxCathode.Size = new System.Drawing.Size(195, 69);
+            this.groupBoxCathode.Size = new System.Drawing.Size(195, 101);
             this.groupBoxCathode.TabIndex = 3;
             this.groupBoxCathode.TabStop = false;
             this.groupBoxCathode.Text = "Cathode";
@@ -213,7 +216,7 @@
             // labelPulseWidthCathodic
             // 
             this.labelPulseWidthCathodic.AutoSize = true;
-            this.labelPulseWidthCathodic.Location = new System.Drawing.Point(11, 44);
+            this.labelPulseWidthCathodic.Location = new System.Drawing.Point(11, 73);
             this.labelPulseWidthCathodic.Name = "labelPulseWidthCathodic";
             this.labelPulseWidthCathodic.Size = new System.Drawing.Size(107, 16);
             this.labelPulseWidthCathodic.TabIndex = 24;
@@ -221,7 +224,7 @@
             // 
             // textboxPulseWidthCathodic
             // 
-            this.textboxPulseWidthCathodic.Location = new System.Drawing.Point(132, 39);
+            this.textboxPulseWidthCathodic.Location = new System.Drawing.Point(132, 68);
             this.textboxPulseWidthCathodic.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textboxPulseWidthCathodic.Name = "textboxPulseWidthCathodic";
             this.textboxPulseWidthCathodic.Size = new System.Drawing.Size(55, 22);
@@ -229,26 +232,27 @@
             this.textboxPulseWidthCathodic.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress_Time);
             this.textboxPulseWidthCathodic.Leave += new System.EventHandler(this.Samples_TextChanged);
             // 
-            // textboxAmplitudeCathodic
+            // textboxAmplitudeCathodicRequested
             // 
-            this.textboxAmplitudeCathodic.Location = new System.Drawing.Point(132, 14);
-            this.textboxAmplitudeCathodic.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.textboxAmplitudeCathodic.Name = "textboxAmplitudeCathodic";
-            this.textboxAmplitudeCathodic.Size = new System.Drawing.Size(55, 22);
-            this.textboxAmplitudeCathodic.TabIndex = 5;
-            this.textboxAmplitudeCathodic.Leave += new System.EventHandler(this.Amplitude_TextChanged);
+            this.textboxAmplitudeCathodicRequested.Location = new System.Drawing.Point(132, 14);
+            this.textboxAmplitudeCathodicRequested.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.textboxAmplitudeCathodicRequested.Name = "textboxAmplitudeCathodicRequested";
+            this.textboxAmplitudeCathodicRequested.Size = new System.Drawing.Size(55, 22);
+            this.textboxAmplitudeCathodicRequested.TabIndex = 5;
+            this.textboxAmplitudeCathodicRequested.Leave += new System.EventHandler(this.Amplitude_TextChanged);
             // 
             // groupBoxAnode
             // 
+            this.groupBoxAnode.Controls.Add(this.textboxAmplitudeAnodic);
             this.groupBoxAnode.Controls.Add(this.labelAmplitudeAnodic);
             this.groupBoxAnode.Controls.Add(this.labelPulseWidthAnodic);
             this.groupBoxAnode.Controls.Add(this.textboxPulseWidthAnodic);
-            this.groupBoxAnode.Controls.Add(this.textboxAmplitudeAnodic);
+            this.groupBoxAnode.Controls.Add(this.textboxAmplitudeAnodicRequested);
             this.groupBoxAnode.Location = new System.Drawing.Point(13, 94);
             this.groupBoxAnode.Margin = new System.Windows.Forms.Padding(4);
             this.groupBoxAnode.Name = "groupBoxAnode";
             this.groupBoxAnode.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBoxAnode.Size = new System.Drawing.Size(195, 69);
+            this.groupBoxAnode.Size = new System.Drawing.Size(195, 101);
             this.groupBoxAnode.TabIndex = 2;
             this.groupBoxAnode.TabStop = false;
             this.groupBoxAnode.Text = "Anode";
@@ -265,7 +269,7 @@
             // labelPulseWidthAnodic
             // 
             this.labelPulseWidthAnodic.AutoSize = true;
-            this.labelPulseWidthAnodic.Location = new System.Drawing.Point(8, 44);
+            this.labelPulseWidthAnodic.Location = new System.Drawing.Point(8, 73);
             this.labelPulseWidthAnodic.Name = "labelPulseWidthAnodic";
             this.labelPulseWidthAnodic.Size = new System.Drawing.Size(107, 16);
             this.labelPulseWidthAnodic.TabIndex = 7;
@@ -273,7 +277,7 @@
             // 
             // textboxPulseWidthAnodic
             // 
-            this.textboxPulseWidthAnodic.Location = new System.Drawing.Point(129, 39);
+            this.textboxPulseWidthAnodic.Location = new System.Drawing.Point(129, 68);
             this.textboxPulseWidthAnodic.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textboxPulseWidthAnodic.Name = "textboxPulseWidthAnodic";
             this.textboxPulseWidthAnodic.Size = new System.Drawing.Size(55, 22);
@@ -281,19 +285,19 @@
             this.textboxPulseWidthAnodic.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ParameterKeyPress_Time);
             this.textboxPulseWidthAnodic.Leave += new System.EventHandler(this.Samples_TextChanged);
             // 
-            // textboxAmplitudeAnodic
+            // textboxAmplitudeAnodicRequested
             // 
-            this.textboxAmplitudeAnodic.Location = new System.Drawing.Point(129, 14);
-            this.textboxAmplitudeAnodic.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.textboxAmplitudeAnodic.Name = "textboxAmplitudeAnodic";
-            this.textboxAmplitudeAnodic.Size = new System.Drawing.Size(55, 22);
-            this.textboxAmplitudeAnodic.TabIndex = 3;
-            this.textboxAmplitudeAnodic.Leave += new System.EventHandler(this.Amplitude_TextChanged);
+            this.textboxAmplitudeAnodicRequested.Location = new System.Drawing.Point(129, 14);
+            this.textboxAmplitudeAnodicRequested.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.textboxAmplitudeAnodicRequested.Name = "textboxAmplitudeAnodicRequested";
+            this.textboxAmplitudeAnodicRequested.Size = new System.Drawing.Size(55, 22);
+            this.textboxAmplitudeAnodicRequested.TabIndex = 3;
+            this.textboxAmplitudeAnodicRequested.Leave += new System.EventHandler(this.Amplitude_TextChanged);
             // 
             // buttonClearPulses
             // 
             this.buttonClearPulses.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
-            this.buttonClearPulses.Location = new System.Drawing.Point(19, 206);
+            this.buttonClearPulses.Location = new System.Drawing.Point(19, 238);
             this.buttonClearPulses.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonClearPulses.Name = "buttonClearPulses";
             this.buttonClearPulses.Size = new System.Drawing.Size(99, 34);
@@ -308,7 +312,7 @@
             // buttonReadPulses
             // 
             this.buttonReadPulses.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
-            this.buttonReadPulses.Location = new System.Drawing.Point(123, 206);
+            this.buttonReadPulses.Location = new System.Drawing.Point(123, 238);
             this.buttonReadPulses.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonReadPulses.Name = "buttonReadPulses";
             this.buttonReadPulses.Size = new System.Drawing.Size(100, 34);
@@ -368,7 +372,7 @@
             // buttonAddPulses
             // 
             this.buttonAddPulses.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
-            this.buttonAddPulses.Location = new System.Drawing.Point(318, 206);
+            this.buttonAddPulses.Location = new System.Drawing.Point(318, 238);
             this.buttonAddPulses.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonAddPulses.Name = "buttonAddPulses";
             this.buttonAddPulses.Size = new System.Drawing.Size(100, 34);
@@ -392,7 +396,7 @@
             // labelNumberOfPulses
             // 
             this.labelNumberOfPulses.AutoSize = true;
-            this.labelNumberOfPulses.Location = new System.Drawing.Point(237, 174);
+            this.labelNumberOfPulses.Location = new System.Drawing.Point(237, 206);
             this.labelNumberOfPulses.Name = "labelNumberOfPulses";
             this.labelNumberOfPulses.Size = new System.Drawing.Size(113, 16);
             this.labelNumberOfPulses.TabIndex = 13;
@@ -409,7 +413,7 @@
             // 
             // textboxNumberOfStimuli
             // 
-            this.textboxNumberOfStimuli.Location = new System.Drawing.Point(363, 170);
+            this.textboxNumberOfStimuli.Location = new System.Drawing.Point(363, 202);
             this.textboxNumberOfStimuli.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textboxNumberOfStimuli.Name = "textboxNumberOfStimuli";
             this.textboxNumberOfStimuli.Size = new System.Drawing.Size(55, 22);
@@ -433,7 +437,7 @@
             // 
             // textboxInterStimulusInterval
             // 
-            this.textboxInterStimulusInterval.Location = new System.Drawing.Point(143, 169);
+            this.textboxInterStimulusInterval.Location = new System.Drawing.Point(143, 201);
             this.textboxInterStimulusInterval.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textboxInterStimulusInterval.Name = "textboxInterStimulusInterval";
             this.textboxInterStimulusInterval.Size = new System.Drawing.Size(55, 22);
@@ -444,7 +448,7 @@
             // labelInterStimulusInterval
             // 
             this.labelInterStimulusInterval.AutoSize = true;
-            this.labelInterStimulusInterval.Location = new System.Drawing.Point(15, 172);
+            this.labelInterStimulusInterval.Location = new System.Drawing.Point(15, 204);
             this.labelInterStimulusInterval.Name = "labelInterStimulusInterval";
             this.labelInterStimulusInterval.Size = new System.Drawing.Size(115, 16);
             this.labelInterStimulusInterval.TabIndex = 9;
@@ -499,7 +503,7 @@
             this.tabPageTable.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tabPageTable.Name = "tabPageTable";
             this.tabPageTable.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPageTable.Size = new System.Drawing.Size(1082, 646);
+            this.tabPageTable.Size = new System.Drawing.Size(1082, 644);
             this.tabPageTable.TabIndex = 1;
             this.tabPageTable.Text = "Table";
             this.tabPageTable.UseVisualStyleBackColor = true;
@@ -517,7 +521,7 @@
             this.dataGridViewStimulusTable.Name = "dataGridViewStimulusTable";
             this.dataGridViewStimulusTable.RowHeadersWidth = 62;
             this.dataGridViewStimulusTable.RowTemplate.Height = 28;
-            this.dataGridViewStimulusTable.Size = new System.Drawing.Size(1076, 642);
+            this.dataGridViewStimulusTable.Size = new System.Drawing.Size(1076, 640);
             this.dataGridViewStimulusTable.TabIndex = 0;
             this.dataGridViewStimulusTable.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridViewStimulusTable_CellEndEdit);
             this.dataGridViewStimulusTable.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.DataGridViewStimulusTable_DataBindingComplete);
@@ -529,7 +533,7 @@
             this.panelProbe.Location = new System.Drawing.Point(1099, 2);
             this.panelProbe.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panelProbe.Name = "panelProbe";
-            this.panelProbe.Size = new System.Drawing.Size(445, 401);
+            this.panelProbe.Size = new System.Drawing.Size(445, 367);
             this.panelProbe.TabIndex = 0;
             // 
             // menuStrip
@@ -590,7 +594,7 @@
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 3;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 274F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 308F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 42F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(1547, 721);
             this.tableLayoutPanel1.TabIndex = 8;
@@ -599,11 +603,11 @@
             // 
             this.groupBox1.Controls.Add(this.panelParameters);
             this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.groupBox1.Location = new System.Drawing.Point(1099, 407);
+            this.groupBox1.Location = new System.Drawing.Point(1099, 373);
             this.groupBox1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.groupBox1.Size = new System.Drawing.Size(445, 270);
+            this.groupBox1.Size = new System.Drawing.Size(445, 304);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Define Stimuli";
@@ -620,6 +624,24 @@
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(1541, 38);
             this.flowLayoutPanel1.TabIndex = 7;
+            // 
+            // textboxAmplitudeAnodic
+            // 
+            this.textboxAmplitudeAnodic.Location = new System.Drawing.Point(129, 39);
+            this.textboxAmplitudeAnodic.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.textboxAmplitudeAnodic.Name = "textboxAmplitudeAnodic";
+            this.textboxAmplitudeAnodic.ReadOnly = true;
+            this.textboxAmplitudeAnodic.Size = new System.Drawing.Size(55, 22);
+            this.textboxAmplitudeAnodic.TabIndex = 8;
+            // 
+            // textboxAmplitudeCathodic
+            // 
+            this.textboxAmplitudeCathodic.Location = new System.Drawing.Point(132, 39);
+            this.textboxAmplitudeCathodic.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.textboxAmplitudeCathodic.Name = "textboxAmplitudeCathodic";
+            this.textboxAmplitudeCathodic.ReadOnly = true;
+            this.textboxAmplitudeCathodic.Size = new System.Drawing.Size(55, 22);
+            this.textboxAmplitudeCathodic.TabIndex = 9;
             // 
             // Rhs2116StimulusSequenceDialog
             // 
@@ -668,7 +690,7 @@
         private System.Windows.Forms.Button buttonOk;
         private System.Windows.Forms.Label labelAmplitudeAnodic;
         private System.Windows.Forms.Label labelDelay;
-        private System.Windows.Forms.TextBox textboxAmplitudeAnodic;
+        private System.Windows.Forms.TextBox textboxAmplitudeAnodicRequested;
         private System.Windows.Forms.TextBox textboxDelay;
         private System.Windows.Forms.CheckBox checkboxBiphasicSymmetrical;
         private System.Windows.Forms.Button buttonAddPulses;
@@ -688,7 +710,7 @@
         private System.Windows.Forms.Label labelAmplitudeCathodic;
         private System.Windows.Forms.Label labelPulseWidthCathodic;
         private System.Windows.Forms.TextBox textboxPulseWidthCathodic;
-        private System.Windows.Forms.TextBox textboxAmplitudeCathodic;
+        private System.Windows.Forms.TextBox textboxAmplitudeCathodicRequested;
         private System.Windows.Forms.TextBox textboxInterPulseInterval;
         private System.Windows.Forms.Label labelInterPulseInterval;
         private System.Windows.Forms.Button buttonClearPulses;
@@ -707,5 +729,7 @@
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
         private System.Windows.Forms.TextBox textBoxStepSize;
         private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.TextBox textboxAmplitudeCathodic;
+        private System.Windows.Forms.TextBox textboxAmplitudeAnodic;
     }
 }

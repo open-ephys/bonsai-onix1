@@ -12,7 +12,14 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     public partial class Rhs2116StimulusSequenceDialog : Form
     {
+        const double SamplePeriodMilliSeconds = 1e3 / Rhs2116.SampleFrequencyHz;
+
         internal Rhs2116StimulusSequencePair Sequence { get; set; }
+
+        private readonly Rhs2116StimulusSequencePair SequenceCopy = new();
+
+        private readonly double[] RequestedAnodicAmplitudeuA;
+        private readonly double[] RequestedCathodicAmplitudeuA;
 
         /// <summary>
         /// Holds the step size that is displayed in the text box of the GUI. This is not the step size that is saved for the stimulus sequence object.
@@ -21,10 +28,8 @@ namespace OpenEphys.Onix1.Design
 
         internal readonly Rhs2116ChannelConfigurationDialog ChannelDialog;
 
-        private const double SamplePeriodMilliSeconds = 1e3 / 30.1932367151e3;
         const double MinAmplitudeuA = 0.01; // NB: Minimum possible amplitude is 10 nA (0.01 µA)
         const double MaxAmplitudeuA = 2550; // NB: Maximum possible amplitude is 2550000 nA (2550 µA)
-
 
         /// <summary>
         /// Opens a dialog allowing for easy changing of stimulus sequence parameters, with visual feedback on what the resulting stimulus sequence looks like.
@@ -37,6 +42,15 @@ namespace OpenEphys.Onix1.Design
             Shown += FormShown;
 
             Sequence = new Rhs2116StimulusSequencePair(sequence);
+            RequestedAnodicAmplitudeuA = new double[Sequence.Stimuli.Length];
+            RequestedCathodicAmplitudeuA = new double[Sequence.Stimuli.Length];
+
+            for (int i = 0; i < Sequence.Stimuli.Length; i++)
+            {
+                RequestedAnodicAmplitudeuA[i] = Sequence.Stimuli[i].AnodicAmplitudeSteps * Sequence.CurrentStepSizeuA;
+                RequestedCathodicAmplitudeuA[i] = Sequence.Stimuli[i].CathodicAmplitudeSteps * Sequence.CurrentStepSizeuA;
+            }
+
             StepSize = Sequence.CurrentStepSize;
 
             ChannelDialog = new(probeGroup)
@@ -229,11 +243,11 @@ namespace OpenEphys.Onix1.Design
             ChannelDialog.RefreshZedGraph();
         }
 
-        private static double GetPeakToPeakAmplitudeInMicroAmps(Rhs2116StimulusSequencePair stimulusSequence)
+        private double GetPeakToPeakAmplitudeInMicroAmps()
         {
-            return stimulusSequence.MaximumPeakToPeakAmplitudeSteps > 0
-                   ? stimulusSequence.CurrentStepSizeuA * stimulusSequence.MaximumPeakToPeakAmplitudeSteps
-                   : stimulusSequence.CurrentStepSizeuA * 1;
+            return Sequence.MaximumPeakToPeakAmplitudeSteps > 0
+                ? Sequence.GetMaxPeakToPeakAmplitudeuA()
+                : Sequence.CurrentStepSizeuA * 1; // NB: Used to give a buffer when plotting the stimulus waveform
         }
 
         private void DrawStimulusWaveform()
@@ -244,24 +258,22 @@ namespace OpenEphys.Onix1.Design
             zedGraphWaveform.GraphPane.GraphObjList.Clear();
             zedGraphWaveform.ZoomOutAll(zedGraphWaveform.GraphPane);
 
-            double peakToPeak = GetPeakToPeakAmplitudeInMicroAmps(Sequence) * 1.1;
+            double peakToPeak = GetPeakToPeakAmplitudeInMicroAmps() * 1.1;
 
             ZoomInBoundaryY = 3;
 
-            var stimuli = Sequence.Stimuli;
-
             double maxLength = 0;
 
-            for (int i = 0; i < stimuli.Length; i++)
+            for (int i = 0; i < Sequence.Stimuli.Length; i++)
             {
                 var channelOffset = peakToPeak * i;
 
                 if (ChannelDialog.SelectedContacts[i] || plotAllContacts)
                 {
-                    PointPairList pointPairs = CreateStimulusWaveform(stimuli[i], channelOffset, peakToPeak);
+                    PointPairList pointPairs = CreateStimulusWaveform(Sequence.Stimuli[i], channelOffset, peakToPeak);
 
                     Color color;
-                    if (stimuli[i].IsValid())
+                    if (Sequence.Stimuli[i].IsValid())
                     {
                         color = Color.CornflowerBlue;
                     }
@@ -290,7 +302,7 @@ namespace OpenEphys.Onix1.Design
             zedGraphWaveform.GraphPane.XAxis.Scale.Max = maxLength;
             zedGraphWaveform.GraphPane.XAxis.Scale.Min = -(maxLength * 0.02);
             zedGraphWaveform.GraphPane.YAxis.Scale.Min = -2;
-            zedGraphWaveform.GraphPane.YAxis.Scale.Max = stimuli.Length - 0.2;
+            zedGraphWaveform.GraphPane.YAxis.Scale.Max = Sequence.Stimuli.Length - 0.2;
 
             DrawScale();
 
@@ -340,7 +352,7 @@ namespace OpenEphys.Onix1.Design
             timeScale.ZOrder = ZOrder.A_InFront;
             zedGraphWaveform.GraphPane.GraphObjList.Add(timeScale);
 
-            TextObj amplitudeScale = new((GetPeakToPeakAmplitudeInMicroAmps(Sequence) / 2).ToString() + " µA", zeroOffsetX, zeroOffsetY + y * 1.02, CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom);
+            TextObj amplitudeScale = new((GetPeakToPeakAmplitudeInMicroAmps() / 2).ToString() + " µA", zeroOffsetX, zeroOffsetY + y * 1.02, CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom);
             amplitudeScale.FontSpec.Border.IsVisible = false;
             amplitudeScale.FontSpec.Fill.IsVisible = false;
             amplitudeScale.ZOrder = ZOrder.A_InFront;
@@ -604,7 +616,7 @@ namespace OpenEphys.Onix1.Design
                                                      return (reason, ind);
                                                  })
                                                  .Where(reason => reason.reason != "")
-                                                 .First();
+                                                 .FirstOrDefault();
 
                     toolStripStatusIsValid.Image = Properties.Resources.StatusCriticalImage;
                     toolStripStatusIsValid.Text = string.Format("Invalid sequence - Contact {0}, Reason: {1}", reason.ind, reason.reason);
@@ -619,67 +631,95 @@ namespace OpenEphys.Onix1.Design
 
         private void ButtonAddPulses_Click(object sender, EventArgs e)
         {
-            if (ChannelDialog.SelectedContacts.All(x => x))
-            {
-                DialogResult result = MessageBox.Show("Caution: All channels are currently selected, and all " +
-                    "settings will be applied to all channels if you continue. Press Okay to add pulse settings to all channels, or Cancel to keep them as is",
-                    "Set all channel settings?", MessageBoxButtons.OKCancel);
-
-                if (result == DialogResult.Cancel)
-                {
-                    return;
-                }
-            }
-
             if (ChannelDialog.SelectedContacts.All(x => x == false))
             {
                 MessageBox.Show("No contacts selected. Please select contact(s) before trying to add pulses.");
                 return;
             }
 
-            if (StepSize != Sequence.CurrentStepSize)
+            var stimuli = Sequence.Stimuli
+                            .Select((s, ind) => { return (Index: ind, Stimulus: s); })
+                            .Where(s => s.Stimulus.Valid
+                                        && (s.Stimulus.AnodicAmplitudeSteps != 0
+                                            || s.Stimulus.CathodicAmplitudeSteps != 0
+                                            || (s.Stimulus.AnodicAmplitudeSteps == 0 && RequestedAnodicAmplitudeuA[s.Index] != 0.0)
+                                            || (s.Stimulus.CathodicAmplitudeSteps == 0 && RequestedCathodicAmplitudeuA[s.Index] != 0.0))
+                                        && !ChannelDialog.SelectedContacts[s.Index])
+                            .Select(s =>
+                            {
+                                GetSampleFromAmplitude(RequestedAnodicAmplitudeuA[s.Index], out var requestedAnodicSteps);
+                                var requestedAnodicError = s.Stimulus.AnodicAmplitudeSteps == 0
+                                                           ? GetAmplitudeFromSample(requestedAnodicSteps, StepSize)
+                                                           : CalculateAmplitudePercentError(RequestedAnodicAmplitudeuA[s.Index], StepSize);
+
+                                GetSampleFromAmplitude(RequestedCathodicAmplitudeuA[s.Index], out var requestedCathodicSteps);
+                                var requestedCathodicError = s.Stimulus.CathodicAmplitudeSteps == 0
+                                                             ? GetAmplitudeFromSample(requestedCathodicSteps, StepSize)
+                                                             : CalculateAmplitudePercentError(RequestedCathodicAmplitudeuA[s.Index], StepSize);
+
+                                return (s.Index,
+                                        ErrorAnodic: requestedAnodicError,
+                                        ErrorCathodic: requestedCathodicError,
+                                        StepsAnodic: requestedAnodicSteps,
+                                        StepsCathodic: requestedCathodicSteps);
+                            });
+
+            if (Sequence.CurrentStepSize != StepSize && stimuli.Any(e => e.ErrorCathodic != 0 || e.ErrorAnodic != 0 &&
+                                                                         ((Sequence.Stimuli[e.Index].AnodicAmplitudeSteps == 0 && e.StepsAnodic != 0) ||
+                                                                          (Sequence.Stimuli[e.Index].CathodicAmplitudeSteps == 0 && e.StepsCathodic != 0))))
             {
-                var stimuli = Sequence.Stimuli
-                              .Select((s, ind) => { return (Index: ind, Stimulus: s); })
-                              .Where(s => s.Stimulus.IsValid() && (s.Stimulus.AnodicAmplitudeSteps != 0 || s.Stimulus.CathodicAmplitudeSteps != 0) && !ChannelDialog.SelectedContacts[s.Index])
-                              .Select(s =>
-                              {
-                                  var currentAnodicAmplitude = GetAmplitudeFromSample(s.Stimulus.AnodicAmplitudeSteps, Sequence.CurrentStepSize);
-                                  var currentCathodicAmplitude = GetAmplitudeFromSample(s.Stimulus.CathodicAmplitudeSteps, Sequence.CurrentStepSize);
+                var message = $"The step size is changing from {GetStepSizeStringuA(Sequence.CurrentStepSize)} to {GetStepSizeStringuA(StepSize)}, " +
+                    $"which will adjust some amplitudes. If applied, the following values will be modified:\n";
 
-                                  var validAnodicAmplitude = GetSampleFromAmplitude(currentAnodicAmplitude, out var newAnodicSteps);
-                                  var validCathodicAmplitude = GetSampleFromAmplitude(currentAnodicAmplitude, out var newCathodicSteps);
-
-                                  return (ValidAmplitudes: validAnodicAmplitude && newAnodicSteps != 0 && validCathodicAmplitude && newCathodicSteps != 0,
-                                          s.Index,
-                                          s.Stimulus,
-                                          NewAnodicSteps: newAnodicSteps,
-                                          NewCathodicSteps: newCathodicSteps);
-                              });
-
-                foreach (var (ValidAmplitudes, Index, Stimulus, NewAnodicSteps, NewCathodicSteps) in stimuli)
+                foreach (var (Index, ErrorAnodic, ErrorCathodic, StepsAnodic, StepsCathodic) in stimuli)
                 {
-                    if (ValidAmplitudes)
+                    if (ErrorAnodic != 0 || ErrorCathodic != 0 && ((Sequence.Stimuli[Index].AnodicAmplitudeSteps == 0 && StepsAnodic != 0) || (Sequence.Stimuli[Index].CathodicAmplitudeSteps == 0 && StepsCathodic != 0)))
                     {
-                        Sequence.Stimuli[Index].AnodicAmplitudeSteps = NewAnodicSteps;
-                        Sequence.Stimuli[Index].CathodicAmplitudeSteps = NewCathodicSteps;
+                        var oldAnodicAmplitude = GetAmplitudeFromSample(Sequence.Stimuli[Index].AnodicAmplitudeSteps, Sequence.CurrentStepSize);
+                        var newAnodicAmplitude = GetAmplitudeFromSample(StepsAnodic, StepSize);
+
+                        var oldCathodicAmplitude = GetAmplitudeFromSample(Sequence.Stimuli[Index].CathodicAmplitudeSteps, Sequence.CurrentStepSize);
+                        var newCathodicAmplitude = GetAmplitudeFromSample(StepsCathodic, StepSize);
+
+                        if (oldAnodicAmplitude == newAnodicAmplitude && oldCathodicAmplitude == newCathodicAmplitude) continue;
+
+                        message += $"\nChannel {Index}: Anode = {oldAnodicAmplitude} µA → {newAnodicAmplitude} µA," +
+                            $" Cathode = {oldCathodicAmplitude} µA → {newCathodicAmplitude} µA";
                     }
-                    else
+                }
+
+                message += "\n\nClick Update to update these channels, or Cancel to stop.";
+
+                CustomMessageBox messageBox = new(message, "New Amplitude Values", "Update", "Cancel");
+                var result = messageBox.ShowDialog();
+
+                if (result == DialogResult.Cancel) return;
+            }
+
+            foreach (var (Index, ErrorAnodic, ErrorCathodic, StepsAnodic, StepsCathodic) in stimuli)
+            {
+                if (StepsAnodic == 0 && StepsCathodic == 0)
+                {
+                    if (Sequence.Stimuli[Index].AnodicAmplitudeSteps != 0 && Sequence.Stimuli[Index].CathodicAmplitudeSteps != 0)
                     {
-                        var result = MessageBox.Show($"The new amplitude ({GetAmplitudeString((byte)textboxAmplitudeAnodic.Tag) + " µA"}) is using a step size of {GetStepSizeStringuA(StepSize)}," +
-                            $" but channel {Index} ({GetAmplitudeString(Stimulus.AnodicAmplitudeSteps, Sequence.CurrentStepSize) + " µA"}) cannot be defined with this step size. " +
-                            $"Press Ok to clear channel {Index}, or Cancel to stop adding this sequence.",
-                            "Amplitude Out of Range", MessageBoxButtons.OKCancel);
-
-                        if (result == DialogResult.Cancel)
-                        {
-                            return;
-                        }
-
+                        SequenceCopy.UpdateStimulus(Sequence.Stimuli[Index], Index); // NB: Store the current pulse pattern before clearing
                         Sequence.Stimuli[Index].Clear();
                     }
                 }
+                else
+                {
+                    if (Sequence.Stimuli[Index].NumberOfStimuli == 0 && SequenceCopy.Stimuli[Index].IsValid() && SequenceCopy.Stimuli[Index].NumberOfStimuli != 0)
+                    {
+                        Sequence.UpdateStimulus(SequenceCopy.Stimuli[Index], Index); // NB: Restore pulse timings before adding amplitude steps
+                    }
+                    else if (Sequence.Stimuli[Index].NumberOfStimuli == 0 && SequenceCopy.Stimuli[Index].NumberOfStimuli != 0) continue;
+
+                    Sequence.Stimuli[Index].AnodicAmplitudeSteps = StepsAnodic;
+                    Sequence.Stimuli[Index].CathodicAmplitudeSteps = StepsCathodic;
+                }
             }
+
+            dataGridViewStimulusTable.DataSource = Sequence.Stimuli; // NB: Force an update in case pulse timings were restored
 
             for (int i = 0; i < ChannelDialog.SelectedContacts.Length; i++)
             {
@@ -688,6 +728,11 @@ namespace OpenEphys.Onix1.Design
                     if (textboxDelay.Tag != null)
                     {
                         Sequence.Stimuli[i].DelaySamples = (uint)textboxDelay.Tag;
+                    }
+
+                    if (textboxAmplitudeAnodicRequested.Tag != null)
+                    {
+                        RequestedAnodicAmplitudeuA[i] = (double)textboxAmplitudeAnodicRequested.Tag;
                     }
 
                     if (textboxAmplitudeAnodic.Tag != null)
@@ -703,6 +748,11 @@ namespace OpenEphys.Onix1.Design
                     if (textboxInterPulseInterval.Tag != null)
                     {
                         Sequence.Stimuli[i].DwellSamples = (uint)textboxInterPulseInterval.Tag;
+                    }
+
+                    if (textboxAmplitudeCathodicRequested.Tag != null)
+                    {
+                        RequestedCathodicAmplitudeuA[i] = (double)textboxAmplitudeCathodicRequested.Tag;
                     }
 
                     if (textboxAmplitudeCathodic.Tag != null)
@@ -882,14 +932,29 @@ namespace OpenEphys.Onix1.Design
         /// Get the number of samples needed at the current step size to represent a given amplitude.
         /// </summary>
         /// <param name="value">Double value defining the amplitude in microamps.</param>
+        /// <param name="stepSize"><see cref="Rhs2116StepSize"/></param>
         /// <param name="samples">Output returning the number of samples as a byte.</param>
         /// <returns>Returns true if the number of samples is a valid byte value (between 0 and 255). Returns false if the number of samples cannot be represented in byte format.</returns>
-        private bool GetSampleFromAmplitude(double value, out byte samples)
+        private bool GetSampleFromAmplitude(double value, Rhs2116StepSize stepSize, out byte samples)
         {
-            var ratio = value / Rhs2116StimulusSequence.GetStepSizeuA(StepSize);
-            samples = (byte)Math.Round(ratio);
+            var ratio = GetRatio(value, Rhs2116StimulusSequence.GetStepSizeuA(stepSize));
+
+            if (ratio >= 255) samples = 255;
+            else if (ratio <= 0) samples = 0;
+            else samples = (byte)Math.Round(ratio);
 
             return !(ratio > byte.MaxValue || ratio < 0);
+        }
+
+        private double GetRatio(double value1, double value2)
+        {
+            return value1 / value2;
+        }
+
+        /// <inheritdoc cref="GetSampleFromAmplitude(double, Rhs2116StepSize, out byte)"/>
+        private bool GetSampleFromAmplitude(double value, out byte samples)
+        {
+            return GetSampleFromAmplitude(value, StepSize, out samples);
         }
 
         private double GetTimeFromSample(uint value)
@@ -902,27 +967,51 @@ namespace OpenEphys.Onix1.Design
             return value * Rhs2116StimulusSequence.GetStepSizeuA(stepSize);
         }
 
+        private void UpdateAmplitudeTextBoxes(TextBox textBox, string text = "", byte? tag = null)
+        {
+            if (checkboxBiphasicSymmetrical.Checked)
+            {
+                textboxAmplitudeCathodic.Text = text;
+                textboxAmplitudeCathodic.Tag = tag.HasValue ? tag.Value : null;
+
+                textboxAmplitudeAnodic.Text = text;
+                textboxAmplitudeAnodic.Tag = tag.HasValue ? tag.Value : null;
+
+                if (textBox.Name == nameof(textboxAmplitudeAnodicRequested))
+                {
+                    textboxAmplitudeCathodicRequested.Text = textboxAmplitudeAnodicRequested.Text;
+                    textboxAmplitudeCathodicRequested.Tag = textboxAmplitudeAnodicRequested.Tag;
+                }
+                else if (textBox.Name == nameof(textboxAmplitudeCathodicRequested))
+                {
+                    textboxAmplitudeAnodicRequested.Text = textboxAmplitudeCathodicRequested.Text;
+                    textboxAmplitudeAnodicRequested.Tag = textboxAmplitudeCathodicRequested.Tag;
+                }
+            }
+            else
+            {
+                if (textBox.Name == nameof(textboxAmplitudeAnodicRequested))
+                {
+                    textboxAmplitudeAnodic.Text = text;
+                    textboxAmplitudeAnodic.Tag = tag.HasValue ? tag.Value : null;
+                }
+                else if (textBox.Name == nameof(textboxAmplitudeCathodicRequested))
+                {
+                    textboxAmplitudeCathodic.Text = text;
+                    textboxAmplitudeCathodic.Tag = tag.HasValue ? tag.Value : null;
+                }
+            }
+
+        }
+
         private void Amplitude_TextChanged(object sender, EventArgs e)
         {
             TextBox textBox = (TextBox)sender;
 
             if (textBox.Text == "")
             {
+                UpdateAmplitudeTextBoxes(textBox);
                 textBox.Tag = null;
-
-                if (checkboxBiphasicSymmetrical.Checked)
-                {
-                    if (textBox.Name == nameof(textboxAmplitudeAnodic))
-                    {
-                        textboxAmplitudeCathodic.Text = "";
-                        textboxAmplitudeCathodic.Tag = null;
-                    }
-                    else if (textBox.Name == nameof(textboxAmplitudeCathodic))
-                    {
-                        textboxAmplitudeAnodic.Text = "";
-                        textboxAmplitudeAnodic.Tag = null;
-                    }
-                }
 
                 return;
             }
@@ -931,35 +1020,25 @@ namespace OpenEphys.Onix1.Design
             {
                 if (!UpdateStepSizeFromAmplitude(result))
                 {
-                    textBox.Text = result > MaxAmplitudeuA ? MaxAmplitudeuA.ToString() : "0";
-                    textBox.Tag = result > MaxAmplitudeuA ? 255 : 0;
+                    string text = result > MaxAmplitudeuA ? MaxAmplitudeuA.ToString() : "0";
+                    byte tag = result > MaxAmplitudeuA ? (byte)255 : (byte)0;
+
+                    UpdateAmplitudeTextBoxes(textBox, text, tag);
+
                     return;
                 }
 
+                textBox.Tag = result;
+
                 GetSampleFromAmplitude(result, out byte sampleAmplitude);
 
-                textBox.Text = GetAmplitudeString(sampleAmplitude);
-                textBox.Tag = sampleAmplitude;
+                UpdateAmplitudeTextBoxes(textBox, GetAmplitudeString(sampleAmplitude), sampleAmplitude);
             }
             else
             {
-                MessageBox.Show("Unable to parse text. Please enter a valid value in milliamps");
+                MessageBox.Show("Unable to parse text. Please enter a valid value in milliamps.", "Invalid Requested Amplitude");
                 textBox.Text = "";
                 textBox.Tag = null;
-            }
-
-            if (checkboxBiphasicSymmetrical.Checked)
-            {
-                if (textBox.Name == nameof(textboxAmplitudeAnodic))
-                {
-                    textboxAmplitudeCathodic.Text = textBox.Text;
-                    textboxAmplitudeCathodic.Tag = textBox.Tag;
-                }
-                else if (textBox.Name == nameof(textboxAmplitudeCathodic))
-                {
-                    textboxAmplitudeAnodic.Text = textBox.Text;
-                    textboxAmplitudeAnodic.Tag = textBox.Tag;
-                }
             }
         }
 
@@ -988,56 +1067,18 @@ namespace OpenEphys.Onix1.Design
                 return false;
             }
 
-            // NB: Update step size to a value that supports the requested amplitude.
-            var possibleStepSizes = Enum.GetValues(typeof(Rhs2116StepSize))
-                                        .Cast<Rhs2116StepSize>()
-                                        .Where(s =>
-                                        {
-                                            return IsValidNumberOfSteps(GetNumberOfSteps(amplitude, s));
-                                        });
+            var stepSizes = Enum.GetValues(typeof(Rhs2116StepSize)).Cast<Rhs2116StepSize>();
+            var validStepSizes = stepSizes.Where(stepSize => IsValidNumberOfSteps(GetNumberOfSteps(amplitude, stepSize)));
 
-            if (possibleStepSizes.Count() == 1)
+            if (validStepSizes.Count() == 1)
             {
-                StepSize = possibleStepSizes.First();
-            }
-            else
-            {
-                if (possibleStepSizes.Contains(Sequence.CurrentStepSize))
-                {
-                    StepSize = Sequence.CurrentStepSize;
-                }
-                else
-                {
-                    // NB: Search through the possible step sizes and try to find one that matches all current amplitudes
-                    var validStepSizes = possibleStepSizes.Where(s =>
-                                         {
-                                             var numberOfStimuli = Sequence.Stimuli.Length;
-
-                                             bool[] isValid = new bool[numberOfStimuli];
-
-                                             for (int i = 0; i < numberOfStimuli; i++)
-                                             {
-                                                 isValid[i] = IsValidNumberOfSteps(GetNumberOfSteps(GetAmplitudeFromSample(Sequence.Stimuli[i].AnodicAmplitudeSteps, Sequence.CurrentStepSize), s));
-                                             }
-
-                                             return isValid.All(i => i);
-                                         });
-
-                    if (!validStepSizes.Any())
-                    {
-                        MessageBox.Show("No step size found that fits all existing and new amplitudes. " +
-                            "Either clear existing stimuli that fall outside the range of the new step size, or modify " +
-                            "the new amplitude.", "Invalid Amplitude");
-
-                        StepSize = possibleStepSizes.First();
-                    }
-                    else
-                    {
-                        StepSize = validStepSizes.First();
-                    }
-                }
+                StepSize = validStepSizes.First();
+                textBoxStepSize.Text = GetStepSizeStringuA(StepSize);
+                
+                return true;
             }
 
+            StepSize = Rhs2116StimulusSequence.GetStepSizeWithMinError(validStepSizes, Sequence.Stimuli, Sequence.CurrentStepSize);
             textBoxStepSize.Text = GetStepSizeStringuA(StepSize);
 
             return true;
@@ -1051,6 +1092,17 @@ namespace OpenEphys.Onix1.Design
         private int GetNumberOfSteps(double amplitude, Rhs2116StepSize stepSize)
         {
             return (int)(amplitude / Rhs2116StimulusSequence.GetStepSizeuA(stepSize));
+        }
+
+        private double CalculateAmplitudePercentError(double amplitude, Rhs2116StepSize stepSize)
+        {
+            if (amplitude == 0) return 0;
+
+            var stepSizeuA = Rhs2116StimulusSequence.GetStepSizeuA(stepSize);
+
+            GetSampleFromAmplitude(amplitude, stepSize, out var steps);
+
+            return 100 * ((amplitude - steps * stepSizeuA) / amplitude);
         }
 
         private void Checkbox_CheckedChanged(object sender, EventArgs e)
@@ -1067,6 +1119,9 @@ namespace OpenEphys.Onix1.Design
 
                     textboxAmplitudeCathodic.Text = textboxAmplitudeAnodic.Text;
                     textboxAmplitudeCathodic.Tag = textboxAmplitudeAnodic.Tag;
+
+                    textboxAmplitudeCathodicRequested.Text = textboxAmplitudeAnodicRequested.Text;
+                    textboxAmplitudeCathodicRequested.Tag = textboxAmplitudeAnodicRequested.Tag;
                 }
                 else
                 {
@@ -1078,6 +1133,9 @@ namespace OpenEphys.Onix1.Design
 
                     textboxAmplitudeAnodic.Text = textboxAmplitudeCathodic.Text;
                     textboxAmplitudeAnodic.Tag = textboxAmplitudeCathodic.Tag;
+
+                    textboxAmplitudeAnodicRequested.Text = textboxAmplitudeCathodicRequested.Text;
+                    textboxAmplitudeAnodicRequested.Tag = textboxAmplitudeCathodicRequested.Tag;
                 }
             }
             else
@@ -1089,25 +1147,13 @@ namespace OpenEphys.Onix1.Design
 
         private void ButtonClearPulses_Click(object sender, EventArgs e)
         {
-            if (ChannelDialog.SelectedContacts.All(x => x == false) || ChannelDialog.SelectedContacts.All(x => x == true))
-            {
-                DialogResult result = MessageBox.Show("Caution: All channels are currently selected, and all " +
-                    "settings will be cleared if you continue. Press Okay to clear all pulse settings, or Cancel to keep them",
-                    "Remove all channel settings?", MessageBoxButtons.OKCancel);
-
-                if (result == DialogResult.Cancel)
-                {
-                    return;
-                }
-            }
-
-            var clearAllContacts = ChannelDialog.SelectedContacts.All(x => x == false);
-
             for (int i = 0; i < ChannelDialog.SelectedContacts.Length; i++)
             {
-                if (ChannelDialog.SelectedContacts[i] || clearAllContacts)
+                if (ChannelDialog.SelectedContacts[i])
                 {
                     Sequence.Stimuli[i].Clear();
+                    RequestedAnodicAmplitudeuA[i] = 0.0;
+                    RequestedCathodicAmplitudeuA[i] = 0.0;
                 }
             }
 
@@ -1153,11 +1199,33 @@ namespace OpenEphys.Onix1.Design
             textboxAmplitudeAnodic.Text = GetAmplitudeString(Sequence.Stimuli[index].AnodicAmplitudeSteps);
             textboxAmplitudeAnodic.Tag = Sequence.Stimuli[index].AnodicAmplitudeSteps;
 
+            if (RequestedAnodicAmplitudeuA[index] != 0.0)
+            {
+                textboxAmplitudeAnodicRequested.Text = RequestedAnodicAmplitudeuA[index].ToString();
+                textboxAmplitudeAnodicRequested.Tag = RequestedAnodicAmplitudeuA[index];
+            }
+            else
+            {
+                textboxAmplitudeAnodicRequested.Text = "";
+                textboxAmplitudeAnodicRequested.Tag = null;
+            }
+
             textboxPulseWidthAnodic.Text = GetTimeString(Sequence.Stimuli[index].AnodicWidthSamples);
             textboxPulseWidthAnodic.Tag = Sequence.Stimuli[index].AnodicWidthSamples;
 
             textboxAmplitudeCathodic.Text = GetAmplitudeString(Sequence.Stimuli[index].CathodicAmplitudeSteps);
             textboxAmplitudeCathodic.Tag = Sequence.Stimuli[index].CathodicAmplitudeSteps;
+
+            if (RequestedCathodicAmplitudeuA[index] != 0.0)
+            {
+                textboxAmplitudeCathodicRequested.Text = RequestedCathodicAmplitudeuA[index].ToString();
+                textboxAmplitudeCathodicRequested.Tag = RequestedCathodicAmplitudeuA[index];
+            }
+            else
+            {
+                textboxAmplitudeCathodicRequested.Text = "";
+                textboxAmplitudeCathodicRequested.Tag = null;
+            }
 
             textboxPulseWidthCathodic.Text = GetTimeString(Sequence.Stimuli[index].CathodicWidthSamples);
             textboxPulseWidthCathodic.Tag = Sequence.Stimuli[index].CathodicWidthSamples;
@@ -1175,7 +1243,7 @@ namespace OpenEphys.Onix1.Design
         {
             if (!Sequence.Valid)
             {
-                var result = MessageBox.Show("Warning: Not all stimuli are valid; are you sure you want to save this file?", 
+                var result = MessageBox.Show("Warning: Not all stimuli are valid; are you sure you want to save this file?",
                     "Invalid Stimuli", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
 
                 if (result == DialogResult.No) return;
