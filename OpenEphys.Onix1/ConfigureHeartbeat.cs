@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using Bonsai;
@@ -99,6 +100,23 @@ namespace OpenEphys.Onix1
                 : base(typeof(Heartbeat))
             {
             }
+        }
+    }
+
+    // NB: Can be used to remove Enable and BeatsPerSecond properties from MultiDeviceFactories that
+    // include a Heartbeat when having those options would cause confusion
+    internal class HeartbeatSingleDeviceFactoryConverter : SingleDeviceFactoryConverter
+    {
+        public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext context, object value, Attribute[] attributes)
+        {
+            var properties = (from property in base.GetProperties(context, value, attributes).Cast<PropertyDescriptor>()
+                              where !property.IsReadOnly &&
+                                    !(property.DisplayName == "Enable") &&
+                                    !(property.DisplayName == "BeatsPerSecond") &&
+                                    property.ComponentType != typeof(SingleDeviceFactory)
+                              select property)
+                              .ToArray();
+            return new PropertyDescriptorCollection(properties).Sort(properties.Select(p => p.Name).ToArray());
         }
     }
 }
