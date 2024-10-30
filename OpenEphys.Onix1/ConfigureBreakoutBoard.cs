@@ -25,10 +25,13 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets the heartbeat configuration.
         /// </summary>
-        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
+        /// <remarks>
+        /// This heartbeat is always enabled and beats at 100 Hz.
+        /// </remarks>
+        [TypeConverter(typeof(HeartbeatSingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the heartbeat device in the ONIX breakout board.")]
         [Category(DevicesCategory)]
-        public ConfigureHeartbeat Heartbeat { get; set; } = new();
+        public ConfigureHeartbeat Heartbeat { get; set; } = new ConfigureHeartbeat { Enable = true, BeatsPerSecond = 100 };
 
         /// <summary>
         /// Gets or sets the breakout board's analog IO configuration.
