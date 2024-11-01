@@ -120,29 +120,34 @@ namespace OpenEphys.Onix1
     public enum PortStatusCode : ushort
     {
         /// <summary>
-        /// Specifies a cyclic redundancy check failure.
-        /// </summary>
-        CrcError = 0x0001,
-        /// <summary>
-        /// Specifies that too many devices were indicated in the hub device table.
-        /// </summary>
-        TooManyDevices = 0x0002,
-        /// <summary>
-        /// Specifies a hub initialization error.
-        /// </summary>
-        InitializationError = 0x0004,
-        /// <summary>
-        /// Specifies the receipt of a badly formatted data packet.
-        /// </summary>
-        BadPacketFormat = 0x0008,
-        /// <summary>
         /// Specifies the SERDES forward channel lock status.
         /// </summary>
-        SerdesLock = 0x0100,
+        SerdesLock = 0x0001,
+
         /// <summary>
         /// Gets the SERDES on-chip parity check status.
         /// </summary>
-        SerdesParityPass = 0x0200,
+        SerdesParityPass = 0x0002,
+
+        /// <summary>
+        /// Specifies a cyclic redundancy check failure.
+        /// </summary>
+        CrcError = 0x0100,
+
+        /// <summary>
+        /// Specifies that too many devices were indicated in the hub device table.
+        /// </summary>
+        TooManyDevices = 0x0200,
+
+        /// <summary>
+        /// Specifies a hub initialization error.
+        /// </summary>
+        InitializationError = 0x0400,
+
+        /// <summary>
+        /// Specifies the receipt of a badly formatted data packet.
+        /// </summary>
+        BadPacketFormat = 0x0800,
     }
 
     /// <summary>
