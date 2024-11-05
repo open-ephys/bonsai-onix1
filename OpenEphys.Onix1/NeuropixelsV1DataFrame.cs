@@ -37,8 +37,12 @@ namespace OpenEphys.Onix1
         /// Gets the spike-band data as a <see cref="Mat"/> object.
         /// </summary>
         /// <remarks>
-        /// Spike-band data has 384 rows (channels) with columns representing the samples acquired at 30 kHz. Each sample is a
-        /// 10-bit, offset binary value encoded as a <see cref="ushort"/>.
+        /// Spike-band data has 384 electrodes (rows) with columns representing the samples acquired at 30 kHz.
+        /// Each sample is a 10-bit, offset binary value encoded as a <see cref="ushort"/>. To convert to
+        /// microvolts, the following equation can be used:
+        /// <code>
+        /// V_electrode (uV) = 1171.875 uV / AP Gain × (ADC result – 512)
+        /// </code>
         /// </remarks>
         public Mat SpikeData { get; }
 
@@ -46,8 +50,12 @@ namespace OpenEphys.Onix1
         /// Gets the LFP band data as a <see cref="Mat"/> object.
         /// </summary>
         /// <remarks>
-        /// LFP data has 32 rows (channels) with columns representing the samples acquired at 2.5 kHz. Each sample is a
-        /// 10-bit, offset binary value encoded as a <see cref="ushort"/>.
+        /// LFP-band data has 384 electrodes (rows) with columns representing the samples acquired at 2.5 kHz.
+        /// Each sample is a 10-bit, offset binary value encoded as a <see cref="ushort"/>. To convert to
+        /// microvolts, the following equation can be used:
+        /// <code>
+        /// V_electrode (uV) = 1171.875 uV / LFP Gain × (ADC result – 512)
+        /// </code>
         /// </remarks>
         public Mat LfpData { get; }
     }

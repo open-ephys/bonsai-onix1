@@ -23,6 +23,14 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets the amplifier data array.
         /// </summary>
+        /// <remarks>
+        /// Wide band (0.5 Hz - 10 kHz) electophysiology data array. Each element is a amplified sample from
+        /// 384 electrodes (rows) acquired at 30 kHz (columns). Each sample is a 12-bit, offset binary value
+        /// encoded as a <see cref="ushort"/>. To convert to microvolts, the following equation can be used:
+        /// <code>
+        /// V_electrode (uV) = 2.44141 uV × (ADC result – 2048)
+        /// </code>
+        /// </remarks>
         public Mat AmplifierData { get; }
 
         internal static unsafe ushort GetProbeIndex(oni.Frame frame)
