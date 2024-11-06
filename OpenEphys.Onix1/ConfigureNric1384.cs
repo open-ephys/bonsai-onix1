@@ -75,6 +75,7 @@ namespace OpenEphys.Onix1
         /// file for your chip, email IMEC at neuropixels.info@imec.be with the chip serial number to retrieve a new copy.
         /// </para>
         /// </remarks>
+        [Category(ConfigurationCategory)]
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the Nric1384 gain calibraiton file.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
@@ -96,6 +97,7 @@ namespace OpenEphys.Onix1
         /// file for your chip, email IMEC at neuropixels.info@imec.be with the chip serial number to retrieve a new copy.
         /// </para>
         /// </remarks>
+        [Category(ConfigurationCategory)]
         [FileNameFilter("ADC calibration files (*_ADCCalibration.csv)|*_ADCCalibration.csv")]
         [Description("Path to the Nric1384 ADC calibraiton file.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]

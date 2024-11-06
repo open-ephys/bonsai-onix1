@@ -86,6 +86,8 @@ namespace OpenEphys.Onix1
         /// <remarks>
         /// The port is the physical connection to the ONIX breakout board and must be specified prior to operation.
         /// </remarks>
+        [Description("Specifies the physical connection of the headstage to the ONIX breakout board.")]
+        [Category(ConfigurationCategory)]
         public PortName Port
         {
             get { return port; }
@@ -113,6 +115,7 @@ namespace OpenEphys.Onix1
         [Description("If defined, overrides automated voltage discovery and applies " +
         "the specified voltage to the headstage. Warning: this device requires 4.5V to 5.5V " +
         "for proper operation. Higher voltages can damage the headstage.")]
+        [Category(ConfigurationCategory)]
         public double? PortVoltage
         {
             get => PortControl.PortVoltage;
