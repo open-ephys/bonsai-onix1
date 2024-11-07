@@ -50,7 +50,12 @@ namespace OpenEphys.Onix1.Design
 
         public static void SerializeObject(object _object, string filepath)
         {
-            var stringJson = JsonConvert.SerializeObject(_object, Formatting.Indented);
+            var serializerSettings = new JsonSerializerSettings()
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+            };
+
+            var stringJson = JsonConvert.SerializeObject(_object, Formatting.Indented, serializerSettings);
 
             File.WriteAllText(filepath, stringJson);
         }

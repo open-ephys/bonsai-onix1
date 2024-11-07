@@ -20,37 +20,41 @@ namespace OpenEphys.Onix1
         /// the default settings for two probes, including the contact positions, shapes, and IDs.
         /// </remarks>
         public Rhs2116ProbeGroup()
-            : base("probeinterface", "0.2.21",
-                new List<Probe>()
-                {
-                    new(
-                        ProbeNdim.Two,
-                        ProbeSiUnits.mm,
-                        new ProbeAnnotations("Rhs2116A", ""),
-                        new ContactAnnotations(new string[0]),
-                        DefaultContactPositions(DefaultNumberOfChannelsPerProbe, 0),
-                        Probe.DefaultContactPlaneAxes(DefaultNumberOfChannelsPerProbe),
-                        Probe.DefaultContactShapes(DefaultNumberOfChannelsPerProbe, ContactShape.Circle),
-                        Probe.DefaultCircleParams(DefaultNumberOfChannelsPerProbe, 0.3f),
-                        DefaultProbePlanarContour(0),
-                        Probe.DefaultDeviceChannelIndices(DefaultNumberOfChannelsPerProbe, 0),
-                        Probe.DefaultContactIds(DefaultNumberOfChannelsPerProbe),
-                        Probe.DefaultShankIds(DefaultNumberOfChannelsPerProbe)),
-                    new(
-                        ProbeNdim.Two,
-                        ProbeSiUnits.mm,
-                        new ProbeAnnotations("Rhs2116B", ""),
-                        new ContactAnnotations(new string[0]),
-                        DefaultContactPositions(DefaultNumberOfChannelsPerProbe, 1),
-                        Probe.DefaultContactPlaneAxes(DefaultNumberOfChannelsPerProbe),
-                        Probe.DefaultContactShapes(DefaultNumberOfChannelsPerProbe, ContactShape.Circle),
-                        Probe.DefaultCircleParams(DefaultNumberOfChannelsPerProbe, 0.3f),
-                        DefaultProbePlanarContour(1),
-                        Probe.DefaultDeviceChannelIndices(DefaultNumberOfChannelsPerProbe, DefaultNumberOfChannelsPerProbe),
-                        Probe.DefaultContactIds(DefaultNumberOfChannelsPerProbe),
-                        Probe.DefaultShankIds(DefaultNumberOfChannelsPerProbe))
-                }.ToArray())
+            : base("probeinterface", "0.2.21", DefaultProbes())
         {
+        }
+
+        private static Probe[] DefaultProbes()
+        {
+            var probe = new Probe[2];
+
+            probe[0] = new(ProbeNdim.Two,
+                           ProbeSiUnits.mm,
+                           new ProbeAnnotations("Rhs2116A", ""),
+                           null,
+                           DefaultContactPositions(DefaultNumberOfChannelsPerProbe, 0),
+                           Probe.DefaultContactPlaneAxes(DefaultNumberOfChannelsPerProbe),
+                           Probe.DefaultContactShapes(DefaultNumberOfChannelsPerProbe, ContactShape.Circle),
+                           Probe.DefaultCircleParams(DefaultNumberOfChannelsPerProbe, 0.3f),
+                           DefaultProbePlanarContour(0),
+                           Probe.DefaultDeviceChannelIndices(DefaultNumberOfChannelsPerProbe, 0),
+                           Probe.DefaultContactIds(DefaultNumberOfChannelsPerProbe),
+                           Probe.DefaultShankIds(DefaultNumberOfChannelsPerProbe));
+
+            probe[1] = new(ProbeNdim.Two,
+                           ProbeSiUnits.mm,
+                           new ProbeAnnotations("Rhs2116B", ""),
+                           null,
+                           DefaultContactPositions(DefaultNumberOfChannelsPerProbe, 1),
+                           Probe.DefaultContactPlaneAxes(DefaultNumberOfChannelsPerProbe),
+                           Probe.DefaultContactShapes(DefaultNumberOfChannelsPerProbe, ContactShape.Circle),
+                           Probe.DefaultCircleParams(DefaultNumberOfChannelsPerProbe, 0.3f),
+                           DefaultProbePlanarContour(1),
+                           Probe.DefaultDeviceChannelIndices(DefaultNumberOfChannelsPerProbe, DefaultNumberOfChannelsPerProbe),
+                           Probe.DefaultContactIds(DefaultNumberOfChannelsPerProbe),
+                           Probe.DefaultShankIds(DefaultNumberOfChannelsPerProbe));
+
+            return probe;
         }
 
         /// <summary>

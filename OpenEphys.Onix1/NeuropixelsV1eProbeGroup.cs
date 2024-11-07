@@ -15,23 +15,28 @@ namespace OpenEphys.Onix1
         /// Initializes a new instance of the <see cref="NeuropixelsV1eProbeGroup"/> class.
         /// </summary>
         public NeuropixelsV1eProbeGroup()
-            : base("probeinterface", "0.2.21",
-                  new List<Probe>()
-                  {
-                      new(ProbeNdim.Two,
-                          ProbeSiUnits.um,
-                          new ProbeAnnotations("Neuropixels 1.0", "IMEC"),
-                          new ContactAnnotations(new string[0]),
-                          DefaultContactPositions(NeuropixelsV1.ElectrodeCount),
-                          Probe.DefaultContactPlaneAxes(NeuropixelsV1.ElectrodeCount),
-                          Probe.DefaultContactShapes(NeuropixelsV1.ElectrodeCount, ContactShape.Square),
-                          Probe.DefaultSquareParams(NeuropixelsV1.ElectrodeCount, 12.0f),
-                          DefaultProbePlanarContour(),
-                          DefaultDeviceChannelIndices(NeuropixelsV1.ChannelCount, NeuropixelsV1.ElectrodeCount),
-                          Probe.DefaultContactIds(NeuropixelsV1.ElectrodeCount),
-                          DefaultShankIds(NeuropixelsV1.ElectrodeCount))
-                  }.ToArray())
+            : base("probeinterface", "0.2.21", DefaultProbes())
         {
+        }
+
+        private static Probe[] DefaultProbes()
+        {
+            var probe = new Probe[1];
+
+            probe[0] = new(ProbeNdim.Two,
+                           ProbeSiUnits.um,
+                           new ProbeAnnotations("Neuropixels 1.0", "IMEC"),
+                           null,
+                           DefaultContactPositions(NeuropixelsV1.ElectrodeCount),
+                           Probe.DefaultContactPlaneAxes(NeuropixelsV1.ElectrodeCount),
+                           Probe.DefaultContactShapes(NeuropixelsV1.ElectrodeCount, ContactShape.Square),
+                           Probe.DefaultSquareParams(NeuropixelsV1.ElectrodeCount, 12.0f),
+                           DefaultProbePlanarContour(),
+                           DefaultDeviceChannelIndices(NeuropixelsV1.ChannelCount, NeuropixelsV1.ElectrodeCount),
+                           Probe.DefaultContactIds(NeuropixelsV1.ElectrodeCount),
+                           DefaultShankIds(NeuropixelsV1.ElectrodeCount));
+
+            return probe;
         }
 
         /// <summary>
