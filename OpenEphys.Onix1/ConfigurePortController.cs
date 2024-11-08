@@ -125,12 +125,12 @@ namespace OpenEphys.Onix1
         SerdesLock = 0x0001,
 
         /// <summary>
-        /// Gets the SERDES on-chip parity check status.
+        /// Specifies the SERDES on-chip parity check status.
         /// </summary>
         SerdesParityPass = 0x0002,
 
         /// <summary>
-        /// Specifies a cyclic redundancy check failure.
+        /// Specifies a cyclic redundancy check failure during data transmission.
         /// </summary>
         CrcError = 0x0100,
 
@@ -148,6 +148,11 @@ namespace OpenEphys.Onix1
         /// Specifies the receipt of a badly formatted data packet.
         /// </summary>
         BadPacketFormat = 0x0800,
+
+        /// <summary>
+        /// Specifies the a cyclic redundancy check failure during hub initialization.
+        /// </summary>
+        InitializationCrcError = 0x1000,
     }
 
     /// <summary>
