@@ -1270,13 +1270,16 @@ namespace OpenEphys.Onix1.Design
             SetSelectedContact(tag, !GetContactStatus(tag));
         }
 
+        private int GetContactIndex(ContactTag tag)
+        {
+            return tag.ProbeIndex == 0
+                ? tag.ContactIndex
+                : tag.ContactIndex + ProbeGroup.Probes.Take(tag.ProbeIndex).Aggregate(0, (total, next) => total + next.NumberOfContacts);
+        }
+
         private void SetSelectedContact(ContactTag contactTag, bool status)
         {
-            var index = contactTag.ProbeIndex == 0
-                        ? contactTag.ContactIndex
-                        : contactTag.ContactIndex + ProbeGroup.Probes
-                                                    .Take(contactTag.ProbeIndex)
-                                                    .Aggregate(0, (total, next) => total + next.NumberOfContacts);
+            var index = GetContactIndex(contactTag);
 
             SetSelectedContact(index, status);
         }
@@ -1303,7 +1306,9 @@ namespace OpenEphys.Onix1.Design
                 MessageBox.Show($"Error: Attempted to check status of an object that is not a contact.", "Invalid Object Selected");
             }
 
-            return SelectedContacts[tag.ContactIndex];
+            var index = GetContactIndex(tag);
+
+            return SelectedContacts[index];
         }
 
         private static PointD TransformPixelsToCoordinates(Point pixels, GraphPane graphPane)
