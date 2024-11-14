@@ -556,6 +556,8 @@ namespace OpenEphys.Onix1.Design
             zedGraphChannels.GraphPane.YAxis.Scale.Max = maxY;
         }
 
+        private float contactSize = 0.0f; // NB: Store the size of a contact (radius or width, depending on the shape). Assumes that all contacts are uniform.
+
         internal void DrawContacts()
         {
             if (ProbeGroup == null)
@@ -571,45 +573,57 @@ namespace OpenEphys.Onix1.Design
                 {
                     Contact contact = probe.GetContact(j);
 
+                    BoxObj contactObj;
+
                     if (contact.Shape.Equals(ContactShape.Circle))
                     {
                         var size = contact.ShapeParams.Radius.Value * 2;
 
-                        EllipseObj contactObj = new(contact.PosX - size / 2, contact.PosY + size / 2, size, size, SelectedContactBorder, DisabledContactFill)
+                        if (contactSize == 0.0f) contactSize = contact.ShapeParams.Radius.Value;
+
+                        contactObj = new EllipseObj(contact.PosX - size / 2, contact.PosY + size / 2, size, size, SelectedContactBorder, DisabledContactFill)
                         {
                             ZOrder = ZOrder.B_BehindLegend,
                             Tag = new ContactTag(probeNumber, contact.Index)
                         };
-
-                        contactObj.Border.Width = borderWidth;
-                        contactObj.Border.IsVisible = false;
-                        contactObj.Location.AlignV = AlignV.Center;
-                        contactObj.Location.AlignH = AlignH.Center;
-
-                        zedGraphChannels.GraphPane.GraphObjList.Add(contactObj);
                     }
                     else if (contact.Shape.Equals(ContactShape.Square))
                     {
                         var size = contact.ShapeParams.Width.Value;
 
-                        BoxObj contactObj = new(contact.PosX - size / 2, contact.PosY + size / 2, size, size, SelectedContactBorder, DisabledContactFill)
+                        if (contactSize == 0.0f) contactSize = size / 2;
+
+                        contactObj = new BoxObj(contact.PosX - size / 2, contact.PosY + size / 2, size, size, SelectedContactBorder, DisabledContactFill)
                         {
                             ZOrder = ZOrder.B_BehindLegend,
                             Tag = new ContactTag(probeNumber, contact.Index)
                         };
+                    }
+                    else if (contact.Shape.Equals(ContactShape.Rect))
+                    {
+                        var width = contact.ShapeParams.Width.Value;
+                        var height = contact.ShapeParams.Height.Value;
 
-                        contactObj.Border.Width = borderWidth;
-                        contactObj.Border.IsVisible = false;
-                        contactObj.Location.AlignV = AlignV.Bottom;
-                        contactObj.Location.AlignH = AlignH.Left;
+                        if (contactSize == 0.0f) contactSize = width >= height ? width / 2 : height / 2;
 
-                        zedGraphChannels.GraphPane.GraphObjList.Add(contactObj);
+                        contactObj = new BoxObj(contact.PosX - width / 2, contact.PosY + height / 2, width, height, SelectedContactBorder, DisabledContactFill)
+                        {
+                            ZOrder = ZOrder.B_BehindLegend,
+                            Tag = new ContactTag(probeNumber, contact.Index)
+                        };
                     }
                     else
                     {
-                        MessageBox.Show("Contact shapes other than 'circle' and 'square' not implemented yet.");
+                        MessageBox.Show("Invalid ContactShape value. Check the contact shape parameter.");
                         return;
                     }
+
+                    contactObj.Border.Width = borderWidth;
+                    contactObj.Border.IsVisible = false;
+                    contactObj.Location.AlignV = AlignV.Center;
+                    contactObj.Location.AlignH = AlignH.Center;
+
+                    zedGraphChannels.GraphPane.GraphObjList.Add(contactObj);
                 }
             }
         }
@@ -1197,9 +1211,29 @@ namespace OpenEphys.Onix1.Design
             return false;
         }
 
+        private void FindNearestContactToMouseClick(PointF mouseClick)
+        {
+            if (zedGraphChannels.GraphPane.FindNearestObject(mouseClick, CreateGraphics(), out object nearestObject, out int _))
+            {
+                if (nearestObject is TextObj textObj)
+                {
+                    ToggleSelectedContact(textObj.Tag as ContactTag);
+                }
+                else if (nearestObject is BoxObj boxObj)
+                {
+                    ToggleSelectedContact(boxObj.Tag as ContactTag);
+                }
+            }
+            else
+            {
+                SetAllSelections(false);
+            }
+        }
+
         private bool MouseUpEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             sender.Cursor = Cursors.Arrow;
+
             if (e.Button == MouseButtons.Left)
             {
                 if (sender.GraphPane.GraphObjList[SelectionAreaTag] is BoxObj selectionArea && selectionArea != null && ProbeGroup != null)
@@ -1208,7 +1242,7 @@ namespace OpenEphys.Onix1.Design
 
                     sender.GraphPane.GraphObjList.Remove(selectionArea);
 
-                    if (!rect.IsEmpty)
+                    if (!rect.IsEmpty && (rect.Width > contactSize || rect.Height > contactSize))
                     {
                         var selectedContacts = sender.GraphPane.GraphObjList.OfType<BoxObj>()
                                                                             .Where(c =>
@@ -1227,29 +1261,17 @@ namespace OpenEphys.Onix1.Design
                             SetSelectedContact((ContactTag)contact.Tag, true);
                         }
                     }
+                    else
+                    {
+                        FindNearestContactToMouseClick(new PointF(e.X, e.Y));
+                    }
 
                     clickStart.X = default;
                     clickStart.Y = default;
                 }
                 else
                 {
-                    PointF mouseClick = new(e.X, e.Y);
-
-                    if (zedGraphChannels.GraphPane.FindNearestObject(mouseClick, CreateGraphics(), out object nearestObject, out int _))
-                    {
-                        if (nearestObject is TextObj textObj)
-                        {
-                            ToggleSelectedContact(textObj.Tag as ContactTag);
-                        }
-                        else if (nearestObject is BoxObj boxObj)
-                        {
-                            ToggleSelectedContact(boxObj.Tag as ContactTag);
-                        }
-                    }
-                    else
-                    {
-                        SetAllSelections(false);
-                    }
+                    FindNearestContactToMouseClick(new PointF(e.X, e.Y));
                 }
 
                 HighlightSelectedContacts();
@@ -1270,13 +1292,16 @@ namespace OpenEphys.Onix1.Design
             SetSelectedContact(tag, !GetContactStatus(tag));
         }
 
+        private int GetContactIndex(ContactTag tag)
+        {
+            return tag.ProbeIndex == 0
+                ? tag.ContactIndex
+                : tag.ContactIndex + ProbeGroup.Probes.Take(tag.ProbeIndex).Aggregate(0, (total, next) => total + next.NumberOfContacts);
+        }
+
         private void SetSelectedContact(ContactTag contactTag, bool status)
         {
-            var index = contactTag.ProbeIndex == 0
-                        ? contactTag.ContactIndex
-                        : contactTag.ContactIndex + ProbeGroup.Probes
-                                                    .Take(contactTag.ProbeIndex)
-                                                    .Aggregate(0, (total, next) => total + next.NumberOfContacts);
+            var index = GetContactIndex(contactTag);
 
             SetSelectedContact(index, status);
         }
@@ -1303,7 +1328,9 @@ namespace OpenEphys.Onix1.Design
                 MessageBox.Show($"Error: Attempted to check status of an object that is not a contact.", "Invalid Object Selected");
             }
 
-            return SelectedContacts[tag.ContactIndex];
+            var index = GetContactIndex(tag);
+
+            return SelectedContacts[index];
         }
 
         private static PointD TransformPixelsToCoordinates(Point pixels, GraphPane graphPane)
