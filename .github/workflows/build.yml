@@ -1,132 +1,16 @@
-name: Build
- 
+name: Build .NET and Publish to Nuget
+
+# This workflow will run when: 1) any commit is pushed to main, 2) any pull request is opened that will merge to main, and 3) whenever a new release is published.
 on:
   push:
-    branches: [main]
+    branches: [main] # 1) Generates a package on Github that is a pre-release package, and is typically named X.Y.Z-main-ci000, where X/Y/Z are the semantic version numbers, and ci000 is incremented for each action that is run, guaranteeing a unique package name
   pull_request:
+    branches: [main] # 2) Does not generate a package, but does check that the semantic version number is increasing, and that the package builds correctly in all matrix configurations (Ubuntu / Windows and Release / Debug)
   release:
-    types: [published]
-env:
-  DOTNET_NOLOGO: true
-  DOTNET_CLI_TELEMETRY_OPTOUT: true
-  DOTNET_GENERATE_ASPNET_CERTIFICATE: false
-  ContinuousIntegrationBuild: true
-  CiRunNumber: ${{ github.run_number }}
-  CiRunPushSuffix: ${{ github.ref_name }}-ci${{ github.run_number }}
-  CiRunPullSuffix: pull-${{ github.event.number }}-ci${{ github.run_number }}
+    types: [published] # 3) Generates a package that is a full release package (X.Y.Z) that is published to Github and NuGet automatically
+
 jobs:
-  setup:
-    runs-on: ubuntu-latest
-    outputs:
-      build-suffix: ${{ steps.setup-build.outputs.build-suffix }}
-    steps:
-      - name: Setup Build
-        id: setup-build
-        run: echo "build-suffix=${{ github.event_name == 'push' && env.CiRunPushSuffix || github.event_name == 'pull_request' && env.CiRunPullSuffix || null }}" >> "$GITHUB_OUTPUT"
-
-  check-semver:
-    runs-on: ubuntu-latest
-    if: github.event_name != 'release'
-    steps:
-      - name: Checkout current version
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Find previous release
-        id: previous-release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          echo "RELEASE_NAME=$(gh release list -L 1 --json tagName -q .[0].tagName)" >> $GITHUB_OUTPUT
-      - name: Checkout last release version
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ steps.previous-release.outputs.RELEASE_NAME }}
-          path: last-release
-          sparse-checkout: |
-            Directory.Build.props
-          sparse-checkout-cone-mode: false
-
-      - name: Extract Versions
-        id: extract-versions
-        run: |
-          echo "CURRENT_VERSION=$(cat ./Directory.Build.props | grep -Po '(?<=VersionPrefix>).*(?=</VersionPrefix>)')" >> $GITHUB_OUTPUT
-          echo "PREVIOUS_VERSION=$(cat ./last-release/Directory.Build.props | grep -Po '(?<=VersionPrefix>).*(?=</VersionPrefix>)')" >> $GITHUB_OUTPUT
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10.12"
-
-      - name: Install semver
-        run: python -m pip install semver
-
-      - name: Compare Versions
-        run: .github/workflows/compare_version_numbers.sh
-      
-  build:
-    needs: [setup, check-semver]
-    if: always() && !failure() && !cancelled()
-    strategy:
-      fail-fast: false
-      matrix:
-        configuration: [debug, release]
-        os: [ubuntu-latest, windows-latest]
-        include:
-          - os: windows-latest
-            configuration: release
-            collect-packages: true
-    runs-on: ${{ matrix.os }}
-    env:
-      CiBuildVersionSuffix: ${{ needs.setup.outputs.build-suffix }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.x
-      
-      - name: Restore
-        run: dotnet restore
-  
-      - name: Build
-        run: dotnet build --no-restore --configuration ${{ matrix.configuration }}
-
-      - name: Pack
-        id: pack
-        if: matrix.collect-packages
-        run: dotnet pack --no-build --configuration ${{ matrix.configuration }}
-
-      - name: Collect packages
-        uses: actions/upload-artifact@v4
-        if: matrix.collect-packages && steps.pack.outcome == 'success' && always()
-        with:
-          name: Packages
-          if-no-files-found: error
-          path: artifacts/package/${{matrix.configuration}}/**
-
-  publish-github:
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-    needs: [build]
-    if: (github.event_name == 'push' || github.event_name == 'release') && always() && !failure() && !cancelled()
-    steps:
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.x
-
-      - name: Download packages
-        uses: actions/download-artifact@v4
-        with:
-          name: Packages
-          path: Packages
-
-      - name: Push to GitHub Packages
-        run: dotnet nuget push "Packages/*.nupkg" --skip-duplicate --no-symbols --api-key ${{secrets.GITHUB_TOKEN}} --source https://nuget.pkg.github.com/${{github.repository_owner}}
-        env:
-          # This is a workaround for https://github.com/NuGet/Home/issues/9775
-          DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER: 0
+  build_and_publish:
+    uses: open-ephys/github-actions/.github/workflows/build_dotnet_publish_nuget.yml@main
+    secrets:
+      NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
