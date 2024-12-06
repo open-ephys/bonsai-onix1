@@ -5,7 +5,7 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Configures a Nric184 bioacquisition chip.
+    /// Configures a Nric1384 bioacquisition chip.
     /// </summary>
     public class ConfigureNric1384 : SingleDeviceFactory
     {
