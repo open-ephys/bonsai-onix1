@@ -6,15 +6,15 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Image data produced by the Python-480 CMOS image sensor on a UCLA Miniscope V4.
     /// </summary>
-    public class UclaMiniscopeV4CameraFrame : BufferedDataFrame
+    public class UclaMiniscopeV4CameraDataFrame : BufferedDataFrame
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="UclaMiniscopeV4CameraFrame"/> class.
+        /// Initializes a new instance of the <see cref="UclaMiniscopeV4CameraDataFrame"/> class.
         /// </summary>
         /// <param name="clock">An array of <see cref="DataFrame.Clock"/> values.</param>
         /// <param name="hubClock">An array of hub clock counter values.</param>
         /// <param name="image">A image produced by the Python-480 on a UCLA Miniscope V4.</param>
-        public UclaMiniscopeV4CameraFrame(ulong[] clock, ulong[] hubClock, IplImage image)
+        public UclaMiniscopeV4CameraDataFrame(ulong[] clock, ulong[] hubClock, IplImage image)
             : base (clock, hubClock)
         {
             Image = image;

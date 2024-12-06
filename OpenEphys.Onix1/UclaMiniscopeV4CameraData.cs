@@ -10,10 +10,10 @@ using OpenCV.Net;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Produces a sequence of <see cref="UclaMiniscopeV4CameraFrame"/>s from the Python-480 image sensor on a
+    /// Produces a sequence of <see cref="UclaMiniscopeV4CameraDataFrame"/>s from the Python-480 image sensor on a
     /// UCLA Miniscope V4.
     /// </summary>
-    public class UclaMiniscopeV4CameraData : Source<UclaMiniscopeV4CameraFrame>
+    public class UclaMiniscopeV4CameraData : Source<UclaMiniscopeV4CameraDataFrame>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(UclaMiniscopeV4.NameConverter))]
@@ -38,11 +38,11 @@ namespace OpenEphys.Onix1
         public UclaMiniscopeV4ImageDepth DataType { get; set; } = UclaMiniscopeV4ImageDepth.U8;
 
         /// <summary>
-        /// Generates a sequence of <see cref="UclaMiniscopeV4CameraFrame"/>s at a rate determined by <see
+        /// Generates a sequence of <see cref="UclaMiniscopeV4CameraDataFrame"/>s at a rate determined by <see
         /// cref="ConfigureUclaMiniscopeV4Camera.FrameRate"/>.
         /// </summary>
-        /// <returns>A sequence of <see cref="UclaMiniscopeV4CameraFrame"/>s</returns>
-        public unsafe override IObservable<UclaMiniscopeV4CameraFrame> Generate()
+        /// <returns>A sequence of <see cref="UclaMiniscopeV4CameraDataFrame"/>s</returns>
+        public unsafe override IObservable<UclaMiniscopeV4CameraDataFrame> Generate()
         {
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
@@ -51,7 +51,7 @@ namespace OpenEphys.Onix1
                 var scopeData = device.Context.GetDeviceFrames(passthrough.Address);
                 var dataType = DataType;
 
-                return Observable.Create<UclaMiniscopeV4CameraFrame>(observer =>
+                return Observable.Create<UclaMiniscopeV4CameraDataFrame>(observer =>
                 {
                     var sampleIndex = 0;
                     var imageBuffer = new short[UclaMiniscopeV4.SensorRows * UclaMiniscopeV4.SensorColumns];
@@ -83,12 +83,12 @@ namespace OpenEphys.Onix1
                                         {
                                             var eightBitImageData = new Mat(imageData.Size, Depth.U8, 1);
                                             CV.ConvertScale(imageData, eightBitImageData, 0.25);
-                                            observer.OnNext(new UclaMiniscopeV4CameraFrame(clockBuffer, hubClockBuffer, eightBitImageData.GetImage()));
+                                            observer.OnNext(new UclaMiniscopeV4CameraDataFrame(clockBuffer, hubClockBuffer, eightBitImageData.GetImage()));
                                             break;
                                         }
                                     case UclaMiniscopeV4ImageDepth.U10:
                                         {
-                                            observer.OnNext(new UclaMiniscopeV4CameraFrame(clockBuffer, hubClockBuffer, imageData.GetImage()));
+                                            observer.OnNext(new UclaMiniscopeV4CameraDataFrame(clockBuffer, hubClockBuffer, imageData.GetImage()));
                                             break;
                                         }
                                 }
