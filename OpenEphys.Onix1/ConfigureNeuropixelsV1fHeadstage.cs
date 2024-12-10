@@ -8,10 +8,10 @@ namespace OpenEphys.Onix1
     /// Configures a NeuropixelsV1f headstage on the specified port.
     /// </summary>
     /// <remarks>
-    /// The NeuropixelsVf Headstage is a 1g serialized, multifunction headstage for small animals. This
-    /// headstage is designed to function with IMEC Neuropixels V1 probes. It provides the following features:
+    /// The NeuropixelsVf Headstage is a 1g serialized, multifunction headstage designed to function
+    /// with IMEC Neuropixels V1 probes. It provides the following features:
     /// <list type="bullet">
-    /// <item><description>Support for a 2x IMEC Neuropixels 1.0 probes, each of which features:
+    /// <item><description>Support for up to 2x IMEC Neuropixels 1.0 probes, each of which features:
     /// <list type="bullet">
     /// <item><description>A single 1 cm long shank probe with a 70 x 24 µm shank cross-section.</description></item>
     /// <item><description>960-electrode low-impedance TiN electrodes.</description></item>

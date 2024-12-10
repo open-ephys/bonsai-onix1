@@ -8,10 +8,10 @@ namespace OpenEphys.Onix1
     /// Configures an ONIX Rhs2116 Headstage on the specified port.
     /// </summary>
     /// <remarks>
-    /// The Rhs2116 Headstage is a serialized headstage for small animals with 32 bi-directional channels 
-    /// which each can be used to deliver electrical stimuli. The Rhs2116 Headstage can be used with passive 
-    /// probes (e.g. silicon arrays, EEG/ECOG arrays, etc) using a 36-Channel Omnetics EIB. It provides the
-    /// following features:
+    /// The Rhs2116 Headstage is a serialized headstage with 32 bi-directional channels that are
+    /// independently configurable to record electrophysiological signals or deliver electrical
+    /// stimuli. The Rhs2116 Headstage can be used with passive probes (e.g. silicon arrays,
+    /// EEG/ECOG arrays, etc) using a 36-Channel Omnetics EIB. It provides the following features:
     /// <list type="bullet">
     /// <item><description>Two, synchronized Rhs2116 ICs for a combined 32 bidirectional ephys channels.</description></item>
     /// <item><description>Real-time control of stimulation sequences.</description></item>

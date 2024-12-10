@@ -10,13 +10,14 @@ using OpenCV.Net;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Produces a sequence of electrophysiology data frames from an Intan Rhd2164 bioacquisition chip.
+    /// Produces a sequence of <see cref="Rhd2164DataFrame"/> objects with data from an Intan
+    /// Rhd2164 bioacquisition chip.
     /// </summary>
     /// <remarks>
     /// This data IO operator must be linked to an appropriate configuration, such as a <see
     /// cref="ConfigureRhd2164"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
-    [Description("Produces a sequence of electrophysiology data frames from an Intan Rhd2164 bioacquisition chip.")]
+    [Description("Produces a sequence of Rhd2164DataFrame objects with data from an Intan Rhd2164 bioacquisition chip.")]
     public class Rhd2164Data : Source<Rhd2164DataFrame>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
