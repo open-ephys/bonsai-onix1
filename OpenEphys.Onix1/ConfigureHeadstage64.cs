@@ -8,9 +8,9 @@ namespace OpenEphys.Onix1
     /// Configures an ONIX headstage-64 on the specified port.
     /// </summary>
     /// <remarks>
-    /// Headstage-64 is a 1.5g serialized, multifunction headstage for small animals. This headstage is
-    /// designed to function with passive probes such as tetrode microdrives, silicon arrays, EEG/ECOG arrays,
-    /// etc. It provides the following features:
+    /// Headstage-64 is a 1.5g serialized, multifunction headstage designed to function with passive
+    /// probes such as tetrode microdrives, silicon arrays, EEG/ECOG arrays, etc. It provides the
+    /// following features:
     /// <list type="bullet">
     /// <item><description>64 analog ephys channels and 3 auxiliary channels sampled at 30 kHz per
     /// channel.</description></item>
@@ -32,9 +32,10 @@ namespace OpenEphys.Onix1
         /// Initializes a new instance of the <see cref="ConfigureHeadstage64"/> class.
         /// </summary>
         /// <remarks>
-        /// Headstage-64 is a 1.5g serialized, multifunction headstage for small animals. This headstage is designed to function
-        /// with tetrode microdrives. Alternatively it can be used with other passive probes (e.g. silicon arrays, EEG/ECOG arrays,
-        /// etc.). It provides the following features on the headstage:
+        /// Headstage-64 is a 1.5g serialized, multifunction headstage designed to function with
+        /// tetrode microdrives. Alternatively it can be used with other passive probes (e.g.
+        /// silicon arrays, EEG/ECOG arrays, etc.). It provides the following features on the
+        /// headstage:
         /// <list type="bullet">
         /// <item><description>64 analog ephys channels and 3 auxiliary channels sampled at 30 kHz per channel.</description></item>
         /// <item><description>A Bno055 9-axis IMU for real-time, 3D orientation tracking.</description></item>

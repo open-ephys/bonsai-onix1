@@ -8,10 +8,10 @@ namespace OpenEphys.Onix1
     /// Configures a Nric1384 headstage on the specified port.
     /// </summary>
     /// <remarks>
-    /// The Nric1384 Headstage is a 2.5g serialized, multifunction headstage for small animals built around the
-    /// IMEC Nric1384 bioacquisition chip. This headstage is designed to function with passive probes of the
-    /// user's choosing (e.g. silicon probe arrays, high-density tetrode drives, etc). It provides the
-    /// following features:
+    /// The Nric1384 Headstage is a 2.5g serialized, multifunction headstage built around the IMEC
+    /// Nric1384 bioacquisition chip and designed to function with passive probes of
+    /// the user's choosing (e.g. silicon probe arrays, high-density tetrode drives, etc). It
+    /// provides the following features:
     /// <list type="bullet">
     /// <item><description>384 analog ephys channels sampled at 30 kHz per channel and exposed via an array of
     /// 12x ultra-high density Molex 203390-0323 quad-row connectors. </description></item>
