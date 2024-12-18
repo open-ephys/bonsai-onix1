@@ -31,7 +31,7 @@ namespace OpenEphys.Onix1
             probe[0] = new(ProbeNdim.Two,
                            ProbeSiUnits.mm,
                            new ProbeAnnotations("Rhs2116A", ""),
-                           null,
+                           DefaultContactAnnotations(DefaultNumberOfChannelsPerProbe, 0),
                            DefaultContactPositions(DefaultNumberOfChannelsPerProbe, 0),
                            Probe.DefaultContactPlaneAxes(DefaultNumberOfChannelsPerProbe),
                            Probe.DefaultContactShapes(DefaultNumberOfChannelsPerProbe, ContactShape.Circle),
@@ -44,7 +44,7 @@ namespace OpenEphys.Onix1
             probe[1] = new(ProbeNdim.Two,
                            ProbeSiUnits.mm,
                            new ProbeAnnotations("Rhs2116B", ""),
-                           null,
+                           DefaultContactAnnotations(DefaultNumberOfChannelsPerProbe, 1),
                            DefaultContactPositions(DefaultNumberOfChannelsPerProbe, 1),
                            Probe.DefaultContactPlaneAxes(DefaultNumberOfChannelsPerProbe),
                            Probe.DefaultContactShapes(DefaultNumberOfChannelsPerProbe, ContactShape.Circle),
@@ -80,6 +80,32 @@ namespace OpenEphys.Onix1
         public Rhs2116ProbeGroup(Rhs2116ProbeGroup probeGroup)
             : base(probeGroup)
         {
+        }
+
+        internal static ContactAnnotations DefaultContactAnnotations(int numberOfChannels, int probeIndex)
+        {
+            string[] contactAnnotations = new string[numberOfChannels];
+
+            if (probeIndex == 0)
+            {
+                for (int i = 0; i < numberOfChannels; i++)
+                {
+                    contactAnnotations[i] = "A" + i.ToString();
+                }
+            }
+            else if (probeIndex == 1)
+            {
+                for (int i = 0; i < numberOfChannels; i++)
+                {
+                    contactAnnotations[i] = "B" + i.ToString();
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException($"Probe {probeIndex} is invalid for getting default contact annotations for {nameof(Rhs2116ProbeGroup)}");
+            }
+
+            return new(contactAnnotations);
         }
 
         internal static float[][] DefaultContactPositions(int numberOfChannels, int probeIndex)
