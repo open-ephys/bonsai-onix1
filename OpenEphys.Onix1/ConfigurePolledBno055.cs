@@ -119,7 +119,7 @@ namespace OpenEphys.Onix1
             i2c.WriteByte(0x3F, 0x00); // Internal oscillator
             i2c.WriteByte(0x41, (uint)AxisMap);  // Axis map config
             i2c.WriteByte(0x42, (uint)AxisSign); // Axis sign
-            i2c.WriteByte(0x3D, 0x0C); // Operation mode is NOF
+            i2c.WriteByte(0x3D, 0x0C); // Operation mode is NDOF
         }
     }
 
