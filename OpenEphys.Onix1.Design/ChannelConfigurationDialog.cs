@@ -739,8 +739,6 @@ namespace OpenEphys.Onix1.Design
 
             zedGraphChannels.GraphPane.GraphObjList.RemoveAll(obj => obj is TextObj && obj.Tag is ContactTag);
 
-            var fontSize = CalculateFontSize(0.5);
-
             int probeNumber = 0;
             int indexOffset = 0;
 
@@ -757,7 +755,7 @@ namespace OpenEphys.Onix1.Design
                         Tag = new ContactTag(probeNumber, i)
                     };
 
-                    SetTextObj(textObj, fontSize);
+                    SetTextObj(textObj);
 
                     textObj.FontSpec.FontColor = indices[i] == -1 ? DisabledContactTextColor : EnabledContactTextColor;
 
@@ -769,13 +767,12 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        internal void SetTextObj(TextObj textObj, float fontSize)
+        internal void SetTextObj(TextObj textObj)
         {
             textObj.FontSpec.IsBold = true;
             textObj.FontSpec.Border.IsVisible = false;
             textObj.FontSpec.Fill.IsVisible = false;
             textObj.FontSpec.Fill.IsVisible = false;
-            textObj.FontSpec.Size = fontSize;
         }
 
         const string DisabledContactString = "Off";
@@ -1086,6 +1083,7 @@ namespace OpenEphys.Onix1.Design
         {
             LoadDefaultChannelLayout();
             DrawProbeGroup();
+            UpdateFontSize();
             RefreshZedGraph();
         }
 
@@ -1338,6 +1336,21 @@ namespace OpenEphys.Onix1.Design
             graphPane.ReverseTransform(pixels, out double x, out double y);
 
             return new PointD(x, y);
+        }
+
+        internal static bool HasContactAnnotations(ProbeGroup probeGroup)
+        {
+            foreach (var probe in probeGroup.Probes)
+            {
+                if (probe.ContactAnnotations != null 
+                    && probe.ContactAnnotations.Annotations != null 
+                    && probe.ContactAnnotations.Annotations.Length > 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
