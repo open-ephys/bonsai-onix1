@@ -28,8 +28,7 @@ namespace OpenEphys.Onix1
         /// 384 electrodes (rows) acquired at 30 kHz (columns). Each sample is a 12-bit, offset binary value
         /// encoded as a <see cref="ushort"/>. To convert to microvolts, the following equation can be used:
         /// <code>
-        /// V_electrode (µV) = 1e6/80/2^12 µV × (ADC result – 2048)
-        /// 1e6/80/2^12 = 3.05176
+        /// V_electrode (µV) = 3.05176 µV/bit × (ADC result – 2048) bits
         /// </code>
         /// </remarks>
         public Mat AmplifierData { get; }
