@@ -230,7 +230,7 @@ namespace OpenEphys.Onix1
             }
         }
 
-        internal static Rhs2116StepSize GetStepSizeWithMinError(IEnumerable<Rhs2116StepSize> stepSizes, Rhs2116Stimulus[] stimuli, Rhs2116StepSize currentStepSize)
+        internal static Rhs2116StepSize GetStepSizeWithMinError(IEnumerable<Rhs2116StepSize> stepSizes, Rhs2116Stimulus[] stimuli, double requestedAmplitude, Rhs2116StepSize currentStepSize)
         {
             var numberOfStepSizes = stepSizes.Count();
             var maxError = new List<double>(numberOfStepSizes);
@@ -263,6 +263,12 @@ namespace OpenEphys.Onix1
 
                     maxError[s] = Math.Max(maxError[s], Math.Max(anodicError, cathodicError));
                 }
+
+                var requestedError = requestedAmplitude < stepSizesuA[s] || requestedAmplitude > stepSizesuA[s] * 255 ?
+                        double.PositiveInfinity :
+                        CalculateError(requestedAmplitude, stepSizesuA[s]);
+
+                maxError[s] = Math.Max(maxError[s], requestedError);
             }
 
             if (maxError.Distinct().Count() == 1)
