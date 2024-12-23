@@ -1078,7 +1078,7 @@ namespace OpenEphys.Onix1.Design
                 return true;
             }
 
-            StepSize = Rhs2116StimulusSequence.GetStepSizeWithMinError(validStepSizes, Sequence.Stimuli, Sequence.CurrentStepSize);
+            StepSize = Rhs2116StimulusSequence.GetStepSizeWithMinError(validStepSizes, Sequence.Stimuli, amplitude, Sequence.CurrentStepSize);
             textBoxStepSize.Text = GetStepSizeStringuA(StepSize);
 
             return true;
