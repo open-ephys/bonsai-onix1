@@ -31,7 +31,7 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <param name="configureNeuropixelsV1A">Configuration settings for <see cref="ConfigureNeuropixelsV1f"/> A.</param>
         /// <param name="configureNeuropixelsV1B">Configuration settings for <see cref="ConfigureNeuropixelsV1f"/> B</param>
-        /// <param name="configureBno055">Configuration settings for a <see cref="PolledBno055"/>.</param>
+        /// <param name="configureBno055">Configuration settings for a <see cref="Onix1.PolledBno055"/>.</param>
         public NeuropixelsV1fHeadstageDialog(ConfigureNeuropixelsV1f configureNeuropixelsV1A, ConfigureNeuropixelsV1f configureNeuropixelsV1B, ConfigureBno055 configureBno055)
         {
             InitializeComponent();
