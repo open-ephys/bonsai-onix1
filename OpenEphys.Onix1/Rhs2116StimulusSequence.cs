@@ -239,7 +239,9 @@ namespace OpenEphys.Onix1
 
             static double CalculateError(double amplitude, double stepSizeuA)
             {
-                return Math.Abs((amplitude - (stepSizeuA * Math.Round(amplitude / stepSizeuA))) / amplitude);
+                return Math.Round(amplitude / stepSizeuA) > 0 && Math.Round(amplitude / stepSizeuA) <= 255
+                    ? Math.Abs((amplitude - (stepSizeuA * Math.Round(amplitude / stepSizeuA))) / amplitude)
+                    : double.PositiveInfinity;
             }
 
             for (int s = 0; s < numberOfStepSizes; s++)
@@ -253,20 +255,13 @@ namespace OpenEphys.Onix1
                     var anodicAmp = stimuli[c].AnodicAmplitudeSteps * currentStepSizeuA;
                     var cathodicAmp = stimuli[c].CathodicAmplitudeSteps * currentStepSizeuA;
 
-                    var anodicError = anodicAmp < stepSizesuA[s] || anodicAmp > stepSizesuA[s] * 255 ?
-                        double.PositiveInfinity :
-                        CalculateError(anodicAmp, stepSizesuA[s]);
-
-                    var cathodicError = cathodicAmp < stepSizesuA[s] || cathodicAmp > stepSizesuA[s] * 255 ?
-                        double.PositiveInfinity :
-                        CalculateError(cathodicAmp, stepSizesuA[s]);
+                    var anodicError = CalculateError(anodicAmp, stepSizesuA[s]);
+                    var cathodicError = CalculateError(cathodicAmp, stepSizesuA[s]);
 
                     maxError[s] = Math.Max(maxError[s], Math.Max(anodicError, cathodicError));
                 }
 
-                var requestedError = requestedAmplitude < stepSizesuA[s] || requestedAmplitude > stepSizesuA[s] * 255 ?
-                        double.PositiveInfinity :
-                        CalculateError(requestedAmplitude, stepSizesuA[s]);
+                var requestedError = CalculateError(requestedAmplitude, stepSizesuA[s]);
 
                 maxError[s] = Math.Max(maxError[s], requestedError);
             }
@@ -277,7 +272,20 @@ namespace OpenEphys.Onix1
                 return stepSizes.OrderBy(s => Math.Abs(GetStepSizeuA(s) - currentStepSizeuA)).First();
             }
 
-            var optimalStepIndex = maxError.IndexOf(maxError.Min());
+            var minimumError = maxError.Min();
+            var optimalStepIndex = maxError
+                .Select((e, ind) =>
+                {
+                    if (e == minimumError)
+                    {
+                        return (Min: true, Ind: ind);
+                    }
+                    return (Min: false, Ind: -1);
+                })
+                .Where(e => e.Min)
+                .OrderBy(e => Math.Abs(GetStepSizeuA(stepSizes.ElementAt(e.Ind)) - currentStepSizeuA))
+                .Select(e => e.Ind)
+                .First();
 
             return stepSizes.ElementAt(optimalStepIndex);
         }

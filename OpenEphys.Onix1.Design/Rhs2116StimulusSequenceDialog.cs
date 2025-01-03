@@ -1020,8 +1020,9 @@ namespace OpenEphys.Onix1.Design
             {
                 if (!UpdateStepSizeFromAmplitude(result))
                 {
-                    string text = result > MaxAmplitudeuA ? MaxAmplitudeuA.ToString() : "0";
-                    byte tag = result > MaxAmplitudeuA ? (byte)255 : (byte)0;
+                    string text = "0";
+                    byte tag = 0;
+                    textBox.Text = "";
 
                     UpdateAmplitudeTextBoxes(textBox, text, tag);
 
