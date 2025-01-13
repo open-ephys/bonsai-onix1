@@ -5,11 +5,14 @@ using System.Linq;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Configures a Bosch Bno055 9-axis inertial measurement unit (IMU) that is polled by the host computer.
+    /// Configures a Bosch Bno055 9-axis inertial measurement unit (IMU) to operate in nine degrees of freedom
+    /// (NDOF) fusion mode that is polled by the host computer.
     /// </summary>
     /// <remarks>
-    /// This configuration operator can be linked to a data IO operator, such as <see
-    /// cref="PolledBno055Data"/>, using a shared <c>DeviceName</c>.
+    /// See page. 25 of the <a
+    /// href="https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bno055-ds000.pdf">datasheet</a>
+    /// for an explanation of NDOF mode. This configuration operator can be linked to a data IO operator,
+    /// such as <see cref="PolledBno055Data"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.PolledBno055Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a PolledBno055 device.")]
@@ -150,38 +153,41 @@ namespace OpenEphys.Onix1
 
     /// <summary>
     /// Specifies the axis map of a Bno055 compared to the default orientation.
-    /// the datasheet.
     /// </summary>
     /// <remarks>
-    /// The axis of the device can be reconfigured to the new reference axis to account for
-    /// differences in its mounting position. The following values can be applied to the Bno055's
-    /// AXIS_MAP_CONFIG register at address 0x41 in order to rotate the Bno055's coordinate system
-    /// compared to the default orientation presented on page 24 of the Bno055 datasheet.
+    /// The axes of the Bno055 can be reconfigured to account for differences in its mounting position. The
+    /// following values can be applied to the Bno055's AXIS_MAP_CONFIG register at address 0x41 to
+    /// rotate the Bno055's coordinate system compared to the default orientation presented on page 26 of the
+    /// Bno055 <a
+    /// href="https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bno055-ds000.pdf">datasheet</a>.
+    /// Remapping is documented using the following notion: <b>Original Axis->New Axis'</b>. For instance,
+    /// X->Z', indicates that what was the X-axis in the default configuration will be the Z axis in the remapped
+    /// configuration.
     /// </remarks>
     public enum Bno055AxisMap : uint
-    {
+    {   
         /// <summary>
-        /// Specifies X->X, Y->Y, Z->Z (chip default).
+        /// Specifies that X->X', Y->Y', Z->Z' (chip default). 
         /// </summary>
         XYZ = 0b00_10_01_00,
         /// <summary>
-        /// Specifies X->X, Y->Z, Z->Y.
+        /// Specifies that X->X', Z->Y', Y->Z'
         /// </summary>
         XZY = 0b00_01_10_00,
         /// <summary>
-        /// Specifies X->Y, Y->X, Z->Z.
+        /// Specifies that Y->X', X->Y', Z->Z'
         /// </summary>
         YXZ = 0b00_10_00_01,
         /// <summary>
-        /// Specifies X->Y, Y->Z, Z->X.
+        /// Specifies that Y->X', Z->Y', X->Z'
         /// </summary>
         YZX = 0b00_00_10_01,
         /// <summary>
-        /// Specifies X->Z, Y->X, Z->Y.
+        /// Specifies that Z->X', X->Y', Y->Z'
         /// </summary>
         ZXY = 0b00_01_00_10,
         /// <summary>
-        /// Specifies X->Z, Y->Y, Z->X.
+        /// Specifies that Z->X', Y->Y', X->Z'
         /// </summary>
         ZYX = 0b00_00_01_10,
     }
@@ -190,10 +196,17 @@ namespace OpenEphys.Onix1
     /// Specifies the axis map sign of a Bno055 IMU
     /// </summary>
     /// <remarks>
-    /// The axis of the device can be reconfigured to the new reference axis to account for
-    /// differences in its mounting position. The following values can be applied to the Bno055's
-    /// AXIS_MAP_SIGN register at address 0x42 to mirror specific axes in the Bno055's coordinate
-    /// system compared to the default orientation presented on page 24 of the Bno055 datasheet.
+    /// <para>
+    /// The axes of the Bno055 can be reconfigured to account for differences in its mounting position. The
+    /// following values can be applied to the Bno055's AXIS_MAP_SIGN register at address 0x42 to mirror
+    /// specific axes in the Bno055's coordinate system compared to the default directions presented on page
+    /// 26 of the Bno055
+    /// <a href="https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bno055-ds000.pdf">datasheet</a>.
+    /// </para>
+    /// <para>
+    /// Note that this setting is applied after the axis map specified by <see cref="Bno055AxisMap"/> and
+    /// applies to the new axis definitions.
+    /// </para>
     /// </remarks>
     [Flags]
     public enum Bno055AxisSign : uint
@@ -203,15 +216,15 @@ namespace OpenEphys.Onix1
         /// </summary>
         Default = 0b00000_000,
         /// <summary>
-        /// Specifies that Z axis should be mirrored.
+        /// Specifies that Z' axis should be mirrored.
         /// </summary>
         MirrorZ = 0b00000_001,
         /// <summary>
-        /// Specifies that Y axis should be mirrored.
+        /// Specifies that Y' axis should be mirrored.
         /// </summary>
         MirrorY = 0b00000_010,
         /// <summary>
-        /// Specifies that X axis should be mirrored.
+        /// Specifies that X' axis should be mirrored.
         /// </summary>
         MirrorX = 0b00000_100,
     }
