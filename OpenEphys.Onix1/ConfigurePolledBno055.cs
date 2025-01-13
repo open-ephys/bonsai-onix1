@@ -165,7 +165,7 @@ namespace OpenEphys.Onix1
     /// configuration.
     /// </remarks>
     public enum Bno055AxisMap : uint
-    {   
+    {
         /// <summary>
         /// Specifies that X->X', Y->Y', Z->Z' (chip default). 
         /// </summary>
