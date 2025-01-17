@@ -7,6 +7,19 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// 3D-orientation data produced by a Bosch Bno55 9-axis inertial measurement unit (IMU).
     /// </summary>
+    /// <remarks>
+    /// The physical interpretation of the orientation measurements contained within a <see
+    /// cref="Bno055DataFrame"/> depends on the sensor fusion mode that is enabled and the axis configuration
+    /// that is chosen (see page. 26 of the <a
+    /// href="https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bno055-ds000.pdf">datasheet</a>)
+    /// . If the chip is in NDOF mode and is calibrated, orientation measurements (Quaternion, Euler Angles,
+    /// and Gravity Vector) are absolute ("allocentric") and referenced to the gravity vector and Earth's
+    /// magnetic field. Specifically, if the chip's axes are oriented such that Y points towords magnetic
+    /// north, X points towards magnetic east, and Z points opposite the gravity vector, the orientation
+    /// reading will be null (i.e. Quaternion: X = 0, Y = 0, Z = 0, W = 1; Euler Angles: Yaw = 0, Pitch = 0,
+    /// and Roll = 0 degrees; Gravity: X = 0, Y = 0, Z = 9.8 m/s^2). Linear acceleration readings are always
+    /// taken relative to the chip's axis definitions (they are "egocentric").
+    /// </remarks>
     public class Bno055DataFrame : DataFrame
     {
         /// <summary>
