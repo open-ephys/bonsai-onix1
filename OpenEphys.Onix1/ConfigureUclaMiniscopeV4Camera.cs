@@ -189,6 +189,13 @@ namespace OpenEphys.Onix1
             // acquisition. For this reason, the frame start needs to be marked.
             device.WriteRegister(DS90UB9x.MARK, (uint)DS90UB9xMarkMode.VsyncRising);
 
+            // The camera does not rely on magic words for data alignment
+            device.WriteRegister(DS90UB9x.MAGIC_MASK, 0);
+            device.WriteRegister(DS90UB9x.MAGIC_WAIT, 0);
+            device.WriteRegister(DS90UB9x.DATAMODE, 0);
+            device.WriteRegister(DS90UB9x.DATALINES0, 0);
+            device.WriteRegister(DS90UB9x.DATALINES1, 0);
+
             DS90UB9x.Initialize933SerDesLink(device, DS90UB9xMode.Raw12BitLowFrequency);
 
             var deserializer = new I2CRegisterContext(device, DS90UB9x.DES_ADDR);
@@ -221,7 +228,7 @@ namespace OpenEphys.Onix1
 
         internal static void ConfigureCameraSystem(DeviceContext device, UclaMiniscopeV4FramesPerSecond frameRate, bool interleaveLed)
         {
-            // NB: atMega (bit-banded i2c to SPI) requires that we talk slowly
+            // NB: atMega (bit-banged I2C to SPI) requires that we talk slowly
             Set80kHzI2C(device);
 
             // set up Python480
@@ -255,7 +262,7 @@ namespace OpenEphys.Onix1
             atMega.WriteByte(0x04, (uint)(interleaveLed ? 0x00 : 0x03));
             WriteCameraRegister(atMega, 200, shutterWidth);
 
-            // NB: interaction with the atMega (bit-banded i2c to SPI) requires that we talk slowly, reset to
+            // NB: interaction with the atMega (bit-banged I2C to SPI) requires that we talk slowly, reset to
             // talk to normal chips
             Set200kHzI2C(device);
         }
