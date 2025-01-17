@@ -28,9 +28,6 @@ namespace OpenEphys.Onix1.Design
 
         internal readonly Rhs2116ChannelConfigurationDialog ChannelDialog;
 
-        const double MinAmplitudeuA = 0.01; // NB: Minimum possible amplitude is 10 nA (0.01 µA)
-        const double MaxAmplitudeuA = 2550; // NB: Maximum possible amplitude is 2550000 nA (2550 µA)
-
         /// <summary>
         /// Opens a dialog allowing for easy changing of stimulus sequence parameters, with visual feedback on what the resulting stimulus sequence looks like.
         /// </summary>
@@ -1020,8 +1017,9 @@ namespace OpenEphys.Onix1.Design
             {
                 if (!UpdateStepSizeFromAmplitude(result))
                 {
-                    string text = result > MaxAmplitudeuA ? MaxAmplitudeuA.ToString() : "0";
-                    byte tag = result > MaxAmplitudeuA ? (byte)255 : (byte)0;
+                    string text = "0";
+                    byte tag = 0;
+                    textBox.Text = "";
 
                     UpdateAmplitudeTextBoxes(textBox, text, tag);
 
@@ -1051,19 +1049,9 @@ namespace OpenEphys.Onix1.Design
         {
             const string InvalidAmplitudeString = "Invalid Amplitude";
 
-            if (amplitude > MaxAmplitudeuA)
-            {
-                MessageBox.Show($"Warning: Amplitude is too high. Amplitude must be less than or equal to {MaxAmplitudeuA} µA.", InvalidAmplitudeString);
-                return false;
-            }
-            else if (amplitude < 0)
+            if (amplitude < 0)
             {
                 MessageBox.Show("Warning: Amplitude cannot be a negative value.", InvalidAmplitudeString);
-                return false;
-            }
-            else if (amplitude < MinAmplitudeuA && amplitude >= 0)
-            {
-                MessageBox.Show($"Amplitude is too small to be resolved. Amplitude must be greater than or equal to {MinAmplitudeuA} µA.", InvalidAmplitudeString);
                 return false;
             }
 
@@ -1078,7 +1066,7 @@ namespace OpenEphys.Onix1.Design
                 return true;
             }
 
-            StepSize = Rhs2116StimulusSequence.GetStepSizeWithMinError(validStepSizes, Sequence.Stimuli, Sequence.CurrentStepSize);
+            StepSize = Rhs2116StimulusSequence.GetStepSizeWithMinError(validStepSizes, Sequence.Stimuli, amplitude, Sequence.CurrentStepSize);
             textBoxStepSize.Text = GetStepSizeStringuA(StepSize);
 
             return true;
