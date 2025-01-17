@@ -191,6 +191,7 @@ namespace OpenEphys.Onix1
 
             // The camera does not rely on magic words for data alignment
             device.WriteRegister(DS90UB9x.MAGIC_MASK, 0);
+            device.WriteRegister(DS90UB9x.MAGIC, 0);
             device.WriteRegister(DS90UB9x.MAGIC_WAIT, 0);
             device.WriteRegister(DS90UB9x.DATAMODE, 0);
             device.WriteRegister(DS90UB9x.DATALINES0, 0);
