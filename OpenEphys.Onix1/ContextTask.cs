@@ -93,12 +93,12 @@ namespace OpenEphys.Onix1
             groupedFrames.Connect();
             contextDriver = driver;
             contextIndex = index;
+            ctx = new oni.Context(contextDriver, contextIndex);
             Initialize();
         }
 
         private void Initialize()
         {
-            ctx = new oni.Context(contextDriver, contextIndex);
             SystemClockHz = ctx.SystemClockHz;
             AcquisitionClockHz = ctx.AcquisitionClockHz;
             MaxReadFrameSize = ctx.MaxReadFrameSize;
@@ -115,8 +115,11 @@ namespace OpenEphys.Onix1
                     lock (readLock)
                         lock (writeLock)
                         {
-                            ctx?.Dispose();
-                            Initialize();
+                            if (ctx != null)
+                            {
+                                ctx.Refresh();
+                                Initialize();
+                            }
                         }
                 }
         }
@@ -195,7 +198,6 @@ namespace OpenEphys.Onix1
         {
             return groupedFrames.Where(deviceFrames => deviceFrames.Key == deviceAddress).Merge();
         }
-
 
         void AssertConfigurationContext()
         {
