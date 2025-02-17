@@ -35,7 +35,7 @@ namespace OpenEphys.Onix1
     /// </remarks>
     public class ContextTask : IDisposable
     {
-        oni.Context ctx;
+        readonly oni.Context ctx;
 
         /// <summary>
         /// Maximum amount of frames the reading queue will hold. If the queue fills or the read thread is not
@@ -93,12 +93,12 @@ namespace OpenEphys.Onix1
             groupedFrames.Connect();
             contextDriver = driver;
             contextIndex = index;
+            ctx = new oni.Context(contextDriver, contextIndex);
             Initialize();
         }
 
         private void Initialize()
         {
-            ctx = new oni.Context(contextDriver, contextIndex);
             SystemClockHz = ctx.SystemClockHz;
             AcquisitionClockHz = ctx.AcquisitionClockHz;
             MaxReadFrameSize = ctx.MaxReadFrameSize;
@@ -115,7 +115,7 @@ namespace OpenEphys.Onix1
                     lock (readLock)
                         lock (writeLock)
                         {
-                            ctx?.Dispose();
+                            ctx.Refresh();
                             Initialize();
                         }
                 }
@@ -195,7 +195,6 @@ namespace OpenEphys.Onix1
         {
             return groupedFrames.Where(deviceFrames => deviceFrames.Key == deviceAddress).Merge();
         }
-
 
         void AssertConfigurationContext()
         {
@@ -287,8 +286,9 @@ namespace OpenEphys.Onix1
                     }
 
                     if (!acquisition.IsCompleted)
+                    {
                         throw new InvalidOperationException("Acquisition already running in the current context.");
-
+                    }
 
                     // NB: Configure context before starting acquisition or the the settings (e.g. Block read
                     // and write sizes) will not be respected
@@ -484,7 +484,9 @@ namespace OpenEphys.Onix1
             lock (disposeLock)
             {
                 if (!disposed)
+                {
                     action();
+                }
             }
         }
 
@@ -560,8 +562,7 @@ namespace OpenEphys.Onix1
                     lock (readLock)
                         lock (writeLock)
                         {
-                            ctx?.Dispose();
-                            ctx = null;
+                            ctx.Dispose();
                         }
         }
 
