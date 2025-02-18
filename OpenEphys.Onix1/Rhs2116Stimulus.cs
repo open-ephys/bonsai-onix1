@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Xml.Serialization;
+using Bonsai;
 
 namespace OpenEphys.Onix1
 {
@@ -8,6 +9,28 @@ namespace OpenEphys.Onix1
     /// </summary>
     public class Rhs2116Stimulus
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Rhs2116Stimulus"/> class.
+        /// </summary>
+        public Rhs2116Stimulus() { }
+
+        /// <summary>
+        /// Construct a new <see cref="Rhs2116Stimulus"/> instance with the same parameters as the given <see cref="Rhs2116Stimulus"/> object.
+        /// </summary>
+        /// <param name="stimulus"></param>
+        public Rhs2116Stimulus(Rhs2116Stimulus stimulus)
+        {
+            NumberOfStimuli = stimulus.NumberOfStimuli;
+            AnodicFirst = stimulus.AnodicFirst;
+            DelaySamples = stimulus.DelaySamples;
+            DwellSamples = stimulus.DwellSamples;
+            AnodicAmplitudeSteps = stimulus.AnodicAmplitudeSteps;
+            AnodicWidthSamples = stimulus.AnodicWidthSamples;
+            CathodicAmplitudeSteps = stimulus.CathodicAmplitudeSteps;
+            CathodicWidthSamples = stimulus.CathodicWidthSamples;
+            InterStimulusIntervalSamples = stimulus.InterStimulusIntervalSamples;
+        }
+
         /// <summary>
         /// Number of stimuli delivered for each trigger.
         /// </summary>

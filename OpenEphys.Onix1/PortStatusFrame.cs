@@ -16,26 +16,13 @@ namespace OpenEphys.Onix1
         {
             var payload = (PortStatusPayload*)frame.Data.ToPointer();
             HubClock = payload->HubClock;
-            var statusCodeValid = (payload->SerdesStatus & 0x0004) == 4;
-            StatusCode = statusCodeValid ? payload->Code : PortStatusCode.Invalid;
-            SerdesLocked = (payload->SerdesStatus & 0x0001) == 1;
-            SerdesPass = (payload->SerdesStatus & 0x0002) == 2;
+            StatusCode = payload->Code;
         }
 
         /// <summary>
         /// Gets the port status code.
         /// </summary>
         public PortStatusCode StatusCode { get; }
-
-        /// <summary>
-        /// Gets the SERDES forward channel lock status.
-        /// </summary>
-        public bool SerdesLocked { get; }
-
-        /// <summary>
-        /// Gets the SERDES on-chip parity check status.
-        /// </summary>
-        public bool SerdesPass { get; }
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -43,6 +30,5 @@ namespace OpenEphys.Onix1
     {
         public ulong HubClock;
         public PortStatusCode Code;
-        public byte SerdesStatus;
     }
 }

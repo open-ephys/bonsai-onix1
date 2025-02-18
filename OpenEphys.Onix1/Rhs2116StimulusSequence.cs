@@ -3,6 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("OpenEphys.Onix1.Design")]
 
 namespace OpenEphys.Onix1
 {
@@ -11,7 +14,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     public class Rhs2116StimulusSequence
     {
-        const int NumberOfChannelsPerDevice = 16;
+        internal const int NumberOfChannels = 16;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Rhs2116StimulusSequence"/> class with 16 default
@@ -19,7 +22,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         public Rhs2116StimulusSequence()
         {
-            Stimuli = new Rhs2116Stimulus[NumberOfChannelsPerDevice];
+            Stimuli = new Rhs2116Stimulus[NumberOfChannels];
 
             for (var i = 0; i < Stimuli.Length; i++)
             {
@@ -148,6 +151,15 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
+        /// Gets the maximum peak-to-peak amplitude across all stimuli.
+        /// </summary>
+        /// <returns>Double containing the maximum peak-to-peak amplitude in µA.</returns>
+        public double GetMaxPeakToPeakAmplitudeuA()
+        {
+            return CurrentStepSizeuA * MaximumPeakToPeakAmplitudeSteps;
+        }
+
+        /// <summary>
         /// Gets the maximum possible amplitude for a single pulse, in µA.
         /// </summary>
         [XmlIgnore]
@@ -172,7 +184,7 @@ namespace OpenEphys.Onix1
         {
             var table = new Dictionary<uint, BitArray>();
 
-            for (int i = 0; i < NumberOfChannelsPerDevice; i++)
+            for (int i = 0; i < NumberOfChannels; i++)
             {
                 var s = Stimuli[i];
 
@@ -216,6 +228,66 @@ namespace OpenEphys.Onix1
                 table[key][channel] = enable;
                 table[key][channel + 16] = polarity;
             }
+        }
+
+        internal static Rhs2116StepSize GetStepSizeWithMinError(IEnumerable<Rhs2116StepSize> stepSizes, Rhs2116Stimulus[] stimuli, double requestedAmplitude, Rhs2116StepSize currentStepSize)
+        {
+            var numberOfStepSizes = stepSizes.Count();
+            var maxError = new List<double>(numberOfStepSizes);
+            var stepSizesuA = stepSizes.Select(s => GetStepSizeuA(s)).ToArray();
+            var currentStepSizeuA = GetStepSizeuA(currentStepSize);
+
+            static double CalculateError(double amplitude, double stepSizeuA)
+            {
+                return Math.Round(amplitude / stepSizeuA) > 0 && Math.Round(amplitude / stepSizeuA) <= 255
+                    ? Math.Abs((amplitude - (stepSizeuA * Math.Round(amplitude / stepSizeuA))) / amplitude)
+                    : double.PositiveInfinity;
+            }
+
+            for (int s = 0; s < numberOfStepSizes; s++)
+            {
+                maxError.Add(0);
+
+                for (int c = 0; c < stimuli.Length; c += 1)
+                {
+                    if (stimuli[c].AnodicAmplitudeSteps == 0 && stimuli[c].CathodicAmplitudeSteps == 0) continue;
+
+                    var anodicAmp = stimuli[c].AnodicAmplitudeSteps * currentStepSizeuA;
+                    var cathodicAmp = stimuli[c].CathodicAmplitudeSteps * currentStepSizeuA;
+
+                    var anodicError = CalculateError(anodicAmp, stepSizesuA[s]);
+                    var cathodicError = CalculateError(cathodicAmp, stepSizesuA[s]);
+
+                    maxError[s] = Math.Max(maxError[s], Math.Max(anodicError, cathodicError));
+                }
+
+                var requestedError = CalculateError(requestedAmplitude, stepSizesuA[s]);
+
+                maxError[s] = Math.Max(maxError[s], requestedError);
+            }
+
+            if (maxError.Distinct().Count() == 1)
+            {
+                // NB: All step sizes have the same error; compare to current step size and choose the closest step size
+                return stepSizes.OrderBy(s => Math.Abs(GetStepSizeuA(s) - currentStepSizeuA)).First();
+            }
+
+            var minimumError = maxError.Min();
+            var optimalStepIndex = maxError
+                .Select((e, ind) =>
+                {
+                    if (e == minimumError)
+                    {
+                        return (Min: true, Ind: ind);
+                    }
+                    return (Min: false, Ind: -1);
+                })
+                .Where(e => e.Min)
+                .OrderBy(e => Math.Abs(GetStepSizeuA(stepSizes.ElementAt(e.Ind)) - currentStepSizeuA))
+                .Select(e => e.Ind)
+                .First();
+
+            return stepSizes.ElementAt(optimalStepIndex);
         }
     }
 }

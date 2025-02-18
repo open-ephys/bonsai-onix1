@@ -50,8 +50,7 @@ namespace OpenEphys.Onix1
         [TypeConverter(typeof(PolledBno055SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the Bno055 device.")]
         public ConfigurePolledBno055 Bno055 { get; set; } =
-            new ConfigurePolledBno055 { AxisMap = Bno055AxisMap.ZYX, AxisSign = Bno055AxisSign.MirrorX | Bno055AxisSign.MirrorY | Bno055AxisSign.MirrorZ };
-
+            new ConfigurePolledBno055 { AxisMap = Bno055AxisMap.ZYX, AxisSign = Bno055AxisSign.MirrorZ };
 
         /// <summary>
         /// Gets or sets the port.

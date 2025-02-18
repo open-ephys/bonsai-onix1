@@ -53,7 +53,7 @@ namespace OpenEphys.Onix1
                 context.HubState = (PassthroughState)(((int)context.HubState & ~(1 << portShift)) | passthroughState);
 
                 // leave in standard mode when finished
-                return Disposable.Create(() => context.HubState = (PassthroughState)((int)context.HubState & ~(1 << portShift))); 
+                return Disposable.Create(() => context.HubState = (PassthroughState)((int)context.HubState & ~(1 << portShift)));
             })
             .ConfigureLink(context =>
             {
@@ -76,7 +76,7 @@ namespace OpenEphys.Onix1
                 }
                 return Disposable.Create(dispose);
             })
-            .ConfigureDevice(context => 
+            .ConfigureDevice(context =>
             {
                 var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
@@ -117,36 +117,50 @@ namespace OpenEphys.Onix1
     /// Specifies the headstage port status codes.
     /// </summary>
     [Flags]
-    public enum PortStatusCode : byte
+    public enum PortStatusCode : ushort
     {
         /// <summary>
-        /// Specifies that the status code should be disregarded.
+        /// Specifies the SERDES forward channel lock status.
         /// </summary>
-        Invalid = 0x0,
+        SerdesLock = 0x0001,
+
         /// <summary>
-        /// Specifies a cyclic redundancy check failure.
+        /// Specifies the SERDES on-chip parity check status.
         /// </summary>
-        CrcError = 0x1,
+        SerdesParityPass = 0x0002,
+
+        /// <summary>
+        /// Specifies a cyclic redundancy check failure during data transmission.
+        /// </summary>
+        CrcError = 0x0100,
+
         /// <summary>
         /// Specifies that too many devices were indicated in the hub device table.
         /// </summary>
-        TooManyDevices = 0x2,
+        TooManyDevices = 0x0200,
+
         /// <summary>
         /// Specifies a hub initialization error.
         /// </summary>
-        InitializationError = 0x4,
+        InitializationError = 0x0400,
+
         /// <summary>
         /// Specifies the receipt of a badly formatted data packet.
         /// </summary>
-        BadPacketFormat = 0x8,
+        BadPacketFormat = 0x0800,
+
+        /// <summary>
+        /// Specifies the a cyclic redundancy check failure during hub initialization.
+        /// </summary>
+        InitializationCrcError = 0x1000,
     }
 
     /// <summary>
     /// Specifies the physical port that a headstage is plugged into.
     /// </summary>
     /// <remarks>
-    /// ONIX uses a common protocol to communicate with a variety of devices using the same physical connection. For this reason
-    /// lots of different headstage types can be plugged into a headstage port.
+    /// ONIX uses a common protocol to communicate with a variety of devices using the same physical
+    /// connection. For this reason lots of different headstage types can be plugged into a headstage port.
     /// </remarks>
     public enum PortName
     {

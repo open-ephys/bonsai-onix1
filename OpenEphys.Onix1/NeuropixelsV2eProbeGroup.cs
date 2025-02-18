@@ -24,23 +24,28 @@ namespace OpenEphys.Onix1
         /// the default settings for all contacts, including their positions, shapes, and IDs.
         /// </remarks>
         public NeuropixelsV2eProbeGroup()
-            : base("probeinterface", "0.2.21",
-                  new List<Probe>()
-                  {
-                      new(ProbeNdim.Two,
-                          ProbeSiUnits.um,
-                          new ProbeAnnotations("Neuropixels 2.0 - Multishank", "IMEC"),
-                          new ContactAnnotations(new string[0]),
-                          DefaultContactPositions(NeuropixelsV2.ElectrodePerShank * numberOfShanks),
-                          Probe.DefaultContactPlaneAxes(NeuropixelsV2.ElectrodePerShank * numberOfShanks),
-                          Probe.DefaultContactShapes(NeuropixelsV2.ElectrodePerShank * numberOfShanks, ContactShape.Square),
-                          Probe.DefaultSquareParams(NeuropixelsV2.ElectrodePerShank * numberOfShanks, 12.0f),
-                          DefaultProbePlanarContourQuadShank(),
-                          DefaultDeviceChannelIndices(NeuropixelsV2.ChannelCount, NeuropixelsV2.ElectrodePerShank * numberOfShanks),
-                          Probe.DefaultContactIds(NeuropixelsV2.ElectrodePerShank * numberOfShanks),
-                          DefaultShankIds(NeuropixelsV2.ElectrodePerShank * numberOfShanks))
-                  })
+            : base("probeinterface", "0.2.21", DefaultProbes())
         {
+        }
+
+        private static Probe[] DefaultProbes()
+        {
+            var probe = new Probe[1];
+
+            probe[0] = new(ProbeNdim.Two,
+                           ProbeSiUnits.um,
+                           new ProbeAnnotations("Neuropixels 2.0 - Multishank", "IMEC"),
+                           null,
+                           DefaultContactPositions(NeuropixelsV2.ElectrodePerShank * numberOfShanks),
+                           Probe.DefaultContactPlaneAxes(NeuropixelsV2.ElectrodePerShank * numberOfShanks),
+                           Probe.DefaultContactShapes(NeuropixelsV2.ElectrodePerShank * numberOfShanks, ContactShape.Square),
+                           Probe.DefaultSquareParams(NeuropixelsV2.ElectrodePerShank * numberOfShanks, 12.0f),
+                           DefaultProbePlanarContourQuadShank(),
+                           DefaultDeviceChannelIndices(NeuropixelsV2.ChannelCount, NeuropixelsV2.ElectrodePerShank * numberOfShanks),
+                           Probe.DefaultContactIds(NeuropixelsV2.ElectrodePerShank * numberOfShanks),
+                           DefaultShankIds(NeuropixelsV2.ElectrodePerShank * numberOfShanks));
+
+            return probe;
         }
 
         /// <summary>

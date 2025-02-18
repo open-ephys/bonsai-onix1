@@ -10,12 +10,14 @@ using OpenCV.Net;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Produces a sequence of <see cref="Rhs2116DataFrame"/> objects from a NeuropixelsV2e headstage.
+    /// Produces a sequence of <see cref="Rhs2116DataFrame"/> objects with data from an Intan
+    /// Rhs2116 bioacquisition chip.
     /// </summary>
     /// <remarks>
     /// This data IO operator must be linked to an appropriate configuration, such as a <see
     /// cref="ConfigureRhs2116"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
+    [Description("Produces a sequence of Rhs2116DataFrame objects with data from an Intan Rhs2116 bioacquisition chip.")]
     public class Rhs2116Data : Source<Rhs2116DataFrame>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>

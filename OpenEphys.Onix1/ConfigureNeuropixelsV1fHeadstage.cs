@@ -8,10 +8,10 @@ namespace OpenEphys.Onix1
     /// Configures a NeuropixelsV1f headstage on the specified port.
     /// </summary>
     /// <remarks>
-    /// The NeuropixelsVf Headstage is a 1g serialized, multifunction headstage for small animals. This
-    /// headstage is designed to function with IMEC Neuropixels V1 probes. It provides the following features:
+    /// The NeuropixelsVf Headstage is a 1g serialized, multifunction headstage designed to function
+    /// with IMEC Neuropixels V1 probes. It provides the following features:
     /// <list type="bullet">
-    /// <item><description>Support for a 2x IMEC Neuropixels 1.0 probes, each of which features:
+    /// <item><description>Support for up to 2x IMEC Neuropixels 1.0 probes, each of which features:
     /// <list type="bullet">
     /// <item><description>A single 1 cm long shank probe with a 70 x 24 µm shank cross-section.</description></item>
     /// <item><description>960-electrode low-impedance TiN electrodes.</description></item>
@@ -86,6 +86,8 @@ namespace OpenEphys.Onix1
         /// <remarks>
         /// The port is the physical connection to the ONIX breakout board and must be specified prior to operation.
         /// </remarks>
+        [Description("Specifies the physical connection of the headstage to the ONIX breakout board.")]
+        [Category(ConfigurationCategory)]
         public PortName Port
         {
             get { return port; }
@@ -113,6 +115,7 @@ namespace OpenEphys.Onix1
         [Description("If defined, overrides automated voltage discovery and applies " +
         "the specified voltage to the headstage. Warning: this device requires 4.5V to 5.5V " +
         "for proper operation. Higher voltages can damage the headstage.")]
+        [Category(ConfigurationCategory)]
         public double? PortVoltage
         {
             get => PortControl.PortVoltage;
