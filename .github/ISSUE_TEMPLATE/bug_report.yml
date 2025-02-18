@@ -1,0 +1,35 @@
+name: Bug report
+description: Create a report to help us improve
+title: "[Bug]: "
+labels: "bug"
+
+body:
+  - type: input
+    attributes: 
+      label: Describe the Bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: To Reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. 
+        2. 
+        ...
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Attach your workflow
+      description: |
+        Please attach the workflow in which you encountered the issue below. To do so:
+        1. Navigate to the top level of your Bonsai workflow.
+        2. Press Ctrl+A to select all nodes.
+        3. Press Ctrl+C to copy the workflow as an XML string.
+        4. Paste the resulting XML below.
+      render: "xml"
+        
+    validations:
+      required: true
