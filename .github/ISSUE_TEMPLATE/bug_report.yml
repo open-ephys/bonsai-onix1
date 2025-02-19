@@ -1,6 +1,5 @@
 name: Bug report
 description: Create a report to help us improve
-title: "[Bug]: "
 labels: "bug"
 
 body:
@@ -20,6 +19,30 @@ body:
         ...
     validations:
       required: true
+  - type: input
+    attributes:
+      label: Bonsai Version
+      description: | 
+        The version of Bonsai that is running. To find the current Bonsai version:
+        1. Open the Bonsai editor
+        2. Click on Help → About
+        3. Note the version number (Version X.Y.Z) here
+      placeholder: X.Y.Z
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: OpenEphys.Onix1 Version
+      description: | 
+        The version of the OpenEphys.Onix1 library being used. To find the current library version:
+        1. Open the Bonsai package manager
+        2. Navigate to the Installed tab
+        3. Filter (or scroll down) to OpenEphys.Onix1
+        4. Click on the OpenEphys.Onix1 package
+        5. Note the version number (Version X.Y.Z) here
+      placeholder: X.Y.Z
+    validations:
+      required: true
   - type: textarea
     attributes:
       label: Attach your workflow
@@ -30,6 +53,5 @@ body:
         3. Press Ctrl+C to copy the workflow as an XML string.
         4. Paste the resulting XML below.
       render: "xml"
-        
     validations:
       required: true
