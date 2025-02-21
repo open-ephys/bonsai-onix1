@@ -82,9 +82,8 @@ namespace OpenEphys.Onix1
         /// <param name="driver"> A string specifying the device driver used to control hardware. </param>
         /// <param name="index">The index of the host interconnect between the ONI controller and host
         /// computer. For instance, 0 could correspond to a particular PCIe slot or USB port as enumerated by
-        /// the operating system and translated by an <see
-        /// href="https://open-ephys.github.io/ONI/api/liboni/driver-translators/index.html#drivers">ONI
-        /// device driver translator</see>. A value of -1 will attempt to open the default hardware index and
+        /// the operating system and translated by an ONI
+        /// device driver translator. A value of -1 will attempt to open the default hardware index and
         /// is useful if there is only a single ONI controller managed by the specified <paramref
         /// name="driver"/> in the host computer.</param>
         internal ContextTask(string driver, int index)
@@ -145,11 +144,10 @@ namespace OpenEphys.Onix1
         /// Gets the size of the largest data frame produced by any device with the acquisition system in bytes.
         /// </summary>
         /// <remarks>
-        /// This number describes the the size, in bytes, of the largest <see
-        /// href="https://open-ephys.github.io/ONI/hw-spec/controller.html#data-frames">ONI Data Frame</see>
-        /// produced by any device within the current device table that generates data. Therefore, it also
-        /// defines the lower bound for the value of <see cref="BlockReadSize"/>. The value of this property
-        /// is determined during hardware initialization.
+        /// This number describes the the size, in bytes, of the largest ONI Data Frame produced by
+        /// any device within the current device table that generates data. Therefore, it also
+        /// defines the lower bound for the value of <see cref="BlockReadSize"/>. The value of this
+        /// property is determined during hardware initialization.
         /// </remarks>
         public uint MaxReadFrameSize { get; private set; }
 
@@ -157,11 +155,10 @@ namespace OpenEphys.Onix1
         /// Gets the size of the largest data frame consumed by any device with the acquisition system in bytes.
         /// </summary>
         /// <remarks>
-        /// This number describes the the size, in bytes, of the largest <see
-        /// href="https://open-ephys.github.io/ONI/hw-spec/controller.html#data-frames">ONI Data Frame</see>
-        /// consumed by any device within the current device table that accepts data. Therefore, it also
-        /// defines the lower bound for the value of <see cref="BlockWriteSize"/>. The value of this property
-        /// is determined during hardware initialization.
+        /// This number describes the the size, in bytes, of the largest ONI Data Frame consumed by
+        /// any device within the current device table that accepts data. Therefore, it also defines
+        /// the lower bound for the value of <see cref="BlockWriteSize"/>. The value of this
+        /// property is determined during hardware initialization.
         /// </remarks>
         public uint MaxWriteFrameSize { get; private set; }
 
@@ -169,26 +166,19 @@ namespace OpenEphys.Onix1
         /// Gets the device table containing the device hierarchy of the acquisition system.
         /// </summary>
         /// <remarks>
-        /// This dictionary provides access to the <see
-        /// href="https://open-ephys.github.io/ONI/hw-spec/dev_table.html">ONI Device Table</see>, which maps
-        /// a set of fully-qualified <see
-        /// href="https://open-ephys.github.io/ONI/hw-spec/dev_table.html#dev-address"> ONI Device
-        /// Addresses</see> to a corresponding set of <see
-        /// href="https://open-ephys.github.io/ONI/hw-spec/devices.html#dev-desc">ONI Device
-        /// Descriptors</see>. The value of this property is determined during hardware initialization.
+        /// This dictionary provides access to the ONI Device Table, which maps a set of
+        /// fully-qualified ONI Device Addresses to a corresponding set of ONI Device Descriptors.
+        /// The value of this property is determined during hardware initialization.
         /// </remarks>
         public Dictionary<uint, oni.Device> DeviceTable { get; private set; }
 
         internal IObservable<IGroupedObservable<uint, oni.Frame>> GroupedFrames => groupedFrames;
 
         /// <summary>
-        /// Gets the sequence of <see
-        /// href="https://open-ephys.github.io/ONI/hw-spec/controller.html#data-frames">ONI Data Frames</see>
-        /// produced by a particular device.
+        /// Gets the sequence of ONI Data Frames produced by a particular device.
         /// </summary>
-        /// <param name="deviceAddress">The fully-qualified <see
-        /// href="https://open-ephys.github.io/ONI/hw-spec/dev_table.html#dev-address"> ONI Device
-        /// Address</see> that will produce the frame sequence.</param>
+        /// <param name="deviceAddress">The fully-qualified ONI Device
+        /// Address that will produce the frame sequence.</param>
         /// <returns>The frame sequence produced by the device at address <paramref
         /// name="deviceAddress"/>.</returns>
         public IObservable<oni.Frame> GetDeviceFrames(uint deviceAddress)
