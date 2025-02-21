@@ -30,7 +30,7 @@ namespace OpenEphys.Onix1
         /// cref="DataFrame.HubClock"/>. Each ADC sample is a 12-bit, offset binary value encoded
         /// as a <see cref="ushort"/>. The following equation can be used to convert it to microvolts:
         /// <code>
-        /// V_electrode (µV) = 3.05176 × (AdcSample – 2048)
+        /// Electrode Voltage (µV) = 3.05176 × (ADC Sample – 2048)
         /// </code>
         /// </remarks>
         public Mat AmplifierData { get; }

@@ -44,7 +44,7 @@ namespace OpenEphys.Onix1
         /// encoded as a <see cref="ushort"/>. The following equation can be used to convert it to
         /// microvolts:
         /// <code> 
-        /// V_electrode (µV) = 1,171.875 / ApGain × (AdcSample – 512) 
+        /// Electrode Voltage (µV) = 1,171.875 / AP Gain × (ADC Sample – 512) 
         /// </code>
         /// where AP gain can be 50, 125, 250, 500, 1,000, 1,500, 2,000, or 3,000 depending on how
         /// it's configured in the <see
@@ -62,7 +62,7 @@ namespace OpenEphys.Onix1
         /// cref="DataFrame.HubClock"/>. Each ADC sample is a 10-bit offset, binary value encoded as
         /// a <see cref="ushort"/>. The following equation can be used to convert it to microvolts:
         /// <code> 
-        /// V_electrode (µV) = 1,171.875 / LfpGain × (AdcSample – 512) 
+        /// Electrode Voltage (µV) = 1,171.875 / LFP Gain × (ADC Sample – 512) 
         /// </code>
         /// where LFP gain can be 50, 125, 250, 500, 1,000, 1,500, 2,000, or 3,000 depending on how
         /// it's configured in the <see
