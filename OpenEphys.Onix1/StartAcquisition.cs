@@ -11,14 +11,14 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// The <see href="https://open-ephys.github.io/ONI/">Open Neuro Interface (ONI)</see> hardware
-    /// specification and API describe a general purpose acquisition system architecture and
-    /// programming interface for communication with a host PC. One requirement of ONI is a sequence
-    /// of events that must occur in order to start synchronized data acquisition. <see
-    /// cref="StartAcquisition"/> performs these required actions on one or more <see
-    /// cref="ContextTask">ContextTasks</see> provided in its input sequence. Once acquisition is
-    /// started, devices managed by a particular <see cref="ContextTask"/> will start to produce
-    /// data in a format called an ONI Data Frame. The output sequence of this operator is therefore
-    /// a <see cref="IGroupedObservable{TKey, TElement}"/>, where
+    /// specification and API describe a general purpose acquisition system architecture and programming
+    /// interface for communication with a host PC. One requirement of ONI is a sequence of events that must
+    /// occur in order to start synchronized data acquisition. <see cref="StartAcquisition"/> performs these
+    /// required actions on one or more <see cref="ContextTask">ContextTasks</see> provided in its input
+    /// sequence. Once acquisition is started, devices managed by a particular <see cref="ContextTask"/> will
+    /// start to produce data in a format called an <see
+    /// href="https://open-ephys.github.io/ONI/">ONI Data Frame</see>. The output
+    /// sequence of this operator is therefore a <see cref="IGroupedObservable{TKey, TElement}"/>, where
     /// <list type="table">
     /// <item>
     /// <term>Tkey</term>
@@ -33,8 +33,9 @@ namespace OpenEphys.Onix1
     /// </description>
     /// </item>
     /// </list>
-    /// These pre-sorted frame sequences can be interpreted by downstream Data I/O operators (e.g.
-    /// <see cref="AnalogInput"/> or <see cref="Bno055Data"/>) that convert ONI Data Frames into
+    /// These pre-sorted frame sequences can be interpreted by downstream Data I/O operators (e.g. <see
+    /// cref="AnalogInput"/> or <see cref="Bno055Data"/>) that convert <see
+    /// href="https://open-ephys.github.io/ONI/">ONI Data Frames</see> into
     /// data types that are are more amenable to processing within Bonsai workflows.
     /// </remarks>
     [Description("Starts data acquisition and frame distribution on a ContextTask.")]

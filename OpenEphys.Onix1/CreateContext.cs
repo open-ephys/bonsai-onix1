@@ -37,10 +37,12 @@ namespace OpenEphys.Onix1
         /// Gets or sets the index of the host interconnect between the ONI controller and host computer.
         /// </summary>
         /// <remarks>
-        /// For instance, 0 could correspond to a particular PCIe slot or USB port as enumerated by
-        /// the operating system and translated by an ONI device driver translator. A value of -1
-        /// will attempt to open the default index and is useful if there is only a single ONI
-        /// controller managed by the specified selected <see cref="Driver"/> in the host computer.
+        /// For instance, 0 could correspond to a particular PCIe slot or USB port as enumerated by the
+        /// operating system and translated by an <see
+        /// href="https://open-ephys.github.io/ONI/">ONI
+        /// device driver translator</see>. A value of -1 will attempt to open the default index and is useful
+        /// if there is only a single ONI controller managed by the specified selected <see cref="Driver"/> in
+        /// the host computer.
         /// </remarks>
         [Description("The index of the host interconnect between the ONI controller and host computer.")]
         [Category(DeviceFactory.ConfigurationCategory)]
