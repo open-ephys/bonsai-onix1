@@ -23,29 +23,31 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets the high-gain AC-coupled ephys amplifier data.
+        /// Gets the high-gain AC-coupled amplifier data array.
         /// </summary>
         /// <remarks>
-        /// Each row corresponds to a channel. Each column corresponds to a sample whose time is indicated by
-        /// the corresponding element <see cref="DataFrame.Clock"/> and <see cref="DataFrame.HubClock"/>.
-        /// Samples are 16-bits each and are represented using unsigned 16-bit integers. To convert to
-        /// microvolts, the following equation can be used:
+        /// Data has 16 rows which represent AC-coupled electrophysiology channels and columns which represent
+        /// samples acquired at 30 kHz. Each column corresponds to an ADC sample whose time is
+        /// indicated by the corresponding elements in <see cref="DataFrame.Clock"/> and <see
+        /// cref="DataFrame.HubClock"/>. Each ADC sample is an 16-bit, offset binary value encoded
+        /// as a <see cref="ushort"/>. The following equation can be used to convert it to microvolts:
         /// <code>
-        /// V_electrode (µV) = 0.195 µV × (ADC result – 32768)
+        /// V_electrode (µV) = 0.195 × (AdcSample – 32768)
         /// </code>
         /// </remarks>
         public Mat AmplifierData { get; }
 
         /// <summary>
-        /// Gets the DC-coupled low-gain amplifier data for monitoring stimulation waveforms.
+        /// Gets the DC-coupled low-gain amplifier data array for monitoring stimulation waveforms.
         /// </summary>
         /// <remarks>
-        /// Each row corresponds to a channel. Each column corresponds to a sample whose time is indicated by
-        /// the corresponding element <see cref="DataFrame.Clock"/> and <see cref="DataFrame.HubClock"/>.
-        /// Samples are 10-bits each and are represented using unsigned 16-bit integers. To convert to
-        /// millivolts, the following equation can be used:
+        /// Data has 16 rows which represent DC-coupled electrophysiology channels and columns which represent
+        /// samples acquired at 30 kHz. Each column corresponds to an ADC sample whose time is
+        /// indicated by the corresponding elements in <see cref="DataFrame.Clock"/> and <see
+        /// cref="DataFrame.HubClock"/>. Each ADC sample is a 16-bit, offset binary value encoded
+        /// as a <see cref="ushort"/>. The following equation can be used to convert it to microvolts:
         /// <code>
-        /// V_electrode (mV) = -19.23 mV × (ADC result – 512)
+        /// V_electrode (mV) = -19.23 × (AdcSample – 512)
         /// </code>
         /// </remarks>
         public Mat DCData { get; }

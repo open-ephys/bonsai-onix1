@@ -21,14 +21,16 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets the amplifier data array.
+        /// Gets the buffered electrophysiology data array.
         /// </summary>
         /// <remarks>
-        /// Wide band (0.5 Hz - 10 kHz) electrophysiology data array. Each element is an amplified sample from
-        /// 384 electrodes (rows) acquired at 30 kHz (columns). Each sample is a 12-bit, offset binary value
-        /// encoded as a <see cref="ushort"/>. To convert to microvolts, the following equation can be used:
+        /// Data has 384 rows which represent electrophysiology channels and columns which represent
+        /// samples acquired at 30 kHz. Each column corresponds to an qADC sample whose time is
+        /// indicated by the corresponding elements in <see cref="DataFrame.Clock"/> and <see
+        /// cref="DataFrame.HubClock"/>. Each ADC sample is a 12-bit, offset binary value encoded
+        /// as a <see cref="ushort"/>. The following equation can be used to convert it to microvolts:
         /// <code>
-        /// V_electrode (µV) = 3.05176 µV/bit × (ADC result – 2048) bits
+        /// V_electrode (µV) = 3.05176 × (AdcSample – 2048)
         /// </code>
         /// </remarks>
         public Mat AmplifierData { get; }

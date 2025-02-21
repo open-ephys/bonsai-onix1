@@ -21,8 +21,24 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Get the buffered analog data array.
+        /// Gets the buffered analog data array.
         /// </summary>
+        /// <remarks>
+        /// Data has 16 rows which represent analog input channels and columns which represent
+        /// samples acquired at 100 kHz. Each column corresponds to an ADC sample whose time is
+        /// indicated by the corresponding elements in <see cref="DataFrame.Clock"/> and <see
+        /// cref="DataFrame.HubClock"/>. When <c>DataType</c> in <see
+        /// cref="OpenEphys.Onix1.AnalogInput"/> is set to <c>Volts</c>, pre-converted voltage
+        /// values are encoded as a <see cref="float"/>. When <c>DataType</c> is set to <c>S16</c>,
+        /// raw 16-bit ADC samples are encoded as a <see cref="ushort"/>. In this case, the following
+        /// equation can be used to convert it to volts:
+        /// <code> 
+        /// V_analogInput (V) = VoltageRange / 2^16 × AdcSample 
+        /// </code> 
+        /// where voltage range can be 5, 10, or 20 depending on how the analog input voltage range
+        /// is configured (±2.5, ±5, or ±10 volts) in <see
+        /// cref="OpenEphys.Onix1.ConfigureBreakoutBoard.AnalogIO"/>.
+        /// </remarks>
         public Mat AnalogData { get; }
     }
 

@@ -26,12 +26,13 @@ namespace OpenEphys.Onix1
         /// Gets the buffered electrophysiology data array.
         /// </summary>
         /// <remarks>
-        /// Each row corresponds to a channel. Each column corresponds to a sample whose time is indicated by
-        /// the corresponding element <see cref="DataFrame.Clock"/> and <see cref="DataFrame.HubClock"/>.
-        /// Samples are 16-bits each and are represented using unsigned 16-bit integers. To convert to
-        /// micro-volts, the following equation can be used:
+        /// Data has 64 rows which represent electrophysiology channels and columns which represent
+        /// samples acquired at 30 kHz. Each column corresponds to an ADC sample whose time is
+        /// indicated by the corresponding elements in <see cref="DataFrame.Clock"/> and <see
+        /// cref="DataFrame.HubClock"/>. Each ADC sample is a 16-bit, offset binary value encoded
+        /// as a <see cref="ushort"/>. TThe following equation can be used to convert it to microvolts:
         /// <code>
-        /// V_electrode (uV) = 0.195 µV × (ADC result – 32768)
+        /// V_electrode (µV) = 0.195 × (AdcSample – 32768)
         /// </code>
         /// </remarks>
         public Mat AmplifierData { get; }
@@ -40,8 +41,14 @@ namespace OpenEphys.Onix1
         /// Gets the buffered auxiliary data array.
         /// </summary>
         /// <remarks>
-        /// Each row corresponds to a channel. Each column corresponds to a sample whose time is indicated by
-        /// the corresponding element <see cref="DataFrame.Clock"/> and <see cref="DataFrame.HubClock"/>.
+        /// Data has 3 rows representing electrophysiology channels and columns representing samples acquired at 30
+        /// kHz. Each column corresponds to an ADC sample whose time is indicated by the
+        /// corresponding element <see cref="DataFrame.Clock"/> and <see
+        /// cref="DataFrame.HubClock"/>. Each ADC sample is a 16-bit, offset binary value encoded
+        /// as a <see cref="ushort"/>. The following equation can be used to convert it to microvolts:
+        /// <code>
+        /// V_electrode (µV) = 0.195 × (AdcSample – 32768)
+        /// </code>
         /// </remarks>
         public Mat AuxData { get; }
     }

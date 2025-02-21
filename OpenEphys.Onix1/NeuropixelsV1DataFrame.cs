@@ -34,28 +34,39 @@ namespace OpenEphys.Onix1
         public int[] FrameCount { get; }
 
         /// <summary>
-        /// Gets the spike-band data as a <see cref="Mat"/> object.
+        /// Gets spike-band data array.
         /// </summary>
         /// <remarks>
-        /// Spike-band data has 384 electrodes (rows) with columns representing the samples acquired at 30 kHz.
-        /// Each sample is a 10-bit, offset binary value encoded as a <see cref="ushort"/>. To convert to
-        /// microvolts, the following equation can be used:
-        /// <code>
-        /// V_electrode (uV) = 1171.875 uV / AP Gain × (ADC result – 512)
+        /// Data has 384 rows which represent spike-band electrophysiology channels and columns
+        /// which represent samples acquired at 30 kHz. Each column corresponds to an ADC sample
+        /// whose time is indicated by the corresponding elements in <see cref="DataFrame.Clock"/>
+        /// and <see cref="DataFrame.HubClock"/>. Each ADC sample is a 10-bit, offset binary value
+        /// encoded as a <see cref="ushort"/>. The following equation can be used to convert it to
+        /// microvolts:
+        /// <code> 
+        /// V_electrode (µV) = 1,171.875 / ApGain × (AdcSample – 512) 
         /// </code>
+        /// where AP gain can be 50, 125, 250, 500, 1,000, 1,500, 2,000, or 3,000 depending on how
+        /// it's configured in the <see
+        /// cref="OpenEphys.Onix1.ConfigureNeuropixelsV1eHeadstage.NeuropixelsV1e"/> configuration GUI.
         /// </remarks>
         public Mat SpikeData { get; }
 
         /// <summary>
-        /// Gets the LFP band data as a <see cref="Mat"/> object.
+        /// Gets LFP-band data array.
         /// </summary>
         /// <remarks>
-        /// LFP-band data has 384 electrodes (rows) with columns representing the samples acquired at 2.5 kHz.
-        /// Each sample is a 10-bit, offset binary value encoded as a <see cref="ushort"/>. To convert to
-        /// microvolts, the following equation can be used:
-        /// <code>
-        /// V_electrode (uV) = 1171.875 uV / LFP Gain × (ADC result – 512)
+        /// Data has 384 rows which represent LFP-band electrophysiology channels and columns which
+        /// represent samples acquired at 2.5 kHz. Each column corresponds to an ADC sample whose
+        /// time is indicated by the every 12th element in <see cref="DataFrame.Clock"/> and <see
+        /// cref="DataFrame.HubClock"/>. Each ADC sample is a 10-bit offset, binary value encoded as
+        /// a <see cref="ushort"/>. The following equation can be used to convert it to microvolts:
+        /// <code> 
+        /// V_electrode (µV) = 1,171.875 / LfpGain × (AdcSample – 512) 
         /// </code>
+        /// where LFP gain can be 50, 125, 250, 500, 1,000, 1,500, 2,000, or 3,000 depending on how
+        /// it's configured in the <see
+        /// cref="OpenEphys.Onix1.ConfigureNeuropixelsV1eHeadstage.NeuropixelsV1e"/> configuration GUI.
         /// </remarks>
         public Mat LfpData { get; }
     }
