@@ -17,7 +17,7 @@ namespace OpenEphys.Onix1
     /// required actions on one or more <see cref="ContextTask">ContextTasks</see> provided in its input
     /// sequence. Once acquisition is started, devices managed by a particular <see cref="ContextTask"/> will
     /// start to produce data in a format called an <see
-    /// href="https://open-ephys.github.io/ONI/hw-spec/controller.html#data-frames">ONI Data Frame</see>. The output
+    /// href="https://open-ephys.github.io/ONI/">ONI</see> Data Frame. The output
     /// sequence of this operator is therefore a <see cref="IGroupedObservable{TKey, TElement}"/>, where
     /// <list type="table">
     /// <item>
@@ -35,7 +35,7 @@ namespace OpenEphys.Onix1
     /// </list>
     /// These pre-sorted frame sequences can be interpreted by downstream Data I/O operators (e.g. <see
     /// cref="AnalogInput"/> or <see cref="Bno055Data"/>) that convert <see
-    /// href="https://open-ephys.github.io/ONI/hw-spec/controller.html#data-frames">ONI Data Frames</see> into
+    /// href="https://open-ephys.github.io/ONI/">ONI</see> Data Frames into
     /// data types that are are more amenable to processing within Bonsai workflows.
     /// </remarks>
     [Description("Starts data acquisition and frame distribution on a ContextTask.")]
