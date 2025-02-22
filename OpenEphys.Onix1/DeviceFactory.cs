@@ -61,7 +61,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <remarks>
         /// This is a fully-qualified numerical hardware address of a device within the device table produced
-        /// by an <see href="https://open-ephys.github.io/ONI/">Open Neuro Interface (ONI)</see> compliant
+        /// by an <see href="https://open-ephys.github.io/ONI/">ONI</see>-compliant
         /// acquisition system. This value is usually not set manually, but is assigned in a <see
         /// cref="MultiDeviceFactory"/> to correspond to a fixed address with a piece of hardware such as a
         /// headstage. This address is used for hardware communication.
@@ -75,7 +75,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <remarks>
         /// This type provides a device identity to each device within the device table produced by an <see
-        /// href="https://open-ephys.github.io/ONI/">Open Neuro Interface (ONI)</see> compliant acquisition
+        /// href="https://open-ephys.github.io/ONI/">ONI</see>-compliant acquisition
         /// system.
         /// </remarks>
         [Browsable(false)]

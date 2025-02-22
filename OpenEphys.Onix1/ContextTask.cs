@@ -13,11 +13,11 @@ namespace OpenEphys.Onix1
     /// Encapsulates a single ONI context and orchestrates interaction with ONI-compliant hardware.
     /// </summary>
     /// <remarks>
-    /// The <see href="https://open-ephys.github.io/ONI/">Open Neuro Interface (ONI)</see> hardware
-    /// specification and API describe a general purpose acquisition system architecture and programming
+    /// The <see href="https://open-ephys.github.io/ONI/">Open Neuro Interface (ONI)</see>
+    /// specification describe a general purpose acquisition system architecture and programming
     /// interface for communication with a host PC. One requirement of ONI is that a host application must
     /// hold a "context" that contains handles for hardware communication, data acquisition parameters, etc.
-    /// for a particular hardware controller, such as the ONIX PCIe card. <see cref="ContextTask"/> fulfills
+    /// for a particular ONI Controller, such as the ONIX PCIe card. <see cref="ContextTask"/> fulfills
     /// this role for this library. Additionally, once data acquisition is started by the <see
     /// cref="StartAcquisition"/> operator, <see cref="ContextTask"/> performs the following:
     /// <list type="bullet">
@@ -31,7 +31,7 @@ namespace OpenEphys.Onix1
     /// Additionally, this operator exposes important information about the underlying ONI hardware such as
     /// the device table, clock rates, and block read and write sizes. <strong>In summary, <see
     /// cref="ContextTask"/> forms a complete interface for all hardware interaction within the library: all
-    /// physical interaction with the ONIX system passes through this class.</strong>
+    /// physical interaction with the ONIX system ultimately passes through this class.</strong>
     /// </remarks>
     public class ContextTask : IDisposable
     {
@@ -82,11 +82,10 @@ namespace OpenEphys.Onix1
         /// <param name="driver"> A string specifying the device driver used to control hardware. </param>
         /// <param name="index">The index of the host interconnect between the ONI controller and host
         /// computer. For instance, 0 could correspond to a particular PCIe slot or USB port as enumerated by
-        /// the operating system and translated by an <see
-        /// href="https://open-ephys.github.io/ONI/">ONI
-        /// device driver translator</see>. A value of -1 will attempt to open the default hardware index and
-        /// is useful if there is only a single ONI controller managed by the specified <paramref
-        /// name="driver"/> in the host computer.</param>
+        /// the operating system and translated by an <see href="https://open-ephys.github.io/ONI/">ONI</see>
+        /// Device Driver Translator. A value of -1 will attempt to open the default hardware index and is
+        /// useful if there is only a single ONI controller managed by the specified <paramref name="driver"/>
+        /// in the host computer.</param>
         internal ContextTask(string driver, int index)
         {
             groupedFrames = frameReceived.GroupBy(frame => frame.DeviceAddress).Replay();
@@ -134,8 +133,9 @@ namespace OpenEphys.Onix1
         /// Gets the acquisition clock rate in Hz.
         /// </summary>
         /// <remarks>
-        /// This property describes the frequency of ONI controller's acquisition clock, which is used to
-        /// generate the <see cref="DataFrame.Clock">Clock</see> counter value included in all data frames
+        /// This property describes the frequency of the <see
+        /// href="https://open-ephys.github.io/ONI/">ONI</see> Controller's Acquisition Clock, which is used
+        /// to generate the <see cref="DataFrame.Clock">Clock</see> counter value included in all data frames
         /// produced by Data IO operators in this library (e.g. <see cref="NeuropixelsV1eData"/> or <see
         /// cref="Bno055Data"/>). The value of this property is determined during hardware initialization.
         /// </remarks>
@@ -146,10 +146,10 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <remarks>
         /// This number describes the the size, in bytes, of the largest <see
-        /// href="https://open-ephys.github.io/ONI/">ONI Data Frame</see>
-        /// produced by any device within the current device table that generates data. Therefore, it also
-        /// defines the lower bound for the value of <see cref="BlockReadSize"/>. The value of this property
-        /// is determined during hardware initialization.
+        /// href="https://open-ephys.github.io/ONI/">ONI</see> Data Frame produced by any device within the
+        /// current device table that generates data. Therefore, it also defines the lower bound for the value
+        /// of <see cref="BlockReadSize"/>. The value of this property is determined during hardware
+        /// initialization.
         /// </remarks>
         public uint MaxReadFrameSize { get; private set; }
 
@@ -158,10 +158,10 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <remarks>
         /// This number describes the the size, in bytes, of the largest <see
-        /// href="https://open-ephys.github.io/ONI/">ONI Data Frame</see>
-        /// consumed by any device within the current device table that accepts data. Therefore, it also
-        /// defines the lower bound for the value of <see cref="BlockWriteSize"/>. The value of this property
-        /// is determined during hardware initialization.
+        /// href="https://open-ephys.github.io/ONI/">ONI</see> Data Frame consumed by any device within the
+        /// current device table that accepts data. Therefore, it also defines the lower bound for the value
+        /// of <see cref="BlockWriteSize"/>. The value of this property is determined during hardware
+        /// initialization.
         /// </remarks>
         public uint MaxWriteFrameSize { get; private set; }
 
@@ -169,26 +169,21 @@ namespace OpenEphys.Onix1
         /// Gets the device table containing the device hierarchy of the acquisition system.
         /// </summary>
         /// <remarks>
-        /// This dictionary provides access to the <see
-        /// href="https://open-ephys.github.io/ONI/hw-spec/dev_table.html">ONI Device Table</see>, which maps
-        /// a set of fully-qualified <see
-        /// href="https://open-ephys.github.io/ONI/"> ONI Device
-        /// Addresses</see> to a corresponding set of <see
-        /// href="https://open-ephys.github.io/ONI/">ONI Device
-        /// Descriptors</see>. The value of this property is determined during hardware initialization.
+        /// This dictionary provides access to the <see href="https://open-ephys.github.io/ONI/">ONI</see>
+        /// Device Table, which maps a set of fully-qualified Device Addresses to a corresponding set of
+        /// Device Descriptors. The value of this property is determined during hardware initialization.
         /// </remarks>
         public Dictionary<uint, oni.Device> DeviceTable { get; private set; }
 
         internal IObservable<IGroupedObservable<uint, oni.Frame>> GroupedFrames => groupedFrames;
 
         /// <summary>
-        /// Gets the sequence of <see
-        /// href="https://open-ephys.github.io/ONI/">ONI Data Frames</see>
-        /// produced by a particular device.
+        /// Gets the sequence of <see href="https://open-ephys.github.io/ONI/">ONI</see> Data Frames produced
+        /// by a particular device.
         /// </summary>
         /// <param name="deviceAddress">The fully-qualified <see
-        /// href="https://open-ephys.github.io/ONI/"> ONI Device
-        /// Address</see> that will produce the frame sequence.</param>
+        /// href="https://open-ephys.github.io/ONI/">ONI</see> Device Address of the Device that will produce
+        /// the Data Frame sequence.</param>
         /// <returns>The frame sequence produced by the device at address <paramref
         /// name="deviceAddress"/>.</returns>
         public IObservable<oni.Frame> GetDeviceFrames(uint deviceAddress)
