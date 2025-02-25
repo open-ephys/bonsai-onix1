@@ -3,10 +3,10 @@
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Partial class to create a GUI for <see cref="ConfigureNeuropixelsV1fHeadstage"/>.
+    /// Partial class to create a GUI for <see cref="ConfigureHeadstageNeuropixelsV1f"/>.
     /// </summary>
     /// <remarks>
-    /// Within the GUI, there is a tab for all devices encapsulated by a <see cref="ConfigureNeuropixelsV1fHeadstage"/>,
+    /// Within the GUI, there is a tab for all devices encapsulated by a <see cref="ConfigureHeadstageNeuropixelsV1f"/>,
     /// specifically two <see cref="ConfigureNeuropixelsV1f"/> devices and one <see cref="ConfigureBno055"/>. 
     /// </remarks>
     public partial class NeuropixelsV1fHeadstageDialog : Form

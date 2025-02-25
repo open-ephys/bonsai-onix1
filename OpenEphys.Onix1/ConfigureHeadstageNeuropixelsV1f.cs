@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
 
@@ -25,15 +26,15 @@ namespace OpenEphys.Onix1
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV1fHeadstageEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a NeuropixelsV1f headstage.")]
-    public class ConfigureNeuropixelsV1fHeadstage : MultiDeviceFactory
+    public class ConfigureHeadstageNeuropixelsV1f : MultiDeviceFactory
     {
         PortName port;
         readonly ConfigureNeuropixels1fHeadstageLinkController PortControl = new();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigureNeuropixelsV1eHeadstage"/> class.
+        /// Initializes a new instance of the <see cref="ConfigureHeadstageNeuropixelsV1f"/> class.
         /// </summary>
-        public ConfigureNeuropixelsV1fHeadstage()
+        public ConfigureHeadstageNeuropixelsV1f()
         {
             Port = PortName.PortA;
             PortControl.HubConfiguration = HubConfiguration.Standard;
@@ -178,4 +179,8 @@ namespace OpenEphys.Onix1
             }
         }
     }
+
+    /// <inheritdoc cref="ConfigureHeadstageNeuropixelsV1f"/>
+    [Obsolete("This operator is obsolete. Use ConfigureHeadstageNeuropixelsV1f instead. Will be removed in version 1.0.0.")]
+    public class ConfigureNeuropixelsV1fHeadstage : ConfigureHeadstageNeuropixelsV1f { }
 }

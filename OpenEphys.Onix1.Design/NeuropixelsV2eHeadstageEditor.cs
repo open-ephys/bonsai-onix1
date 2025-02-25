@@ -6,7 +6,7 @@ using System;
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Class that opens a new dialog for a <see cref="ConfigureNeuropixelsV2eHeadstage"/>.
+    /// Class that opens a new dialog for a <see cref="ConfigureHeadstageNeuropixelsV2e"/>.
     /// </summary>
     public class NeuropixelsV2eHeadstageEditor : WorkflowComponentEditor
     {
@@ -17,7 +17,7 @@ namespace OpenEphys.Onix1.Design
             {
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
 
-                if (editorState != null && !editorState.WorkflowRunning && component is ConfigureNeuropixelsV2eHeadstage configureV2eHeadstage)
+                if (editorState != null && !editorState.WorkflowRunning && component is ConfigureHeadstageNeuropixelsV2e configureV2eHeadstage)
                 {
                     using var editorDialog = new NeuropixelsV2eHeadstageDialog(configureV2eHeadstage.NeuropixelsV2e, configureV2eHeadstage.Bno055);
 
@@ -34,7 +34,7 @@ namespace OpenEphys.Onix1.Design
                         return true;
                     }
                 }
-                else if (editorState != null && !editorState.WorkflowRunning && component is ConfigureNeuropixelsV2eBetaHeadstage configureV2eBetaHeadstage)
+                else if (editorState != null && !editorState.WorkflowRunning && component is ConfigureHeadstageNeuropixelsV2eBeta configureV2eBetaHeadstage)
                 {
                     using var editorDialog = new NeuropixelsV2eHeadstageDialog(configureV2eBetaHeadstage.NeuropixelsV2eBeta, configureV2eBetaHeadstage.Bno055);
 
