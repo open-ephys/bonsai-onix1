@@ -2,7 +2,7 @@
 
 namespace OpenEphys.Onix1
 {
-    class NeuropixelsV1eMetadata
+    class NeuropixelsV1eMetadata : I2CRegisterContext
     {
         const uint OFFSET_ID = 0;
         const uint OFFSET_VERSION = 10;
@@ -10,21 +10,21 @@ namespace OpenEphys.Onix1
         const uint OFFSET_FLEXPN = 20;
         const uint OFFSET_PROBEPN = 40;
 
-        public NeuropixelsV1eMetadata(I2CRegisterContext serializer)
+        public NeuropixelsV1eMetadata(DeviceContext deviceContext)
+            : base(deviceContext, NeuropixelsV1.FlexEepromI2CAddress)
         {
-            var flexI2C = new I2CRegisterContext(serializer, NeuropixelsV1.FlexEepromI2CAddress);
             try
             {
-                var sn = flexI2C.ReadBytes(OFFSET_ID, 8);
+                var sn = ReadBytes(OFFSET_ID, 8);
                 ProbeSerialNumber = BitConverter.ToUInt64(sn, 0);
-                Version = flexI2C.ReadByte(OFFSET_VERSION);
-                Revision = flexI2C.ReadByte(OFFSET_REVISION);
-                PartNumber = flexI2C.ReadString(OFFSET_FLEXPN, 20);
-                ProbePartNumber = flexI2C.ReadString(OFFSET_PROBEPN, 20);
+                Version = ReadByte(OFFSET_VERSION);
+                Revision = ReadByte(OFFSET_REVISION);
+                PartNumber = ReadString(OFFSET_FLEXPN, 20);
+                ProbePartNumber = ReadString(OFFSET_PROBEPN, 20);
             }
             catch (oni.ONIException ex)
             {
-                throw new InvalidOperationException("Could not communicate with probe. Ensure that the " +
+                throw new InvalidOperationException("Could not communicate with probe at address " + deviceContext.Address + " . Ensure that the " +
                     "flex connection is properly seated.", ex);
             }
         }
