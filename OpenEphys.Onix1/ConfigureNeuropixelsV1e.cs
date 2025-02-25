@@ -145,7 +145,7 @@ namespace OpenEphys.Onix1
                 DS90UB9x.Set933I2CRate(device, 400e3);
 
                 // read probe metadata
-                var probeMetadata = new NeuropixelsV1eMetadata(serializer);
+                var probeMetadata = new NeuropixelsV1eMetadata(device);
 
                 // issue full mux reset to the probe
                 var gpo10Config = NeuropixelsV1e.DefaultGPO10Config;

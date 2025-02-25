@@ -2,7 +2,7 @@
 
 namespace OpenEphys.Onix1
 {
-    class NeuropixelsV1fMetadata :  I2CRegisterContext
+    class NeuropixelsV1fMetadata : I2CRegisterContext
     {
         const uint OFFSET_ID = 0;
         const uint OFFSET_VERSION = 10;
@@ -24,7 +24,7 @@ namespace OpenEphys.Onix1
             }
             catch (oni.ONIException ex)
             {
-                throw new InvalidOperationException("Could not communicate with probe. Ensure that the " +
+                throw new InvalidOperationException("Could not communicate with probe at address " + deviceContext.Address + " . Ensure that the " +
                     "flex connection is properly seated.", ex);
             }
         }
