@@ -1,6 +1,9 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("OpenEphys.Onix1.Design")]
 
 namespace OpenEphys.Onix1
 {
