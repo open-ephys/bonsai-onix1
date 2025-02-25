@@ -65,7 +65,7 @@ namespace OpenEphys.Onix1
         /// <remarks>
         /// Configuration is accomplished using a GUI to aid in channel selection and relevant configuration properties.
         /// To open a probe configuration GUI, select the ellipses next the <see cref="ProbeConfigurationA"/> variable
-        /// in the property pane, or double-click <see cref="ConfigureNeuropixelsV2eBetaHeadstage"/> to configure both
+        /// in the property pane, or double-click <see cref="ConfigureHeadstageNeuropixelsV2eBeta"/> to configure both
         /// probes and the <see cref="ConfigurePolledBno055"/> simultaneously.
         /// </remarks>
         [Category(ConfigurationCategory)]
@@ -96,7 +96,7 @@ namespace OpenEphys.Onix1
         /// <remarks>
         /// Configuration is accomplished using a GUI to aid in channel selection and relevant configuration properties.
         /// To open a probe configuration GUI, select the ellipses next the <see cref="ProbeConfigurationB"/> variable
-        /// in the property pane, or double-click <see cref="ConfigureNeuropixelsV2eBetaHeadstage"/> to configure both
+        /// in the property pane, or double-click <see cref="ConfigureHeadstageNeuropixelsV2eBeta"/> to configure both
         /// probes and the <see cref="ConfigurePolledBno055"/> simultaneously.
         /// </remarks>
         [Category(ConfigurationCategory)]
