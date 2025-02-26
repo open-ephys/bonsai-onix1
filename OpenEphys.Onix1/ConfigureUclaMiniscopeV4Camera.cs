@@ -16,6 +16,7 @@ namespace OpenEphys.Onix1
         readonly BehaviorSubject<double> ledBrightness = new(0);
         readonly BehaviorSubject<UclaMiniscopeV4SensorGain> sensorGain = new(UclaMiniscopeV4SensorGain.Low);
         readonly BehaviorSubject<double> focus = new(0);
+        UclaMiniscopeV4FramesPerSecond frameRate = UclaMiniscopeV4FramesPerSecond.Fps30;
 
         /// <summary>
         /// Initialize a new instance of a <see cref="ConfigureUclaMiniscopeV4Camera"/> class.
@@ -41,7 +42,23 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Camera video rate in frames per second.")]
-        public UclaMiniscopeV4FramesPerSecond FrameRate { get; set; } = UclaMiniscopeV4FramesPerSecond.Fps30Hz;
+        public UclaMiniscopeV4FramesPerSecond FrameRate
+        {
+            get => frameRate;
+            set
+            {
+                // NB: Required for backwards compabitility. The get/set bodies can be removed in v1.0.0 when the *Hz enums are removed.
+                frameRate = value switch
+                {
+                    UclaMiniscopeV4FramesPerSecond.Fps10 or UclaMiniscopeV4FramesPerSecond.Fps10Hz => UclaMiniscopeV4FramesPerSecond.Fps10,
+                    UclaMiniscopeV4FramesPerSecond.Fps15 or UclaMiniscopeV4FramesPerSecond.Fps15Hz => UclaMiniscopeV4FramesPerSecond.Fps15,
+                    UclaMiniscopeV4FramesPerSecond.Fps20 or UclaMiniscopeV4FramesPerSecond.Fps20Hz => UclaMiniscopeV4FramesPerSecond.Fps20,
+                    UclaMiniscopeV4FramesPerSecond.Fps25 or UclaMiniscopeV4FramesPerSecond.Fps25Hz => UclaMiniscopeV4FramesPerSecond.Fps25,
+                    UclaMiniscopeV4FramesPerSecond.Fps30 or UclaMiniscopeV4FramesPerSecond.Fps30Hz => UclaMiniscopeV4FramesPerSecond.Fps30,
+                    _ => UclaMiniscopeV4FramesPerSecond.Fps30
+                };
+            }
+        }
 
         /// <summary>
         /// Gets or sets the camera sensor's analog gain.
@@ -253,11 +270,11 @@ namespace OpenEphys.Onix1
             // configuration properties
             uint shutterWidth = frameRate switch
             {
-                UclaMiniscopeV4FramesPerSecond.Fps10Hz => 10000,
-                UclaMiniscopeV4FramesPerSecond.Fps15Hz => 6667,
-                UclaMiniscopeV4FramesPerSecond.Fps20Hz => 5000,
-                UclaMiniscopeV4FramesPerSecond.Fps25Hz => 4000,
-                UclaMiniscopeV4FramesPerSecond.Fps30Hz => 3300,
+                UclaMiniscopeV4FramesPerSecond.Fps10 => 10000,
+                UclaMiniscopeV4FramesPerSecond.Fps15 => 6667,
+                UclaMiniscopeV4FramesPerSecond.Fps20 => 5000,
+                UclaMiniscopeV4FramesPerSecond.Fps25 => 4000,
+                UclaMiniscopeV4FramesPerSecond.Fps30 => 3300,
                 _ => 3300
             };
 
@@ -359,26 +376,56 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Specifies 10 frames per second.
         /// </summary>
-        Fps10Hz,
+        Fps10,
 
         /// <summary>
         /// Specifies 15 frames per second.
         /// </summary>
-        Fps15Hz,
+        Fps15,
 
         /// <summary>
         /// Specifies 20 frames per second.
         /// </summary>
-        Fps20Hz,
+        Fps20,
 
         /// <summary>
         /// Specifies 25 frames per second.
         /// </summary>
-        Fps25Hz,
+        Fps25,
 
         /// <summary>
         /// Specifies 30 frames per second.
         /// </summary>
+        Fps30,
+
+        /// <summary>
+        /// This value is deprecated. Please use the corresponding version without the Hz suffix. This will be removed in v1.0.0.
+        /// </summary>
+        [Browsable(false)]
+        Fps10Hz,
+
+        /// <summary>
+        /// This value is deprecated. Please use the corresponding version without the Hz suffix. This will be removed in v1.0.0.
+        /// </summary>
+        [Browsable(false)]
+        Fps15Hz,
+
+        /// <summary>
+        /// This value is deprecated. Please use the corresponding version without the Hz suffix. This will be removed in v1.0.0.
+        /// </summary>
+        [Browsable(false)]
+        Fps20Hz,
+
+        /// <summary>
+        /// This value is deprecated. Please use the corresponding version without the Hz suffix. This will be removed in v1.0.0.
+        /// </summary>
+        [Browsable(false)]
+        Fps25Hz,
+
+        /// <summary>
+        /// This value is deprecated. Please use the corresponding version without the Hz suffix. This will be removed in v1.0.0.
+        /// </summary>
+        [Browsable(false)]
         Fps30Hz,
     }
 }
