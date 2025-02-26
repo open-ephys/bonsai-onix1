@@ -402,35 +402,30 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// This value is deprecated. Please use the corresponding version without the Hz suffix. This will be removed in v1.0.0.
         /// </summary>
-        [Obsolete]
         [Browsable(false)]
         Fps10Hz,
 
         /// <summary>
         /// This value is deprecated. Please use the corresponding version without the Hz suffix. This will be removed in v1.0.0.
         /// </summary>
-        [Obsolete]
         [Browsable(false)]
         Fps15Hz,
 
         /// <summary>
         /// This value is deprecated. Please use the corresponding version without the Hz suffix. This will be removed in v1.0.0.
         /// </summary>
-        [Obsolete]
         [Browsable(false)]
         Fps20Hz,
 
         /// <summary>
         /// This value is deprecated. Please use the corresponding version without the Hz suffix. This will be removed in v1.0.0.
         /// </summary>
-        [Obsolete]
         [Browsable(false)]
         Fps25Hz,
 
         /// <summary>
         /// This value is deprecated. Please use the corresponding version without the Hz suffix. This will be removed in v1.0.0.
         /// </summary>
-        [Obsolete]
         [Browsable(false)]
         Fps30Hz,
     }
