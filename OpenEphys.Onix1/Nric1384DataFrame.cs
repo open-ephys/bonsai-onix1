@@ -4,7 +4,7 @@ using OpenCV.Net;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Buffered data from a Nric1384 bioacquisition device.
+    /// Buffered data from a Nric1384 bioacquisition chip.
     /// </summary>
     public class Nric1384DataFrame : BufferedDataFrame
     {
@@ -28,29 +28,47 @@ namespace OpenEphys.Onix1
         /// Gets the frame count value array.
         /// </summary>
         /// <remarks>
-        /// A 20-bit counter on the chip that increments its value for every frame produced. The value ranges from 0 to
-        /// 1048575 (2^20-1), and should always increment by 13 (one count is taken per super-frame and there are 13 frames 
-        /// in a super frame) until it wraps around back to 0. This can be used to detect dropped frames.
+        /// A 20-bit counter on the probe that increments its value for every "frame" produced by the probe.
+        /// Thirteen frames are produced for each 384-channel column of samples in  <see cref="SpikeData"/>.
+        /// The value ranges from 0 to 1048575 (2^20-1), and should always increment by 1 until it wraps
+        /// around back to 0. This can be used to detect dropped frames.
         /// </remarks>
         public int[] FrameCount { get; }
 
-
         /// <summary>
-        /// Gets the spike-band data as a <see cref="Mat"/> object.
+        /// Gets spike-band electrophysiology data array.
         /// </summary>
         /// <remarks>
-        /// Spike-band data has 384 rows (channels) with columns representing the samples acquired at 30 kHz. Each sample is a
-        /// 10-bit, offset binary value encoded as a <see cref="ushort"/>.
+        /// Spike-band (0.3-10 kHz) samples are organized in 384xN matrix with rows representing
+        /// channel number and N columns representing samples acquired at 30 kHz. Each column is a 384-channel
+        /// vector of ADC samples whose acquisition time is indicated by the corresponding elements in <see
+        /// cref="DataFrame.Clock"/> and <see cref="DataFrame.HubClock"/>. Each ADC sample is a 10-bit, offset
+        /// binary value represented as a <see cref="ushort"/>. The following equation can be used to convert
+        /// a sample to microvolts:
+        /// <code> 
+        /// Electrode Voltage (µV) = (1,171.875 / AP Gain) × (ADC Sample – 512) 
+        /// </code>
+        /// where <c>AP Gain</c> can be 50, 125, 250, 500, 1000, 1500, 2000, or 3000 depending on the value of <see
+        /// cref="ConfigureNric1384.SpikeAmplifierGain"/>.
         /// </remarks>
         public Mat SpikeData { get; }
 
 
         /// <summary>
-        /// Gets the LFP band data as a <see cref="Mat"/> object.
+        /// Gets LFP-band electrophysiology data array.
         /// </summary>
         /// <remarks>
-        /// LFP data has 32 rows (channels) with columns representing the samples acquired at 2.5 kHz. Each sample is a
-        /// 10-bit, offset binary value encoded as a <see cref="ushort"/>.
+        /// LFP-band (0.5-500 Hz) samples are organized in 384xN matrix with rows representing channel
+        /// number and N columns representing samples acquired at 2.5 kHz. Each column is a 384-channel vector
+        /// of ADC samples whose acquisition time is indicated by the corresponding elements in <see
+        /// cref="DataFrame.Clock"/> and <see cref="DataFrame.HubClock"/>. Each ADC sample is a 10-bit, offset
+        /// binary value represented as a <see cref="ushort"/>. The following equation can be used to convert
+        /// a sample to microvolts:
+        /// <code> 
+        /// Electrode Voltage (µV) = (1,171.875 / LFP Gain) × (ADC Sample – 512)
+        /// </code>
+        /// where <c>LFP Gain</c> can be 50, 125, 250, 500, 1000, 1500, 2000, or 3000 depending on the value of <see
+        /// cref="ConfigureNric1384.LfpAmplifierGain"/>.
         /// </remarks>
         public Mat LfpData { get; }
     }

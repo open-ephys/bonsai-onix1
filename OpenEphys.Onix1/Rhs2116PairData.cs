@@ -10,7 +10,9 @@ using OpenCV.Net;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Produces a sequence of <see cref="Rhs2116DataFrame"/> objects from a Rhs2116Pair.
+    /// Produces a sequence of <see cref="Rhs2116DataFrame"/> objects from a synchronized pair of Intan
+    /// Rhs2116 bidirectional bioacquisition chips.
+    /// chips.
     /// </summary>
     /// <remarks>
     /// This data IO operator must be linked to an appropriate configuration, such as a <see
@@ -26,11 +28,11 @@ namespace OpenEphys.Onix1
         /// Gets or sets the buffer size.
         /// </summary>
         /// <remarks>
-        /// This property determines the number of samples that are collected from each of the 16 ephys
-        /// channels before data is propagated. For instance, if this value is set to 30, then 16x30 samples,
-        /// along with 30 corresponding clock values, will be collected and packed into each <see
-        /// cref="Rhs2116DataFrame"/>. Because channels are sampled at 30 kHz, this is equivalent to 1
-        /// millisecond of data from each channel.
+        /// This property determines the number of samples that are collected from each of the 32
+        /// electrophysiology channels before data is propagated. For instance, if this value is set to 30,
+        /// then 32x30 samples, along with 30 corresponding clock values, will be collected and packed into
+        /// each <see cref="Rhs2116DataFrame"/>. Because channels are sampled at ~30 kHz, this is equivalent
+        /// to ~1 millisecond of data from each channel.
         /// </remarks>
         public int BufferSize { get; set; } = 30;
 
