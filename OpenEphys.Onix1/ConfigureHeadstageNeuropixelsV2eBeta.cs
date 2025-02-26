@@ -1,18 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Configures a NeuropixelsV2e headstage on the specified port.
+    /// Configures a NeuropixelsV2eBeta headstage on the specified port.
     /// </summary>
     /// <remarks>
-    /// The NeuropixelsV2e Headstage is a 0.64g serialized, multifunction headstage designed to
-    /// function with IMEC Neuropixels V2 probes. It provides the following features:
+    /// The NeuropixelsV2eBeta Headstage is a 0.64g serialized, multifunction headstage designed to
+    /// function with IMEC Neuropixels V2Beta probes. It provides the following features:
     /// <list type="bullet">
-    /// <item><description>Support for dual IMEC Neuropixels 2.0 probes, each of which features:
+    /// <item><description>Support for dual IMEC Neuropixels 2.0-Beta probes, each of which features:
     /// <list type="bullet">
-    /// <item><description>Either 1x or 4x silicon shanks with a 70 x 24 µm cross-section.</description></item>
+    /// <item><description>4x silicon shanks with a 70 x 24 µm cross-section.</description></item>
     /// <item><description>1280 electrodes low-impedance TiN electrodes per shank.</description></item>
     /// <item><description>384 parallel, full-band (AP, LFP), low-noise recording channels.</description></item>
     /// </list>
@@ -21,28 +22,28 @@ namespace OpenEphys.Onix1
     /// </list>
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eHeadstageEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
-    [Description("Configures a NeuropixelsV2e headstage on the specified port.")]
-    public class ConfigureNeuropixelsV2eHeadstage : MultiDeviceFactory
+    [Description("Configures a NeuropixelsV2eBeta headstage.")]
+    public class ConfigureHeadstageNeuropixelsV2eBeta : MultiDeviceFactory
     {
         PortName port;
         readonly ConfigureNeuropixelsV2ePortController PortControl = new();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigureNeuropixelsV2e"/> class.
+        /// Initializes a new instance of the <see cref="ConfigureHeadstageNeuropixelsV2eBeta"/> class.
         /// </summary>
-        public ConfigureNeuropixelsV2eHeadstage()
+        public ConfigureHeadstageNeuropixelsV2eBeta()
         {
             Port = PortName.PortA;
             PortControl.HubConfiguration = HubConfiguration.Passthrough;
         }
 
         /// <summary>
-        /// Gets or sets the NeuropixelsV2e configuration.
+        /// Gets or sets the NeuropixelsV2eBeta configuration.
         /// </summary>
         [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
-        [Description("Specifies the configuration for the NeuropixelsV2e device.")]
-        public ConfigureNeuropixelsV2e NeuropixelsV2e { get; set; } = new();
+        [Description("Specifies the configuration for the NeuropixelsV2eBeta device.")]
+        public ConfigureNeuropixelsV2eBeta NeuropixelsV2eBeta { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the Bno055 9-axis inertial measurement unit configuration.
@@ -69,7 +70,7 @@ namespace OpenEphys.Onix1
                 port = value;
                 var offset = (uint)port << 8;
                 PortControl.DeviceAddress = (uint)port;
-                NeuropixelsV2e.DeviceAddress = offset + 0;
+                NeuropixelsV2eBeta.DeviceAddress = offset + 0;
                 Bno055.DeviceAddress = offset + 1;
             }
         }
@@ -80,11 +81,11 @@ namespace OpenEphys.Onix1
         /// <remarks>
         /// If a port voltage is defined this will override the automated voltage discovery and applies
         /// the specified voltage to the headstage. To enable automated voltage discovery, leave this field 
-        /// empty. Warning: This device requires 3.0V to 5.5V for proper operation. Voltages higher than 5.5V can 
+        /// empty. Warning: This device requires 3.0V to 5.0V for proper operation. Voltages higher than 5.0V can 
         /// damage the headstage
         /// </remarks>
         [Description("If defined, overrides automated voltage discovery and applies " +
-            "the specified voltage to the headstage. Warning: this device requires 3.0V to 5.5V " +
+            "the specified voltage to the headstage. Warning: this device requires 3.0V to 5.0V " +
             "for proper operation. Higher voltages can damage the headstage.")]
         [Category(ConfigurationCategory)]
         public double? PortVoltage
@@ -96,8 +97,12 @@ namespace OpenEphys.Onix1
         internal override IEnumerable<IDeviceConfiguration> GetDevices()
         {
             yield return PortControl;
-            yield return NeuropixelsV2e;
+            yield return NeuropixelsV2eBeta;
             yield return Bno055;
         }
     }
+
+    /// <inheritdoc cref="ConfigureHeadstageNeuropixelsV2eBeta"/>
+    [Obsolete("This operator is obsolete. Use ConfigureHeadstageNeuropixelsV2eBeta instead. Will be removed in version 1.0.0.")]
+    public class ConfigureNeuropixelsV2eBetaHeadstage : ConfigureHeadstageNeuropixelsV2eBeta { }
 }

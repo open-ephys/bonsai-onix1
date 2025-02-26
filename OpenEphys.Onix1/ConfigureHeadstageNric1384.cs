@@ -23,7 +23,7 @@ namespace OpenEphys.Onix1
     /// electrode discharge).</description></item>
     /// </list>
     /// </remarks>
-    [Description("Configures a Nric1384 Headstage headstage.")]
+    [Description("Configures a Nric1384 headstage.")]
     public class ConfigureHeadstageNric1384 : MultiDeviceFactory
     {
         PortName port;

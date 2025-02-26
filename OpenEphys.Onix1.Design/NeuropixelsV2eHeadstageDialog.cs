@@ -3,7 +3,7 @@
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Partial class to create a GUI for <see cref="ConfigureNeuropixelsV2eHeadstage"/>.
+    /// Partial class to create a GUI for <see cref="ConfigureHeadstageNeuropixelsV2e"/>.
     /// </summary>
     public partial class NeuropixelsV2eHeadstageDialog : Form
     {
