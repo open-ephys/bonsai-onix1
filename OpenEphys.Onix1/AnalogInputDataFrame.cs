@@ -24,20 +24,22 @@ namespace OpenEphys.Onix1
         /// Gets the buffered analog data array.
         /// </summary>
         /// <remarks>
-        /// Data has 16 rows which represent analog input channels and columns which represent
-        /// samples acquired at 100 kHz. Each column corresponds to an ADC sample whose time is
-        /// indicated by the corresponding elements in <see cref="DataFrame.Clock"/> and <see
-        /// cref="DataFrame.HubClock"/>. When <c>DataType</c> in <see
-        /// cref="OpenEphys.Onix1.AnalogInput"/> is set to <c>Volts</c>, each pre-converted voltage
-        /// value is encoded as a <see cref="float"/>. When <c>DataType</c> is set to <c>S16</c>,
-        /// each raw 16-bit ADC samples is encoded as a <see cref="short"/>. In this case, the
-        /// following equation can be used to convert it to volts:
+        /// Analog samples are organized in 12xN matrix with rows representing channel number and
+        /// N columns representing samples acquired at 100 kHz. Each column is a 12-channel vector of ADC
+        /// samples whose acquisition time is indicated by the corresponding elements in <see
+        /// cref="DataFrame.Clock"/> and <see cref="DataFrame.HubClock"/>. When <see
+        /// cref="AnalogInput.DataType"/> is set to <see cref="AnalogIODataType.Volts"/>, each sample is
+        /// internally converted to a voltage value and are represented using a <see cref="float"/>. When <see
+        /// cref="AnalogInput.DataType"/> is set to <see cref="AnalogIODataType.S16"/>, each 16-bit ADC sample
+        /// is represented as a <see cref="short"/>. In this case, the following equation can be used to
+        /// convert a sample to volts:
         /// <code> 
-        /// Analog Voltage (V) = Voltage Range / 2^16 × ADC Sample 
+        /// Channel Voltage (V) = ADC Sample × (Input Span / 2^16)
         /// </code> 
-        /// where voltage range can be 5, 10, or 20 depending on how the analog input voltage range
-        /// is configured (±2.5, ±5, or ±10 volts) in <see
-        /// cref="OpenEphys.Onix1.ConfigureBreakoutBoard.AnalogIO"/>.
+        /// where <c>Input Span</c> is 5V, 10V, or 20V  when the <see cref="AnalogIOVoltageRange"/> is set to
+        /// ±2.5V, ±5V, or ±10V, respectively. Note that <see cref="AnalogIOVoltageRange"/> can be set
+        /// independently for each channel in <see cref="ConfigureBreakoutBoard.AnalogIO"/>. Therefore, the
+        /// conversion factor may be different for each channel.
         /// </remarks>
         public Mat AnalogData { get; }
     }

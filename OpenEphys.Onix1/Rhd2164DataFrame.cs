@@ -26,11 +26,12 @@ namespace OpenEphys.Onix1
         /// Gets the buffered electrophysiology data array.
         /// </summary>
         /// <remarks>
-        /// Data has 64 rows which represent electrophysiology channels and columns which represent
-        /// samples acquired at 30 kHz. Each column corresponds to an ADC sample whose time is
-        /// indicated by the corresponding elements in <see cref="DataFrame.Clock"/> and <see
-        /// cref="DataFrame.HubClock"/>. Each ADC sample is a 16-bit, offset binary value encoded
-        /// as a <see cref="ushort"/>. TThe following equation can be used to convert it to microvolts:
+        /// Electrophysiology samples are organized in 64xN matrix with rows representing electrophysiology
+        /// channel number and N columns representing sample index. Each column is a 64-channel vector of ADC
+        /// samples whose acquisition time is indicated by the corresponding elements in <see
+        /// cref="DataFrame.Clock"/> and <see cref="DataFrame.HubClock"/>. Each ADC sample is a 16-bit,
+        /// offset binary value encoded as a <see cref="ushort"/>. The following equation can be used to
+        /// convert a sample to microvolts:
         /// <code>
         /// Electrode Voltage (µV) = 0.195 × (ADC Sample – 32768)
         /// </code>
@@ -38,17 +39,19 @@ namespace OpenEphys.Onix1
         public Mat AmplifierData { get; }
 
         /// <summary>
-        /// Gets the buffered auxiliary data array.
+        /// Gets the buffered auxiliary data array. 
         /// </summary>
         /// <remarks>
-        /// Data has 3 rows representing electrophysiology channels and columns representing samples acquired at 30
-        /// kHz. Each column corresponds to an ADC sample whose time is indicated by the
-        /// corresponding element <see cref="DataFrame.Clock"/> and <see
-        /// cref="DataFrame.HubClock"/>. Each ADC sample is a 16-bit, offset binary value encoded
-        /// as a <see cref="ushort"/>. The following equation can be used to convert it to microvolts:
+        /// Auxiliary samples are organized in 3xN matrix with rows representing electrophysiology channel
+        /// number and N columns representing sample index. Each column is a 3-channel vector of ADC samples
+        /// whose acquisition time is indicated by the corresponding elements in <see cref="DataFrame.Clock"/>
+        /// and <see cref="DataFrame.HubClock"/>. Each ADC sample is a 16-bit <see cref="ushort"/>. The
+        /// following equation can be used to convert a sample to volts:
         /// <code>
-        /// Electrode Voltage (µV) = 0.195 × (ADC Sample – 32768)
+        /// Auxiliary Voltage (V) = 0.0000374 × ADC Sample
         /// </code>
+        /// Note that auxiliary inputs have a 0.10-2.45V input range. Nonlinearities may occur if voltages
+        /// outside of this range are applied to auxiliary inputs.
         /// </remarks>
         public Mat AuxData { get; }
     }

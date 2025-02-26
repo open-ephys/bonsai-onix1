@@ -4,7 +4,7 @@ using OpenCV.Net;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Buffered data from a NeuropixelsV2e device.
+    /// Buffered data from a NeuropixelsV2-Beta probe.
     /// </summary>
     public class NeuropixelsV2eBetaDataFrame : BufferedDataFrame
     {
@@ -26,11 +26,12 @@ namespace OpenEphys.Onix1
         /// Gets the buffered electrophysiology data array.
         /// </summary>
         /// <remarks>
-        /// Data has 384 rows which represent electrophysiology channels and columns which represent
-        /// samples acquired at 30 kHz. Each column corresponds to an ADC sample whose time is
-        /// indicated by the corresponding elements in <see cref="DataFrame.Clock"/> and <see
-        /// cref="DataFrame.HubClock"/>. Each ADC sample is a 14-bit, offset binary value encoded
-        /// as a <see cref="ushort"/>. The following equation can be used to convert it to microvolts:
+        /// Electrophysiology samples are organized in 384xN matrix with rows representing electrophysiology
+        /// channel number and N columns representing samples acquired at 30 kHz. Each column is a 384-channel
+        /// vector of ADC samples whose acquisition time is indicated by the corresponding elements in <see
+        /// cref="DataFrame.Clock"/> and <see cref="DataFrame.HubClock"/>. Each ADC sample is a 14-bit, offset
+        /// binary value represented as a <see cref="ushort"/>. The following equation can be used to convert
+        /// a sample to microvolts:
         /// <code>
         /// Electrode Voltage (µV) = 0.76294 × (ADC Sample – 8192)
         /// </code>
@@ -38,12 +39,13 @@ namespace OpenEphys.Onix1
         public Mat AmplifierData { get; }
 
         /// <summary>
-        /// Gets the frame count array.
+        /// Gets the frame count value array.
         /// </summary>
         /// <remarks>
-        /// Frame count is a 20-bit counter on the probe that increments its value for every frame produced.
-        /// The value ranges from 0 to 1048575 (2^20-1), and should always increment by 1 until it wraps around back to 0.
-        /// This can be used to detect dropped frames.
+        /// A 20-bit counter on the probe that increments its value for every "frame" produced by the probe.
+        /// Sixteen frames are produced for each 384-channel column of samples in  <see cref="AmplifierData"/>.
+        /// The value ranges from 0 to 1048575 (2^20-1), and should always increment by 1 until it wraps
+        /// around back to 0. This can be used to detect dropped frames.
         /// </remarks>
         public int[] FrameCount { get; }
 

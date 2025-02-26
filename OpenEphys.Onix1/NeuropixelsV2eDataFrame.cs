@@ -4,7 +4,7 @@ using OpenCV.Net;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Buffered data from a NeuropixelsV2e device.
+    /// Buffered data from a NeuropixelsV2 probe.
     /// </summary>
     public class NeuropixelsV2eDataFrame : BufferedDataFrame
     {
@@ -24,11 +24,12 @@ namespace OpenEphys.Onix1
         /// Gets the buffered electrophysiology data array.
         /// </summary>
         /// <remarks>
-        /// Data has 384 rows which represent electrophysiology channels and columns which represent
-        /// samples acquired at 30 kHz. Each column corresponds to an qADC sample whose time is
-        /// indicated by the corresponding elements in <see cref="DataFrame.Clock"/> and <see
-        /// cref="DataFrame.HubClock"/>. Each ADC sample is a 12-bit, offset binary value encoded
-        /// as a <see cref="ushort"/>. The following equation can be used to convert it to microvolts:
+        /// Electrophysiology samples are organized in 384xN matrix with rows representing electrophysiology
+        /// channel number and N columns representing samples acquired at 30 kHz. Each column is a 384-channel
+        /// vector of ADC samples whose acquisition time is indicated by the corresponding elements in <see
+        /// cref="DataFrame.Clock"/> and <see cref="DataFrame.HubClock"/>. Each ADC sample is a 12-bit, offset
+        /// binary value represented as a <see cref="ushort"/>. The following equation can be used to convert
+        /// a sample to microvolts:
         /// <code>
         /// Electrode Voltage (µV) = 3.05176 × (ADC Sample – 2048)
         /// </code>
