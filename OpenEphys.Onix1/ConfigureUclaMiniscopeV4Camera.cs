@@ -47,7 +47,8 @@ namespace OpenEphys.Onix1
             get => frameRate;
             set
             {
-                // NB: Required for backwards compabitility. The get/set bodies can be removed in v1.0.0 when the *Hz enums are removed.
+                // NB: Required for backwards compatibility. The frameRate variable and get/set bodies can be
+                // removed in v1.0.0 when the *Hz enums are removed.
                 frameRate = value switch
                 {
                     UclaMiniscopeV4FramesPerSecond.Fps10 or UclaMiniscopeV4FramesPerSecond.Fps10Hz => UclaMiniscopeV4FramesPerSecond.Fps10,
@@ -100,17 +101,17 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets or sets the excitation LED brightness as a percent of the range around nominal.
+        /// Gets or sets the focal plane as a percentage up or down around its nominal depth.
         /// </summary>
         /// <remarks>
-        /// The imaging focal plane is controlled by using a MAX14574 high-voltage liquid lens driver. This
-        /// chip produces pulse-width modulated, 5 kHz alternative electric field that deforms the miniscope's
-        /// liquid lens in order to change the focal plane. The strength of this field determines the degree
-        /// of deformation and therefore the focal depth. The default setting of 0 corresponds to
-        /// approximately mid-range, with 100 corresponding to the maximum excitation and -100 corresponding to 
-        /// the minimum excitation.
+        /// The imaging focal plane is controlled by using a Max14574 high-voltage liquid lens driver. This
+        /// chip produces pulse-width modulated, 5 kHz alternative electric field that deforms a liquid lens
+        /// in order to change the Miniscope's focal plane. The strength of this field determines the degree
+        /// of deformation and therefore the focal depth. The default setting of 0% corresponds to
+        /// approximately mid-range with an excitation voltage of ~47 VRMS. -100% and 100% correspond to the
+        /// minimum and maximum excitation voltage of ~24.4 and ~69.7 VRMS, respectively. 
         /// </remarks>
-        [Description("Electro-wetting lens focal plane adjustment (percent of range around nominal).")]
+        [Description("Electro-wetting lens focal plane adjustment (percent of range around nominal depth).")]
         [Category(AcquisitionCategory)]
         [Range(-100, 100)]
         [Precision(1, 0.1)]
@@ -139,7 +140,7 @@ namespace OpenEphys.Onix1
         /// configuration actions.</param>
         /// <returns>
         /// The original sequence but with each <see cref="ContextTask"/> instance now containing
-        /// configuration actions required to use the miniscope's camera.
+        /// configuration actions required to use the Miniscope's camera.
         /// </returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
@@ -401,30 +402,35 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// This value is deprecated. Please use the corresponding version without the Hz suffix. This will be removed in v1.0.0.
         /// </summary>
+        [Obsolete]
         [Browsable(false)]
         Fps10Hz,
 
         /// <summary>
         /// This value is deprecated. Please use the corresponding version without the Hz suffix. This will be removed in v1.0.0.
         /// </summary>
+        [Obsolete]
         [Browsable(false)]
         Fps15Hz,
 
         /// <summary>
         /// This value is deprecated. Please use the corresponding version without the Hz suffix. This will be removed in v1.0.0.
         /// </summary>
+        [Obsolete]
         [Browsable(false)]
         Fps20Hz,
 
         /// <summary>
         /// This value is deprecated. Please use the corresponding version without the Hz suffix. This will be removed in v1.0.0.
         /// </summary>
+        [Obsolete]
         [Browsable(false)]
         Fps25Hz,
 
         /// <summary>
         /// This value is deprecated. Please use the corresponding version without the Hz suffix. This will be removed in v1.0.0.
         /// </summary>
+        [Obsolete]
         [Browsable(false)]
         Fps30Hz,
     }
