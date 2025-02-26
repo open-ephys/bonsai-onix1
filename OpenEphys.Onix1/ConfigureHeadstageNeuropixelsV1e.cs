@@ -22,8 +22,8 @@ namespace OpenEphys.Onix1
     /// <item><description>A BNO055 9-axis IMU for real-time, 3D orientation tracking.</description></item>
     /// </list>
     /// </remarks>
-    [Description("Configures a NeuropixelsV1e headstage.")]
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV1eHeadstageEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
+    [Description("Configures a NeuropixelsV1e headstage.")]
     public class ConfigureHeadstageNeuropixelsV1e : MultiDeviceFactory
     {
         PortName port;

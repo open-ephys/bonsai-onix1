@@ -13,17 +13,17 @@ namespace OpenEphys.Onix1
     /// stimuli. The Rhs2116 Headstage can be used with passive probes (e.g. silicon arrays,
     /// EEG/ECOG arrays, etc) using a 36-Channel Omnetics EIB. It provides the following features:
     /// <list type="bullet">
-    /// <item><description>Two, synchronized Rhs2116 ICs for a combined 32 bidirectional ephys channels.</description></item>
+    /// <item><description>Two, synchronized Rhs2116 ICs for a combined 32 bidirectional ephys channels
+    /// sampled at 30.1932367 kHz per channel.</description></item>
     /// <item><description>Real-time control of stimulation sequences.</description></item>
-    /// <item><description>Real-time control of filter settings and artifact recovery parameters.</description></item>
-    /// <item><description>~1 millisecond active stimulus artifact recovery.</description></item>
+    /// <item><description>Real-time control of filter settings.</description></item>
+    /// <item><description>Active post-stimulus electrode discharge and filtering allowing ~1 ms artifact recovery.</description></item>
     /// <item><description>Max stimulator current: 2.55mA @ +/-7V compliance.</description></item>
-    /// <item><description>Sample rate: 30193.2367 Hz.</description></item>
     /// <item><description>Stimulus active and stimulus trigger pins.</description></item>
-    /// <item><description>On-board Lattice Crosslink FPGA for real-time data arbitration.</description></item>
     /// </list>
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.HeadstageRhs2116Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
+    [Description("Configures an ONIX Rhs2116 headstage.")]
     public class ConfigureHeadstageRhs2116 : MultiDeviceFactory
     {
         PortName port;

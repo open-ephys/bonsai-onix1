@@ -22,7 +22,7 @@ namespace OpenEphys.Onix1
     /// </list>
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eHeadstageEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
-    [Description("Configures a NeuropixelsV2e headstage on the specified port.")]
+    [Description("Configures a NeuropixelsV2e headstage.")]
     public class ConfigureHeadstageNeuropixelsV2e : MultiDeviceFactory
     {
         PortName port;
