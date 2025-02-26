@@ -29,7 +29,7 @@ namespace OpenEphys.Onix1
         /// samples whose acquisition time is indicated by the corresponding elements in <see
         /// cref="DataFrame.Clock"/> and <see cref="DataFrame.HubClock"/>. When <see
         /// cref="AnalogInput.DataType"/> is set to <see cref="AnalogIODataType.Volts"/>, each sample is
-        /// internally converted to a voltage value and are represented using a <see cref="float"/>. When <see
+        /// internally converted to a voltage value and represented using a <see cref="float"/>. When <see
         /// cref="AnalogInput.DataType"/> is set to <see cref="AnalogIODataType.S16"/>, each 16-bit ADC sample
         /// is represented as a <see cref="short"/>. In this case, the following equation can be used to
         /// convert a sample to volts:
