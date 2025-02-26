@@ -15,7 +15,7 @@ namespace OpenEphys.Onix1
     {
         readonly BehaviorSubject<double> ledBrightness = new(0);
         readonly BehaviorSubject<UclaMiniscopeV4SensorGain> sensorGain = new(UclaMiniscopeV4SensorGain.Low);
-        readonly BehaviorSubject<double> liquidLensVoltage = new(47); // NB: middle of range
+        readonly BehaviorSubject<double> focus = new(0);
 
         /// <summary>
         /// Initialize a new instance of a <see cref="ConfigureUclaMiniscopeV4Camera"/> class.
@@ -83,24 +83,25 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets or sets the liquid lens driver voltage (Volts RMS).
+        /// Gets or sets the excitation LED brightness as a percent of the range around nominal.
         /// </summary>
         /// <remarks>
         /// The imaging focal plane is controlled by using a MAX14574 high-voltage liquid lens driver. This
         /// chip produces pulse-width modulated, 5 kHz alternative electric field that deforms the miniscope's
         /// liquid lens in order to change the focal plane. The strength of this field determines the degree
-        /// of deformation and therefore the focal depth. The default setting of 47 Volts RMS corresponds to
-        /// approximately mid-range.
+        /// of deformation and therefore the focal depth. The default setting of 0 corresponds to
+        /// approximately mid-range, with 100 corresponding to the maximum excitation and -100 corresponding to 
+        /// the minimum excitation.
         /// </remarks>
-        [Description("Liquid lens driver voltage (Volts RMS).")]
+        [Description("Electro-wetting lens focal plane adjustment (percent of range around nominal).")]
         [Category(AcquisitionCategory)]
-        [Range(24.4, 69.7)]
-        [Precision(1, 1)]
+        [Range(-100, 100)]
+        [Precision(1, 0.1)]
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
-        public double LiquidLensVoltage
+        public double Focus
         {
-            get => liquidLensVoltage.Value;
-            set => liquidLensVoltage.OnNext(value);
+            get => focus.Value;
+            set => focus.OnNext(value);
         }
 
         // This is a hack. The hardware is quite unreliable and requires special assistance in order to
@@ -162,7 +163,7 @@ namespace OpenEphys.Onix1
                     return new CompositeDisposable(
                         ledBrightness.Subscribe(value => SetLedBrightness(device, value)),
                         sensorGain.Subscribe(value => SetSensorGain(device, value)),
-                        liquidLensVoltage.Subscribe(value => SetLiquidLensVoltage(device, value)),
+                        focus.Subscribe(value => SetLiquidLensVoltage(device, value)),
                         DeviceManager.RegisterDevice(deviceName, deviceInfo),
                         shutdown);
                 }
@@ -302,10 +303,11 @@ namespace OpenEphys.Onix1
             Set200kHzI2C(device);
         }
 
-        internal static void SetLiquidLensVoltage(DeviceContext device, double voltage)
+        internal static void SetLiquidLensVoltage(DeviceContext device, double focus)
         {
             var max14574 = new I2CRegisterContext(device, UclaMiniscopeV4.Max14574Address);
-            max14574.WriteByte(0x08, (uint)((voltage - 24.4) / 0.0445) >> 2);
+            var scaled = focus * 1.27;
+            max14574.WriteByte(0x08, (byte)(127 + scaled));
             max14574.WriteByte(0x09, 0x02);
         }
     }
