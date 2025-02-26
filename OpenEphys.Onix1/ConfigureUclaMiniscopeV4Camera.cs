@@ -15,7 +15,8 @@ namespace OpenEphys.Onix1
     {
         readonly BehaviorSubject<double> ledBrightness = new(0);
         readonly BehaviorSubject<UclaMiniscopeV4SensorGain> sensorGain = new(UclaMiniscopeV4SensorGain.Low);
-        readonly BehaviorSubject<double> liquidLensVoltage = new(47); // NB: middle of range
+        readonly BehaviorSubject<double> focus = new(0);
+        UclaMiniscopeV4FramesPerSecond frameRate = UclaMiniscopeV4FramesPerSecond.Fps30;
 
         /// <summary>
         /// Initialize a new instance of a <see cref="ConfigureUclaMiniscopeV4Camera"/> class.
@@ -41,7 +42,24 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Camera video rate in frames per second.")]
-        public UclaMiniscopeV4FramesPerSecond FrameRate { get; set; } = UclaMiniscopeV4FramesPerSecond.Fps30Hz;
+        public UclaMiniscopeV4FramesPerSecond FrameRate
+        {
+            get => frameRate;
+            set
+            {
+                // NB: Required for backwards compatibility. The frameRate variable and get/set bodies can be
+                // removed in v1.0.0 when the *Hz enums are removed.
+                frameRate = value switch
+                {
+                    UclaMiniscopeV4FramesPerSecond.Fps10 or UclaMiniscopeV4FramesPerSecond.Fps10Hz => UclaMiniscopeV4FramesPerSecond.Fps10,
+                    UclaMiniscopeV4FramesPerSecond.Fps15 or UclaMiniscopeV4FramesPerSecond.Fps15Hz => UclaMiniscopeV4FramesPerSecond.Fps15,
+                    UclaMiniscopeV4FramesPerSecond.Fps20 or UclaMiniscopeV4FramesPerSecond.Fps20Hz => UclaMiniscopeV4FramesPerSecond.Fps20,
+                    UclaMiniscopeV4FramesPerSecond.Fps25 or UclaMiniscopeV4FramesPerSecond.Fps25Hz => UclaMiniscopeV4FramesPerSecond.Fps25,
+                    UclaMiniscopeV4FramesPerSecond.Fps30 or UclaMiniscopeV4FramesPerSecond.Fps30Hz => UclaMiniscopeV4FramesPerSecond.Fps30,
+                    _ => UclaMiniscopeV4FramesPerSecond.Fps30
+                };
+            }
+        }
 
         /// <summary>
         /// Gets or sets the camera sensor's analog gain.
@@ -83,24 +101,25 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets or sets the liquid lens driver voltage (Volts RMS).
+        /// Gets or sets the focal plane as a percentage up or down around its nominal depth.
         /// </summary>
         /// <remarks>
-        /// The imaging focal plane is controlled by using a MAX14574 high-voltage liquid lens driver. This
-        /// chip produces pulse-width modulated, 5 kHz alternative electric field that deforms the miniscope's
-        /// liquid lens in order to change the focal plane. The strength of this field determines the degree
-        /// of deformation and therefore the focal depth. The default setting of 47 Volts RMS corresponds to
-        /// approximately mid-range.
+        /// The imaging focal plane is controlled by using a Max14574 high-voltage liquid lens driver. This
+        /// chip produces pulse-width modulated, 5 kHz alternative electric field that deforms a liquid lens
+        /// in order to change the Miniscope's focal plane. The strength of this field determines the degree
+        /// of deformation and therefore the focal depth. The default setting of 0% corresponds to
+        /// approximately mid-range with an excitation voltage of ~47 VRMS. -100% and 100% correspond to the
+        /// minimum and maximum excitation voltage of ~24.4 and ~69.7 VRMS, respectively. 
         /// </remarks>
-        [Description("Liquid lens driver voltage (Volts RMS).")]
+        [Description("Electro-wetting lens focal plane adjustment (percent of range around nominal depth).")]
         [Category(AcquisitionCategory)]
-        [Range(24.4, 69.7)]
-        [Precision(1, 1)]
+        [Range(-100, 100)]
+        [Precision(1, 0.1)]
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
-        public double LiquidLensVoltage
+        public double Focus
         {
-            get => liquidLensVoltage.Value;
-            set => liquidLensVoltage.OnNext(value);
+            get => focus.Value;
+            set => focus.OnNext(value);
         }
 
         // This is a hack. The hardware is quite unreliable and requires special assistance in order to
@@ -121,7 +140,7 @@ namespace OpenEphys.Onix1
         /// configuration actions.</param>
         /// <returns>
         /// The original sequence but with each <see cref="ContextTask"/> instance now containing
-        /// configuration actions required to use the miniscope's camera.
+        /// configuration actions required to use the Miniscope's camera.
         /// </returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
@@ -162,7 +181,7 @@ namespace OpenEphys.Onix1
                     return new CompositeDisposable(
                         ledBrightness.Subscribe(value => SetLedBrightness(device, value)),
                         sensorGain.Subscribe(value => SetSensorGain(device, value)),
-                        liquidLensVoltage.Subscribe(value => SetLiquidLensVoltage(device, value)),
+                        focus.Subscribe(value => SetLiquidLensVoltage(device, value)),
                         DeviceManager.RegisterDevice(deviceName, deviceInfo),
                         shutdown);
                 }
@@ -252,11 +271,11 @@ namespace OpenEphys.Onix1
             // configuration properties
             uint shutterWidth = frameRate switch
             {
-                UclaMiniscopeV4FramesPerSecond.Fps10Hz => 10000,
-                UclaMiniscopeV4FramesPerSecond.Fps15Hz => 6667,
-                UclaMiniscopeV4FramesPerSecond.Fps20Hz => 5000,
-                UclaMiniscopeV4FramesPerSecond.Fps25Hz => 4000,
-                UclaMiniscopeV4FramesPerSecond.Fps30Hz => 3300,
+                UclaMiniscopeV4FramesPerSecond.Fps10 => 10000,
+                UclaMiniscopeV4FramesPerSecond.Fps15 => 6667,
+                UclaMiniscopeV4FramesPerSecond.Fps20 => 5000,
+                UclaMiniscopeV4FramesPerSecond.Fps25 => 4000,
+                UclaMiniscopeV4FramesPerSecond.Fps30 => 3300,
                 _ => 3300
             };
 
@@ -302,10 +321,11 @@ namespace OpenEphys.Onix1
             Set200kHzI2C(device);
         }
 
-        internal static void SetLiquidLensVoltage(DeviceContext device, double voltage)
+        internal static void SetLiquidLensVoltage(DeviceContext device, double focus)
         {
             var max14574 = new I2CRegisterContext(device, UclaMiniscopeV4.Max14574Address);
-            max14574.WriteByte(0x08, (uint)((voltage - 24.4) / 0.0445) >> 2);
+            var scaled = focus * 1.27;
+            max14574.WriteByte(0x08, (byte)(127 + scaled));
             max14574.WriteByte(0x09, 0x02);
         }
     }
@@ -357,26 +377,56 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Specifies 10 frames per second.
         /// </summary>
-        Fps10Hz,
+        Fps10,
 
         /// <summary>
         /// Specifies 15 frames per second.
         /// </summary>
-        Fps15Hz,
+        Fps15,
 
         /// <summary>
         /// Specifies 20 frames per second.
         /// </summary>
-        Fps20Hz,
+        Fps20,
 
         /// <summary>
         /// Specifies 25 frames per second.
         /// </summary>
-        Fps25Hz,
+        Fps25,
 
         /// <summary>
         /// Specifies 30 frames per second.
         /// </summary>
+        Fps30,
+
+        /// <summary>
+        /// This value is deprecated. Please use the corresponding version without the Hz suffix. This will be removed in v1.0.0.
+        /// </summary>
+        [Browsable(false)]
+        Fps10Hz,
+
+        /// <summary>
+        /// This value is deprecated. Please use the corresponding version without the Hz suffix. This will be removed in v1.0.0.
+        /// </summary>
+        [Browsable(false)]
+        Fps15Hz,
+
+        /// <summary>
+        /// This value is deprecated. Please use the corresponding version without the Hz suffix. This will be removed in v1.0.0.
+        /// </summary>
+        [Browsable(false)]
+        Fps20Hz,
+
+        /// <summary>
+        /// This value is deprecated. Please use the corresponding version without the Hz suffix. This will be removed in v1.0.0.
+        /// </summary>
+        [Browsable(false)]
+        Fps25Hz,
+
+        /// <summary>
+        /// This value is deprecated. Please use the corresponding version without the Hz suffix. This will be removed in v1.0.0.
+        /// </summary>
+        [Browsable(false)]
         Fps30Hz,
     }
 }
