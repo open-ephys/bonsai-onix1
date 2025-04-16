@@ -157,6 +157,7 @@ namespace OpenEphys.Onix1.Design
             this.tableLayoutPanelCoordinates.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.tableLayoutPanelCoordinates.Size = new System.Drawing.Size(618, 150);
             this.tableLayoutPanelCoordinates.TabIndex = 5;
+            this.tableLayoutPanelCoordinates.Tag = "6";
             // 
             // textBoxUserCoordinate3
             // 
@@ -166,8 +167,9 @@ namespace OpenEphys.Onix1.Design
             this.textBoxUserCoordinate3.Name = "textBoxUserCoordinate3";
             this.textBoxUserCoordinate3.Size = new System.Drawing.Size(220, 20);
             this.textBoxUserCoordinate3.TabIndex = 39;
+            this.textBoxUserCoordinate3.Tag = "7";
             this.textBoxUserCoordinate3.Text = "x\'3, y\'3, z\'3";
-            this.textBoxUserCoordinate3.TextChanged += new System.EventHandler(this.textBoxUserCoordinate3_TextChanged);
+            this.textBoxUserCoordinate3.TextChanged += new System.EventHandler(this.textBoxUserCoordinate_TextChanged);
             // 
             // textBoxUserCoordinate2
             // 
@@ -177,8 +179,9 @@ namespace OpenEphys.Onix1.Design
             this.textBoxUserCoordinate2.Name = "textBoxUserCoordinate2";
             this.textBoxUserCoordinate2.Size = new System.Drawing.Size(220, 20);
             this.textBoxUserCoordinate2.TabIndex = 38;
+            this.textBoxUserCoordinate2.Tag = "6";
             this.textBoxUserCoordinate2.Text = "x\'2, y\'2, z\'2";
-            this.textBoxUserCoordinate2.TextChanged += new System.EventHandler(this.textBoxUserCoordinate2_TextChanged);
+            this.textBoxUserCoordinate2.TextChanged += new System.EventHandler(this.textBoxUserCoordinate_TextChanged);
             // 
             // textBoxUserCoordinate1
             // 
@@ -188,8 +191,9 @@ namespace OpenEphys.Onix1.Design
             this.textBoxUserCoordinate1.Name = "textBoxUserCoordinate1";
             this.textBoxUserCoordinate1.Size = new System.Drawing.Size(220, 20);
             this.textBoxUserCoordinate1.TabIndex = 37;
+            this.textBoxUserCoordinate1.Tag = "5";
             this.textBoxUserCoordinate1.Text = "x\'1, y\'1, z\'1";
-            this.textBoxUserCoordinate1.TextChanged += new System.EventHandler(this.textBoxUserCoordinate1_TextChanged);
+            this.textBoxUserCoordinate1.TextChanged += new System.EventHandler(this.textBoxUserCoordinate_TextChanged);
             // 
             // textBoxUserCoordinate0
             // 
@@ -199,8 +203,9 @@ namespace OpenEphys.Onix1.Design
             this.textBoxUserCoordinate0.Name = "textBoxUserCoordinate0";
             this.textBoxUserCoordinate0.Size = new System.Drawing.Size(220, 20);
             this.textBoxUserCoordinate0.TabIndex = 36;
+            this.textBoxUserCoordinate0.Tag = "4";
             this.textBoxUserCoordinate0.Text = "x\'0, y\'0, z\'0";
-            this.textBoxUserCoordinate0.TextChanged += new System.EventHandler(this.textBoxUserCoordinate0_TextChanged);
+            this.textBoxUserCoordinate0.TextChanged += new System.EventHandler(this.textBoxUserCoordinate_TextChanged);
             // 
             // textBoxTS4231Coordinate3
             // 
@@ -212,8 +217,9 @@ namespace OpenEphys.Onix1.Design
             this.textBoxTS4231Coordinate3.Size = new System.Drawing.Size(220, 20);
             this.textBoxTS4231Coordinate3.TabIndex = 33;
             this.textBoxTS4231Coordinate3.TabStop = false;
+            this.textBoxTS4231Coordinate3.Tag = "3";
             this.textBoxTS4231Coordinate3.Text = "x3, y3, z3";
-            this.textBoxTS4231Coordinate3.TextChanged += new System.EventHandler(this.textBoxTS4231Coordinate3_TextChanged);
+            this.textBoxTS4231Coordinate3.TextChanged += new System.EventHandler(this.textBoxTS4231Coordinate_TextChanged);
             // 
             // textBoxTS4231Coordinate2
             // 
@@ -225,8 +231,9 @@ namespace OpenEphys.Onix1.Design
             this.textBoxTS4231Coordinate2.Size = new System.Drawing.Size(220, 20);
             this.textBoxTS4231Coordinate2.TabIndex = 32;
             this.textBoxTS4231Coordinate2.TabStop = false;
+            this.textBoxTS4231Coordinate2.Tag = "2";
             this.textBoxTS4231Coordinate2.Text = "x2, y2, z2";
-            this.textBoxTS4231Coordinate2.TextChanged += new System.EventHandler(this.textBoxTS4231Coordinate2_TextChanged);
+            this.textBoxTS4231Coordinate2.TextChanged += new System.EventHandler(this.textBoxTS4231Coordinate_TextChanged);
             // 
             // textBoxTS4231Coordinate1
             // 
@@ -238,8 +245,9 @@ namespace OpenEphys.Onix1.Design
             this.textBoxTS4231Coordinate1.Size = new System.Drawing.Size(220, 20);
             this.textBoxTS4231Coordinate1.TabIndex = 31;
             this.textBoxTS4231Coordinate1.TabStop = false;
+            this.textBoxTS4231Coordinate1.Tag = "1";
             this.textBoxTS4231Coordinate1.Text = "x1, y1, z1";
-            this.textBoxTS4231Coordinate1.TextChanged += new System.EventHandler(this.textBoxTS4231Coordinate1_TextChanged);
+            this.textBoxTS4231Coordinate1.TextChanged += new System.EventHandler(this.textBoxTS4231Coordinate_TextChanged);
             // 
             // buttonMeasure3
             // 
@@ -247,9 +255,10 @@ namespace OpenEphys.Onix1.Design
             this.buttonMeasure3.Name = "buttonMeasure3";
             this.buttonMeasure3.Size = new System.Drawing.Size(80, 24);
             this.buttonMeasure3.TabIndex = 29;
+            this.buttonMeasure3.Tag = "3";
             this.buttonMeasure3.Text = "Measure";
             this.buttonMeasure3.UseVisualStyleBackColor = true;
-            this.buttonMeasure3.Click += new System.EventHandler(this.buttonMeasure3_Click);
+            this.buttonMeasure3.Click += new System.EventHandler(this.buttonMeasure_Click);
             // 
             // buttonMeasure2
             // 
@@ -257,9 +266,10 @@ namespace OpenEphys.Onix1.Design
             this.buttonMeasure2.Name = "buttonMeasure2";
             this.buttonMeasure2.Size = new System.Drawing.Size(80, 24);
             this.buttonMeasure2.TabIndex = 26;
+            this.buttonMeasure2.Tag = "2";
             this.buttonMeasure2.Text = "Measure";
             this.buttonMeasure2.UseVisualStyleBackColor = true;
-            this.buttonMeasure2.Click += new System.EventHandler(this.buttonMeasure2_Click);
+            this.buttonMeasure2.Click += new System.EventHandler(this.buttonMeasure_Click);
             // 
             // buttonMeasure1
             // 
@@ -268,9 +278,10 @@ namespace OpenEphys.Onix1.Design
             this.buttonMeasure1.Name = "buttonMeasure1";
             this.buttonMeasure1.Size = new System.Drawing.Size(80, 24);
             this.buttonMeasure1.TabIndex = 23;
+            this.buttonMeasure1.Tag = "1";
             this.buttonMeasure1.Text = "Measure";
             this.buttonMeasure1.UseVisualStyleBackColor = true;
-            this.buttonMeasure1.Click += new System.EventHandler(this.buttonMeasure1_Click);
+            this.buttonMeasure1.Click += new System.EventHandler(this.buttonMeasure_Click);
             // 
             // labelCoordinate3
             // 
@@ -307,9 +318,10 @@ namespace OpenEphys.Onix1.Design
             this.buttonMeasure0.Name = "buttonMeasure0";
             this.buttonMeasure0.Size = new System.Drawing.Size(80, 24);
             this.buttonMeasure0.TabIndex = 1;
+            this.buttonMeasure0.Tag = "0";
             this.buttonMeasure0.Text = "Measure";
             this.buttonMeasure0.UseVisualStyleBackColor = true;
-            this.buttonMeasure0.Click += new System.EventHandler(this.buttonMeasure0_Click);
+            this.buttonMeasure0.Click += new System.EventHandler(this.buttonMeasure_Click);
             // 
             // labelHeaderTS4231
             // 
@@ -342,8 +354,9 @@ namespace OpenEphys.Onix1.Design
             this.textBoxTS4231Coordinate0.Size = new System.Drawing.Size(220, 20);
             this.textBoxTS4231Coordinate0.TabIndex = 30;
             this.textBoxTS4231Coordinate0.TabStop = false;
+            this.textBoxTS4231Coordinate0.Tag = "0";
             this.textBoxTS4231Coordinate0.Text = "x0, y0, z0";
-            this.textBoxTS4231Coordinate0.TextChanged += new System.EventHandler(this.textBoxTS4231Coordinate0_TextChanged);
+            this.textBoxTS4231Coordinate0.TextChanged += new System.EventHandler(this.textBoxTS4231Coordinate_TextChanged);
             // 
             // labelHeaderUser
             // 

@@ -3,6 +3,9 @@ using System.Linq;
 using System.Numerics;
 using System.Windows.Forms;
 using System.Reactive.Linq;
+using System.Collections.Generic;
+using Bonsai.Reactive;
+using System.Reflection;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -11,7 +14,7 @@ namespace OpenEphys.Onix1.Design
         private const byte NumMeasurements = 100;
 
         private bool[] InputsValid = { false, false, false, false, false, false, false, false };
-        
+
         private IObservable<Tuple<int, Vector3>> PositionDataSource;
 
         private Vector3[] TS4231Coordinates = { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero };
@@ -26,17 +29,7 @@ namespace OpenEphys.Onix1.Design
             PositionDataSource = positionDataSource;
         }
 
-        private bool CheckInputValidity(string userInput)
-        {
-            string[] serInputSplit = userInput.Split(',');
-            if (serInputSplit.Length != 3)
-            {
-                return false;
-            }
-            return serInputSplit.All(floatCandidate => float.TryParse(floatCandidate, out _));
-        }
-
-        private void DisableButtons() 
+        private void DisableButtons()
         {
             buttonMeasure0.Enabled = false;
             buttonMeasure1.Enabled = false;
@@ -45,7 +38,7 @@ namespace OpenEphys.Onix1.Design
             buttonCalculate.Enabled = false;
         }
 
-        private void EnableButtons() 
+        private void EnableButtons()
         {
             buttonMeasure0.Invoke((Action)delegate
             {
@@ -69,11 +62,12 @@ namespace OpenEphys.Onix1.Design
             });
         }
 
-        private void buttonMeasure_Click(byte coordinate)
+        private void buttonMeasure_Click(object sender, EventArgs e)
         {
             TextBox[] ts4231TextBoxes = { textBoxTS4231Coordinate0, textBoxTS4231Coordinate1, textBoxTS4231Coordinate2, textBoxTS4231Coordinate3 };
+            var index = int.Parse((string)((Button)sender).Tag);
 
-            textBoxStatus.AppendText(string.Format("Measuring coordinate {0}...", coordinate) + Environment.NewLine);
+            textBoxStatus.AppendText(string.Format("Measuring coordinate {0}...", index) + Environment.NewLine);
 
             DisableButtons();
 
@@ -87,7 +81,7 @@ namespace OpenEphys.Onix1.Design
                 {
                     textBoxStatus.Invoke((Action)delegate
                     {
-                        textBoxStatus.AppendText(string.Format("Measurements at coordinate {0} complete.", coordinate) 
+                        textBoxStatus.AppendText(string.Format("Measurements at coordinate {0} complete.", index)
                             + Environment.NewLine + Environment.NewLine + "Awaiting user input..." + Environment.NewLine);
                     });
                     EnableButtons();
@@ -107,86 +101,33 @@ namespace OpenEphys.Onix1.Design
                     (acc, current) => acc + current,
                     acc =>
                     {
-                        TS4231Coordinates[coordinate] = acc / NumMeasurements;
-                        ts4231TextBoxes[coordinate].Invoke((Action)delegate
+                        TS4231Coordinates[index] = acc / NumMeasurements;
+                        ts4231TextBoxes[index].Invoke((Action)delegate
                         {
-                            ts4231TextBoxes[coordinate].Text = string.Format("{0}, {1}, {2}",
-                                TS4231Coordinates[coordinate].X,
-                                TS4231Coordinates[coordinate].Y,
-                                TS4231Coordinates[coordinate].Z);
+                            ts4231TextBoxes[index].Text = string.Format("{0}, {1}, {2}",
+                                TS4231Coordinates[index].X,
+                                TS4231Coordinates[index].Y,
+                                TS4231Coordinates[index].Z);
                         });
-                        return TS4231Coordinates[coordinate];
+                        return TS4231Coordinates[index];
                     })
                 .Subscribe();
 
             sharedPositionDataGroups.Connect();
-        }
+         }
 
-        private void textBoxTS4231Coordinate0_TextChanged(object sender, EventArgs e)
+        private void textBoxTS4231Coordinate_TextChanged(object sender, EventArgs e)
         {
-            
+            var index = int.Parse((string)((TextBox)sender).Tag);
+            InputsValid[index] = true;
             buttonCalculate.Enabled = InputsValid.All(inputValid => inputValid);
         }
 
-        private void textBoxTS4231Coordinate1_TextChanged(object sender, EventArgs e)
+        private void textBoxUserCoordinate_TextChanged(object sender, EventArgs e)
         {
-            buttonCalculate.Enabled = InputsValid.All(inputValid => inputValid);
-        }
-
-        private void textBoxTS4231Coordinate2_TextChanged(object sender, EventArgs e)
-        {
-            buttonCalculate.Enabled = InputsValid.All(inputValid => inputValid);
-        }
-
-        private void textBoxTS4231Coordinate3_TextChanged(object sender, EventArgs e)
-        {
-            buttonCalculate.Enabled = InputsValid.All(inputValid => inputValid);
-        }
-
-        private void buttonMeasure0_Click(object sender, EventArgs e)
-        {
-            buttonMeasure_Click(0);
-            InputsValid[0] = true;
-        }
-
-        private void buttonMeasure1_Click(object sender, EventArgs e)
-        {
-            buttonMeasure_Click(1);
-            InputsValid[1] = true;
-        }
-
-        private void buttonMeasure2_Click(object sender, EventArgs e)
-        {
-            buttonMeasure_Click(2);
-            InputsValid[2] = true;
-        }
-
-        private void buttonMeasure3_Click(object sender, EventArgs e)
-        {
-            buttonMeasure_Click(3);
-            InputsValid[3] = true;
-        }
-        private void textBoxUserCoordinate0_TextChanged(object sender, EventArgs e)
-        {
-            InputsValid[4] = CheckInputValidity(textBoxUserCoordinate0.Text);
-            buttonCalculate.Enabled = InputsValid.All(inputValid => inputValid);
-        }
-
-        private void textBoxUserCoordinate1_TextChanged(object sender, EventArgs e)
-        {
-            InputsValid[5] = CheckInputValidity(textBoxUserCoordinate1.Text);
-            buttonCalculate.Enabled = InputsValid.All(inputValid => inputValid);
-        }
-
-        private void textBoxUserCoordinate2_TextChanged(object sender, EventArgs e)
-        {
-            InputsValid[6] = CheckInputValidity(textBoxUserCoordinate2.Text);
-            buttonCalculate.Enabled = InputsValid.All(inputValid => inputValid);
-        }
-
-        private void textBoxUserCoordinate3_TextChanged(object sender, EventArgs e)
-        {
-            InputsValid[7] = CheckInputValidity(textBoxUserCoordinate3.Text);
+            var index = int.Parse((string)((TextBox)sender).Tag);
+            string[] serInputSplit = ((TextBox)sender).Text.Split(',');
+            InputsValid[index] = serInputSplit.Length == 3 ? serInputSplit.All(floatCandidate => float.TryParse(floatCandidate, out _)) : false;
             buttonCalculate.Enabled = InputsValid.All(inputValid => inputValid);
         }
 
