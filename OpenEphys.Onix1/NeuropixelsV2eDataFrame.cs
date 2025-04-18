@@ -42,17 +42,37 @@ namespace OpenEphys.Onix1
             return data->ProbeIndex;
         }
 
-        internal static unsafe void CopyAmplifierBuffer(ushort* amplifierData, ushort[,] amplifierBuffer, int index, double gainCorrection)
+        internal static unsafe void CopyAmplifierBuffer(ushort* amplifierData, ushort[,] amplifierBuffer, int index, double gainCorrection, bool invertPolarity)
         {
-            // Loop over 16 "frames" within each "super-frame"
-            for (int i = 0; i < NeuropixelsV2e.FramesPerSuperFrame; i++)
+            if (invertPolarity)
             {
-                // The period of ADC data within data array is 36 words
-                var adcDataOffset = i * NeuropixelsV2e.FrameWords;
+                const double NumberOfAdcBins = 2048;
+                double inversionOffset = gainCorrection * NumberOfAdcBins;
 
-                for (int k = 0; k < NeuropixelsV2e.AdcsPerProbe; k++)
+                // Loop over 16 "frames" within each "super-frame"
+                for (int i = 0; i < NeuropixelsV2e.FramesPerSuperFrame; i++)
                 {
-                    amplifierBuffer[RawToChannel[k, i], index] = (ushort)(gainCorrection * amplifierData[AdcIndicies[k] + adcDataOffset]);
+                    // The period of ADC data within data array is 36 words
+                    var adcDataOffset = i * NeuropixelsV2e.FrameWords;
+
+                    for (int k = 0; k < NeuropixelsV2e.AdcsPerProbe; k++)
+                    {
+                        amplifierBuffer[RawToChannel[k, i], index] = (ushort)(inversionOffset - gainCorrection * amplifierData[AdcIndicies[k] + adcDataOffset]);
+                    }
+                }
+            } 
+            else
+            {
+                // Loop over 16 "frames" within each "super-frame"
+                for (int i = 0; i < NeuropixelsV2e.FramesPerSuperFrame; i++)
+                {
+                    // The period of ADC data within data array is 36 words
+                    var adcDataOffset = i * NeuropixelsV2e.FrameWords;
+
+                    for (int k = 0; k < NeuropixelsV2e.AdcsPerProbe; k++)
+                    {
+                        amplifierBuffer[RawToChannel[k, i], index] = (ushort)(gainCorrection * amplifierData[AdcIndicies[k] + adcDataOffset]);
+                    }
                 }
             }
         }
