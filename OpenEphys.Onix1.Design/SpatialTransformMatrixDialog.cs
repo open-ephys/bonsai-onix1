@@ -3,9 +3,7 @@ using System.Linq;
 using System.Numerics;
 using System.Windows.Forms;
 using System.Reactive.Linq;
-using System.Collections.Generic;
-using Bonsai.Reactive;
-using System.Reflection;
+using Bonsai.Design;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -29,39 +27,6 @@ namespace OpenEphys.Onix1.Design
             PositionDataSource = positionDataSource;
         }
 
-        private void DisableButtons()
-        {
-            buttonMeasure0.Enabled = false;
-            buttonMeasure1.Enabled = false;
-            buttonMeasure2.Enabled = false;
-            buttonMeasure3.Enabled = false;
-            buttonCalculate.Enabled = false;
-        }
-
-        private void EnableButtons()
-        {
-            buttonMeasure0.Invoke((Action)delegate
-            {
-                buttonMeasure0.Enabled = true;
-            });
-            buttonMeasure1.Invoke((Action)delegate
-            {
-                buttonMeasure1.Enabled = true;
-            });
-            buttonMeasure2.Invoke((Action)delegate
-            {
-                buttonMeasure2.Enabled = true;
-            });
-            buttonMeasure3.Invoke((Action)delegate
-            {
-                buttonMeasure3.Enabled = true;
-            });
-            buttonCalculate.Invoke((Action)delegate
-            {
-                buttonCalculate.Enabled = InputsValid.All(inputValid => inputValid);
-            });
-        }
-
         private void buttonMeasure_Click(object sender, EventArgs e)
         {
             TextBox[] ts4231TextBoxes = { textBoxTS4231Coordinate0, textBoxTS4231Coordinate1, textBoxTS4231Coordinate2, textBoxTS4231Coordinate3 };
@@ -69,7 +34,11 @@ namespace OpenEphys.Onix1.Design
 
             textBoxStatus.AppendText(string.Format("Measuring coordinate {0}...", index) + Environment.NewLine);
 
-            DisableButtons();
+            buttonMeasure0.Enabled = false;
+            buttonMeasure1.Enabled = false;
+            buttonMeasure2.Enabled = false;
+            buttonMeasure3.Enabled = false;
+            buttonCalculate.Enabled = false;
 
             var sharedPositionDataGroups = PositionDataSource.Take(NumMeasurements)
                 .GroupBy(dataFrame => dataFrame.Item1, dataFrame => dataFrame.Item2)
@@ -77,38 +46,35 @@ namespace OpenEphys.Onix1.Design
 
             sharedPositionDataGroups
                 .SelectMany(group => group.Count().Select(count => new { index = group.Key, measurementCount = count }))
+                .ObserveOn(new ControlScheduler(this))
                 .Finally(() =>
                 {
-                    textBoxStatus.Invoke((Action)delegate
-                    {
-                        textBoxStatus.AppendText(string.Format("Measurements at coordinate {0} complete.", index)
-                            + Environment.NewLine + Environment.NewLine + "Awaiting user input..." + Environment.NewLine);
-                    });
-                    EnableButtons();
+                    textBoxStatus.AppendText(string.Format("Measurements at coordinate {0} complete.", index)
+                        + Environment.NewLine + Environment.NewLine + "Awaiting user input..." + Environment.NewLine);
+                    buttonMeasure0.Enabled = true;
+                    buttonMeasure1.Enabled = true;
+                    buttonMeasure2.Enabled = true;
+                    buttonMeasure3.Enabled = true;
+                    buttonCalculate.Enabled = InputsValid.All(inputValid => inputValid);
                 })
                 .Subscribe(sensor =>
                 {
-                    textBoxStatus.Invoke((Action)delegate
-                    {
-                        textBoxStatus.AppendText(string.Format("{1} measurements from sensor {0}.", sensor.index, sensor.measurementCount) + Environment.NewLine);
-                    });
+                    textBoxStatus.AppendText(string.Format("{1} measurements from sensor {0}.", sensor.index, sensor.measurementCount) + Environment.NewLine);
                 });
 
             sharedPositionDataGroups
                 .Merge()
+                .ObserveOn(new ControlScheduler(this))
                 .Aggregate(
                     new Vector3(0, 0, 0),
                     (acc, current) => acc + current,
                     acc =>
                     {
                         TS4231Coordinates[index] = acc / NumMeasurements;
-                        ts4231TextBoxes[index].Invoke((Action)delegate
-                        {
-                            ts4231TextBoxes[index].Text = string.Format("{0}, {1}, {2}",
-                                TS4231Coordinates[index].X,
-                                TS4231Coordinates[index].Y,
-                                TS4231Coordinates[index].Z);
-                        });
+                        ts4231TextBoxes[index].Text = string.Format("{0}, {1}, {2}",
+                            TS4231Coordinates[index].X,
+                            TS4231Coordinates[index].Y,
+                            TS4231Coordinates[index].Z);
                         return TS4231Coordinates[index];
                     })
                 .Subscribe();
