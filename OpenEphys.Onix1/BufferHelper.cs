@@ -59,7 +59,7 @@ namespace OpenEphys.Onix1
         {
             if (channelMap == null || channelMap.Length != channelCount)
             {
-                throw new ArgumentException($"{nameof(channelMap)} must contain {nameof(channelCount)} entries", nameof(channelMap));
+                return CopyTranspose(buffer, sampleCount, channelCount, depth);
             }
 
             using var bufferHeader = Mat.CreateMatHeader(
@@ -68,12 +68,15 @@ namespace OpenEphys.Onix1
                 channelCount,
                 depth,
                 channels: 1);
-            var data = new Mat(bufferHeader.Cols, bufferHeader.Rows, depth, 1);
+            var data = new Mat(bufferHeader.Rows, bufferHeader.Cols, depth, 1);
 
             for (int i = 0; i < bufferHeader.Cols; i++)
-                CV.Copy(bufferHeader.GetCol(channelMap[i]), data.GetRow(i));
+                CV.Copy(bufferHeader.GetCol(channelMap[i]), data.GetCol(i));
 
-            return data;
+            var transposeData = new Mat(bufferHeader.Cols, bufferHeader.Rows, depth, 1);
+
+            CV.Transpose(data, transposeData);
+            return transposeData;
         }
     }
 }
