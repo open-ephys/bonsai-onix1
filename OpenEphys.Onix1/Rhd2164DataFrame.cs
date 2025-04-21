@@ -27,11 +27,12 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <remarks>
         /// Electrophysiology samples are organized in 64xN matrix with rows representing electrophysiology
-        /// channel number and N columns representing sample index. Each column is a 64-channel vector of ADC
-        /// samples whose acquisition time is indicated by the corresponding elements in <see
-        /// cref="DataFrame.Clock"/> and <see cref="DataFrame.HubClock"/>. Each ADC sample is a 16-bit,
-        /// offset binary value encoded as a <see cref="ushort"/>. The following equation can be used to
-        /// convert a sample to microvolts:
+        /// channel number and N columns representing sample index. Channels are ordered in accordance with
+        /// the Rhd2164 input number specified on its datasheet (channel 0 corresponds to input 0, channel 1
+        /// corresponds to input 1, and so on). Each column is a 64-channel vector of ADC samples whose
+        /// acquisition time is indicated by the corresponding elements in <see cref="DataFrame.Clock"/> and
+        /// <see cref="DataFrame.HubClock"/>. Each ADC sample is a 16-bit, offset binary value encoded as a
+        /// <see cref="ushort"/>. The following equation can be used to convert a sample to microvolts:
         /// <code>
         /// Electrode Voltage (µV) = 0.195 × (ADC Sample – 32768)
         /// </code>
@@ -42,11 +43,13 @@ namespace OpenEphys.Onix1
         /// Gets the buffered auxiliary data array. 
         /// </summary>
         /// <remarks>
-        /// Auxiliary samples are organized in 3xN matrix with rows representing electrophysiology channel
-        /// number and N columns representing sample index. Each column is a 3-channel vector of ADC samples
-        /// whose acquisition time is indicated by the corresponding elements in <see cref="DataFrame.Clock"/>
-        /// and <see cref="DataFrame.HubClock"/>. Each ADC sample is a 16-bit <see cref="ushort"/>. The
-        /// following equation can be used to convert a sample to volts:
+        /// Auxiliary samples are organized in 3xN matrix with rows representing auxilary channel number and N
+        /// columns representing sample index. Channels are ordered in accordance with the Rhd2164 input
+        /// number specified on its datasheet (channel 0 corresponds to auxiliary input 0, channel 1
+        /// corresponds to auxiliary input 1, and channel 2 corresponds to auxiliary input 2). Each column is
+        /// a 3-channel vector of ADC samples whose acquisition time is indicated by the corresponding
+        /// elements in <see cref="DataFrame.Clock"/> and <see cref="DataFrame.HubClock"/>. Each ADC sample is
+        /// a 16-bit <see cref="ushort"/>. The following equation can be used to convert a sample to volts:
         /// <code>
         /// Auxiliary Voltage (V) = 0.0000374 × ADC Sample
         /// </code>
