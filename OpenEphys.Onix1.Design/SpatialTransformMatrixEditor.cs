@@ -18,7 +18,7 @@ namespace OpenEphys.Onix1.Design
     public class SpatialTransformMatrixEditor : DataSourceTypeEditor
     {
         public SpatialTransformMatrixEditor()
-            : base(DataSource.Input, typeof(void))
+            : base(DataSource.Output, typeof(void))
         {
         }
 
@@ -28,9 +28,9 @@ namespace OpenEphys.Onix1.Design
             return UITypeEditorEditStyle.Modal;
         }
 
-        protected virtual IObservable<Tuple<int, Vector3>> GetData(IObservable<IObservable<object>> source)
+        protected virtual IObservable<TS4231V1PositionDataFrame> GetData(IObservable<IObservable<object>> source)
         {
-            return source.Merge().Select(coordinate => (Tuple<int, Vector3>)coordinate);
+            return source.Merge().Select(x => x as TS4231V1PositionDataFrame);
         }
 
         public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)

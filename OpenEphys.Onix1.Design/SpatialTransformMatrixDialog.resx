@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="labelInstructions.Text" xml:space="preserve">
-    <value>Follow the instructions below to transform naive TS4231 position data from a naive reference frame to a user-defined reference frame. For more in-depth instructions, find the corresponding tutorial in Open Ephys' online documentation.
+    <value>Follow the instructions below to transform naive TS4231 position data from the base-station reference frame to a user-defined reference frame. For more in-depth instructions, find the corresponding tutorial in Open Ephys' online documentation.
 1) Make sure the workflow is running.
 2) For each coordinate: 
     • Place the TS4231V1 device and click the corresponding "Measure" button.

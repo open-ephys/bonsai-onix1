@@ -13,7 +13,7 @@ namespace OpenEphys.Onix1.Design
 
         private bool[] InputsValid = { false, false, false, false, false, false, false, false };
 
-        private IObservable<Tuple<int, Vector3>> PositionDataSource;
+        private IObservable<TS4231V1PositionDataFrame> PositionDataSource;
 
         private Vector3[] TS4231Coordinates = { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero };
 
@@ -21,7 +21,7 @@ namespace OpenEphys.Onix1.Design
 
         internal bool ApplySpatialTransform { get; private set; }
 
-        internal SpatialTransformMatrixDialog(IObservable<Tuple<int, Vector3>> positionDataSource)
+        internal SpatialTransformMatrixDialog(IObservable<TS4231V1PositionDataFrame> positionDataSource)
         {
             InitializeComponent();
             PositionDataSource = positionDataSource;
@@ -41,7 +41,7 @@ namespace OpenEphys.Onix1.Design
             buttonCalculate.Enabled = false;
 
             var sharedPositionDataGroups = PositionDataSource.Take(NumMeasurements)
-                .GroupBy(dataFrame => dataFrame.Item1, dataFrame => dataFrame.Item2)
+                .GroupBy(dataFrame => dataFrame.SensorIndex, dataFrame => dataFrame.Position)
                 .Publish();
 
             sharedPositionDataGroups
@@ -136,5 +136,6 @@ namespace OpenEphys.Onix1.Design
         {
             ApplySpatialTransform = checkBoxApplySpatialTransform.Checked;
         }
+
     }
 }
