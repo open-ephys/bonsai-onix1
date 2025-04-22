@@ -88,7 +88,8 @@ namespace OpenEphys.Onix1
             "the specified voltage to the headstage. Warning: this device requires 3.0V to 5.5V " +
             "for proper operation. Higher voltages can damage the headstage.")]
         [Category(ConfigurationCategory)]
-        public double? PortVoltage
+        [TypeConverter(typeof(PortVoltageConverter))]
+        public AutoPortVoltage PortVoltage
         {
             get => PortControl.PortVoltage;
             set => PortControl.PortVoltage = value;
