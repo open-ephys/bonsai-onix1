@@ -44,7 +44,7 @@ namespace OpenEphys.Onix1
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SerAlias, SER_ADDR << 1);
             // Enable backchannel GPIO on deserializer. It is then the serializer task to decide if using them or use manual output
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.GpioCtrl0, 0x10);
-            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.GpioCtrl0, 0x32);
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.GpioCtrl1, 0x32);
         }
 
         internal static void Set933I2CRate(DeviceContext device, double i2cRate)
