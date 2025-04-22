@@ -21,7 +21,8 @@ namespace OpenEphys.Onix1
                      "voltage discovery. Warning: Supplying excessive voltage may result in damage to devices. " +
                      "Consult the device datasheet and documentation for allowable voltage ranges.")]
         [Category(ConfigurationCategory)]
-        public double? PortVoltage { get; set; } = null;
+        [TypeConverter(typeof(PortVoltageConverter))]
+        public AutoPortVoltage PortVoltage { get; set; } = null;
 
         protected virtual bool CheckLinkState(DeviceContext device)
         {
@@ -29,7 +30,7 @@ namespace OpenEphys.Onix1
             return (linkState & PortController.LINKSTATE_SL) != 0;
         }
 
-        protected abstract bool ConfigurePortVoltage(DeviceContext device);
+        protected abstract bool ConfigurePortVoltage(DeviceContext device, out double voltage);
 
         protected virtual bool ConfigurePortVoltageOverride(DeviceContext device, double voltage)
         {
@@ -58,12 +59,23 @@ namespace OpenEphys.Onix1
             .ConfigureLink(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
-                void dispose() => device.WriteRegister(PortController.PORTVOLTAGE, 0);
+                void dispose() { device.WriteRegister(PortController.PORTVOLTAGE, 0); PortVoltage.Applied = null; }
                 device.WriteRegister(PortController.ENABLE, 1);
 
-                var serdesLock = portVoltage.HasValue
-                    ? ConfigurePortVoltageOverride(device, portVoltage.GetValueOrDefault())
-                    : ConfigurePortVoltage(device);
+                //double voltage = portVoltage.Requested.GetValueOrDefault();
+                bool serdesLock = false;
+                if (portVoltage.Requested.HasValue)
+                {
+                    var voltage = portVoltage.Requested.GetValueOrDefault();
+                    serdesLock = ConfigurePortVoltageOverride(device, voltage);
+                    PortVoltage.Applied = voltage;
+
+                } else
+                {
+                    serdesLock = ConfigurePortVoltage(device, out double voltage);
+                    PortVoltage.Applied = voltage;
+                }
+
                 if (!serdesLock)
                 {
                     dispose();
@@ -74,6 +86,7 @@ namespace OpenEphys.Onix1
                                          .Description ?? "Address " + deviceAddress.ToString();
                     throw new InvalidOperationException($"Unable to acquire communication lock on {portString}.");
                 }
+
                 return Disposable.Create(dispose);
             })
             .ConfigureDevice(context =>

@@ -117,7 +117,8 @@ namespace OpenEphys.Onix1
         "the specified voltage to the headstage. Warning: this device requires 4.5V to 5.5V " +
         "for proper operation. Higher voltages can damage the headstage.")]
         [Category(ConfigurationCategory)]
-        public double? PortVoltage
+        [TypeConverter(typeof(PortVoltageConverter))]
+        public AutoPortVoltage PortVoltage
         {
             get => PortControl.PortVoltage;
             set => PortControl.PortVoltage = value;
@@ -134,39 +135,24 @@ namespace OpenEphys.Onix1
 
         class ConfigureNeuropixels1fHeadstageLinkController : ConfigurePortController
         {
-            // TODO: Needs more testing
-            protected override bool ConfigurePortVoltage(DeviceContext device)
+            protected override bool ConfigurePortVoltage(DeviceContext device, out double voltage)
             {
-                if (PortVoltage == null)
-                {
-                    const double MinVoltage = 5.0;
-                    const double MaxVoltage = 7.0;
-                    const double VoltageOffset = 1.0;
-                    const double VoltageIncrement = 0.2;
+                const double MinVoltage = 5.0;
+                const double MaxVoltage = 7.0;
+                const double VoltageOffset = 1.0;
+                const double VoltageIncrement = 0.2;
 
-                    for (double voltage = MinVoltage; voltage <= MaxVoltage; voltage += VoltageIncrement)
+                voltage = MinVoltage;
+                for (; voltage <= MaxVoltage; voltage += VoltageIncrement)
+                {
+                    SetVoltage(device, voltage);
+                    if (CheckLinkState(device))
                     {
+                        voltage += VoltageOffset;
                         SetVoltage(device, voltage);
-                        if (CheckLinkState(device))
-                        {
-                            SetVoltage(device, voltage + VoltageOffset);
-                            return CheckLinkState(device);
-                        }
+                        return CheckLinkState(device);
                     }
-                    return false;
                 }
-                else
-                {
-                    SetVoltage(device, (double)PortVoltage);
-                }
-
-                if (CheckLinkState(device))
-                {
-                    device.Context.Reset();
-                    Thread.Sleep(200);
-                    return true;
-                }
-
                 return false;
             }
 

@@ -5,7 +5,7 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Defines a single stimulus sequence for a channel on an RHS2116 device.
+    /// Defines a single stimulus sequence for a channel on an Rhs2116 device.
     /// </summary>
     public class Rhs2116Stimulus
     {

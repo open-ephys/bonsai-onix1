@@ -125,11 +125,12 @@ namespace OpenEphys.Onix1
         /// Supplying higher voltages may result in damage.
         /// </para>
         /// </remarks>
-        [Description("If defined, it will override automated voltage discovery and apply the specified voltage" +
-                     "to the headstage. Warning: this device requires 5.5V to 6.0V for proper operation." +
-                     "Supplying higher voltages may result in damage to the headstage.")]
+        [Description("If defined, it will override automated voltage discovery and apply the specified voltage " +
+                     "to the headstage. Warning: this device requires 5.5V to 6.0V, measured at the headstage, " +
+                     "for proper operation. Supplying higher voltages may result in damage to the headstage.")]
         [Category(ConfigurationCategory)]
-        public double? PortVoltage
+        [TypeConverter(typeof(PortVoltageConverter))]
+        public AutoPortVoltage PortVoltage
         {
             get => PortControl.PortVoltage;
             set => PortControl.PortVoltage = value;
@@ -147,34 +148,38 @@ namespace OpenEphys.Onix1
 
         class ConfigureHeadstage64PortController : ConfigurePortController
         {
-            protected override bool ConfigurePortVoltage(DeviceContext device)
+            protected override bool ConfigurePortVoltage(DeviceContext device, out double voltage)
             {
                 // WONTFIX: It takes a huge amount of time to get to 0, almost 10 seconds. The best we can do
                 // at the moment is drive port voltage to minimum which is an active process and then settle
                 // from there to zero volts. This requires a hardware revision that discharges the headstage
                 // between cycles to fix.
-                const uint MinVoltage = 33;
-                const uint MaxVoltage = 60;
-                const uint VoltageOffset = 34;
-                const uint VoltageIncrement = 02;
+                const double MinVoltage = 3.3;
+                const double MaxVoltage = 6.0;
+                const double VoltageOffset = 3.4;
+                const double VoltageIncrement = 0.2;
 
                 // Start with highest voltage and ramp it down to find lowest lock voltage
-                var voltage = MaxVoltage;
+                voltage = MaxVoltage;
                 for (; voltage >= MinVoltage; voltage -= VoltageIncrement)
                 {
-                    device.WriteRegister(PortController.PORTVOLTAGE, voltage);
+                    device.WriteRegister(PortController.PORTVOLTAGE, (uint)(10 * voltage));
                     Thread.Sleep(200);
                     if (!CheckLinkState(device))
                     {
-                        if (voltage == MaxVoltage) return false;
+                        if (voltage == MaxVoltage)
+                        {
+                            return false;
+                        }
                         else break;
                     }
                 }
 
-                device.WriteRegister(PortController.PORTVOLTAGE, MinVoltage);
+                device.WriteRegister(PortController.PORTVOLTAGE, (uint)(10 * MinVoltage));
                 device.WriteRegister(PortController.PORTVOLTAGE, 0);
                 Thread.Sleep(1000);
-                device.WriteRegister(PortController.PORTVOLTAGE, voltage + VoltageOffset);
+                voltage += VoltageOffset;
+                device.WriteRegister(PortController.PORTVOLTAGE, (uint)(10 * voltage));
                 Thread.Sleep(200);
                 return CheckLinkState(device);
             }
