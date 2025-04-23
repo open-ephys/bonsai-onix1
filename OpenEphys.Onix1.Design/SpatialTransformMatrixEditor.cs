@@ -36,15 +36,20 @@ namespace OpenEphys.Onix1.Design
         public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
         {
             var editorService = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
+            var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
             if (context != null && editorService != null)
             {
                 var source = GetDataSource(context, provider);
                 var dataFrames = GetData(source.Output);
                 using (var visualizerDialog = new SpatialTransformMatrixDialog(dataFrames))
                 {
-                    if (editorService.ShowDialog(visualizerDialog) == DialogResult.OK && visualizerDialog.ApplySpatialTransform)
+                    if (!editorState.WorkflowRunning)
                     {
-                        return visualizerDialog.SpatialTransform;
+                        throw new InvalidOperationException("Workflow must be running to open this GUI.");
+                    }
+                    else if (editorService.ShowDialog(visualizerDialog) == DialogResult.OK && visualizerDialog.ApplySpatialTransform)
+                    {
+                        return visualizerDialog.NewSpatialTransform;
                     }
                 }
             }

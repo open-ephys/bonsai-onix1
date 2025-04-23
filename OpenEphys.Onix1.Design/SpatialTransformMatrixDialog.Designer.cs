@@ -89,9 +89,9 @@ namespace OpenEphys.Onix1.Design
             // 
             this.groupBoxStatus.Controls.Add(this.textBoxStatus);
             this.groupBoxStatus.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.groupBoxStatus.Location = new System.Drawing.Point(3, 263);
+            this.groupBoxStatus.Location = new System.Drawing.Point(3, 250);
             this.groupBoxStatus.Name = "groupBoxStatus";
-            this.groupBoxStatus.Size = new System.Drawing.Size(618, 330);
+            this.groupBoxStatus.Size = new System.Drawing.Size(618, 343);
             this.groupBoxStatus.TabIndex = 6;
             this.groupBoxStatus.TabStop = false;
             this.groupBoxStatus.Text = "Status Messages";
@@ -106,7 +106,7 @@ namespace OpenEphys.Onix1.Design
             this.textBoxStatus.Name = "textBoxStatus";
             this.textBoxStatus.ReadOnly = true;
             this.textBoxStatus.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBoxStatus.Size = new System.Drawing.Size(612, 311);
+            this.textBoxStatus.Size = new System.Drawing.Size(612, 324);
             this.textBoxStatus.TabIndex = 3;
             this.textBoxStatus.Text = "Awaiting user input...\r\n";
             // 
@@ -117,7 +117,7 @@ namespace OpenEphys.Onix1.Design
             this.labelInstructions.Location = new System.Drawing.Point(3, 0);
             this.labelInstructions.MaximumSize = new System.Drawing.Size(620, 0);
             this.labelInstructions.Name = "labelInstructions";
-            this.labelInstructions.Size = new System.Drawing.Size(618, 104);
+            this.labelInstructions.Size = new System.Drawing.Size(618, 91);
             this.labelInstructions.TabIndex = 4;
             this.labelInstructions.Text = resources.GetString("labelInstructions.Text");
             // 
@@ -147,7 +147,7 @@ namespace OpenEphys.Onix1.Design
             this.tableLayoutPanelCoordinates.Controls.Add(this.textBoxTS4231Coordinate0, 2, 1);
             this.tableLayoutPanelCoordinates.Controls.Add(this.labelHeaderUser, 3, 0);
             this.tableLayoutPanelCoordinates.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanelCoordinates.Location = new System.Drawing.Point(3, 107);
+            this.tableLayoutPanelCoordinates.Location = new System.Drawing.Point(3, 94);
             this.tableLayoutPanelCoordinates.Name = "tableLayoutPanelCoordinates";
             this.tableLayoutPanelCoordinates.RowCount = 5;
             this.tableLayoutPanelCoordinates.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
@@ -168,7 +168,6 @@ namespace OpenEphys.Onix1.Design
             this.textBoxUserCoordinate3.Size = new System.Drawing.Size(220, 20);
             this.textBoxUserCoordinate3.TabIndex = 39;
             this.textBoxUserCoordinate3.Tag = "7";
-            this.textBoxUserCoordinate3.Text = "x\'3, y\'3, z\'3";
             this.textBoxUserCoordinate3.TextChanged += new System.EventHandler(this.textBoxUserCoordinate_TextChanged);
             // 
             // textBoxUserCoordinate2
@@ -180,7 +179,6 @@ namespace OpenEphys.Onix1.Design
             this.textBoxUserCoordinate2.Size = new System.Drawing.Size(220, 20);
             this.textBoxUserCoordinate2.TabIndex = 38;
             this.textBoxUserCoordinate2.Tag = "6";
-            this.textBoxUserCoordinate2.Text = "x\'2, y\'2, z\'2";
             this.textBoxUserCoordinate2.TextChanged += new System.EventHandler(this.textBoxUserCoordinate_TextChanged);
             // 
             // textBoxUserCoordinate1
@@ -192,7 +190,6 @@ namespace OpenEphys.Onix1.Design
             this.textBoxUserCoordinate1.Size = new System.Drawing.Size(220, 20);
             this.textBoxUserCoordinate1.TabIndex = 37;
             this.textBoxUserCoordinate1.Tag = "5";
-            this.textBoxUserCoordinate1.Text = "x\'1, y\'1, z\'1";
             this.textBoxUserCoordinate1.TextChanged += new System.EventHandler(this.textBoxUserCoordinate_TextChanged);
             // 
             // textBoxUserCoordinate0
@@ -204,7 +201,6 @@ namespace OpenEphys.Onix1.Design
             this.textBoxUserCoordinate0.Size = new System.Drawing.Size(220, 20);
             this.textBoxUserCoordinate0.TabIndex = 36;
             this.textBoxUserCoordinate0.Tag = "4";
-            this.textBoxUserCoordinate0.Text = "x\'0, y\'0, z\'0";
             this.textBoxUserCoordinate0.TextChanged += new System.EventHandler(this.textBoxUserCoordinate_TextChanged);
             // 
             // textBoxTS4231Coordinate3
@@ -218,8 +214,6 @@ namespace OpenEphys.Onix1.Design
             this.textBoxTS4231Coordinate3.TabIndex = 33;
             this.textBoxTS4231Coordinate3.TabStop = false;
             this.textBoxTS4231Coordinate3.Tag = "3";
-            this.textBoxTS4231Coordinate3.Text = "x3, y3, z3";
-            this.textBoxTS4231Coordinate3.TextChanged += new System.EventHandler(this.textBoxTS4231Coordinate_TextChanged);
             // 
             // textBoxTS4231Coordinate2
             // 
@@ -232,8 +226,6 @@ namespace OpenEphys.Onix1.Design
             this.textBoxTS4231Coordinate2.TabIndex = 32;
             this.textBoxTS4231Coordinate2.TabStop = false;
             this.textBoxTS4231Coordinate2.Tag = "2";
-            this.textBoxTS4231Coordinate2.Text = "x2, y2, z2";
-            this.textBoxTS4231Coordinate2.TextChanged += new System.EventHandler(this.textBoxTS4231Coordinate_TextChanged);
             // 
             // textBoxTS4231Coordinate1
             // 
@@ -246,8 +238,6 @@ namespace OpenEphys.Onix1.Design
             this.textBoxTS4231Coordinate1.TabIndex = 31;
             this.textBoxTS4231Coordinate1.TabStop = false;
             this.textBoxTS4231Coordinate1.Tag = "1";
-            this.textBoxTS4231Coordinate1.Text = "x1, y1, z1";
-            this.textBoxTS4231Coordinate1.TextChanged += new System.EventHandler(this.textBoxTS4231Coordinate_TextChanged);
             // 
             // buttonMeasure3
             // 
@@ -355,8 +345,6 @@ namespace OpenEphys.Onix1.Design
             this.textBoxTS4231Coordinate0.TabIndex = 30;
             this.textBoxTS4231Coordinate0.TabStop = false;
             this.textBoxTS4231Coordinate0.Tag = "0";
-            this.textBoxTS4231Coordinate0.Text = "x0, y0, z0";
-            this.textBoxTS4231Coordinate0.TextChanged += new System.EventHandler(this.textBoxTS4231Coordinate_TextChanged);
             // 
             // labelHeaderUser
             // 

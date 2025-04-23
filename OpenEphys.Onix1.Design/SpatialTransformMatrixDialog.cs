@@ -17,7 +17,13 @@ namespace OpenEphys.Onix1.Design
 
         private Vector3[] TS4231Coordinates = { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero };
 
-        internal Matrix4x4 SpatialTransform { get; private set; }
+        private Button[] MeasureButtons;
+
+        private IDisposable TextBoxStatusUpdateSubscription;
+
+        private IDisposable MeasurementCalculationSubscription;
+
+        internal Matrix4x4 NewSpatialTransform { get; private set; }
 
         internal bool ApplySpatialTransform { get; private set; }
 
@@ -25,75 +31,108 @@ namespace OpenEphys.Onix1.Design
         {
             InitializeComponent();
             PositionDataSource = positionDataSource;
+            MeasureButtons = new Button[] { buttonMeasure0, buttonMeasure1, buttonMeasure2, buttonMeasure3 };
+        }
+
+        private void enableButtons(bool enable, byte index)
+        {
+            for (byte i = 0; i < MeasureButtons.Length; i++)
+            {
+                MeasureButtons[i].Enabled = enable || (i == index);
+            }
+            buttonCalculate.Enabled = enable && InputsValid.All(inputValid => inputValid);
         }
 
         private void buttonMeasure_Click(object sender, EventArgs e)
         {
             TextBox[] ts4231TextBoxes = { textBoxTS4231Coordinate0, textBoxTS4231Coordinate1, textBoxTS4231Coordinate2, textBoxTS4231Coordinate3 };
-            var index = int.Parse((string)((Button)sender).Tag);
+            var index = byte.Parse((string)((Button)sender).Tag);
 
-            textBoxStatus.AppendText(string.Format("Measuring coordinate {0}...", index) + Environment.NewLine);
+            if (MeasureButtons[index].Text == "Measure")
+            {
+                textBoxStatus.AppendText(string.Format("Measuring coordinate {0}...", index) + Environment.NewLine);
+                MeasureButtons[index].Text = "Cancel";
+                enableButtons(false, index);
 
-            buttonMeasure0.Enabled = false;
-            buttonMeasure1.Enabled = false;
-            buttonMeasure2.Enabled = false;
-            buttonMeasure3.Enabled = false;
-            buttonCalculate.Enabled = false;
+                var sharedPositionDataGroups = PositionDataSource
+                    .Take(NumMeasurements)
+                    .Timeout(new TimeSpan(0, 0, 5), Observable.Empty<TS4231V1PositionDataFrame>())
+                    .Publish();
 
-            var sharedPositionDataGroups = PositionDataSource.Take(NumMeasurements)
-                .GroupBy(dataFrame => dataFrame.SensorIndex, dataFrame => dataFrame.Position)
-                .Publish();
-
-            sharedPositionDataGroups
-                .SelectMany(group => group.Count().Select(count => new { index = group.Key, measurementCount = count }))
-                .ObserveOn(new ControlScheduler(this))
-                .Finally(() =>
-                {
-                    textBoxStatus.AppendText(string.Format("Measurements at coordinate {0} complete.", index)
-                        + Environment.NewLine + Environment.NewLine + "Awaiting user input..." + Environment.NewLine);
-                    buttonMeasure0.Enabled = true;
-                    buttonMeasure1.Enabled = true;
-                    buttonMeasure2.Enabled = true;
-                    buttonMeasure3.Enabled = true;
-                    buttonCalculate.Enabled = InputsValid.All(inputValid => inputValid);
-                })
-                .Subscribe(sensor =>
-                {
-                    textBoxStatus.AppendText(string.Format("{1} measurements from sensor {0}.", sensor.index, sensor.measurementCount) + Environment.NewLine);
-                });
-
-            sharedPositionDataGroups
-                .Merge()
-                .ObserveOn(new ControlScheduler(this))
-                .Aggregate(
-                    new Vector3(0, 0, 0),
-                    (acc, current) => acc + current,
-                    acc =>
+                TextBoxStatusUpdateSubscription = sharedPositionDataGroups
+                    .GroupBy(dataFrame => dataFrame.SensorIndex, dataFrame => dataFrame.Position)
+                    .SelectMany(group => group.Count().Select(count => new { Index = group.Key, MeasurementCount = count }))
+                    .Aggregate(
+                        (TextBoxStatusUpdate: "", Count: 0),
+                        (acc, sensor) =>
+                        {
+                            var textBoxStatusUpdateString = acc.TextBoxStatusUpdate;
+                            textBoxStatusUpdateString += string.Format("{0} measurements from sensor {1}.",
+                                sensor.MeasurementCount, sensor.Index);
+                            textBoxStatusUpdateString += Environment.NewLine;
+                            return (textBoxStatusUpdateString, acc.Count + sensor.MeasurementCount);
+                        },
+                        acc => (TextBoxStatusUpdate: acc.TextBoxStatusUpdate, Valid: acc.Count == NumMeasurements))
+                    .ObserveOn(new ControlScheduler(this))
+                    .Subscribe(finalResult =>
                     {
-                        TS4231Coordinates[index] = acc / NumMeasurements;
-                        ts4231TextBoxes[index].Text = string.Format("{0}, {1}, {2}",
-                            TS4231Coordinates[index].X,
-                            TS4231Coordinates[index].Y,
-                            TS4231Coordinates[index].Z);
-                        return TS4231Coordinates[index];
-                    })
-                .Subscribe();
+                        if (finalResult.Valid)
+                        {
+                            textBoxStatus.AppendText(finalResult.TextBoxStatusUpdate);
+                            textBoxStatus.AppendText(string.Format("Measurements at coordinate {0} complete.", index)
+                                + Environment.NewLine + Environment.NewLine + "Awaiting user input..." + Environment.NewLine);
+                        }
+                        else
+                        {
+                            textBoxStatus.AppendText(string.Format("Measurements at coordinate {0} timed out. ", index)
+                                + "Confirm the Lighthouse receivers are within range and unobstructed from Lighthouse transmitters."
+                                + Environment.NewLine + Environment.NewLine + "Awaiting user input..." + Environment.NewLine);
+                        }
+                        enableButtons(true, index);
+                    });
 
-            sharedPositionDataGroups.Connect();
-         }
+                MeasurementCalculationSubscription = sharedPositionDataGroups
+                    .Aggregate(
+                        (Sum: Vector3.Zero, Count: 0),
+                        (acc, current) => (acc.Sum + current.Position, acc.Count + 1),
+                        acc =>
+                        {
+                            TS4231Coordinates[index] = acc.Item1 / NumMeasurements;
+                            return (Position: TS4231Coordinates[index], Valid: acc.Count == NumMeasurements);
+                        })
+                    .ObserveOn(new ControlScheduler(this))
+                    .Subscribe(finalMeasurement =>
+                    {
+                        MeasureButtons[index].Text = "Measure";
+                        if (finalMeasurement.Valid)
+                        {
+                            ts4231TextBoxes[index].Text = string.Format("{0}, {1}, {2}",
+                                finalMeasurement.Position.X,
+                                finalMeasurement.Position.Y,
+                                finalMeasurement.Position.Z);
+                            InputsValid[index] = true;
+                            buttonCalculate.Enabled = InputsValid.All(inputValid => inputValid);
+                        }
+                    });
 
-        private void textBoxTS4231Coordinate_TextChanged(object sender, EventArgs e)
-        {
-            var index = int.Parse((string)((TextBox)sender).Tag);
-            InputsValid[index] = true;
-            buttonCalculate.Enabled = InputsValid.All(inputValid => inputValid);
+                sharedPositionDataGroups.Connect();
+            }
+            else
+            {
+                TextBoxStatusUpdateSubscription.Dispose();
+                MeasurementCalculationSubscription.Dispose();
+                textBoxStatus.AppendText(string.Format("Measurements at coordinate {0} cancelled by user.", index)
+                    + Environment.NewLine + Environment.NewLine + "Awaiting user input..." + Environment.NewLine);
+                MeasureButtons[index].Text = "Measure";
+                enableButtons(true, index);
+            }
         }
 
         private void textBoxUserCoordinate_TextChanged(object sender, EventArgs e)
         {
             var index = int.Parse((string)((TextBox)sender).Tag);
             string[] serInputSplit = ((TextBox)sender).Text.Split(',');
-            InputsValid[index] = serInputSplit.Length == 3 ? serInputSplit.All(floatCandidate => float.TryParse(floatCandidate, out _)) : false;
+            InputsValid[index] = serInputSplit.Length == 3 && serInputSplit.All(floatCandidate => float.TryParse(floatCandidate, out _));
             buttonCalculate.Enabled = InputsValid.All(inputValid => inputValid);
         }
 
@@ -101,7 +140,7 @@ namespace OpenEphys.Onix1.Design
         {
             var ts4231V1CoordinatesMatrix = new Matrix4x4(
                 TS4231Coordinates[0].X, TS4231Coordinates[0].Y, TS4231Coordinates[0].Z, 1,
-                TS4231Coordinates[1].X, TS4231Coordinates[1].Y, TS4231Coordinates[1].Y, 1,
+                TS4231Coordinates[1].X, TS4231Coordinates[1].Y, TS4231Coordinates[1].Z, 1,
                 TS4231Coordinates[2].X, TS4231Coordinates[2].Y, TS4231Coordinates[2].Z, 1,
                 TS4231Coordinates[3].X, TS4231Coordinates[3].Y, TS4231Coordinates[3].Z, 1);
 
@@ -118,10 +157,10 @@ namespace OpenEphys.Onix1.Design
                 userCoordinates[3][0], userCoordinates[3][1], userCoordinates[3][2], 1);
 
             Matrix4x4.Invert(ts4231V1CoordinatesMatrix, out var ts4231V1CoordinatesMatrixInverted);
-            SpatialTransform = Matrix4x4.Multiply(ts4231V1CoordinatesMatrixInverted, userCoordinatesMatrix);
+            NewSpatialTransform = Matrix4x4.Multiply(ts4231V1CoordinatesMatrixInverted, userCoordinatesMatrix);
 
             textBoxStatus.AppendText("The spatial transform matrix for the above coordinates is:" + Environment.NewLine);
-            textBoxStatus.AppendText(SpatialTransform.ToString() + Environment.NewLine + Environment.NewLine);
+            textBoxStatus.AppendText(NewSpatialTransform.ToString() + Environment.NewLine + Environment.NewLine);
             textBoxStatus.AppendText("Awaiting user input..." + Environment.NewLine);
 
             checkBoxApplySpatialTransform.Enabled = true;
