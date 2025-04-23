@@ -37,9 +37,9 @@ namespace OpenEphys.Onix1
         /// Gets or sets a value specifying if the output clock is active.
         /// </summary>
         /// <remarks>
-        /// If set to true, the clock output will be connected to the clock output line. If set to false, the
-        /// clock output line will be held low. This value can be toggled in real time to gate acquisition of
-        /// external hardware.
+        /// If set to true, the physical clock output will be connected to the internal clock signal. If set
+        /// to false, the clock output line will be held low. This value can be toggled in real time to gate
+        /// acquisition of external hardware without resetting the internal clock.
         /// </remarks>
         [Category(AcquisitionCategory)]
         [Description("Clock gate control signal.")]
@@ -140,6 +140,10 @@ namespace OpenEphys.Onix1
             return source.ConfigureDevice((context, observer) =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
+
+                // NB: In this library the hardware run state and the workflow operation are linked.
+                // Therefore, the clock should never be active outside the running state
+                device.WriteRegister(OutputClock.GATE_RUN, 0b1);
 
                 var baseFreqHz = device.ReadRegister(OutputClock.BASE_FREQ_HZ);
                 var periodTicks = (uint)(baseFreqHz / clkFreqHz);
