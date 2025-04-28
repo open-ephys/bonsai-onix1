@@ -24,7 +24,10 @@ namespace OpenEphys.Onix1
     /// <item><description>Two SteamVR V1 base stations are used.</description></item>
     /// <item><description>The base stations have been synchronized with a patch cable and their modes set to
     /// ‘A’ and ‘b’, respectively.</description></item>
-    /// <item><description>The base stations are in the same 3D orientation at an arbitrary 3D offset.</description></item>
+    /// <item><description>The base stations are in the same 3D rotational orientation at an arbitrary
+    /// translational offset. The most common way to achieve this is by mounting the base stations along a
+    /// beam over the area of interest so they have the same rotational orientation but are offset along the
+    /// axis parallel to the support beam.</description></item>
     /// <item><description>The Z-axis extends away the emitting face of lighthouses, X along the direction of
     /// the text on the back label, and Y from bottom to top text on the back label.</description></item>
     /// </list>
