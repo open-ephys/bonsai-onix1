@@ -50,6 +50,7 @@ namespace OpenEphys.Onix1
                     var device = deviceInfo.GetDeviceContext(typeof(Rhs2116));
                     var amplifierBuffer = new short[Rhs2116.AmplifierChannelCount * bufferSize];
                     var dcBuffer = new short[Rhs2116.AmplifierChannelCount * bufferSize];
+                    var recovery = new ushort[bufferSize];
                     var hubClockBuffer = new ulong[bufferSize];
                     var clockBuffer = new ulong[bufferSize];
 
@@ -61,12 +62,14 @@ namespace OpenEphys.Onix1
                             Marshal.Copy(new IntPtr(payload->DCData), dcBuffer, sampleIndex * Rhs2116.AmplifierChannelCount, Rhs2116.AmplifierChannelCount);
                             hubClockBuffer[sampleIndex] = payload->HubClock;
                             clockBuffer[sampleIndex] = frame.Clock;
+                            recovery[sampleIndex] = payload->Recovery;
                             if (++sampleIndex >= bufferSize)
                             {
                                 var amplifierData = BufferHelper.CopyTranspose(amplifierBuffer, bufferSize, Rhs2116.AmplifierChannelCount, Depth.U16);
                                 var dcData = BufferHelper.CopyTranspose(dcBuffer, bufferSize, Rhs2116.AmplifierChannelCount, Depth.U16);
-                                observer.OnNext(new Rhs2116DataFrame(clockBuffer, hubClockBuffer, amplifierData, dcData));
+                                observer.OnNext(new Rhs2116DataFrame(clockBuffer, hubClockBuffer, amplifierData, dcData, recovery));
                                 hubClockBuffer = new ulong[bufferSize];
+                                recovery = new ushort[bufferSize];
                                 clockBuffer = new ulong[bufferSize];
                                 sampleIndex = 0;
                             }
