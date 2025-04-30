@@ -10,17 +10,20 @@ using Newtonsoft.Json;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Configures an ONIX RHS 2116 Trigger device.
+    /// Configures an Rhs2116 trigger device.
     /// </summary>
     /// <remarks>
-    /// The RHS2116 Trigger device generates triggers for Intan RHS2116 bioamplifier and stimulator chip(s)
-    /// either from a remote source via external SYNC pin or locally via GPIO or TRIGGER register. This 
-    /// device can be used to synchronize stimulus application and recovery across chips.
+    /// The Rhs2116 Trigger device generates triggers for Intan Rhs2116 bioamplifier and stimulator chip(s)
+    /// either from a remote source via external SYNC pin or locally via GPIO or TRIGGER register. This device
+    /// can be used to synchronize stimulus application and recovery across chips. This configuration operator
+    /// can be linked to a data IO operator, such as <see cref="Rhs2116TriggerData"/>, using a shared
+    /// <c>DeviceName</c>.
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.Rhs2116StimulusSequenceEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureRhs2116Trigger : SingleDeviceFactory
     {
         readonly BehaviorSubject<Rhs2116StimulusSequencePair> stimulusSequence = new(new Rhs2116StimulusSequencePair());
+        readonly BehaviorSubject<bool> triggerArmed = new(true);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureRhs2116Trigger"/> class.
@@ -29,6 +32,19 @@ namespace OpenEphys.Onix1
             : base(typeof(Rhs2116Trigger))
         {
         }
+
+        /// <summary>
+        /// Gets or sets the device enable state.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, a <see cref="Rhs2116TriggerData"/> instance that is linked to this configuration
+        /// will produce data. If set to false, it will not produce data. Note that this does not affect the
+        /// ability of the device to trigger stimuli, but only affects if trigger event information is
+        /// streamed back from the device. To disable the trigger see the <see cref="Armed"/> property.
+        /// </remarks>
+        [Category(ConfigurationCategory)]
+        [Description("Specifies whether the stimulus trigger device will stream stimulus delivery information.")]
+        public bool Enable { get; set; } = true;
 
         /// <summary>
         /// Gets or sets the trigger source.
@@ -51,6 +67,21 @@ namespace OpenEphys.Onix1
         [Category(ConfigurationCategory)]
         [Description("Defines the channel configuration")]
         public Rhs2116ProbeGroup ProbeGroup { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets if trigger is armed.
+        /// </summary>
+        /// <remarks>
+        /// If true, this device will respect triggers from the selected <see cref="TriggerSource"/>.
+        /// Otherwise, triggers will be ignored. 
+        /// </remarks>
+        [Category(AcquisitionCategory)]
+        [Description("If true, respect triggers. Otherwise, triggers will not be applied.")]
+        public bool Armed
+        {
+            get => triggerArmed.Value;
+            set => triggerArmed.OnNext(value);
+        }
 
         /// <summary>
         /// Gets or sets a string defining the <see cref="ProbeGroup"/> in Base64.
@@ -88,7 +119,7 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Configures an RHS2116 Trigger device.
+        /// Configures an Rhs2116 Trigger device.
         /// </summary>
         /// <remarks>
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
@@ -97,10 +128,11 @@ namespace OpenEphys.Onix1
         /// <param name="source">A sequence of <see cref="ContextTask"/> that holds all configuration actions.</param>
         /// <returns>
         /// The original sequence with the side effect of an additional configuration action to configure
-        /// aN RHS2116 Trigger device.
+        /// aN Rhs2116 Trigger device.
         /// </returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
+            var enable = Enable;
             var triggerSource = TriggerSource;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
@@ -113,6 +145,7 @@ namespace OpenEphys.Onix1
                 var rhs2116B = context.GetDeviceContext(rhs2116BAddress, typeof(Rhs2116));
 
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
+                device.WriteRegister(Rhs2116Trigger.ENABLE, enable ? 1u : 0u);
                 device.WriteRegister(Rhs2116Trigger.TRIGGERSOURCE, (uint)triggerSource);
 
                 static void WriteStimulusSequence(DeviceContext device, Rhs2116StimulusSequence sequence)
@@ -164,6 +197,10 @@ namespace OpenEphys.Onix1
                         WriteStimulusSequence(rhs2116A, newValue.StimulusSequenceA);
                         WriteStimulusSequence(rhs2116B, newValue.StimulusSequenceB);
                     }),
+                    triggerArmed.SubscribeSafe(observer, newValue =>
+                    {
+                        device.WriteRegister(Rhs2116Trigger.TRIGGERARMED, newValue ? 1u : 0u);
+                    }),
                     DeviceManager.RegisterDevice(deviceName, device, DeviceType));
             });
         }
@@ -174,9 +211,11 @@ namespace OpenEphys.Onix1
         public const int ID = 32;
 
         // managed registers
-        public const uint ENABLE = 0; // Writes and reads to ENABLE are ignored without error
+        public const uint ENABLE = 0; // Enable or disable the trigger event datastream
         public const uint TRIGGERSOURCE = 1; // The LSB is used to determine the trigger source
         public const uint TRIGGER = 2; // Writing 0x1 to this register will trigger a stimulation sequence if the TRIGGERSOURCE is set to 0.
+        public const uint TRIGGERARMED = 3; // 0x0: Ignore all trigger inputs regardless of TRIGGERSOURCE.
+                                            // 0x1: Respect the trigger input specified by TRIGGERSOURCE
 
         internal class NameConverter : DeviceNameConverter
         {

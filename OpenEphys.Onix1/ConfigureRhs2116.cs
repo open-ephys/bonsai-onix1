@@ -187,6 +187,10 @@ namespace OpenEphys.Onix1
                         device.WriteRegister(Rhs2116.BW1, regs[3] << 6 | regs[2]);
                         device.WriteRegister(Rhs2116.FASTSETTLESAMPLES, Rhs2116Config.AnalogHighCutoffToFastSettleSamples[newValue]);
                     }),
+                    respectExternalActiveStim.SubscribeSafe(observer, newValue =>
+                    {
+                        device.WriteRegister(Rhs2116.RESPECTSTIMACTIVE, newValue ? 1u : 0u);
+                    }),
                     DeviceManager.RegisterDevice(deviceName, device, DeviceType)
                 );
             });

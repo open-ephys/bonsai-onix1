@@ -7,7 +7,7 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Controls an RHS2116 stimulus sequence.
+    /// Controls an Rhs2116 stimulus sequence.
     /// </summary>
     /// <remarks>
     /// This operator must be linked to an appropriate configuration, such as a <see

@@ -149,6 +149,10 @@ namespace OpenEphys.Onix1
                     // consistency
                     device.WriteRegister(Rhs2116.FORMAT, format);
                     device.WriteRegister(Rhs2116.ENABLE, enable ? 1u : 0);
+
+                    // Force each device to respect each other's stimulation state since they are being
+                    // treated, de-facto, as a single chip.
+                    device.WriteRegister(Rhs2116.RESPECTSTIMACTIVE, 1u);
                 }
 
                 ConfigureChip(rhs2116A, enable, dspCutoff);
