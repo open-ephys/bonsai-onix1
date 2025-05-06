@@ -9,27 +9,29 @@ namespace OpenEphys.Onix1.Design
 {
     public partial class SpatialTransformMatrixDialog : Form
     {
-        private const byte NumMeasurements = 100;
+        const byte NumMeasurements = 100;
+        readonly Matrix4x4 inverseM;
 
-        private bool[] InputsValid = { false, false, false, false, false, false, false, false };
+        readonly bool[] InputsValid = { false, false, false, false, false, false, false, false };
+        readonly IObservable<TS4231V1PositionDataFrame> PositionDataSource;
+        readonly Vector3[] TS4231Coordinates = { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero };
+        readonly Button[] MeasureButtons;
 
-        private IObservable<TS4231V1PositionDataFrame> PositionDataSource;
-
-        private Vector3[] TS4231Coordinates = { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero };
-
-        private Button[] MeasureButtons;
-
-        private IDisposable TextBoxStatusUpdateSubscription;
-
-        private IDisposable MeasurementCalculationSubscription;
+        IDisposable TextBoxStatusUpdateSubscription;
+        IDisposable MeasurementCalculationSubscription;
 
         internal Matrix4x4 NewSpatialTransform { get; private set; }
 
         internal bool ApplySpatialTransform { get; private set; }
 
-        internal SpatialTransformMatrixDialog(IObservable<TS4231V1PositionDataFrame> positionDataSource)
+        internal SpatialTransformMatrixDialog(IObservable<TS4231V1PositionDataFrame> positionDataSource, Matrix4x4 currentM)
         {
             InitializeComponent();
+            if (!Matrix4x4.Invert(currentM, out inverseM)) 
+            {
+                throw new ArgumentException("Current spatial transform matrix is non-invertible. " +
+                    "You can set M to the identity matrix if you want to start anew.");
+            }
             PositionDataSource = positionDataSource;
             MeasureButtons = new Button[] { buttonMeasure0, buttonMeasure1, buttonMeasure2, buttonMeasure3 };
         }
@@ -72,7 +74,7 @@ namespace OpenEphys.Onix1.Design
                             textBoxStatusUpdateString += Environment.NewLine;
                             return (textBoxStatusUpdateString, acc.Count + sensor.MeasurementCount);
                         },
-                        acc => (TextBoxStatusUpdate: acc.TextBoxStatusUpdate, Valid: acc.Count == NumMeasurements))
+                        acc => (acc.TextBoxStatusUpdate, Valid: acc.Count == NumMeasurements))
                     .ObserveOn(new ControlScheduler(this))
                     .Subscribe(finalResult =>
                     {
@@ -94,10 +96,10 @@ namespace OpenEphys.Onix1.Design
                 MeasurementCalculationSubscription = sharedPositionDataGroups
                     .Aggregate(
                         (Sum: Vector3.Zero, Count: 0),
-                        (acc, current) => (acc.Sum + current.Position, acc.Count + 1),
+                        (acc, current) => (acc.Sum + Vector3.Transform(current.Position, inverseM), acc.Count + 1),
                         acc =>
                         {
-                            TS4231Coordinates[index] = acc.Item1 / NumMeasurements;
+                            TS4231Coordinates[index] = acc.Sum / NumMeasurements;
                             return (Position: TS4231Coordinates[index], Valid: acc.Count == NumMeasurements);
                         })
                     .ObserveOn(new ControlScheduler(this))
@@ -175,6 +177,5 @@ namespace OpenEphys.Onix1.Design
         {
             ApplySpatialTransform = checkBoxApplySpatialTransform.Checked;
         }
-
     }
 }

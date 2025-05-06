@@ -41,7 +41,7 @@ namespace OpenEphys.Onix1.Design
             {
                 var source = GetDataSource(context, provider);
                 var dataFrames = GetData(source.Output);
-                using (var visualizerDialog = new SpatialTransformMatrixDialog(dataFrames))
+                using (var visualizerDialog = new SpatialTransformMatrixDialog(dataFrames, (Matrix4x4)value))
                 {
                     if (!editorState.WorkflowRunning)
                     {
