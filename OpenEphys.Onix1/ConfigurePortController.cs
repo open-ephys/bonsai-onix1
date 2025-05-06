@@ -61,6 +61,7 @@ namespace OpenEphys.Onix1
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
                 void dispose() { device.WriteRegister(PortController.PORTVOLTAGE, 0); }
                 device.WriteRegister(PortController.ENABLE, 1);
+                device.WriteRegister(PortController.DESPWR, 1); 
 
                 bool serdesLock = false;
                 if (portVoltage.Requested.HasValue)
