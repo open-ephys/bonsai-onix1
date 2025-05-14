@@ -24,7 +24,7 @@ namespace OpenEphys.Onix1
 
         public void AssertType(Type expectedType)
         {
-            if (DeviceType != expectedType)
+            if (!ContextHelper.CheckDeviceType(DeviceType, expectedType))
             {
                 throw new InvalidOperationException(
                     $"Expected device of type {expectedType.Name}. Actual type is {DeviceType.Name}."

@@ -112,7 +112,7 @@ namespace OpenEphys.Onix1
                                      let factory = ExpressionBuilder.GetWorkflowElement(element) as DeviceFactory
                                      where factory != null
                                      from device in factory.GetDevices()
-                                     where device.DeviceType == targetType
+                                     where ContextHelper.CheckDeviceType(device.DeviceType,targetType)
                                      select device.DeviceName)
                                      .Distinct()
                                      .ToList();

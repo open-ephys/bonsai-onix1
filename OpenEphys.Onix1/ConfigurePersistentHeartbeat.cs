@@ -74,6 +74,7 @@ namespace OpenEphys.Onix1
         }
     }
 
+    [EquivalentDataSource(typeof(Heartbeat))]
     static class PersistentHeartbeat
     {
         public const int ID = 34;
