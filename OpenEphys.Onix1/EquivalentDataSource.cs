@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OpenEphys.Onix1
 {
@@ -10,23 +6,21 @@ namespace OpenEphys.Onix1
     /// Specifies a device class as equivalent to another for data production
     /// </summary>
     /// <remarks>
-    /// This attribute must be used on the static classes that specify
-    /// the device IDs and name converters to mark it as equivalent to
-    /// another. 
-    /// 
-    /// This will be used only for data production and name converters
-    /// 
-    /// The method <see cref="ContextHelper.CheckDeviceType(Type, Type)"/>
-    /// can be used to check for type or equivalent type matching
+    /// This attribute can be used on a static class that specifies device constants (e.g. ID, register
+    /// addresses, etc) to indicate that another device produces equivalent <see
+    /// cref="oni.Frame">oni.Frames</see> and, therefore, that both devices a common (set of) production
+    /// operator(s). This attribute is used by <see cref="DeviceNameConverter"/> to identify devices that can
+    /// make use of a given data production operator.
     /// </remarks>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
     public sealed class EquivalentDataSource : Attribute
     {
-        /// <summary>
-        /// The original type the tagged class is equivalent to
-        /// </summary>
-        public Type BaseType { get; }
+        internal Type BaseType { get; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EquivalentDataSource"/> class.
+        /// </summary>
+        /// <param name="baseType">Device type that produces equivalent <see cref="oni.Frame">oni.Frames</see></param>
         public EquivalentDataSource(Type baseType)
         {
             BaseType = baseType;
