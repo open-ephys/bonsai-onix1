@@ -7,6 +7,9 @@ using Bonsai.Design;
 
 namespace OpenEphys.Onix1.Design
 {
+    /// <summary>
+    /// Partial class to create a spatial-calibration GUI for <see cref="TS4231V1PositionData.M"/>.
+    /// </summary>
     public partial class SpatialTransformMatrixDialog : Form
     {
         const byte NumMeasurements = 100;
@@ -22,8 +25,6 @@ namespace OpenEphys.Onix1.Design
 
         internal Matrix4x4 NewSpatialTransform { get; private set; }
 
-        internal bool ApplySpatialTransform { get; private set; }
-
         internal SpatialTransformMatrixDialog(IObservable<TS4231V1PositionDataFrame> positionDataSource, Matrix4x4 currentM)
         {
             InitializeComponent();
@@ -36,7 +37,7 @@ namespace OpenEphys.Onix1.Design
             MeasureButtons = new Button[] { buttonMeasure0, buttonMeasure1, buttonMeasure2, buttonMeasure3 };
         }
 
-        private void enableButtons(bool enable, byte index)
+        private void EnableButtons(bool enable, byte index)
         {
             for (byte i = 0; i < MeasureButtons.Length; i++)
             {
@@ -45,7 +46,7 @@ namespace OpenEphys.Onix1.Design
             buttonCalculate.Enabled = enable && InputsValid.All(inputValid => inputValid);
         }
 
-        private void buttonMeasure_Click(object sender, EventArgs e)
+        private void ButtonMeasure_Click(object sender, EventArgs e)
         {
             TextBox[] ts4231TextBoxes = { textBoxTS4231Coordinate0, textBoxTS4231Coordinate1, textBoxTS4231Coordinate2, textBoxTS4231Coordinate3 };
             var index = byte.Parse((string)((Button)sender).Tag);
@@ -54,7 +55,7 @@ namespace OpenEphys.Onix1.Design
             {
                 textBoxStatus.AppendText(string.Format("Measuring coordinate {0}...", index) + Environment.NewLine);
                 MeasureButtons[index].Text = "Cancel";
-                enableButtons(false, index);
+                EnableButtons(false, index);
 
                 var sharedPositionDataGroups = PositionDataSource
                     .Take(NumMeasurements)
@@ -90,16 +91,16 @@ namespace OpenEphys.Onix1.Design
                                 + "Confirm the Lighthouse receivers are within range and unobstructed from Lighthouse transmitters."
                                 + Environment.NewLine + Environment.NewLine + "Awaiting user input..." + Environment.NewLine);
                         }
-                        enableButtons(true, index);
+                        EnableButtons(true, index);
                     });
 
                 MeasurementCalculationSubscription = sharedPositionDataGroups
                     .Aggregate(
                         (Sum: Vector3.Zero, Count: 0),
-                        (acc, current) => (acc.Sum + Vector3.Transform(current.Position, inverseM), acc.Count + 1),
+                        (acc, current) => (acc.Sum + current.Position, acc.Count + 1),
                         acc =>
                         {
-                            TS4231Coordinates[index] = acc.Sum / NumMeasurements;
+                            TS4231Coordinates[index] = Vector3.Transform(acc.Sum / NumMeasurements, inverseM);
                             return (Position: TS4231Coordinates[index], Valid: acc.Count == NumMeasurements);
                         })
                     .ObserveOn(new ControlScheduler(this))
@@ -113,6 +114,16 @@ namespace OpenEphys.Onix1.Design
                                 finalMeasurement.Position.Y,
                                 finalMeasurement.Position.Z);
                             InputsValid[index] = true;
+                            if (InputsValid.Take(4).All(ts4231InputValid => ts4231InputValid))
+                            {
+                                toolStripStatusLabelTS4231.Image = OpenEphys.Onix1.Design.Properties.Resources.StatusReadyImage;
+                                toolStripStatusLabelTS4231.Text = "All TS4231 coordinates are valid.";
+                            }
+                            else
+                            {
+                                toolStripStatusLabelTS4231.Image = OpenEphys.Onix1.Design.Properties.Resources.StatusBlockedImage;
+                                toolStripStatusLabelTS4231.Text = "At least one TS4231 coordinate is invalid.";
+                            }
                             buttonCalculate.Enabled = InputsValid.All(inputValid => inputValid);
                         }
                     });
@@ -126,19 +137,29 @@ namespace OpenEphys.Onix1.Design
                 textBoxStatus.AppendText(string.Format("Measurements at coordinate {0} cancelled by user.", index)
                     + Environment.NewLine + Environment.NewLine + "Awaiting user input..." + Environment.NewLine);
                 MeasureButtons[index].Text = "Measure";
-                enableButtons(true, index);
+                EnableButtons(true, index);
             }
         }
 
-        private void textBoxUserCoordinate_TextChanged(object sender, EventArgs e)
+        private void TextBoxUserCoordinate_TextChanged(object sender, EventArgs e)
         {
             var index = int.Parse((string)((TextBox)sender).Tag);
             string[] serInputSplit = ((TextBox)sender).Text.Split(',');
             InputsValid[index] = serInputSplit.Length == 3 && serInputSplit.All(floatCandidate => float.TryParse(floatCandidate, out _));
             buttonCalculate.Enabled = InputsValid.All(inputValid => inputValid);
+            if (InputsValid.Skip(4).Take(4).All(userInputValid => userInputValid))
+            {
+                toolStripStatusLabelUser.Image = OpenEphys.Onix1.Design.Properties.Resources.StatusReadyImage;
+                toolStripStatusLabelUser.Text = "All user-defined coordinates are valid.";
+            }
+            else
+            {
+                toolStripStatusLabelUser.Image = OpenEphys.Onix1.Design.Properties.Resources.StatusBlockedImage;
+                toolStripStatusLabelUser.Text = "At least one user-defined coordinate is invalid.";
+            }
         }
 
-        private void buttonCalculate_Click(object sender, EventArgs e)
+        private void ButtonCalculate_Click(object sender, EventArgs e)
         {
             var ts4231V1CoordinatesMatrix = new Matrix4x4(
                 TS4231Coordinates[0].X, TS4231Coordinates[0].Y, TS4231Coordinates[0].Z, 1,
@@ -165,17 +186,12 @@ namespace OpenEphys.Onix1.Design
             textBoxStatus.AppendText(NewSpatialTransform.ToString() + Environment.NewLine + Environment.NewLine);
             textBoxStatus.AppendText("Awaiting user input..." + Environment.NewLine);
 
-            checkBoxApplySpatialTransform.Enabled = true;
+            buttonOK.Enabled = true;
         }
 
-        private void buttonClose_Click(object sender, EventArgs e)
+        private void ButtonOKOrCancel_Click(object sender, EventArgs e)
         {
             Close();
-        }
-
-        private void checkBoxApplySpatialTransform_CheckedChanged(object sender, EventArgs e)
-        {
-            ApplySpatialTransform = checkBoxApplySpatialTransform.Checked;
         }
     }
 }

@@ -121,9 +121,17 @@
     <value>Follow the instructions below to transform naive TS4231 position data from the base-station reference frame to a user-defined reference frame. For more in-depth instructions, find the corresponding tutorial in Open Ephys' online documentation.
 1) For each coordinate: 
     • Place the TS4231V1 device and click the corresponding "Measure" button.
-    • Input how would like to define the coordinate in the user-defined reference frame.
+    • Input how you would like to define the coordinate in the user-defined reference frame.
 2) Click the "Calculate Spatial Transform" button which enables after all fields are populated with valid data. 
-3) To automatically set the SpatialTransformMatrix property, check the bottom checkbox and close this GUI.</value>
+3) Click "OK" to close this GUI and set the M property as the calculated spatial transform matrix. Click "Cancel" to close this GUI and not set the M property.</value>
+  </data>
+  <metadata name="statusStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>36, 14</value>
+  </metadata>
+  <data name="toolStripStatusLabelUser.ToolTipText" xml:space="preserve">
+    <value>All four user-defined coordinates must have the following format: "XX, YY, ZZ" or 
+"XX.XX, YY.YY, ZZ.ZZ" with any number of digits following the decimal before the 
+spatial transform matrix can be calculated.</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
