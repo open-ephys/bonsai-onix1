@@ -43,7 +43,7 @@ namespace OpenEphys.Onix1
         /// Gets the buffered auxiliary data array. 
         /// </summary>
         /// <remarks>
-        /// Auxiliary samples are organized in 3xN matrix with rows representing auxilary channel number and N
+        /// Auxiliary samples are organized in 3xN matrix with rows representing auxiliary channel number and N
         /// columns representing sample index. Channels are ordered in accordance with the Rhd2164 input
         /// number specified on its datasheet (channel 0 corresponds to auxiliary input 0, channel 1
         /// corresponds to auxiliary input 1, and channel 2 corresponds to auxiliary input 2). Each column is
