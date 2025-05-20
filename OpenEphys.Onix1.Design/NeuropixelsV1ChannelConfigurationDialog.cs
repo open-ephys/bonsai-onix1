@@ -247,7 +247,7 @@ namespace OpenEphys.Onix1.Design
             return index.ToString();
         }
 
-        internal void EnableElectrodes(List<NeuropixelsV1Electrode> electrodes)
+        internal void EnableElectrodes(NeuropixelsV1Electrode[] electrodes)
         {
             ProbeConfiguration.SelectElectrodes(electrodes);
         }
