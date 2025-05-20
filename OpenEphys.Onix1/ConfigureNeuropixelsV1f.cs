@@ -48,6 +48,7 @@ namespace OpenEphys.Onix1
             ProbeConfiguration = new(configureNeuropixelsV1f.ProbeConfiguration);
             DeviceName = configureNeuropixelsV1f.DeviceName;
             DeviceAddress = configureNeuropixelsV1f.DeviceAddress;
+            InvertPolarity = configureNeuropixelsV1f.InvertPolarity;
         }
 
         /// <summary>

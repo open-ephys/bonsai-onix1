@@ -40,6 +40,7 @@ namespace OpenEphys.Onix1
             GainCalibrationFileB = configureNode.GainCalibrationFileB;
             DeviceName = configureNode.DeviceName;
             DeviceAddress = configureNode.DeviceAddress;
+            InvertPolarity = configureNode.InvertPolarity;
         }
 
         /// <inheritdoc/>
