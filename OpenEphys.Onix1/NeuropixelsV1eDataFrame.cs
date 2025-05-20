@@ -6,7 +6,6 @@ namespace OpenEphys.Onix1
     {
         internal static unsafe void CopyAmplifierBuffer(ushort* amplifierData, int[] frameCountBuffer, ushort[,] spikeBuffer, ushort[,] lfpBuffer, int index, double apGainCorrection, double lfpGainCorrection, ushort[] thresholds, ushort[] offsets, bool invertPolarity)
         {
-
             var frameCountStartIndex = index * NeuropixelsV1.FramesPerSuperFrame;
             frameCountBuffer[frameCountStartIndex] = (amplifierData[31] << 10) | (amplifierData[39] << 0);
 
@@ -17,7 +16,6 @@ namespace OpenEphys.Onix1
 
             if (invertPolarity)
             {
-
                 const double NumberOfAdcBins = 1024;
                 double lfpInversionOffset = lfpGainCorrection * NumberOfAdcBins;
                 double apInversionOffset = apGainCorrection * NumberOfAdcBins;
@@ -25,7 +23,7 @@ namespace OpenEphys.Onix1
                 for (int k = 0; k < NeuropixelsV1.AdcCount; k++)
                 {
                     var a = amplifierData[adcToFrameIndex[k]];
-                    lfpBuffer[RawToChannel[k, lfpFrameIndex], lfpBufferIndex] = (ushort)(lfpGainCorrection - lfpGainCorrection * (a > thresholds[k] ? a - offsets[k] : a));
+                    lfpBuffer[RawToChannel[k, lfpFrameIndex], lfpBufferIndex] = (ushort)(lfpInversionOffset - lfpGainCorrection * (a > thresholds[k] ? a - offsets[k] : a));
                 }
 
                 // Loop over 12 AP frames within each "super-frame"
@@ -45,7 +43,6 @@ namespace OpenEphys.Onix1
             }
             else
             {
-
                 for (int k = 0; k < NeuropixelsV1.AdcCount; k++)
                 {
                     var a = amplifierData[adcToFrameIndex[k]];

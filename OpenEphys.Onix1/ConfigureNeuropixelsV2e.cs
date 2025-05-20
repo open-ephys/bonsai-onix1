@@ -53,7 +53,7 @@ namespace OpenEphys.Onix1
         /// <remarks>
         /// <para>
         /// The analog channels on the probe ASIC have negative gain coefficients. This means that neural data
-        /// that captured by the probe will be inverted compared to the physical signal that occurs at the
+        /// that is captured by the probe will be inverted compared to the physical signal that occurs at the
         /// electrode: e.g. extracellular action potentials will tend to have positive deflections instead of
         /// negative. Setting this property to true will apply a gain of -1 to neural data to undo this
         /// effect.

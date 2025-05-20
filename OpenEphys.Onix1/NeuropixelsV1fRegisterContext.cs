@@ -24,7 +24,6 @@ namespace OpenEphys.Onix1
         public NeuropixelsV1fRegisterContext(DeviceContext deviceContext, NeuropixelsV1ProbeConfiguration configuration, string gainCalibrationFile, string adcCalibrationFile, bool invertPolarity)
             : base(deviceContext, NeuropixelsV1.ProbeI2CAddress)
         {
-
             device = deviceContext;
             var metaData = new NeuropixelsV1fMetadata(device);
 

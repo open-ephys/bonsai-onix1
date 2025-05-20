@@ -14,7 +14,6 @@ namespace OpenEphys.Onix1
             InvertPolarity = invertPolarity;
         }
 
-
         public double ApGainCorrection { get; }
         public double LfpGainCorrection { get; }
         public ushort[] AdcThresholds { get; }
