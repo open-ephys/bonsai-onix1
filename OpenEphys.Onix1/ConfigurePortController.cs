@@ -22,7 +22,7 @@ namespace OpenEphys.Onix1
                      "Consult the device datasheet and documentation for allowable voltage ranges.")]
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(PortVoltageConverter))]
-        public AutoPortVoltage PortVoltage { get; set; } = null;
+        public AutoPortVoltage PortVoltage { get; set; } = new();
 
         protected virtual bool CheckLinkState(DeviceContext device)
         {
@@ -62,7 +62,6 @@ namespace OpenEphys.Onix1
                 void dispose() { device.WriteRegister(PortController.PORTVOLTAGE, 0); PortVoltage.Applied = null; }
                 device.WriteRegister(PortController.ENABLE, 1);
 
-                //double voltage = portVoltage.Requested.GetValueOrDefault();
                 bool serdesLock = false;
                 if (portVoltage.Requested.HasValue)
                 {
