@@ -59,7 +59,7 @@ namespace OpenEphys.Onix1
             .ConfigureLink(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
-                void dispose() { device.WriteRegister(PortController.PORTVOLTAGE, 0); PortVoltage.Applied = null; }
+                void dispose() { device.WriteRegister(PortController.PORTVOLTAGE, 0); }
                 device.WriteRegister(PortController.ENABLE, 1);
 
                 bool serdesLock = false;

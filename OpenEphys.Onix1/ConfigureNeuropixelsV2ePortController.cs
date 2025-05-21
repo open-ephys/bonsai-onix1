@@ -27,7 +27,6 @@ namespace OpenEphys.Onix1
             return false;
         }
 
-
         void SetVoltage(DeviceContext device, double voltage)
         {
             device.WriteRegister(PortController.PORTVOLTAGE, 0);
