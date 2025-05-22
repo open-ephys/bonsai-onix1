@@ -16,7 +16,7 @@ namespace OpenEphys.Onix1
         public double? Requested { get; set; }
 
         /// <summary>
-        /// Gets or sets the currently applied port voltage
+        /// Gets or sets the last applied port voltage
         /// </summary>
         [XmlIgnore]
         public double? Applied { get; internal set; }

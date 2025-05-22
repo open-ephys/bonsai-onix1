@@ -77,13 +77,18 @@ namespace OpenEphys.Onix1
 
                 if (!serdesLock)
                 {
-                    dispose();
                     var port = (PortName)deviceAddress;
                     var portString = port.GetType()
                                          .GetField(port.ToString())?
                                          .GetCustomAttribute<DescriptionAttribute>()?
                                          .Description ?? "Address " + deviceAddress.ToString();
-                    throw new InvalidOperationException($"Unable to acquire communication lock on {portString}.");
+                    var appliedVoltage = PortVoltage.Applied;
+                    var message = portVoltage.Requested.HasValue ?
+                        $"Unable to acquire communication lock on {portString}" :
+                        $"Unable to acquire communication lock on {portString}. You may need to manually specify a PortVoltage greater than {PortVoltage.Applied} volts, the maximum automatic value for this device.";
+
+                    dispose();
+                    throw new InvalidOperationException(message);
                 }
 
                 return Disposable.Create(dispose);
