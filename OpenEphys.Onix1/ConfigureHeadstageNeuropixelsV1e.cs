@@ -89,7 +89,8 @@ namespace OpenEphys.Onix1
             "the specified voltage to the headstage. Warning: this device requires 3.8V to 5.0V " +
             "for proper operation. Higher voltages can damage the headstage.")]
         [Category(ConfigurationCategory)]
-        public double? PortVoltage
+        [TypeConverter(typeof(PortVoltageConverter))]
+        public AutoPortVoltage PortVoltage
         {
             get => PortControl.PortVoltage;
             set => PortControl.PortVoltage = value;
@@ -104,20 +105,22 @@ namespace OpenEphys.Onix1
 
         class ConfigureNeuropixelsV1ePortController : ConfigurePortController
         {
-            protected override bool ConfigurePortVoltage(DeviceContext device)
+            protected override bool ConfigurePortVoltage(DeviceContext device, out double voltage)
             {
                 const double MinVoltage = 3.3;
                 const double MaxVoltage = 5.5;
                 const double VoltageOffset = 1.0;
                 const double VoltageIncrement = 0.2;
 
-                for (double voltage = MinVoltage; voltage <= MaxVoltage; voltage += VoltageIncrement)
+                voltage = MinVoltage;
+                for (; voltage <= MaxVoltage; voltage += VoltageIncrement)
                 {
                     SetVoltage(device, voltage);
 
                     if (CheckLinkState(device))
                     {
-                        SetVoltage(device, voltage + VoltageOffset);
+                        voltage += VoltageOffset;
+                        SetVoltage(device, voltage);
                         return CheckLinkState(device);
                     }
                 }
