@@ -38,7 +38,7 @@ namespace OpenEphys.Onix1.Design
 
             ProbeConfigurations = new List<NeuropixelsV2eProbeConfigurationDialog>
             {
-                new(ConfigureNode.ProbeConfigurationA, ConfigureNode.GainCalibrationFileA)
+                new(ConfigureNode.ProbeConfigurationA, ConfigureNode.GainCalibrationFileA, ConfigureNode.InvertPolarity)
                 {
                     TopLevel = false,
                     FormBorderStyle = FormBorderStyle.None,
@@ -46,7 +46,7 @@ namespace OpenEphys.Onix1.Design
                     Parent = this,
                     Tag = NeuropixelsV2Probe.ProbeA
                 },
-                new(ConfigureNode.ProbeConfigurationB, ConfigureNode.GainCalibrationFileB)
+                new(ConfigureNode.ProbeConfigurationB, ConfigureNode.GainCalibrationFileB, ConfigureNode.InvertPolarity)
                 {
                     TopLevel = false,
                     FormBorderStyle = FormBorderStyle.None,
@@ -58,11 +58,26 @@ namespace OpenEphys.Onix1.Design
 
             foreach (var channelConfiguration in ProbeConfigurations)
             {
+                channelConfiguration.InvertPolarityChanged += InvertPolarityChanged;
+
                 string probeName = GetProbeName((NeuropixelsV2Probe)channelConfiguration.Tag);
 
                 tabControlProbe.TabPages.Add(probeName, probeName);
                 tabControlProbe.TabPages[probeName].Controls.Add(channelConfiguration);
                 this.AddMenuItemsFromDialogToFileOption(channelConfiguration, probeName);
+            }
+        }
+
+        private void InvertPolarityChanged(object sender, EventArgs e)
+        {
+            NeuropixelsV2eProbeConfigurationDialog sendingDialog = (NeuropixelsV2eProbeConfigurationDialog)sender;
+            foreach (var channelConfiguration in ProbeConfigurations)
+            {
+                if (channelConfiguration.Tag != sendingDialog.Tag)
+                {
+                    channelConfiguration.SetInvertPolarity(sendingDialog.InvertPolarity);
+                    //channelConfiguration.Refresh();
+                }
             }
         }
 
@@ -111,6 +126,8 @@ namespace OpenEphys.Onix1.Design
 
             ConfigureNode.GainCalibrationFileA = ProbeConfigurations[GetProbeIndex(NeuropixelsV2Probe.ProbeA)].textBoxProbeCalibrationFile.Text;
             ConfigureNode.GainCalibrationFileB = ProbeConfigurations[GetProbeIndex(NeuropixelsV2Probe.ProbeB)].textBoxProbeCalibrationFile.Text;
+
+            ConfigureNode.InvertPolarity = ProbeConfigurations[GetProbeIndex(NeuropixelsV2Probe.ProbeA)].InvertPolarity;
         }
     }
 }

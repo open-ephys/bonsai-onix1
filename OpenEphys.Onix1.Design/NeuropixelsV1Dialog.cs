@@ -34,7 +34,7 @@ namespace OpenEphys.Onix1.Design
                 ConfigureNode = new ConfigureNeuropixelsV1f(configureV1f);
             }
 
-            ProbeConfigurationDialog = new(ConfigureNode.ProbeConfiguration, ConfigureNode.AdcCalibrationFile, ConfigureNode.GainCalibrationFile)
+            ProbeConfigurationDialog = new(ConfigureNode.ProbeConfiguration, ConfigureNode.AdcCalibrationFile, ConfigureNode.GainCalibrationFile, ConfigureNode.InvertPolarity)
             {
                 TopLevel = false,
                 FormBorderStyle = FormBorderStyle.None,
@@ -73,6 +73,8 @@ namespace OpenEphys.Onix1.Design
 
             ConfigureNode.GainCalibrationFile = ProbeConfigurationDialog.textBoxGainCalibrationFile.Text;
             ConfigureNode.AdcCalibrationFile = ProbeConfigurationDialog.textBoxAdcCalibrationFile.Text;
+
+            ConfigureNode.InvertPolarity = ProbeConfigurationDialog.InvertPolarity;
         }
     }
 }

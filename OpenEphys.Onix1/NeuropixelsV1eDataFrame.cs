@@ -4,9 +4,8 @@ namespace OpenEphys.Onix1
 {
     class NeuropixelsV1eDataFrame
     {
-        internal static unsafe void CopyAmplifierBuffer(ushort* amplifierData, int[] frameCountBuffer, ushort[,] spikeBuffer, ushort[,] lfpBuffer, int index, double apGainCorrection, double lfpGainCorrection, ushort[] thresholds, ushort[] offsets)
+        internal static unsafe void CopyAmplifierBuffer(ushort* amplifierData, int[] frameCountBuffer, ushort[,] spikeBuffer, ushort[,] lfpBuffer, int index, double apGainCorrection, double lfpGainCorrection, ushort[] thresholds, ushort[] offsets, bool invertPolarity)
         {
-
             var frameCountStartIndex = index * NeuropixelsV1.FramesPerSuperFrame;
             frameCountBuffer[frameCountStartIndex] = (amplifierData[31] << 10) | (amplifierData[39] << 0);
 
@@ -15,25 +14,55 @@ namespace OpenEphys.Onix1
             var lfpBufferIndex = index / NeuropixelsV1.FramesPerRoundRobin;
             var lfpFrameIndex = index % NeuropixelsV1.FramesPerRoundRobin;
 
-            for (int k = 0; k < NeuropixelsV1.AdcCount; k++)
+            if (invertPolarity)
             {
-                var a = amplifierData[adcToFrameIndex[k]];
-                lfpBuffer[RawToChannel[k, lfpFrameIndex], lfpBufferIndex] = (ushort)(lfpGainCorrection * (a > thresholds[k] ? a - offsets[k] : a));
-            }
-
-            // Loop over 12 AP frames within each "super-frame"
-            for (int i = 0; i < NeuropixelsV1.FramesPerRoundRobin; i++)
-            {
-                // The period of ADC data within data array is 36 words
-                var adcDataOffset = (i + 1) * NeuropixelsV1.FrameWords;
+                const double NumberOfAdcBins = 1024;
+                double lfpInversionOffset = lfpGainCorrection * NumberOfAdcBins;
+                double apInversionOffset = apGainCorrection * NumberOfAdcBins;
 
                 for (int k = 0; k < NeuropixelsV1.AdcCount; k++)
                 {
-                    var a = amplifierData[adcToFrameIndex[k] + adcDataOffset];
-                    spikeBuffer[RawToChannel[k, i], index] = (ushort)(apGainCorrection * (a > thresholds[k] ? a - offsets[k] : a));
+                    var a = amplifierData[adcToFrameIndex[k]];
+                    lfpBuffer[RawToChannel[k, lfpFrameIndex], lfpBufferIndex] = (ushort)(lfpInversionOffset - lfpGainCorrection * (a > thresholds[k] ? a - offsets[k] : a));
                 }
 
-                frameCountBuffer[frameCountStartIndex + i + 1] = (amplifierData[adcDataOffset + 31] << 10) | (amplifierData[adcDataOffset + 39] << 0);
+                // Loop over 12 AP frames within each "super-frame"
+                for (int i = 0; i < NeuropixelsV1.FramesPerRoundRobin; i++)
+                {
+                    // The period of ADC data within data array is 36 words
+                    var adcDataOffset = (i + 1) * NeuropixelsV1.FrameWords;
+
+                    for (int k = 0; k < NeuropixelsV1.AdcCount; k++)
+                    {
+                        var a = amplifierData[adcToFrameIndex[k] + adcDataOffset];
+                        spikeBuffer[RawToChannel[k, i], index] = (ushort)(apInversionOffset - apGainCorrection * (a > thresholds[k] ? a - offsets[k] : a));
+                    }
+
+                    frameCountBuffer[frameCountStartIndex + i + 1] = (amplifierData[adcDataOffset + 31] << 10) | (amplifierData[adcDataOffset + 39] << 0);
+                }
+            }
+            else
+            {
+                for (int k = 0; k < NeuropixelsV1.AdcCount; k++)
+                {
+                    var a = amplifierData[adcToFrameIndex[k]];
+                    lfpBuffer[RawToChannel[k, lfpFrameIndex], lfpBufferIndex] = (ushort)(lfpGainCorrection * (a > thresholds[k] ? a - offsets[k] : a));
+                }
+
+                // Loop over 12 AP frames within each "super-frame"
+                for (int i = 0; i < NeuropixelsV1.FramesPerRoundRobin; i++)
+                {
+                    // The period of ADC data within data array is 36 words
+                    var adcDataOffset = (i + 1) * NeuropixelsV1.FrameWords;
+
+                    for (int k = 0; k < NeuropixelsV1.AdcCount; k++)
+                    {
+                        var a = amplifierData[adcToFrameIndex[k] + adcDataOffset];
+                        spikeBuffer[RawToChannel[k, i], index] = (ushort)(apGainCorrection * (a > thresholds[k] ? a - offsets[k] : a));
+                    }
+
+                    frameCountBuffer[frameCountStartIndex + i + 1] = (amplifierData[adcDataOffset + 31] << 10) | (amplifierData[adcDataOffset + 39] << 0);
+                }
             }
         }
 

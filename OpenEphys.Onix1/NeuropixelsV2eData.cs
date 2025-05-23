@@ -60,6 +60,7 @@ namespace OpenEphys.Onix1
                 var probeData = device.Context
                     .GetDeviceFrames(passthrough.Address)
                     .Where(frame => NeuropixelsV2eDataFrame.GetProbeIndex(frame) == (int)ProbeIndex);
+                var invertPolarity = info.InvertPolarity;
 
                 var gainCorrection = ProbeIndex switch
                 {
@@ -79,7 +80,7 @@ namespace OpenEphys.Onix1
                         frame =>
                         {
                             var payload = (NeuropixelsV2Payload*)frame.Data.ToPointer();
-                            NeuropixelsV2eDataFrame.CopyAmplifierBuffer(payload->AmplifierData, amplifierBuffer, sampleIndex, gainCorrection);
+                            NeuropixelsV2eDataFrame.CopyAmplifierBuffer(payload->AmplifierData, amplifierBuffer, sampleIndex, gainCorrection, invertPolarity);
                             hubClockBuffer[sampleIndex] = payload->HubClock;
                             clockBuffer[sampleIndex] = frame.Clock;
                             if (++sampleIndex >= bufferSize)

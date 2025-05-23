@@ -48,6 +48,7 @@ namespace OpenEphys.Onix1
             ProbeConfiguration = new(configureNeuropixelsV1f.ProbeConfiguration);
             DeviceName = configureNeuropixelsV1f.DeviceName;
             DeviceAddress = configureNeuropixelsV1f.DeviceAddress;
+            InvertPolarity = configureNeuropixelsV1f.InvertPolarity;
         }
 
         /// <summary>
@@ -62,10 +63,27 @@ namespace OpenEphys.Onix1
         public bool Enable { get; set; } = true;
 
         /// <summary>
+        /// Gets or sets a value determining if the polarity of the electrode voltages acquired by the probe
+        /// should be inverted.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The analog channels on the probe ASIC have negative gain coefficients. This means that neural data
+        /// that is captured by the probe will be inverted compared to the physical signal that occurs at the
+        /// electrode: e.g. extracellular action potentials will tend to have positive deflections instead of
+        /// negative. Setting this property to true will apply a gain of -1 to neural data to undo this
+        /// effect.
+        /// </para>
+        /// </remarks>
+        [Category(ConfigurationCategory)]
+        [Description("Invert the polarity of the electrode voltages acquired by the probe.")]
+        public bool InvertPolarity { get; set; } = true;
+
+        /// <summary>
         /// Gets or sets the NeuropixelsV1 probe configuration.
         /// </summary>
         [Category(ConfigurationCategory)]
-        [Description("Neuropixels 1.0e probe configuration")]
+        [Description("Neuropixels 1.0e probe configuration.")]
         public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; set; } = new();
 
         /// <summary>
@@ -132,6 +150,7 @@ namespace OpenEphys.Onix1
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;
+            var invertPolarity = InvertPolarity;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
             return source.ConfigureDevice(context =>
@@ -141,7 +160,7 @@ namespace OpenEphys.Onix1
 
                 if (enable)
                 {
-                    var probeControl = new NeuropixelsV1fRegisterContext(device, ProbeConfiguration, GainCalibrationFile, AdcCalibrationFile);
+                    var probeControl = new NeuropixelsV1fRegisterContext(device, ProbeConfiguration, GainCalibrationFile, AdcCalibrationFile, invertPolarity);
                     probeControl.InitializeProbe();
                     probeControl.WriteShiftRegisters();
                 }

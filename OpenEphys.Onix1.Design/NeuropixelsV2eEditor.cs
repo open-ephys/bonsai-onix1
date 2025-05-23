@@ -27,6 +27,7 @@ namespace OpenEphys.Onix1.Design
                         configureNeuropixelsV2e.GainCalibrationFileB = editorDialog.ConfigureNode.GainCalibrationFileB;
                         configureNeuropixelsV2e.ProbeConfigurationA = editorDialog.ConfigureNode.ProbeConfigurationA;
                         configureNeuropixelsV2e.ProbeConfigurationB = editorDialog.ConfigureNode.ProbeConfigurationB;
+                        configureNeuropixelsV2e.InvertPolarity = editorDialog.ConfigureNode.InvertPolarity;
 
                         return true;
                     }

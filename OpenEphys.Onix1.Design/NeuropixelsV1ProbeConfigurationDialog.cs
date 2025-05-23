@@ -37,13 +37,17 @@ namespace OpenEphys.Onix1.Design
         /// </remarks>
         public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; set; }
 
+        /// <inheritdoc cref="ConfigureNeuropixelsV1e.InvertPolarity"/>
+        public bool InvertPolarity { get; set; }
+
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV1Dialog"/>.
         /// </summary>
         /// <param name="probeConfiguration">A <see cref="NeuropixelsV1ProbeConfiguration"/> object holding the current configuration settings.</param>
         /// <param name="adcCalibrationFile">String defining the path to the ADC calibration file.</param>
         /// <param name="gainCalibrationFile">String defining the path to the gain calibration file.</param>
-        public NeuropixelsV1ProbeConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration, string adcCalibrationFile, string gainCalibrationFile)
+        /// <param name="invertPolarity">Boolean denoting whether or not to invert the polarity of neural data.</param>
+        public NeuropixelsV1ProbeConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration, string adcCalibrationFile, string gainCalibrationFile, bool invertPolarity)
         {
             InitializeComponent();
             Shown += FormShown;
@@ -57,6 +61,8 @@ namespace OpenEphys.Onix1.Design
                 Dock = DockStyle.Fill,
                 Parent = this,
             };
+
+            InvertPolarity = invertPolarity;
 
             panelProbe.Controls.Add(ChannelConfiguration);
             this.AddMenuItemsFromDialogToFileOption(ChannelConfiguration);
@@ -79,6 +85,9 @@ namespace OpenEphys.Onix1.Design
             checkBoxSpikeFilter.Checked = ProbeConfiguration.SpikeFilter;
             checkBoxSpikeFilter.CheckedChanged += SpikeFilterIndexChanged;
 
+            checkBoxInvertPolarity.Checked = InvertPolarity;
+            checkBoxInvertPolarity.CheckedChanged += InvertPolarityIndexChanged;
+
             textBoxAdcCalibrationFile.Text = adcCalibrationFile;
 
             textBoxGainCalibrationFile.Text = gainCalibrationFile;
@@ -88,6 +97,11 @@ namespace OpenEphys.Onix1.Design
             comboBoxChannelPresets.SelectedIndexChanged += ChannelPresetIndexChanged;
 
             CheckStatus();
+        }
+
+        private void InvertPolarityIndexChanged(object sender, EventArgs e)
+        {
+            InvertPolarity = ((CheckBox)sender).Checked;
         }
 
         private void FormShown(object sender, EventArgs e)

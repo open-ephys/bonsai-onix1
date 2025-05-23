@@ -30,6 +30,7 @@ namespace OpenEphys.Onix1.Design
                         configureV2eHeadstage.NeuropixelsV2e.ProbeConfigurationB = editorDialog.DialogNeuropixelsV2e.ConfigureNode.ProbeConfigurationB;
                         configureV2eHeadstage.NeuropixelsV2e.GainCalibrationFileA = editorDialog.DialogNeuropixelsV2e.ConfigureNode.GainCalibrationFileA;
                         configureV2eHeadstage.NeuropixelsV2e.GainCalibrationFileB = editorDialog.DialogNeuropixelsV2e.ConfigureNode.GainCalibrationFileB;
+                        configureV2eHeadstage.NeuropixelsV2e.InvertPolarity = editorDialog.DialogNeuropixelsV2e.ConfigureNode.InvertPolarity;
 
                         return true;
                     }
@@ -47,6 +48,7 @@ namespace OpenEphys.Onix1.Design
                         configureV2eBetaHeadstage.NeuropixelsV2eBeta.ProbeConfigurationB = editorDialog.DialogNeuropixelsV2e.ConfigureNode.ProbeConfigurationB;
                         configureV2eBetaHeadstage.NeuropixelsV2eBeta.GainCalibrationFileA = editorDialog.DialogNeuropixelsV2e.ConfigureNode.GainCalibrationFileA;
                         configureV2eBetaHeadstage.NeuropixelsV2eBeta.GainCalibrationFileB = editorDialog.DialogNeuropixelsV2e.ConfigureNode.GainCalibrationFileB;
+                        configureV2eBetaHeadstage.NeuropixelsV2eBeta.InvertPolarity = editorDialog.DialogNeuropixelsV2e.ConfigureNode.InvertPolarity;
 
                         return true;
                     }
