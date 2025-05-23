@@ -84,7 +84,7 @@ namespace OpenEphys.Onix1
     /// Specifies the state of the ONIX breakout board's digital input pins.
     /// </summary>
     [Flags]
-    public enum DigitalPortState : ushort
+    public enum DigitalPortState : byte
     {
         /// <summary>
         /// Specifies that pin 0 is high.
