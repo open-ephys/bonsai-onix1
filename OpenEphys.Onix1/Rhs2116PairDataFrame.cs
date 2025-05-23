@@ -14,6 +14,7 @@ namespace OpenEphys.Onix1
         /// <param name="hubClock">An array of hub clock counter values.</param>
         /// <param name="amplifierData">An array of multi-channel amplifier data.</param>
         /// <param name="dcData">An array of multi-channel DC data.</param>
+        /// <param name="recoveryMask">An array of stimulus artifact recovery mask values.</param>
         public Rhs2116PairDataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData, Mat dcData, uint[] recoveryMask)
             : base(clock, hubClock)
         {

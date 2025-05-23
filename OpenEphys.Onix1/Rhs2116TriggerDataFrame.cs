@@ -94,7 +94,7 @@ namespace OpenEphys.Onix1
         Gpio = 0x1,
 
         /// <summary>
-        /// Specifies the source of the trigger is a a register.
+        /// Specifies the source of the trigger is a register.
         /// </summary>
         Register = 0x2,
 

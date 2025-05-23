@@ -31,7 +31,7 @@ namespace OpenEphys.Onix1
         /// This property determines the number of samples that are collected from each of the 32
         /// electrophysiology channels before data is propagated. For instance, if this value is set to 30,
         /// then 32x30 samples, along with 30 corresponding clock values, will be collected and packed into
-        /// each <see cref="Rhs211Pair6DataFrame"/>. Because channels are sampled at ~30 kHz, this is equivalent
+        /// each <see cref="Rhs2116PairDataFrame"/>. Because channels are sampled at ~30 kHz, this is equivalent
         /// to ~1 millisecond of data from each channel.
         /// </remarks>
         public int BufferSize { get; set; } = 30;
@@ -39,7 +39,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Generates a sequence of <see cref="Rhs2116PairDataFrame"/>s.
         /// </summary>
-        /// <returns>A sequence of <see cref="Rhs211Pair6DataFrame"/>s.</returns>
+        /// <returns>A sequence of <see cref="Rhs2116PairDataFrame"/>s.</returns>
         public unsafe override IObservable<Rhs2116PairDataFrame> Generate()
         {
             var bufferSize = BufferSize;
