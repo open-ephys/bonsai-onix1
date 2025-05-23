@@ -84,36 +84,26 @@ namespace OpenEphys.Onix1
         /// </summary>
         public NeuropixelsV2QuadShankProbeConfiguration()
         {
-            ChannelMap = new List<NeuropixelsV2QuadShankElectrode>(NeuropixelsV2.ChannelCount);
-            for (int i = 0; i < NeuropixelsV2.ChannelCount; i++)
+            ChannelMap = new NeuropixelsV2QuadShankElectrode[NeuropixelsV2.ChannelCount];
+            for (int i = 0; i < ChannelMap.Length; i++)
             {
-                ChannelMap.Add(ProbeModel.FirstOrDefault(e => e.Channel == i));
+                ChannelMap[i] = ProbeModel.FirstOrDefault(e => e.Channel == i);
             }
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class.
         /// </summary>
-        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe probe)
+        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe probe) : this()
         {
-            ChannelMap = new List<NeuropixelsV2QuadShankElectrode>(NeuropixelsV2.ChannelCount);
-            for (int i = 0; i < NeuropixelsV2.ChannelCount; i++)
-            {
-                ChannelMap.Add(ProbeModel.FirstOrDefault(e => e.Channel == i));
-            }
             Probe = probe;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class.
         /// </summary>
-        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe probe, NeuropixelsV2QuadShankReference reference)
+        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe probe, NeuropixelsV2QuadShankReference reference) : this()
         {
-            ChannelMap = new List<NeuropixelsV2QuadShankElectrode>(NeuropixelsV2.ChannelCount);
-            for (int i = 0; i < NeuropixelsV2.ChannelCount; i++)
-            {
-                ChannelMap.Add(ProbeModel.FirstOrDefault(e => e.Channel == i));
-            }
             Probe = probe;
             Reference = reference;
         }
@@ -182,23 +172,25 @@ namespace OpenEphys.Onix1
         /// The channel map will always be 384 channels, and will return the 384 enabled electrodes.
         /// </remarks>
         [XmlIgnore]
-        public List<NeuropixelsV2QuadShankElectrode> ChannelMap { get; }
+        public NeuropixelsV2QuadShankElectrode[] ChannelMap { get; }
 
         /// <summary>
         /// Update the <see cref="ChannelMap"/> with the selected electrodes.
         /// </summary>
         /// <param name="electrodes">List of selected electrodes that are being added to the <see cref="ChannelMap"/></param>
-        public void SelectElectrodes(List<NeuropixelsV2QuadShankElectrode> electrodes)
+        public void SelectElectrodes(NeuropixelsV2QuadShankElectrode[] electrodes)
         {
             foreach (var e in electrodes)
             {
-                ChannelMap[e.Channel] = e;
-            }
-
-            if (ChannelMap.Count != NeuropixelsV2.ChannelCount)
-            {
-                throw new InvalidOperationException($"Channel map does not match the expected number of active channels " +
-                    $"for a NeuropixelsV2 probe. Expected {NeuropixelsV2.ChannelCount}, but there are {ChannelMap.Count} values.");
+                try
+                {
+                    ChannelMap[e.Channel] = e;
+                }
+                catch (IndexOutOfRangeException ex)
+                {
+                    throw new IndexOutOfRangeException($"Electrode {e.Index} specifies channel {e.Channel} but only channels " +
+                        $"0 to {ChannelMap.Length - 1} are supported.", ex);
+                }
             }
 
             ChannelConfiguration.UpdateDeviceChannelIndices(ChannelMap);

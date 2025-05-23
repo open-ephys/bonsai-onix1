@@ -172,13 +172,10 @@ namespace OpenEphys.Onix1
         /// Updates the <see cref="Probe.DeviceChannelIndices"/> based on the given channel map.
         /// </summary>
         /// <param name="channelMap">Existing <see cref="NeuropixelsV1ProbeConfiguration.ChannelMap"/>.</param>
-        internal void UpdateDeviceChannelIndices(List<NeuropixelsV1Electrode> channelMap)
+        internal void UpdateDeviceChannelIndices(NeuropixelsV1Electrode[] channelMap)
         {
-            var numberOfContacts = NumberOfContacts;
-
-            int[] newDeviceChannelIndices = new int[numberOfContacts];
-
-            for (int i = 0; i < numberOfContacts; i++)
+            int[] newDeviceChannelIndices = new int[NumberOfContacts];
+            for (int i = 0; i < newDeviceChannelIndices.Length; i++)
             {
                 newDeviceChannelIndices[i] = -1;
             }
@@ -196,10 +193,8 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <param name="channelConfiguration">A <see cref="NeuropixelsV1eProbeGroup"/> object</param>
         /// <returns>List of <see cref="NeuropixelsV1Electrode"/>'s that are enabled</returns>
-        public static List<NeuropixelsV1Electrode> ToChannelMap(NeuropixelsV1eProbeGroup channelConfiguration)
+        public static NeuropixelsV1Electrode[] ToChannelMap(NeuropixelsV1eProbeGroup channelConfiguration)
         {
-            List<NeuropixelsV1Electrode> channelMap = new();
-
             var enabledContacts = channelConfiguration.GetContacts().Where(c => c.DeviceId != -1);
 
             if (enabledContacts.Count() != NeuropixelsV1.ChannelCount)
@@ -209,12 +204,9 @@ namespace OpenEphys.Onix1
                     $"index >= 0.");
             }
 
-            foreach (var c in enabledContacts)
-            {
-                channelMap.Add(new NeuropixelsV1Electrode(c.Index));
-            }
-
-            return channelMap.OrderBy(e => e.Channel).ToList();
+            return enabledContacts.Select(c => new NeuropixelsV1Electrode(c.Index))
+                                  .OrderBy(e => e.Channel)
+                                  .ToArray();
         }
 
         /// <summary>

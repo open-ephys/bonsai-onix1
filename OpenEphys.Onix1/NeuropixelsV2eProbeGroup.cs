@@ -240,9 +240,8 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <param name="channelConfiguration">A <see cref="NeuropixelsV2eProbeGroup"/> object</param>
         /// <returns>List of <see cref="NeuropixelsV2QuadShankElectrode"/> electrodes that are enabled</returns>
-        public static List<NeuropixelsV2QuadShankElectrode> ToChannelMap(NeuropixelsV2eProbeGroup channelConfiguration)
+        public static NeuropixelsV2QuadShankElectrode[] ToChannelMap(NeuropixelsV2eProbeGroup channelConfiguration)
         {
-            List<NeuropixelsV2QuadShankElectrode> channelMap = new();
 
             var enabledContacts = channelConfiguration.GetContacts().Where(c => c.DeviceId != -1);
 
@@ -253,25 +252,20 @@ namespace OpenEphys.Onix1
                     $"index >= 0.");
             }
 
-            foreach (var c in enabledContacts)
-            {
-                channelMap.Add(new NeuropixelsV2QuadShankElectrode(c.Index));
-            }
-
-            return channelMap.OrderBy(e => e.Channel).ToList();
+            return enabledContacts.Select(c => new NeuropixelsV2QuadShankElectrode(c.Index))
+                                  .OrderBy(e => e.Channel)
+                                  .ToArray();
         }
 
         /// <summary>
         /// Updates the <see cref="Probe.DeviceChannelIndices"/> based on the given channel map.
         /// </summary>
         /// <param name="channelMap">Existing <see cref="NeuropixelsV2QuadShankProbeConfiguration.ChannelMap"/>.</param>
-        internal void UpdateDeviceChannelIndices(List<NeuropixelsV2QuadShankElectrode> channelMap)
+        internal void UpdateDeviceChannelIndices(NeuropixelsV2QuadShankElectrode[] channelMap)
         {
-            var numberOfContacts = NumberOfContacts;
+            int[] newDeviceChannelIndices = new int[NumberOfContacts];
 
-            int[] newDeviceChannelIndices = new int[numberOfContacts];
-
-            for (int i = 0; i < numberOfContacts; i++)
+            for (int i = 0; i < newDeviceChannelIndices.Length; i++)
             {
                 newDeviceChannelIndices[i] = -1;
             }
