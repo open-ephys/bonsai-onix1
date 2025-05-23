@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -11,23 +12,32 @@ namespace OpenEphys.Onix1.Design
         /// Gets or sets the <see cref="ConfigurePolledBno055"/> object attached to
         /// the property grid.
         /// </summary>
-        public ConfigurePolledBno055 ConfigureNode
-        {
-            get => (ConfigurePolledBno055)propertyGrid.SelectedObject;
-            set => propertyGrid.SelectedObject = value;
-        }
+        internal InternalPolledBno055 Bno055 { get; set; }
 
         /// <summary>
         /// Initializes a new <see cref="PolledBno055Dialog"/> instance with the given
         /// <see cref="ConfigurePolledBno055"/> object.
         /// </summary>
         /// <param name="configureNode">A <see cref="ConfigurePolledBno055"/> object that contains configuration settings.</param>
-        public PolledBno055Dialog(ConfigurePolledBno055 configureNode)
+        /// <param name="allFieldsEditable">
+        /// Boolean that is true if this <see cref="ConfigurePolledBno055"/> should be allowed to 
+        /// edit the <see cref="ConfigurePolledBno055.AxisMap"/> and  <see cref="ConfigurePolledBno055.AxisSign"/>
+        /// properties. It is set to false when called from headstage editors.</param>
+        public PolledBno055Dialog(ConfigurePolledBno055 configureNode, bool allFieldsEditable = false)
         {
             InitializeComponent();
             Shown += FormShown;
 
-            ConfigureNode = new(configureNode);
+            Bno055 = new(configureNode);
+
+            if (allFieldsEditable)
+            {
+                propertyGrid.SelectedObject = Bno055.Bno055;
+            }
+            else
+            {
+                propertyGrid.SelectedObject = Bno055;
+            }
         }
 
         private void FormShown(object sender, EventArgs e)
@@ -40,5 +50,26 @@ namespace OpenEphys.Onix1.Design
                 MaximumSize = new System.Drawing.Size(0, 0);
             }
         }
+    }
+
+    internal class InternalPolledBno055
+    {
+        [TypeConverter(typeof(PolledBno055SingleDeviceFactoryConverter))]
+        [Category(DeviceFactory.ConfigurationCategory)]
+        public ConfigurePolledBno055 Bno055 { get; set; }
+
+        public InternalPolledBno055(ConfigurePolledBno055 polledBno)
+        {
+            Bno055 = polledBno;
+        }
+
+        [Browsable(false)]
+        public bool Enable { get => Bno055.Enable; }
+
+        [Browsable(false)]
+        public string DeviceName { get => Bno055.DeviceName; }
+
+        [Browsable(false)]
+        public uint DeviceAddress { get => Bno055.DeviceAddress; }
     }
 }
