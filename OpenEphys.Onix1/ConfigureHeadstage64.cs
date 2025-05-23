@@ -148,6 +148,17 @@ namespace OpenEphys.Onix1
 
         class ConfigureHeadstage64PortController : ConfigurePortController
         {
+
+            protected override bool ConfigurePortVoltageOverride(DeviceContext device, double voltage)
+            {
+                // NB: Wait for 1 second to discharge the headstage in the case that they have e.g. just
+                // restarted the workflow automatically with nearly no delay from the last run. 
+                Thread.Sleep(1000);
+                device.WriteRegister(PortController.PORTVOLTAGE, (uint)(voltage * 10));
+                Thread.Sleep(500);
+                return CheckLinkState(device);
+            }
+
             protected override bool ConfigurePortVoltage(DeviceContext device, out double voltage)
             {
                 // WONTFIX: It takes a huge amount of time to get to 0, almost 10 seconds. The best we can do
@@ -158,6 +169,10 @@ namespace OpenEphys.Onix1
                 const double MaxVoltage = 6.0;
                 const double VoltageOffset = 3.4;
                 const double VoltageIncrement = 0.2;
+
+                // NB: Wait for 1 second to discharge the headstage in the case that they have e.g. just
+                // restarted the workflow automatically with nearly no delay from the last run. 
+                Thread.Sleep(1000);
 
                 // Start with highest voltage and ramp it down to find lowest lock voltage
                 voltage = MaxVoltage;
