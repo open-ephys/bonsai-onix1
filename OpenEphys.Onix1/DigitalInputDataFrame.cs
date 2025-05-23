@@ -36,6 +36,7 @@ namespace OpenEphys.Onix1
     {
         public ulong HubClock;
         public DigitalPortState DigitalInputs;
+        public byte Pad; // NB: Pad comes after port state due to endianness change
         public BreakoutButtonState Buttons;
     }
 }
