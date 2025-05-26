@@ -46,7 +46,7 @@ namespace OpenEphys.Onix1
         {
             if (invertPolarity)
             {
-                const double NumberOfAdcBins = 2048;
+                const double NumberOfAdcBins = 4096;
                 double inversionOffset = gainCorrection * NumberOfAdcBins;
 
                 // Loop over 16 "frames" within each "super-frame"
