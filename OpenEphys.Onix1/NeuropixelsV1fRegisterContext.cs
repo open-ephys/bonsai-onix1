@@ -21,10 +21,9 @@ namespace OpenEphys.Onix1
         readonly BitArray ShankConfig;
         readonly BitArray[] BaseConfigs;
 
-        public NeuropixelsV1fRegisterContext(DeviceContext deviceContext, NeuropixelsV1ProbeConfiguration configuration, string gainCalibrationFile, string adcCalibrationFile)
+        public NeuropixelsV1fRegisterContext(DeviceContext deviceContext, NeuropixelsV1ProbeConfiguration configuration, string gainCalibrationFile, string adcCalibrationFile, bool invertPolarity)
             : base(deviceContext, NeuropixelsV1.ProbeI2CAddress)
         {
-
             device = deviceContext;
             var metaData = new NeuropixelsV1fMetadata(device);
 
@@ -68,8 +67,8 @@ namespace OpenEphys.Onix1
                     $"match the gain calibration file serial number ({gainCorrection.Value.SerialNumber}).");
             }
 
-            ApGainCorrection = gainCorrection.Value.ApGainCorrectionFactor;
-            LfpGainCorrection = gainCorrection.Value.LfpGainCorrectionFactor;
+            ApGainCorrection = invertPolarity ? -gainCorrection.Value.ApGainCorrectionFactor : gainCorrection.Value.ApGainCorrectionFactor;
+            LfpGainCorrection = invertPolarity ? -gainCorrection.Value.LfpGainCorrectionFactor : gainCorrection.Value.LfpGainCorrectionFactor;
 
             Adcs = adcCalibration.Value.Adcs;
             AdcThresholds = Adcs.ToList().Select(a => (ushort)a.Threshold).ToArray();
@@ -78,6 +77,11 @@ namespace OpenEphys.Onix1
             // create Configuration bit arrays
             ShankConfig = NeuropixelsV1.MakeShankBits(configuration);
             BaseConfigs = NeuropixelsV1.MakeConfigBits(configuration, Adcs);
+        }
+
+        private static uint ConvertGainToQ1p14(double gain)
+        {
+            return gain < 0 ? ~ConvertGainToQ1p14(-gain) + 1 : (uint)(gain * (1 << 14)) & 0xFFFF;
         }
 
         internal void InitializeProbe()
@@ -140,8 +144,8 @@ namespace OpenEphys.Onix1
                 device.WriteRegister(NeuropixelsV1f.ADC01_00_OFF_THRESH + i, (uint)(Adcs[i + 1].Offset << 26 | Adcs[i + 1].Threshold << 16 | Adcs[i].Offset << 10 | Adcs[i].Threshold));
             }
 
-            var fixedPointLfPGain = (uint)(LfpGainCorrection * (1 << 14)) & 0xFFFF;
-            var fixedPointApGain = (uint)(ApGainCorrection * (1 << 14)) & 0xFFFF;
+            var fixedPointLfPGain = ConvertGainToQ1p14(LfpGainCorrection);
+            var fixedPointApGain = ConvertGainToQ1p14(ApGainCorrection);
 
             for (uint i = 0; i < NeuropixelsV1.ChannelCount / 2; i++)
             {

@@ -40,6 +40,7 @@ namespace OpenEphys.Onix1
             GainCalibrationFileB = configureNode.GainCalibrationFileB;
             DeviceName = configureNode.DeviceName;
             DeviceAddress = configureNode.DeviceAddress;
+            InvertPolarity = configureNode.InvertPolarity;
         }
 
         /// <inheritdoc/>
@@ -60,6 +61,23 @@ namespace OpenEphys.Onix1
         [Category(ConfigurationCategory)]
         [Description("If true, the headstage LED will turn on during data acquisition. If false, the LED will not turn on.")]
         public bool EnableLed { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value determining if the polarity of the electrode voltages acquired by the probe
+        /// should be inverted.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The analog channels on the probe ASIC have negative gain coefficients. This means that neural data
+        /// that is captured by the probe will be inverted compared to the physical signal that occurs at the
+        /// electrode: e.g. extracellular action potentials will tend to have positive deflections instead of
+        /// negative. Setting this property to true will apply a gain of -1 to neural data to undo this
+        /// effect.
+        /// </para>
+        /// </remarks>
+        [Category(ConfigurationCategory)]
+        [Description("Invert the polarity of the electrode voltages acquired by the probe.")]
+        public bool InvertPolarity { get; set; } = true;
 
         /// <inheritdoc/>
         /// <remarks>
@@ -135,6 +153,7 @@ namespace OpenEphys.Onix1
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;
+            var invertPolarity = InvertPolarity;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
             return source.ConfigureDevice(context =>
@@ -234,7 +253,7 @@ namespace OpenEphys.Onix1
                 // Still its good to get them roughly (i.e. within 10 PCLKs) started at the same time.
                 SyncProbes(serializer, gpo10Config);
 
-                var deviceInfo = new NeuropixelsV2eDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB);
+                var deviceInfo = new NeuropixelsV2eDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB, invertPolarity);
                 var shutdown = Disposable.Create(() =>
                 {
                     serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, NeuropixelsV2eBeta.DefaultGPO10Config);

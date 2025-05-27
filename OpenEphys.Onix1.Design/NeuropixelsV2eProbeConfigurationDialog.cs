@@ -13,6 +13,8 @@ namespace OpenEphys.Onix1.Design
     {
         readonly NeuropixelsV2eChannelConfigurationDialog ChannelConfiguration;
 
+        internal event EventHandler InvertPolarityChanged;
+
         private enum ChannelPreset
         {
             Shank0BankA,
@@ -53,12 +55,16 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfiguration { get; set; }
 
+        /// <inheritdoc cref="ConfigureNeuropixelsV2e.InvertPolarity"/>
+        public bool InvertPolarity { get; set; }
+
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV2eProbeConfigurationDialog"/>.
         /// </summary>
         /// <param name="configuration">A <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> object holding the current configuration settings.</param>
         /// <param name="calibrationFile">String containing the path to the calibration file for this probe.</param>
-        public NeuropixelsV2eProbeConfigurationDialog(NeuropixelsV2QuadShankProbeConfiguration configuration, string calibrationFile)
+        /// <param name="invertPolarity">Boolean denoting whether or not to invert the polarity of neural data.</param>
+        public NeuropixelsV2eProbeConfigurationDialog(NeuropixelsV2QuadShankProbeConfiguration configuration, string calibrationFile, bool invertPolarity)
         {
             InitializeComponent();
             Shown += FormShown;
@@ -75,6 +81,8 @@ namespace OpenEphys.Onix1.Design
                 Parent = this
             };
 
+            InvertPolarity = invertPolarity;
+
             panelProbe.Controls.Add(ChannelConfiguration);
             this.AddMenuItemsFromDialogToFileOption(ChannelConfiguration);
 
@@ -87,11 +95,35 @@ namespace OpenEphys.Onix1.Design
 
             comboBoxChannelPresets.DataSource = Enum.GetValues(typeof(ChannelPreset));
             comboBoxChannelPresets.SelectedIndexChanged += SelectedChannelPresetChanged;
+
+            checkBoxInvertPolarity.Checked = InvertPolarity;
+            checkBoxInvertPolarity.CheckedChanged += InvertPolarityIndexChanged;
+
             CheckForExistingChannelPreset();
 
             CheckStatus();
 
             Text += ": " + ProbeConfiguration.Probe.ToString();
+        }
+
+        private void InvertPolarityIndexChanged(object sender, EventArgs e)
+        {
+            InvertPolarity = ((CheckBox)sender).Checked;
+            OnInvertPolarityChangedHandler();
+        }
+
+        /// <summary>
+        /// Set the <see cref="checkBoxInvertPolarity"/> value to the given boolean.
+        /// </summary>
+        /// <param name="invertPolarity">Boolean denoting whether or not to invert the neural data polarity.</param>
+        public void SetInvertPolarity(bool invertPolarity)
+        {
+            checkBoxInvertPolarity.Checked = invertPolarity;
+        }
+
+        private void OnInvertPolarityChangedHandler()
+        {
+            InvertPolarityChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void FormShown(object sender, EventArgs e)
@@ -559,8 +591,8 @@ namespace OpenEphys.Onix1.Design
                 CheckFileExists = true,
                 Filter = "Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv|All Files|*.*",
                 FilterIndex = 0,
-                InitialDirectory = File.Exists(textBoxProbeCalibrationFile.Text) ? 
-                                   Path.GetDirectoryName(textBoxProbeCalibrationFile.Text) : 
+                InitialDirectory = File.Exists(textBoxProbeCalibrationFile.Text) ?
+                                   Path.GetDirectoryName(textBoxProbeCalibrationFile.Text) :
                                    ""
             };
 

@@ -40,6 +40,7 @@ namespace OpenEphys.Onix1
             ProbeConfiguration = new(configureNeuropixelsV1e.ProbeConfiguration);
             DeviceName = configureNeuropixelsV1e.DeviceName;
             DeviceAddress = configureNeuropixelsV1e.DeviceAddress;
+            InvertPolarity = configureNeuropixelsV1e.InvertPolarity;
         }
 
         /// <summary>
@@ -62,6 +63,23 @@ namespace OpenEphys.Onix1
         [Category(ConfigurationCategory)]
         [Description("If true, the headstage LED will turn on during data acquisition. If false, the LED will not turn on.")]
         public bool EnableLed { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value determining if the polarity of the electrode voltages acquired by the probe
+        /// should be inverted.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The analog channels on the probe ASIC have negative gain coefficients. This means that neural data
+        /// that is captured by the probe will be inverted compared to the physical signal that occurs at the
+        /// electrode: e.g. extracellular action potentials will tend to have positive deflections instead of
+        /// negative. Setting this property to true will apply a gain of -1 to neural data to undo this
+        /// effect.
+        /// </para>
+        /// </remarks>
+        [Category(ConfigurationCategory)]
+        [Description("Invert the polarity of the electrode voltages acquired by the probe.")]
+        public bool InvertPolarity { get; set; } = true;
 
         /// <summary>
         /// Gets or sets the path to the gain calibration file.
@@ -131,6 +149,7 @@ namespace OpenEphys.Onix1
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
             var ledEnabled = EnableLed;
+            var invertPolarity = InvertPolarity;
             return source.ConfigureDevice(context =>
             {
                 // configure device via the DS90UB9x deserializer device
@@ -164,7 +183,7 @@ namespace OpenEphys.Onix1
                     TurnOnLed(serializer, NeuropixelsV1e.DefaultGPO32Config);
                 }
 
-                var deviceInfo = new NeuropixelsV1eDeviceInfo(context, DeviceType, deviceAddress, probeControl);
+                var deviceInfo = new NeuropixelsV1eDeviceInfo(context, DeviceType, deviceAddress, probeControl, invertPolarity);
                 var shutdown = Disposable.Create(() =>
                 {
                     serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, NeuropixelsV1e.DefaultGPO10Config);
