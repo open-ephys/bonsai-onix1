@@ -77,7 +77,7 @@ namespace OpenEphys.Onix1
     [EquivalentDataSource(typeof(Heartbeat))]
     static class PersistentHeartbeat
     {
-        public const int ID = 34;
+        public const int ID = 35;
 
         public const uint ENABLE = 0; // Heartbeat enable state (read only; always enabled for this device).
         public const uint CLK_DIV = 1; // Heartbeat clock divider ratio. Minimum value is CLK_HZ / 10e6.
