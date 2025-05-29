@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using Bonsai;
 
@@ -18,7 +20,21 @@ namespace OpenEphys.Onix1
     [Description("Polls a Bno055 9-axis IMU to produce a sequence Bno055 data frames.")]
     public class PolledBno055Data : Source<Bno055DataFrame>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        static readonly HashSet<string> registeredValues = new();
+        static readonly object registrationLock = new();
+
+        /// <summary>
+        /// Gets or sets a unique device name. Only a single <see cref="PolledBno055Data"/> operator can be
+        /// used per distinct device name. 
+        /// </summary>
+        /// <remarks>
+        /// The device name provides a unique, human-readable identifier that is used to link software
+        /// elements for configuration, control, and data streaming to hardware. For instance, it can be used
+        /// to link configuration operators to data IO operators within a workflow. This value is
+        /// usually not set manually, but is assigned in a <see cref="MultiDeviceFactory"/> to correspond to a
+        /// fixed address with a piece of hardware such as a headstage. This address is used for software
+        /// communication.
+        /// </remarks>
         [TypeConverter(typeof(PolledBno055.NameConverter))]
         [Description(SingleDeviceFactory.DeviceNameDescription)]
         [Category(DeviceFactory.ConfigurationCategory)]
@@ -73,8 +89,10 @@ namespace OpenEphys.Onix1
         /// <returns>A sequence of <see cref="Bno055DataFrame">Bno055DataFrames</see>.</returns>
         public unsafe IObservable<Bno055DataFrame> Generate<TSource>(IObservable<TSource> source)
         {
+            var deviceName = DeviceName;
             var polled = PolledRegisters;
-            return DeviceManager.GetDevice(DeviceName).SelectMany(
+
+            return DeviceManager.GetDevice(deviceName).SelectMany(
                 deviceInfo =>
                 {
                     return !((PolledBno055DeviceInfo)deviceInfo).Enable
@@ -85,7 +103,19 @@ namespace OpenEphys.Onix1
                             var passthrough = device.GetPassthroughDeviceContext(typeof(DS90UB9x));
                             var i2c = new I2CRegisterContext(passthrough, PolledBno055.BNO055Address);
 
-                            return source.SubscribeSafe(observer, _ =>
+                            // NB: Only allow one PolledBno055Data operator per unique DeviceName
+                            lock (registrationLock)
+                            {
+                                if (registeredValues.Contains(deviceName))
+                                {
+                                    throw new InvalidOperationException($"There is already a {nameof(PolledBno055Data)} linked to '{deviceName}'. " +
+                                        $"Only one {nameof(PolledBno055Data)} operator is allowed for each distinct {nameof(DeviceName)}.");
+                                }
+
+                                registeredValues.Add(deviceName);
+                            }
+
+                            var s = source.SubscribeSafe(observer, _ =>
                             {
                                 Bno055DataFrame frame = default;
                                 device.Context.EnsureContext(() =>
@@ -138,6 +168,15 @@ namespace OpenEphys.Onix1
                                 {
                                     observer.OnNext(frame);
                                 }
+                            });
+                            
+                            return Disposable.Create(() =>
+                            {
+                                lock (registrationLock)
+                                {
+                                    registeredValues.Remove(deviceName);
+                                }
+                                s.Dispose();
                             });
                         });
                 });
