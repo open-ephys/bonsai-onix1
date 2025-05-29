@@ -20,6 +20,15 @@ namespace OpenEphys.Onix1
     [Description("Produces a sequence of Rhd2164DataFrame objects with data from an Intan Rhd2164 bioacquisition chip.")]
     public class Rhd2164Data : Source<Rhd2164DataFrame>
     {
+        private readonly static int[] EphysChannelMap = new[] {0 ,  2,  4,  6,  8, 10, 12, 14,
+                                                               16, 18, 20, 22, 24, 26, 28, 30,
+                                                               32, 34, 36, 38, 40, 42, 44, 46,
+                                                               48, 50, 52, 54, 56, 58, 60, 62,
+                                                               1 , 3 , 5 , 7 , 9 , 11, 13, 15,
+                                                               17, 19, 21, 23, 25, 27, 29, 31,
+                                                               33, 35, 37, 39, 41, 43, 45, 47,
+                                                               49, 51, 53, 55, 57, 59, 61, 63};
+
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(Rhd2164.NameConverter))]
         [Description(SingleDeviceFactory.DeviceNameDescription)]
@@ -66,7 +75,7 @@ namespace OpenEphys.Onix1
                             clockBuffer[sampleIndex] = frame.Clock;
                             if (++sampleIndex >= bufferSize)
                             {
-                                var amplifierData = BufferHelper.CopyTranspose(amplifierBuffer, bufferSize, Rhd2164.AmplifierChannelCount, Depth.U16);
+                                var amplifierData = BufferHelper.CopyTranspose(amplifierBuffer, bufferSize, Rhd2164.AmplifierChannelCount, Depth.U16, EphysChannelMap);
                                 var auxData = BufferHelper.CopyTranspose(auxBuffer, bufferSize, Rhd2164.AuxChannelCount, Depth.U16);
                                 observer.OnNext(new Rhd2164DataFrame(clockBuffer, hubClockBuffer, amplifierData, auxData));
                                 hubClockBuffer = new ulong[bufferSize];

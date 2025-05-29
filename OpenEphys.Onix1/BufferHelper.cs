@@ -1,4 +1,5 @@
-﻿using OpenCV.Net;
+﻿using System;
+using OpenCV.Net;
 
 namespace OpenEphys.Onix1
 {
@@ -46,6 +47,36 @@ namespace OpenEphys.Onix1
             CV.Transpose(bufferHeader, transposeBuffer);
             CV.Mul(transposeBuffer, scale, data);
             return data;
+        }
+
+        public static Mat CopyTranspose<TBuffer>(
+        TBuffer[] buffer,
+        int sampleCount,
+        int channelCount,
+        Depth depth,
+        int[] channelMap)
+        where TBuffer : unmanaged
+        {
+            if (channelMap == null || channelMap.Length != channelCount)
+            {
+                return CopyTranspose(buffer, sampleCount, channelCount, depth);
+            }
+
+            using var bufferHeader = Mat.CreateMatHeader(
+                buffer,
+                sampleCount,
+                channelCount,
+                depth,
+                channels: 1);
+            var data = new Mat(bufferHeader.Rows, bufferHeader.Cols, depth, 1);
+
+            for (int i = 0; i < bufferHeader.Cols; i++)
+                CV.Copy(bufferHeader.GetCol(channelMap[i]), data.GetCol(i));
+
+            var transposeData = new Mat(bufferHeader.Cols, bufferHeader.Rows, depth, 1);
+
+            CV.Transpose(data, transposeData);
+            return transposeData;
         }
     }
 }
