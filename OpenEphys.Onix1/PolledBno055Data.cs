@@ -103,7 +103,7 @@ namespace OpenEphys.Onix1
                             var passthrough = device.GetPassthroughDeviceContext(typeof(DS90UB9x));
                             var i2c = new I2CRegisterContext(passthrough, PolledBno055.BNO055Address);
 
-                            // NB: Only allow on PolledBno055Data operator per unique DeviceName
+                            // NB: Only allow one PolledBno055Data operator per unique DeviceName
                             lock (registrationLock)
                             {
                                 if (registeredValues.Contains(deviceName))
