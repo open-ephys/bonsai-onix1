@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
 using System.Xml.Serialization;
@@ -153,23 +152,24 @@ namespace OpenEphys.Onix1
         /// The channel map will always be 384 channels, and will return the 384 enabled electrodes.
         /// </remarks>
         [XmlIgnore]
-        public List<NeuropixelsV1Electrode> ChannelMap { get; }
+        public NeuropixelsV1Electrode[] ChannelMap { get; }
 
         /// <summary>
         /// Update the <see cref="ChannelMap"/> with the selected electrodes.
         /// </summary>
         /// <param name="electrodes">List of selected electrodes that are being added to the <see cref="ChannelMap"/></param>
-        public void SelectElectrodes(List<NeuropixelsV1Electrode> electrodes)
+        public void SelectElectrodes(NeuropixelsV1Electrode[] electrodes)
         {
             foreach (var e in electrodes)
             {
-                ChannelMap[e.Channel] = e;
-            }
-
-            if (ChannelMap.Count != NeuropixelsV1.ChannelCount)
-            {
-                throw new InvalidOperationException($"Channel map does not match the expected number of active channels " +
-                    $"for a NeuropixelsV2 probe. Expected {NeuropixelsV1.ChannelCount}, but there are {ChannelMap.Count} values.");
+                try
+                {
+                    ChannelMap[e.Channel] = e;
+                } catch (IndexOutOfRangeException ex)
+                {
+                    throw new IndexOutOfRangeException($"Electrode {e.Index} specifies channel {e.Channel} but only channels " +
+                        $"0 to {ChannelMap.Length - 1} are supported.", ex);
+                }
             }
 
             ChannelConfiguration.UpdateDeviceChannelIndices(ChannelMap);

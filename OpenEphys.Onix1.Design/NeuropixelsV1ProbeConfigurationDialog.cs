@@ -175,26 +175,26 @@ namespace OpenEphys.Onix1.Design
             switch (preset)
             {
                 case ChannelPreset.BankA:
-                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.A).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.A).ToArray());
                     break;
 
                 case ChannelPreset.BankB:
-                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.B).ToList());
+                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.B).ToArray());
                     break;
 
                 case ChannelPreset.BankC:
                     probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.C ||
-                                                                             (e.Bank == NeuropixelsV1Bank.B && e.Index >= 576)).ToList());
+                                                                             (e.Bank == NeuropixelsV1Bank.B && e.Index >= 576)).ToArray());
                     break;
 
                 case ChannelPreset.SingleColumn:
                     probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Index % 2 == 0 && e.Bank == NeuropixelsV1Bank.A) ||
-                                                                              (e.Index % 2 == 1 && e.Bank == NeuropixelsV1Bank.B)).ToList());
+                                                                              (e.Index % 2 == 1 && e.Bank == NeuropixelsV1Bank.B)).ToArray());
                     break;
 
                 case ChannelPreset.Tetrodes:
                     probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Index % 8 < 4 && e.Bank == NeuropixelsV1Bank.A) ||
-                                                                              (e.Index % 8 > 3 && e.Bank == NeuropixelsV1Bank.B)).ToList());
+                                                                              (e.Index % 8 > 3 && e.Bank == NeuropixelsV1Bank.B)).ToArray());
                     break;
             }
 
@@ -435,7 +435,7 @@ namespace OpenEphys.Onix1.Design
             var electrodes = NeuropixelsV1eProbeGroup.ToElectrodes(ChannelConfiguration.ProbeConfiguration.ChannelConfiguration);
 
             var selectedElectrodes = electrodes.Where((e, ind) => ChannelConfiguration.SelectedContacts[ind])
-                                               .ToList();
+                                               .ToArray();
 
             ChannelConfiguration.EnableElectrodes(selectedElectrodes);
 
