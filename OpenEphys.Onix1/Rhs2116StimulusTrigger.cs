@@ -22,7 +22,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Start an electrical stimulus sequence.
         /// </summary>
-        /// <param name="source">A sequence of double values that start the stimulus sequence when received.</param>
+        /// <param name="source">A sequence of double values indicating the delay in microseconds before the start of a stimulus sequence.</param>
         /// <returns>A sequence of double values that is identical to <paramref name="source"/></returns>
         public override IObservable<double> Process(IObservable<double> source)
         {
