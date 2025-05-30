@@ -22,8 +22,8 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Start an electrical stimulus sequence with an optional hardware delay.
         /// </summary>
-        /// <param name="source">A sequence of double values that serves a combined a stimulus trigger and
-        /// delay in microseconds. A value of 0 results in immediate stimulus delivery. A value of 100 results
+        /// <param name="source">A sequence of double values that serve as a combined stimulus trigger and
+        /// delay in microseconds. A value of 0 results in immediate stimulus delivery. A value of 100 results in
         /// stimulus delivery following a 100 microsecond delay. Delays are implemented in hardware and are
         /// exact. </param>
         /// <returns>A sequence of double values that is identical to <paramref name="source"/></returns>
