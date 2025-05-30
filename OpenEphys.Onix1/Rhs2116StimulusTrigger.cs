@@ -20,9 +20,12 @@ namespace OpenEphys.Onix1
         public string DeviceName { get; set; }
 
         /// <summary>
-        /// Start an electrical stimulus sequence.
+        /// Start an electrical stimulus sequence with an optional hardware delay.
         /// </summary>
-        /// <param name="source">A sequence of double values indicating the delay in microseconds before the start of a stimulus sequence.</param>
+        /// <param name="source">A sequence of double values that serves a combined a stimulus trigger and
+        /// delay in microseconds. A value of 0 results in immediate stimulus delivery. A value of 100 results
+        /// stimulus delivery following a 100 microsecond delay. Delays are implemented in hardware and are
+        /// exact. </param>
         /// <returns>A sequence of double values that is identical to <paramref name="source"/></returns>
         public override IObservable<double> Process(IObservable<double> source)
         {
