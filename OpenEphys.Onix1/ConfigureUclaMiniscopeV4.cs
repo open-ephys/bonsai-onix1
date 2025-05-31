@@ -99,7 +99,8 @@ namespace OpenEphys.Onix1
                      "to the miniscope. Warning: this device requires 4.0 to 5.0V, measured at the scope, for proper operation. " +
                      "Supplying higher voltages may result in damage to the miniscope.")]
         [Category(ConfigurationCategory)]
-        public double? PortVoltage
+        [TypeConverter(typeof(PortVoltageConverter))]
+        public AutoPortVoltage PortVoltage
         {
             get => PortControl.PortVoltage;
             set => PortControl.PortVoltage = value;
@@ -116,12 +117,13 @@ namespace OpenEphys.Onix1
         {
             internal ConfigureUclaMiniscopeV4Camera Camera;
 
-            protected override bool ConfigurePortVoltage(DeviceContext device)
+            protected override bool ConfigurePortVoltage(DeviceContext device, out double voltage)
             {
                 const double MinVoltage = 5.2;
                 const double VoltageIncrement = 0.05;
 
-                for (var voltage = MinVoltage; voltage <= MaxVoltage; voltage += VoltageIncrement)
+                voltage = MinVoltage;
+                for (; voltage <= MaxVoltage; voltage += VoltageIncrement)
                 {
                     SetPortVoltage(device, voltage);
                     if (CheckLinkStateWithRetry(device))

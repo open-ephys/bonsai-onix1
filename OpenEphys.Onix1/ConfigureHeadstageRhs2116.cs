@@ -100,7 +100,8 @@ namespace OpenEphys.Onix1
                      "to the headstage. Warning: this device requires 3.4V to 4.4V for proper operation." +
                      "Supplying higher voltages may result in damage to the headstage.")]
         [Category(ConfigurationCategory)]
-        public double? PortVoltage
+        [TypeConverter(typeof(PortVoltageConverter))]
+        public AutoPortVoltage PortVoltage
         {
             get => LinkController.PortVoltage;
             set => LinkController.PortVoltage = value;
@@ -115,19 +116,21 @@ namespace OpenEphys.Onix1
 
         class ConfigureHeadstageRhs2116LinkController : ConfigurePortController
         {
-            protected override bool ConfigurePortVoltage(DeviceContext device)
+            protected override bool ConfigurePortVoltage(DeviceContext device, out double voltage)
             {
                 const double MinVoltage = 3.3;
                 const double MaxVoltage = 4.4;
                 const double VoltageOffset = 2.0;
                 const double VoltageIncrement = 0.2;
 
-                for (var voltage = MinVoltage; voltage <= MaxVoltage; voltage += VoltageIncrement)
+                voltage = MinVoltage;
+                for (; voltage <= MaxVoltage; voltage += VoltageIncrement)
                 {
                     SetPortVoltage(device, voltage);
                     if (base.CheckLinkState(device))
                     {
-                        SetPortVoltage(device, voltage + VoltageOffset);
+                        voltage += VoltageOffset;
+                        SetPortVoltage(device, voltage);
                         return CheckLinkState(device);
                     }
                 }
