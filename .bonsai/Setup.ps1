@@ -14,6 +14,5 @@ if (!(Test-Path "./Bonsai.exe")) {
     Expand-Archive "temp.zip" -DestinationPath "." -Force
     Move-Item -Path "temp.config" "NuGet.config" -Force
     Remove-Item -Path "temp.zip"
-	Remove-Item -Path "Bonsai32.exe"
 }
 & .\Bonsai.exe --no-editor
