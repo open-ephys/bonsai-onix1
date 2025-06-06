@@ -221,13 +221,13 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Convert a ProbeInterface object to a list of electrodes, which includes all possible electrodes
         /// </summary>
-        /// <param name="channelConfiguration">A <see cref="NeuropixelsV2eProbeGroup"/> object</param>
+        /// <param name="probeGroup">A <see cref="NeuropixelsV2eProbeGroup"/> object</param>
         /// <returns>List of <see cref="NeuropixelsV2QuadShankElectrode"/> electrodes</returns>
-        public static List<NeuropixelsV2QuadShankElectrode> ToElectrodes(NeuropixelsV2eProbeGroup channelConfiguration)
+        public static List<NeuropixelsV2QuadShankElectrode> ToElectrodes(NeuropixelsV2eProbeGroup probeGroup)
         {
             List<NeuropixelsV2QuadShankElectrode> electrodes = new();
 
-            foreach (var c in channelConfiguration.GetContacts())
+            foreach (var c in probeGroup.GetContacts())
             {
                 electrodes.Add(new NeuropixelsV2QuadShankElectrode(c.Index));
             }
@@ -238,12 +238,12 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Convert a <see cref="NeuropixelsV2eProbeGroup"/> object to a list of electrodes, which only includes currently enabled electrodes
         /// </summary>
-        /// <param name="channelConfiguration">A <see cref="NeuropixelsV2eProbeGroup"/> object</param>
+        /// <param name="probeGroup">A <see cref="NeuropixelsV2eProbeGroup"/> object</param>
         /// <returns>List of <see cref="NeuropixelsV2QuadShankElectrode"/> electrodes that are enabled</returns>
-        public static NeuropixelsV2QuadShankElectrode[] ToChannelMap(NeuropixelsV2eProbeGroup channelConfiguration)
+        public static NeuropixelsV2QuadShankElectrode[] ToChannelMap(NeuropixelsV2eProbeGroup probeGroup)
         {
 
-            var enabledContacts = channelConfiguration.GetContacts().Where(c => c.DeviceId != -1);
+            var enabledContacts = probeGroup.GetContacts().Where(c => c.DeviceId != -1);
 
             if (enabledContacts.Count() != NeuropixelsV2.ChannelCount)
             {

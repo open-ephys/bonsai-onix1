@@ -76,7 +76,6 @@ namespace OpenEphys.Onix1.Design
                 if (channelConfiguration.Tag != sendingDialog.Tag)
                 {
                     channelConfiguration.SetInvertPolarity(sendingDialog.InvertPolarity);
-                    //channelConfiguration.Refresh();
                 }
             }
         }

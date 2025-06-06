@@ -168,7 +168,7 @@ namespace OpenEphys.Onix1.Design
         private void SetChannelPreset(ChannelPreset preset)
         {
             var probeConfiguration = ChannelConfiguration.ProbeConfiguration;
-            var electrodes = NeuropixelsV2eProbeGroup.ToElectrodes(ChannelConfiguration.ProbeConfiguration.ChannelConfiguration);
+            var electrodes = NeuropixelsV2eProbeGroup.ToElectrodes(ChannelConfiguration.ProbeConfiguration.ProbeGroup);
 
             switch (preset)
             {
@@ -622,7 +622,7 @@ namespace OpenEphys.Onix1.Design
 
         private void EnableSelectedContacts()
         {
-            var selected = NeuropixelsV2eProbeGroup.ToElectrodes(ChannelConfiguration.ProbeConfiguration.ChannelConfiguration)
+            var selected = NeuropixelsV2eProbeGroup.ToElectrodes(ChannelConfiguration.ProbeConfiguration.ProbeGroup)
                                                    .Where((e, ind) => ChannelConfiguration.SelectedContacts[ind])
                                                    .ToArray();
 
