@@ -115,7 +115,7 @@ namespace OpenEphys.Onix1
                                 registeredValues.Add(deviceName);
                             }
 
-                            // Preallocate the array to avoid unnecesary allocation each frame
+                            // NB: Preallocate the array to avoid unnecesary allocation each frame
                             byte[] data = new byte[28];
                             var s = source.SubscribeSafe(observer, _ =>
                             {
@@ -162,7 +162,7 @@ namespace OpenEphys.Onix1
                                           Array.Clear(data, 0, 6);
                                       }
 
-                                      //NOTE: actual performance would be a little better if we merged these two so they could be read together
+                                      //TODO: actual performance would be a little better if we merged these two so they could be read together
                                       data[26] = polled.HasFlag(PolledBno055Registers.Temperature) ? i2c.ReadByte(PolledBno055.EulerHeadingLsbAddress + 26) : (byte)0;
                                       data[27] = polled.HasFlag(PolledBno055Registers.Calibration) ? i2c.ReadByte(PolledBno055.EulerHeadingLsbAddress + 27) : (byte)0;
 
