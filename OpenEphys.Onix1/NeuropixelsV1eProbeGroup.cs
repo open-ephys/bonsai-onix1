@@ -191,11 +191,11 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Convert a <see cref="NeuropixelsV1eProbeGroup"/> object to a list of electrodes, which only includes currently enabled electrodes
         /// </summary>
-        /// <param name="channelConfiguration">A <see cref="NeuropixelsV1eProbeGroup"/> object</param>
+        /// <param name="probeGroup">A <see cref="NeuropixelsV1eProbeGroup"/> object</param>
         /// <returns>List of <see cref="NeuropixelsV1Electrode"/>'s that are enabled</returns>
-        public static NeuropixelsV1Electrode[] ToChannelMap(NeuropixelsV1eProbeGroup channelConfiguration)
+        public static NeuropixelsV1Electrode[] ToChannelMap(NeuropixelsV1eProbeGroup probeGroup)
         {
-            var enabledContacts = channelConfiguration.GetContacts().Where(c => c.DeviceId != -1);
+            var enabledContacts = probeGroup.GetContacts().Where(c => c.DeviceId != -1);
 
             if (enabledContacts.Count() != NeuropixelsV1.ChannelCount)
             {
@@ -212,13 +212,13 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Convert a ProbeInterface object to a list of electrodes, which includes all possible electrodes.
         /// </summary>
-        /// <param name="channelConfiguration">A <see cref="NeuropixelsV1eProbeGroup"/> object.</param>
+        /// <param name="probeGroup">A <see cref="NeuropixelsV1eProbeGroup"/> object.</param>
         /// <returns>List of <see cref="NeuropixelsV1Electrode"/> electrodes.</returns>
-        public static List<NeuropixelsV1Electrode> ToElectrodes(NeuropixelsV1eProbeGroup channelConfiguration)
+        public static List<NeuropixelsV1Electrode> ToElectrodes(NeuropixelsV1eProbeGroup probeGroup)
         {
             List<NeuropixelsV1Electrode> electrodes = new();
 
-            foreach (var c in channelConfiguration.GetContacts())
+            foreach (var c in probeGroup.GetContacts())
             {
                 electrodes.Add(new NeuropixelsV1Electrode(c.Index));
             }

@@ -29,7 +29,7 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <param name="probeConfiguration">A <see cref="NeuropixelsV1ProbeConfiguration"/> object holding the current configuration settings.</param>
         public NeuropixelsV1ChannelConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration)
-            : base(probeConfiguration.ChannelConfiguration)
+            : base(probeConfiguration.ProbeGroup)
         {
             zedGraphChannels.ZoomButtons = MouseButtons.None;
             zedGraphChannels.ZoomButtons2 = MouseButtons.None;
@@ -57,7 +57,7 @@ namespace OpenEphys.Onix1.Design
         internal override void LoadDefaultChannelLayout()
         {
             ProbeConfiguration = new(ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain, ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter);
-            ProbeGroup = ProbeConfiguration.ChannelConfiguration;
+            ProbeGroup = ProbeConfiguration.ProbeGroup;
 
             OnFileOpenHandler();
         }
@@ -67,7 +67,7 @@ namespace OpenEphys.Onix1.Design
             if (base.OpenFile<NeuropixelsV1eProbeGroup>())
             {
                 ProbeConfiguration = new((NeuropixelsV1eProbeGroup)ProbeGroup, ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain, ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter);
-                ProbeGroup = ProbeConfiguration.ChannelConfiguration;
+                ProbeGroup = ProbeConfiguration.ProbeGroup;
 
                 OnFileOpenHandler();
 
@@ -114,7 +114,7 @@ namespace OpenEphys.Onix1.Design
             const int MinorTickIncrement = 10;
             const int MinorTickLength = 5;
 
-            if (ProbeConfiguration.ChannelConfiguration.Probes.ElementAt(0).SiUnits != ProbeSiUnits.um)
+            if (ProbeConfiguration.ProbeGroup.Probes.ElementAt(0).SiUnits != ProbeSiUnits.um)
             {
                 MessageBox.Show("Warning: Expected ProbeGroup units to be in microns, but it is in millimeters. Scale might not be accurate.");
             }
@@ -216,7 +216,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override void UpdateContactLabels()
         {
-            if (ProbeConfiguration.ChannelConfiguration == null)
+            if (ProbeConfiguration.ProbeGroup == null)
                 return;
 
             var textObjs = zedGraphChannels.GraphPane.GraphObjList.OfType<TextObj>()
