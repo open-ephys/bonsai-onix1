@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 using oni;
 
@@ -67,6 +68,15 @@ namespace OpenEphys.Onix1
         static void ThrowInvalidDeviceException(Type expectedType, uint address)
         {
             throw new InvalidOperationException($"Invalid device ID. The device found at address {address} is not a '{expectedType.Name}' device.");
+        }
+
+        internal static bool CheckDeviceType(Type deviceType, Type targetType)
+        {
+            if (deviceType == targetType) return true;
+
+            var equivalentTypes = deviceType.GetCustomAttributes(typeof(EquivalentDataSource), false).Cast<EquivalentDataSource>();
+
+            return equivalentTypes.Any(t => t.BaseType == targetType);
         }
     }
 }
