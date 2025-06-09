@@ -23,6 +23,7 @@ namespace OpenEphys.Onix1.Design
         readonly int NumberOfChannels;
         readonly bool UseProbeGroup;
 
+        internal const double ZeroPeakToPeak = 1e-12;
         internal double PeakToPeak = 1;
         internal readonly double ChannelScale = 1.1;
 
@@ -242,7 +243,7 @@ namespace OpenEphys.Onix1.Design
             var zeroOffsetY = zedGraphWaveform.GraphPane.YAxis.Scale.Min + CalculateScaleRange(zedGraphWaveform.GraphPane.YAxis.Scale) * 0.025;
 
             var x = CalculateScaleRange(zedGraphWaveform.GraphPane.XAxis.Scale) * 0.05;
-            var y = 1 / 2.2; // NB: Equal to 1/2 of the max peak-to-peak amplitude
+            var y = 1 / (ChannelScale * 2); // NB: Equal to 1/2 of the max peak-to-peak amplitude
 
             PointPairList points = new()
             {
@@ -262,7 +263,7 @@ namespace OpenEphys.Onix1.Design
             timeScale.ZOrder = ZOrder.A_InFront;
             zedGraphWaveform.GraphPane.GraphObjList.Add(timeScale);
 
-            TextObj amplitudeScale = new((PeakToPeak / 2.2).ToString() + " µA", zeroOffsetX, zeroOffsetY + y * 1.02, CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom);
+            TextObj amplitudeScale = new(((PeakToPeak == ZeroPeakToPeak ? 0 : PeakToPeak) / (ChannelScale * 2)).ToString("0.##") + " " + yAxisScale, zeroOffsetX, zeroOffsetY + y * 1.02, CoordType.AxisXYScale, AlignH.Left, AlignV.Bottom);
             amplitudeScale.FontSpec.Border.IsVisible = false;
             amplitudeScale.FontSpec.Fill.IsVisible = false;
             amplitudeScale.ZOrder = ZOrder.A_InFront;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Drawing.Design;
 
 namespace OpenEphys.Onix1
 {
@@ -11,6 +12,7 @@ namespace OpenEphys.Onix1
     /// cref="Rhd2164Data"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Configures a Rhd2164 device.")]
+    [DefaultProperty(nameof(Enable))]
     public class ConfigureRhd2164 : SingleDeviceFactory
     {
         /// <summary>
@@ -22,6 +24,21 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
+        /// Initializes a copy instance of the <see cref="ConfigureRhd2164"/> class with the given values.
+        /// </summary>
+        /// <param name="configureRhd2164">Existing configuration settings.</param>
+        public ConfigureRhd2164(ConfigureRhd2164 configureRhd2164)
+            : this()
+        {
+            Enable = configureRhd2164.Enable;
+            DspCutoff = configureRhd2164.DspCutoff;
+            AnalogHighCutoff = configureRhd2164.AnalogHighCutoff;
+            AnalogLowCutoff = configureRhd2164.AnalogLowCutoff;
+            DeviceAddress = configureRhd2164.DeviceAddress;
+            DeviceName = configureRhd2164.DeviceName;
+        }
+
+        /// <summary>
         /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>
@@ -30,6 +47,7 @@ namespace OpenEphys.Onix1
         /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Specifies whether the Rhd2164 device is enabled.")]
+        [Editor("OpenEphys.Onix1.Design.Rhd2164Editor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         public bool Enable { get; set; } = true;
 
         /// <summary>
