@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Drawing.Design;
 
 namespace OpenEphys.Onix1
 {
@@ -11,7 +12,7 @@ namespace OpenEphys.Onix1
     /// using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Configures a Bosch Bno055 9-axis inertial measurement unit.")]
-    [Editor("OpenEphys.Onix1.Design.Bno055Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
+    [DefaultProperty(nameof(Enable))]
     public class ConfigureBno055 : SingleDeviceFactory
     {
         /// <summary>
@@ -43,6 +44,7 @@ namespace OpenEphys.Onix1
         /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Specifies whether the Bno055 device is enabled.")]
+        [Editor("OpenEphys.Onix1.Design.Bno055Editor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         public bool Enable { get; set; } = true;
 
         /// <summary>

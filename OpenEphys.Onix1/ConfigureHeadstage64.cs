@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing.Design;
 using System.Threading;
 
 namespace OpenEphys.Onix1
@@ -22,6 +23,7 @@ namespace OpenEphys.Onix1
     /// <item><description>Two optical stimulators (800 mA peak current per channel).</description></item>
     /// </list>
     /// </remarks>
+    [Editor("OpenEphys.Onix1.Design.Headstage64Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures an ONIX multifunction 64-channel headstage.")]
     public class ConfigureHeadstage64 : MultiDeviceFactory
     {
@@ -48,6 +50,7 @@ namespace OpenEphys.Onix1
         [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the Rhd2164 device in the headstage-64.")]
+        [Editor("OpenEphys.Onix1.Design.Rhd2164Editor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         public ConfigureRhd2164 Rhd2164 { get; set; } = new();
 
         /// <summary>
@@ -56,6 +59,7 @@ namespace OpenEphys.Onix1
         [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the Bno055 device in the headstage-64.")]
+        [Editor("OpenEphys.Onix1.Design.Bno055Editor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         public ConfigureBno055 Bno055 { get; set; } = new();
 
         /// <summary>
@@ -64,6 +68,7 @@ namespace OpenEphys.Onix1
         [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the TS4231 device in the headstage-64.")]
+        [Editor("OpenEphys.Onix1.Design.TS4231V1Editor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         public ConfigureTS4231V1 TS4231 { get; set; } = new();
 
         /// <summary>
@@ -73,6 +78,7 @@ namespace OpenEphys.Onix1
         [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the ElectricalStimulator device in the headstage-64.")]
+        [Editor("OpenEphys.Onix1.Design.Headstage64ElectricalStimulatorSequenceEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         public ConfigureHeadstage64ElectricalStimulator ElectricalStimulator { get; set; } = new();
 
         /// <summary>
@@ -82,6 +88,7 @@ namespace OpenEphys.Onix1
         [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the OpticalStimulator device in the headstage-64.")]
+        [Editor("OpenEphys.Onix1.Design.Headstage64OpticalStimulatorSequenceEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         public ConfigureHeadstage64OpticalStimulator OpticalStimulator { get; set; } = new();
 
         /// <summary>
@@ -148,7 +155,6 @@ namespace OpenEphys.Onix1
 
         class ConfigureHeadstage64PortController : ConfigurePortController
         {
-
             protected override bool ConfigurePortVoltageOverride(DeviceContext device, double voltage)
             {
                 // NB: Wait for 1 second to discharge the headstage in the case that they have e.g. just
@@ -200,6 +206,4 @@ namespace OpenEphys.Onix1
             }
         }
     }
-
-
 }

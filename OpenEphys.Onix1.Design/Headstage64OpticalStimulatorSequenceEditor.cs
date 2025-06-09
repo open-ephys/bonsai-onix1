@@ -8,9 +8,9 @@ using Bonsai.Design;
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Class that opens a new dialog for a <see cref="ConfigureBno055"/>.
+    /// Class that opens a new dialog for a <see cref="ConfigureHeadstage64OpticalStimulator"/>.
     /// </summary>
-    public class Bno055Editor : UITypeEditor
+    public class Headstage64OpticalStimulatorSequenceEditor : UITypeEditor
     {
         /// <inheritdoc/>
         public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
@@ -26,24 +26,22 @@ namespace OpenEphys.Onix1.Design
                 var editorService = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
 
-                ConfigureBno055 configureBno055;
+                ConfigureHeadstage64OpticalStimulator configureHeadstage64OpticalStimulator;
 
-                if (context.Instance.GetType() == typeof(ConfigureBno055))
-                    configureBno055 = (ConfigureBno055)context.Instance;
-                else if (value.GetType() == typeof(ConfigureBno055))
-                    configureBno055 = (ConfigureBno055)value;
+                if (context.Instance.GetType() == typeof(ConfigureHeadstage64OpticalStimulator))
+                    configureHeadstage64OpticalStimulator = (ConfigureHeadstage64OpticalStimulator)context.Instance;
+                else if (value.GetType() == typeof(ConfigureHeadstage64OpticalStimulator))
+                    configureHeadstage64OpticalStimulator = (ConfigureHeadstage64OpticalStimulator)value;
                 else
-                    throw new Exception("Invalid input given to Bno055Editor.");
+                    throw new Exception($"Invalid input given to {nameof(Headstage64OpticalStimulatorSequenceEditor)}.");
 
                 if (editorService != null && editorState != null && !editorState.WorkflowRunning)
                 {
-                    using var editorDialog = new Bno055Dialog(configureBno055);
+                    using var editorDialog = new Headstage64OpticalStimulatorSequenceDialog(configureHeadstage64OpticalStimulator);
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
-                        configureBno055.Enable = editorDialog.ConfigureNode.Enable;
-                        configureBno055.DeviceAddress = editorDialog.ConfigureNode.DeviceAddress;
-                        configureBno055.DeviceName = editorDialog.ConfigureNode.DeviceName;
+                        return editorDialog.OpticalStimulator;
                     }
                 }
             }
@@ -52,3 +50,4 @@ namespace OpenEphys.Onix1.Design
         }
     }
 }
+
