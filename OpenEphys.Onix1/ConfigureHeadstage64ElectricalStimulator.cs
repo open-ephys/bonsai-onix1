@@ -1,5 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Linq;
+using System.Reactive.Disposables;
+using System.Reactive.Subjects;
 
 namespace OpenEphys.Onix1
 {
@@ -14,12 +17,36 @@ namespace OpenEphys.Onix1
     [Description("Configures a headstage-64 onboard electrical stimulator.")]
     public class ConfigureHeadstage64ElectricalStimulator : SingleDeviceFactory
     {
+        readonly BehaviorSubject<Headstage64ElectricalStimulatorSequence> stimulusSequence = new(new Headstage64ElectricalStimulatorSequence());
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureHeadstage64ElectricalStimulator"/> class.
         /// </summary>
         public ConfigureHeadstage64ElectricalStimulator()
             : base(typeof(Headstage64ElectricalStimulator))
         {
+        }
+
+        /// <summary>
+        /// Gets or sets the device enable state.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, then the electrical stimulator circuit will respect triggers. If set to false, triggers will be ignored.
+        /// </remarks>
+        [Description("Specifies whether the electrical stimulator will respect triggers.")]
+        [Category(ConfigurationCategory)]
+        public bool Enable { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets the stimulus sequence.
+        /// </summary>
+        [Description("Stimulus sequence to be applied by the electrical stimulator.")]
+        [Category(ConfigurationCategory)]
+        [TypeConverter(typeof(GenericPropertyConverter))]
+        public Headstage64ElectricalStimulatorSequence StimulusSequence
+        {
+            get => stimulusSequence.Value;
+            set => stimulusSequence.OnNext(value);
         }
 
         /// <summary>
@@ -35,13 +62,38 @@ namespace OpenEphys.Onix1
         /// configure a headstage-64 onboard electrical stimulator.</returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
+            var enable = Enable;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
-            return source.ConfigureDevice(context =>
+            return source.ConfigureDevice((context, observer) =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
-                device.WriteRegister(Headstage64ElectricalStimulator.ENABLE, 0);
-                return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
+                device.WriteRegister(Headstage64ElectricalStimulator.ENABLE, enable ? 0u : 1u);
+
+                static uint uAToCode(double currentuA)
+                {
+                    var k = 1 / (2 * Headstage64ElectricalStimulator.AbsMaxMicroAmps / (Math.Pow(2, Headstage64ElectricalStimulator.DacBitDepth) - 1));
+                    return (uint)(k * (currentuA + Headstage64ElectricalStimulator.AbsMaxMicroAmps));
+                }
+
+                static void WriteStimulusSequence(DeviceContext device, Headstage64ElectricalStimulatorSequence sequence)
+                {
+                    device.WriteRegister(Headstage64ElectricalStimulator.CURRENT1, uAToCode(sequence.PhaseOneCurrent));
+                    device.WriteRegister(Headstage64ElectricalStimulator.RESTCURR, uAToCode(sequence.InterPhaseCurrent));
+                    device.WriteRegister(Headstage64ElectricalStimulator.CURRENT2, uAToCode(sequence.PhaseTwoCurrent));
+                    device.WriteRegister(Headstage64ElectricalStimulator.TRAINDELAY, sequence.TriggerDelay);
+                    device.WriteRegister(Headstage64ElectricalStimulator.PULSEDUR1, sequence.PhaseOneDuration);
+                    device.WriteRegister(Headstage64ElectricalStimulator.INTERPHASEINTERVAL, sequence.InterPhaseInterval);
+                    device.WriteRegister(Headstage64ElectricalStimulator.PULSEDUR2, sequence.PhaseTwoDuration);
+                    device.WriteRegister(Headstage64ElectricalStimulator.INTERPULSEINTERVAL, sequence.InterPulseInterval);
+                    device.WriteRegister(Headstage64ElectricalStimulator.INTERBURSTINTERVAL, sequence.InterBurstInterval);
+                    device.WriteRegister(Headstage64ElectricalStimulator.BURSTCOUNT, sequence.BurstPulseCount);
+                    device.WriteRegister(Headstage64ElectricalStimulator.TRAINCOUNT, sequence.TrainBurstCount);
+                };
+
+                return new CompositeDisposable(
+                    stimulusSequence.SubscribeSafe(observer, value => { WriteStimulusSequence(device, value); }),
+                    DeviceManager.RegisterDevice(deviceName, device, DeviceType));
             });
         }
     }
