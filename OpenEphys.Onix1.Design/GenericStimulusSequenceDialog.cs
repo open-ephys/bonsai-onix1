@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using ZedGraph;
-using System.IO;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -21,9 +20,19 @@ namespace OpenEphys.Onix1.Design
     public partial class GenericStimulusSequenceDialog : Form
     {
         private readonly int NumberOfChannels;
+        private readonly bool UseProbeGroup;
 
         internal double PeakToPeak = 1;
         internal readonly double ChannelScale = 1.1;
+
+        [Obsolete("Designer only", true)]
+        private GenericStimulusSequenceDialog()
+        {
+            InitializeComponent();
+
+            NumberOfChannels = 0;
+            UseProbeGroup = true;
+        }
 
         /// <summary>
         /// Opens a dialog allowing for easy changing of stimulus sequence parameters, with visual feedback on what the resulting stimulus sequence looks like.
@@ -34,6 +43,15 @@ namespace OpenEphys.Onix1.Design
             Shown += FormShown;
 
             NumberOfChannels = numberOfChannels;
+            UseProbeGroup = useProbeGroup;
+
+            if (!UseProbeGroup)
+            {
+                tableLayoutPanel1.Controls.Remove(panelProbe);
+                GroupBox gb = tableLayoutPanel1.Controls[nameof(groupBoxDefineStimuli)] as GroupBox;
+                tableLayoutPanel1.SetRow(gb, 0);
+                tableLayoutPanel1.SetRowSpan(gb, 2);
+            }
 
             InitializeZedGraphWaveform();
 
