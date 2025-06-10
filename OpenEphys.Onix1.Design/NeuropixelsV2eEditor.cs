@@ -16,18 +16,13 @@ namespace OpenEphys.Onix1.Design
             if (provider != null)
             {
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
-                if (editorState != null && !editorState.WorkflowRunning && component is IConfigureNeuropixelsV2 configureNeuropixelsV2e)
+                if (editorState != null && !editorState.WorkflowRunning && component is IConfigureNeuropixelsV2 configureNode)
                 {
-                    using var editorDialog = new NeuropixelsV2eDialog(configureNeuropixelsV2e);
+                    using var editorDialog = new NeuropixelsV2eDialog(configureNode);
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
-                        configureNeuropixelsV2e.Enable = editorDialog.ConfigureNode.Enable;
-                        configureNeuropixelsV2e.GainCalibrationFileA = editorDialog.ConfigureNode.GainCalibrationFileA;
-                        configureNeuropixelsV2e.GainCalibrationFileB = editorDialog.ConfigureNode.GainCalibrationFileB;
-                        configureNeuropixelsV2e.ProbeConfigurationA = editorDialog.ConfigureNode.ProbeConfigurationA;
-                        configureNeuropixelsV2e.ProbeConfigurationB = editorDialog.ConfigureNode.ProbeConfigurationB;
-                        configureNeuropixelsV2e.InvertPolarity = editorDialog.ConfigureNode.InvertPolarity;
+                        DesignHelper.CopyProperties(editorDialog.ConfigureNode, configureNode);
 
                         return true;
                     }

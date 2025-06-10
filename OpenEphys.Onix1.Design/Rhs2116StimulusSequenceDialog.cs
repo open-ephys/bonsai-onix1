@@ -59,15 +59,9 @@ namespace OpenEphys.Onix1.Design
 
             StepSize = Sequence.CurrentStepSize;
 
-            ChannelDialog = new(probeGroup)
-            {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this,
-            };
+            ChannelDialog = new(probeGroup);
 
-            panelProbe.Controls.Add(ChannelDialog);
+            ChannelDialog.SetChildFormProperties(this).AddDialogToPanel(panelProbe);
             this.AddMenuItemsFromDialogToFileOption(ChannelDialog, "Channel Configuration");
 
             ChannelDialog.OnSelect += OnSelect;
@@ -75,14 +69,8 @@ namespace OpenEphys.Onix1.Design
 
             ChannelDialog.Show();
 
-            StimulusSequenceOptions = new()
-            {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this,
-            };
-            groupBoxDefineStimuli.Controls.Add(StimulusSequenceOptions);
+            StimulusSequenceOptions = new();
+            groupBoxDefineStimuli.Controls.Add(StimulusSequenceOptions.SetChildFormProperties(this));
 
             StimulusSequenceOptions.buttonAddPulses.Click += ButtonAddPulses_Click;
             StimulusSequenceOptions.buttonReadPulses.Click += ButtonReadPulses_Click;

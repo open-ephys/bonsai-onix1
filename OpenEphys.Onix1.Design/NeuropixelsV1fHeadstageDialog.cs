@@ -38,44 +38,28 @@ namespace OpenEphys.Onix1.Design
 
             DialogNeuropixelsV1A = new(configureNeuropixelsV1A)
             {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this,
                 Tag = configureNeuropixelsV1A.ProbeName
             };
 
-            panelNeuropixelsV1A.Controls.Add(DialogNeuropixelsV1A);
+            DialogNeuropixelsV1A.SetChildFormProperties(this).AddDialogToPanel(panelNeuropixelsV1A);
+
             this.AddMenuItemsFromDialogToFileOption(DialogNeuropixelsV1A, "NeuropixelsV1A");
-            DialogNeuropixelsV1A.Show();
 
             DialogNeuropixelsV1B = new(configureNeuropixelsV1B)
             {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this,
                 Tag = configureNeuropixelsV1B.ProbeName
             };
 
-            panelNeuropixelsV1B.Controls.Add(DialogNeuropixelsV1B);
+            DialogNeuropixelsV1B.SetChildFormProperties(this).AddDialogToPanel(panelNeuropixelsV1B);
+
             this.AddMenuItemsFromDialogToFileOption(DialogNeuropixelsV1B, "NeuropixelsV1B");
-            DialogNeuropixelsV1B.Show();
 
-            DialogBno055 = new(configureBno055)
-            {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this
-            };
+            DialogBno055 = new(configureBno055);
 
-            panelBno055.Controls.Add(DialogBno055);
-            DialogBno055.Show();
-            DialogBno055.Invalidate();
+            DialogBno055.SetChildFormProperties(this).AddDialogToPanel(panelBno055);
         }
 
-        private void Okay_Click(object sender, System.EventArgs e)
+        void Okay_Click(object sender, System.EventArgs e)
         {
             DialogNeuropixelsV1A.SaveVariables();
             DialogNeuropixelsV1B.SaveVariables();

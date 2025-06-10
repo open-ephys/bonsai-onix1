@@ -26,24 +26,22 @@ namespace OpenEphys.Onix1.Design
                 var editorService = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
 
-                ConfigureTS4231V1 configureTS4231V1;
+                ConfigureTS4231V1 configureNode;
 
                 if (context.Instance.GetType() == typeof(ConfigureTS4231V1))
-                    configureTS4231V1 = (ConfigureTS4231V1)context.Instance;
+                    configureNode = (ConfigureTS4231V1)context.Instance;
                 else if (value.GetType() == typeof(ConfigureTS4231V1))
-                    configureTS4231V1 = (ConfigureTS4231V1)value;
+                    configureNode = (ConfigureTS4231V1)value;
                 else
                     throw new Exception("Invalid input given to TS4231V1Editor.");
 
                 if (editorService != null && editorState != null && !editorState.WorkflowRunning)
                 {
-                    using var editorDialog = new TS4231V1Dialog(configureTS4231V1);
+                    using var editorDialog = new TS4231V1Dialog(configureNode);
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
-                        configureTS4231V1.Enable = editorDialog.ConfigureNode.Enable;
-                        configureTS4231V1.DeviceAddress = editorDialog.ConfigureNode.DeviceAddress;
-                        configureTS4231V1.DeviceName = editorDialog.ConfigureNode.DeviceName;
+                        DesignHelper.CopyProperties(editorDialog.ConfigureNode, configureNode);
                     }
                 }
             }

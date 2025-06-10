@@ -17,19 +17,15 @@ namespace OpenEphys.Onix1.Design
             {
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
 
-                if (editorState != null && !editorState.WorkflowRunning && component is ConfigureHeadstageNeuropixelsV1e configureHeadstage)
+                if (editorState != null && !editorState.WorkflowRunning && component is ConfigureHeadstageNeuropixelsV1e configureNode)
                 {
-                    using var editorDialog = new NeuropixelsV1eHeadstageDialog(configureHeadstage.NeuropixelsV1e, configureHeadstage.Bno055);
+                    using var editorDialog = new NeuropixelsV1eHeadstageDialog(configureNode.NeuropixelsV1e, configureNode.Bno055);
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
-                        configureHeadstage.Bno055.Enable = editorDialog.DialogBno055.ConfigureNode.Enable;
+                        configureNode.Bno055.Enable = editorDialog.DialogBno055.ConfigureNode.Enable;
 
-                        configureHeadstage.NeuropixelsV1e.AdcCalibrationFile = editorDialog.DialogNeuropixelsV1e.ConfigureNode.AdcCalibrationFile;
-                        configureHeadstage.NeuropixelsV1e.GainCalibrationFile = editorDialog.DialogNeuropixelsV1e.ConfigureNode.GainCalibrationFile;
-                        configureHeadstage.NeuropixelsV1e.Enable = editorDialog.DialogNeuropixelsV1e.ConfigureNode.Enable;
-                        configureHeadstage.NeuropixelsV1e.ProbeConfiguration = editorDialog.DialogNeuropixelsV1e.ConfigureNode.ProbeConfiguration;
-                        configureHeadstage.NeuropixelsV1e.InvertPolarity = editorDialog.DialogNeuropixelsV1e.ConfigureNode.InvertPolarity;
+                        DesignHelper.CopyProperties(editorDialog.DialogNeuropixelsV1e.ConfigureNode, configureNode.NeuropixelsV1e);
 
                         return true;
                     }

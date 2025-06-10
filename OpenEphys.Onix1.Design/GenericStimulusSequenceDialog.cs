@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using ZedGraph;
-using System.IO;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -45,6 +44,15 @@ namespace OpenEphys.Onix1.Design
             Shown += FormShown;
 
             NumberOfChannels = numberOfChannels;
+            UseProbeGroup = useProbeGroup;
+
+            if (!UseProbeGroup)
+            {
+                tableLayoutPanel1.Controls.Remove(panelProbe);
+                GroupBox gb = tableLayoutPanel1.Controls[nameof(groupBoxDefineStimuli)] as GroupBox;
+                tableLayoutPanel1.SetRow(gb, 0);
+                tableLayoutPanel1.SetRowSpan(gb, 2);
+            }
 
             InitializeZedGraphWaveform();
 
