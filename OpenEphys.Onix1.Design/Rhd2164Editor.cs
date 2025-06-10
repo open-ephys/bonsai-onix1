@@ -26,27 +26,22 @@ namespace OpenEphys.Onix1.Design
                 var editorService = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
 
-                ConfigureRhd2164 configureRhd2164;
+                ConfigureRhd2164 configureNode;
 
                 if (context.Instance.GetType() == typeof(ConfigureRhd2164))
-                    configureRhd2164 = (ConfigureRhd2164)context.Instance;
+                    configureNode = (ConfigureRhd2164)context.Instance;
                 else if (value.GetType() == typeof(ConfigureRhd2164))
-                    configureRhd2164 = (ConfigureRhd2164)value;
+                    configureNode = (ConfigureRhd2164)value;
                 else
                     throw new Exception("Invalid input given to Rhd2164Editor.");
 
                 if (editorService != null && editorState != null && !editorState.WorkflowRunning)
                 {
-                    using var editorDialog = new Rhd2164Dialog(configureRhd2164);
+                    using var editorDialog = new Rhd2164Dialog(configureNode);
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
-                        configureRhd2164.Enable = editorDialog.ConfigureNode.Enable;
-                        configureRhd2164.DspCutoff = editorDialog.ConfigureNode.DspCutoff;
-                        configureRhd2164.AnalogHighCutoff = editorDialog.ConfigureNode.AnalogHighCutoff;
-                        configureRhd2164.AnalogLowCutoff = editorDialog.ConfigureNode.AnalogLowCutoff;
-                        configureRhd2164.DeviceAddress = editorDialog.ConfigureNode.DeviceAddress;
-                        configureRhd2164.DeviceName = editorDialog.ConfigureNode.DeviceName;
+                        DesignHelper.CopyProperties(editorDialog.ConfigureNode, configureNode);
                     }
                 }
             }

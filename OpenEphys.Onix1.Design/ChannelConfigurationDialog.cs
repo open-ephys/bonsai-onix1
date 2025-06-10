@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1.Design
     /// Within, there are a number of useful methods for initializing, resizing, and drawing channels.
     /// Each device must implement their own ChannelConfigurationDialog.
     /// </summary>
-    public abstract partial class ChannelConfigurationDialog : Form
+    public partial class ChannelConfigurationDialog : Form
     {
         internal event EventHandler OnResizeZedGraph;
 
@@ -23,6 +23,12 @@ namespace OpenEphys.Onix1.Design
         internal readonly List<int> ReferenceContacts = new();
 
         internal readonly bool[] SelectedContacts = null;
+
+        [Obsolete("Designer only.", true)]
+        ChannelConfigurationDialog()
+        {
+            InitializeComponent();
+        }
 
         /// <summary>
         /// Constructs the dialog window using the given probe group, and plots all contacts after loading.
@@ -68,7 +74,10 @@ namespace OpenEphys.Onix1.Design
         /// </code>
         /// </example>
         /// <returns>Returns an object that inherits from <see cref="ProbeInterface.NET.ProbeGroup"/></returns>
-        internal abstract ProbeGroup DefaultChannelLayout();
+        internal virtual ProbeGroup DefaultChannelLayout()
+        {
+            throw new NotImplementedException();
+        }
 
         internal virtual void LoadDefaultChannelLayout()
         {
@@ -104,7 +113,7 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        private void SetEqualAxisLimits(ZedGraphControl zedGraphControl)
+        void SetEqualAxisLimits(ZedGraphControl zedGraphControl)
         {
             var rangeX = CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale);
             var rangeY = CalculateScaleRange(zedGraphControl.GraphPane.YAxis.Scale);
@@ -127,7 +136,7 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        private void CenterAxesOnCursor(ZedGraphControl zedGraphControl)
+        void CenterAxesOnCursor(ZedGraphControl zedGraphControl)
         {
             if ((zedGraphControl.GraphPane.XAxis.Scale.Min == ZoomOutBoundaryLeft &&
                 zedGraphControl.GraphPane.XAxis.Scale.Max == ZoomOutBoundaryRight &&
@@ -160,7 +169,7 @@ namespace OpenEphys.Onix1.Design
             zedGraphControl.GraphPane.YAxis.Scale.Max += diffY;
         }
 
-        private struct ProbeEdge
+        struct ProbeEdge
         {
             public double Left;
             public double Bottom;
@@ -176,7 +185,7 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        private struct ScaleEdge
+        struct ScaleEdge
         {
             public double Left;
             public double Bottom;
@@ -192,7 +201,7 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        private void CheckProbeIsInView(ZedGraphControl zedGraphControl)
+        void CheckProbeIsInView(ZedGraphControl zedGraphControl)
         {
             var probeEdge = new ProbeEdge(zedGraphControl);
             var scaleEdge = new ScaleEdge(zedGraphControl);
@@ -251,7 +260,7 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        private void MoveProbeLeft(ZedGraphControl zedGraphControl, ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
+        void MoveProbeLeft(ZedGraphControl zedGraphControl, ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
         {
             bool probeSmallerThanScale = probeEdge.Right - probeEdge.Left < scaleEdge.Right - scaleEdge.Left;
 
@@ -261,12 +270,12 @@ namespace OpenEphys.Onix1.Design
             zedGraphControl.GraphPane.XAxis.Scale.Max += diff;
         }
 
-        private bool IsProbeTooRight(ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
+        bool IsProbeTooRight(ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
         {
             return probeEdge.Left > scaleEdge.Left + boundary;
         }
 
-        private void MoveProbeRight(ZedGraphControl zedGraphControl, ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
+        void MoveProbeRight(ZedGraphControl zedGraphControl, ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
         {
             bool probeSmallerThanScale = probeEdge.Right - probeEdge.Left < scaleEdge.Right - scaleEdge.Left;
 
@@ -276,12 +285,12 @@ namespace OpenEphys.Onix1.Design
             zedGraphControl.GraphPane.XAxis.Scale.Max += diff;
         }
 
-        private bool IsProbeTooLeft(ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
+        bool IsProbeTooLeft(ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
         {
             return probeEdge.Right < scaleEdge.Right - boundary;
         }
 
-        private void MoveProbeUp(ZedGraphControl zedGraphControl, ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
+        void MoveProbeUp(ZedGraphControl zedGraphControl, ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
         {
             var diff = probeEdge.Top - (scaleEdge.Top - boundary);
 
@@ -289,12 +298,12 @@ namespace OpenEphys.Onix1.Design
             zedGraphControl.GraphPane.YAxis.Scale.Max += diff;
         }
 
-        private bool IsProbeTooLow(ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
+        bool IsProbeTooLow(ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
         {
             return probeEdge.Top < scaleEdge.Top - boundary;
         }
 
-        private void MoveProbeDown(ZedGraphControl zedGraphControl, ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
+        void MoveProbeDown(ZedGraphControl zedGraphControl, ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
         {
             var diff = probeEdge.Bottom - (scaleEdge.Bottom + boundary);
 
@@ -302,24 +311,24 @@ namespace OpenEphys.Onix1.Design
             zedGraphControl.GraphPane.YAxis.Scale.Max += diff;
         }
 
-        private bool IsProbeTooHigh(ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
+        bool IsProbeTooHigh(ProbeEdge probeEdge, ScaleEdge scaleEdge, double boundary)
         {
             return probeEdge.Bottom > scaleEdge.Bottom + boundary;
         }
 
-        private bool IsProbeCenteredY(ProbeEdge probeEdge, ScaleEdge scaleEdge)
+        bool IsProbeCenteredY(ProbeEdge probeEdge, ScaleEdge scaleEdge)
         {
             return probeEdge.Bottom >= scaleEdge.Bottom && probeEdge.Top <= scaleEdge.Top ||
                    probeEdge.Bottom <= scaleEdge.Bottom && probeEdge.Top >= scaleEdge.Top;
         }
 
-        private bool IsProbeCenteredX(ProbeEdge probeEdge, ScaleEdge scaleEdge)
+        bool IsProbeCenteredX(ProbeEdge probeEdge, ScaleEdge scaleEdge)
         {
             return probeEdge.Left >= scaleEdge.Left && probeEdge.Right <= scaleEdge.Right ||
                    probeEdge.Left <= scaleEdge.Left && probeEdge.Right >= scaleEdge.Right;
         }
 
-        private bool IsProbeCentered(ProbeEdge probeEdge, ScaleEdge scaleEdge)
+        bool IsProbeCentered(ProbeEdge probeEdge, ScaleEdge scaleEdge)
         {
             return (probeEdge.Left >= scaleEdge.Left && probeEdge.Right <= scaleEdge.Right &&
                     probeEdge.Bottom >= scaleEdge.Bottom && probeEdge.Top <= scaleEdge.Top) ||
@@ -361,7 +370,7 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <param name="zedGraphControl">A <see cref="ZedGraphControl"/> object.</param>
         /// <returns>True if the zoom boundary has been correctly handled, False if the previous zoom state should be reinstated.</returns>
-        private bool CheckZoomBoundaries(ZedGraphControl zedGraphControl)
+        bool CheckZoomBoundaries(ZedGraphControl zedGraphControl)
         {
             var rangeX = CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale);
             var rangeY = CalculateScaleRange(zedGraphControl.GraphPane.YAxis.Scale);
@@ -402,7 +411,7 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        private void FormShown(object sender, EventArgs e)
+        void FormShown(object sender, EventArgs e)
         {
             if (!TopLevel)
             {
@@ -484,10 +493,10 @@ namespace OpenEphys.Onix1.Design
             DrawScale();
         }
 
-        private double ZoomOutBoundaryLeft = default;
-        private double ZoomOutBoundaryRight = default;
-        private double ZoomOutBoundaryBottom = default;
-        private double ZoomOutBoundaryTop = default;
+        double ZoomOutBoundaryLeft = default;
+        double ZoomOutBoundaryRight = default;
+        double ZoomOutBoundaryBottom = default;
+        double ZoomOutBoundaryTop = default;
 
         internal void DrawProbeContour()
         {
@@ -508,7 +517,7 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        private void SetZoomOutBoundaries()
+        void SetZoomOutBoundaries()
         {
             var rangeX = CalculateScaleRange(zedGraphChannels.GraphPane.XAxis.Scale);
             var rangeY = CalculateScaleRange(zedGraphChannels.GraphPane.YAxis.Scale);
@@ -556,7 +565,7 @@ namespace OpenEphys.Onix1.Design
             zedGraphChannels.GraphPane.YAxis.Scale.Max = maxY;
         }
 
-        private float contactSize = 0.0f; // NB: Store the size of a contact (radius or width, depending on the shape). Assumes that all contacts are uniform.
+        float contactSize = 0.0f; // NB: Store the size of a contact (radius or width, depending on the shape). Assumes that all contacts are uniform.
 
         internal void DrawContacts()
         {
@@ -979,7 +988,7 @@ namespace OpenEphys.Onix1.Design
             zedGraphChannels.GraphPane.YAxis.Scale.MinAuto = true;
         }
 
-        private void MenuItemSaveFile(object sender, EventArgs e)
+        void MenuItemSaveFile(object sender, EventArgs e)
         {
             using SaveFileDialog sfd = new();
             sfd.Filter = "Probe Interface Files (*.json)|*.json";
@@ -1005,7 +1014,7 @@ namespace OpenEphys.Onix1.Design
             zedGraphChannels.Resize -= ZedGraphChannels_Resize;
         }
 
-        private void ZedGraphChannels_Resize(object sender, EventArgs e)
+        void ZedGraphChannels_Resize(object sender, EventArgs e)
         {
             if (zedGraphChannels.Size.Width == zedGraphChannels.Size.Height &&
                 zedGraphChannels.Size.Height == zedGraphChannels.GraphPane.Rect.Height &&
@@ -1027,7 +1036,7 @@ namespace OpenEphys.Onix1.Design
             OnResizeHandler();
         }
 
-        private void OnResizeHandler()
+        void OnResizeHandler()
         {
             OnResizeZedGraph?.Invoke(this, EventArgs.Empty);
         }
@@ -1062,7 +1071,7 @@ namespace OpenEphys.Onix1.Design
             zedGraphChannels.GraphPane.Chart.Rect = axisRect;
         }
 
-        private void UpdateControlSizeBasedOnAxisSize()
+        void UpdateControlSizeBasedOnAxisSize()
         {
             RectangleF axisRect = zedGraphChannels.GraphPane.Rect;
 
@@ -1070,7 +1079,7 @@ namespace OpenEphys.Onix1.Design
             zedGraphChannels.Location = new Point((int)axisRect.X, (int)axisRect.Y);
         }
 
-        private void MenuItemOpenFile(object sender, EventArgs e)
+        void MenuItemOpenFile(object sender, EventArgs e)
         {
             if (OpenFile<ProbeGroup>())
             {
@@ -1079,7 +1088,7 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        private void MenuItemLoadDefaultConfig(object sender, EventArgs e)
+        void MenuItemLoadDefaultConfig(object sender, EventArgs e)
         {
             LoadDefaultChannelLayout();
             DrawProbeGroup();
@@ -1087,7 +1096,7 @@ namespace OpenEphys.Onix1.Design
             RefreshZedGraph();
         }
 
-        private void ButtonOK(object sender, EventArgs e)
+        void ButtonOK(object sender, EventArgs e)
         {
             if (TopLevel)
             {
@@ -1155,7 +1164,7 @@ namespace OpenEphys.Onix1.Design
 
         PointD clickStart = new(0.0, 0.0);
 
-        private bool MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
+        bool MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
             {
@@ -1167,7 +1176,7 @@ namespace OpenEphys.Onix1.Design
 
         const string SelectionAreaTag = "Selection";
 
-        private bool MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
+        bool MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
             {
@@ -1209,7 +1218,7 @@ namespace OpenEphys.Onix1.Design
             return false;
         }
 
-        private void FindNearestContactToMouseClick(PointF mouseClick)
+        void FindNearestContactToMouseClick(PointF mouseClick)
         {
             if (zedGraphChannels.GraphPane.FindNearestObject(mouseClick, CreateGraphics(), out object nearestObject, out int _))
             {
@@ -1228,7 +1237,7 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        private bool MouseUpEvent(ZedGraphControl sender, MouseEventArgs e)
+        bool MouseUpEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             sender.Cursor = Cursors.Arrow;
 
@@ -1282,7 +1291,7 @@ namespace OpenEphys.Onix1.Design
             return false;
         }
 
-        private void ToggleSelectedContact(ContactTag tag)
+        void ToggleSelectedContact(ContactTag tag)
         {
             if (tag == null)
                 return;
@@ -1290,21 +1299,21 @@ namespace OpenEphys.Onix1.Design
             SetSelectedContact(tag, !GetContactStatus(tag));
         }
 
-        private int GetContactIndex(ContactTag tag)
+        int GetContactIndex(ContactTag tag)
         {
             return tag.ProbeIndex == 0
                 ? tag.ContactIndex
                 : tag.ContactIndex + ProbeGroup.Probes.Take(tag.ProbeIndex).Aggregate(0, (total, next) => total + next.NumberOfContacts);
         }
 
-        private void SetSelectedContact(ContactTag contactTag, bool status)
+        void SetSelectedContact(ContactTag contactTag, bool status)
         {
             var index = GetContactIndex(contactTag);
 
             SetSelectedContact(index, status);
         }
 
-        private void SetSelectedContact(int index, bool status)
+        void SetSelectedContact(int index, bool status)
         {
             SelectedContacts[index] = status;
         }
@@ -1319,7 +1328,7 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        private bool GetContactStatus(ContactTag tag)
+        bool GetContactStatus(ContactTag tag)
         {
             if (tag == null)
             {
@@ -1331,7 +1340,7 @@ namespace OpenEphys.Onix1.Design
             return SelectedContacts[index];
         }
 
-        private static PointD TransformPixelsToCoordinates(Point pixels, GraphPane graphPane)
+        static PointD TransformPixelsToCoordinates(Point pixels, GraphPane graphPane)
         {
             graphPane.ReverseTransform(pixels, out double x, out double y);
 

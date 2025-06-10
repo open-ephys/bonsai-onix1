@@ -26,15 +26,9 @@ namespace OpenEphys.Onix1.Design
         {
             InitializeComponent();
 
-            DialogNeuropixelsV2e = new(configureNeuropixelsV2e)
-            {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this
-            };
+            DialogNeuropixelsV2e = new(configureNeuropixelsV2e);
 
-            panelNeuropixelsV2e.Controls.Add(DialogNeuropixelsV2e);
+            DialogNeuropixelsV2e.SetChildFormProperties(this).AddDialogToPanel(panelNeuropixelsV2e);
 
             if (configureNeuropixelsV2e is ConfigureNeuropixelsV2e)
             {
@@ -47,22 +41,12 @@ namespace OpenEphys.Onix1.Design
                 tabPageNeuropixelsV2e.Text = "NeuropixelsV2eBeta";
             }
 
-            DialogNeuropixelsV2e.Show();
+            DialogBno055 = new(configureBno055);
 
-            DialogBno055 = new(configureBno055)
-            {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this
-            };
-
-            panelBno055.Controls.Add(DialogBno055);
-            DialogBno055.Show();
-            DialogBno055.Invalidate();
+            DialogBno055.SetChildFormProperties(this).AddDialogToPanel(panelBno055);
         }
 
-        private void Okay_Click(object sender, System.EventArgs e)
+        void Okay_Click(object sender, System.EventArgs e)
         {
             DialogNeuropixelsV2e.SaveVariables();
 

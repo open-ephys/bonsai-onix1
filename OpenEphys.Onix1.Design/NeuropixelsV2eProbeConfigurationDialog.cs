@@ -15,7 +15,7 @@ namespace OpenEphys.Onix1.Design
 
         internal event EventHandler InvertPolarityChanged;
 
-        private enum ChannelPreset
+        enum ChannelPreset
         {
             Shank0BankA,
             Shank0BankB,
@@ -73,17 +73,11 @@ namespace OpenEphys.Onix1.Design
 
             textBoxProbeCalibrationFile.Text = calibrationFile;
 
-            ChannelConfiguration = new(ProbeConfiguration)
-            {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this
-            };
+            ChannelConfiguration = new(ProbeConfiguration);
 
             InvertPolarity = invertPolarity;
 
-            panelProbe.Controls.Add(ChannelConfiguration);
+            ChannelConfiguration.SetChildFormProperties(this).AddDialogToPanel(panelProbe);
             this.AddMenuItemsFromDialogToFileOption(ChannelConfiguration);
 
             ChannelConfiguration.OnZoom += UpdateTrackBarLocation;
@@ -106,7 +100,7 @@ namespace OpenEphys.Onix1.Design
             Text += ": " + ProbeConfiguration.Probe.ToString();
         }
 
-        private void InvertPolarityIndexChanged(object sender, EventArgs e)
+        void InvertPolarityIndexChanged(object sender, EventArgs e)
         {
             InvertPolarity = ((CheckBox)sender).Checked;
             OnInvertPolarityChangedHandler();
@@ -121,12 +115,12 @@ namespace OpenEphys.Onix1.Design
             checkBoxInvertPolarity.Checked = invertPolarity;
         }
 
-        private void OnInvertPolarityChangedHandler()
+        void OnInvertPolarityChangedHandler()
         {
             InvertPolarityChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        private void FormShown(object sender, EventArgs e)
+        void FormShown(object sender, EventArgs e)
         {
             if (!TopLevel)
             {
@@ -141,7 +135,7 @@ namespace OpenEphys.Onix1.Design
             ChannelConfiguration.OnResizeZedGraph += ResizeTrackBar;
         }
 
-        private void ResizeTrackBar(object sender, EventArgs e)
+        void ResizeTrackBar(object sender, EventArgs e)
         {
             if (sender is ChannelConfigurationDialog dialog)
             {
@@ -150,12 +144,12 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        private void SelectedReferenceChanged(object sender, EventArgs e)
+        void SelectedReferenceChanged(object sender, EventArgs e)
         {
             ProbeConfiguration.Reference = (NeuropixelsV2QuadShankReference)((ComboBox)sender).SelectedItem;
         }
 
-        private void SelectedChannelPresetChanged(object sender, EventArgs e)
+        void SelectedChannelPresetChanged(object sender, EventArgs e)
         {
             var channelPreset = (ChannelPreset)((ComboBox)sender).SelectedItem;
 
@@ -165,7 +159,7 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        private void SetChannelPreset(ChannelPreset preset)
+        void SetChannelPreset(ChannelPreset preset)
         {
             var probeConfiguration = ChannelConfiguration.ProbeConfiguration;
             var electrodes = NeuropixelsV2eProbeGroup.ToElectrodes(ChannelConfiguration.ProbeConfiguration.ProbeGroup);
@@ -354,7 +348,7 @@ namespace OpenEphys.Onix1.Design
             ChannelConfiguration.RefreshZedGraph();
         }
 
-        private void CheckForExistingChannelPreset()
+        void CheckForExistingChannelPreset()
         {
             var channelMap = ChannelConfiguration.ProbeConfiguration.ChannelMap;
 
@@ -532,19 +526,19 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        private void OnFileLoadEvent(object sender, EventArgs e)
+        void OnFileLoadEvent(object sender, EventArgs e)
         {
             // NB: Ensure that the newly loaded ProbeConfiguration in the ChannelConfigurationDialog is reflected here.
             ProbeConfiguration = ChannelConfiguration.ProbeConfiguration;
             CheckForExistingChannelPreset();
         }
 
-        private void FileTextChanged(object sender, EventArgs e)
+        void FileTextChanged(object sender, EventArgs e)
         {
             CheckStatus();
         }
 
-        private void CheckStatus()
+        void CheckStatus()
         {
             const string NoFileSelected = "No file selected.";
             const string InvalidFile = "Invalid file.";
@@ -620,7 +614,7 @@ namespace OpenEphys.Onix1.Design
             DeselectContacts();
         }
 
-        private void EnableSelectedContacts()
+        void EnableSelectedContacts()
         {
             var selected = NeuropixelsV2eProbeGroup.ToElectrodes(ChannelConfiguration.ProbeConfiguration.ProbeGroup)
                                                    .Where((e, ind) => ChannelConfiguration.SelectedContacts[ind])
@@ -631,7 +625,7 @@ namespace OpenEphys.Onix1.Design
             CheckForExistingChannelPreset();
         }
 
-        private void DeselectContacts()
+        void DeselectContacts()
         {
             ChannelConfiguration.SetAllSelections(false);
             ChannelConfiguration.HighlightEnabledContacts();
@@ -640,26 +634,26 @@ namespace OpenEphys.Onix1.Design
             ChannelConfiguration.RefreshZedGraph();
         }
 
-        private void ResetZoom()
+        void ResetZoom()
         {
             ChannelConfiguration.ResetZoom();
             ChannelConfiguration.DrawScale();
             ChannelConfiguration.RefreshZedGraph();
         }
 
-        private void MoveToVerticalPosition(float relativePosition)
+        void MoveToVerticalPosition(float relativePosition)
         {
             ChannelConfiguration.MoveToVerticalPosition(relativePosition);
             ChannelConfiguration.RefreshZedGraph();
         }
 
-        private void TrackBarScroll(object sender, EventArgs e)
+        void TrackBarScroll(object sender, EventArgs e)
         {
             var trackBar = (TrackBar)sender;
             MoveToVerticalPosition((float)trackBar.Value / trackBar.Maximum);
         }
 
-        private void UpdateTrackBarLocation(object sender, EventArgs e)
+        void UpdateTrackBarLocation(object sender, EventArgs e)
         {
             trackBarProbePosition.Value = (int)(ChannelConfiguration.GetRelativeVerticalPosition() * trackBarProbePosition.Maximum);
         }

@@ -12,15 +12,13 @@ namespace OpenEphys.Onix1.Design
             if (provider != null)
             {
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
-                if (editorState != null && !editorState.WorkflowRunning && component is ConfigurePolledBno055 configureBno055)
+                if (editorState != null && !editorState.WorkflowRunning && component is ConfigurePolledBno055 configureNode)
                 {
-                    using var editorDialog = new PolledBno055Dialog(configureBno055);
+                    using var editorDialog = new PolledBno055Dialog(configureNode);
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
-                        configureBno055.Enable = editorDialog.ConfigureNode.Enable;
-                        configureBno055.DeviceAddress = editorDialog.ConfigureNode.DeviceAddress;
-                        configureBno055.DeviceName = editorDialog.ConfigureNode.DeviceName;
+                        DesignHelper.CopyProperties(editorDialog.ConfigureNode, configureNode);
 
                         return true;
                     }

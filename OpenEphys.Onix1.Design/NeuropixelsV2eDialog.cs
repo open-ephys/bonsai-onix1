@@ -40,18 +40,10 @@ namespace OpenEphys.Onix1.Design
             {
                 new(ConfigureNode.ProbeConfigurationA, ConfigureNode.GainCalibrationFileA, ConfigureNode.InvertPolarity)
                 {
-                    TopLevel = false,
-                    FormBorderStyle = FormBorderStyle.None,
-                    Dock = DockStyle.Fill,
-                    Parent = this,
                     Tag = NeuropixelsV2Probe.ProbeA
                 },
                 new(ConfigureNode.ProbeConfigurationB, ConfigureNode.GainCalibrationFileB, ConfigureNode.InvertPolarity)
                 {
-                    TopLevel = false,
-                    FormBorderStyle = FormBorderStyle.None,
-                    Dock = DockStyle.Fill,
-                    Parent = this,
                     Tag = NeuropixelsV2Probe.ProbeB
                 }
             };
@@ -63,12 +55,12 @@ namespace OpenEphys.Onix1.Design
                 string probeName = GetProbeName((NeuropixelsV2Probe)channelConfiguration.Tag);
 
                 tabControlProbe.TabPages.Add(probeName, probeName);
-                tabControlProbe.TabPages[probeName].Controls.Add(channelConfiguration);
+                tabControlProbe.TabPages[probeName].Controls.Add(channelConfiguration.SetChildFormProperties(this));
                 this.AddMenuItemsFromDialogToFileOption(channelConfiguration, probeName);
             }
         }
 
-        private void InvertPolarityChanged(object sender, EventArgs e)
+        void InvertPolarityChanged(object sender, EventArgs e)
         {
             NeuropixelsV2eProbeConfigurationDialog sendingDialog = (NeuropixelsV2eProbeConfigurationDialog)sender;
             foreach (var channelConfiguration in ProbeConfigurations)
@@ -80,7 +72,7 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        private string GetProbeName(NeuropixelsV2Probe probe)
+        string GetProbeName(NeuropixelsV2Probe probe)
         {
             return probe switch
             {
@@ -90,12 +82,12 @@ namespace OpenEphys.Onix1.Design
             };
         }
 
-        private int GetProbeIndex(NeuropixelsV2Probe probe)
+        int GetProbeIndex(NeuropixelsV2Probe probe)
         {
             return probe == NeuropixelsV2Probe.ProbeA ? 0 : 1;
         }
 
-        private void FormShown(object sender, EventArgs e)
+        void FormShown(object sender, EventArgs e)
         {
             if (!TopLevel)
             {

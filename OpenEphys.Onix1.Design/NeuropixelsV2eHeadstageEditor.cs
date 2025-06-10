@@ -17,38 +17,28 @@ namespace OpenEphys.Onix1.Design
             {
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
 
-                if (editorState != null && !editorState.WorkflowRunning && component is ConfigureHeadstageNeuropixelsV2e configureV2eHeadstage)
+                if (editorState != null && !editorState.WorkflowRunning && component is ConfigureHeadstageNeuropixelsV2e configureNode)
                 {
-                    using var editorDialog = new NeuropixelsV2eHeadstageDialog(configureV2eHeadstage.NeuropixelsV2e, configureV2eHeadstage.Bno055);
+                    using var editorDialog = new NeuropixelsV2eHeadstageDialog(configureNode.NeuropixelsV2e, configureNode.Bno055);
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
-                        configureV2eHeadstage.Bno055.Enable = editorDialog.DialogBno055.ConfigureNode.Enable;
+                        configureNode.Bno055.Enable = editorDialog.DialogBno055.ConfigureNode.Enable;
 
-                        configureV2eHeadstage.NeuropixelsV2e.Enable = editorDialog.DialogNeuropixelsV2e.ConfigureNode.Enable;
-                        configureV2eHeadstage.NeuropixelsV2e.ProbeConfigurationA = editorDialog.DialogNeuropixelsV2e.ConfigureNode.ProbeConfigurationA;
-                        configureV2eHeadstage.NeuropixelsV2e.ProbeConfigurationB = editorDialog.DialogNeuropixelsV2e.ConfigureNode.ProbeConfigurationB;
-                        configureV2eHeadstage.NeuropixelsV2e.GainCalibrationFileA = editorDialog.DialogNeuropixelsV2e.ConfigureNode.GainCalibrationFileA;
-                        configureV2eHeadstage.NeuropixelsV2e.GainCalibrationFileB = editorDialog.DialogNeuropixelsV2e.ConfigureNode.GainCalibrationFileB;
-                        configureV2eHeadstage.NeuropixelsV2e.InvertPolarity = editorDialog.DialogNeuropixelsV2e.ConfigureNode.InvertPolarity;
+                        DesignHelper.CopyProperties(editorDialog.DialogNeuropixelsV2e.ConfigureNode, configureNode.NeuropixelsV2e);
 
                         return true;
                     }
                 }
-                else if (editorState != null && !editorState.WorkflowRunning && component is ConfigureHeadstageNeuropixelsV2eBeta configureV2eBetaHeadstage)
+                else if (editorState != null && !editorState.WorkflowRunning && component is ConfigureHeadstageNeuropixelsV2eBeta configureNodeBeta)
                 {
-                    using var editorDialog = new NeuropixelsV2eHeadstageDialog(configureV2eBetaHeadstage.NeuropixelsV2eBeta, configureV2eBetaHeadstage.Bno055);
+                    using var editorDialog = new NeuropixelsV2eHeadstageDialog(configureNodeBeta.NeuropixelsV2eBeta, configureNodeBeta.Bno055);
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
-                        configureV2eBetaHeadstage.Bno055.Enable = editorDialog.DialogBno055.ConfigureNode.Enable;
+                        configureNodeBeta.Bno055.Enable = editorDialog.DialogBno055.ConfigureNode.Enable;
 
-                        configureV2eBetaHeadstage.NeuropixelsV2eBeta.Enable = editorDialog.DialogNeuropixelsV2e.ConfigureNode.Enable;
-                        configureV2eBetaHeadstage.NeuropixelsV2eBeta.ProbeConfigurationA = editorDialog.DialogNeuropixelsV2e.ConfigureNode.ProbeConfigurationA;
-                        configureV2eBetaHeadstage.NeuropixelsV2eBeta.ProbeConfigurationB = editorDialog.DialogNeuropixelsV2e.ConfigureNode.ProbeConfigurationB;
-                        configureV2eBetaHeadstage.NeuropixelsV2eBeta.GainCalibrationFileA = editorDialog.DialogNeuropixelsV2e.ConfigureNode.GainCalibrationFileA;
-                        configureV2eBetaHeadstage.NeuropixelsV2eBeta.GainCalibrationFileB = editorDialog.DialogNeuropixelsV2e.ConfigureNode.GainCalibrationFileB;
-                        configureV2eBetaHeadstage.NeuropixelsV2eBeta.InvertPolarity = editorDialog.DialogNeuropixelsV2e.ConfigureNode.InvertPolarity;
+                        DesignHelper.CopyProperties(editorDialog.DialogNeuropixelsV2e.ConfigureNode, configureNodeBeta.NeuropixelsV2eBeta);
 
                         return true;
                     }

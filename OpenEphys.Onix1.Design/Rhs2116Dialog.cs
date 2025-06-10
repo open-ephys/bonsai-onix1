@@ -20,20 +20,8 @@ namespace OpenEphys.Onix1.Design
         public Rhs2116Dialog(ConfigureRhs2116Pair configureRhs2116)
         {
             InitializeComponent();
-            Shown += FormShown;
 
             ConfigureNode = configureRhs2116;
-        }
-
-        private void FormShown(object sender, EventArgs e)
-        {
-            if (!TopLevel)
-            {
-                tableLayoutPanel1.Controls.Remove(flowLayoutPanel1);
-                tableLayoutPanel1.RowCount = 1;
-
-                MaximumSize = new System.Drawing.Size(0, 0);
-            }
         }
     }
 }

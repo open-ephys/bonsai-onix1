@@ -77,7 +77,7 @@ namespace OpenEphys.Onix1.Design
             return false;
         }
 
-        private void OnFileOpenHandler()
+        void OnFileOpenHandler()
         {
             OnFileLoad?.Invoke(this, EventArgs.Empty);
         }
@@ -93,7 +93,7 @@ namespace OpenEphys.Onix1.Design
             OnZoomHandler();
         }
 
-        private void OnZoomHandler()
+        void OnZoomHandler()
         {
             OnZoom?.Invoke(this, EventArgs.Empty);
         }

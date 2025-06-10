@@ -26,24 +26,22 @@ namespace OpenEphys.Onix1.Design
                 var editorService = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
 
-                ConfigureBno055 configureBno055;
+                ConfigureBno055 configureNode;
 
                 if (context.Instance.GetType() == typeof(ConfigureBno055))
-                    configureBno055 = (ConfigureBno055)context.Instance;
+                    configureNode = (ConfigureBno055)context.Instance;
                 else if (value.GetType() == typeof(ConfigureBno055))
-                    configureBno055 = (ConfigureBno055)value;
+                    configureNode = (ConfigureBno055)value;
                 else
                     throw new Exception("Invalid input given to Bno055Editor.");
 
                 if (editorService != null && editorState != null && !editorState.WorkflowRunning)
                 {
-                    using var editorDialog = new Bno055Dialog(configureBno055);
+                    using var editorDialog = new Bno055Dialog(configureNode);
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
-                        configureBno055.Enable = editorDialog.ConfigureNode.Enable;
-                        configureBno055.DeviceAddress = editorDialog.ConfigureNode.DeviceAddress;
-                        configureBno055.DeviceName = editorDialog.ConfigureNode.DeviceName;
+                        DesignHelper.CopyProperties(editorDialog.ConfigureNode, configureNode);
                     }
                 }
             }
