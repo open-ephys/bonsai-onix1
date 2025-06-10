@@ -55,9 +55,9 @@ namespace OpenEphys.Onix1.Design
             Rhs2116Dialog.Show();
         }
 
-        private void OnClickOK(object sender, EventArgs e)
+        void OnClickOK(object sender, EventArgs e)
         {
-            if (Rhs2116StimulusSequenceDialog.CanCloseForm(StimulusSequenceDialog.Sequence, out DialogResult result))
+            if (StimulusSequenceDialog.CanCloseForm(out DialogResult result))
             {
                 DialogResult = result;
                 Close();
