@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Numerics;
 using System.Reactive;
 using System.Reactive.Linq;
 using Bonsai;
@@ -80,6 +81,7 @@ namespace OpenEphys.Onix1
         /// <returns>A sequence of <see cref="TS4231V1PositionDataFrame"/> objects.</returns>
         public unsafe override IObservable<TS4231V1PositionDataFrame> Generate()
         {
+
             return DeviceManager.GetDevice(DeviceName).SelectMany(
                 deviceInfo => Observable.Create<TS4231V1PositionDataFrame>(observer =>
                 {
@@ -101,7 +103,8 @@ namespace OpenEphys.Onix1
                     return deviceInfo.Context
                         .GetDeviceFrames(device.Address)
                         .SubscribeSafe(frameObserver);
-                }));
+                }))
+                .Select(input => new TS4231V1PositionDataFrame(input.Clock, input.HubClock, input.SensorIndex, input.Position));
         }
     }
 }
