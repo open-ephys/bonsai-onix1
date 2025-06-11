@@ -39,7 +39,6 @@ namespace OpenEphys.Onix1
     /// using downstream processing.
     /// </para>
     /// </remarks>
-    [DefaultProperty(nameof(M))]
     [Description("Produces a sequence of 3D positions from an array of Triad Semiconductor TS4231 receivers beneath a pair of SteamVR V1 base stations.")]
     public class TS4231V1PositionData : Source<TS4231V1PositionDataFrame>
     {
@@ -72,20 +71,6 @@ namespace OpenEphys.Onix1
         [Category(DeviceFactory.ConfigurationCategory)]
         public Point3d Q { get; set; } = new(1, 0, 0);
 
-
-        /// <summary>
-        /// Gets or sets a spatial transform to convert position measurements to an external coordinate
-        /// system.
-        /// </summary>
-        [Description("Spatial transform matrix to convert position measurements to an external coordinate system.")]
-        [Category(DeviceFactory.ConfigurationCategory)]
-        [Editor("OpenEphys.Onix1.Design.SpatialTransformMatrixEditor, OpenEphys.Onix1.Design", DesignTypes.UITypeEditor)]
-        [TypeConverter(typeof(NumericRecordConverter))]
-        public Matrix4x4 M { get; set; } = new Matrix4x4( 1, 0, 0, 0,
-                                                          0, 1, 0, 0,
-                                                          0, 0, 1, 0,
-                                                          0, 0, 0, 1);
-
         /// <summary>
         /// Generates a sequence of <see cref="TS4231V1PositionDataFrame"/> objects, each of which contains
         /// the 3D position of single photodiode.
@@ -116,7 +101,7 @@ namespace OpenEphys.Onix1
                         .GetDeviceFrames(device.Address)
                         .SubscribeSafe(frameObserver);
                 }))
-                .Select(input => new TS4231V1PositionDataFrame(input.Clock, input.HubClock, input.SensorIndex, Vector3.Transform(input.Position, M)));
+                .Select(input => new TS4231V1PositionDataFrame(input.Clock, input.HubClock, input.SensorIndex, input.Position));
         }
     }
 }
