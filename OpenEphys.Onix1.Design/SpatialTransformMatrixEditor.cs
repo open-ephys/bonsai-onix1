@@ -5,9 +5,7 @@ using System.ComponentModel;
 using System.Windows.Forms.Design;
 using System.Windows.Forms;
 using System.Reactive.Linq;
-using System.Numerics;
 using Bonsai.Design;
-
 
 namespace OpenEphys.Onix1.Design
 {
@@ -18,10 +16,7 @@ namespace OpenEphys.Onix1.Design
     public class SpatialTransformMatrixEditor : DataSourceTypeEditor
     {
         /// <inheritdoc/>
-        public SpatialTransformMatrixEditor()
-            : base(DataSource.Output, typeof(void))
-        {
-        }
+        public SpatialTransformMatrixEditor() : base(DataSource.Input, typeof(void)) { }
 
         /// <inheritdoc/>
         public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
@@ -38,14 +33,14 @@ namespace OpenEphys.Onix1.Design
             {
                 var source = GetDataSource(context, provider);
                 var dataFrames = source.Output.Merge().Select(x => x as TS4231V1PositionDataFrame);
-                using var visualizerDialog = new SpatialTransformMatrixDialog(dataFrames, (Matrix4x4)value);
+                using var visualizerDialog = new SpatialTransformMatrixDialog(dataFrames, (SpatialTransformProperties)value);
                 if (!editorState.WorkflowRunning)
                 {
                     throw new InvalidOperationException("Workflow must be running to open this GUI.");
                 }
                 else if (editorService.ShowDialog(visualizerDialog) == DialogResult.OK)
                 {
-                    return visualizerDialog.NewSpatialTransform;
+                    return visualizerDialog.SpatialTransform;
                 }
             }
             return base.EditValue(context, provider, value);
