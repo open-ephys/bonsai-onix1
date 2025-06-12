@@ -33,7 +33,7 @@ namespace OpenEphys.Onix1.Design
             {
                 var source = GetDataSource(context, provider);
                 var dataFrames = source.Output.Merge().Select(x => x as TS4231V1PositionDataFrame);
-                using var visualizerDialog = new SpatialTransformMatrixDialog(dataFrames, (SpatialTransformProperties)value);
+                using var visualizerDialog = new SpatialTransformMatrixDialog(dataFrames, new SpatialTransformProperties((SpatialTransformProperties)value));
                 if (!editorState.WorkflowRunning)
                 {
                     throw new InvalidOperationException("Workflow must be running to open this GUI.");
