@@ -13,6 +13,7 @@ namespace OpenEphys.Onix1
     /// cref="Headstage64ElectricalStimulatorTrigger"/>, using a shared
     /// <c>DeviceName</c>.
     /// </remarks>
+    [Editor("OpenEphys.Onix1.Design.Headstage64ElectricalStimulatorSequenceEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a headstage-64 onboard electrical stimulator.")]
     public class ConfigureHeadstage64ElectricalStimulator : SingleDeviceFactory
     {

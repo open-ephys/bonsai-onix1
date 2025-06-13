@@ -17,6 +17,18 @@ namespace OpenEphys.Onix1
         [Category(DeviceFactory.ConfigurationCategory)]
         public uint TriggerDelay { get; set; } = 0;
 
+        private static double VerifyCurrentLimits(double value)
+        {
+            if (value > Headstage64ElectricalStimulator.AbsMaxMicroAmps)
+                return Headstage64ElectricalStimulator.AbsMaxMicroAmps;
+            else if (value < -Headstage64ElectricalStimulator.AbsMaxMicroAmps)
+                return -Headstage64ElectricalStimulator.AbsMaxMicroAmps;
+            else
+                return value;
+        }
+
+        private double phaseOneCurrent = 0;
+
         /// <summary>
         /// Gets or sets the amplitude of the first phase of each pulse in μA.
         /// </summary>
@@ -25,7 +37,13 @@ namespace OpenEphys.Onix1
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
         [Precision(3, 1)]
         [Category(DeviceFactory.ConfigurationCategory)]
-        public double PhaseOneCurrent { get; set; } = 0;
+        public double PhaseOneCurrent
+        { 
+            get => phaseOneCurrent;
+            set => phaseOneCurrent = VerifyCurrentLimits(value);
+        }
+
+        private double interPhaseCurrent = 0;
 
         /// <summary>
         /// Gets or sets the amplitude of the interphase current of each pulse in μA.
@@ -35,7 +53,13 @@ namespace OpenEphys.Onix1
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
         [Precision(3, 1)]
         [Category(DeviceFactory.ConfigurationCategory)]
-        public double InterPhaseCurrent { get; set; } = 0;
+        public double InterPhaseCurrent
+        {
+            get => interPhaseCurrent;
+            set => interPhaseCurrent = VerifyCurrentLimits(value);
+        }
+
+        private double phaseTwoCurrent = 0;
 
         /// <summary>
         /// Gets or sets the amplitude of the second phase of each pulse in μA.
@@ -45,7 +69,11 @@ namespace OpenEphys.Onix1
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
         [Precision(3, 1)]
         [Category(DeviceFactory.ConfigurationCategory)]
-        public double PhaseTwoCurrent { get; set; } = 0;
+        public double PhaseTwoCurrent
+        {
+            get => phaseTwoCurrent;
+            set => phaseTwoCurrent = VerifyCurrentLimits(value);
+        }
 
         /// <summary>
         /// Gets or sets the duration of the first phase of each pulse in μsec.
@@ -128,6 +156,25 @@ namespace OpenEphys.Onix1
             InterBurstInterval = interBurstInterval;
             BurstPulseCount = burstPulseCount;
             TrainBurstCount = trainBurstCount;
+        }
+
+        /// <summary>
+        /// Copy constructor for the <see cref="Headstage64ElectricalStimulatorSequence"/> class.
+        /// </summary>
+        /// <param name="stimulatorSequence">Existing sequence to copy.</param>
+        public Headstage64ElectricalStimulatorSequence(Headstage64ElectricalStimulatorSequence stimulatorSequence)
+        {
+            TriggerDelay = stimulatorSequence.TriggerDelay;
+            PhaseOneCurrent = stimulatorSequence.PhaseOneCurrent;
+            InterPhaseCurrent = stimulatorSequence.InterPhaseCurrent;
+            PhaseTwoCurrent = stimulatorSequence.PhaseTwoCurrent;
+            PhaseOneDuration = stimulatorSequence.PhaseOneDuration;
+            InterPhaseInterval = stimulatorSequence.InterPhaseInterval;
+            PhaseTwoDuration = stimulatorSequence.PhaseTwoDuration;
+            InterPulseInterval = stimulatorSequence.InterPulseInterval;
+            InterBurstInterval = stimulatorSequence.InterBurstInterval;
+            BurstPulseCount = stimulatorSequence.BurstPulseCount;
+            TrainBurstCount = stimulatorSequence.TrainBurstCount;
         }
     }
 }
