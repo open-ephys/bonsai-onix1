@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
-using Newtonsoft.Json.Linq;
 
 namespace OpenEphys.Onix1
 {
@@ -14,6 +13,7 @@ namespace OpenEphys.Onix1
     /// cref="Headstage64OpticalStimulatorTrigger"/>, using a shared
     /// <c>DeviceName</c>.
     /// </remarks>
+    [Editor("OpenEphys.Onix1.Design.Headstage64OpticalStimulatorSequenceEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a headstage-64 dual-channel optical stimulator.")]
     public class ConfigureHeadstage64OpticalStimulator : SingleDeviceFactory
     {
@@ -107,12 +107,12 @@ namespace OpenEphys.Onix1
                     stimulusSequence.SubscribeSafe(observer, value => {
 
                         device.WriteRegister(Headstage64OpticalStimulator.MAXCURRENT, mAToPotSetting(value.MaxCurrent));
-                        currentSourceMask = percentToPulseMask(0, value.ChannelOneCurrent, currentSourceMask);
+                        currentSourceMask = percentToPulseMask(0, value.ChannelOnePercent, currentSourceMask);
                         device.WriteRegister(Headstage64OpticalStimulator.PULSEMASK, currentSourceMask);
-                        currentSourceMask = percentToPulseMask(1, value.ChannelTwoCurrent, currentSourceMask);
+                        currentSourceMask = percentToPulseMask(1, value.ChannelTwoPercent, currentSourceMask);
                         device.WriteRegister(Headstage64OpticalStimulator.PULSEMASK, currentSourceMask);
-                        device.WriteRegister(Headstage64OpticalStimulator.PULSEDUR, pulseDurationToRegister(value.PulseDuration, value.PulsesPerSecond));
-                        device.WriteRegister(Headstage64OpticalStimulator.PULSEPERIOD, pulseFrequencyToRegister(value.PulsesPerSecond, value.PulseDuration));
+                        device.WriteRegister(Headstage64OpticalStimulator.PULSEDUR, pulseDurationToRegister(value.PulseDuration, value.PulsePeriod));
+                        device.WriteRegister(Headstage64OpticalStimulator.PULSEPERIOD, pulseFrequencyToRegister(value.PulsePeriod, value.PulseDuration));
                         device.WriteRegister(Headstage64OpticalStimulator.BURSTCOUNT, value.PulsesPerBurst);
                         device.WriteRegister(Headstage64OpticalStimulator.IBI, (uint)(1000 * value.InterBurstInterval));
                         device.WriteRegister(Headstage64OpticalStimulator.TRAINCOUNT, value.BurstsPerTrain);

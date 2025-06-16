@@ -1,5 +1,4 @@
-﻿using System;
-using Bonsai.Reactive;
+﻿using Bonsai.Reactive;
 using Bonsai;
 using System.ComponentModel;
 using System.Drawing.Design;
@@ -11,6 +10,8 @@ namespace OpenEphys.Onix1
     /// </summary>
     public class Headstage64OpticalStimulatorSequence
     {
+        private double delay = 0;
+
         /// <summary>
         /// Gets or sets a delay from receiving a trigger to the start of stimulus sequence application in msec.
         /// </summary>
@@ -19,24 +20,46 @@ namespace OpenEphys.Onix1
         [Range(0.0, 1000.0)]
         [Precision(3, 1)]
         [Category(DeviceFactory.ConfigurationCategory)]
-        public double Delay { get; set; } = 0;
+        public double Delay
+        {
+            get => delay;
+            set 
+            {
+                if (value < 0) delay = 0;
+                else if (value > 1000) delay = 1000;
+                else delay = value;
+            }
+        }
+
+        private double maxCurrent = 100;
 
         /// <summary>
         /// Gets or sets the Maximum current per channel per pulse in mA.
         /// </summary>
         /// <remarks>
         /// This value defines the maximal possible current that can be delivered to each channel.
-        /// To get different amplitudes for each channel use the <see cref="ChannelOneCurrent"/> and
-        /// <see cref="ChannelTwoCurrent"/> properties.
+        /// To get different amplitudes for each channel use the <see cref="ChannelOnePercent"/> and
+        /// <see cref="ChannelTwoPercent"/> properties.
         /// </remarks>
         [Description("Maximum current per channel per pulse (mA). " +
             "This value is used by both channels. To get different amplitudes " +
-            "for each channel use the ChannelOneCurrent and ChannelTwoCurrent properties.")]
+            "for each channel use the ChannelOnePercent and ChannelTwoPercent properties.")]
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
         [Range(0, 300)]
         [Precision(3, 0)]
         [Category(DeviceFactory.ConfigurationCategory)]
-        public double MaxCurrent { get; set; } = 100;
+        public double MaxCurrent
+        {
+            get => maxCurrent;
+            set
+            {
+                if (value < 0) maxCurrent = 0;
+                else if (value > 300) maxCurrent = 300;
+                else maxCurrent = value;
+            }
+        }
+
+        private double channelOnePercent = 100;
 
         /// <summary>
         /// Gets or sets the percent of <see cref="MaxCurrent"/> that will delivered to channel 1 in each pulse.
@@ -46,7 +69,18 @@ namespace OpenEphys.Onix1
         [Range(0, 100)]
         [Precision(1, 12.5)]
         [Category(DeviceFactory.ConfigurationCategory)]
-        public double ChannelOneCurrent { get; set; } = 100;
+        public double ChannelOnePercent
+        {
+            get => channelOnePercent;
+            set
+            {
+                if (value < 0) channelOnePercent = 0;
+                else if (value > 100) channelOnePercent = 100;
+                else channelOnePercent = value;
+            }
+        }
+
+        private double channelTwoPercent = 0;
 
         /// <summary>
         /// Gets or sets the percent of <see cref="MaxCurrent"/> that will delivered to channel 2 in each pulse.
@@ -56,7 +90,18 @@ namespace OpenEphys.Onix1
         [Range(0, 100)]
         [Precision(1, 12.5)]
         [Category(DeviceFactory.ConfigurationCategory)]
-        public double ChannelTwoCurrent { get; set; } = 0;
+        public double ChannelTwoPercent
+        {
+            get => channelTwoPercent;
+            set
+            {
+                if (value < 0) channelTwoPercent = 0;
+                else if (value > 100) channelTwoPercent = 100;
+                else channelTwoPercent = value;
+            }
+        }
+
+        private double pulseDuration = 5;
 
         /// <summary>
         /// Gets or sets the duration of each pulse in msec.
@@ -66,7 +111,18 @@ namespace OpenEphys.Onix1
         [Range(0.001, 1000.0)]
         [Precision(3, 1)]
         [Category(DeviceFactory.ConfigurationCategory)]
-        public double PulseDuration { get; set; } = 5;
+        public double PulseDuration
+        {
+            get => pulseDuration;
+            set
+            {
+                if (value < 0.001) pulseDuration = 0.001;
+                else if (value > 1000) pulseDuration = 1000;
+                else pulseDuration = value;
+            }
+        }
+
+        private double pulsePeriod = 50;
 
         /// <summary>
         /// Gets or sets the pulse period within a burst in msec.
@@ -76,7 +132,18 @@ namespace OpenEphys.Onix1
         [Range(0.01, 10000.0)]
         [Precision(3, 1)]
         [Category(DeviceFactory.ConfigurationCategory)]
-        public double PulsesPerSecond { get; set; } = 50;
+        public double PulsePeriod
+        {
+            get => pulsePeriod;
+            set
+            {
+                if (value < 0.01) pulsePeriod = 0.01;
+                else if (value > 10000) pulsePeriod = 10000;
+                else pulsePeriod = value;
+            }
+        }
+
+        private uint pulsesPerBurst = 20;
 
         /// <summary>
         /// Gets or sets the number of pulses per burst.
@@ -86,7 +153,18 @@ namespace OpenEphys.Onix1
         [Range(1, int.MaxValue)]
         [Precision(0, 1)]
         [Category(DeviceFactory.ConfigurationCategory)]
-        public uint PulsesPerBurst { get; set; } = 20;
+        public uint PulsesPerBurst
+        {
+            get => pulsesPerBurst;
+            set
+            {
+                if (value < 1) pulsesPerBurst = 1;
+                else if (value > int.MaxValue) pulsesPerBurst = int.MaxValue;
+                else pulsesPerBurst = value;
+            }
+        }
+
+        private double interBurstInterval = 0;
 
         /// <summary>
         /// Gets or sets the duration of the inter-burst interval within a stimulus train in msec.
@@ -97,7 +175,18 @@ namespace OpenEphys.Onix1
         [Range(0.0, 10000.0)]
         [Precision(3, 1)]
         [Category(DeviceFactory.ConfigurationCategory)]
-        public double InterBurstInterval { get; set; } = 0;
+        public double InterBurstInterval
+        {
+            get => interBurstInterval;
+            set
+            {
+                if (value < 0) interBurstInterval = 0;
+                else if (value > 10000) interBurstInterval = 10000;
+                else interBurstInterval = value;
+            }
+        }
+
+        private uint burstsPerTrain = 1;
 
         /// <summary>
         /// Gets or sets the number of bursts in a stimulus train.
@@ -107,7 +196,16 @@ namespace OpenEphys.Onix1
         [Range(1, int.MaxValue)]
         [Precision(0, 1)]
         [Category(DeviceFactory.ConfigurationCategory)]
-        public uint BurstsPerTrain { get; set; } = 1;
+        public uint BurstsPerTrain
+        {
+            get => burstsPerTrain;
+            set
+            {
+                if (value < 1) burstsPerTrain = 1;
+                else if (value > int.MaxValue) burstsPerTrain = int.MaxValue;
+                else burstsPerTrain = value;
+            }
+        }
 
         // TODO: Should this be checked before TRIGGER is written to below and an error thrown if
         // DC current is too high? Or, should settings be forced too keep DC current under some value?
@@ -122,7 +220,7 @@ namespace OpenEphys.Onix1
         {
             get
             {
-                return PulsesPerSecond * 0.001 * PulseDuration * MaxCurrent * 0.01 * (ChannelOneCurrent + ChannelTwoCurrent);
+                return PulsePeriod * 0.001 * PulseDuration * MaxCurrent * 0.01 * (ChannelOnePercent + ChannelTwoPercent);
             }
         }
 
@@ -141,13 +239,30 @@ namespace OpenEphys.Onix1
         {
             Delay = delay;
             MaxCurrent = maxCurrent;
-            ChannelOneCurrent = channelOneCurrent;
-            ChannelTwoCurrent = channelTwoCurrent;
+            ChannelOnePercent = channelOneCurrent;
+            ChannelTwoPercent = channelTwoCurrent;
             PulseDuration = pulseDuration;
-            PulsesPerSecond = pulsesPerSecond;
+            PulsePeriod = pulsesPerSecond;
             PulsesPerBurst = pulsesPerBurst;
             InterBurstInterval = interBurstInterval;
             BurstsPerTrain = burstsPerTrain;
+        }
+
+        /// <summary>
+        /// Copy constructor for the <see cref="Headstage64OpticalStimulatorSequence"/> class.
+        /// </summary>
+        /// <param name="stimulatorSequence">Existing sequence to copy.</param>
+        public Headstage64OpticalStimulatorSequence(Headstage64OpticalStimulatorSequence stimulatorSequence)
+        {
+            Delay = stimulatorSequence.Delay;
+            MaxCurrent = stimulatorSequence.MaxCurrent;
+            ChannelOnePercent = stimulatorSequence.ChannelOnePercent;
+            ChannelTwoPercent = stimulatorSequence.ChannelTwoPercent;
+            PulseDuration = stimulatorSequence.PulseDuration;
+            PulsePeriod = stimulatorSequence.PulsePeriod;
+            PulsesPerBurst = stimulatorSequence.PulsesPerBurst;
+            InterBurstInterval = stimulatorSequence.InterBurstInterval;
+            BurstsPerTrain = stimulatorSequence.BurstsPerTrain;
         }
     }
 }
