@@ -115,25 +115,25 @@ namespace OpenEphys.Onix1
         public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2QuadShankProbeConfiguration probeConfiguration)
         {
             Reference = probeConfiguration.Reference;
-            var probes = probeConfiguration.ChannelConfiguration.Probes.ToList().Select(probe => new Probe(probe));
-            ChannelConfiguration = new(probeConfiguration.ChannelConfiguration.Specification, probeConfiguration.ChannelConfiguration.Version, probes.ToArray());
-            ChannelMap = NeuropixelsV2eProbeGroup.ToChannelMap(ChannelConfiguration);
+            var probes = probeConfiguration.ProbeGroup.Probes.ToList().Select(probe => new Probe(probe));
+            ProbeGroup = new(probeConfiguration.ProbeGroup.Specification, probeConfiguration.ProbeGroup.Version, probes.ToArray());
+            ChannelMap = NeuropixelsV2eProbeGroup.ToChannelMap(ProbeGroup);
             Probe = probeConfiguration.Probe;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class with the given
         /// <see cref="NeuropixelsV2eProbeGroup"/> channel configuration. The <see cref="ChannelMap"/> is automatically 
-        /// generated from the <see cref="ChannelConfiguration"/>. 
+        /// generated from the <see cref="ProbeGroup"/>. 
         /// </summary>
-        /// <param name="channelConfiguration">The existing <see cref="NeuropixelsV2eProbeGroup"/> instance to use.</param>
+        /// <param name="probeGroup">The existing <see cref="NeuropixelsV2eProbeGroup"/> instance to use.</param>
         /// <param name="reference">The <see cref="NeuropixelsV2QuadShankReference"/> reference value.</param>
         /// <param name="probe">The <see cref="NeuropixelsV2Probe"/> for this probe.</param>
         [JsonConstructor]
-        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2eProbeGroup channelConfiguration, NeuropixelsV2QuadShankReference reference, NeuropixelsV2Probe probe)
+        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2eProbeGroup probeGroup, NeuropixelsV2QuadShankReference reference, NeuropixelsV2Probe probe)
         {
-            ChannelMap = NeuropixelsV2eProbeGroup.ToChannelMap(channelConfiguration);
-            ChannelConfiguration = channelConfiguration;
+            ChannelMap = NeuropixelsV2eProbeGroup.ToChannelMap(probeGroup);
+            ProbeGroup = probeGroup;
             Reference = reference;
             Probe = probe;
         }
@@ -193,7 +193,7 @@ namespace OpenEphys.Onix1
                 }
             }
 
-            ChannelConfiguration.UpdateDeviceChannelIndices(ChannelMap);
+            ProbeGroup.UpdateDeviceChannelIndices(ChannelMap);
         }
 
         /// <summary>
@@ -202,28 +202,28 @@ namespace OpenEphys.Onix1
         [XmlIgnore]
         [Category("Configuration")]
         [Description("Defines the shape of the probe, and which contacts are currently selected for streaming")]
-        public NeuropixelsV2eProbeGroup ChannelConfiguration { get; private set; } = new();
+        public NeuropixelsV2eProbeGroup ProbeGroup { get; private set; } = new();
 
         /// <summary>
-        /// Gets or sets a string defining the <see cref="ChannelConfiguration"/> in Base64.
+        /// Gets or sets a string defining the <see cref="ProbeGroup"/> in Base64.
         /// This variable is needed to properly save a workflow in Bonsai, but it is not
         /// directly accessible in the Bonsai editor.
         /// </summary>
         [Browsable(false)]
         [Externalizable(false)]
-        [XmlElement(nameof(ChannelConfiguration))]
-        public string ChannelConfigurationString
+        [XmlElement(nameof(ProbeGroup))]
+        public string ProbeGroupString
         {
             get
             {
-                var jsonString = JsonConvert.SerializeObject(ChannelConfiguration);
+                var jsonString = JsonConvert.SerializeObject(ProbeGroup);
                 return Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonString));
             }
             set
             {
                 var jsonString = Encoding.UTF8.GetString(Convert.FromBase64String(value));
-                ChannelConfiguration = JsonConvert.DeserializeObject<NeuropixelsV2eProbeGroup>(jsonString);
-                SelectElectrodes(NeuropixelsV2eProbeGroup.ToChannelMap(ChannelConfiguration));
+                ProbeGroup = JsonConvert.DeserializeObject<NeuropixelsV2eProbeGroup>(jsonString);
+                SelectElectrodes(NeuropixelsV2eProbeGroup.ToChannelMap(ProbeGroup));
             }
         }
     }
