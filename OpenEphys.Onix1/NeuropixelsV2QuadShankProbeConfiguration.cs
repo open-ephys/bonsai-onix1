@@ -200,7 +200,7 @@ namespace OpenEphys.Onix1
         /// Gets the <see cref="NeuropixelsV2eProbeGroup"/> channel configuration for this probe.
         /// </summary>
         [XmlIgnore]
-        [Category("Configuration")]
+        [Category(DeviceFactory.ConfigurationCategory)]
         [Description("Defines the shape of the probe, and which contacts are currently selected for streaming")]
         public NeuropixelsV2eProbeGroup ProbeGroup { get; private set; } = new();
 

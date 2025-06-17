@@ -107,7 +107,7 @@ namespace OpenEphys.Onix1
         /// The spike-band is from DC to 10 kHz if <see cref="SpikeFilter"/> is set to false, while the 
         /// spike-band is from 300 Hz to 10 kHz if <see cref="SpikeFilter"/> is set to true.
         /// </remarks>
-        [Category("Configuration")]
+        [Category(DeviceFactory.ConfigurationCategory)]
         [Description("Amplifier gain for spike-band.")]
         public NeuropixelsV1Gain SpikeAmplifierGain { get; set; } = NeuropixelsV1Gain.Gain1000;
 
@@ -117,7 +117,7 @@ namespace OpenEphys.Onix1
         /// <remarks>
         /// The LFP band is from 0.5 to 500 Hz.
         /// </remarks>
-        [Category("Configuration")]
+        [Category(DeviceFactory.ConfigurationCategory)]
         [Description("Amplifier gain for LFP-band.")]
         public NeuropixelsV1Gain LfpAmplifierGain { get; set; } = NeuropixelsV1Gain.Gain50;
 
@@ -130,7 +130,7 @@ namespace OpenEphys.Onix1
         /// Setting to <see cref="NeuropixelsV1ReferenceSource.External"/> will use the external reference, while 
         /// <see cref="NeuropixelsV1ReferenceSource.Tip"/> sets the reference to the electrode at the tip of the probe.
         /// </remarks>
-        [Category("Configuration")]
+        [Category(DeviceFactory.ConfigurationCategory)]
         [Description("Reference selection.")]
         public NeuropixelsV1ReferenceSource Reference { get; set; } = NeuropixelsV1ReferenceSource.External;
 
@@ -141,7 +141,7 @@ namespace OpenEphys.Onix1
         /// If set to true, the spike-band has a 300 Hz high-pass filter which will be activated. If set to
         /// false, the high-pass filter will not to be activated.
         /// </remarks>
-        [Category("Configuration")]
+        [Category(DeviceFactory.ConfigurationCategory)]
         [Description("If true, activates a 300 Hz high-pass filter in the spike-band data stream.")]
         public bool SpikeFilter { get; set; } = true;
 
@@ -179,7 +179,7 @@ namespace OpenEphys.Onix1
         /// Gets or sets the <see cref="NeuropixelsV1eProbeGroup"/> channel configuration for this probe.
         /// </summary>
         [XmlIgnore]
-        [Category("Configuration")]
+        [Category(DeviceFactory.ConfigurationCategory)]
         [Description("Defines all aspects of the probe group, including probe contours, electrode size and location, enabled channels, etc.")]
         public NeuropixelsV1eProbeGroup ProbeGroup { get; set; } = new();
 
