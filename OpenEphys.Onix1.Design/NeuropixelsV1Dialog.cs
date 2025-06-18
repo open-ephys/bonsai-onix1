@@ -76,5 +76,20 @@ namespace OpenEphys.Onix1.Design
 
             ConfigureNode.InvertPolarity = ProbeConfigurationDialog.InvertPolarity;
         }
+
+        internal NeuropixelsV1eProbeGroup GetProbeGroup()
+        {
+            return ProbeConfigurationDialog.GetProbeGroup();
+        }
+
+        internal string GetProbeInterfaceFile()
+        {
+            return ProbeConfigurationDialog.ProbeConfiguration.ProbeInterfaceFile;
+        }
+
+        private void NeuropixelsV1Dialog_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            ChannelConfigurationDialog.TryRemoveEmptyFile(ProbeConfigurationDialog.ProbeConfiguration.ProbeInterfaceFile);
+        }
     }
 }

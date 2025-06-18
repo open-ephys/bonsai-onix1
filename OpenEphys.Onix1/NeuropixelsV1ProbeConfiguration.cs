@@ -43,7 +43,6 @@ namespace OpenEphys.Onix1
         /// </summary>
         public NeuropixelsV1ProbeConfiguration()
         {
-            ChannelMap = NeuropixelsV1eProbeGroup.ToChannelMap(ProbeGroup);
         }
 
         /// <summary>
@@ -54,14 +53,15 @@ namespace OpenEphys.Onix1
         /// <param name="lfpAmplifierGain">Desired or current <see cref="NeuropixelsV1Gain"/> for the LFP-band.</param>
         /// <param name="reference">Desired or current <see cref="NeuropixelsV1ReferenceSource"/>.</param>
         /// <param name="spikeFilter">Desired or current option to filer the spike-band.</param>
-        public NeuropixelsV1ProbeConfiguration(NeuropixelsV1Gain spikeAmplifierGain, NeuropixelsV1Gain lfpAmplifierGain, NeuropixelsV1ReferenceSource reference, bool spikeFilter)
+        /// <param name="probeInterfaceFile">String containing the filepath to an external configuration file.</param>
+        public NeuropixelsV1ProbeConfiguration(NeuropixelsV1Gain spikeAmplifierGain, NeuropixelsV1Gain lfpAmplifierGain,
+            NeuropixelsV1ReferenceSource reference, bool spikeFilter, string probeInterfaceFile)
         {
             SpikeAmplifierGain = spikeAmplifierGain;
             LfpAmplifierGain = lfpAmplifierGain;
             Reference = reference;
             SpikeFilter = spikeFilter;
-            ProbeGroup = new();
-            ChannelMap = NeuropixelsV1eProbeGroup.ToChannelMap(ProbeGroup);
+            ProbeInterfaceFile = probeInterfaceFile;
         }
 
         /// <summary>
@@ -73,19 +73,19 @@ namespace OpenEphys.Onix1
         /// <param name="lfpAmplifierGain">Desired or current <see cref="NeuropixelsV1Gain"/> for the LFP-band.</param>
         /// <param name="reference">Desired or current <see cref="NeuropixelsV1ReferenceSource"/>.</param>
         /// <param name="spikeFilter">Desired or current option to filer the spike-band.</param>
-        public NeuropixelsV1ProbeConfiguration(NeuropixelsV1eProbeGroup probeGroup, NeuropixelsV1Gain spikeAmplifierGain, NeuropixelsV1Gain lfpAmplifierGain, NeuropixelsV1ReferenceSource reference, bool spikeFilter)
+        [Obsolete("Specifying a probe group is obsolete as of 0.6.1. Remove in 1.0.0")]
+        public NeuropixelsV1ProbeConfiguration(NeuropixelsV1eProbeGroup probeGroup, NeuropixelsV1Gain spikeAmplifierGain, 
+            NeuropixelsV1Gain lfpAmplifierGain, NeuropixelsV1ReferenceSource reference, bool spikeFilter)
         {
             SpikeAmplifierGain = spikeAmplifierGain;
             LfpAmplifierGain = lfpAmplifierGain;
             Reference = reference;
             SpikeFilter = spikeFilter;
-            ChannelMap = NeuropixelsV1eProbeGroup.ToChannelMap(probeGroup);
-            ProbeGroup = new();
-            ProbeGroup.UpdateDeviceChannelIndices(ChannelMap);
         }
 
         /// <summary>
-        /// Copy constructor initializes a new instance of <see cref="NeuropixelsV1ProbeConfiguration"/> using the given <see cref="NeuropixelsV1ProbeConfiguration"/>
+        /// Copy constructor initializes a new instance of <see cref="NeuropixelsV1ProbeConfiguration"/> 
+        /// using the given <see cref="NeuropixelsV1ProbeConfiguration"/>
         /// values.
         /// </summary>
         /// <param name="probeConfiguration">Existing <see cref="NeuropixelsV1ProbeConfiguration"/> instance.</param>
@@ -95,9 +95,7 @@ namespace OpenEphys.Onix1
             LfpAmplifierGain = probeConfiguration.LfpAmplifierGain;
             Reference = probeConfiguration.Reference;
             SpikeFilter = probeConfiguration.SpikeFilter;
-            ProbeGroup = new();
-            ProbeGroup.UpdateDeviceChannelIndices(probeConfiguration.ChannelMap);
-            ChannelMap = NeuropixelsV1eProbeGroup.ToChannelMap(ProbeGroup);
+            ProbeInterfaceFile = probeConfiguration.ProbeInterfaceFile;
         }
 
         /// <summary>
@@ -152,12 +150,14 @@ namespace OpenEphys.Onix1
         /// The channel map will always be 384 channels, and will return the 384 enabled electrodes.
         /// </remarks>
         [XmlIgnore]
+        [Obsolete("This is now obsolete, as the Probe Group is now held in an externalized configuration file. Remove in 1.0.0.")]
         public NeuropixelsV1Electrode[] ChannelMap { get; }
 
         /// <summary>
         /// Update the <see cref="ChannelMap"/> with the selected electrodes.
         /// </summary>
         /// <param name="electrodes">List of selected electrodes that are being added to the <see cref="ChannelMap"/></param>
+        [Obsolete("This method is obsolete as of 0.6.1, and should not be called from this class. Remove in 1.0.0")]
         public void SelectElectrodes(NeuropixelsV1Electrode[] electrodes)
         {
             foreach (var e in electrodes)
@@ -181,29 +181,18 @@ namespace OpenEphys.Onix1
         [XmlIgnore]
         [Category(DeviceFactory.ConfigurationCategory)]
         [Description("Defines all aspects of the probe group, including probe contours, electrode size and location, enabled channels, etc.")]
-        public NeuropixelsV1eProbeGroup ProbeGroup { get; set; } = new();
-
-        /// <summary>
-        /// Gets or sets a string defining the <see cref="ProbeGroup"/> in Base64.
-        /// This variable is needed to properly save a workflow in Bonsai, but it is not
-        /// directly accessible in the Bonsai editor.
-        /// </summary>
+        [Obsolete("Holding the class has been superseded by an externalized configuration file. Remove in 1.0.0.")]
         [Browsable(false)]
         [Externalizable(false)]
-        [XmlElement(nameof(ProbeGroup))]
-        public string ProbeGroupString
-        {
-            get
-            {
-                var jsonString = JsonConvert.SerializeObject(ProbeGroup);
-                return Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonString));
-            }
-            set
-            {
-                var jsonString = Encoding.UTF8.GetString(Convert.FromBase64String(value));
-                ProbeGroup = JsonConvert.DeserializeObject<NeuropixelsV1eProbeGroup>(jsonString);
-                SelectElectrodes(NeuropixelsV1eProbeGroup.ToChannelMap(ProbeGroup));
-            }
-        }
+        public NeuropixelsV1eProbeGroup ProbeGroup { get; set; }
+
+        /// <summary>
+        /// Gets or sets the file path to a configuration file holding the Probe Interface JSON specifications for this probe.
+        /// </summary>
+        [Category(DeviceFactory.ConfigurationCategory)]
+        [Description("File path to a configuration file holding the Probe Interface JSON specifications for this probe.")]
+        [FileNameFilter($"Probe Interface files ({ProbeGroupHelper.ProbeInterfaceFileString}*.json)|*.json")]
+        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
+        public string ProbeInterfaceFile { get; set; }
     }
 }

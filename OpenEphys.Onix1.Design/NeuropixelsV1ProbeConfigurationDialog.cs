@@ -169,32 +169,32 @@ namespace OpenEphys.Onix1.Design
 
         private void SetChannelPreset(ChannelPreset preset)
         {
-            var probeConfiguration = ChannelConfiguration.ProbeConfiguration;
-            var electrodes = NeuropixelsV1eProbeGroup.ToElectrodes(ChannelConfiguration.ProbeConfiguration.ProbeGroup);
+            var probeGroup = (NeuropixelsV1eProbeGroup)ChannelConfiguration.ProbeGroup;
+            var electrodes = probeGroup.ToElectrodes();
 
             switch (preset)
             {
                 case ChannelPreset.BankA:
-                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.A).ToArray());
+                    probeGroup.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.A).ToArray());
                     break;
 
                 case ChannelPreset.BankB:
-                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.B).ToArray());
+                    probeGroup.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.B).ToArray());
                     break;
 
                 case ChannelPreset.BankC:
-                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.C ||
-                                                                             (e.Bank == NeuropixelsV1Bank.B && e.Index >= 576)).ToArray());
+                    probeGroup.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.C ||
+                                                (e.Bank == NeuropixelsV1Bank.B && e.Index >= 576)).ToArray());
                     break;
 
                 case ChannelPreset.SingleColumn:
-                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Index % 2 == 0 && e.Bank == NeuropixelsV1Bank.A) ||
-                                                                              (e.Index % 2 == 1 && e.Bank == NeuropixelsV1Bank.B)).ToArray());
+                    probeGroup.SelectElectrodes(electrodes.Where(e => (e.Index % 2 == 0 && e.Bank == NeuropixelsV1Bank.A) ||
+                                                (e.Index % 2 == 1 && e.Bank == NeuropixelsV1Bank.B)).ToArray());
                     break;
 
                 case ChannelPreset.Tetrodes:
-                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Index % 8 < 4 && e.Bank == NeuropixelsV1Bank.A) ||
-                                                                              (e.Index % 8 > 3 && e.Bank == NeuropixelsV1Bank.B)).ToArray());
+                    probeGroup.SelectElectrodes(electrodes.Where(e => (e.Index % 8 < 4 && e.Bank == NeuropixelsV1Bank.A) ||
+                                                (e.Index % 8 > 3 && e.Bank == NeuropixelsV1Bank.B)).ToArray());
                     break;
             }
 
@@ -206,7 +206,7 @@ namespace OpenEphys.Onix1.Design
 
         private void CheckForExistingChannelPreset()
         {
-            var channelMap = ChannelConfiguration.ProbeConfiguration.ChannelMap;
+            var channelMap = ((NeuropixelsV1eProbeGroup)ChannelConfiguration.ProbeGroup).ToChannelMap();
 
             if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.A))
             {
@@ -239,8 +239,6 @@ namespace OpenEphys.Onix1.Design
 
         private void OnFileLoadEvent(object sender, EventArgs e)
         {
-            // NB: Ensure that the newly loaded ProbeConfiguration in the ChannelConfigurationDialog is reflected here.
-            ProbeConfiguration = ChannelConfiguration.ProbeConfiguration;
             CheckForExistingChannelPreset();
         }
 
@@ -317,22 +315,22 @@ namespace OpenEphys.Onix1.Design
 
             panelProbe.Visible = adcCalibration.HasValue && gainCorrection.HasValue;
 
-            if (toolStripAdcCalSN.Text == NoFileSelected) 
+            if (toolStripAdcCalSN.Text == NoFileSelected)
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusWarningImage;
-            else if (toolStripAdcCalSN.Text == InvalidFile) 
+            else if (toolStripAdcCalSN.Text == InvalidFile)
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusCriticalImage;
             else if (toolStripGainCalSN.Text != NoFileSelected && toolStripGainCalSN.Text != InvalidFile && toolStripAdcCalSN.Text != toolStripGainCalSN.Text)
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusBlockedImage;
-            else 
+            else
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusReadyImage;
 
-            if (toolStripGainCalSN.Text == NoFileSelected) 
+            if (toolStripGainCalSN.Text == NoFileSelected)
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusWarningImage;
-            else if (toolStripGainCalSN.Text == InvalidFile) 
+            else if (toolStripGainCalSN.Text == InvalidFile)
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusCriticalImage;
             else if (toolStripAdcCalSN.Text != NoFileSelected && toolStripAdcCalSN.Text != InvalidFile && toolStripAdcCalSN.Text != toolStripGainCalSN.Text)
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusBlockedImage;
-            else 
+            else
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusReadyImage;
         }
 
@@ -432,7 +430,7 @@ namespace OpenEphys.Onix1.Design
 
         private void EnableSelectedContacts()
         {
-            var electrodes = NeuropixelsV1eProbeGroup.ToElectrodes(ChannelConfiguration.ProbeConfiguration.ProbeGroup);
+            var electrodes = ((NeuropixelsV1eProbeGroup)ChannelConfiguration.ProbeGroup).ToElectrodes();
 
             var selectedElectrodes = electrodes.Where((e, ind) => ChannelConfiguration.SelectedContacts[ind])
                                                .ToArray();
@@ -472,6 +470,11 @@ namespace OpenEphys.Onix1.Design
         private void UpdateTrackBarLocation(object sender, EventArgs e)
         {
             trackBarProbePosition.Value = (int)(ChannelConfiguration.GetRelativeVerticalPosition() * 100);
+        }
+
+        internal NeuropixelsV1eProbeGroup GetProbeGroup()
+        {
+            return (NeuropixelsV1eProbeGroup)ChannelConfiguration.ProbeGroup;
         }
     }
 }

@@ -28,6 +28,8 @@ namespace OpenEphys.Onix1.Design
                         configureNeuropixelsV1.ProbeConfiguration = editorDialog.ConfigureNode.ProbeConfiguration;
                         configureNeuropixelsV1.InvertPolarity = editorDialog.ConfigureNode.InvertPolarity;
 
+                        ProbeGroupHelper.SaveExternalProbeConfigurationFile(editorDialog.GetProbeGroup(), configureNeuropixelsV1.ProbeConfiguration.ProbeInterfaceFile);
+
                         return true;
                     }
                 }

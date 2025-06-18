@@ -128,7 +128,8 @@ namespace OpenEphys.Onix1
         /// Gets or sets the NeuropixelsV1 probe configuration.
         /// </summary>
         [Category(ConfigurationCategory)]
-        [Description("Neuropixels 1.0e probe configuration")]
+        [Description("Neuropixels 1.0 probe configuration")]
+        [TypeConverter(typeof(GenericPropertyConverter))]
         public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; set; } = new();
 
         /// <summary>
@@ -154,7 +155,7 @@ namespace OpenEphys.Onix1
             {
                 // configure device via the DS90UB9x deserializer device
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
-                device.WriteRegister(DS90UB9x.ENABLE, enable ? 1u : 0);
+                device.WriteRegister(DS90UB9x.ENABLE, enable ? 1u : 0u);
 
                 // configure deserializer aliases and serializer power supply
                 ConfigureDeserializer(device);

@@ -6,6 +6,7 @@ using System.Linq;
 
 namespace OpenEphys.Onix1
 {
+    // TODO: This class is supposed to be named `NeuropixelsV1ProbeGroup`. At the next major update, deprecate this class and change the name
     /// <summary>
     /// A <see cref="ProbeGroup"/> class for NeuropixelsV1e.
     /// </summary>
@@ -186,44 +187,6 @@ namespace OpenEphys.Onix1
             }
 
             UpdateDeviceChannelIndices(0, newDeviceChannelIndices);
-        }
-
-        /// <summary>
-        /// Convert a <see cref="NeuropixelsV1eProbeGroup"/> object to a list of electrodes, which only includes currently enabled electrodes
-        /// </summary>
-        /// <param name="probeGroup">A <see cref="NeuropixelsV1eProbeGroup"/> object</param>
-        /// <returns>List of <see cref="NeuropixelsV1Electrode"/>'s that are enabled</returns>
-        public static NeuropixelsV1Electrode[] ToChannelMap(NeuropixelsV1eProbeGroup probeGroup)
-        {
-            var enabledContacts = probeGroup.GetContacts().Where(c => c.DeviceId != -1);
-
-            if (enabledContacts.Count() != NeuropixelsV1.ChannelCount)
-            {
-                throw new InvalidOperationException($"Channel configuration must have {NeuropixelsV1.ChannelCount} contacts enabled." +
-                    $"Instead there are {enabledContacts.Count()} contacts enabled. Enabled contacts are designated by a device channel" +
-                    $"index >= 0.");
-            }
-
-            return enabledContacts.Select(c => new NeuropixelsV1Electrode(c.Index))
-                                  .OrderBy(e => e.Channel)
-                                  .ToArray();
-        }
-
-        /// <summary>
-        /// Convert a ProbeInterface object to a list of electrodes, which includes all possible electrodes.
-        /// </summary>
-        /// <param name="probeGroup">A <see cref="NeuropixelsV1eProbeGroup"/> object.</param>
-        /// <returns>List of <see cref="NeuropixelsV1Electrode"/> electrodes.</returns>
-        public static List<NeuropixelsV1Electrode> ToElectrodes(NeuropixelsV1eProbeGroup probeGroup)
-        {
-            List<NeuropixelsV1Electrode> electrodes = new();
-
-            foreach (var c in probeGroup.GetContacts())
-            {
-                electrodes.Add(new NeuropixelsV1Electrode(c.Index));
-            }
-
-            return electrodes;
         }
     }
 }

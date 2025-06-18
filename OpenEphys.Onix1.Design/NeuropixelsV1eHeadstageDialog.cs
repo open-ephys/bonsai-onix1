@@ -61,5 +61,10 @@ namespace OpenEphys.Onix1.Design
 
             DialogResult = DialogResult.OK;
         }
+
+        private void NeuropixelsV1eHeadstageDialog_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            ChannelConfigurationDialog.TryRemoveEmptyFile(DialogNeuropixelsV1e.GetProbeInterfaceFile());
+        }
     }
 }

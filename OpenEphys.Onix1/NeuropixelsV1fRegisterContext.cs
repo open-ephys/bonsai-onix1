@@ -55,7 +55,6 @@ namespace OpenEphys.Onix1
             var gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(gainCalibrationFile,
                 configuration.SpikeAmplifierGain, configuration.LfpAmplifierGain, NeuropixelsV1.ElectrodeCount);
 
-
             if (!gainCorrection.HasValue)
             {
                 throw new ArgumentException($"The calibration file \"{gainCalibrationFile}\" is invalid.");

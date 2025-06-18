@@ -18,6 +18,7 @@ namespace OpenEphys.Onix1.Design
     {
         internal event EventHandler OnResizeZedGraph;
 
+        internal string ProbeInterfaceFile;
         internal ProbeGroup ProbeGroup;
 
         internal readonly List<int> ReferenceContacts = new();
@@ -31,20 +32,66 @@ namespace OpenEphys.Onix1.Design
         public ChannelConfigurationDialog(ProbeGroup probeGroup)
         {
             InitializeComponent();
-            Shown += FormShown;
 
-            if (probeGroup == null)
+            ProbeGroup = probeGroup ?? DefaultChannelLayout();
+
+            SelectedContacts = new bool[ProbeGroup.NumberOfContacts];
+
+            ReferenceContacts = new List<int>();
+
+            InitializeChannelConfigurationDialog();
+        }
+
+        /// <summary>
+        /// Constructs the dialog window using the given probe interface file, loading the probe group, and plots all contacts after loading.
+        /// </summary>
+        /// <param name="probeInterfaceFile">File path to an existing probe interface file.</param>
+        public ChannelConfigurationDialog(string probeInterfaceFile)
+        {
+            InitializeComponent();
+
+            ProbeGroup = DefaultChannelLayout();
+
+            if (string.IsNullOrEmpty(probeInterfaceFile))
             {
-                LoadDefaultChannelLayout();
+                ProbeInterfaceFile = ProbeGroupHelper.GenerateProbeConfigurationFilename();
+
+                if (!string.IsNullOrEmpty(ProbeInterfaceFile))
+                {
+                    try
+                    {
+                        using var fs = File.Create(ProbeInterfaceFile);
+                    }
+                    catch (UnauthorizedAccessException ex)
+                    {
+                        throw new Exception($"Unable to create a Probe Interface file (${ProbeInterfaceFile}) due to folder permissions.", ex);
+                    }
+                    catch (DirectoryNotFoundException ex)
+                    {
+                        throw new Exception($"Unable to create a Probe Interface file (${ProbeInterfaceFile}) due to the directory not existing.", ex);
+                    }
+                    catch (IOException ex)
+                    {
+                        throw new Exception($"Unable to create a Probe Interface file (${ProbeInterfaceFile}) due to an I/O error.", ex);
+                    }
+                }
             }
             else
             {
-                ProbeGroup = probeGroup;
+                ProbeInterfaceFile = probeInterfaceFile;
+                LoadExternalProbeInterfaceFile();
             }
 
             SelectedContacts = new bool[ProbeGroup.NumberOfContacts];
 
             ReferenceContacts = new List<int>();
+
+            InitializeChannelConfigurationDialog();
+        }
+
+        private void InitializeChannelConfigurationDialog()
+        {
+            Shown += FormShown;
 
             zedGraphChannels.MouseDownEvent += MouseDownEvent;
             zedGraphChannels.MouseMoveEvent += MouseMoveEvent;
@@ -74,6 +121,8 @@ namespace OpenEphys.Onix1.Design
         {
             ProbeGroup = DefaultChannelLayout();
         }
+
+        internal abstract void LoadExternalProbeInterfaceFile();
 
         /// <summary>
         /// After every zoom event, check that the axis limits are equal to maintain the equal
@@ -849,7 +898,7 @@ namespace OpenEphys.Onix1.Design
         internal static double GetProbeContourLeft(GraphObjList graphObjs)
         {
             return graphObjs.OfType<PolyObj>()
-                            .Min(obj => { return obj.Points.Min(p => p.X); });
+                            .Min(obj => { return obj.Points.Min((Func<PointD, double>)(p => p.X)); });
         }
 
         internal static double GetProbeBottom(GraphObjList graphObjs)
@@ -875,7 +924,7 @@ namespace OpenEphys.Onix1.Design
         internal static double GetProbeContourBottom(GraphObjList graphObjs)
         {
             return graphObjs.OfType<PolyObj>()
-                            .Min(obj => { return obj.Points.Min(p => p.Y); });
+                            .Min(obj => { return obj.Points.Min((Func<PointD, double>)(p => p.Y)); });
         }
 
         internal static double GetProbeRight(GraphObjList graphObjs)
@@ -901,7 +950,7 @@ namespace OpenEphys.Onix1.Design
         internal static double GetProbeContourRight(GraphObjList graphObjs)
         {
             return graphObjs.OfType<PolyObj>()
-                            .Max(obj => { return obj.Points.Max(p => p.X); });
+                            .Max(obj => { return obj.Points.Max((Func<PointD, double>)(p => p.X)); });
         }
 
         internal static double GetProbeTop(GraphObjList graphObjs)
@@ -927,7 +976,7 @@ namespace OpenEphys.Onix1.Design
         internal static double GetProbeContourTop(GraphObjList graphObjs)
         {
             return graphObjs.OfType<PolyObj>()
-                            .Max(obj => { return obj.Points.Max(p => p.Y); });
+                            .Max(obj => { return obj.Points.Max((Func<PointD, double>)(p => p.Y)); });
         }
 
         /// <summary>
@@ -1342,12 +1391,41 @@ namespace OpenEphys.Onix1.Design
         {
             foreach (var probe in probeGroup.Probes)
             {
-                if (probe.ContactAnnotations != null 
-                    && probe.ContactAnnotations.Annotations != null 
+                if (probe.ContactAnnotations != null
+                    && probe.ContactAnnotations.Annotations != null
                     && probe.ContactAnnotations.Annotations.Length > 0)
                 {
                     return true;
                 }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Attempts to remove the given file if it is empty.
+        /// </summary>
+        /// <param name="file">Filepath to the given file.</param>
+        /// <returns>True if the file was empty and it was successfully removed, otherwise returns false.</returns>
+        /// <exception cref="Exception"></exception>
+        internal static bool TryRemoveEmptyFile(string file)
+        {
+            if (string.IsNullOrEmpty(file) || !File.Exists(file))
+                return false;
+
+            try
+            {
+                var info = new FileInfo(file);
+
+                if (info.Length == 0 && info.Name.Contains(ProbeGroupHelper.ProbeInterfaceFileString))
+                {
+                    File.Delete(file); // NB: Automatically remove the empty file generated in ChannelConfigurationDialog
+                    return true;
+                }
+            }
+            catch (IOException ex)
+            {
+                throw new Exception($"Unable to automatically remove Probe Interface file {file}. This file can be deleted if it is no longer needed.", ex);
             }
 
             return false;

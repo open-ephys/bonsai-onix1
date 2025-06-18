@@ -83,7 +83,8 @@ namespace OpenEphys.Onix1
         /// Gets or sets the NeuropixelsV1 probe configuration.
         /// </summary>
         [Category(ConfigurationCategory)]
-        [Description("Neuropixels 1.0e probe configuration.")]
+        [Description("Neuropixels 1.0 probe configuration.")]
+        [TypeConverter(typeof(GenericPropertyConverter))]
         public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; set; } = new();
 
         /// <summary>
@@ -156,7 +157,7 @@ namespace OpenEphys.Onix1
             return source.ConfigureDevice(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, typeof(NeuropixelsV1f));
-                device.WriteRegister(NeuropixelsV1f.ENABLE, enable ? 1u : 0);
+                device.WriteRegister(NeuropixelsV1f.ENABLE, enable ? 1u : 0u);
 
                 if (enable)
                 {

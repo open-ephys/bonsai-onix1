@@ -31,11 +31,17 @@ namespace OpenEphys.Onix1.Design
                         configureHeadstage.NeuropixelsV1A.ProbeConfiguration = editorDialog.DialogNeuropixelsV1A.ConfigureNode.ProbeConfiguration;
                         configureHeadstage.NeuropixelsV1A.InvertPolarity = editorDialog.DialogNeuropixelsV1A.ConfigureNode.InvertPolarity;
 
+                        ProbeGroupHelper.SaveExternalProbeConfigurationFile(editorDialog.DialogNeuropixelsV1A.GetProbeGroup(),
+                            configureHeadstage.NeuropixelsV1A.ProbeConfiguration.ProbeInterfaceFile);
+
                         configureHeadstage.NeuropixelsV1B.AdcCalibrationFile = editorDialog.DialogNeuropixelsV1B.ConfigureNode.AdcCalibrationFile;
                         configureHeadstage.NeuropixelsV1B.GainCalibrationFile = editorDialog.DialogNeuropixelsV1B.ConfigureNode.GainCalibrationFile;
                         configureHeadstage.NeuropixelsV1B.Enable = editorDialog.DialogNeuropixelsV1B.ConfigureNode.Enable;
                         configureHeadstage.NeuropixelsV1B.ProbeConfiguration = editorDialog.DialogNeuropixelsV1B.ConfigureNode.ProbeConfiguration;
                         configureHeadstage.NeuropixelsV1B.InvertPolarity = editorDialog.DialogNeuropixelsV1B.ConfigureNode.InvertPolarity;
+
+                        ProbeGroupHelper.SaveExternalProbeConfigurationFile(editorDialog.DialogNeuropixelsV1B.GetProbeGroup(),
+                            configureHeadstage.NeuropixelsV1B.ProbeConfiguration.ProbeInterfaceFile);
 
                         return true;
                     }
