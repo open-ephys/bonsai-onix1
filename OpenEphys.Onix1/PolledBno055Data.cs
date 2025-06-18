@@ -115,56 +115,48 @@ namespace OpenEphys.Onix1
                                 registeredValues.Add(deviceName);
                             }
 
-                            // NB: Preallocate the array to avoid unnecesary allocation each frame
                             byte[] data = new byte[28];
+
                             var s = source.SubscribeSafe(observer, _ =>
                             {
                                 Bno055DataFrame frame = default;
                                 device.Context.EnsureContext(() =>
                                 {
-                                      if (polled.HasFlag(PolledBno055Registers.EulerAngle))
-                                      {
-                                          i2c.ReadWord(PolledBno055.EulerHeadingLsbAddress + 0, 4, data, 0);
-                                          i2c.ReadWord(PolledBno055.EulerHeadingLsbAddress + 4, 2, data, 4);
-                                      }
-                                      else
-                                      {
-                                          Array.Clear(data, 0, 6);
-                                      }
+                                    Array.Clear(data, 0, data.Length);
 
-                                      if (polled.HasFlag(PolledBno055Registers.Quaternion))
-                                      {
-                                          i2c.ReadWord(PolledBno055.EulerHeadingLsbAddress + 6, 4, data, 6);
-                                          i2c.ReadWord(PolledBno055.EulerHeadingLsbAddress + 10, 4, data, 10);
-                                      }
-                                      else
-                                      {
-                                          Array.Clear(data, 6, 8);
-                                      }
+                                    if (polled.HasFlag(PolledBno055Registers.EulerAngle))
+                                    {
+                                        i2c.ReadWord(PolledBno055.EulerHeadingLsbAddress + 0, 4, data, 0);
+                                        i2c.ReadWord(PolledBno055.EulerHeadingLsbAddress + 4, 2, data, 4);
+                                    }
 
-                                      if (polled.HasFlag(PolledBno055Registers.Acceleration))
-                                      {
-                                          i2c.ReadWord(PolledBno055.EulerHeadingLsbAddress + 14, 4, data, 14);
-                                          i2c.ReadWord(PolledBno055.EulerHeadingLsbAddress + 18, 2, data, 18);
-                                      }
-                                      else
-                                      {
-                                          Array.Clear(data, 0, 6);
-                                      }
+                                    if (polled.HasFlag(PolledBno055Registers.Quaternion))
+                                    {
+                                        i2c.ReadWord(PolledBno055.EulerHeadingLsbAddress + 6, 4, data, 6);
+                                        i2c.ReadWord(PolledBno055.EulerHeadingLsbAddress + 10, 4, data, 10);
+                                    }
 
-                                      if (polled.HasFlag(PolledBno055Registers.Gravity))
-                                      {
-                                          i2c.ReadWord(PolledBno055.EulerHeadingLsbAddress + 20, 4, data, 20);
-                                          i2c.ReadWord(PolledBno055.EulerHeadingLsbAddress + 24, 2, data, 24);
-                                      }
-                                      else
-                                      {
-                                          Array.Clear(data, 0, 6);
-                                      }
+                                    if (polled.HasFlag(PolledBno055Registers.Acceleration))
+                                    {
+                                        i2c.ReadWord(PolledBno055.EulerHeadingLsbAddress + 14, 4, data, 14);
+                                        i2c.ReadWord(PolledBno055.EulerHeadingLsbAddress + 18, 2, data, 18);
+                                    }
 
-                                      //TODO: actual performance would be a little better if we merged these two so they could be read together
-                                      data[26] = polled.HasFlag(PolledBno055Registers.Temperature) ? i2c.ReadByte(PolledBno055.EulerHeadingLsbAddress + 26) : (byte)0;
-                                      data[27] = polled.HasFlag(PolledBno055Registers.Calibration) ? i2c.ReadByte(PolledBno055.EulerHeadingLsbAddress + 27) : (byte)0;
+                                    if (polled.HasFlag(PolledBno055Registers.Gravity))
+                                    {
+                                        i2c.ReadWord(PolledBno055.EulerHeadingLsbAddress + 20, 4, data, 20);
+                                        i2c.ReadWord(PolledBno055.EulerHeadingLsbAddress + 24, 2, data, 24);
+                                    }
+
+                                    if (polled.HasFlag(PolledBno055Registers.Temperature | PolledBno055Registers.Calibration))
+                                    {
+                                        i2c.ReadWord(PolledBno055.EulerHeadingLsbAddress + 26, 2, data, 26);
+                                    }
+                                    else
+                                    {
+                                        data[26] = polled.HasFlag(PolledBno055Registers.Temperature) ? i2c.ReadByte(PolledBno055.EulerHeadingLsbAddress + 26) : (byte)0;
+                                        data[27] = polled.HasFlag(PolledBno055Registers.Calibration) ? i2c.ReadByte(PolledBno055.EulerHeadingLsbAddress + 27) : (byte)0;
+                                    }
 
                                     ulong clock = passthrough.ReadRegister(DS90UB9x.LASTI2CL);
                                     clock += (ulong)passthrough.ReadRegister(DS90UB9x.LASTI2CH) << 32;
