@@ -18,21 +18,41 @@ namespace OpenEphys.Onix1
             device = deviceContext ?? throw new ArgumentNullException(nameof(deviceContext));
             address = i2cAddress;
         }
-
         public void WriteByte(uint address, uint value, bool sixteenBitAddress = false)
         {
+            WriteWord(address, value, 1, sixteenBitAddress);
+        }
+
+        public void WriteWord(uint address, uint value, uint numBytes, bool sixteenBitAddress = false)
+        {
+            if (numBytes < 1 || numBytes > 4) throw new ArgumentOutOfRangeException(nameof(numBytes)); 
             uint registerAddress = (address << 7) | (this.address & 0x7F);
             registerAddress |= sixteenBitAddress ? 0x80000000 : 0;
-            device.WriteRegister(registerAddress, (byte)value);
+            registerAddress |= (numBytes - 1) << 28;
+            device.WriteRegister(registerAddress, value);
         }
 
         public byte ReadByte(uint address, bool sixteenBitAddress = false)
         {
+            return (byte)ReadWord(address, 1, sixteenBitAddress);
+        }
+        public uint ReadWord(uint address, uint numBytes, bool sixteenBitAddress = false)
+        {
+            if (numBytes < 1 || numBytes > 4) throw new ArgumentOutOfRangeException(nameof(numBytes));
             uint registerAddress = (address << 7) | (this.address & 0x7F);
             registerAddress |= sixteenBitAddress ? 0x80000000 : 0;
-            return (byte)device.ReadRegister(registerAddress);
+            registerAddress |= (numBytes - 1) << 28;
+            return device.ReadRegister(registerAddress);
         }
 
+        public void ReadWord(uint address, uint numBytes, byte[] arr, int offset, bool sixteenBitAddress = false)
+        {
+            uint data = ReadWord(address, numBytes, sixteenBitAddress);
+            for (int i = 0; i < numBytes; i++)
+            {
+                arr[offset + i] = (byte)(data >> (8 * i));
+            }
+        }
         public byte[] ReadBytes(uint address, int count, bool sixteenBitAddress = false)
         {
             var data = new byte[count];
