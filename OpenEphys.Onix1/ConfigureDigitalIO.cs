@@ -1,5 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
+using Bonsai;
+using Bonsai.Reactive;
 
 namespace OpenEphys.Onix1
 {
@@ -18,6 +20,10 @@ namespace OpenEphys.Onix1
     [Description("Configures the ONIX breakout board's digital inputs and outputs.")]
     public class ConfigureDigitalIO : SingleDeviceFactory
     {
+
+        double? sampleRate = null;
+        double deadTime = 0;
+
         /// <summary>
         /// Initialize a new instance of the <see cref="ConfigureDigitalIO"/> class.
         /// </summary>
@@ -39,6 +45,49 @@ namespace OpenEphys.Onix1
         public bool Enable { get; set; } = true;
 
         /// <summary>
+        /// Gets or sets the dead time, in microseconds, between event detections when in asynchronous
+        /// sampling mode.
+        /// </summary>
+        /// <remarks>
+        /// This property is useful for filtering "glitches" due to rapidly changing port states, for instance
+        /// from switch bounce. This property has no effect when <see cref="SampleRate"/> is set and periodic
+        /// sampling mode is active.
+        /// </remarks>
+        [Range(0, 1e6)]
+        [Category(ConfigurationCategory)]
+        [Description("Specifies dead time, in microseconds, between digital event detections when in asynchronous " +
+            "sampling mode")]
+        public double DeadTime
+        {
+            get => deadTime;
+            set => deadTime = (value >= 0 && value <= 1e6)
+            ? value
+            : throw new ArgumentOutOfRangeException(nameof(DeadTime), value,
+                $"{nameof(DeadTime)} must be between 0 and 1e6 microseconds.");
+        }
+
+        /// <summary>
+        /// Gets or sets the optional sample rate, in Hz, of the digital inputs.
+        /// </summary>
+        /// <remarks>
+        /// If specified, digital inputs will be sampled periodically at the specified rate in Hz. If not
+        /// specified, digital input data will be produced asynchronously upon changes in digital input state
+        /// as long as the changes do not occur in the <see cref="DeadTime"/> with respect to the last
+        /// detected digital event.
+        /// </remarks>
+        [Range(10, 1e6)]
+        [Category(ConfigurationCategory)]
+        [Description("Specifies the optional sample rate, in Hz, of digital inputs. If not specified, digital " +
+            "data will be produced asynchronously upon changes in digital input state.")]
+        public double? SampleRate { 
+            get => sampleRate; 
+            set => sampleRate = (value >= 10 && value <= 1e6) | value is null
+            ? value
+            : throw new ArgumentOutOfRangeException(nameof(SampleRate), value,
+                $"{nameof(SampleRate)} must be between 10 Hz and 1 MHz.");
+        }
+
+        /// <summary>
         /// Configures the digital input and output device in the ONIX breakout board.
         /// </summary>
         /// <remarks>
@@ -55,10 +104,23 @@ namespace OpenEphys.Onix1
         {
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
+            var dt = deadTime;
+            var sr = SampleRate;
             return source.ConfigureDevice(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
                 device.WriteRegister(DigitalIO.ENABLE, Enable ? 1u : 0);
+
+                var baseFreqHz = device.ReadRegister(DigitalIO.BASE_FREQ_HZ);
+                device.WriteRegister(DigitalIO.DEAD_TICKS, (uint)(dt / 1e6 * baseFreqHz));
+
+                if (sr is not null)
+                {
+                    
+                    var periodTicks = (uint)(baseFreqHz / sr);
+                    device.WriteRegister(DigitalIO.SAMPLE_PERIOD, periodTicks);
+                }
+
                 return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
             });
         }
@@ -69,7 +131,10 @@ namespace OpenEphys.Onix1
         public const int ID = 18;
 
         // managed registers
-        public const uint ENABLE = 0x0; // Enable or disable the data output stream
+        public const uint ENABLE = 0x0;
+        public const uint BASE_FREQ_HZ = 0x5;
+        public const uint DEAD_TICKS = 0x6;
+        public const uint SAMPLE_PERIOD = 0x7;
 
         internal class NameConverter : DeviceNameConverter
         {
