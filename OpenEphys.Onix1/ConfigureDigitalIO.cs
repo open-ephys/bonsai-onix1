@@ -45,7 +45,7 @@ namespace OpenEphys.Onix1
         public bool Enable { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets the dead time, in microseconds, between event detections when in asynchronous
+        /// Gets or sets the dead time, in μsec, between event detections when in asynchronous
         /// sampling mode.
         /// </summary>
         /// <remarks>
@@ -55,7 +55,7 @@ namespace OpenEphys.Onix1
         /// </remarks>
         [Range(0, 1e6)]
         [Category(ConfigurationCategory)]
-        [Description("Specifies dead time, in microseconds, between digital event detections when in asynchronous " +
+        [Description("Specifies dead time, in μsec, between digital event detections when in asynchronous " +
             "sampling mode")]
         public double DeadTime
         {
@@ -63,7 +63,7 @@ namespace OpenEphys.Onix1
             set => deadTime = (value >= 0 && value <= 1e6)
             ? value
             : throw new ArgumentOutOfRangeException(nameof(DeadTime), value,
-                $"{nameof(DeadTime)} must be between 0 and 1e6 microseconds.");
+                $"{nameof(DeadTime)} must be between 0 and 1e6 μsec.");
         }
 
         /// <summary>
@@ -191,6 +191,10 @@ namespace OpenEphys.Onix1
     [Flags]
     public enum BreakoutButtonState : ushort
     {
+        /// <summary>
+        /// Specifies that no buttons or switches are active.
+        /// </summary>
+        None = 0x0,
         /// <summary>
         /// Specifies that the ☾ key is depressed.
         /// </summary>
