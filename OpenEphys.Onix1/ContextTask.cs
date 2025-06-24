@@ -76,8 +76,6 @@ namespace OpenEphys.Onix1
         readonly string contextDriver = DefaultDriver;
         readonly int contextIndex = DefaultIndex;
 
-        private oni.Hub controllerHub;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ContextTask"/> class.
         /// </summary>
@@ -96,13 +94,11 @@ namespace OpenEphys.Onix1
             contextIndex = index;
             ctx = new oni.Context(contextDriver, contextIndex);
             Initialize();
-            controllerHub = GetHub(0);
-            uint versionMajor;
-            GenericHelper.GetVersionComponents(controllerHub.FirmwareVersion, out versionMajor, out _);
-            if (versionMajor != 2)
+            var (major, _) = GenericHelper.GetFirmwareVersionComponents(GetHub(0).FirmwareVersion);
+            if (major != 2)
             {
-                throw new NotSupportedException("This library requires version 2.x of the ONIX firmware."
-                    + "Please update it. Instructions can be found in "
+                throw new NotSupportedException("This library requires version 2.x of the ONIX firmware. "
+                    + "Please perform a firmware update to use this library. Instructions can be found at "
                     + "https://open-ephys.github.io/onix-docs/Hardware%20Guide/PCIe%20Host/updating-firmware.html");
             }
         }
