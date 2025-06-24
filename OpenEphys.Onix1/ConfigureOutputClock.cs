@@ -57,7 +57,7 @@ namespace OpenEphys.Onix1
         /// integer multiple of the <see cref="ContextTask.AcquisitionClockHz">Acquisition Clock</see>
         /// frequency. Therefore, the true clock frequency will be set to a value that is as close as possible
         /// to the requested setting while respecting this constraint. The value as actualized in hardware is
-        /// reported by <see cref="OutputClockData"/>.
+        /// reported by <see cref="OutputClockHardwareParameters"/>.
         /// </remarks>
         [Range(0.1, 10e6)]
         [Category(ConfigurationCategory)]
@@ -79,7 +79,7 @@ namespace OpenEphys.Onix1
         /// multiple of the <see cref="ContextTask.AcquisitionClockHz">Acquisition Clock</see> frequency.
         /// Therefore, the true duty cycle will be set to a value that is as close as possible to the
         /// requested setting while respecting this constraint. The value as actualized in hardware is
-        /// reported by <see cref="OutputClockData"/>.
+        /// reported by <see cref="OutputClockHardwareParameters"/>.
         /// </remarks>
         [Range(10, 90)]
         [Editor(DesignTypes.SliderEditor, typeof(UITypeEditor))]
@@ -110,7 +110,7 @@ namespace OpenEphys.Onix1
         /// cref="ContextTask.AcquisitionClockHz">Acquisition Clock</see> frequency. Therefore, the true delay
         /// cycle will be set to a value that is as close as possible to the requested setting while
         /// respecting this constraint. The value as actualized in hardware is reported by <see
-        /// cref="OutputClockData"/>.
+        /// cref="OutputClockHardwareParameters"/>.
         /// </para>
         /// </remarks>
         [Category(ConfigurationCategory)]

@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1
     /// href="https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bno055-ds000.pdf">datasheet</a>)
     /// . If the chip is in NDOF mode and is calibrated, orientation measurements (Quaternion, Euler Angles,
     /// and Gravity Vector) are absolute ("allocentric") and referenced to the gravity vector and Earth's
-    /// magnetic field. Specifically, if the chip's axes are oriented such that Y points towords magnetic
+    /// magnetic field. Specifically, if the chip's axes are oriented such that Y points towards magnetic
     /// north, X points towards magnetic east, and Z points opposite the gravity vector, the orientation
     /// reading will be null (i.e. Quaternion: X = 0, Y = 0, Z = 0, W = 1; Euler Angles: Yaw = 0, Pitch = 0,
     /// and Roll = 0 degrees; Gravity: X = 0, Y = 0, Z = 9.8 m/s^2). Linear acceleration readings are always

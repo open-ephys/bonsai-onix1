@@ -7,14 +7,15 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Produces a sequence with a single element containing the output clock's exact hardware parameters for each subscription.
+    /// Produces a sequence with a single element containing the output clock's exact hardware parameters for
+    /// each subscription.
     /// </summary>
     /// <remarks>
     /// This data IO operator must be linked to an appropriate configuration, such as a <see
     /// cref="ConfigureOutputClock"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Produces a sequence with a single element containing the output clock's hardware parameters for each subscription.")]
-    public class OutputClockData : Source<OutputClockParameters>
+    public class OutputClockHardwareParameters : Source<OutputClockParameters>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(OutputClock.NameConverter))]
@@ -36,4 +37,9 @@ namespace OpenEphys.Onix1
                 });
         }
     }
+
+    /// <inheritdoc cref = "OutputClockHardwareParameters"/>v
+    [Obsolete("This operator is obsolete. Use OutputClockHardwareParameters instead. Will be removed in version 1.0.0.")]
+    public class OutputClockData : OutputClockHardwareParameters { }
+
 }
