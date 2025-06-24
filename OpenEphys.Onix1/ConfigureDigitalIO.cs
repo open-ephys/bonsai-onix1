@@ -116,9 +116,11 @@ namespace OpenEphys.Onix1
 
                 if (sr is not null)
                 {
-                    
                     var periodTicks = (uint)(baseFreqHz / sr);
                     device.WriteRegister(DigitalIO.SAMPLE_PERIOD, periodTicks);
+                } else
+                {
+                    device.WriteRegister(DigitalIO.SAMPLE_PERIOD, 0);
                 }
 
                 return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
