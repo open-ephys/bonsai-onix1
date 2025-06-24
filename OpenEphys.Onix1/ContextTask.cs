@@ -94,6 +94,13 @@ namespace OpenEphys.Onix1
             contextIndex = index;
             ctx = new oni.Context(contextDriver, contextIndex);
             Initialize();
+            var (major, _) = GenericHelper.GetFirmwareVersionComponents(GetHub(0).FirmwareVersion);
+            if (major != 2)
+            {
+                throw new NotSupportedException("This library requires version 2.x of the ONIX firmware. "
+                    + "Please perform a firmware update to use this library. Instructions can be found at "
+                    + "https://open-ephys.github.io/onix-docs/Hardware%20Guide/PCIe%20Host/updating-firmware.html");
+            }
         }
 
         private void Initialize()
