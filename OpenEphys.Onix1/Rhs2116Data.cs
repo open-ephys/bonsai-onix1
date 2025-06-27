@@ -37,9 +37,9 @@ namespace OpenEphys.Onix1
         public int BufferSize { get; set; } = 30;
 
         /// <summary>
-        /// Generates a sequence of <see cref="Rhs2116DataFrame"/>s.
+        /// Generates a sequence of <see cref="Rhs2116DataFrame">Rhs2116DataFrames</see>.
         /// </summary>
-        /// <returns>A sequence of <see cref="Rhs2116DataFrame"/>s.</returns>
+        /// <returns>A sequence of <see cref="Rhs2116DataFrame">Rhs2116DataFrames</see>.</returns>
         public unsafe override IObservable<Rhs2116DataFrame> Generate()
         {
             var bufferSize = BufferSize;

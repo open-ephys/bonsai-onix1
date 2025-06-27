@@ -57,7 +57,7 @@ namespace OpenEphys.Onix1
         /// </remarks>
         /// <param name="specification">String defining the <see cref="ProbeGroup.Specification"/>.</param>
         /// <param name="version">String defining the <see cref="ProbeGroup.Version"/>.</param>
-        /// <param name="probes">Array of <see cref="Probe"/>s.</param>
+        /// <param name="probes">Array of <see cref="Probe">Probes</see>.</param>
         [JsonConstructor]
         public NeuropixelsV2eProbeGroup(string specification, string version, Probe[] probes)
             : base(specification, version, probes)

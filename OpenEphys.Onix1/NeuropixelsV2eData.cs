@@ -46,9 +46,9 @@ namespace OpenEphys.Onix1
         public NeuropixelsV2Probe ProbeIndex { get; set; }
 
         /// <summary>
-        /// Generates a sequence of <see cref="NeuropixelsV2eDataFrame"/>s.
+        /// Generates a sequence of <see cref="NeuropixelsV2eDataFrame">NeuropixelsV2eDataFrames</see>.
         /// </summary>
-        /// <returns>A sequence of <see cref="NeuropixelsV2eDataFrame"/>s.</returns>
+        /// <returns>A sequence of <see cref="NeuropixelsV2eDataFrame">NeuropixelsV2eDataFrames</see>.</returns>
         public unsafe override IObservable<NeuropixelsV2eDataFrame> Generate()
         {
             var bufferSize = BufferSize;
