@@ -12,7 +12,6 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Produces a sequence of <see cref="Rhs2116PairDataFrame"/> objects from a synchronized pair of Intan
     /// Rhs2116 bidirectional bioacquisition chips.
-    /// chips.
     /// </summary>
     /// <remarks>
     /// This data IO operator must be linked to an appropriate configuration, such as a <see
@@ -37,9 +36,9 @@ namespace OpenEphys.Onix1
         public int BufferSize { get; set; } = 30;
 
         /// <summary>
-        /// Generates a sequence of <see cref="Rhs2116PairDataFrame"/>s.
+        /// Generates a sequence of <see cref="Rhs2116PairDataFrame">Rhs2116PairDataFrames</see>.
         /// </summary>
-        /// <returns>A sequence of <see cref="Rhs2116PairDataFrame"/>s.</returns>
+        /// <returns>A sequence of <see cref="Rhs2116PairDataFrame">Rhs2116PairDataFrames</see>.</returns>
         public unsafe override IObservable<Rhs2116PairDataFrame> Generate()
         {
             var bufferSize = BufferSize;

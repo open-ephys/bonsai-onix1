@@ -9,6 +9,7 @@
     <Platforms>x64</Platforms>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <ForceDesignerDPIUnaware>true</ForceDesignerDPIUnaware>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>

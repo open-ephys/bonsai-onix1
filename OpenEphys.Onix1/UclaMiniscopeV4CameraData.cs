@@ -10,8 +10,8 @@ using OpenCV.Net;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Produces a sequence of <see cref="UclaMiniscopeV4CameraFrame"/>s from the Python-480 image sensor on a
-    /// UCLA Miniscope V4.
+    /// Produces a sequence of <see cref="UclaMiniscopeV4CameraFrame">UclaMiniscopeV4CameraFrames</see> from
+    /// the Python-480 image sensor on a UCLA Miniscope V4.
     /// </summary>
     public class UclaMiniscopeV4CameraData : Source<UclaMiniscopeV4CameraFrame>
     {
@@ -38,10 +38,10 @@ namespace OpenEphys.Onix1
         public UclaMiniscopeV4ImageDepth DataType { get; set; } = UclaMiniscopeV4ImageDepth.U8;
 
         /// <summary>
-        /// Generates a sequence of <see cref="UclaMiniscopeV4CameraFrame"/>s at a rate determined by <see
-        /// cref="ConfigureUclaMiniscopeV4Camera.FrameRate"/>.
+        /// Generates a sequence of <see cref="UclaMiniscopeV4CameraFrame">UclaMiniscopeV4CameraFrames</see>
+        /// at a rate determined by <see cref="ConfigureUclaMiniscopeV4Camera.FrameRate"/>.
         /// </summary>
-        /// <returns>A sequence of <see cref="UclaMiniscopeV4CameraFrame"/>s</returns>
+        /// <returns>A sequence of <see cref="UclaMiniscopeV4CameraFrame">UclaMiniscopeV4CameraFrames</see></returns>
         public unsafe override IObservable<UclaMiniscopeV4CameraFrame> Generate()
         {
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>

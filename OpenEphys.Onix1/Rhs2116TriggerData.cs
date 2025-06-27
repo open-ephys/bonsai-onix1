@@ -24,9 +24,9 @@ namespace OpenEphys.Onix1
         public string DeviceName { get; set; }
 
         /// <summary>
-        /// Generates a sequence of <see cref="Rhs2116TriggerDataFrame"/>s.
+        /// Generates a sequence of <see cref="Rhs2116TriggerDataFrame">Rhs2116TriggerDataFrames</see>.
         /// </summary>
-        /// <returns>A sequence of <see cref="Rhs2116TriggerDataFrame"/>s.</returns>
+        /// <returns>A sequence of <see cref="Rhs2116TriggerDataFrame">Rhs2116TriggerDataFrames</see>.</returns>
         public override IObservable<Rhs2116TriggerDataFrame> Generate()
         {
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
