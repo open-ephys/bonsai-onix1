@@ -317,10 +317,6 @@ namespace OpenEphys.Onix1
 
             // Activate recording mode on NP
             i2cNP.WriteByte(NeuropixelsV2e.OP_MODE, 0b0100_0000);
-
-            // Set global ADC settings
-            // TODO: Undocumented
-            i2cNP.WriteByte(NeuropixelsV2e.ADC_CONFIG, 0b0000_1000);
         }
     }
 
