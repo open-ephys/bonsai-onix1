@@ -42,4 +42,11 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <Target Name="CopyNativeDependencies" AfterTargets="AfterBuild">
+    <ItemGroup>
+      <NativeDlls Include="$(OutputPath)..\..\OpenEphys.Onix1\$(ArtifactsPivots)\*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(NativeDlls)" DestinationFolder="$(OutputPath)" />
+  </Target>
+
 </Project>
