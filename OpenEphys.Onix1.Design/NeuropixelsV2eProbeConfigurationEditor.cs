@@ -45,10 +45,14 @@ namespace OpenEphys.Onix1.Design
                         if (configuration.Probe == NeuropixelsV2Probe.ProbeA)
                         {
                             instance.GainCalibrationFileA = editorDialog.textBoxProbeCalibrationFile.Text;
+                            instance.ProbeConfigurationA.ProbeInterfaceFile = editorDialog.ProbeConfiguration.ProbeInterfaceFile;
+                            ProbeGroupHelper.SaveExternalProbeConfigurationFile(editorDialog.GetProbeGroup(), instance.ProbeConfigurationA.ProbeInterfaceFile);
                         }
                         else
                         {
                             instance.GainCalibrationFileB = editorDialog.textBoxProbeCalibrationFile.Text;
+                            instance.ProbeConfigurationB.ProbeInterfaceFile = editorDialog.ProbeConfiguration.ProbeInterfaceFile;
+                            ProbeGroupHelper.SaveExternalProbeConfigurationFile(editorDialog.GetProbeGroup(), instance.ProbeConfigurationB.ProbeInterfaceFile);
                         }
 
                         instance.InvertPolarity = editorDialog.InvertPolarity;

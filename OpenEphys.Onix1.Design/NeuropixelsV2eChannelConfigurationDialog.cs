@@ -27,7 +27,7 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <param name="probeConfiguration">A <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> object holding the current configuration settings.</param>
         public NeuropixelsV2eChannelConfigurationDialog(NeuropixelsV2QuadShankProbeConfiguration probeConfiguration)
-            : base(probeConfiguration.ProbeGroup)
+            : base(probeConfiguration.ProbeInterfaceFile)
         {
             zedGraphChannels.ZoomButtons = MouseButtons.None;
             zedGraphChannels.ZoomButtons2 = MouseButtons.None;
@@ -35,6 +35,7 @@ namespace OpenEphys.Onix1.Design
             zedGraphChannels.ZoomStepFraction = 0.5;
 
             ProbeConfiguration = probeConfiguration;
+            ProbeConfiguration.ProbeInterfaceFile = ProbeInterfaceFile;
 
             ZoomInBoundaryX = 600;
             ZoomInBoundaryY = 600;
@@ -49,10 +50,23 @@ namespace OpenEphys.Onix1.Design
             return new NeuropixelsV2eProbeGroup();
         }
 
+        internal override void LoadExternalProbeInterfaceFile()
+        {
+            var probeGroup = ProbeGroupHelper.LoadExternalProbeConfigurationFile<NeuropixelsV2eProbeGroup>(ProbeInterfaceFile);
+
+            if (probeGroup.NumberOfContacts != ProbeGroup.NumberOfContacts)
+                throw new InvalidOperationException("The Probe Interface has the wrong number of contacts. " +
+                    $"Expected {ProbeGroup.NumberOfContacts} to exist, but there were {probeGroup.NumberOfContacts} found. " +
+                    $"\n\nDouble check that the correct filepath is given for this probe. " +
+                    $"\nFilepath: {ProbeInterfaceFile}" +
+                    $"\nProbe Type: {nameof(NeuropixelsV2)}");
+
+            ProbeGroup = probeGroup;
+        }
+
         internal override void LoadDefaultChannelLayout()
         {
-            ProbeConfiguration = new(ProbeConfiguration.Probe, ProbeConfiguration.Reference);
-            ProbeGroup = ProbeConfiguration.ProbeGroup;
+            base.LoadDefaultChannelLayout();
 
             OnFileOpenHandler();
         }
@@ -61,8 +75,6 @@ namespace OpenEphys.Onix1.Design
         {
             if (base.OpenFile<NeuropixelsV2eProbeGroup>())
             {
-                ProbeConfiguration = new((NeuropixelsV2eProbeGroup)ProbeGroup, ProbeConfiguration.Reference, ProbeConfiguration.Probe);
-
                 OnFileOpenHandler();
 
                 return true;
@@ -108,7 +120,7 @@ namespace OpenEphys.Onix1.Design
             const int MinorTickIncrement = 10;
             const int MinorTickLength = 5;
 
-            if (ProbeConfiguration.ProbeGroup.Probes.ElementAt(0).SiUnits != ProbeSiUnits.um)
+            if (ProbeGroup.Probes.ElementAt(0).SiUnits != ProbeSiUnits.um)
             {
                 MessageBox.Show("Warning: Expected ProbeGroup units to be in microns, but it is in millimeters. Scale might not be accurate.");
             }
@@ -181,8 +193,10 @@ namespace OpenEphys.Onix1.Design
 
         internal override void HighlightEnabledContacts()
         {
-            if (ProbeConfiguration == null || ProbeConfiguration.ChannelMap == null)
+            if (ProbeConfiguration == null)
                 return;
+
+            var channelMap = ((NeuropixelsV2eProbeGroup)ProbeGroup).ToChannelMap();
 
             var contactObjects = zedGraphChannels.GraphPane.GraphObjList.OfType<BoxObj>()
                                                                         .Where(c => c is not PolyObj);
@@ -198,7 +212,7 @@ namespace OpenEphys.Onix1.Design
                                                         {
                                                             var tag = c.Tag as ContactTag;
                                                             var channel = NeuropixelsV2QuadShankElectrode.GetChannelNumber(tag.ContactIndex);
-                                                            return ProbeConfiguration.ChannelMap[channel].Index == tag.ContactIndex;
+                                                            return channelMap[channel].Index == tag.ContactIndex;
                                                         });
 
             foreach (var contact in contactsToEnable)
@@ -211,8 +225,10 @@ namespace OpenEphys.Onix1.Design
 
         internal override void UpdateContactLabels()
         {
-            if (ProbeConfiguration.ProbeGroup == null)
+            if (ProbeGroup == null)
                 return;
+
+            var channelMap = ((NeuropixelsV2eProbeGroup)ProbeGroup).ToChannelMap();
 
             var textObjs = zedGraphChannels.GraphPane.GraphObjList.OfType<TextObj>()
                                                                   .Where(t => t.Tag is ContactTag);
@@ -228,7 +244,7 @@ namespace OpenEphys.Onix1.Design
                                               {
                                                   var tag = c.Tag as ContactTag;
                                                   var channel = NeuropixelsV2QuadShankElectrode.GetChannelNumber(tag.ContactIndex);
-                                                  return ProbeConfiguration.ChannelMap[channel].Index == tag.ContactIndex;
+                                                  return channelMap[channel].Index == tag.ContactIndex;
                                               });
 
             foreach (var textObj in textObjsToUpdate)
@@ -244,7 +260,7 @@ namespace OpenEphys.Onix1.Design
 
         internal void EnableElectrodes(NeuropixelsV2QuadShankElectrode[] electrodes)
         {
-            ProbeConfiguration.SelectElectrodes(electrodes);
+            ((NeuropixelsV2eProbeGroup)ProbeGroup).SelectElectrodes(electrodes);
         }
     }
 }

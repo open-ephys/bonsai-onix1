@@ -36,6 +36,14 @@ namespace OpenEphys.Onix1.Design
                 ConfigureNode = new ConfigureNeuropixelsV2e(configureV2e);
             }
 
+            if (ProbeGroupHelper.CompareFilePaths(ConfigureNode.ProbeConfigurationA.ProbeInterfaceFile, ConfigureNode.ProbeConfigurationB.ProbeInterfaceFile))
+            {
+                MessageBox.Show("Both probes are pointing to the same Probe Interface file. \n\nAny changes made in " +
+                    "Probe A will be ignored, and any changes made in Probe B will be applied to both probes.\n\nIf this is not desired, " +
+                    "close this GUI and update the ProbeInterfaceFile property in ProbeConfigurationA/B to point to unique files.",
+                    "Probe Interface File Not Unique", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+
             ProbeConfigurations = new List<NeuropixelsV2eProbeConfigurationDialog>
             {
                 new(ConfigureNode.ProbeConfigurationA, ConfigureNode.GainCalibrationFileA, ConfigureNode.InvertPolarity)
@@ -127,6 +135,31 @@ namespace OpenEphys.Onix1.Design
             ConfigureNode.GainCalibrationFileB = ProbeConfigurations[GetProbeIndex(NeuropixelsV2Probe.ProbeB)].textBoxProbeCalibrationFile.Text;
 
             ConfigureNode.InvertPolarity = ProbeConfigurations[GetProbeIndex(NeuropixelsV2Probe.ProbeA)].InvertPolarity;
+        }
+
+        internal NeuropixelsV2eProbeGroup[] GetProbeGroups()
+        {
+            NeuropixelsV2eProbeGroup[] probeGroups = new NeuropixelsV2eProbeGroup[ProbeConfigurations.Count];
+
+            for (int i = 0; i < ProbeConfigurations.Count; i++)
+            {
+                probeGroups[i] = ProbeConfigurations[i].GetProbeGroup();
+            }
+
+            return probeGroups;
+        }
+
+        internal void TryRemoveEmptyFiles()
+        {
+            foreach (var probeConfiguration in ProbeConfigurations)
+            {
+                ChannelConfigurationDialog.TryRemoveEmptyFile(probeConfiguration.ProbeConfiguration.ProbeInterfaceFile);
+            }
+        }
+
+        private void NeuropixelsV2eDialog_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            TryRemoveEmptyFiles();
         }
     }
 }

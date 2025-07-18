@@ -172,5 +172,67 @@ namespace OpenEphys.Onix1
         }
 
         #endregion
+
+        #region Neuropixels 2.0
+
+        /// <summary>
+        /// Convert a <see cref="NeuropixelsV2eProbeGroup"/> object to a list of electrodes, which only includes currently enabled electrodes
+        /// </summary>
+        /// <param name="probeGroup">A <see cref="NeuropixelsV1eProbeGroup"/> object</param>
+        /// <returns>List of <see cref="NeuropixelsV1Electrode"/>'s that are enabled</returns>
+        public static NeuropixelsV2QuadShankElectrode[] ToChannelMap(this NeuropixelsV2eProbeGroup probeGroup)
+        {
+            var enabledContacts = probeGroup.GetContacts().Where(c => c.DeviceId != -1);
+
+            if (enabledContacts.Count() != NeuropixelsV2.ChannelCount)
+            {
+                throw new InvalidOperationException($"Channel configuration must have {NeuropixelsV2.ChannelCount} contacts enabled." +
+                    $"Instead there are {enabledContacts.Count()} contacts enabled. Enabled contacts are designated by a device channel" +
+                    $"index >= 0.");
+            }
+
+            return enabledContacts.Select(c => new NeuropixelsV2QuadShankElectrode(c.Index))
+                                  .OrderBy(e => e.Channel)
+                                  .ToArray();
+        }
+
+        public static void SelectElectrodes(this NeuropixelsV2eProbeGroup probeGroup, NeuropixelsV2QuadShankElectrode[] electrodes)
+        {
+            var channelMap = probeGroup.ToChannelMap();
+
+            foreach (var e in electrodes)
+            {
+                try
+                {
+                    channelMap[e.Channel] = e;
+                }
+                catch (IndexOutOfRangeException ex)
+                {
+                    throw new IndexOutOfRangeException($"Electrode {e.Index} specifies channel {e.Channel} but only channels " +
+                        $"0 to {channelMap.Length - 1} are supported.", ex);
+                }
+            }
+
+            probeGroup.UpdateDeviceChannelIndices(channelMap);
+        }
+
+        /// <summary>
+        /// Convert a ProbeInterface object to a list of electrodes, which includes all possible electrodes.
+        /// </summary>
+        /// <param name="probeGroup">A <see cref="NeuropixelsV2eProbeGroup"/> object.</param>
+        /// <returns>List of <see cref="NeuropixelsV2QuadShankElectrode"/> electrodes.</returns>
+        public static List<NeuropixelsV2QuadShankElectrode> ToElectrodes(this NeuropixelsV2eProbeGroup probeGroup)
+        {
+            List<NeuropixelsV2QuadShankElectrode> electrodes = new();
+
+            foreach (var c in probeGroup.GetContacts())
+            {
+                electrodes.Add(new NeuropixelsV2QuadShankElectrode(c.Index));
+            }
+
+            return electrodes;
+        }
+
+        #endregion
     }
 }

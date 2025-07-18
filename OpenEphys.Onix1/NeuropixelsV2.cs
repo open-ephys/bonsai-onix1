@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.IO;
 
 namespace OpenEphys.Onix1
 {
@@ -36,6 +37,14 @@ namespace OpenEphys.Onix1
 
         internal static BitArray[] GenerateShankBits(NeuropixelsV2QuadShankProbeConfiguration probe)
         {
+            if (!File.Exists(probe.ProbeInterfaceFile))
+                throw new FileNotFoundException("Must specify a valid Probe Interface file.");
+
+            var probeGroup = ProbeGroupHelper.LoadExternalProbeConfigurationFile<NeuropixelsV2eProbeGroup>(probe.ProbeInterfaceFile);
+
+            if (probeGroup == null)
+                throw new ArgumentNullException(nameof(probeGroup));
+
             BitArray[] shankBits =
             {
                 new(RegistersPerShank, false),
@@ -70,7 +79,7 @@ namespace OpenEphys.Onix1
 
             const int PixelOffset = (ElectrodePerShank - 1) / 2;
             const int ReferencePixelOffset = 3;
-            foreach (var c in probe.ChannelMap)
+            foreach (var c in probeGroup.ToChannelMap())
             {
                 var baseIndex = c.IntraShankElectrodeIndex % 2;
                 var pixelIndex = c.IntraShankElectrodeIndex / 2;

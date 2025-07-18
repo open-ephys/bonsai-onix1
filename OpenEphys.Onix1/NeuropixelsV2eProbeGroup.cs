@@ -6,8 +6,9 @@ using OpenEphys.ProbeInterface.NET;
 
 namespace OpenEphys.Onix1
 {
+    // TODO: This should be named "NeuropixelsV2ProbeGroup". Rename in 1.0.0
     /// <summary>
-    /// A <see cref="ProbeGroup"/> class for NeuropixelsV2e.
+    /// A <see cref="ProbeGroup"/> class for NeuropixelsV2.
     /// </summary>
     public class NeuropixelsV2eProbeGroup : ProbeGroup
     {

@@ -3,10 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using Bonsai;
 using Newtonsoft.Json;
-using System.Text;
 using System.Xml.Serialization;
-using System.Linq;
-using OpenEphys.ProbeInterface.NET;
 
 namespace OpenEphys.Onix1
 {
@@ -77,24 +74,23 @@ namespace OpenEphys.Onix1
         /// Creates a model of the probe with all electrodes instantiated.
         /// </summary>
         [XmlIgnore]
+        [Obsolete("Probe model no longer needed as of 0.6.1. Remove in 1.0.0.")]
+        [Browsable(false)]
         public static readonly IReadOnlyList<NeuropixelsV2QuadShankElectrode> ProbeModel = CreateProbeModel();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class.
         /// </summary>
+        [Obsolete("Default constructor is no longer allowed, as the Probe is a required input. Remove in 1.0.0.")]
         public NeuropixelsV2QuadShankProbeConfiguration()
         {
-            ChannelMap = new NeuropixelsV2QuadShankElectrode[NeuropixelsV2.ChannelCount];
-            for (int i = 0; i < ChannelMap.Length; i++)
-            {
-                ChannelMap[i] = ProbeModel.FirstOrDefault(e => e.Channel == i);
-            }
+            Probe = NeuropixelsV2Probe.ProbeA;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class.
         /// </summary>
-        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe probe) : this()
+        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe probe)
         {
             Probe = probe;
         }
@@ -102,10 +98,21 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class.
         /// </summary>
-        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe probe, NeuropixelsV2QuadShankReference reference) : this()
+        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe probe, NeuropixelsV2QuadShankReference reference)
         {
             Probe = probe;
             Reference = reference;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class.
+        /// </summary>
+        [JsonConstructor]
+        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe probe, NeuropixelsV2QuadShankReference reference, string probeInterfaceFile)
+        {
+            Probe = probe;
+            Reference = reference;
+            ProbeInterfaceFile = probeInterfaceFile;
         }
 
         /// <summary>
@@ -114,11 +121,9 @@ namespace OpenEphys.Onix1
         /// <param name="probeConfiguration">The existing <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> object to copy.</param>
         public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2QuadShankProbeConfiguration probeConfiguration)
         {
-            Reference = probeConfiguration.Reference;
-            var probes = probeConfiguration.ProbeGroup.Probes.ToList().Select(probe => new Probe(probe));
-            ProbeGroup = new(probeConfiguration.ProbeGroup.Specification, probeConfiguration.ProbeGroup.Version, probes.ToArray());
-            ChannelMap = NeuropixelsV2eProbeGroup.ToChannelMap(ProbeGroup);
             Probe = probeConfiguration.Probe;
+            Reference = probeConfiguration.Reference;
+            ProbeInterfaceFile = probeConfiguration.ProbeInterfaceFile;
         }
 
         /// <summary>
@@ -129,15 +134,14 @@ namespace OpenEphys.Onix1
         /// <param name="probeGroup">The existing <see cref="NeuropixelsV2eProbeGroup"/> instance to use.</param>
         /// <param name="reference">The <see cref="NeuropixelsV2QuadShankReference"/> reference value.</param>
         /// <param name="probe">The <see cref="NeuropixelsV2Probe"/> for this probe.</param>
-        [JsonConstructor]
+        [Obsolete("Probe Group is no longer used as of 0.6.1. Remove in 1.0.0.")]
         public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2eProbeGroup probeGroup, NeuropixelsV2QuadShankReference reference, NeuropixelsV2Probe probe)
         {
-            ChannelMap = NeuropixelsV2eProbeGroup.ToChannelMap(probeGroup);
-            ProbeGroup = probeGroup;
             Reference = reference;
             Probe = probe;
         }
 
+        [Obsolete("No longer used. Remove in 1.0.0.")]
         private static List<NeuropixelsV2QuadShankElectrode> CreateProbeModel()
         {
             var electrodes = new List<NeuropixelsV2QuadShankElectrode>(NeuropixelsV2.ElectrodePerShank * 4);
@@ -151,7 +155,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets the <see cref="NeuropixelsV2Probe"/> for this probe.
         /// </summary>
-        public NeuropixelsV2Probe Probe { get; set; } = NeuropixelsV2Probe.ProbeA;
+        public NeuropixelsV2Probe Probe { get; }
 
         /// <summary>
         /// Gets or sets the reference for all electrodes.
@@ -172,12 +176,16 @@ namespace OpenEphys.Onix1
         /// The channel map will always be 384 channels, and will return the 384 enabled electrodes.
         /// </remarks>
         [XmlIgnore]
+        [Obsolete("This is now obsolete, as the Probe Group is now held in an externalized configuration file. Remove in 1.0.0.")]
+        [Browsable(false)]
+        [Externalizable(false)]
         public NeuropixelsV2QuadShankElectrode[] ChannelMap { get; }
 
         /// <summary>
         /// Update the <see cref="ChannelMap"/> with the selected electrodes.
         /// </summary>
         /// <param name="electrodes">List of selected electrodes that are being added to the <see cref="ChannelMap"/></param>
+        [Obsolete("This method is obsolete as of 0.6.1, and should not be called from this class. Remove in 1.0.0")]
         public void SelectElectrodes(NeuropixelsV2QuadShankElectrode[] electrodes)
         {
             foreach (var e in electrodes)
@@ -202,29 +210,18 @@ namespace OpenEphys.Onix1
         [XmlIgnore]
         [Category(DeviceFactory.ConfigurationCategory)]
         [Description("Defines the shape of the probe, and which contacts are currently selected for streaming")]
+        [Obsolete("Holding the class has been superseded by an externalized configuration file. Remove in 1.0.0.")]
+        [Browsable(false)]
+        [Externalizable(false)]
         public NeuropixelsV2eProbeGroup ProbeGroup { get; private set; } = new();
 
         /// <summary>
-        /// Gets or sets a string defining the <see cref="ProbeGroup"/> in Base64.
-        /// This variable is needed to properly save a workflow in Bonsai, but it is not
-        /// directly accessible in the Bonsai editor.
+        /// Gets or sets the file path to a configuration file holding the Probe Interface JSON specifications for this probe.
         /// </summary>
-        [Browsable(false)]
-        [Externalizable(false)]
-        [XmlElement(nameof(ProbeGroup))]
-        public string ProbeGroupString
-        {
-            get
-            {
-                var jsonString = JsonConvert.SerializeObject(ProbeGroup);
-                return Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonString));
-            }
-            set
-            {
-                var jsonString = Encoding.UTF8.GetString(Convert.FromBase64String(value));
-                ProbeGroup = JsonConvert.DeserializeObject<NeuropixelsV2eProbeGroup>(jsonString);
-                SelectElectrodes(NeuropixelsV2eProbeGroup.ToChannelMap(ProbeGroup));
-            }
-        }
+        [Category(DeviceFactory.ConfigurationCategory)]
+        [Description("File path to a configuration file holding the Probe Interface JSON specifications for this probe.")]
+        [FileNameFilter($"Probe Interface files ({ProbeGroupHelper.ProbeInterfaceFileString}*.json)|*.json")]
+        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
+        public string ProbeInterfaceFile { get; set; }
     }
 }

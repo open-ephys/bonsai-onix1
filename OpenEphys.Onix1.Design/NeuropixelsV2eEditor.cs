@@ -29,6 +29,14 @@ namespace OpenEphys.Onix1.Design
                         configureNeuropixelsV2e.ProbeConfigurationB = editorDialog.ConfigureNode.ProbeConfigurationB;
                         configureNeuropixelsV2e.InvertPolarity = editorDialog.ConfigureNode.InvertPolarity;
 
+                        var probeGroups = editorDialog.GetProbeGroups();
+
+                        if (probeGroups.Length != 2)
+                            throw new ArgumentOutOfRangeException("Invalid number of probe groups returned.");
+
+                        ProbeGroupHelper.SaveExternalProbeConfigurationFile(probeGroups[0], configureNeuropixelsV2e.ProbeConfigurationA.ProbeInterfaceFile);
+                        ProbeGroupHelper.SaveExternalProbeConfigurationFile(probeGroups[1], configureNeuropixelsV2e.ProbeConfigurationB.ProbeInterfaceFile);
+
                         return true;
                     }
                 }

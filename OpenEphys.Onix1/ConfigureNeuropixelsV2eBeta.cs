@@ -89,6 +89,7 @@ namespace OpenEphys.Onix1
         [Category(ConfigurationCategory)]
         [Description("Probe A electrode configuration.")]
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
+        [TypeConverter(typeof(GenericPropertyConverter))]
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new(NeuropixelsV2Probe.ProbeA);
 
         /// <inheritdoc/>
@@ -120,6 +121,7 @@ namespace OpenEphys.Onix1
         [Category(ConfigurationCategory)]
         [Description("Probe B electrode configuration.")]
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
+        [TypeConverter(typeof(GenericPropertyConverter))]
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new(NeuropixelsV2Probe.ProbeB);
 
         /// <inheritdoc/>
