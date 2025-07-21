@@ -136,22 +136,22 @@
             // dropDownOpenFile
             // 
             this.dropDownOpenFile.Name = "dropDownOpenFile";
-            this.dropDownOpenFile.Size = new System.Drawing.Size(265, 22);
-            this.dropDownOpenFile.Text = "Open Channel Configuration";
+            this.dropDownOpenFile.Size = new System.Drawing.Size(211, 22);
+            this.dropDownOpenFile.Text = "Open Probe Group";
             this.dropDownOpenFile.Click += new System.EventHandler(this.MenuItemOpenFile);
             // 
             // dropDownSaveFile
             // 
             this.dropDownSaveFile.Name = "dropDownSaveFile";
-            this.dropDownSaveFile.Size = new System.Drawing.Size(265, 22);
-            this.dropDownSaveFile.Text = "Save Channel Configuration";
+            this.dropDownSaveFile.Size = new System.Drawing.Size(211, 22);
+            this.dropDownSaveFile.Text = "Save Probe Group";
             this.dropDownSaveFile.Click += new System.EventHandler(this.MenuItemSaveFile);
             // 
             // dropDownLoadDefault
             // 
             this.dropDownLoadDefault.Name = "dropDownLoadDefault";
-            this.dropDownLoadDefault.Size = new System.Drawing.Size(265, 22);
-            this.dropDownLoadDefault.Text = "Load Default Channel Configuration";
+            this.dropDownLoadDefault.Size = new System.Drawing.Size(211, 22);
+            this.dropDownLoadDefault.Text = "Load Default Probe Group";
             this.dropDownLoadDefault.Click += new System.EventHandler(this.MenuItemLoadDefaultConfig);
             // 
             // ChannelConfigurationDialog
@@ -165,7 +165,7 @@
             this.MainMenuStrip = this.menuStrip;
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "ChannelConfigurationDialog";
-            this.Text = "Channel Configuration";
+            this.Text = "Probe Group Configuration";
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();
             this.splitContainer1.Panel2.ResumeLayout(false);
