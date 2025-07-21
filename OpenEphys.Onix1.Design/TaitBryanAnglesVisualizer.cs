@@ -3,7 +3,7 @@ using Bonsai;
 using Bonsai.Design.Visualizers;
 using OpenEphys.Onix1.Design;
 
-[assembly: TypeVisualizer(typeof(EulerAnglesVisualizer), Target = typeof(TaitBryanAngles))]
+[assembly: TypeVisualizer(typeof(TaitBryanAnglesVisualizer), Target = typeof(OpenEphys.Onix1.TaitBryanAngles))]
 
 namespace OpenEphys.Onix1.Design
 {
@@ -11,13 +11,13 @@ namespace OpenEphys.Onix1.Design
     /// Provides a type visualizer that displays a sequence of <see cref="TaitBryanAngles"/>
     /// values as a time series.
     /// </summary>
-    public class EulerAnglesVisualizer : TimeSeriesVisualizer
+    public class TaitBryanAnglesVisualizer : TimeSeriesVisualizer
     {
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="EulerAnglesVisualizer"/> class.
+        /// Initializes a new instance of the <see cref="TaitBryanAnglesVisualizer"/> class.
         /// </summary>
-        public EulerAnglesVisualizer()
+        public TaitBryanAnglesVisualizer()
             : base(numSeries: 3)
         {
         }
