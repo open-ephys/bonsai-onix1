@@ -18,12 +18,10 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// Initializes a new instance of <see cref="Rhs2116ChannelConfigurationDialog"/>.
         /// </summary>
-        /// <param name="probeGroup">Channel configuration settings for a <see cref="Rhs2116ProbeGroup"/>.</param>
-        public Rhs2116ChannelConfigurationDialog(Rhs2116ProbeGroup probeGroup)
-            : base(probeGroup)
+        public Rhs2116ChannelConfigurationDialog(string probeInterfaceFile)
+            : base(probeInterfaceFile)
         {
             InitializeComponent();
-            ProbeGroup = probeGroup;
 
             zedGraphChannels.ZoomButtons = MouseButtons.None;
             zedGraphChannels.ZoomButtons2 = MouseButtons.None;
@@ -39,6 +37,19 @@ namespace OpenEphys.Onix1.Design
         internal override ProbeGroup DefaultChannelLayout()
         {
             return new Rhs2116ProbeGroup();
+        }
+
+        internal override void LoadExternalProbeInterfaceFile()
+        {
+            var probeGroup = ProbeGroupHelper.LoadExternalProbeConfigurationFile<Rhs2116ProbeGroup>(ProbeInterfaceFile);
+
+            if (probeGroup.NumberOfContacts != ProbeGroup.NumberOfContacts)
+                throw new InvalidOperationException("The Probe Interface file has the wrong number of contacts. " +
+                    $"Expected {ProbeGroup.NumberOfContacts} to exist, but there were {probeGroup.NumberOfContacts} found. " +
+                    $"\n\nDouble check that the correct filepath is given for this device. " +
+                    $"\nFilepath: {ProbeInterfaceFile}");
+
+            ProbeGroup = probeGroup;
         }
 
         internal override bool OpenFile<T>()

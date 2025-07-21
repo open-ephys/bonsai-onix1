@@ -29,11 +29,24 @@ namespace OpenEphys.Onix1.Design
         internal readonly Rhs2116ChannelConfigurationDialog ChannelDialog;
 
         /// <summary>
-        /// Opens a dialog allowing for easy changing of stimulus sequence parameters, with visual feedback on what the resulting stimulus sequence looks like.
+        /// Opens a dialog allowing for easy changing of stimulus sequence parameters, 
+        /// with visual feedback on what the resulting stimulus sequence looks like.
         /// </summary>
         /// <param name="sequence"></param>
         /// <param name="probeGroup"></param>
+        [Obsolete("This constructor is now deprecated, as Probe Groups are now held in externalized files.")]
         public Rhs2116StimulusSequenceDialog(Rhs2116StimulusSequencePair sequence, Rhs2116ProbeGroup probeGroup)
+            : this(sequence, "")
+        {
+        }
+
+        /// <summary>
+        /// Opens a dialog allowing for easy changing of stimulus sequence parameters, 
+        /// with visual feedback on what the resulting stimulus sequence looks like.
+        /// </summary>
+        /// <param name="sequence">Stimulus sequence object containing all stimulation parameters.</param>
+        /// <param name="probeInterfaceFile">Filepath to the location where the Probe Interface file is saved.</param>
+        public Rhs2116StimulusSequenceDialog(Rhs2116StimulusSequencePair sequence, string probeInterfaceFile)
         {
             InitializeComponent();
             Shown += FormShown;
@@ -50,7 +63,7 @@ namespace OpenEphys.Onix1.Design
 
             StepSize = Sequence.CurrentStepSize;
 
-            ChannelDialog = new(probeGroup)
+            ChannelDialog = new(probeInterfaceFile)
             {
                 TopLevel = false,
                 FormBorderStyle = FormBorderStyle.None,
@@ -67,11 +80,6 @@ namespace OpenEphys.Onix1.Design
             ChannelDialog.Show();
 
             textBoxStepSize.Text = GetStepSizeStringuA(StepSize);
-
-            if (probeGroup.NumberOfContacts != 32)
-            {
-                throw new ArgumentException($"Probe group is not valid: 32 channels were expected, there are {probeGroup.NumberOfContacts} instead.");
-            }
 
             InitializeZedGraphWaveform();
             DrawStimulusWaveform();
@@ -1062,7 +1070,7 @@ namespace OpenEphys.Onix1.Design
             {
                 StepSize = validStepSizes.First();
                 textBoxStepSize.Text = GetStepSizeStringuA(StepSize);
-                
+
                 return true;
             }
 
@@ -1308,6 +1316,11 @@ namespace OpenEphys.Onix1.Design
                     }
                 }
             }
+        }
+
+        private void Rhs2116StimulusSequenceDialog_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            ChannelConfigurationDialog.TryRemoveEmptyFile(ChannelDialog.ProbeInterfaceFile);
         }
     }
 }

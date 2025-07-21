@@ -18,14 +18,16 @@ namespace OpenEphys.Onix1.Design
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
                 if (editorState != null && !editorState.WorkflowRunning && component is ConfigureHeadstageRhs2116 configureNode)
                 {
-                    using var editorDialog = new HeadstageRhs2116Dialog(configureNode.StimulusTrigger.ProbeGroup,
+                    using var editorDialog = new HeadstageRhs2116Dialog(configureNode.StimulusTrigger.ProbeInterfaceFile,
                         configureNode.StimulusTrigger.StimulusSequence, configureNode.Rhs2116Pair);
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
                         configureNode.StimulusTrigger.StimulusSequence = editorDialog.StimulusSequenceDialog.Sequence;
-                        configureNode.StimulusTrigger.ProbeGroup = (Rhs2116ProbeGroup)editorDialog.StimulusSequenceDialog.ChannelDialog.ProbeGroup;
+                        configureNode.StimulusTrigger.ProbeInterfaceFile = editorDialog.StimulusSequenceDialog.ChannelDialog.ProbeInterfaceFile;
                         configureNode.Rhs2116Pair = editorDialog.Rhs2116Dialog.ConfigureNode;
+
+                        ProbeGroupHelper.SaveExternalProbeConfigurationFile(editorDialog.StimulusSequenceDialog.ChannelDialog.ProbeGroup, configureNode.StimulusTrigger.ProbeInterfaceFile);
 
                         return true;
                     }

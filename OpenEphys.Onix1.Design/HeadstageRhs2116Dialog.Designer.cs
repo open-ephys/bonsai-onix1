@@ -53,7 +53,7 @@
             this.tabControl.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
-            this.tabControl.Size = new System.Drawing.Size(1588, 740);
+            this.tabControl.Size = new System.Drawing.Size(1588, 746);
             this.tabControl.TabIndex = 0;
             // 
             // tabPageStimulusSequence
@@ -62,7 +62,7 @@
             this.tabPageStimulusSequence.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tabPageStimulusSequence.Name = "tabPageStimulusSequence";
             this.tabPageStimulusSequence.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPageStimulusSequence.Size = new System.Drawing.Size(1580, 711);
+            this.tabPageStimulusSequence.Size = new System.Drawing.Size(1580, 717);
             this.tabPageStimulusSequence.TabIndex = 1;
             this.tabPageStimulusSequence.Text = "Stimulus Sequence";
             this.tabPageStimulusSequence.UseVisualStyleBackColor = true;
@@ -109,14 +109,14 @@
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
             this.menuStrip.Padding = new System.Windows.Forms.Padding(5, 2, 0, 2);
-            this.menuStrip.Size = new System.Drawing.Size(1594, 30);
+            this.menuStrip.Size = new System.Drawing.Size(1594, 24);
             this.menuStrip.TabIndex = 3;
             this.menuStrip.Text = "menuStrip1";
             // 
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(46, 26);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
             // 
             // tableLayoutPanel1
@@ -126,12 +126,12 @@
             this.tableLayoutPanel1.Controls.Add(this.tabControl, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 0, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 30);
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 24);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 42F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(1594, 786);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(1594, 792);
             this.tableLayoutPanel1.TabIndex = 4;
             // 
             // flowLayoutPanel1
@@ -140,7 +140,7 @@
             this.flowLayoutPanel1.Controls.Add(this.buttonOK);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 747);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 753);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(1588, 36);
             this.flowLayoutPanel1.TabIndex = 1;
@@ -158,6 +158,7 @@
             this.Name = "HeadstageRhs2116Dialog";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "HeadstageRhs2116Dialog";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.HeadstageRhs2116Dialog_FormClosing);
             this.tabControl.ResumeLayout(false);
             this.menuStrip.ResumeLayout(false);
             this.menuStrip.PerformLayout();

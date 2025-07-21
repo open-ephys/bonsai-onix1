@@ -66,7 +66,19 @@ namespace OpenEphys.Onix1
         [XmlIgnore]
         [Category(ConfigurationCategory)]
         [Description("Defines the channel configuration")]
-        public Rhs2116ProbeGroup ProbeGroup { get; set; } = new();
+        [Obsolete("Holding the class has been superseded by an externalized configuration file. Remove in 1.0.0.")]
+        [Browsable(false)]
+        [Externalizable(false)]
+        public Rhs2116ProbeGroup ProbeGroup { get; set; }
+
+        /// <summary>
+        /// Gets or sets the file path to a configuration file holding the Probe Interface JSON specifications for this probe.
+        /// </summary>
+        [Category(DeviceFactory.ConfigurationCategory)]
+        [Description("File path to a configuration file holding the Probe Interface JSON specifications for this probe.")]
+        [FileNameFilter($"Probe Interface files ({ProbeGroupHelper.ProbeInterfaceFileString}*.json)|*.json")]
+        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
+        public string ProbeInterfaceFile { get; set; }
 
         /// <summary>
         /// Gets or sets if trigger is armed.
@@ -81,30 +93,6 @@ namespace OpenEphys.Onix1
         {
             get => triggerArmed.Value;
             set => triggerArmed.OnNext(value);
-        }
-
-        /// <summary>
-        /// Gets or sets a string defining the <see cref="ProbeGroup"/> in Base64.
-        /// </summary>
-        /// <remarks>
-        /// This variable is needed to properly save a workflow in Bonsai, but it is not
-        /// directly accessible in the Bonsai editor.
-        /// </remarks>
-        [Browsable(false)]
-        [Externalizable(false)]
-        [XmlElement(nameof(ProbeGroup))]
-        public string ProbeGroupString
-        {
-            get
-            {
-                var jsonString = JsonConvert.SerializeObject(ProbeGroup);
-                return Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonString));
-            }
-            set
-            {
-                var jsonString = Encoding.UTF8.GetString(Convert.FromBase64String(value));
-                ProbeGroup = JsonConvert.DeserializeObject<Rhs2116ProbeGroup>(jsonString);
-            }
         }
 
         /// <summary>
