@@ -19,7 +19,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Editor("OpenEphys.Onix1.Design.SpatialTransformMatrixEditor, OpenEphys.Onix1.Design", DesignTypes.UITypeEditor)]
         [Description("Data for transforming position measurements to another reference frame.")]
-        public SpatialTransformProperties SpatialTransform { get; set; } = new();
+        public SpatialTransform3D SpatialTransform { get; set; } = new();
 
         /// <summary>
         /// Transforms a sequence of <see cref="TS4231V1PositionDataFrame"/>
@@ -34,7 +34,7 @@ namespace OpenEphys.Onix1
         {
             return source.Select(input =>
                 new TS4231V1PositionDataFrame(input.Clock, input.HubClock, input.SensorIndex, 
-                    Vector3.Transform(input.Position, SpatialTransform.M.GetValueOrDefault())));
+                    Vector3.Transform(input.Position, SpatialTransform.M)));
         }
     }
 }
