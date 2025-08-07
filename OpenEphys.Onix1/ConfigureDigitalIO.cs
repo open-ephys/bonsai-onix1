@@ -116,7 +116,7 @@ namespace OpenEphys.Onix1
 
                 if (sr is not null)
                 {
-                    var periodTicks = (uint)(baseFreqHz / sr);
+                    var periodTicks = (uint)(baseFreqHz / sr) - 2; // NB: -2 results from known issue in version 2 of DigitalIO device
                     device.WriteRegister(DigitalIO.SAMPLE_PERIOD, periodTicks);
                 } else
                 {
