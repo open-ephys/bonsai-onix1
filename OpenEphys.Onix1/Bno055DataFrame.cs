@@ -40,10 +40,10 @@ namespace OpenEphys.Onix1
         internal unsafe Bno055DataFrame(ulong clock, Bno055DataPayload* payload)
             : base(clock)
         {
-            EulerAngle = new Vector3(
-                x: Bno055.EulerAngleScale * payload->EulerAngle[0],
-                y: Bno055.EulerAngleScale * payload->EulerAngle[1],
-                z: Bno055.EulerAngleScale * payload->EulerAngle[2]);
+            EulerAngle = new TaitBryanAngles(
+                yaw: Bno055.EulerAngleScale * payload->EulerAngle[0],
+                pitch: Bno055.EulerAngleScale * payload->EulerAngle[1],
+                roll: Bno055.EulerAngleScale * payload->EulerAngle[2]);
             Quaternion = new Quaternion(
                 w: Bno055.QuaternionScale * payload->Quaternion[0],
                 x: Bno055.QuaternionScale * payload->Quaternion[1],
@@ -62,17 +62,16 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets the 3D orientation in Euler angle format with units of degrees.
+        /// Gets the 3D orientation in as Euler angles using the Tait-Bryan formalism.
         /// </summary>
         /// <remarks>
-        /// The Tait-Bryan formalism is used:
         /// <list type="bullet">
         /// <item><description>Yaw: 0 to 360 degrees.</description></item>
         /// <item><description>Roll: -180 to 180 degrees</description></item>
         /// <item><description>Pitch: -90 to 90 degrees</description></item>
         /// </list>
         /// </remarks>
-        public Vector3 EulerAngle { get; }
+        public TaitBryanAngles EulerAngle { get; }
 
         /// <summary>
         /// Gets the 3D orientation represented as a Quaternion.
