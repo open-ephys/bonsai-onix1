@@ -1,5 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Reactive.Disposables;
+using System.Reactive.Subjects;
 
 namespace OpenEphys.Onix1
 {
@@ -11,9 +13,12 @@ namespace OpenEphys.Onix1
     /// cref="Headstage64OpticalStimulatorTrigger"/>, using a shared
     /// <c>DeviceName</c>.
     /// </remarks>
+    [Editor("OpenEphys.Onix1.Design.Headstage64OpticalStimulatorSequenceEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a headstage-64 dual-channel optical stimulator.")]
     public class ConfigureHeadstage64OpticalStimulator : SingleDeviceFactory
     {
+        readonly BehaviorSubject<Headstage64OpticalStimulatorSequence> stimulusSequence = new(new Headstage64OpticalStimulatorSequence());
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureHeadstage64OpticalStimulator"/> class.
         /// </summary>
@@ -21,6 +26,24 @@ namespace OpenEphys.Onix1
             : base(typeof(Headstage64OpticalStimulator))
         {
         }
+
+        /// <summary>
+        /// Gets or sets the device enable state.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, then the optical stimulator circuit will respect triggers. If set to false, triggers will be ignored.
+        /// </remarks>
+        [Description("Specifies whether the optical stimulator will respect triggers.")]
+        [Category(ConfigurationCategory)]
+        public bool Enable { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets the stimulus sequence.
+        /// </summary>
+        [Description("Stimulus sequence to be applied by the optical stimulator.")]
+        [Category(ConfigurationCategory)]
+        [TypeConverter(typeof(GenericPropertyConverter))]
+        public Headstage64OpticalStimulatorSequence StimulusSequence { get; set; } = new();
 
         /// <summary>
         /// Configure a headstage-64 dual-channel optical stimulator.
@@ -35,13 +58,67 @@ namespace OpenEphys.Onix1
         /// configure a headstage-64 dual-channel optical stimulator.</returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
+            var enable = Enable;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
-            return source.ConfigureDevice(context =>
+            return source.ConfigureDevice((context, observer) =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
-                device.WriteRegister(Headstage64OpticalStimulator.ENABLE, 0);
-                return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
+                device.WriteRegister(Headstage64OpticalStimulator.ENABLE, enable ? 0u : 1u);
+
+                // NB: fit from Fig. 10 of CAT4016 datasheet
+                // x = (y/a)^(1/b)
+                // a = 3.833e+05
+                // b = -0.9632
+                static uint mAToPotSetting(double currentMa)
+                {
+                    double R = Math.Pow(currentMa / 3.833e+05, 1 / -0.9632);
+                    double s = 256 * (R - Headstage64OpticalStimulator.MinRheostatResistanceOhms) / Headstage64OpticalStimulator.PotResistanceOhms;
+                    return s > 255 ? 255 : s < 0 ? 0 : (uint)s;
+                }
+
+                uint currentSourceMask = 0;
+                static uint percentToPulseMask(int channel, double percent, uint oldMask)
+                {
+                    uint mask = 0x00000000;
+                    var p = 0.0;
+                    while (p < percent)
+                    {
+                        mask = (mask << 1) | 1;
+                        p += 12.5;
+                    }
+
+                    return channel == 0 ? (oldMask & 0x0000FF00) | mask : (mask << 8) | (oldMask & 0x000000FF);
+                }
+
+                static uint pulseDurationToRegister(double pulseDuration, double pulseHz)
+                {
+                    var pulsePeriod = 1000.0 / pulseHz;
+                    return pulseDuration > pulsePeriod ? (uint)(1000 * pulsePeriod - 1) : (uint)(1000 * pulseDuration);
+                }
+
+                static uint pulseFrequencyToRegister(double pulseHz, double pulseDuration)
+                {
+                    var pulsePeriod = 1000.0 / pulseHz;
+                    return pulsePeriod > pulseDuration ? (uint)(1000 * pulsePeriod) : (uint)(1000 * pulseDuration + 1);
+                }
+
+                return new CompositeDisposable(
+                    stimulusSequence.SubscribeSafe(observer, value => {
+
+                        device.WriteRegister(Headstage64OpticalStimulator.MAXCURRENT, mAToPotSetting(value.MaxCurrent));
+                        currentSourceMask = percentToPulseMask(0, value.ChannelOnePercent, currentSourceMask);
+                        device.WriteRegister(Headstage64OpticalStimulator.PULSEMASK, currentSourceMask);
+                        currentSourceMask = percentToPulseMask(1, value.ChannelTwoPercent, currentSourceMask);
+                        device.WriteRegister(Headstage64OpticalStimulator.PULSEMASK, currentSourceMask);
+                        device.WriteRegister(Headstage64OpticalStimulator.PULSEDUR, pulseDurationToRegister(value.PulseDuration, value.PulsePeriod));
+                        device.WriteRegister(Headstage64OpticalStimulator.PULSEPERIOD, pulseFrequencyToRegister(value.PulsePeriod, value.PulseDuration));
+                        device.WriteRegister(Headstage64OpticalStimulator.BURSTCOUNT, value.PulsesPerBurst);
+                        device.WriteRegister(Headstage64OpticalStimulator.IBI, (uint)(1000 * value.InterBurstInterval));
+                        device.WriteRegister(Headstage64OpticalStimulator.TRAINCOUNT, value.BurstsPerTrain);
+                        device.WriteRegister(Headstage64OpticalStimulator.TRAINDELAY, (uint)(1000 * value.Delay));
+                    }),
+                    DeviceManager.RegisterDevice(deviceName, device, DeviceType));
             });
         }
     }

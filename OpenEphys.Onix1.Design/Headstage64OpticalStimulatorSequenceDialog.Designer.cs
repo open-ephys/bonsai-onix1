@@ -1,6 +1,6 @@
 ﻿namespace OpenEphys.Onix1.Design
 {
-    partial class Rhs2116ChannelConfigurationDialog
+    partial class Headstage64OpticalStimulatorSequenceDialog
     {
         /// <summary>
         /// Required designer variable.
@@ -30,13 +30,13 @@
         {
             this.SuspendLayout();
             // 
-            // Rhs2116ChannelConfigurationDialog
+            // Headstage64OpticalStimulatorSequenceDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(609, 586);
-            this.Name = "Rhs2116ChannelConfigurationDialog";
-            this.Text = "Rhs2116ChannelConfigurationDialog";
+            this.ClientSize = new System.Drawing.Size(1189, 592);
+            this.Name = "Headstage64OpticalStimulatorSequenceDialog";
+            this.Text = "Headstage64OpticalStimulatorSequenceDialog";
             this.ResumeLayout(false);
             this.PerformLayout();
 
