@@ -19,7 +19,7 @@ namespace OpenEphys.Onix1
     /// </remarks>
     public struct TaitBryanAngles : IEquatable<TaitBryanAngles>
     {
-        private Vector3 _vector;
+        private Vector3 vector;
 
         /// <summary>
         /// Gets or sets the Yaw.
@@ -27,8 +27,8 @@ namespace OpenEphys.Onix1
         /// <remarks>Yaw represents the bearing.</remarks>
         public float Yaw
         {
-            readonly get => _vector.X;
-            set => _vector.X = value;
+            readonly get => vector.X;
+            set => vector.X = value;
         }
 
         /// <summary>
@@ -37,8 +37,8 @@ namespace OpenEphys.Onix1
         /// <remarks>Pitch represents the elevation.</remarks>
         public float Pitch
         {
-            readonly get => _vector.Y;
-            set => _vector.Y = value;
+            readonly get => vector.Y;
+            set => vector.Y = value;
         }
 
         /// <summary>
@@ -47,8 +47,8 @@ namespace OpenEphys.Onix1
         /// <remarks>Roll represents the bank angle.</remarks>
         public float Roll
         {
-            readonly get => _vector.Z;
-            set => _vector.Z = value;
+            readonly get => vector.Z;
+            set => vector.Z = value;
         }
 
         /// <summary>
@@ -60,17 +60,27 @@ namespace OpenEphys.Onix1
         /// <param name="roll">The roll angle (bank/rotation about X'' axis).</param>
         public TaitBryanAngles(float yaw, float pitch, float roll)
         {
-            _vector = new Vector3(yaw, pitch, roll);
+            vector = new Vector3(yaw, pitch, roll);
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TaitBryanAngles"/> struct from an existing <see
         /// cref="Vector3"/>.
         /// </summary>
-        /// <param name="vector">The vector containing the yaw (X), pitch (Y), and roll (Z) values.</param>
-        public TaitBryanAngles(Vector3 vector)
+        /// <param name="other">The vector containing the yaw (X), pitch (Y), and roll (Z) values.</param>
+        public TaitBryanAngles(Vector3 other)
         {
-            _vector = vector;
+            vector = other;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TaitBryanAngles"/> struct from an existing
+        /// instance.
+        /// </summary>
+        /// <param name="other">An existing TaitBryanAngles object to copy.</param>
+        public TaitBryanAngles(TaitBryanAngles other)
+        {
+            vector = other;
         }
 
         /// <summary>
@@ -78,7 +88,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <param name="euler">The Tait-Bryan angles to convert.</param>
         /// <returns>A <see cref="Vector3"/> where X=Yaw, Y=Pitch, Z=Roll.</returns>
-        public static implicit operator Vector3(TaitBryanAngles euler) => euler._vector;
+        public static implicit operator Vector3(TaitBryanAngles euler) => euler.vector;
 
         /// <summary>
         /// Implicitly converts a <see cref="Vector3"/> to a <see cref="TaitBryanAngles"/>.
@@ -93,7 +103,7 @@ namespace OpenEphys.Onix1
         /// <param name="left">The first instance to compare.</param>
         /// <param name="right">The second instance to compare.</param>
         /// <returns><c>true</c> if the instances are equal; otherwise, <c>false</c>.</returns>
-        public static bool operator ==(TaitBryanAngles left, TaitBryanAngles right) => left._vector == right._vector;
+        public static bool operator ==(TaitBryanAngles left, TaitBryanAngles right) => left.vector == right.vector;
 
         /// <summary>
         /// Determines whether two <see cref="TaitBryanAngles"/> instances are not equal.
@@ -101,16 +111,16 @@ namespace OpenEphys.Onix1
         /// <param name="left">The first instance to compare.</param>
         /// <param name="right">The second instance to compare.</param>
         /// <returns><c>true</c> if the instances are not equal; otherwise, <c>false</c>.</returns>
-        public static bool operator !=(TaitBryanAngles left, TaitBryanAngles right) => left._vector != right._vector;
+        public static bool operator !=(TaitBryanAngles left, TaitBryanAngles right) => left.vector != right.vector;
 
         /// <inheritdoc cref = "Vector3.Equals(Vector3)"/>
-        public bool Equals(TaitBryanAngles other) => _vector.Equals(other._vector);
+        public bool Equals(TaitBryanAngles other) => vector.Equals(other.vector);
 
         /// <inheritdoc cref = "Vector3.Equals(object)"/>
         public override bool Equals(object obj) => obj is TaitBryanAngles other && Equals(other);
 
         /// <inheritdoc cref = "Vector3.GetHashCode"/>
-        public override int GetHashCode() => _vector.GetHashCode();
+        public override int GetHashCode() => vector.GetHashCode();
 
         /// <summary>
         /// Returns a string that represents the current object.

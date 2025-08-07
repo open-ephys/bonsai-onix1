@@ -64,6 +64,13 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets the 3D orientation in as Euler angles using the Tait-Bryan formalism.
         /// </summary>
+        /// <remarks>
+        /// <list type="bullet">
+        /// <item><description>Yaw: 0 to 360 degrees.</description></item>
+        /// <item><description>Roll: -180 to 180 degrees</description></item>
+        /// <item><description>Pitch: -90 to 90 degrees</description></item>
+        /// </list>
+        /// </remarks>
         public TaitBryanAngles EulerAngle { get; }
 
         /// <summary>
