@@ -21,29 +21,29 @@ namespace OpenEphys.Onix1
         readonly BitArray ShankConfig;
         readonly BitArray[] BaseConfigs;
 
-        public NeuropixelsV1fRegisterContext(DeviceContext deviceContext, NeuropixelsV1ProbeConfiguration configuration, string gainCalibrationFile, string adcCalibrationFile, bool invertPolarity)
+        public NeuropixelsV1fRegisterContext(DeviceContext deviceContext, NeuropixelsV1ProbeConfiguration configuration, bool invertPolarity)
             : base(deviceContext, NeuropixelsV1.ProbeI2CAddress)
         {
             device = deviceContext;
             var metaData = new NeuropixelsV1fMetadata(device);
 
-            if (!File.Exists(gainCalibrationFile))
+            if (!File.Exists(configuration.GainCalibrationFile))
             {
                 throw new ArgumentException($"A gain calibration file must be specified for the probe with serial number " +
                     $"{metaData.ProbeSerialNumber}");
             }
 
-            if (!File.Exists(adcCalibrationFile))
+            if (!File.Exists(configuration.AdcCalibrationFile))
             {
                 throw new ArgumentException($"An ADC calibration file must be specified for the probe with serial number " +
                     $"{metaData.ProbeSerialNumber}");
             }
 
-            var adcCalibration = NeuropixelsV1Helper.TryParseAdcCalibrationFile(adcCalibrationFile);
+            var adcCalibration = NeuropixelsV1Helper.TryParseAdcCalibrationFile(configuration.AdcCalibrationFile);
 
             if (!adcCalibration.HasValue)
             {
-                throw new ArgumentException($"The calibration file \"{adcCalibrationFile}\" is invalid.");
+                throw new ArgumentException($"The calibration file \"{configuration.AdcCalibrationFile}\" is invalid.");
             }
 
             if (adcCalibration.Value.SerialNumber != metaData.ProbeSerialNumber)
@@ -52,13 +52,12 @@ namespace OpenEphys.Onix1
                     $"match the ADC calibration file serial number ({adcCalibration.Value.SerialNumber}).");
             }
 
-            var gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(gainCalibrationFile,
+            var gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(configuration.GainCalibrationFile,
                 configuration.SpikeAmplifierGain, configuration.LfpAmplifierGain, NeuropixelsV1.ElectrodeCount);
-
 
             if (!gainCorrection.HasValue)
             {
-                throw new ArgumentException($"The calibration file \"{gainCalibrationFile}\" is invalid.");
+                throw new ArgumentException($"The calibration file \"{configuration.GainCalibrationFile}\" is invalid.");
             }
 
             if (gainCorrection.Value.SerialNumber != metaData.ProbeSerialNumber)

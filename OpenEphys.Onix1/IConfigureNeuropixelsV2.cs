@@ -16,9 +16,9 @@
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; }
 
         /// <summary>
-        /// Gets or sets the path to the gain calibration file for Probe A.
+        /// Gets or sets the path to the ProbeInterface file for Probe A.
         /// </summary>
-        public string GainCalibrationFileA { get; set; }
+        public string ProbeInterfaceFileA { get; set; }
 
         /// <summary>
         /// Gets or sets the electrode configuration for Probe B.
@@ -26,9 +26,9 @@
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; }
 
         /// <summary>
-        /// Gets or sets the path to the gain calibration file for Probe B.
+        /// Gets or sets the path to the ProbeInterface file for Probe B.
         /// </summary>
-        public string GainCalibrationFileB { get; set; }
+        public string ProbeInterfaceFileB { get; set; }
 
         /// <summary>
         /// Gets or sets the boolean to determine if neural data is inverted

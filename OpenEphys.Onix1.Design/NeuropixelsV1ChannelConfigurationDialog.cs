@@ -56,7 +56,9 @@ namespace OpenEphys.Onix1.Design
 
         internal override void LoadDefaultChannelLayout()
         {
-            ProbeConfiguration = new(ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain, ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter);
+            ProbeConfiguration = new(ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain, 
+                ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter,
+                ProbeConfiguration.AdcCalibrationFile, ProbeConfiguration.GainCalibrationFile);
             ProbeGroup = ProbeConfiguration.ProbeGroup;
 
             OnFileOpenHandler();
@@ -66,7 +68,9 @@ namespace OpenEphys.Onix1.Design
         {
             if (base.OpenFile<NeuropixelsV1eProbeGroup>())
             {
-                ProbeConfiguration = new((NeuropixelsV1eProbeGroup)ProbeGroup, ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain, ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter);
+                ProbeConfiguration = new((NeuropixelsV1eProbeGroup)ProbeGroup, ProbeConfiguration.SpikeAmplifierGain,
+                    ProbeConfiguration.LfpAmplifierGain, ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter,
+                    ProbeConfiguration.AdcCalibrationFile, ProbeConfiguration.GainCalibrationFile);
                 ProbeGroup = ProbeConfiguration.ProbeGroup;
 
                 OnFileOpenHandler();

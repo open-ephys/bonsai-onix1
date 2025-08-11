@@ -1,7 +1,9 @@
 ﻿using System;
 using System.ComponentModel;
+using System.IO;
 using System.Reactive.Disposables;
 using System.Threading;
+using System.Xml.Serialization;
 using Bonsai;
 
 namespace OpenEphys.Onix1
@@ -35,8 +37,7 @@ namespace OpenEphys.Onix1
         {
             Enable = configureNeuropixelsV1e.Enable;
             EnableLed = configureNeuropixelsV1e.EnableLed;
-            GainCalibrationFile = configureNeuropixelsV1e.GainCalibrationFile;
-            AdcCalibrationFile = configureNeuropixelsV1e.AdcCalibrationFile;
+            ProbeInterfaceFile = configureNeuropixelsV1e.ProbeInterfaceFile;
             ProbeConfiguration = new(configureNeuropixelsV1e.ProbeConfiguration);
             DeviceName = configureNeuropixelsV1e.DeviceName;
             DeviceAddress = configureNeuropixelsV1e.DeviceAddress;
@@ -82,54 +83,74 @@ namespace OpenEphys.Onix1
         public bool InvertPolarity { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets the path to the gain calibration file.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Each probe is linked to a gain calibration file that contains gain adjustments determined by IMEC during
-        /// factory testing. Electrode voltages are scaled using these values to ensure they can be accurately compared
-        /// across probes. Therefore, using the correct gain calibration file is mandatory to create standardized recordings.
-        /// </para>
-        /// <para>
-        /// Calibration files are probe-specific and not interchangeable across probes. Calibration files must contain the 
-        /// serial number of the corresponding probe on their first line of text. If you have lost track of a calibration 
-        /// file for your probe, email IMEC at neuropixels.info@imec.be with the probe serial number to retrieve a new copy.
-        /// </para>
-        /// </remarks>
-        [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
-        [Description("Path to the Neuropixels 1.0 gain calibration file.")]
-        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
-        [Category(ConfigurationCategory)]
-        public string GainCalibrationFile { get; set; }
-
-        /// <summary>
-        /// Gets or sets the path to the ADC calibration file.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Each probe must be provided with an ADC calibration file that contains probe-specific hardware settings that is
-        /// created by IMEC during factory calibration. These files are used to set internal bias currents, correct for ADC
-        /// nonlinearities, correct ADC-zero crossing non-monotonicities, etc. Using the correct calibration file is mandatory
-        /// for the probe to operate correctly. 
-        /// </para>
-        /// <para>
-        /// Calibration files are probe-specific and not interchangeable across probes. Calibration files must contain the 
-        /// serial number of the corresponding probe on their first line of text. If you have lost track of a calibration 
-        /// file for your probe, email IMEC at neuropixels.info@imec.be with the probe serial number to retrieve a new copy.
-        /// </para>
-        /// </remarks>
-        [FileNameFilter("ADC calibration files (*_ADCCalibration.csv)|*_ADCCalibration.csv")]
-        [Description("Path to the Neuropixels 1.0 ADC calibration file.")]
-        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
-        [Category(ConfigurationCategory)]
-        public string AdcCalibrationFile { get; set; }
-
-        /// <summary>
         /// Gets or sets the NeuropixelsV1 probe configuration.
         /// </summary>
         [Category(ConfigurationCategory)]
-        [Description("Neuropixels 1.0e probe configuration")]
+        [Description("Neuropixels 1.0 probe configuration")]
+        [TypeConverter(typeof(GenericPropertyConverter))]
         public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; set; } = new();
+
+        private string _probeInterfaceFile = "";
+
+        /// <summary>
+        /// Gets or sets the file path to a configuration file holding the Probe Interface JSON specifications for this probe.
+        /// </summary>
+        [XmlIgnore]
+        [Category(ConfigurationCategory)]
+        [Description("File path to a configuration file holding the Probe Interface JSON specifications for this probe. If left empty, a default file will be created next to the *.bonsai file when it is saved.")]
+        public string ProbeInterfaceFile
+        {
+            get
+            {
+                return _probeInterfaceFile;
+            }
+            set
+            {
+                if (!string.IsNullOrEmpty(value) && !value.EndsWith(ProbeGroupHelper.ProbeInterfaceExtension))
+                    value += ProbeGroupHelper.ProbeInterfaceExtension;
+
+                _probeInterfaceFile = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a string defining the path to an external ProbeInterface JSON file.
+        /// This variable is needed to properly save a workflow in Bonsai, but it is not
+        /// directly accessible in the Bonsai editor.
+        /// </summary>
+        [Browsable(false)]
+        [Externalizable(false)]
+        [XmlElement(nameof(ProbeInterfaceFile))]
+        public string ProbeInterfaceFileSerialize
+        {
+            get
+            {
+                var filename = string.IsNullOrEmpty(ProbeInterfaceFile)
+                                ? ProbeGroupHelper.GenerateProbeInterfaceFilename(DeviceAddress, DeviceName)
+                                : ProbeInterfaceFile;
+
+                ProbeGroupHelper.SaveExternalProbeInterfaceFile(ProbeConfiguration.ProbeGroup, filename);
+                return ProbeInterfaceFile;
+            }
+            set
+            {
+                ProbeInterfaceFile = value;
+                var filename = string.IsNullOrEmpty(ProbeInterfaceFile)
+                                ? ProbeGroupHelper.GenerateProbeInterfaceFilename(DeviceAddress, DeviceName)
+                                : ProbeInterfaceFile;
+
+                // NB: If a file does not exist at the default file path, leave the default probe group settings as-is
+                if (string.IsNullOrEmpty(ProbeInterfaceFile) && !File.Exists(filename))
+                {
+                    return;
+                }
+
+                ProbeConfiguration = new(ProbeGroupHelper.LoadExternalProbeInterfaceFile<NeuropixelsV1eProbeGroup>(filename),
+                                            ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain,
+                                            ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter,
+                                            ProbeConfiguration.AdcCalibrationFile, ProbeConfiguration.GainCalibrationFile);
+            }
+        }
 
         /// <summary>
         /// Configures a NeuropixelsV1e device.
@@ -154,7 +175,7 @@ namespace OpenEphys.Onix1
             {
                 // configure device via the DS90UB9x deserializer device
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
-                device.WriteRegister(DS90UB9x.ENABLE, enable ? 1u : 0);
+                device.WriteRegister(DS90UB9x.ENABLE, enable ? 1u : 0u);
 
                 // configure deserializer aliases and serializer power supply
                 ConfigureDeserializer(device);
@@ -172,7 +193,7 @@ namespace OpenEphys.Onix1
 
                 // program shift registers
                 var probeControl = new NeuropixelsV1eRegisterContext(device, NeuropixelsV1.ProbeI2CAddress,
-                                        probeMetadata.ProbeSerialNumber, ProbeConfiguration, GainCalibrationFile, AdcCalibrationFile);
+                                        probeMetadata.ProbeSerialNumber, ProbeConfiguration);
                 probeControl.InitializeProbe();
                 probeControl.WriteConfiguration();
                 probeControl.StartAcquisition();

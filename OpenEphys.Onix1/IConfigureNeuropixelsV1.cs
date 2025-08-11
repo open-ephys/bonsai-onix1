@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-
-namespace OpenEphys.Onix1
+﻿namespace OpenEphys.Onix1
 {
     /// <summary>
     /// Public interface that defines common properties in NeuropixelsV1 devices.
@@ -20,12 +18,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets the path to the gain calibration file.
         /// </summary>
-        public string GainCalibrationFile { get; set; }
-
-        /// <summary>
-        /// Gets or sets the path to the gain calibration file.
-        /// </summary>
-        public string AdcCalibrationFile { get; set; }
+        public string ProbeInterfaceFile { get; set; }
 
         /// <summary>
         /// Gets or sets the boolean to determine if neural data is inverted
