@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using Bonsai;
-using Newtonsoft.Json;
+using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
-using System.Linq;
+using Bonsai;
+using Newtonsoft.Json;
 using OpenEphys.ProbeInterface.NET;
 
 namespace OpenEphys.Onix1
@@ -100,7 +100,7 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class.
+        /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class with the given probe and reference values.
         /// </summary>
         public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe probe, NeuropixelsV2QuadShankReference reference) : this()
         {
@@ -119,6 +119,7 @@ namespace OpenEphys.Onix1
             ProbeGroup = new(probeConfiguration.ProbeGroup.Specification, probeConfiguration.ProbeGroup.Version, probes.ToArray());
             ChannelMap = NeuropixelsV2eProbeGroup.ToChannelMap(ProbeGroup);
             Probe = probeConfiguration.Probe;
+            GainCalibrationFile = probeConfiguration.GainCalibrationFile;
         }
 
         /// <summary>
@@ -129,13 +130,16 @@ namespace OpenEphys.Onix1
         /// <param name="probeGroup">The existing <see cref="NeuropixelsV2eProbeGroup"/> instance to use.</param>
         /// <param name="reference">The <see cref="NeuropixelsV2QuadShankReference"/> reference value.</param>
         /// <param name="probe">The <see cref="NeuropixelsV2Probe"/> for this probe.</param>
+        /// <param name="gainCalibrationFile">Filepath to the gain calibration file for this probe.</param>
         [JsonConstructor]
-        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2eProbeGroup probeGroup, NeuropixelsV2QuadShankReference reference, NeuropixelsV2Probe probe)
+        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2eProbeGroup probeGroup, NeuropixelsV2QuadShankReference reference,
+            NeuropixelsV2Probe probe, string gainCalibrationFile)
         {
             ChannelMap = NeuropixelsV2eProbeGroup.ToChannelMap(probeGroup);
             ProbeGroup = probeGroup;
             Reference = reference;
             Probe = probe;
+            GainCalibrationFile = gainCalibrationFile;
         }
 
         private static List<NeuropixelsV2QuadShankElectrode> CreateProbeModel()
@@ -212,7 +216,7 @@ namespace OpenEphys.Onix1
         [Browsable(false)]
         [Externalizable(false)]
         [XmlElement(nameof(ProbeGroup))]
-        public string ProbeGroupString
+        public string ProbeGroupSerialize
         {
             get
             {
@@ -226,5 +230,35 @@ namespace OpenEphys.Onix1
                 SelectElectrodes(NeuropixelsV2eProbeGroup.ToChannelMap(ProbeGroup));
             }
         }
+
+        /// <summary>
+        /// Prevent the ProbeGroup property from being serialized. Should be removed in 1.0.0.
+        /// </summary>
+        /// <returns></returns>
+        public bool ShouldSerializeProbeGroupSerialize()
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// Gets or sets the path to the gain calibration file for this probe.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Each probe is linked to a gain calibration file that contains gain adjustments determined by IMEC during
+        /// factory testing. Electrode voltages are scaled using these values to ensure they can be accurately compared
+        /// across probes. Therefore, using the correct gain calibration file is mandatory to create standardized recordings.
+        /// </para>
+        /// <para>
+        /// Calibration files are probe-specific and not interchangeable across probes. Calibration files must contain the
+        /// serial number of the corresponding probe on their first line of text. If you have lost track of a calibration
+        /// file for your probe, email IMEC at neuropixels.info@imec.be with the probe serial number to retrieve a new copy.
+        /// </para>
+        /// </remarks>
+        [Category(DeviceFactory.ConfigurationCategory)]
+        [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
+        [Description("Path to the gain calibration file for this probe.")]
+        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
+        public string GainCalibrationFile { get; set; }
     }
 }
