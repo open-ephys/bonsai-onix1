@@ -63,10 +63,97 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets the <see cref="Rhs2116ProbeGroup"/> channel configuration.
         /// </summary>
+        [Category(ConfigurationCategory)]
+        [Description("Defines the shape of the probe, and which contacts are currently selected for streaming")]
+        [XmlIgnore]
+        public Rhs2116ProbeGroup ProbeGroup { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets a string defining the <see cref="ProbeGroup"/> in Base64.
+        /// </summary>
+        /// <remarks>
+        /// This variable is needed to properly save a workflow in Bonsai, but it is not
+        /// directly accessible in the Bonsai editor.
+        /// </remarks>
+        [Browsable(false)]
+        [Externalizable(false)]
+        [XmlElement(nameof(ProbeGroup))]
+        public string ProbeGroupSerialize
+        {
+            get
+            {
+                var jsonString = JsonConvert.SerializeObject(ProbeGroup);
+                return Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonString));
+            }
+            set
+            {
+                var jsonString = Encoding.UTF8.GetString(Convert.FromBase64String(value));
+                ProbeGroup = JsonConvert.DeserializeObject<Rhs2116ProbeGroup>(jsonString);
+            }
+        }
+
+        /// <summary>
+        /// Prevent the ProbeGroup property from being serialized. Should be removed in 1.0.0.
+        /// </summary>
+        /// <returns></returns>
+        public bool ShouldSerializeProbeGroupSerialize()
+        {
+            return false;
+        }
+
+        private string _probeInterfaceFile = "";
+
+        /// <summary>
+        /// Gets or sets the file path to a configuration file holding the Probe Interface JSON specifications for this probe.
+        /// </summary>
         [XmlIgnore]
         [Category(ConfigurationCategory)]
-        [Description("Defines the channel configuration")]
-        public Rhs2116ProbeGroup ProbeGroup { get; set; } = new();
+        [Description("File path to a configuration file holding the Probe Interface JSON specifications for this probe. If left empty, a default file will be created next to the *.bonsai file when it is saved.")]
+        public string ProbeInterfaceFile
+        {
+            get
+            {
+                return _probeInterfaceFile;
+            }
+            set
+            {
+                if (!string.IsNullOrEmpty(value) && !value.EndsWith(ProbeGroupHelper.ProbeInterfaceExtension))
+                    value += ProbeGroupHelper.ProbeInterfaceExtension;
+
+                _probeInterfaceFile = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a string defining the path to an external ProbeInterface JSON file.
+        /// This variable is needed to properly save a workflow in Bonsai, but it is not
+        /// directly accessible in the Bonsai editor.
+        /// </summary>
+        [Browsable(false)]
+        [Externalizable(false)]
+        [XmlElement(nameof(ProbeInterfaceFile))]
+        public string ProbeInterfaceFileSerialize
+        {
+            get
+            {
+                var filename = string.IsNullOrEmpty(ProbeInterfaceFile)
+                                ? ProbeGroupHelper.GenerateProbeInterfaceFilename(DeviceAddress, DeviceName)
+                                : ProbeInterfaceFile;
+
+                ProbeGroupHelper.SaveExternalProbeInterfaceFile(ProbeGroup, filename);
+                return ProbeInterfaceFile;
+            }
+            set
+            {
+                var filename = string.IsNullOrEmpty(value)
+                                ? ProbeGroupHelper.GenerateProbeInterfaceFilename(DeviceAddress, DeviceName)
+                                : value;
+
+                ProbeGroup = ProbeGroupHelper.LoadExternalProbeInterfaceFile<Rhs2116ProbeGroup>(filename);
+
+                ProbeInterfaceFile = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets if trigger is armed.
@@ -84,34 +171,11 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets or sets a string defining the <see cref="ProbeGroup"/> in Base64.
-        /// </summary>
-        /// <remarks>
-        /// This variable is needed to properly save a workflow in Bonsai, but it is not
-        /// directly accessible in the Bonsai editor.
-        /// </remarks>
-        [Browsable(false)]
-        [Externalizable(false)]
-        [XmlElement(nameof(ProbeGroup))]
-        public string ProbeGroupString
-        {
-            get
-            {
-                var jsonString = JsonConvert.SerializeObject(ProbeGroup);
-                return Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonString));
-            }
-            set
-            {
-                var jsonString = Encoding.UTF8.GetString(Convert.FromBase64String(value));
-                ProbeGroup = JsonConvert.DeserializeObject<Rhs2116ProbeGroup>(jsonString);
-            }
-        }
-
-        /// <summary>
         /// Gets or sets the stimulus sequence.
         /// </summary>
         [Category(AcquisitionCategory)]
         [Description("Stimulus sequence.")]
+        [TypeConverter(typeof(GenericPropertyConverter))]
         public Rhs2116StimulusSequencePair StimulusSequence
         {
             get => stimulusSequence.Value;
