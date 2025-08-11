@@ -31,9 +31,7 @@ namespace OpenEphys.Onix1.Design
                 {
                     var instance = (IConfigureNeuropixelsV2)context.Instance;
 
-                    var calibrationFile = configuration.Probe == NeuropixelsV2Probe.ProbeA ? instance.GainCalibrationFileA : instance.GainCalibrationFileB;
-
-                    using var editorDialog = new NeuropixelsV2eProbeConfigurationDialog(configuration, calibrationFile, instance.InvertPolarity);
+                    using var editorDialog = new NeuropixelsV2eProbeConfigurationDialog(configuration, instance.InvertPolarity);
 
                     if (instance is ConfigureNeuropixelsV2eBeta)
                     {
@@ -42,15 +40,6 @@ namespace OpenEphys.Onix1.Design
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
-                        if (configuration.Probe == NeuropixelsV2Probe.ProbeA)
-                        {
-                            instance.GainCalibrationFileA = editorDialog.textBoxProbeCalibrationFile.Text;
-                        }
-                        else
-                        {
-                            instance.GainCalibrationFileB = editorDialog.textBoxProbeCalibrationFile.Text;
-                        }
-
                         instance.InvertPolarity = editorDialog.InvertPolarity;
 
                         return editorDialog.ProbeConfiguration;
