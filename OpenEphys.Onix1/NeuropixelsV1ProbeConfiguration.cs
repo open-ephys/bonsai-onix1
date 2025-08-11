@@ -54,12 +54,17 @@ namespace OpenEphys.Onix1
         /// <param name="lfpAmplifierGain">Desired or current <see cref="NeuropixelsV1Gain"/> for the LFP-band.</param>
         /// <param name="reference">Desired or current <see cref="NeuropixelsV1ReferenceSource"/>.</param>
         /// <param name="spikeFilter">Desired or current option to filer the spike-band.</param>
-        public NeuropixelsV1ProbeConfiguration(NeuropixelsV1Gain spikeAmplifierGain, NeuropixelsV1Gain lfpAmplifierGain, NeuropixelsV1ReferenceSource reference, bool spikeFilter)
+        /// <param name="adcCalibrationFile">String containing the filepath to the ADC calibration file.</param>
+        /// <param name="gainCalibrationFile">String containing the filepath to the Gain calibration file.</param>
+        public NeuropixelsV1ProbeConfiguration(NeuropixelsV1Gain spikeAmplifierGain, NeuropixelsV1Gain lfpAmplifierGain,
+            NeuropixelsV1ReferenceSource reference, bool spikeFilter, string adcCalibrationFile, string gainCalibrationFile)
         {
             SpikeAmplifierGain = spikeAmplifierGain;
             LfpAmplifierGain = lfpAmplifierGain;
             Reference = reference;
             SpikeFilter = spikeFilter;
+            AdcCalibrationFile = adcCalibrationFile;
+            GainCalibrationFile = gainCalibrationFile;
             ProbeGroup = new();
             ChannelMap = NeuropixelsV1eProbeGroup.ToChannelMap(ProbeGroup);
         }
@@ -73,7 +78,11 @@ namespace OpenEphys.Onix1
         /// <param name="lfpAmplifierGain">Desired or current <see cref="NeuropixelsV1Gain"/> for the LFP-band.</param>
         /// <param name="reference">Desired or current <see cref="NeuropixelsV1ReferenceSource"/>.</param>
         /// <param name="spikeFilter">Desired or current option to filer the spike-band.</param>
-        public NeuropixelsV1ProbeConfiguration(NeuropixelsV1eProbeGroup probeGroup, NeuropixelsV1Gain spikeAmplifierGain, NeuropixelsV1Gain lfpAmplifierGain, NeuropixelsV1ReferenceSource reference, bool spikeFilter)
+        /// <param name="adcCalibrationFile">String containing the filepath to the ADC calibration file.</param>
+        /// <param name="gainCalibrationFile">String containing the filepath to the Gain calibration file.</param>
+        public NeuropixelsV1ProbeConfiguration(NeuropixelsV1eProbeGroup probeGroup, NeuropixelsV1Gain spikeAmplifierGain, 
+            NeuropixelsV1Gain lfpAmplifierGain, NeuropixelsV1ReferenceSource reference, bool spikeFilter,
+            string adcCalibrationFile, string gainCalibrationFile)
         {
             SpikeAmplifierGain = spikeAmplifierGain;
             LfpAmplifierGain = lfpAmplifierGain;
@@ -82,10 +91,13 @@ namespace OpenEphys.Onix1
             ChannelMap = NeuropixelsV1eProbeGroup.ToChannelMap(probeGroup);
             ProbeGroup = new();
             ProbeGroup.UpdateDeviceChannelIndices(ChannelMap);
+            AdcCalibrationFile = adcCalibrationFile;
+            GainCalibrationFile = gainCalibrationFile;
         }
 
         /// <summary>
-        /// Copy constructor initializes a new instance of <see cref="NeuropixelsV1ProbeConfiguration"/> using the given <see cref="NeuropixelsV1ProbeConfiguration"/>
+        /// Copy constructor initializes a new instance of <see cref="NeuropixelsV1ProbeConfiguration"/> 
+        /// using the given <see cref="NeuropixelsV1ProbeConfiguration"/>
         /// values.
         /// </summary>
         /// <param name="probeConfiguration">Existing <see cref="NeuropixelsV1ProbeConfiguration"/> instance.</param>
@@ -95,6 +107,8 @@ namespace OpenEphys.Onix1
             LfpAmplifierGain = probeConfiguration.LfpAmplifierGain;
             Reference = probeConfiguration.Reference;
             SpikeFilter = probeConfiguration.SpikeFilter;
+            AdcCalibrationFile = probeConfiguration.AdcCalibrationFile;
+            GainCalibrationFile = probeConfiguration.GainCalibrationFile;
             ProbeGroup = new();
             ProbeGroup.UpdateDeviceChannelIndices(probeConfiguration.ChannelMap);
             ChannelMap = NeuropixelsV1eProbeGroup.ToChannelMap(ProbeGroup);
@@ -181,7 +195,9 @@ namespace OpenEphys.Onix1
         [XmlIgnore]
         [Category(DeviceFactory.ConfigurationCategory)]
         [Description("Defines all aspects of the probe group, including probe contours, electrode size and location, enabled channels, etc.")]
-        public NeuropixelsV1eProbeGroup ProbeGroup { get; set; } = new();
+        [Browsable(false)]
+        [Externalizable(false)]
+        public NeuropixelsV1eProbeGroup ProbeGroup { get; private set; } = new();
 
         /// <summary>
         /// Gets or sets a string defining the <see cref="ProbeGroup"/> in Base64.
@@ -191,7 +207,7 @@ namespace OpenEphys.Onix1
         [Browsable(false)]
         [Externalizable(false)]
         [XmlElement(nameof(ProbeGroup))]
-        public string ProbeGroupString
+        public string ProbeGroupSerialize
         {
             get
             {
@@ -205,5 +221,57 @@ namespace OpenEphys.Onix1
                 SelectElectrodes(NeuropixelsV1eProbeGroup.ToChannelMap(ProbeGroup));
             }
         }
+
+        /// <summary>
+        /// Prevent the ProbeGroup property from being serialized. Should be removed in 1.0.0.
+        /// </summary>
+        /// <returns></returns>
+        public bool ShouldSerializeProbeGroupSerialize()
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// Gets or sets the path to the gain calibration file.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Each probe is linked to a gain calibration file that contains gain adjustments determined by IMEC during
+        /// factory testing. Electrode voltages are scaled using these values to ensure they can be accurately compared
+        /// across probes. Therefore, using the correct gain calibration file is mandatory to create standardized recordings.
+        /// </para>
+        /// <para>
+        /// Calibration files are probe-specific and not interchangeable across probes. Calibration files must contain the 
+        /// serial number of the corresponding probe on their first line of text. If you have lost track of a calibration 
+        /// file for your probe, email IMEC at neuropixels.info@imec.be with the probe serial number to retrieve a new copy.
+        /// </para>
+        /// </remarks>
+        [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
+        [Description("Path to the Neuropixels 1.0 gain calibration file.")]
+        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
+        [Category(DeviceFactory.ConfigurationCategory)]
+        public string GainCalibrationFile { get; set; }
+
+        /// <summary>
+        /// Gets or sets the path to the ADC calibration file.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Each probe must be provided with an ADC calibration file that contains probe-specific hardware settings that is
+        /// created by IMEC during factory calibration. These files are used to set internal bias currents, correct for ADC
+        /// nonlinearities, correct ADC-zero crossing non-monotonicities, etc. Using the correct calibration file is mandatory
+        /// for the probe to operate correctly. 
+        /// </para>
+        /// <para>
+        /// Calibration files are probe-specific and not interchangeable across probes. Calibration files must contain the 
+        /// serial number of the corresponding probe on their first line of text. If you have lost track of a calibration 
+        /// file for your probe, email IMEC at neuropixels.info@imec.be with the probe serial number to retrieve a new copy.
+        /// </para>
+        /// </remarks>
+        [FileNameFilter("ADC calibration files (*_ADCCalibration.csv)|*_ADCCalibration.csv")]
+        [Description("Path to the Neuropixels 1.0 ADC calibration file.")]
+        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
+        [Category(DeviceFactory.ConfigurationCategory)]
+        public string AdcCalibrationFile { get; set; }
     }
 }
