@@ -7,7 +7,7 @@ namespace OpenEphys.Onix1
 {
     /// <summary>
     /// Represents a, possibly automatically set, port voltage. 
-    /// </summary>
+    /// </summary> 
     public class AutoPortVoltage
     {
         /// <summary>

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Specialized;
-using System.Numerics;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using OpenCV.Net;
 
 namespace OpenEphys.Onix1

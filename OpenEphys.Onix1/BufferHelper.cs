@@ -1,5 +1,4 @@
-﻿using System;
-using OpenCV.Net;
+﻿using OpenCV.Net;
 
 namespace OpenEphys.Onix1
 {
