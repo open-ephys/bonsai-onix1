@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using Newtonsoft.Json;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -15,49 +13,14 @@ namespace OpenEphys.Onix1.Design
         /// <typeparam name="T"></typeparam>
         /// <param name="jsonString"></param>
         /// <returns></returns>
-        #nullable enable
-        public static T? DeserializeString<T>(string jsonString)
+        public static T DeserializeString<T>(string jsonString) where T : class
         {
-            var errors = new List<string>();
-
-            var serializerSettings = new JsonSerializerSettings()
-            {
-                Error = delegate(object sender, Newtonsoft.Json.Serialization.ErrorEventArgs args)
-                {
-                    errors.Add(args.ErrorContext.Error.Message);
-                    args.ErrorContext.Handled = true;
-                }
-            };
-
-            var obj = JsonConvert.DeserializeObject<T>(jsonString, serializerSettings);
-
-            if (errors.Count > 0)
-            {
-                MessageBox.Show($"There were errors encountered while parsing a JSON string. Check the console " +
-                    $"for an error log.", "JSON Parse Error");
-
-                foreach (var e in errors)
-                {
-                    Console.Error.WriteLine(e);
-                }
-
-                return default;
-            }
-
-            return obj;
+            return ProbeGroupHelper.DeserializeString<T>(jsonString);
         }
-        #nullable disable
 
         public static void SerializeObject(object _object, string filepath)
         {
-            var serializerSettings = new JsonSerializerSettings()
-            {
-                NullValueHandling = NullValueHandling.Ignore,
-            };
-
-            var stringJson = JsonConvert.SerializeObject(_object, Formatting.Indented, serializerSettings);
-
-            File.WriteAllText(filepath, stringJson);
+            ProbeGroupHelper.SerializeObject(_object, filepath);
         }
 
         public static IEnumerable<Control> GetAllControls(this Control root)

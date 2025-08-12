@@ -38,7 +38,7 @@ namespace OpenEphys.Onix1.Design
 
             ProbeConfigurations = new List<NeuropixelsV2eProbeConfigurationDialog>
             {
-                new(ConfigureNode.ProbeConfigurationA, ConfigureNode.GainCalibrationFileA, ConfigureNode.InvertPolarity)
+                new(ConfigureNode.ProbeConfigurationA, ConfigureNode.InvertPolarity)
                 {
                     TopLevel = false,
                     FormBorderStyle = FormBorderStyle.None,
@@ -46,7 +46,7 @@ namespace OpenEphys.Onix1.Design
                     Parent = this,
                     Tag = NeuropixelsV2Probe.ProbeA
                 },
-                new(ConfigureNode.ProbeConfigurationB, ConfigureNode.GainCalibrationFileB, ConfigureNode.InvertPolarity)
+                new(ConfigureNode.ProbeConfigurationB, ConfigureNode.InvertPolarity)
                 {
                     TopLevel = false,
                     FormBorderStyle = FormBorderStyle.None,
@@ -120,13 +120,13 @@ namespace OpenEphys.Onix1.Design
 
         internal void SaveVariables()
         {
-            ConfigureNode.ProbeConfigurationA = ProbeConfigurations[GetProbeIndex(NeuropixelsV2Probe.ProbeA)].ProbeConfiguration;
-            ConfigureNode.ProbeConfigurationB = ProbeConfigurations[GetProbeIndex(NeuropixelsV2Probe.ProbeB)].ProbeConfiguration;
+            var indProbeA = GetProbeIndex(NeuropixelsV2Probe.ProbeA);
+            var indProbeB = GetProbeIndex(NeuropixelsV2Probe.ProbeB);
 
-            ConfigureNode.GainCalibrationFileA = ProbeConfigurations[GetProbeIndex(NeuropixelsV2Probe.ProbeA)].textBoxProbeCalibrationFile.Text;
-            ConfigureNode.GainCalibrationFileB = ProbeConfigurations[GetProbeIndex(NeuropixelsV2Probe.ProbeB)].textBoxProbeCalibrationFile.Text;
+            ConfigureNode.ProbeConfigurationA = ProbeConfigurations[indProbeA].ProbeConfiguration;
+            ConfigureNode.ProbeConfigurationB = ProbeConfigurations[indProbeB].ProbeConfiguration;
 
-            ConfigureNode.InvertPolarity = ProbeConfigurations[GetProbeIndex(NeuropixelsV2Probe.ProbeA)].InvertPolarity;
+            ConfigureNode.InvertPolarity = ProbeConfigurations[indProbeA].InvertPolarity;
         }
     }
 }

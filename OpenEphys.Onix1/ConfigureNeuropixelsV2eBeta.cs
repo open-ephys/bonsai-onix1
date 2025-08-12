@@ -1,7 +1,9 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Drawing.Design;
+using System.IO;
 using System.Reactive.Disposables;
+using System.Xml.Serialization;
 using Bonsai;
 
 namespace OpenEphys.Onix1
@@ -36,8 +38,8 @@ namespace OpenEphys.Onix1
             EnableLed = configureNode.EnableLed;
             ProbeConfigurationA = configureNode.ProbeConfigurationA;
             ProbeConfigurationB = configureNode.ProbeConfigurationB;
-            GainCalibrationFileA = configureNode.GainCalibrationFileA;
-            GainCalibrationFileB = configureNode.GainCalibrationFileB;
+            ProbeInterfaceFileNameA = configureNode.ProbeInterfaceFileNameA;
+            ProbeInterfaceFileNameB = configureNode.ProbeInterfaceFileNameB;
             DeviceName = configureNode.DeviceName;
             DeviceAddress = configureNode.DeviceAddress;
             InvertPolarity = configureNode.InvertPolarity;
@@ -89,26 +91,88 @@ namespace OpenEphys.Onix1
         [Category(ConfigurationCategory)]
         [Description("Probe A electrode configuration.")]
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
+        [TypeConverter(typeof(GenericPropertyConverter))]
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new(NeuropixelsV2Probe.ProbeA);
 
-        /// <inheritdoc/>
-        /// <remarks>
-        /// <para>
-        /// Each probe is linked to a gain calibration file that contains gain adjustments determined by IMEC during
-        /// factory testing. Electrode voltages are scaled using these values to ensure they can be accurately compared
-        /// across probes. Therefore, using the correct gain calibration file is mandatory to create standardized recordings.
-        /// </para>
-        /// <para>
-        /// Calibration files are probe-specific and not interchangeable across probes. Calibration files must contain the
-        /// serial number of the corresponding probe on their first line of text. If you have lost track of a calibration
-        /// file for your probe, email IMEC at neuropixels.info@imec.be with the probe serial number to retrieve a new copy.
-        /// </para>
-        /// </remarks>
+        /// <summary>
+        /// Gets or sets the file path to a configuration file holding the Probe Interface JSON specifications for this probe.
+        /// </summary>
+        [XmlIgnore]
         [Category(ConfigurationCategory)]
-        [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
-        [Description("Path to the gain calibration file for probe A.")]
-        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
-        public string GainCalibrationFileA { get; set; }
+        [Description("File path to a configuration file holding the Probe Interface JSON specifications for this probe. If left empty, a default file will be created next to the *.bonsai file when it is saved.")]
+        [FileNameFilter(ProbeGroupHelper.ProbeInterfaceFileNameFilter)]
+        [Editor("Bonsai.Design.SaveFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
+        public string ProbeInterfaceFileNameA { get; set; } = "";
+
+        private string GetProbeInterfaceFilename(NeuropixelsV2Probe probe)
+        {
+            var name = probe switch
+            {
+                NeuropixelsV2Probe.ProbeA => DeviceName + "_probeA",
+                NeuropixelsV2Probe.ProbeB => DeviceName + "_probeB",
+                _ => throw new NotImplementedException(),
+            };
+
+            return ProbeGroupHelper.GenerateProbeInterfaceFilename(DeviceAddress, name);
+        }
+
+        /// <summary>
+        /// Gets or sets a string defining the path to an external ProbeInterface JSON file.
+        /// This variable is needed to properly save a workflow in Bonsai, but it is not
+        /// directly accessible in the Bonsai editor.
+        /// </summary>
+        [Browsable(false)]
+        [Externalizable(false)]
+        [XmlElement(nameof(ProbeInterfaceFileNameA))]
+        public string ProbeInterfaceFileSerializeA
+        {
+            get
+            {
+                var filename = string.IsNullOrEmpty(ProbeInterfaceFileNameA)
+                                ? GetProbeInterfaceFilename(NeuropixelsV2Probe.ProbeA)
+                                : ProbeInterfaceFileNameA;
+
+                ProbeGroupHelper.SaveExternalProbeInterfaceFile(ProbeConfigurationA.ProbeGroup, filename);
+                return ProbeInterfaceFileNameA;
+            }
+            set
+            {
+                ProbeInterfaceFileNameA = value;
+                var filename = string.IsNullOrEmpty(ProbeInterfaceFileNameA)
+                                ? GetProbeInterfaceFilename(NeuropixelsV2Probe.ProbeA)
+                                : ProbeInterfaceFileNameA;
+
+                // NB: If a file does not exist at the default file path, leave the default probe group settings as-is
+                if (string.IsNullOrEmpty(ProbeInterfaceFileNameA) && !File.Exists(filename))
+                {
+                    return;
+                }
+
+                ProbeConfigurationA = new(ProbeGroupHelper.LoadExternalProbeInterfaceFile<NeuropixelsV2eProbeGroup>(filename),
+                                        ProbeConfigurationA.Reference, ProbeConfigurationA.Probe, ProbeConfigurationA.GainCalibrationFile);
+            }
+        }
+
+        /// <summary>
+        /// Obsolete: Calibration files have been moved to the ProbeConfiguration class as of 0.6.1.
+        /// Will be removed in 1.0.0.
+        /// </summary>
+        [Browsable(false)]
+        [Externalizable(false)]
+        public string GainCalibrationFileA
+        {
+            get => ProbeConfigurationA.GainCalibrationFile;
+            set => ProbeConfigurationA.GainCalibrationFile = value;
+        }
+
+        /// <summary>
+        /// Prevent the GainCalibrationFile property from being serialized. Will be removed in 1.0.0.
+        /// </summary>
+        /// <returns>False</returns>
+        public bool ShouldSerializeGainCalibrationFileA()
+        {
+            return false;
+        }
 
         /// <inheritdoc/>
         /// <remarks>
@@ -120,26 +184,76 @@ namespace OpenEphys.Onix1
         [Category(ConfigurationCategory)]
         [Description("Probe B electrode configuration.")]
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
+        [TypeConverter(typeof(GenericPropertyConverter))]
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new(NeuropixelsV2Probe.ProbeB);
 
-        /// <inheritdoc/>
-        /// <remarks>
-        /// <para>
-        /// Each probe is linked to a gain calibration file that contains gain adjustments determined by IMEC during
-        /// factory testing. Electrode voltages are scaled using these values to ensure they can be accurately compared
-        /// across probes. Therefore, using the correct gain calibration file is mandatory to create standardized recordings.
-        /// </para>
-        /// <para>
-        /// Calibration files are probe-specific and not interchangeable across probes. Calibration files must contain the
-        /// serial number of the corresponding probe on their first line of text. If you have lost track of a calibration
-        /// file for your probe, email IMEC at neuropixels.info@imec.be with the probe serial number to retrieve a new copy.
-        /// </para>
-        /// </remarks>
+        /// <summary>
+        /// Gets or sets the file path to a configuration file holding the Probe Interface JSON specifications for this probe.
+        /// </summary>
+        [XmlIgnore]
         [Category(ConfigurationCategory)]
-        [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
-        [Description("Path to the gain calibration file for probe B.")]
-        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
-        public string GainCalibrationFileB { get; set; }
+        [Description("File path to a configuration file holding the Probe Interface JSON specifications for this probe. If left empty, a default file will be created next to the *.bonsai file when it is saved.")]
+        [FileNameFilter(ProbeGroupHelper.ProbeInterfaceFileNameFilter)]
+        [Editor("Bonsai.Design.SaveFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
+        public string ProbeInterfaceFileNameB { get; set; } = "";
+
+        /// <summary>
+        /// Gets or sets a string defining the path to an external ProbeInterface JSON file.
+        /// This variable is needed to properly save a workflow in Bonsai, but it is not
+        /// directly accessible in the Bonsai editor.
+        /// </summary>
+        [Browsable(false)]
+        [Externalizable(false)]
+        [XmlElement(nameof(ProbeInterfaceFileNameB))]
+        public string ProbeInterfaceFileSerializeB
+        {
+            get
+            {
+                var filename = string.IsNullOrEmpty(ProbeInterfaceFileNameB)
+                                ? GetProbeInterfaceFilename(NeuropixelsV2Probe.ProbeB)
+                                : ProbeInterfaceFileNameB;
+
+                ProbeGroupHelper.SaveExternalProbeInterfaceFile(ProbeConfigurationB.ProbeGroup, filename);
+                return ProbeInterfaceFileNameB;
+            }
+            set
+            {
+                ProbeInterfaceFileNameB = value;
+                var filename = string.IsNullOrEmpty(ProbeInterfaceFileNameB)
+                                ? GetProbeInterfaceFilename(NeuropixelsV2Probe.ProbeB)
+                                : ProbeInterfaceFileNameB;
+
+                // NB: If a file does not exist at the default file path, leave the default probe group settings as-is
+                if (string.IsNullOrEmpty(ProbeInterfaceFileNameB) && !File.Exists(filename))
+                {
+                    return;
+                }
+
+                ProbeConfigurationB = new(ProbeGroupHelper.LoadExternalProbeInterfaceFile<NeuropixelsV2eProbeGroup>(filename),
+                                        ProbeConfigurationB.Reference, ProbeConfigurationB.Probe, ProbeConfigurationB.GainCalibrationFile);
+            }
+        }
+
+        /// <summary>
+        /// Obsolete: Calibration files have been moved to the ProbeConfiguration class as of 0.6.1.
+        /// Will be removed in 1.0.0.
+        /// </summary>
+        [Browsable(false)]
+        [Externalizable(false)]
+        public string GainCalibrationFileB
+        {
+            get => ProbeConfigurationB.GainCalibrationFile;
+            set => ProbeConfigurationB.GainCalibrationFile = value;
+        }
+
+        /// <summary>
+        /// Prevent the GainCalibrationFile property from being serialized. Will be removed in 1.0.0.
+        /// </summary>
+        /// <returns>False</returns>
+        public bool ShouldSerializeGainCalibrationFileB()
+        {
+            return false;
+        }
 
         /// <summary>
         /// Configures a NeuropixelsV2eBeta device.
@@ -200,11 +314,11 @@ namespace OpenEphys.Onix1
                 // configure probe A streaming
                 if (probeAMetadata.ProbeSerialNumber != null)
                 {
-                    var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(GainCalibrationFileA);
+                    var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(ProbeConfigurationA.GainCalibrationFile);
 
                     if (!gainCorrection.HasValue)
                     {
-                        throw new ArgumentException($"{NeuropixelsV2Probe.ProbeA}'s calibration file \"{GainCalibrationFileA}\" is invalid.");
+                        throw new ArgumentException($"{NeuropixelsV2Probe.ProbeA}'s calibration file \"{ProbeConfigurationA.GainCalibrationFile}\" is invalid.");
                     }
 
                     if (gainCorrection.Value.SerialNumber != probeAMetadata.ProbeSerialNumber)
@@ -223,11 +337,11 @@ namespace OpenEphys.Onix1
                 // configure probe B streaming
                 if (probeAMetadata.ProbeSerialNumber != null)
                 {
-                    var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(GainCalibrationFileB);
+                    var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(ProbeConfigurationB.GainCalibrationFile);
 
                     if (!gainCorrection.HasValue)
                     {
-                        throw new ArgumentException($"{NeuropixelsV2Probe.ProbeB}'s calibration file \"{GainCalibrationFileB}\" is invalid.");
+                        throw new ArgumentException($"{NeuropixelsV2Probe.ProbeB}'s calibration file \"{ProbeConfigurationB.GainCalibrationFile}\" is invalid.");
                     }
 
                     if (gainCorrection.Value.SerialNumber != probeBMetadata.ProbeSerialNumber)

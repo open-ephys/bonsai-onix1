@@ -15,30 +15,30 @@ namespace OpenEphys.Onix1
         const uint ShiftRegisterSuccess = 1 << 7;
 
         readonly NeuropixelsV1Adc[] Adcs = new NeuropixelsV1Adc[NeuropixelsV1.AdcCount];
-        readonly BitArray ShankConfig; 
+        readonly BitArray ShankConfig;
         readonly BitArray[] BaseConfigs;
 
         public NeuropixelsV1eRegisterContext(DeviceContext deviceContext, uint i2cAddress, ulong probeSerialNumber,
-            NeuropixelsV1ProbeConfiguration probeConfiguration, string gainCalibrationFile, string adcCalibrationFile)
+            NeuropixelsV1ProbeConfiguration probeConfiguration)
             : base(deviceContext, i2cAddress)
         {
-            if (!File.Exists(gainCalibrationFile))
+            if (!File.Exists(probeConfiguration.GainCalibrationFile))
             {
                 throw new ArgumentException($"A gain calibration file must be specified for the probe with serial number " +
                     $"{probeSerialNumber}");
             }
-            
-            if (!File.Exists(adcCalibrationFile))
+
+            if (!File.Exists(probeConfiguration.AdcCalibrationFile))
             {
                 throw new ArgumentException($"An ADC calibration file must be specified for the probe with serial number " +
                     $"{probeSerialNumber}");
             }
 
-            var adcCalibration = NeuropixelsV1Helper.TryParseAdcCalibrationFile(adcCalibrationFile);
+            var adcCalibration = NeuropixelsV1Helper.TryParseAdcCalibrationFile(probeConfiguration.AdcCalibrationFile);
 
             if (!adcCalibration.HasValue)
             {
-                throw new ArgumentException($"The calibration file \"{adcCalibrationFile}\" is invalid.");
+                throw new ArgumentException($"The calibration file \"{probeConfiguration.AdcCalibrationFile}\" is invalid.");
             }
 
             if (adcCalibration.Value.SerialNumber != probeSerialNumber)
@@ -47,12 +47,12 @@ namespace OpenEphys.Onix1
                     $"match the ADC calibration file serial number ({adcCalibration.Value.SerialNumber}).");
             }
 
-            var gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(gainCalibrationFile, 
+            var gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(probeConfiguration.GainCalibrationFile,
                 probeConfiguration.SpikeAmplifierGain, probeConfiguration.LfpAmplifierGain, NeuropixelsV1.ElectrodeCount);
 
             if (!gainCorrection.HasValue)
             {
-                throw new ArgumentException($"The calibration file \"{gainCalibrationFile}\" is invalid.");
+                throw new ArgumentException($"The calibration file \"{probeConfiguration.GainCalibrationFile}\" is invalid.");
             }
 
             if (gainCorrection.Value.SerialNumber != probeSerialNumber)
@@ -71,7 +71,6 @@ namespace OpenEphys.Onix1
             // Create Configuration bit arrays
             ShankConfig = NeuropixelsV1.MakeShankBits(probeConfiguration);
             BaseConfigs = NeuropixelsV1.MakeConfigBits(probeConfiguration, Adcs);
-           
         }
 
         public void InitializeProbe()
@@ -99,7 +98,7 @@ namespace OpenEphys.Onix1
 
             foreach (var b in shankBytes)
             {
-               WriteByte(NeuropixelsV1e.SR_CHAIN1, b);
+                WriteByte(NeuropixelsV1e.SR_CHAIN1, b);
             }
 
             // base configuration
@@ -143,6 +142,5 @@ namespace OpenEphys.Onix1
             WriteByte(NeuropixelsV1e.OP_MODE, (uint)NeuropixelsV1OperationRegisterValues.RECORD);
             WriteByte(NeuropixelsV1e.REC_MOD, (uint)NeuropixelsV1RecordRegisterValues.ACTIVE);
         }
-
     }
 }

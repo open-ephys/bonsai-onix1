@@ -33,14 +33,7 @@ namespace OpenEphys.Onix1.Design
             InitializeComponent();
             Shown += FormShown;
 
-            if (probeGroup == null)
-            {
-                LoadDefaultChannelLayout();
-            }
-            else
-            {
-                ProbeGroup = probeGroup;
-            }
+            ProbeGroup = probeGroup ?? DefaultChannelLayout();
 
             SelectedContacts = new bool[ProbeGroup.NumberOfContacts];
 
@@ -849,7 +842,7 @@ namespace OpenEphys.Onix1.Design
         internal static double GetProbeContourLeft(GraphObjList graphObjs)
         {
             return graphObjs.OfType<PolyObj>()
-                            .Min(obj => { return obj.Points.Min(p => p.X); });
+                            .Min(obj => { return obj.Points.Min((Func<PointD, double>)(p => p.X)); });
         }
 
         internal static double GetProbeBottom(GraphObjList graphObjs)
@@ -875,7 +868,7 @@ namespace OpenEphys.Onix1.Design
         internal static double GetProbeContourBottom(GraphObjList graphObjs)
         {
             return graphObjs.OfType<PolyObj>()
-                            .Min(obj => { return obj.Points.Min(p => p.Y); });
+                            .Min(obj => { return obj.Points.Min((Func<PointD, double>)(p => p.Y)); });
         }
 
         internal static double GetProbeRight(GraphObjList graphObjs)
@@ -901,7 +894,7 @@ namespace OpenEphys.Onix1.Design
         internal static double GetProbeContourRight(GraphObjList graphObjs)
         {
             return graphObjs.OfType<PolyObj>()
-                            .Max(obj => { return obj.Points.Max(p => p.X); });
+                            .Max(obj => { return obj.Points.Max((Func<PointD, double>)(p => p.X)); });
         }
 
         internal static double GetProbeTop(GraphObjList graphObjs)
@@ -927,7 +920,7 @@ namespace OpenEphys.Onix1.Design
         internal static double GetProbeContourTop(GraphObjList graphObjs)
         {
             return graphObjs.OfType<PolyObj>()
-                            .Max(obj => { return obj.Points.Max(p => p.Y); });
+                            .Max(obj => { return obj.Points.Max((Func<PointD, double>)(p => p.Y)); });
         }
 
         /// <summary>
@@ -1342,8 +1335,8 @@ namespace OpenEphys.Onix1.Design
         {
             foreach (var probe in probeGroup.Probes)
             {
-                if (probe.ContactAnnotations != null 
-                    && probe.ContactAnnotations.Annotations != null 
+                if (probe.ContactAnnotations != null
+                    && probe.ContactAnnotations.Annotations != null
                     && probe.ContactAnnotations.Annotations.Length > 0)
                 {
                     return true;

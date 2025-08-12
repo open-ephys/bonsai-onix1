@@ -1,5 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
+using System.IO;
+using System.Xml.Serialization;
 using Bonsai;
 
 namespace OpenEphys.Onix1
@@ -43,8 +45,7 @@ namespace OpenEphys.Onix1
         {
             ProbeName = configureNeuropixelsV1f.ProbeName;
             Enable = configureNeuropixelsV1f.Enable;
-            GainCalibrationFile = configureNeuropixelsV1f.GainCalibrationFile;
-            AdcCalibrationFile = configureNeuropixelsV1f.AdcCalibrationFile;
+            ProbeInterfaceFileName = configureNeuropixelsV1f.ProbeInterfaceFileName;
             ProbeConfiguration = new(configureNeuropixelsV1f.ProbeConfiguration);
             DeviceName = configureNeuropixelsV1f.DeviceName;
             DeviceAddress = configureNeuropixelsV1f.DeviceAddress;
@@ -83,51 +84,102 @@ namespace OpenEphys.Onix1
         /// Gets or sets the NeuropixelsV1 probe configuration.
         /// </summary>
         [Category(ConfigurationCategory)]
-        [Description("Neuropixels 1.0e probe configuration.")]
+        [Description("Neuropixels 1.0 probe configuration.")]
+        [TypeConverter(typeof(GenericPropertyConverter))]
         public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; set; } = new();
 
         /// <summary>
-        /// Gets or sets the path to the gain calibration file.
+        /// Gets or sets the file path to a configuration file holding the Probe Interface JSON specifications for this probe.
         /// </summary>
         /// <remarks>
-        /// <para>
-        /// Each probe is linked to a gain calibration file that contains gain adjustments determined by IMEC during
-        /// factory testing. Electrode voltages are scaled using these values to ensure they can be accurately compared
-        /// across probes. Therefore, using the correct gain calibration file is mandatory to create standardized recordings.
-        /// </para>
-        /// <para>
-        /// Calibration files are probe-specific and not interchangeable across probes. Calibration files must contain the 
-        /// serial number of the corresponding probe on their first line of text. If you have lost track of a calibration 
-        /// file for your probe, email IMEC at neuropixels.info@imec.be with the probe serial number to retrieve a new copy.
-        /// </para>
+        /// If left empty, a default file will be created next to the *.bonsai file when it is saved.
         /// </remarks>
-        [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
-        [Description("Path to the Neuropixels 1.0 gain calibration file.")]
-        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
+        [XmlIgnore]
         [Category(ConfigurationCategory)]
-        public string GainCalibrationFile { get; set; }
+        [Description("File path to a configuration file holding the Probe Interface JSON specifications for this probe. If left empty, a default file will be created next to the *.bonsai file when it is saved.")]
+        [FileNameFilter(ProbeGroupHelper.ProbeInterfaceFileNameFilter)]
+        [Editor("Bonsai.Design.SaveFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
+        public string ProbeInterfaceFileName { get; set; } = "";
 
         /// <summary>
-        /// Gets or sets the path to the ADC calibration file.
+        /// Gets or sets a string defining the path to an external ProbeInterface JSON file.
+        /// This variable is needed to properly save a workflow in Bonsai, but it is not
+        /// directly accessible in the Bonsai editor.
         /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Each probe must be provided with an ADC calibration file that contains probe-specific hardware settings that is
-        /// created by IMEC during factory calibration. These files are used to set internal bias currents, correct for ADC
-        /// nonlinearities, correct ADC-zero crossing non-monotonicities, etc. Using the correct calibration file is mandatory
-        /// for the probe to operate correctly. 
-        /// </para>
-        /// <para>
-        /// Calibration files are probe-specific and not interchangeable across probes. Calibration files must contain the 
-        /// serial number of the corresponding probe on their first line of text. If you have lost track of a calibration 
-        /// file for your probe, email IMEC at neuropixels.info@imec.be with the probe serial number to retrieve a new copy.
-        /// </para>
-        /// </remarks>
-        [FileNameFilter("ADC calibration files (*_ADCCalibration.csv)|*_ADCCalibration.csv")]
-        [Description("Path to the Neuropixels 1.0 ADC calibration file.")]
-        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
-        [Category(ConfigurationCategory)]
-        public string AdcCalibrationFile { get; set; }
+        [Browsable(false)]
+        [Externalizable(false)]
+        [XmlElement(nameof(ProbeInterfaceFileName))]
+        public string ProbeInterfaceFileSerialize
+        {
+            get
+            {
+                var filename = string.IsNullOrEmpty(ProbeInterfaceFileName)
+                                ? ProbeGroupHelper.GenerateProbeInterfaceFilename(DeviceAddress, DeviceName)
+                                : ProbeInterfaceFileName;
+
+                ProbeGroupHelper.SaveExternalProbeInterfaceFile(ProbeConfiguration.ProbeGroup, filename);
+                return ProbeInterfaceFileName;
+            }
+            set
+            {
+                ProbeInterfaceFileName = value;
+                var filename = string.IsNullOrEmpty(ProbeInterfaceFileName)
+                                ? ProbeGroupHelper.GenerateProbeInterfaceFilename(DeviceAddress, DeviceName)
+                                : ProbeInterfaceFileName;
+
+                // NB: If a file does not exist at the default file path, leave the default probe group settings as-is
+                if (string.IsNullOrEmpty(ProbeInterfaceFileName) && !File.Exists(filename))
+                {
+                    return;
+                }
+
+                ProbeConfiguration = new(ProbeGroupHelper.LoadExternalProbeInterfaceFile<NeuropixelsV1eProbeGroup>(filename),
+                                            ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain,
+                                            ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter,
+                                            ProbeConfiguration.AdcCalibrationFile, ProbeConfiguration.GainCalibrationFile);
+            }
+        }
+
+        /// <summary>
+        /// Obsolete: Calibration files have been moved to the ProbeConfiguration class as of 0.6.1.
+        /// Will be removed in 1.0.0.
+        /// </summary>
+        [Browsable(false)]
+        [Externalizable(false)]
+        public string GainCalibrationFile
+        {
+            get => ProbeConfiguration.GainCalibrationFile;
+            set => ProbeConfiguration.GainCalibrationFile = value;
+        }
+
+        /// <summary>
+        /// Prevent the GainCalibrationFile property from being serialized. Will be removed in 1.0.0.
+        /// </summary>
+        /// <returns>False</returns>
+        public bool ShouldSerializeGainCalibrationFile()
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// Obsolete: Calibration files have been moved to the ProbeConfiguration class as of 0.6.1. Will be removed in 1.0.0.
+        /// </summary>
+        [Browsable(false)]
+        [Externalizable(false)]
+        public string AdcCalibrationFile
+        {
+            get => ProbeConfiguration.AdcCalibrationFile;
+            set => ProbeConfiguration.AdcCalibrationFile = value;
+        }
+
+        /// <summary>
+        /// Prevent the AdcCalibrationFile property from being serialized. Will be removed in 1.0.0.
+        /// </summary>
+        /// <returns>False</returns>
+        public bool ShouldSerializeAdcCalibrationFile()
+        {
+            return false;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="NeuropixelsV1Probe"/> for this probe.
@@ -156,11 +208,11 @@ namespace OpenEphys.Onix1
             return source.ConfigureDevice(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, typeof(NeuropixelsV1f));
-                device.WriteRegister(NeuropixelsV1f.ENABLE, enable ? 1u : 0);
+                device.WriteRegister(NeuropixelsV1f.ENABLE, enable ? 1u : 0u);
 
                 if (enable)
                 {
-                    var probeControl = new NeuropixelsV1fRegisterContext(device, ProbeConfiguration, GainCalibrationFile, AdcCalibrationFile, invertPolarity);
+                    var probeControl = new NeuropixelsV1fRegisterContext(device, ProbeConfiguration, invertPolarity);
                     probeControl.InitializeProbe();
                     probeControl.WriteShiftRegisters();
                 }

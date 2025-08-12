@@ -44,10 +44,8 @@ namespace OpenEphys.Onix1.Design
         /// Initializes a new instance of <see cref="NeuropixelsV1Dialog"/>.
         /// </summary>
         /// <param name="probeConfiguration">A <see cref="NeuropixelsV1ProbeConfiguration"/> object holding the current configuration settings.</param>
-        /// <param name="adcCalibrationFile">String defining the path to the ADC calibration file.</param>
-        /// <param name="gainCalibrationFile">String defining the path to the gain calibration file.</param>
         /// <param name="invertPolarity">Boolean denoting whether or not to invert the polarity of neural data.</param>
-        public NeuropixelsV1ProbeConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration, string adcCalibrationFile, string gainCalibrationFile, bool invertPolarity)
+        public NeuropixelsV1ProbeConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration, bool invertPolarity)
         {
             InitializeComponent();
             Shown += FormShown;
@@ -88,9 +86,9 @@ namespace OpenEphys.Onix1.Design
             checkBoxInvertPolarity.Checked = InvertPolarity;
             checkBoxInvertPolarity.CheckedChanged += InvertPolarityIndexChanged;
 
-            textBoxAdcCalibrationFile.Text = adcCalibrationFile;
+            textBoxAdcCalibrationFile.Text = ProbeConfiguration.AdcCalibrationFile;
 
-            textBoxGainCalibrationFile.Text = gainCalibrationFile;
+            textBoxGainCalibrationFile.Text = ProbeConfiguration.GainCalibrationFile;
 
             comboBoxChannelPresets.DataSource = Enum.GetValues(typeof(ChannelPreset));
             CheckForExistingChannelPreset();
@@ -128,11 +126,13 @@ namespace OpenEphys.Onix1.Design
         private void GainCalibrationFileTextChanged(object sender, EventArgs e)
         {
             CheckStatus();
+            ProbeConfiguration.GainCalibrationFile = ((TextBox)sender).Text;
         }
 
         private void AdcCalibrationFileTextChanged(object sender, EventArgs e)
         {
             CheckStatus();
+            ProbeConfiguration.AdcCalibrationFile = ((TextBox)sender).Text;
         }
 
         private void SpikeAmplifierGainIndexChanged(object sender, EventArgs e)
@@ -184,17 +184,17 @@ namespace OpenEphys.Onix1.Design
 
                 case ChannelPreset.BankC:
                     probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.C ||
-                                                                             (e.Bank == NeuropixelsV1Bank.B && e.Index >= 576)).ToArray());
+                                                (e.Bank == NeuropixelsV1Bank.B && e.Index >= 576)).ToArray());
                     break;
 
                 case ChannelPreset.SingleColumn:
                     probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Index % 2 == 0 && e.Bank == NeuropixelsV1Bank.A) ||
-                                                                              (e.Index % 2 == 1 && e.Bank == NeuropixelsV1Bank.B)).ToArray());
+                                                (e.Index % 2 == 1 && e.Bank == NeuropixelsV1Bank.B)).ToArray());
                     break;
 
                 case ChannelPreset.Tetrodes:
                     probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Index % 8 < 4 && e.Bank == NeuropixelsV1Bank.A) ||
-                                                                              (e.Index % 8 > 3 && e.Bank == NeuropixelsV1Bank.B)).ToArray());
+                                                (e.Index % 8 > 3 && e.Bank == NeuropixelsV1Bank.B)).ToArray());
                     break;
             }
 
@@ -317,22 +317,22 @@ namespace OpenEphys.Onix1.Design
 
             panelProbe.Visible = adcCalibration.HasValue && gainCorrection.HasValue;
 
-            if (toolStripAdcCalSN.Text == NoFileSelected) 
+            if (toolStripAdcCalSN.Text == NoFileSelected)
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusWarningImage;
-            else if (toolStripAdcCalSN.Text == InvalidFile) 
+            else if (toolStripAdcCalSN.Text == InvalidFile)
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusCriticalImage;
             else if (toolStripGainCalSN.Text != NoFileSelected && toolStripGainCalSN.Text != InvalidFile && toolStripAdcCalSN.Text != toolStripGainCalSN.Text)
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusBlockedImage;
-            else 
+            else
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusReadyImage;
 
-            if (toolStripGainCalSN.Text == NoFileSelected) 
+            if (toolStripGainCalSN.Text == NoFileSelected)
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusWarningImage;
-            else if (toolStripGainCalSN.Text == InvalidFile) 
+            else if (toolStripGainCalSN.Text == InvalidFile)
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusCriticalImage;
             else if (toolStripAdcCalSN.Text != NoFileSelected && toolStripAdcCalSN.Text != InvalidFile && toolStripAdcCalSN.Text != toolStripGainCalSN.Text)
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusBlockedImage;
-            else 
+            else
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusReadyImage;
         }
 

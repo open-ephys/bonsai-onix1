@@ -25,14 +25,10 @@ namespace OpenEphys.Onix1.Design
                     {
                         configureHeadstage.Bno055.Enable = editorDialog.DialogBno055.ConfigureNode.Enable;
 
-                        configureHeadstage.NeuropixelsV1A.AdcCalibrationFile = editorDialog.DialogNeuropixelsV1A.ConfigureNode.AdcCalibrationFile;
-                        configureHeadstage.NeuropixelsV1A.GainCalibrationFile = editorDialog.DialogNeuropixelsV1A.ConfigureNode.GainCalibrationFile;
                         configureHeadstage.NeuropixelsV1A.Enable = editorDialog.DialogNeuropixelsV1A.ConfigureNode.Enable;
                         configureHeadstage.NeuropixelsV1A.ProbeConfiguration = editorDialog.DialogNeuropixelsV1A.ConfigureNode.ProbeConfiguration;
                         configureHeadstage.NeuropixelsV1A.InvertPolarity = editorDialog.DialogNeuropixelsV1A.ConfigureNode.InvertPolarity;
 
-                        configureHeadstage.NeuropixelsV1B.AdcCalibrationFile = editorDialog.DialogNeuropixelsV1B.ConfigureNode.AdcCalibrationFile;
-                        configureHeadstage.NeuropixelsV1B.GainCalibrationFile = editorDialog.DialogNeuropixelsV1B.ConfigureNode.GainCalibrationFile;
                         configureHeadstage.NeuropixelsV1B.Enable = editorDialog.DialogNeuropixelsV1B.ConfigureNode.Enable;
                         configureHeadstage.NeuropixelsV1B.ProbeConfiguration = editorDialog.DialogNeuropixelsV1B.ConfigureNode.ProbeConfiguration;
                         configureHeadstage.NeuropixelsV1B.InvertPolarity = editorDialog.DialogNeuropixelsV1B.ConfigureNode.InvertPolarity;

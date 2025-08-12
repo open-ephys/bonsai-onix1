@@ -29,7 +29,8 @@ namespace OpenEphys.Onix1.Design
         internal readonly Rhs2116ChannelConfigurationDialog ChannelDialog;
 
         /// <summary>
-        /// Opens a dialog allowing for easy changing of stimulus sequence parameters, with visual feedback on what the resulting stimulus sequence looks like.
+        /// Opens a dialog allowing for easy changing of stimulus sequence parameters, 
+        /// with visual feedback on what the resulting stimulus sequence looks like.
         /// </summary>
         /// <param name="sequence"></param>
         /// <param name="probeGroup"></param>
@@ -67,11 +68,6 @@ namespace OpenEphys.Onix1.Design
             ChannelDialog.Show();
 
             textBoxStepSize.Text = GetStepSizeStringuA(StepSize);
-
-            if (probeGroup.NumberOfContacts != 32)
-            {
-                throw new ArgumentException($"Probe group is not valid: 32 channels were expected, there are {probeGroup.NumberOfContacts} instead.");
-            }
 
             InitializeZedGraphWaveform();
             DrawStimulusWaveform();
@@ -1062,7 +1058,7 @@ namespace OpenEphys.Onix1.Design
             {
                 StepSize = validStepSizes.First();
                 textBoxStepSize.Text = GetStepSizeStringuA(StepSize);
-                
+
                 return true;
             }
 

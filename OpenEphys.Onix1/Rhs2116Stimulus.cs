@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using System.Xml.Serialization;
-using Bonsai;
 
 namespace OpenEphys.Onix1
 {

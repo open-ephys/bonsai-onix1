@@ -62,16 +62,15 @@ namespace OpenEphys.Onix1.Design
         /// Initializes a new instance of <see cref="NeuropixelsV2eProbeConfigurationDialog"/>.
         /// </summary>
         /// <param name="configuration">A <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> object holding the current configuration settings.</param>
-        /// <param name="calibrationFile">String containing the path to the calibration file for this probe.</param>
         /// <param name="invertPolarity">Boolean denoting whether or not to invert the polarity of neural data.</param>
-        public NeuropixelsV2eProbeConfigurationDialog(NeuropixelsV2QuadShankProbeConfiguration configuration, string calibrationFile, bool invertPolarity)
+        public NeuropixelsV2eProbeConfigurationDialog(NeuropixelsV2QuadShankProbeConfiguration configuration, bool invertPolarity)
         {
             InitializeComponent();
             Shown += FormShown;
 
             ProbeConfiguration = new(configuration);
 
-            textBoxProbeCalibrationFile.Text = calibrationFile;
+            textBoxProbeCalibrationFile.Text = ProbeConfiguration.GainCalibrationFile;
 
             ChannelConfiguration = new(ProbeConfiguration)
             {
@@ -542,6 +541,7 @@ namespace OpenEphys.Onix1.Design
         private void FileTextChanged(object sender, EventArgs e)
         {
             CheckStatus();
+            ProbeConfiguration.GainCalibrationFile = ((TextBox)sender).Text;
         }
 
         private void CheckStatus()

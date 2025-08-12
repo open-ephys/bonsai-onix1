@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -61,7 +60,8 @@ namespace OpenEphys.Onix1.Design
         {
             if (base.OpenFile<NeuropixelsV2eProbeGroup>())
             {
-                ProbeConfiguration = new((NeuropixelsV2eProbeGroup)ProbeGroup, ProbeConfiguration.Reference, ProbeConfiguration.Probe);
+                ProbeConfiguration = new((NeuropixelsV2eProbeGroup)ProbeGroup, ProbeConfiguration.Reference,
+                    ProbeConfiguration.Probe, ProbeConfiguration.GainCalibrationFile);
 
                 OnFileOpenHandler();
 
@@ -173,7 +173,7 @@ namespace OpenEphys.Onix1.Design
 
             const float scaleBarWidth = 1;
 
-            curve.Line.Width = scaleBarWidth; 
+            curve.Line.Width = scaleBarWidth;
             curve.Label.IsVisible = false;
             curve.Symbol.IsVisible = false;
             curve.Tag = ScalePointsTag;

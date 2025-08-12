@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using OpenEphys.ProbeInterface.NET;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -30,7 +31,7 @@ namespace OpenEphys.Onix1.Design
 
             ProbeGroup = new Rhs2116ProbeGroup(probeGroup);
 
-            StimulusSequenceDialog = new Rhs2116StimulusSequenceDialog(sequence, ProbeGroup)
+            StimulusSequenceDialog = new Rhs2116StimulusSequenceDialog(sequence, probeGroup)
             {
                 TopLevel = false,
                 FormBorderStyle = FormBorderStyle.None,
