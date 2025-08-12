@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.IO;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Text;
@@ -74,6 +75,7 @@ namespace OpenEphys.Onix1
         /// <remarks>
         /// This variable is needed to properly save a workflow in Bonsai, but it is not
         /// directly accessible in the Bonsai editor.
+        /// Obsolete: Will be removed in 1.0.0.
         /// </remarks>
         [Browsable(false)]
         [Externalizable(false)]
@@ -93,15 +95,13 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Prevent the ProbeGroup property from being serialized. Should be removed in 1.0.0.
+        /// Prevent the ProbeGroup property from being serialized. Will be removed in 1.0.0.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>False</returns>
         public bool ShouldSerializeProbeGroupSerialize()
         {
             return false;
         }
-
-        private string _probeInterfaceFile = "";
 
         /// <summary>
         /// Gets or sets the file path to a configuration file holding the Probe Interface JSON specifications for this probe.
@@ -109,20 +109,9 @@ namespace OpenEphys.Onix1
         [XmlIgnore]
         [Category(ConfigurationCategory)]
         [Description("File path to a configuration file holding the Probe Interface JSON specifications for this probe. If left empty, a default file will be created next to the *.bonsai file when it is saved.")]
-        public string ProbeInterfaceFile
-        {
-            get
-            {
-                return _probeInterfaceFile;
-            }
-            set
-            {
-                if (!string.IsNullOrEmpty(value) && !value.EndsWith(ProbeGroupHelper.ProbeInterfaceExtension))
-                    value += ProbeGroupHelper.ProbeInterfaceExtension;
-
-                _probeInterfaceFile = value;
-            }
-        }
+        [FileNameFilter(ProbeGroupHelper.ProbeInterfaceFileNameFilter)]
+        [Editor("Bonsai.Design.SaveFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
+        public string ProbeInterfaceFileName { get; set; } = "";
 
         /// <summary>
         /// Gets or sets a string defining the path to an external ProbeInterface JSON file.
@@ -131,17 +120,17 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Browsable(false)]
         [Externalizable(false)]
-        [XmlElement(nameof(ProbeInterfaceFile))]
+        [XmlElement(nameof(ProbeInterfaceFileName))]
         public string ProbeInterfaceFileSerialize
         {
             get
             {
-                var filename = string.IsNullOrEmpty(ProbeInterfaceFile)
+                var filename = string.IsNullOrEmpty(ProbeInterfaceFileName)
                                 ? ProbeGroupHelper.GenerateProbeInterfaceFilename(DeviceAddress, DeviceName)
-                                : ProbeInterfaceFile;
+                                : ProbeInterfaceFileName;
 
                 ProbeGroupHelper.SaveExternalProbeInterfaceFile(ProbeGroup, filename);
-                return ProbeInterfaceFile;
+                return ProbeInterfaceFileName;
             }
             set
             {
@@ -149,9 +138,15 @@ namespace OpenEphys.Onix1
                                 ? ProbeGroupHelper.GenerateProbeInterfaceFilename(DeviceAddress, DeviceName)
                                 : value;
 
+                // NB: If a file does not exist at the default file path, leave the default probe group settings as-is
+                if (string.IsNullOrEmpty(ProbeInterfaceFileName) && !File.Exists(filename))
+                {
+                    return;
+                }
+
                 ProbeGroup = ProbeGroupHelper.LoadExternalProbeInterfaceFile<Rhs2116ProbeGroup>(filename);
 
-                ProbeInterfaceFile = value;
+                ProbeInterfaceFileName = value;
             }
         }
 

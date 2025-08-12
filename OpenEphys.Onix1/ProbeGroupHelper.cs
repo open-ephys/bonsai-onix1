@@ -8,8 +8,9 @@ namespace OpenEphys.Onix1
 {
     internal static class ProbeGroupHelper
     {
-        public const string ProbeInterfaceFileString = "pi";
+        public const string ProbeInterfaceFileStringPrefix = "pi";
         public const string ProbeInterfaceExtension = ".json";
+        public const string ProbeInterfaceFileNameFilter = "Probe Interface Files|*.json|All Files|*.*";
 
         /// <summary>
         /// Given a string with a valid JSON structure, deserialize the string to the given type.
@@ -17,8 +18,7 @@ namespace OpenEphys.Onix1
         /// <typeparam name="T"></typeparam>
         /// <param name="jsonString"></param>
         /// <returns></returns>
-#nullable enable
-        public static T? DeserializeString<T>(string jsonString)
+        public static T DeserializeString<T>(string jsonString) where T : class
         {
             var errors = new List<string>();
 
@@ -42,7 +42,7 @@ namespace OpenEphys.Onix1
                     {
                         Console.Error.WriteLine(e);
                     }
-                    return default;
+                    return null;
                 }
 
                 return obj;
@@ -56,7 +56,6 @@ namespace OpenEphys.Onix1
                 throw new InvalidDataException("Failed to deserialize JSON", e);
             }
         }
-#nullable disable
 
         public static void SerializeObject(object _object, string filepath)
         {
@@ -143,13 +142,13 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <param name="address">Unsigned integer defining the address of the device</param>
         /// <param name="name">String defining the name of the device, including the headstage name and any other relevant information, if needed.</param>
-        /// <returns>Filename in the format {<see cref="ProbeInterfaceFileString"/>_{address}_{name}.json}</returns>
+        /// <returns>Filename in the format {<see cref="ProbeInterfaceFileStringPrefix"/>_{address}_{name}.json}</returns>
         public static string GenerateProbeInterfaceFilename(uint address, string name)
         {
             if (!string.IsNullOrEmpty(name))
                 name = name.Replace("/", "_");
 
-            string filename = ProbeInterfaceFileString + "_" + address + "_" + name + ProbeInterfaceExtension;
+            string filename = ProbeInterfaceFileStringPrefix + "_" + address + "_" + name + ProbeInterfaceExtension;
 
             return filename;
         }

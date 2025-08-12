@@ -13,12 +13,10 @@ namespace OpenEphys.Onix1.Design
         /// <typeparam name="T"></typeparam>
         /// <param name="jsonString"></param>
         /// <returns></returns>
-        #nullable enable
-        public static T? DeserializeString<T>(string jsonString)
+        public static T DeserializeString<T>(string jsonString) where T : class
         {
             return ProbeGroupHelper.DeserializeString<T>(jsonString);
         }
-        #nullable disable
 
         public static void SerializeObject(object _object, string filepath)
         {

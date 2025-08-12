@@ -38,8 +38,8 @@ namespace OpenEphys.Onix1
             EnableLed = configureNode.EnableLed;
             ProbeConfigurationA = configureNode.ProbeConfigurationA;
             ProbeConfigurationB = configureNode.ProbeConfigurationB;
-            ProbeInterfaceFileA = configureNode.ProbeInterfaceFileA;
-            ProbeInterfaceFileB = configureNode.ProbeInterfaceFileB;
+            ProbeInterfaceFileNameA = configureNode.ProbeInterfaceFileNameA;
+            ProbeInterfaceFileNameB = configureNode.ProbeInterfaceFileNameB;
             DeviceName = configureNode.DeviceName;
             DeviceAddress = configureNode.DeviceAddress;
             InvertPolarity = configureNode.InvertPolarity;
@@ -94,28 +94,15 @@ namespace OpenEphys.Onix1
         [TypeConverter(typeof(GenericPropertyConverter))]
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new(NeuropixelsV2Probe.ProbeA);
 
-        private string _probeInterfaceFileA = "";
-
         /// <summary>
         /// Gets or sets the file path to a configuration file holding the Probe Interface JSON specifications for this probe.
         /// </summary>
         [XmlIgnore]
         [Category(ConfigurationCategory)]
         [Description("File path to a configuration file holding the Probe Interface JSON specifications for this probe. If left empty, a default file will be created next to the *.bonsai file when it is saved.")]
-        public string ProbeInterfaceFileA
-        {
-            get
-            {
-                return _probeInterfaceFileA;
-            }
-            set
-            {
-                if (!string.IsNullOrEmpty(value) && !value.EndsWith(ProbeGroupHelper.ProbeInterfaceExtension))
-                    value += ProbeGroupHelper.ProbeInterfaceExtension;
-
-                _probeInterfaceFileA = value;
-            }
-        }
+        [FileNameFilter(ProbeGroupHelper.ProbeInterfaceFileNameFilter)]
+        [Editor("Bonsai.Design.SaveFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
+        public string ProbeInterfaceFileNameA { get; set; } = "";
 
         private string GetProbeInterfaceFilename(NeuropixelsV2Probe probe)
         {
@@ -136,27 +123,27 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Browsable(false)]
         [Externalizable(false)]
-        [XmlElement(nameof(ProbeInterfaceFileA))]
+        [XmlElement(nameof(ProbeInterfaceFileNameA))]
         public string ProbeInterfaceFileSerializeA
         {
             get
             {
-                var filename = string.IsNullOrEmpty(ProbeInterfaceFileA)
+                var filename = string.IsNullOrEmpty(ProbeInterfaceFileNameA)
                                 ? GetProbeInterfaceFilename(NeuropixelsV2Probe.ProbeA)
-                                : ProbeInterfaceFileA;
+                                : ProbeInterfaceFileNameA;
 
                 ProbeGroupHelper.SaveExternalProbeInterfaceFile(ProbeConfigurationA.ProbeGroup, filename);
-                return ProbeInterfaceFileA;
+                return ProbeInterfaceFileNameA;
             }
             set
             {
-                ProbeInterfaceFileA = value;
-                var filename = string.IsNullOrEmpty(ProbeInterfaceFileA)
+                ProbeInterfaceFileNameA = value;
+                var filename = string.IsNullOrEmpty(ProbeInterfaceFileNameA)
                                 ? GetProbeInterfaceFilename(NeuropixelsV2Probe.ProbeA)
-                                : ProbeInterfaceFileA;
+                                : ProbeInterfaceFileNameA;
 
                 // NB: If a file does not exist at the default file path, leave the default probe group settings as-is
-                if (string.IsNullOrEmpty(ProbeInterfaceFileA) && !File.Exists(filename))
+                if (string.IsNullOrEmpty(ProbeInterfaceFileNameA) && !File.Exists(filename))
                 {
                     return;
                 }
@@ -168,7 +155,7 @@ namespace OpenEphys.Onix1
 
         /// <summary>
         /// Obsolete: Calibration files have been moved to the ProbeConfiguration class as of 0.6.1.
-        /// Should be removed in 1.0.0.
+        /// Will be removed in 1.0.0.
         /// </summary>
         [Browsable(false)]
         [Externalizable(false)]
@@ -179,9 +166,9 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Prevent the GainCalibrationFile property from being serialized. Should be removed in 1.0.0.
+        /// Prevent the GainCalibrationFile property from being serialized. Will be removed in 1.0.0.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>False</returns>
         public bool ShouldSerializeGainCalibrationFileA()
         {
             return false;
@@ -200,28 +187,15 @@ namespace OpenEphys.Onix1
         [TypeConverter(typeof(GenericPropertyConverter))]
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new(NeuropixelsV2Probe.ProbeB);
 
-        private string _probeInterfaceFileB = "";
-
         /// <summary>
         /// Gets or sets the file path to a configuration file holding the Probe Interface JSON specifications for this probe.
         /// </summary>
         [XmlIgnore]
         [Category(ConfigurationCategory)]
         [Description("File path to a configuration file holding the Probe Interface JSON specifications for this probe. If left empty, a default file will be created next to the *.bonsai file when it is saved.")]
-        public string ProbeInterfaceFileB
-        {
-            get
-            {
-                return _probeInterfaceFileB;
-            }
-            set
-            {
-                if (!string.IsNullOrEmpty(value) && !value.EndsWith(ProbeGroupHelper.ProbeInterfaceExtension))
-                    value += ProbeGroupHelper.ProbeInterfaceExtension;
-
-                _probeInterfaceFileB = value;
-            }
-        }
+        [FileNameFilter(ProbeGroupHelper.ProbeInterfaceFileNameFilter)]
+        [Editor("Bonsai.Design.SaveFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
+        public string ProbeInterfaceFileNameB { get; set; } = "";
 
         /// <summary>
         /// Gets or sets a string defining the path to an external ProbeInterface JSON file.
@@ -230,27 +204,27 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Browsable(false)]
         [Externalizable(false)]
-        [XmlElement(nameof(ProbeInterfaceFileB))]
+        [XmlElement(nameof(ProbeInterfaceFileNameB))]
         public string ProbeInterfaceFileSerializeB
         {
             get
             {
-                var filename = string.IsNullOrEmpty(ProbeInterfaceFileB)
+                var filename = string.IsNullOrEmpty(ProbeInterfaceFileNameB)
                                 ? GetProbeInterfaceFilename(NeuropixelsV2Probe.ProbeB)
-                                : ProbeInterfaceFileB;
+                                : ProbeInterfaceFileNameB;
 
                 ProbeGroupHelper.SaveExternalProbeInterfaceFile(ProbeConfigurationB.ProbeGroup, filename);
-                return ProbeInterfaceFileB;
+                return ProbeInterfaceFileNameB;
             }
             set
             {
-                ProbeInterfaceFileB = value;
-                var filename = string.IsNullOrEmpty(ProbeInterfaceFileB)
+                ProbeInterfaceFileNameB = value;
+                var filename = string.IsNullOrEmpty(ProbeInterfaceFileNameB)
                                 ? GetProbeInterfaceFilename(NeuropixelsV2Probe.ProbeB)
-                                : ProbeInterfaceFileB;
+                                : ProbeInterfaceFileNameB;
 
                 // NB: If a file does not exist at the default file path, leave the default probe group settings as-is
-                if (string.IsNullOrEmpty(ProbeInterfaceFileB) && !File.Exists(filename))
+                if (string.IsNullOrEmpty(ProbeInterfaceFileNameB) && !File.Exists(filename))
                 {
                     return;
                 }
@@ -262,7 +236,7 @@ namespace OpenEphys.Onix1
 
         /// <summary>
         /// Obsolete: Calibration files have been moved to the ProbeConfiguration class as of 0.6.1.
-        /// Should be removed in 1.0.0.
+        /// Will be removed in 1.0.0.
         /// </summary>
         [Browsable(false)]
         [Externalizable(false)]
@@ -273,9 +247,9 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Prevent the GainCalibrationFile property from being serialized. Should be removed in 1.0.0.
+        /// Prevent the GainCalibrationFile property from being serialized. Will be removed in 1.0.0.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>False</returns>
         public bool ShouldSerializeGainCalibrationFileB()
         {
             return false;

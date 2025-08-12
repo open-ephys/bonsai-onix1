@@ -18,7 +18,7 @@
         /// <summary>
         /// Gets or sets the path to the ProbeInterface file for Probe A.
         /// </summary>
-        public string ProbeInterfaceFileA { get; set; }
+        public string ProbeInterfaceFileNameA { get; set; }
 
         /// <summary>
         /// Gets or sets the electrode configuration for Probe B.
@@ -28,7 +28,7 @@
         /// <summary>
         /// Gets or sets the path to the ProbeInterface file for Probe B.
         /// </summary>
-        public string ProbeInterfaceFileB { get; set; }
+        public string ProbeInterfaceFileNameB { get; set; }
 
         /// <summary>
         /// Gets or sets the boolean to determine if neural data is inverted
