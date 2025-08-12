@@ -18,7 +18,7 @@
         /// <summary>
         /// Gets or sets the path to the gain calibration file.
         /// </summary>
-        public string ProbeInterfaceFile { get; set; }
+        public string ProbeInterfaceFileName { get; set; }
 
         /// <summary>
         /// Gets or sets the boolean to determine if neural data is inverted

@@ -213,6 +213,9 @@ namespace OpenEphys.Onix1
         /// This variable is needed to properly save a workflow in Bonsai, but it is not
         /// directly accessible in the Bonsai editor.
         /// </summary>
+        /// <remarks>
+        /// Obsolete: Will be removed in 1.0.0.
+        /// </remarks>
         [Browsable(false)]
         [Externalizable(false)]
         [XmlElement(nameof(ProbeGroup))]
@@ -232,9 +235,9 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Prevent the ProbeGroup property from being serialized. Should be removed in 1.0.0.
+        /// Prevent the ProbeGroup property from being serialized. Will be removed in 1.0.0.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>False</returns>
         public bool ShouldSerializeProbeGroupSerialize()
         {
             return false;
