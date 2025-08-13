@@ -51,7 +51,7 @@
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
             this.splitContainer1.IsSplitterFixed = true;
-            this.splitContainer1.Location = new System.Drawing.Point(0, 30);
+            this.splitContainer1.Location = new System.Drawing.Point(0, 24);
             this.splitContainer1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.splitContainer1.Name = "splitContainer1";
             this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
@@ -64,8 +64,8 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.buttonCancel);
             this.splitContainer1.Panel2.Controls.Add(this.buttonOK);
-            this.splitContainer1.Size = new System.Drawing.Size(609, 544);
-            this.splitContainer1.SplitterDistance = 507;
+            this.splitContainer1.Size = new System.Drawing.Size(609, 550);
+            this.splitContainer1.SplitterDistance = 513;
             this.splitContainer1.TabIndex = 0;
             // 
             // zedGraphChannels
@@ -82,7 +82,7 @@
             this.zedGraphChannels.ScrollMinX = 0D;
             this.zedGraphChannels.ScrollMinY = 0D;
             this.zedGraphChannels.ScrollMinY2 = 0D;
-            this.zedGraphChannels.Size = new System.Drawing.Size(609, 507);
+            this.zedGraphChannels.Size = new System.Drawing.Size(609, 513);
             this.zedGraphChannels.TabIndex = 4;
             this.zedGraphChannels.UseExtendedPrintDialog = true;
             this.zedGraphChannels.ZoomEvent += new ZedGraph.ZedGraphControl.ZoomEventHandler(this.ZoomEvent);
@@ -119,7 +119,7 @@
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
             this.menuStrip.Padding = new System.Windows.Forms.Padding(5, 1, 0, 1);
-            this.menuStrip.Size = new System.Drawing.Size(609, 30);
+            this.menuStrip.Size = new System.Drawing.Size(609, 24);
             this.menuStrip.TabIndex = 5;
             this.menuStrip.Text = "menuStripChannelConfiguration";
             // 
@@ -130,27 +130,27 @@
             this.dropDownSaveFile,
             this.dropDownLoadDefault});
             this.fileMenuItem.Name = "fileMenuItem";
-            this.fileMenuItem.Size = new System.Drawing.Size(46, 28);
+            this.fileMenuItem.Size = new System.Drawing.Size(37, 22);
             this.fileMenuItem.Text = "File";
             // 
             // dropDownOpenFile
             // 
             this.dropDownOpenFile.Name = "dropDownOpenFile";
-            this.dropDownOpenFile.Size = new System.Drawing.Size(330, 26);
+            this.dropDownOpenFile.Size = new System.Drawing.Size(265, 22);
             this.dropDownOpenFile.Text = "Open Channel Configuration";
             this.dropDownOpenFile.Click += new System.EventHandler(this.MenuItemOpenFile);
             // 
             // dropDownSaveFile
             // 
             this.dropDownSaveFile.Name = "dropDownSaveFile";
-            this.dropDownSaveFile.Size = new System.Drawing.Size(330, 26);
+            this.dropDownSaveFile.Size = new System.Drawing.Size(265, 22);
             this.dropDownSaveFile.Text = "Save Channel Configuration";
             this.dropDownSaveFile.Click += new System.EventHandler(this.MenuItemSaveFile);
             // 
             // dropDownLoadDefault
             // 
             this.dropDownLoadDefault.Name = "dropDownLoadDefault";
-            this.dropDownLoadDefault.Size = new System.Drawing.Size(330, 26);
+            this.dropDownLoadDefault.Size = new System.Drawing.Size(265, 22);
             this.dropDownLoadDefault.Text = "Load Default Channel Configuration";
             this.dropDownLoadDefault.Click += new System.EventHandler(this.MenuItemLoadDefaultConfig);
             // 
@@ -165,6 +165,7 @@
             this.MainMenuStrip = this.menuStrip;
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "ChannelConfigurationDialog";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Channel Configuration";
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();
