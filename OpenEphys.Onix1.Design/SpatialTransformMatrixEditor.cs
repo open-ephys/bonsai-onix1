@@ -12,13 +12,14 @@ using Bonsai.Design;
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Provides a user interface editor that displays a dialog for selecting
-    /// members of a workflow expression type.
+    /// Provides a user interface editor that displays a spatial-calibration dialog 
+    /// for a <see cref="TS4231V1PositionData"/>.
     /// </summary>
     public class SpatialTransformMatrixEditor : DataSourceTypeEditor
     {
+        /// <inheritdoc/>
         public SpatialTransformMatrixEditor()
-            : base(DataSource.Input, typeof(void))
+            : base(DataSource.Output, typeof(void))
         {
         }
 
@@ -28,24 +29,23 @@ namespace OpenEphys.Onix1.Design
             return UITypeEditorEditStyle.Modal;
         }
 
-        protected virtual IObservable<Tuple<int, Vector3>> GetData(IObservable<IObservable<object>> source)
-        {
-            return source.Merge().Select(coordinate => (Tuple<int, Vector3>)coordinate);
-        }
-
+        /// <inheritdoc/>
         public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
         {
             var editorService = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
+            var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
             if (context != null && editorService != null)
             {
                 var source = GetDataSource(context, provider);
-                var dataFrames = GetData(source.Output);
-                using (var visualizerDialog = new SpatialTransformMatrixDialog(dataFrames))
+                var dataFrames = source.Output.Merge().Select(x => x as TS4231V1PositionDataFrame);
+                using var visualizerDialog = new SpatialTransformMatrixDialog(dataFrames, new SpatialTransformProperties((SpatialTransformProperties)value));
+                if (!editorState.WorkflowRunning)
                 {
-                    if (editorService.ShowDialog(visualizerDialog) == DialogResult.OK && visualizerDialog.ApplySpatialTransform)
-                    {
-                        return visualizerDialog.SpatialTransform;
-                    }
+                    throw new InvalidOperationException("Workflow must be running to open this GUI.");
+                }
+                else if (editorService.ShowDialog(visualizerDialog) == DialogResult.OK)
+                {
+                    return visualizerDialog.NewSpatialTransform;
                 }
             }
             return base.EditValue(context, provider, value);
