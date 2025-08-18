@@ -1,74 +1,73 @@
 ﻿using System;
+using System.Drawing;
 using System.Linq;
 using System.Numerics;
-using System.Windows.Forms;
 using System.Reactive.Linq;
+using System.Windows.Forms;
 using Bonsai.Design;
 
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Partial class to create a spatial-calibration GUI for <see cref="TS4231V1PositionData.M"/>.
+    /// Partial class to create a spatial-calibration GUI for <see cref="TS4231V1SpatialTransform.SpatialTransform"/>.
     /// </summary>
     public partial class SpatialTransformMatrixDialog : Form
     {
+        internal SpatialTransform3D SpatialTransform;
         const byte NumMeasurements = 100;
-        readonly Matrix4x4 inverseM;
-
-        readonly bool[] InputsValid = { false, false, false, false, false, false, false, false };
         readonly IObservable<TS4231V1PositionDataFrame> PositionDataSource;
         IDisposable richTextBoxStatusUpdateSubscription;
         IDisposable MeasurementCalculationSubscription;
 
-        internal Matrix4x4 NewSpatialTransform { get; private set; }
-
-        internal SpatialTransformMatrixDialog(IObservable<TS4231V1PositionDataFrame> positionDataSource, Matrix4x4 currentM)
+        internal SpatialTransformMatrixDialog(IObservable<TS4231V1PositionDataFrame> dataSource, SpatialTransform3D transformProperties)
         {
             InitializeComponent();
             SpatialTransform = transformProperties;
             PositionDataSource = dataSource;
 
-            var ts4231TextBoxes = new TextBox[] { 
-                textBoxTS4231Coordinate0, textBoxTS4231Coordinate1, 
-                textBoxTS4231Coordinate2, textBoxTS4231Coordinate3};
-            foreach (var (textBox, v) in Enumerable.Zip(ts4231TextBoxes, SpatialTransform.Pre, (tb, v) => (tb, v)))
-                textBox.Text = checkVector3ForNaN(v) ? "" : $"{v.X}, {v.Y}, {v.Z}";
+            var ts4231TextBoxes = new TextBox[] {
+                textBoxTS4231Coordinate0, textBoxTS4231Coordinate1,
+                textBoxTS4231Coordinate2, textBoxTS4231Coordinate3 };
+            var preTransformCoordinates = MatrixToFloatArray(SpatialTransform.A);
+            for (byte i = 0; i < 4; i++)
+                ts4231TextBoxes[i].Text = float.IsNaN(preTransformCoordinates[i * 3]) ? "" :  $"{preTransformCoordinates[i * 3]}, " +
+                                                                                              $"{preTransformCoordinates[i * 3 + 1]}, " +
+                                                                                              $"{preTransformCoordinates[i * 3 + 2]}";
 
             var userTextBoxes = new TextBox[] {
                 textBoxUserCoordinate0X, textBoxUserCoordinate0Y, textBoxUserCoordinate0Z,
                 textBoxUserCoordinate1X, textBoxUserCoordinate1Y, textBoxUserCoordinate1Z,
                 textBoxUserCoordinate2X, textBoxUserCoordinate2Y, textBoxUserCoordinate2Z,
-                textBoxUserCoordinate3X, textBoxUserCoordinate3Y, textBoxUserCoordinate3Z};
-            for (byte i = 0; i < 12; i++)
-            {
-                ref var component = ref GetComponent(ref SpatialTransform.Post[i / 3], i % 3);
-                userTextBoxes[i].Text = float.IsNaN(component) ? "" : component.ToString();
-            }
+                textBoxUserCoordinate3X, textBoxUserCoordinate3Y, textBoxUserCoordinate3Z };
+            var postTransformCoordinates = MatrixToFloatArray(SpatialTransform.B);
+            foreach (var (tb, comp) in Enumerable.Zip(userTextBoxes, postTransformCoordinates, (tb, comp) => (tb, comp)))
+                tb.Text = float.IsNaN(comp) ? "" : comp.ToString();
 
-            CalculatePrintMatrix();
+            IndicateSpatialTransformStatus();
         }
 
-        private void TextBoxUserCoordinate_TextChanged(object sender, EventArgs e)
+        void TextBoxUserCoordinate_TextChanged(object sender, EventArgs e)
         {
             var tag = Convert.ToByte(((TextBox)sender).Tag);
-            ref var coordinateComponent = ref GetComponent(ref SpatialTransform.Post[tag / 3], tag % 3);
-            try { coordinateComponent = float.Parse(((TextBox)sender).Text); }
-            catch { coordinateComponent = float.NaN; }
-            CalculatePrintMatrix();
+            try { SpatialTransform.B = SetMatrixElement(SpatialTransform.B, float.Parse(((TextBox)sender).Text), tag / 3, tag % 3); }
+            catch { SpatialTransform.B = SetMatrixElement(SpatialTransform.B, float.NaN, tag / 3, tag % 3); }
+            IndicateSpatialTransformStatus();
         }
 
-        private void ButtonMeasure_Click(object sender, EventArgs e)
+        void ButtonMeasure_Click(object sender, EventArgs e)
         {
             TextBox[] ts4231TextBoxes = { textBoxTS4231Coordinate0, textBoxTS4231Coordinate1, textBoxTS4231Coordinate2, textBoxTS4231Coordinate3 };
             var index = Convert.ToByte(((Button)sender).Tag);
+
+            for (byte i = 0; i < 3; i++)
+                SpatialTransform.A = SetMatrixElement(SpatialTransform.A, float.NaN, index, i);
             ts4231TextBoxes[index].Text = "";
-            SpatialTransform.Pre[index] = new(float.NaN);
+            
             if (((Button)sender).Text == "Measure")
             {
                 richTextBoxStatus.SelectionColor = Color.Blue;
                 richTextBoxStatus.AppendText($"Measurement at coordinate {index} initiated.\n");
-                SpatialTransform.M = null;
-                textBoxSpatialTransformMatrix.Text = "";
+                IndicateSpatialTransformStatus();
                 ((Button)sender).Text = "Cancel";
                 EnableButtons(false, index);
 
@@ -77,34 +76,30 @@ namespace OpenEphys.Onix1.Design
                     .Timeout(new TimeSpan(0, 0, 5), Observable.Empty<TS4231V1PositionDataFrame>())
                     .Publish();
 
-                TextBoxStatusUpdateSubscription = sharedPositionDataGroups
+                richTextBoxStatusUpdateSubscription = sharedPositionDataGroups
                     .GroupBy(dataFrame => dataFrame.SensorIndex, dataFrame => dataFrame.Position)
                     .SelectMany(group => group.Count().Select(count => new { Index = group.Key, MeasurementCount = count }))
                     .Aggregate(
-                        (TextBoxStatusUpdate: "", Count: 0),
+                        (richTextBoxStatusUpdate: "", Count: 0),
                         (acc, sensor) =>
                         {
-                            var textBoxStatusUpdateString = acc.TextBoxStatusUpdate;
-                            textBoxStatusUpdateString += string.Format("{0} measurements from sensor {1}.",
-                                sensor.MeasurementCount, sensor.Index);
-                            textBoxStatusUpdateString += Environment.NewLine;
-                            return (textBoxStatusUpdateString, acc.Count + sensor.MeasurementCount);
+                            var richTextBoxStatusUpdateString = $"{acc.richTextBoxStatusUpdate}{sensor.MeasurementCount} samples from sensor {sensor.Index}.\n";
+                            return (richTextBoxStatusUpdateString, acc.Count + sensor.MeasurementCount);
                         },
-                        acc => (acc.TextBoxStatusUpdate, Valid: acc.Count == NumMeasurements))
+                        acc => (acc.richTextBoxStatusUpdate, Valid: acc.Count == NumMeasurements))
                     .ObserveOn(new ControlScheduler(this))
                     .Subscribe(finalResult =>
                     {
                         if (finalResult.Valid)
                         {
-                            textBoxStatus.AppendText(finalResult.TextBoxStatusUpdate);
-                            textBoxStatus.AppendText(string.Format("Measurements at coordinate {0} complete.", index)
-                                + Environment.NewLine + Environment.NewLine + "Awaiting user input..." + Environment.NewLine);
+                            richTextBoxStatus.SelectionColor = Color.Black;
+                            richTextBoxStatus.AppendText($"{finalResult.richTextBoxStatusUpdate}Measurement at coordinate {index} complete.\n\n");
                         }
                         else
                         {
-                            textBoxStatus.AppendText(string.Format("Measurements at coordinate {0} timed out. ", index)
-                                + "Confirm the Lighthouse receivers are within range and unobstructed from Lighthouse transmitters."
-                                + Environment.NewLine + Environment.NewLine + "Awaiting user input..." + Environment.NewLine);
+                            richTextBoxStatus.SelectionColor = Color.Red;
+                            richTextBoxStatus.AppendText($"Measurement at coordinate {index} timed out.\n" +
+                                "Confirm the Lighthouse receivers are within range of and unobstructed from Lighthouse transmitters.\n\n");
                         }
                         EnableButtons(true, index);
                     });
@@ -115,31 +110,20 @@ namespace OpenEphys.Onix1.Design
                         (acc, current) => (acc.Sum + current.Position, acc.Count + 1),
                         acc =>
                         {
-                            SpatialTransform.Pre[index] = acc.Sum / NumMeasurements;
-                            return (Position: SpatialTransform.Pre[index], Valid: acc.Count == NumMeasurements);
+                            var measurement = acc.Sum / NumMeasurements;
+                            SpatialTransform.A = SetMatrixElement(SpatialTransform.A, measurement.X, index, 0);
+                            SpatialTransform.A = SetMatrixElement(SpatialTransform.A, measurement.Y, index, 1);
+                            SpatialTransform.A = SetMatrixElement(SpatialTransform.A, measurement.Z, index, 2);
+                            return (Position: measurement, Valid: acc.Count == NumMeasurements);
                         })
                     .ObserveOn(new ControlScheduler(this))
-                    .Subscribe(finalMeasurement =>
+                    .Subscribe(measurement =>
                     {
-                        MeasureButtons[index].Text = "Measure";
-                        if (finalMeasurement.Valid)
+                        ((Button)sender).Text = "Measure";
+                        if (measurement.Valid)
                         {
-                            ts4231TextBoxes[index].Text = string.Format("{0}, {1}, {2}",
-                                finalMeasurement.Position.X,
-                                finalMeasurement.Position.Y,
-                                finalMeasurement.Position.Z);
-                            InputsValid[index] = true;
-                            if (InputsValid.Take(4).All(ts4231InputValid => ts4231InputValid))
-                            {
-                                toolStripStatusLabelTS4231.Image = OpenEphys.Onix1.Design.Properties.Resources.StatusReadyImage;
-                                toolStripStatusLabelTS4231.Text = "All TS4231 coordinates are valid.";
-                            }
-                            else
-                            {
-                                toolStripStatusLabelTS4231.Image = OpenEphys.Onix1.Design.Properties.Resources.StatusBlockedImage;
-                                toolStripStatusLabelTS4231.Text = "At least one TS4231 coordinate is invalid.";
-                            }
-                            buttonCalculate.Enabled = InputsValid.All(inputValid => inputValid);
+                            ts4231TextBoxes[index].Text = $"{measurement.Position.X}, {measurement.Position.Y}, {measurement.Position.Z}";
+                            IndicateSpatialTransformStatus();
                         }
                     });
 
@@ -147,132 +131,111 @@ namespace OpenEphys.Onix1.Design
             }
             else
             {
-                TextBoxStatusUpdateSubscription.Dispose();
+                richTextBoxStatusUpdateSubscription.Dispose();
                 MeasurementCalculationSubscription.Dispose();
-                textBoxStatus.AppendText(string.Format("Measurements at coordinate {0} cancelled by user.", index)
-                    + Environment.NewLine + Environment.NewLine + "Awaiting user input..." + Environment.NewLine);
-                MeasureButtons[index].Text = "Measure";
+                richTextBoxStatus.SelectionColor = Color.Red;
+                richTextBoxStatus.AppendText($"Measurement at coordinate {index} cancelled by user.\n\n");
+                ((Button)sender).Text = "Measure";
                 EnableButtons(true, index);
             }
         }
 
-        private void ButtonOK_Click(object sender, EventArgs e)
+        void ButtonOK_Click(object sender, EventArgs e)
         {
-            if (SpatialTransform.M.HasValue)
-                DialogResult = DialogResult.OK;
-            else
+            var confirmationMessage = "";
+            var invalidInput = false;
+            if (ContainsNaN(SpatialTransform.A) || ContainsNaN(SpatialTransform.B))
             {
-                var confirmationMessage = "";
-                var incompleteInput = false;
-                if (SpatialTransform.Post.Any(userCoordinate => checkVector3ForNaN(userCoordinate)))
-                {
-                    incompleteInput = true;
-                    var axes = new char[] { 'X', 'Y', 'Z' };
-                    var coordinates = new byte[] { 0, 1, 2, 3 };
-                    confirmationMessage += "At least one coordinate component is empty or invalid:\n";
-                    for (byte i = 0; i < 12; i++)
-                    {
-                        ref var component = ref GetComponent(ref SpatialTransform.Post[i / 3], i % 3);
-                        if (float.IsNaN(component))
-                            confirmationMessage += $" • Coordinate {coordinates[i / 3]} {axes[i % 3]} component\n";
-                    }
-                    confirmationMessage += "\n";
-                }
-                if (SpatialTransform.Pre.Any(TS4231Coordinate => checkVector3ForNaN(TS4231Coordinate)))
-                {
-                    incompleteInput = true;
-                    confirmationMessage += "At least one coordinate measurement is empty:\n";
-                    foreach (var (i, v) in SpatialTransform.Pre.Select((i, v) => (v, i)))
-                        if (checkVector3ForNaN(v))
-                            confirmationMessage += $" • Coordinate {i}\n";
-                    confirmationMessage += "\n";
-                }
+                confirmationMessage = $"At least one entry in the TS4231V1 Calibration GUI form is invalid:\n\n";
 
-                if (incompleteInput)
-                    confirmationMessage += "They will not be saved and transformed position data won't be properly output.\n\n";
-                else if (!Matrix4x4.Invert(Vector3sToMatrix4x4(SpatialTransform.Post), out _))
-                    confirmationMessage = "The spatial transform matrix is non-invertible. The transformed position data won't be properly output.\n\n";
+                for (byte i = 0; i < 4; i++)
+                    if (float.IsNaN(MatrixToFloatArray(SpatialTransform.A)[i * 3]))
+                        confirmationMessage += $" • TS4231 coordinate {i}\n";
 
-                confirmationMessage += "Would you like to continue?";
+                var axes = new char[] { 'X', 'Y', 'Z' };
+                var coordinates = new byte[] { 0, 1, 2, 3 };
 
+                for (byte i = 0; i < 12; i++)
+                    if (float.IsNaN(MatrixToFloatArray(SpatialTransform.B)[i]))
+                        confirmationMessage += $" • Component {axes[i % 3]} from user coordinate {coordinates[i / 3]}\n";
+
+                confirmationMessage += "\nAny invalid entry will not be saved. ";
+                invalidInput = true;
+            }
+            else if (!Matrix4x4.Invert(SpatialTransform.M, out _))
+            { 
+                confirmationMessage = $"The calculated spatial transform matrix is non-invertible. ";
+                invalidInput = true;
+            }
+
+            if (invalidInput)
+            {
+                confirmationMessage += "The transformed position data will be NaNs until all entries are valid.\n\n" +
+                    "Would you like to continue?";
                 if (MessageBox.Show(confirmationMessage, "Confirmation", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     DialogResult = DialogResult.OK;
-            }                
+            }
+            else
+                DialogResult = DialogResult.OK;
         }   
 
-        private readonly Func<Vector3, bool> checkVector3ForNaN = v => new[] { v.X, v.Y, v.Z }.Any(float.IsNaN);
-
-        private void EnableButtons(bool enable, byte index)
+        void EnableButtons(bool enable, byte index)
         {
             var buttons = new Button[] { buttonMeasure0, buttonMeasure1, buttonMeasure2, buttonMeasure3, buttonOK, buttonCancel };
             Array.ForEach(buttons, button => button.Enabled = enable || (Convert.ToByte(button.Tag) == index));
         }
 
-        private void CalculatePrintMatrix()
+        void IndicateSpatialTransformStatus()
         {
-            SpatialTransform.M = null;
-            if (!SpatialTransform.Post.Any(userCoordinate => checkVector3ForNaN(userCoordinate)) &&
-            !SpatialTransform.Pre.Any(TS4231Coordinate => checkVector3ForNaN(TS4231Coordinate)))
+            if (ContainsNaN(SpatialTransform.A) || ContainsNaN(SpatialTransform.B))
             {
-                if (Matrix4x4.Invert(Vector3sToMatrix4x4(SpatialTransform.Post), out _))
-                {
-                    var ts4231V1CoordinatesMatrix = Vector3sToMatrix4x4(SpatialTransform.Pre);
-                    var userCoordinatesMatrix = Vector3sToMatrix4x4(SpatialTransform.Post);
-                    Matrix4x4.Invert(ts4231V1CoordinatesMatrix, out var ts4231V1CoordinatesMatrixInverted);
-                    SpatialTransform.M = Matrix4x4.Multiply(ts4231V1CoordinatesMatrixInverted, userCoordinatesMatrix);
-                    toolStripStatusLabel.Image = Properties.Resources.StatusReadyImage;
-                    toolStripStatusLabel.Text = "Spatial transform matrix is calculated.";
-                }
-                else
-                {
-                    toolStripStatusLabel.Image = Properties.Resources.StatusWarningImage;
-                    toolStripStatusLabel.Text = "The resulting spatial transform matrix must be non-invertible.";
-                }
-            }
-            else
-            {
-                toolStripStatusLabelUser.Image = OpenEphys.Onix1.Design.Properties.Resources.StatusBlockedImage;
-                toolStripStatusLabelUser.Text = "At least one user-defined coordinate is invalid.";
-            }
-            if (SpatialTransform.M.HasValue)
-                textBoxSpatialTransformMatrix.Text = SpatialTransform.M.Value.ToString();  
-            else
+                toolStripStatusLabel.Image = Properties.Resources.StatusWarningImage;
+                toolStripStatusLabel.Text = "All fields must be properly populated.";
                 textBoxSpatialTransformMatrix.Text = "";
+            }
+            else if (!Matrix4x4.Invert(SpatialTransform.M, out _))
+            {
+                toolStripStatusLabel.Image = Properties.Resources.StatusWarningImage;
+                toolStripStatusLabel.Text = "The calculated spatial transform matrix must be invertible.";
+                textBoxSpatialTransformMatrix.Text = "";
+            }
+            else 
+            {
+                toolStripStatusLabel.Image = Properties.Resources.StatusReadyImage;
+                toolStripStatusLabel.Text = "Spatial transform matrix is calculated.";
+                textBoxSpatialTransformMatrix.Text = SpatialTransform.M.ToString();
+            }
         }
 
-        private void ButtonCalculate_Click(object sender, EventArgs e)
+        static float[] MatrixToFloatArray(Matrix4x4 m) =>
+            new float[] { m.M11, m.M12, m.M13,
+                          m.M21, m.M22, m.M23,
+                          m.M31, m.M32, m.M33,
+                          m.M41, m.M42, m.M43 };
+
+        static bool ContainsNaN(Matrix4x4 m) => MatrixToFloatArray(m).Any(float.IsNaN);
+
+        static Matrix4x4 SetMatrixElement(Matrix4x4 m, float value, int coordinate, int component)
         {
-            var ts4231V1CoordinatesMatrix = new Matrix4x4(
-                TS4231Coordinates[0].X, TS4231Coordinates[0].Y, TS4231Coordinates[0].Z, 1,
-                TS4231Coordinates[1].X, TS4231Coordinates[1].Y, TS4231Coordinates[1].Z, 1,
-                TS4231Coordinates[2].X, TS4231Coordinates[2].Y, TS4231Coordinates[2].Z, 1,
-                TS4231Coordinates[3].X, TS4231Coordinates[3].Y, TS4231Coordinates[3].Z, 1);
+            if (coordinate is < 0 or > 3) throw new ArgumentOutOfRangeException(nameof(coordinate) + " must be 0, 1, 2, or 3.");
+            if (component is < 0 or > 2) throw new ArgumentOutOfRangeException(nameof(component) + " must be 0, 1, or 2.");
 
-            float[][] userCoordinates = {
-                textBoxUserCoordinate0.Text.Split(',').Select(item => float.Parse(item)).ToArray(),
-                textBoxUserCoordinate1.Text.Split(',').Select(item => float.Parse(item)).ToArray(),
-                textBoxUserCoordinate2.Text.Split(',').Select(item => float.Parse(item)).ToArray(),
-                textBoxUserCoordinate3.Text.Split(',').Select(item => float.Parse(item)).ToArray()};
-
-            var userCoordinatesMatrix = new Matrix4x4(
-                userCoordinates[0][0], userCoordinates[0][1], userCoordinates[0][2], 1,
-                userCoordinates[1][0], userCoordinates[1][1], userCoordinates[1][2], 1,
-                userCoordinates[2][0], userCoordinates[2][1], userCoordinates[2][2], 1,
-                userCoordinates[3][0], userCoordinates[3][1], userCoordinates[3][2], 1);
-
-            Matrix4x4.Invert(ts4231V1CoordinatesMatrix, out var ts4231V1CoordinatesMatrixInverted);
-            NewSpatialTransform = Matrix4x4.Multiply(ts4231V1CoordinatesMatrixInverted, userCoordinatesMatrix);
-
-            textBoxStatus.AppendText("The spatial transform matrix for the above coordinates is:" + Environment.NewLine);
-            textBoxStatus.AppendText(NewSpatialTransform.ToString() + Environment.NewLine + Environment.NewLine);
-            textBoxStatus.AppendText("Awaiting user input..." + Environment.NewLine);
-
-            buttonOK.Enabled = true;
-        }
-
-        private void ButtonOKOrCancel_Click(object sender, EventArgs e)
-        {
-            Close();
+            switch ((coordinate, component))
+            {
+                case (0, 0): m.M11 = value; break;
+                case (0, 1): m.M12 = value; break;
+                case (0, 2): m.M13 = value; break;
+                case (1, 0): m.M21 = value; break;
+                case (1, 1): m.M22 = value; break;
+                case (1, 2): m.M23 = value; break;
+                case (2, 0): m.M31 = value; break;
+                case (2, 1): m.M32 = value; break;
+                case (2, 2): m.M33 = value; break;
+                case (3, 0): m.M41 = value; break;
+                case (3, 1): m.M42 = value; break;
+                case (3, 2): m.M43 = value; break;
+            }
+            return m;
         }
     }
 }
