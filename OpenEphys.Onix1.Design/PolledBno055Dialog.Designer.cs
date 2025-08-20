@@ -31,7 +31,7 @@
             this.components = new System.ComponentModel.Container();
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Text = "NeuropixelsV1eBno055Dialog";
+            this.Text = "Bno055Dialog";
         }
 
         #endregion

@@ -62,6 +62,7 @@ namespace OpenEphys.Onix1
         /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Specifies the axis map that will be applied during configuration.")]
+        [Browsable(false)]
         public Bno055AxisMap AxisMap { get; set; } = Bno055AxisMap.XYZ;
 
         /// <summary>
@@ -74,6 +75,7 @@ namespace OpenEphys.Onix1
         /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Specifies axis sign that will be applied during configuration.")]
+        [Browsable(false)]
         public Bno055AxisSign AxisSign { get; set; } = Bno055AxisSign.Default;
 
         /// <summary>
@@ -227,24 +229,6 @@ namespace OpenEphys.Onix1
         /// Specifies that X' axis should be mirrored.
         /// </summary>
         MirrorX = 0b00000_100,
-    }
-
-    // NB: Can be used to remove axis map and sign properties from MultiDeviceFactories that include a
-    // ConfigurePolledBno055 when having those options would cause confusion and potential
-    // commutator malfunction
-    internal class PolledBno055SingleDeviceFactoryConverter : SingleDeviceFactoryConverter
-    {
-        public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext context, object value, Attribute[] attributes)
-        {
-            var properties = (from property in base.GetProperties(context, value, attributes).Cast<PropertyDescriptor>()
-                              where !property.IsReadOnly &&
-                                    !(property.PropertyType == typeof(Bno055AxisMap)) &&
-                                    !(property.PropertyType == typeof(Bno055AxisSign)) &&
-                                    property.ComponentType != typeof(SingleDeviceFactory)
-                              select property)
-                              .ToArray();
-            return new PropertyDescriptorCollection(properties).Sort(properties.Select(p => p.Name).ToArray());
-        }
     }
 
     /// <inheritdoc cref = "ConfigurePolledBno055"/>
