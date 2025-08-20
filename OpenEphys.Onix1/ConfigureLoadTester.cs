@@ -32,15 +32,15 @@ namespace OpenEphys.Onix1
         public bool Enable { get; set; } = false;
 
         /// <summary>
-        /// Gets or sets the number of repetitions incrementing, unsigned 16-bit integers sent with each read frame.
+        /// Gets or sets the number of incrementing, unsigned 16-bit integers sent with each read frame.
         /// </summary>
         /// <remarks>
-        /// These data are produced by the controller and are used to impose a load the controller to host
+        /// These data are produced by the controller and are used to impose a load on the controller to host
         /// communication. These data can be used in downstream computational operations that model the
         /// computational load imposed by a closed-loop algorithm.
         /// </remarks>
         [Category(ConfigurationCategory)]
-        [Description("Number of repetitions of the 16-bit unsigned integer 42 sent with each read-frame.")]
+        [Description("Number of incrementing, unsigned 16-bit integers sent with each read-frame.")]
         [Range(0, 10e6)]
         public uint ReceivedWords { get; set; }
 
@@ -53,7 +53,7 @@ namespace OpenEphys.Onix1
         /// commutation. They are discarded by the controller when they are received.
         /// </remarks>
         [Category(ConfigurationCategory)]
-        [Description("Number of repetitions of the 32-bit integer 42 sent with each write frame.")]
+        [Description("Number of repetitions of the 32-bit integer dummy words sent with each write frame.")]
         [Range(0, 10e6)]
         public uint TransmittedWords { get; set; }
 

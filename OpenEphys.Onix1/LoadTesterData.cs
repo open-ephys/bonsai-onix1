@@ -7,11 +7,11 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Produces a sequence of heartbeat data frames.
+    /// Produces a sequence of LoadTester data frames.
     /// </summary>
     /// <remarks>
     /// This data IO operator must be linked to an appropriate configuration, such as a <see
-    /// cref="ConfigureHeartbeat"/>, using a shared <c>DeviceName</c>.
+    /// cref="ConfigureLoadTester"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Produces a sequence of load tester data frames.")]
     public class LoadTesterData : Source<LoadTesterDataFrame>

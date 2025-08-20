@@ -6,7 +6,6 @@ using Bonsai;
 
 namespace OpenEphys.Onix1
 {
-
     /// <summary>
     /// Sends loopback data to the load testing device for closed-loop latency measurement.
     /// </summary>
@@ -14,7 +13,7 @@ namespace OpenEphys.Onix1
     /// This data IO operator must be linked to an appropriate configuration, such as a <see
     /// cref="ConfigureLoadTester"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
-    [Description("Sends analog output data to an ONIX breakout board.")]
+    [Description("Sends loopback data to an ONIX breakout board.")]
     public class LoadTesterLoopback : Sink<ulong>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
@@ -24,16 +23,16 @@ namespace OpenEphys.Onix1
         public string DeviceName { get; set; }
 
         /// <summary>
-        /// Creates and sends an loopback frame to the load testing device.
+        /// Creates and sends a loopback frame to the load testing device.
         /// </summary>
         /// <remarks>
-        /// A loopback frame consists the <c>ulong</c> loopback value provided by <paramref name="source"/>
+        /// A loopback frame consists of the <c>ulong</c> loopback value provided by <paramref name="source"/>
         /// that is prepended to a <see cref="ConfigureLoadTester.TransmittedWords"/>-element <c>ushort</c>
         /// array of dummy data. When the frame is received by hardware, the loopback value is subtracted from
         /// the current hub clock count on the load testing device and stored. Therefore, if the loopback
-        /// value is is that of a previous <see cref="DataFrame.HubClock"/> from the <see
+        /// value is that of a previous <see cref="DataFrame.HubClock"/> from the <see
         /// cref="LoadTesterData"/> with the same <see cref="DeviceName"/> as this operator, this difference will provide a
-        /// hardware-timed measurement of real-time latency. The the variably-sized dummy data in the loopback
+        /// hardware-timed measurement of real-time latency. The variably-sized dummy data in the loopback
         /// frame is used for testing the effect of increasing the frame size, and thus the write
         /// communication bandwidth, on real-time latency.
         /// </remarks>
