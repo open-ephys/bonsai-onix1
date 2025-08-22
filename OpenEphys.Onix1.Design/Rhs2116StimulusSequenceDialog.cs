@@ -82,6 +82,21 @@ namespace OpenEphys.Onix1.Design
             dataGridViewStimulusTable.DataSource = Sequence.Stimuli;
         }
 
+        /// <inheritdoc/>
+        protected override bool ProcessTabKey(bool forward)
+        {
+            Control active = ActiveControl;
+
+            if (active != null && panelParameters.GetNextControl(active, true) == null)
+            {
+                // NB: If this is the last control, loop back to the beginning
+                panelParameters.GetNextControl(null, true).Focus();
+                return true;
+            }
+
+            return base.ProcessTabKey(forward);
+        }
+
         private void FormShown(object sender, EventArgs e)
         {
             if (!TopLevel)
