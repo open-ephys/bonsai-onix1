@@ -22,6 +22,17 @@ namespace OpenEphys.Onix1.Design
         internal SpatialTransformMatrixDialog(IObservable<TS4231V1PositionDataFrame> dataSource, SpatialTransform3D transformProperties)
         {
             InitializeComponent();
+
+            richTextBoxInstructions.Clear();
+            richTextBoxInstructions.BulletIndent = 16;
+            richTextBoxInstructions.SelectedText = "The following is a list of bulleted items:\n\n";
+            richTextBoxInstructions.SelectionBullet = true;
+            richTextBoxInstructions.SelectedText = "Determine a set of 4, well separated XYZ positions in the space in which the headstage will move. These positions should explore a large region of the territory that the headstage will explore and not be confined to a particular plane. Each position defined in this step corresponds to a row in the table below.\n";
+            richTextBoxInstructions.SelectedText = "For the first position, place the headstage and click the first measure button on the GUI. After the TS4231 coordinate is obtained from the headstage, enter the known User coordinates in the X, Y, and Z text boxes to provide your spatial mapping. Repeat this process for the second, third, and fourth positions to populate the second, third, and fourth rows of the table.\n";
+            richTextBoxInstructions.SelectedText = "Click \"OK\" to close this GUI and set the spatial transform properties in the workflow.\n";
+            richTextBoxInstructions.SelectionBullet = false;
+            richTextBoxInstructions.SelectedText = "\nFor more in-depth instructions, find the corresponding tutorial in Open Ephys' online documentation.";
+
             SpatialTransform = transformProperties;
             PositionDataSource = dataSource;
 
@@ -46,7 +57,7 @@ namespace OpenEphys.Onix1.Design
             IndicateSpatialTransformStatus();
         }
 
-        private void TextBoxUserCoordinate_TextChanged(object sender, EventArgs e)
+        void TextBoxUserCoordinate_TextChanged(object sender, EventArgs e)
         {
             var tag = Convert.ToByte(((TextBox)sender).Tag);
             try { SpatialTransform.SetMatrixBElement(float.Parse(((TextBox)sender).Text), tag / 3, tag % 3); }
@@ -54,7 +65,7 @@ namespace OpenEphys.Onix1.Design
             IndicateSpatialTransformStatus();
         }
 
-        private void ButtonMeasure_Click(object sender, EventArgs e)
+        void ButtonMeasure_Click(object sender, EventArgs e)
         {
             TextBox[] ts4231TextBoxes = { textBoxTS4231Coordinate0, textBoxTS4231Coordinate1, textBoxTS4231Coordinate2, textBoxTS4231Coordinate3 };
             var index = Convert.ToByte(((Button)sender).Tag);
@@ -141,7 +152,7 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        private void ButtonOK_Click(object sender, EventArgs e)
+        void ButtonOK_Click(object sender, EventArgs e)
         {
             var confirmationMessage = "";
             var invalidInput = false;
@@ -180,13 +191,13 @@ namespace OpenEphys.Onix1.Design
                 DialogResult = DialogResult.OK;
         }   
 
-        private void EnableButtons(bool enable, byte index)
+        void EnableButtons(bool enable, byte index)
         {
             var buttons = new Button[] { buttonMeasure0, buttonMeasure1, buttonMeasure2, buttonMeasure3, buttonOK, buttonCancel };
             Array.ForEach(buttons, button => button.Enabled = enable || (Convert.ToByte(button.Tag) == index));
         }
 
-        private void IndicateSpatialTransformStatus()
+        void IndicateSpatialTransformStatus()
         {
             if (SpatialTransform.ContainsNaN(SpatialTransform.A) || SpatialTransform.ContainsNaN(SpatialTransform.B))
             {
@@ -206,6 +217,10 @@ namespace OpenEphys.Onix1.Design
                 toolStripStatusLabel.Text = "Spatial transform matrix is calculated.";
                 textBoxSpatialTransformMatrix.Text = SpatialTransform.M.ToString();
             }
+        }
+        void richTextBoxInstructions_ContentsResized(object sender, ContentsResizedEventArgs e)
+        {
+            ((RichTextBox)sender).Height = e.NewRectangle.Height;
         }
     }
 }

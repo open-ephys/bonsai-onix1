@@ -117,16 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="labelInstructions.Text" xml:space="preserve">
-    <value>Follow the instructions below to transform TS4231 position data from a generic base-station reference frame to a user-defined reference frame:
-
-1) For each coordinate:
-    • Place the TS4231V1 device and click the "Measure" button.
-    • Define the coordinate in the user-defined reference frame using the fields under "User Coordinates".
-2) Click "OK" to close this GUI and set the spatial transform properties in the workflow. 
-
-For more in-depth instructions, find the corresponding tutorial in Open Ephys' online documentation.</value>
-  </data>
   <metadata name="statusStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>-2, 3</value>
   </metadata>

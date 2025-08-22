@@ -34,7 +34,6 @@ namespace OpenEphys.Onix1.Design
             this.tableLayoutPanelMain = new System.Windows.Forms.TableLayoutPanel();
             this.groupBoxStatus = new System.Windows.Forms.GroupBox();
             this.richTextBoxStatus = new System.Windows.Forms.RichTextBox();
-            this.labelInstructions = new System.Windows.Forms.Label();
             this.tableLayoutPanelCoordinates = new System.Windows.Forms.TableLayoutPanel();
             this.labelZ = new System.Windows.Forms.Label();
             this.labelY = new System.Windows.Forms.Label();
@@ -72,6 +71,7 @@ namespace OpenEphys.Onix1.Design
             this.tableLayoutPanelSpatialMatrix = new System.Windows.Forms.TableLayoutPanel();
             this.labelSpatialMatrix = new System.Windows.Forms.Label();
             this.textBoxSpatialTransformMatrix = new System.Windows.Forms.TextBox();
+            this.richTextBoxInstructions = new System.Windows.Forms.RichTextBox();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.tableLayoutPanelMain.SuspendLayout();
@@ -87,10 +87,10 @@ namespace OpenEphys.Onix1.Design
             this.tableLayoutPanelMain.ColumnCount = 1;
             this.tableLayoutPanelMain.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanelMain.Controls.Add(this.groupBoxStatus, 0, 3);
-            this.tableLayoutPanelMain.Controls.Add(this.labelInstructions, 0, 0);
             this.tableLayoutPanelMain.Controls.Add(this.tableLayoutPanelCoordinates, 0, 1);
             this.tableLayoutPanelMain.Controls.Add(this.flowLayoutPanelBottom, 0, 4);
             this.tableLayoutPanelMain.Controls.Add(this.tableLayoutPanelSpatialMatrix, 0, 2);
+            this.tableLayoutPanelMain.Controls.Add(this.richTextBoxInstructions, 0, 0);
             this.tableLayoutPanelMain.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanelMain.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanelMain.Name = "tableLayoutPanelMain";
@@ -100,7 +100,6 @@ namespace OpenEphys.Onix1.Design
             this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanelMain.Size = new System.Drawing.Size(624, 540);
             this.tableLayoutPanelMain.TabIndex = 0;
             // 
@@ -108,9 +107,9 @@ namespace OpenEphys.Onix1.Design
             // 
             this.groupBoxStatus.Controls.Add(this.richTextBoxStatus);
             this.groupBoxStatus.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.groupBoxStatus.Location = new System.Drawing.Point(3, 372);
+            this.groupBoxStatus.Location = new System.Drawing.Point(3, 406);
             this.groupBoxStatus.Name = "groupBoxStatus";
-            this.groupBoxStatus.Size = new System.Drawing.Size(618, 129);
+            this.groupBoxStatus.Size = new System.Drawing.Size(618, 95);
             this.groupBoxStatus.TabIndex = 1000;
             this.groupBoxStatus.TabStop = false;
             this.groupBoxStatus.Text = "Status Messages";
@@ -122,19 +121,10 @@ namespace OpenEphys.Onix1.Design
             this.richTextBoxStatus.Name = "richTextBoxStatus";
             this.richTextBoxStatus.ReadOnly = true;
             this.richTextBoxStatus.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
-            this.richTextBoxStatus.Size = new System.Drawing.Size(612, 110);
+            this.richTextBoxStatus.Size = new System.Drawing.Size(612, 76);
             this.richTextBoxStatus.TabIndex = 1000;
             this.richTextBoxStatus.TabStop = false;
             this.richTextBoxStatus.Text = "";
-            // 
-            // labelInstructions
-            // 
-            this.labelInstructions.AutoSize = true;
-            this.labelInstructions.Location = new System.Drawing.Point(3, 0);
-            this.labelInstructions.Name = "labelInstructions";
-            this.labelInstructions.Size = new System.Drawing.Size(596, 117);
-            this.labelInstructions.TabIndex = 1000;
-            this.labelInstructions.Text = resources.GetString("labelInstructions.Text");
             // 
             // tableLayoutPanelCoordinates
             // 
@@ -176,7 +166,7 @@ namespace OpenEphys.Onix1.Design
             this.tableLayoutPanelCoordinates.Controls.Add(this.labelUser, 3, 0);
             this.tableLayoutPanelCoordinates.Controls.Add(this.labelX, 3, 1);
             this.tableLayoutPanelCoordinates.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanelCoordinates.Location = new System.Drawing.Point(3, 120);
+            this.tableLayoutPanelCoordinates.Location = new System.Drawing.Point(3, 154);
             this.tableLayoutPanelCoordinates.Name = "tableLayoutPanelCoordinates";
             this.tableLayoutPanelCoordinates.RowCount = 6;
             this.tableLayoutPanelCoordinates.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
@@ -415,7 +405,7 @@ namespace OpenEphys.Onix1.Design
             this.labelCoordinate2.Location = new System.Drawing.Point(3, 120);
             this.labelCoordinate2.Name = "labelCoordinate2";
             this.labelCoordinate2.Size = new System.Drawing.Size(74, 30);
-            this.labelCoordinate2.TabIndex = 100;
+            this.labelCoordinate2.TabIndex = 1000;
             this.labelCoordinate2.Text = "Coordinate 2:";
             this.labelCoordinate2.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -514,7 +504,7 @@ namespace OpenEphys.Onix1.Design
             this.flowLayoutPanelBottom.Location = new System.Drawing.Point(3, 507);
             this.flowLayoutPanelBottom.Name = "flowLayoutPanelBottom";
             this.flowLayoutPanelBottom.Size = new System.Drawing.Size(618, 30);
-            this.flowLayoutPanelBottom.TabIndex = 2;
+            this.flowLayoutPanelBottom.TabIndex = 1;
             // 
             // buttonCancel
             // 
@@ -547,7 +537,7 @@ namespace OpenEphys.Onix1.Design
             this.tableLayoutPanelSpatialMatrix.Controls.Add(this.labelSpatialMatrix, 0, 0);
             this.tableLayoutPanelSpatialMatrix.Controls.Add(this.textBoxSpatialTransformMatrix, 1, 0);
             this.tableLayoutPanelSpatialMatrix.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanelSpatialMatrix.Location = new System.Drawing.Point(3, 306);
+            this.tableLayoutPanelSpatialMatrix.Location = new System.Drawing.Point(3, 340);
             this.tableLayoutPanelSpatialMatrix.Name = "tableLayoutPanelSpatialMatrix";
             this.tableLayoutPanelSpatialMatrix.RowCount = 1;
             this.tableLayoutPanelSpatialMatrix.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 60F));
@@ -576,6 +566,21 @@ namespace OpenEphys.Onix1.Design
             this.textBoxSpatialTransformMatrix.Size = new System.Drawing.Size(483, 54);
             this.textBoxSpatialTransformMatrix.TabIndex = 1000;
             this.textBoxSpatialTransformMatrix.TabStop = false;
+            // 
+            // richTextBoxInstructions
+            // 
+            this.richTextBoxInstructions.BackColor = System.Drawing.SystemColors.Control;
+            this.richTextBoxInstructions.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.richTextBoxInstructions.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.richTextBoxInstructions.Location = new System.Drawing.Point(3, 3);
+            this.richTextBoxInstructions.Name = "richTextBoxInstructions";
+            this.richTextBoxInstructions.ReadOnly = true;
+            this.richTextBoxInstructions.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.None;
+            this.richTextBoxInstructions.Size = new System.Drawing.Size(618, 145);
+            this.richTextBoxInstructions.TabIndex = 1000;
+            this.richTextBoxInstructions.TabStop = false;
+            this.richTextBoxInstructions.Text = "Placeholder text";
+            this.richTextBoxInstructions.ContentsResized += new System.Windows.Forms.ContentsResizedEventHandler(this.richTextBoxInstructions_ContentsResized);
             // 
             // statusStrip
             // 
@@ -638,7 +643,6 @@ namespace OpenEphys.Onix1.Design
         private System.Windows.Forms.TextBox textBoxTS4231Coordinate0;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanelBottom;
         private System.Windows.Forms.Button buttonCancel;
-        private System.Windows.Forms.Label labelInstructions;
         private System.Windows.Forms.Button buttonOK;
         private System.Windows.Forms.StatusStrip statusStrip;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel;
@@ -666,5 +670,6 @@ namespace OpenEphys.Onix1.Design
         private System.Windows.Forms.TextBox textBoxSpatialTransformMatrix;
         private System.Windows.Forms.RichTextBox richTextBoxStatus;
         private System.Windows.Forms.TextBox textBoxUserCoordinate0Y;
+        private System.Windows.Forms.RichTextBox richTextBoxInstructions;
     }
 }
