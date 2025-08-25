@@ -39,7 +39,7 @@ namespace OpenEphys.Onix1.Design
             var ts4231TextBoxes = new TextBox[] {
                 textBoxTS4231Coordinate0, textBoxTS4231Coordinate1,
                 textBoxTS4231Coordinate2, textBoxTS4231Coordinate3 };
-            var preTransformCoordinates = SpatialTransform.MatrixToFloatArray(SpatialTransform.A);
+            var preTransformCoordinates = MatrixToFloatArray(SpatialTransform.A);
             for (byte i = 0; i < 4; i++)
                 ts4231TextBoxes[i].Text = float.IsNaN(preTransformCoordinates[i * 3]) ? "" :  $"{preTransformCoordinates[i * 3]}, " +
                                                                                               $"{preTransformCoordinates[i * 3 + 1]}, " +
@@ -50,7 +50,7 @@ namespace OpenEphys.Onix1.Design
                 textBoxUserCoordinate1X, textBoxUserCoordinate1Y, textBoxUserCoordinate1Z,
                 textBoxUserCoordinate2X, textBoxUserCoordinate2Y, textBoxUserCoordinate2Z,
                 textBoxUserCoordinate3X, textBoxUserCoordinate3Y, textBoxUserCoordinate3Z };
-            var postTransformCoordinates = SpatialTransform.MatrixToFloatArray(SpatialTransform.B);
+            var postTransformCoordinates = MatrixToFloatArray(SpatialTransform.B);
             foreach (var (tb, comp) in Enumerable.Zip(userTextBoxes, postTransformCoordinates, (tb, comp) => (tb, comp)))
                 tb.Text = float.IsNaN(comp) ? "" : comp.ToString();
 
@@ -60,8 +60,8 @@ namespace OpenEphys.Onix1.Design
         void TextBoxUserCoordinate_TextChanged(object sender, EventArgs e)
         {
             var tag = Convert.ToByte(((TextBox)sender).Tag);
-            try { SpatialTransform.SetMatrixBElement(float.Parse(((TextBox)sender).Text), tag / 3, tag % 3); }
-            catch { SpatialTransform.SetMatrixBElement(float.NaN, tag / 3, tag % 3); }
+            try { SpatialTransform.B = SetMatrixElement(SpatialTransform.B, float.Parse(((TextBox)sender).Text), tag / 3, tag % 3); }
+            catch { SpatialTransform.B = SetMatrixElement(SpatialTransform.B, float.NaN, tag / 3, tag % 3); }
             IndicateSpatialTransformStatus();
         }
 
@@ -71,7 +71,7 @@ namespace OpenEphys.Onix1.Design
             var index = Convert.ToByte(((Button)sender).Tag);
 
             for (byte i = 0; i < 3; i++)
-                SpatialTransform.SetMatrixAElement(float.NaN, index, i);
+                SpatialTransform.A = SetMatrixElement(SpatialTransform.A, float.NaN, index, i);
             ts4231TextBoxes[index].Text = "";
             
             if (((Button)sender).Text == "Measure")
@@ -123,9 +123,9 @@ namespace OpenEphys.Onix1.Design
                         acc =>
                         {
                             var measurement = acc.Sum / NumMeasurements;
-                            SpatialTransform.SetMatrixAElement(measurement.X, index, 0);
-                            SpatialTransform.SetMatrixAElement(measurement.Y, index, 1);
-                            SpatialTransform.SetMatrixAElement(measurement.Z, index, 2);
+                            SpatialTransform.A = SetMatrixElement(SpatialTransform.A, measurement.X, index, 0);
+                            SpatialTransform.A = SetMatrixElement(SpatialTransform.A, measurement.Y, index, 1);
+                            SpatialTransform.A = SetMatrixElement(SpatialTransform.A, measurement.Z, index, 2);
                             return (Position: measurement, Valid: acc.Count == NumMeasurements);
                         })
                     .ObserveOn(new ControlScheduler(this))
@@ -156,22 +156,22 @@ namespace OpenEphys.Onix1.Design
         {
             var confirmationMessage = "";
             var invalidInput = false;
-            if (SpatialTransform.ContainsNaN(SpatialTransform.A) || SpatialTransform.ContainsNaN(SpatialTransform.B))
+            if (ContainsNaN(SpatialTransform.A) || ContainsNaN(SpatialTransform.B))
             {
-                confirmationMessage = $"At least one entry in the {Name} is invalid for calculating a proper 3D spatial transform:\n";
+                confirmationMessage = $"At least one entry in the TS4231V1 Calibration GUI form is invalid:\n\n";
+
+                for (byte i = 0; i < 4; i++)
+                    if (float.IsNaN(MatrixToFloatArray(SpatialTransform.A)[i * 3]))
+                        confirmationMessage += $" • TS4231 coordinate {i}\n";
 
                 var axes = new char[] { 'X', 'Y', 'Z' };
                 var coordinates = new byte[] { 0, 1, 2, 3 };
 
                 for (byte i = 0; i < 12; i++)
-                    if (float.IsNaN(SpatialTransform.MatrixToFloatArray(SpatialTransform.B)[i]))
+                    if (float.IsNaN(MatrixToFloatArray(SpatialTransform.B)[i]))
                         confirmationMessage += $" • Component {axes[i % 3]} from user coordinate {coordinates[i / 3]}\n";
 
-                for (byte i = 0; i < 4; i++)
-                    if (float.IsNaN(SpatialTransform.MatrixToFloatArray(SpatialTransform.A)[i * 3]))
-                        confirmationMessage += $" • TS4231 Coordinate {i}\n";
-
-                confirmationMessage += "\nThese invalid entries will not be saved. ";
+                confirmationMessage += "\nAny invalid entry will not be saved. ";
                 invalidInput = true;
             }
             else if (!Matrix4x4.Invert(SpatialTransform.M, out _))
@@ -182,7 +182,7 @@ namespace OpenEphys.Onix1.Design
 
             if (invalidInput)
             {
-                confirmationMessage += "The transformed position data will be NaNs until these entries are fixed.\n\n" +
+                confirmationMessage += "The transformed position data will be NaNs until all entries are valid.\n\n" +
                     "Would you like to continue?";
                 if (MessageBox.Show(confirmationMessage, "Confirmation", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     DialogResult = DialogResult.OK;
@@ -199,7 +199,7 @@ namespace OpenEphys.Onix1.Design
 
         void IndicateSpatialTransformStatus()
         {
-            if (SpatialTransform.ContainsNaN(SpatialTransform.A) || SpatialTransform.ContainsNaN(SpatialTransform.B))
+            if (ContainsNaN(SpatialTransform.A) || ContainsNaN(SpatialTransform.B))
             {
                 toolStripStatusLabel.Image = Properties.Resources.StatusWarningImage;
                 toolStripStatusLabel.Text = "All fields must be properly populated.";
@@ -217,6 +217,37 @@ namespace OpenEphys.Onix1.Design
                 toolStripStatusLabel.Text = "Spatial transform matrix is calculated.";
                 textBoxSpatialTransformMatrix.Text = SpatialTransform.M.ToString();
             }
+        }
+
+        static float[] MatrixToFloatArray(Matrix4x4 m) =>
+            new float[] { m.M11, m.M12, m.M13,
+                          m.M21, m.M22, m.M23,
+                          m.M31, m.M32, m.M33,
+                          m.M41, m.M42, m.M43 };
+
+        static bool ContainsNaN(Matrix4x4 m) => MatrixToFloatArray(m).Any(float.IsNaN);
+
+        static Matrix4x4 SetMatrixElement(Matrix4x4 m, float value, int coordinate, int component)
+        {
+            if (coordinate is < 0 or > 3) throw new ArgumentOutOfRangeException(nameof(coordinate) + " must be 0, 1, 2, or 3.");
+            if (component is < 0 or > 2) throw new ArgumentOutOfRangeException(nameof(component) + " must be 0, 1, or 2.");
+
+            switch ((coordinate, component))
+            {
+                case (0, 0): m.M11 = value; break;
+                case (0, 1): m.M12 = value; break;
+                case (0, 2): m.M13 = value; break;
+                case (1, 0): m.M21 = value; break;
+                case (1, 1): m.M22 = value; break;
+                case (1, 2): m.M23 = value; break;
+                case (2, 0): m.M31 = value; break;
+                case (2, 1): m.M32 = value; break;
+                case (2, 2): m.M33 = value; break;
+                case (3, 0): m.M41 = value; break;
+                case (3, 1): m.M42 = value; break;
+                case (3, 2): m.M43 = value; break;
+            }
+            return m;
         }
         void richTextBoxInstructions_ContentsResized(object sender, ContentsResizedEventArgs e)
         {
