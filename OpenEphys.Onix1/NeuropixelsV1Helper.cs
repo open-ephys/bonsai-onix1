@@ -26,13 +26,13 @@ namespace OpenEphys.Onix1
         /// integer value.
         /// </para>
         /// </remarks>
-        /// <param name="adcCalibrationFile">String defining the path to the ADC calibration file.</param>
+        /// <param name="adcCalibrationFileName">String defining the path to the ADC calibration file.</param>
         /// <returns><see cref="NeuropixelsV1AdcCalibration"/> object that contains the ADC calibration values. This object is null if the file was not successfully parsed.</returns>
-        public static NeuropixelsV1AdcCalibration? TryParseAdcCalibrationFile(string adcCalibrationFile)
+        public static NeuropixelsV1AdcCalibration? TryParseAdcCalibrationFile(string adcCalibrationFileName)
         {
-            if (!File.Exists(adcCalibrationFile)) return null;
+            if (!File.Exists(adcCalibrationFileName)) return null;
 
-            var lines = File.ReadLines(adcCalibrationFile);
+            var lines = File.ReadLines(adcCalibrationFileName);
 
             if (lines.Count() != NeuropixelsV1.AdcCount + 1) return null;
             if (!ulong.TryParse(lines.ElementAt(0), out var serialNumber)) return null;
@@ -95,16 +95,16 @@ namespace OpenEphys.Onix1
         /// are LFP gain corrections, for the LFP band.
         /// </para>
         /// </remarks>
-        /// <param name="gainCalibrationFile">String defining the path to the gain calibration file.</param>
+        /// <param name="gainCalibrationFileName">String defining the path to the gain calibration file.</param>
         /// <param name="apGain">Current <see cref="NeuropixelsV1Gain"/> for the AP data.</param>
         /// <param name="lfpGain">Current <see cref="NeuropixelsV1Gain"/> for the LFP data.</param>
         /// <param name="electrodeCount">Number of electrodes expected in the calibration file.</param>
         /// <returns><see cref="NeuropixelsV1eGainCorrection"/> object that contains the AP and LFP gain correction values. This object is null if the file was not successfully parsed.</returns>
-        public static NeuropixelsV1eGainCorrection? TryParseGainCalibrationFile(string gainCalibrationFile, NeuropixelsV1Gain apGain, NeuropixelsV1Gain lfpGain, int electrodeCount)
+        public static NeuropixelsV1eGainCorrection? TryParseGainCalibrationFile(string gainCalibrationFileName, NeuropixelsV1Gain apGain, NeuropixelsV1Gain lfpGain, int electrodeCount)
         {
-            if (!File.Exists(gainCalibrationFile)) return null;
+            if (!File.Exists(gainCalibrationFileName)) return null;
 
-            var lines = File.ReadLines(gainCalibrationFile);
+            var lines = File.ReadLines(gainCalibrationFileName);
 
             if (lines.Count() != electrodeCount + 1) return null;
             if (!ulong.TryParse(lines.ElementAt(0), out var serialNumber)) return null;

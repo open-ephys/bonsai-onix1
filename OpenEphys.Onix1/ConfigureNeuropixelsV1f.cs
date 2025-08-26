@@ -136,7 +136,7 @@ namespace OpenEphys.Onix1
                 ProbeConfiguration = new(ProbeGroupHelper.LoadExternalProbeGroupFile<NeuropixelsV1eProbeGroup>(filename),
                                             ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain,
                                             ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter,
-                                            ProbeConfiguration.AdcCalibrationFile, ProbeConfiguration.GainCalibrationFile);
+                                            ProbeConfiguration.AdcCalibrationFileName, ProbeConfiguration.GainCalibrationFileName);
             }
         }
 
@@ -150,8 +150,8 @@ namespace OpenEphys.Onix1
         [Externalizable(false)]
         public string GainCalibrationFile
         {
-            get => ProbeConfiguration.GainCalibrationFile;
-            set => ProbeConfiguration.GainCalibrationFile = value;
+            get => ProbeConfiguration.GainCalibrationFileName;
+            set => ProbeConfiguration.GainCalibrationFileName = value;
         }
 
         /// <summary>
@@ -174,8 +174,8 @@ namespace OpenEphys.Onix1
         [Externalizable(false)]
         public string AdcCalibrationFile
         {
-            get => ProbeConfiguration.AdcCalibrationFile;
-            set => ProbeConfiguration.AdcCalibrationFile = value;
+            get => ProbeConfiguration.AdcCalibrationFileName;
+            set => ProbeConfiguration.AdcCalibrationFileName = value;
         }
 
         /// <summary>

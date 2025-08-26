@@ -70,7 +70,7 @@ namespace OpenEphys.Onix1.Design
 
             ProbeConfiguration = new(configuration);
 
-            textBoxProbeCalibrationFile.Text = ProbeConfiguration.GainCalibrationFile;
+            textBoxProbeCalibrationFile.Text = ProbeConfiguration.GainCalibrationFileName;
 
             ChannelConfiguration = new(ProbeConfiguration)
             {
@@ -541,7 +541,7 @@ namespace OpenEphys.Onix1.Design
         private void FileTextChanged(object sender, EventArgs e)
         {
             CheckStatus();
-            ProbeConfiguration.GainCalibrationFile = ((TextBox)sender).Text;
+            ProbeConfiguration.GainCalibrationFileName = ((TextBox)sender).Text;
         }
 
         private void CheckStatus()

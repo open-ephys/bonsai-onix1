@@ -149,7 +149,7 @@ namespace OpenEphys.Onix1
                 }
 
                 ProbeConfigurationA = new(ProbeGroupHelper.LoadExternalProbeGroupFile<NeuropixelsV2eProbeGroup>(filename),
-                                        ProbeConfigurationA.Reference, ProbeConfigurationA.Probe, ProbeConfigurationA.GainCalibrationFile);
+                                        ProbeConfigurationA.Reference, ProbeConfigurationA.Probe, ProbeConfigurationA.GainCalibrationFileName);
             }
         }
 
@@ -163,8 +163,8 @@ namespace OpenEphys.Onix1
         [Externalizable(false)]
         public string GainCalibrationFileA
         {
-            get => ProbeConfigurationA.GainCalibrationFile;
-            set => ProbeConfigurationA.GainCalibrationFile = value;
+            get => ProbeConfigurationA.GainCalibrationFileName;
+            set => ProbeConfigurationA.GainCalibrationFileName = value;
         }
 
         /// <summary>
@@ -233,7 +233,7 @@ namespace OpenEphys.Onix1
                 }
 
                 ProbeConfigurationB = new(ProbeGroupHelper.LoadExternalProbeGroupFile<NeuropixelsV2eProbeGroup>(filename),
-                                        ProbeConfigurationB.Reference, ProbeConfigurationB.Probe, ProbeConfigurationB.GainCalibrationFile);
+                                        ProbeConfigurationB.Reference, ProbeConfigurationB.Probe, ProbeConfigurationB.GainCalibrationFileName);
             }
         }
 
@@ -247,8 +247,8 @@ namespace OpenEphys.Onix1
         [Externalizable(false)]
         public string GainCalibrationFileB
         {
-            get => ProbeConfigurationB.GainCalibrationFile;
-            set => ProbeConfigurationB.GainCalibrationFile = value;
+            get => ProbeConfigurationB.GainCalibrationFileName;
+            set => ProbeConfigurationB.GainCalibrationFileName = value;
         }
 
         /// <summary>
@@ -320,11 +320,11 @@ namespace OpenEphys.Onix1
                 // configure probe A streaming
                 if (probeAMetadata.ProbeSerialNumber != null)
                 {
-                    var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(ProbeConfigurationA.GainCalibrationFile);
+                    var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(ProbeConfigurationA.GainCalibrationFileName);
 
                     if (!gainCorrection.HasValue)
                     {
-                        throw new ArgumentException($"{NeuropixelsV2Probe.ProbeA}'s calibration file \"{ProbeConfigurationA.GainCalibrationFile}\" is invalid.");
+                        throw new ArgumentException($"{NeuropixelsV2Probe.ProbeA}'s calibration file \"{ProbeConfigurationA.GainCalibrationFileName}\" is invalid.");
                     }
 
                     if (gainCorrection.Value.SerialNumber != probeAMetadata.ProbeSerialNumber)
@@ -343,11 +343,11 @@ namespace OpenEphys.Onix1
                 // configure probe B streaming
                 if (probeAMetadata.ProbeSerialNumber != null)
                 {
-                    var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(ProbeConfigurationB.GainCalibrationFile);
+                    var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(ProbeConfigurationB.GainCalibrationFileName);
 
                     if (!gainCorrection.HasValue)
                     {
-                        throw new ArgumentException($"{NeuropixelsV2Probe.ProbeB}'s calibration file \"{ProbeConfigurationB.GainCalibrationFile}\" is invalid.");
+                        throw new ArgumentException($"{NeuropixelsV2Probe.ProbeB}'s calibration file \"{ProbeConfigurationB.GainCalibrationFileName}\" is invalid.");
                     }
 
                     if (gainCorrection.Value.SerialNumber != probeBMetadata.ProbeSerialNumber)

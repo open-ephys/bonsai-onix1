@@ -61,7 +61,7 @@ namespace OpenEphys.Onix1.Design
             if (base.OpenFile<NeuropixelsV2eProbeGroup>())
             {
                 ProbeConfiguration = new((NeuropixelsV2eProbeGroup)ProbeGroup, ProbeConfiguration.Reference,
-                    ProbeConfiguration.Probe, ProbeConfiguration.GainCalibrationFile);
+                    ProbeConfiguration.Probe, ProbeConfiguration.GainCalibrationFileName);
 
                 OnFileOpenHandler();
 

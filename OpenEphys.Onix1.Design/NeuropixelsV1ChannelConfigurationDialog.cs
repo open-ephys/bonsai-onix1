@@ -58,7 +58,7 @@ namespace OpenEphys.Onix1.Design
         {
             ProbeConfiguration = new(ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain, 
                 ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter,
-                ProbeConfiguration.AdcCalibrationFile, ProbeConfiguration.GainCalibrationFile);
+                ProbeConfiguration.AdcCalibrationFileName, ProbeConfiguration.GainCalibrationFileName);
             ProbeGroup = ProbeConfiguration.ProbeGroup;
 
             OnFileOpenHandler();
@@ -70,7 +70,7 @@ namespace OpenEphys.Onix1.Design
             {
                 ProbeConfiguration = new((NeuropixelsV1eProbeGroup)ProbeGroup, ProbeConfiguration.SpikeAmplifierGain,
                     ProbeConfiguration.LfpAmplifierGain, ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter,
-                    ProbeConfiguration.AdcCalibrationFile, ProbeConfiguration.GainCalibrationFile);
+                    ProbeConfiguration.AdcCalibrationFileName, ProbeConfiguration.GainCalibrationFileName);
                 ProbeGroup = ProbeConfiguration.ProbeGroup;
 
                 OnFileOpenHandler();

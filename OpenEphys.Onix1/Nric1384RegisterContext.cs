@@ -20,34 +20,34 @@ namespace OpenEphys.Onix1
         readonly BitArray[] BaseConfigs = { new(BaseConfigurationBitCount, false),   // Ch 0, 2, 4, ...
                                             new(BaseConfigurationBitCount, false) }; // Ch 1, 3, 5, ...
 
-        public Nric1384RegisterContext(DeviceContext deviceContext, NeuropixelsV1Gain apGain, NeuropixelsV1Gain lfpGain, bool apFilter, string gainCalibrationFile, string adcCalibrationFile)
+        public Nric1384RegisterContext(DeviceContext deviceContext, NeuropixelsV1Gain apGain, NeuropixelsV1Gain lfpGain, bool apFilter, string gainCalibrationFileName, string adcCalibrationFileName)
             : base(deviceContext, Nric1384.I2cAddress)
         {
 
             device = deviceContext;
 
-            if (!File.Exists(gainCalibrationFile))
+            if (!File.Exists(gainCalibrationFileName))
             {
                 throw new ArgumentException("A gain calibration file must be specified for the Nric1384 chip.");
             }
 
-            if (!File.Exists(adcCalibrationFile))
+            if (!File.Exists(adcCalibrationFileName))
             {
                 throw new ArgumentException("An ADC calibration file must be specified for the Nric1384 chip.");
             }
 
-            var adcCalibration = NeuropixelsV1Helper.TryParseAdcCalibrationFile(adcCalibrationFile);
+            var adcCalibration = NeuropixelsV1Helper.TryParseAdcCalibrationFile(adcCalibrationFileName);
 
             if (!adcCalibration.HasValue)
             {
-                throw new ArgumentException($"The calibration file \"{adcCalibrationFile}\" is invalid.");
+                throw new ArgumentException($"The calibration file \"{adcCalibrationFileName}\" is invalid.");
             }
 
-            var gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(gainCalibrationFile,apGain, lfpGain, Nric1384.ElectrodeCount);
+            var gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(gainCalibrationFileName,apGain, lfpGain, Nric1384.ElectrodeCount);
 
             if (!gainCorrection.HasValue)
             {
-                throw new ArgumentException($"The calibration file \"{gainCalibrationFile}\" is invalid.");
+                throw new ArgumentException($"The calibration file \"{gainCalibrationFileName}\" is invalid.");
             }
 
             if (adcCalibration.Value.SerialNumber != gainCorrection.Value.SerialNumber)

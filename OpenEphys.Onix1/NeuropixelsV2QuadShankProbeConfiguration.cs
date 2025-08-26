@@ -119,7 +119,7 @@ namespace OpenEphys.Onix1
             ProbeGroup = new(probeConfiguration.ProbeGroup.Specification, probeConfiguration.ProbeGroup.Version, probes.ToArray());
             ChannelMap = NeuropixelsV2eProbeGroup.ToChannelMap(ProbeGroup);
             Probe = probeConfiguration.Probe;
-            GainCalibrationFile = probeConfiguration.GainCalibrationFile;
+            GainCalibrationFileName = probeConfiguration.GainCalibrationFileName;
         }
 
         /// <summary>
@@ -130,16 +130,16 @@ namespace OpenEphys.Onix1
         /// <param name="probeGroup">The existing <see cref="NeuropixelsV2eProbeGroup"/> instance to use.</param>
         /// <param name="reference">The <see cref="NeuropixelsV2QuadShankReference"/> reference value.</param>
         /// <param name="probe">The <see cref="NeuropixelsV2Probe"/> for this probe.</param>
-        /// <param name="gainCalibrationFile">Filepath to the gain calibration file for this probe.</param>
+        /// <param name="gainCalibrationFileName">Filepath to the gain calibration file for this probe.</param>
         [JsonConstructor]
         public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2eProbeGroup probeGroup, NeuropixelsV2QuadShankReference reference,
-            NeuropixelsV2Probe probe, string gainCalibrationFile)
+            NeuropixelsV2Probe probe, string gainCalibrationFileName)
         {
             ChannelMap = NeuropixelsV2eProbeGroup.ToChannelMap(probeGroup);
             ProbeGroup = probeGroup;
             Reference = reference;
             Probe = probe;
-            GainCalibrationFile = gainCalibrationFile;
+            GainCalibrationFileName = gainCalibrationFileName;
         }
 
         private static List<NeuropixelsV2QuadShankElectrode> CreateProbeModel()
@@ -245,7 +245,7 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets or sets the path to the gain calibration file for this probe.
+        /// Gets or sets the path to the gain calibration file name for this probe.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -263,6 +263,6 @@ namespace OpenEphys.Onix1
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the gain calibration file for this probe.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
-        public string GainCalibrationFile { get; set; }
+        public string GainCalibrationFileName { get; set; }
     }
 }

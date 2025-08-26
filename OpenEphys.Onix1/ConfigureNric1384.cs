@@ -61,7 +61,7 @@ namespace OpenEphys.Onix1
         public bool SpikeFilter { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets the path to the gain calibration file.
+        /// Gets or sets the path to the gain calibration file name.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -77,9 +77,9 @@ namespace OpenEphys.Onix1
         /// </remarks>
         [Category(ConfigurationCategory)]
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
-        [Description("Path to the Nric1384 gain calibraiton file.")]
+        [Description("Path to the Nric1384 gain calibration file.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
-        public string GainCalibrationFile { get; set; }
+        public string GainCalibrationFileName { get; set; }
 
         /// <summary>
         /// Gets or sets the path to the ADC calibration file.
@@ -99,9 +99,9 @@ namespace OpenEphys.Onix1
         /// </remarks>
         [Category(ConfigurationCategory)]
         [FileNameFilter("ADC calibration files (*_ADCCalibration.csv)|*_ADCCalibration.csv")]
-        [Description("Path to the Nric1384 ADC calibraiton file.")]
+        [Description("Path to the Nric1384 ADC calibration file.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
-        public string AdcCalibrationFile { get; set; }
+        public string AdcCalibrationFileName { get; set; }
 
         /// <summary>
         /// Configures a Nric1384 bioacquisition device.
@@ -127,7 +127,7 @@ namespace OpenEphys.Onix1
 
                 if (enable)
                 {
-                    var probeControl = new Nric1384RegisterContext(device, SpikeAmplifierGain, LfpAmplifierGain, SpikeFilter, GainCalibrationFile, AdcCalibrationFile);
+                    var probeControl = new Nric1384RegisterContext(device, SpikeAmplifierGain, LfpAmplifierGain, SpikeFilter, GainCalibrationFileName, AdcCalibrationFileName);
                     probeControl.InitializeChip();
                     probeControl.WriteShiftRegisters();
                 }

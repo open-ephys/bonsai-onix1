@@ -54,17 +54,17 @@ namespace OpenEphys.Onix1
         /// <param name="lfpAmplifierGain">Desired or current <see cref="NeuropixelsV1Gain"/> for the LFP-band.</param>
         /// <param name="reference">Desired or current <see cref="NeuropixelsV1ReferenceSource"/>.</param>
         /// <param name="spikeFilter">Desired or current option to filer the spike-band.</param>
-        /// <param name="adcCalibrationFile">String containing the filepath to the ADC calibration file.</param>
-        /// <param name="gainCalibrationFile">String containing the filepath to the Gain calibration file.</param>
+        /// <param name="adcCalibrationFileName">String containing the filepath to the ADC calibration file.</param>
+        /// <param name="gainCalibrationFileName">String containing the filepath to the Gain calibration file.</param>
         public NeuropixelsV1ProbeConfiguration(NeuropixelsV1Gain spikeAmplifierGain, NeuropixelsV1Gain lfpAmplifierGain,
-            NeuropixelsV1ReferenceSource reference, bool spikeFilter, string adcCalibrationFile, string gainCalibrationFile)
+            NeuropixelsV1ReferenceSource reference, bool spikeFilter, string adcCalibrationFileName, string gainCalibrationFileName)
         {
             SpikeAmplifierGain = spikeAmplifierGain;
             LfpAmplifierGain = lfpAmplifierGain;
             Reference = reference;
             SpikeFilter = spikeFilter;
-            AdcCalibrationFile = adcCalibrationFile;
-            GainCalibrationFile = gainCalibrationFile;
+            AdcCalibrationFileName = adcCalibrationFileName;
+            GainCalibrationFileName = gainCalibrationFileName;
             ProbeGroup = new();
             ChannelMap = NeuropixelsV1eProbeGroup.ToChannelMap(ProbeGroup);
         }
@@ -78,11 +78,11 @@ namespace OpenEphys.Onix1
         /// <param name="lfpAmplifierGain">Desired or current <see cref="NeuropixelsV1Gain"/> for the LFP-band.</param>
         /// <param name="reference">Desired or current <see cref="NeuropixelsV1ReferenceSource"/>.</param>
         /// <param name="spikeFilter">Desired or current option to filer the spike-band.</param>
-        /// <param name="adcCalibrationFile">String containing the filepath to the ADC calibration file.</param>
-        /// <param name="gainCalibrationFile">String containing the filepath to the Gain calibration file.</param>
+        /// <param name="adcCalibrationFileName">String containing the filepath to the ADC calibration file.</param>
+        /// <param name="gainCalibrationFileName">String containing the filepath to the Gain calibration file.</param>
         public NeuropixelsV1ProbeConfiguration(NeuropixelsV1eProbeGroup probeGroup, NeuropixelsV1Gain spikeAmplifierGain, 
             NeuropixelsV1Gain lfpAmplifierGain, NeuropixelsV1ReferenceSource reference, bool spikeFilter,
-            string adcCalibrationFile, string gainCalibrationFile)
+            string adcCalibrationFileName, string gainCalibrationFileName)
         {
             SpikeAmplifierGain = spikeAmplifierGain;
             LfpAmplifierGain = lfpAmplifierGain;
@@ -91,8 +91,8 @@ namespace OpenEphys.Onix1
             ChannelMap = NeuropixelsV1eProbeGroup.ToChannelMap(probeGroup);
             ProbeGroup = new();
             ProbeGroup.UpdateDeviceChannelIndices(ChannelMap);
-            AdcCalibrationFile = adcCalibrationFile;
-            GainCalibrationFile = gainCalibrationFile;
+            AdcCalibrationFileName = adcCalibrationFileName;
+            GainCalibrationFileName = gainCalibrationFileName;
         }
 
         /// <summary>
@@ -107,8 +107,8 @@ namespace OpenEphys.Onix1
             LfpAmplifierGain = probeConfiguration.LfpAmplifierGain;
             Reference = probeConfiguration.Reference;
             SpikeFilter = probeConfiguration.SpikeFilter;
-            AdcCalibrationFile = probeConfiguration.AdcCalibrationFile;
-            GainCalibrationFile = probeConfiguration.GainCalibrationFile;
+            AdcCalibrationFileName = probeConfiguration.AdcCalibrationFileName;
+            GainCalibrationFileName = probeConfiguration.GainCalibrationFileName;
             ProbeGroup = new();
             ProbeGroup.UpdateDeviceChannelIndices(probeConfiguration.ChannelMap);
             ChannelMap = NeuropixelsV1eProbeGroup.ToChannelMap(ProbeGroup);
@@ -235,7 +235,7 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets or sets the path to the gain calibration file.
+        /// Gets or sets the path to the gain calibration file name.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -253,10 +253,10 @@ namespace OpenEphys.Onix1
         [Description("Path to the Neuropixels 1.0 gain calibration file.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         [Category(DeviceFactory.ConfigurationCategory)]
-        public string GainCalibrationFile { get; set; }
+        public string GainCalibrationFileName { get; set; }
 
         /// <summary>
-        /// Gets or sets the path to the ADC calibration file.
+        /// Gets or sets the path to the ADC calibration file name.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -275,6 +275,6 @@ namespace OpenEphys.Onix1
         [Description("Path to the Neuropixels 1.0 ADC calibration file.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         [Category(DeviceFactory.ConfigurationCategory)]
-        public string AdcCalibrationFile { get; set; }
+        public string AdcCalibrationFileName { get; set; }
     }
 }

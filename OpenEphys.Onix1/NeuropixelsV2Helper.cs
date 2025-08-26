@@ -21,13 +21,13 @@ namespace OpenEphys.Onix1
         /// The integer defines the channel number, and the double is the gain calibration value for that channel.
         /// </para>
         /// </remarks>
-        /// <param name="gainCalibrationFile">String containing the path to the gain calibration file.</param>
+        /// <param name="gainCalibrationFileName">String containing the path to the gain calibration file.</param>
         /// <returns><see cref="NeuropixelsV2GainCorrection"/> object that contains the gain correction value. This object is null if the file was not successfully parsed.</returns>
-        public static NeuropixelsV2GainCorrection? TryParseGainCalibrationFile(string gainCalibrationFile)
+        public static NeuropixelsV2GainCorrection? TryParseGainCalibrationFile(string gainCalibrationFileName)
         {
-            if (!File.Exists(gainCalibrationFile)) return null;
+            if (!File.Exists(gainCalibrationFileName)) return null;
 
-            var lines = File.ReadLines(gainCalibrationFile);
+            var lines = File.ReadLines(gainCalibrationFileName);
 
             if (lines.Count() != NeuropixelsV2.ChannelCount + 1) return null;
             if (!ulong.TryParse(lines.ElementAt(0), out var serialNumber)) return null;

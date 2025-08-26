@@ -27,23 +27,23 @@ namespace OpenEphys.Onix1
             device = deviceContext;
             var metaData = new NeuropixelsV1fMetadata(device);
 
-            if (!File.Exists(configuration.GainCalibrationFile))
+            if (!File.Exists(configuration.GainCalibrationFileName))
             {
                 throw new ArgumentException($"A gain calibration file must be specified for the probe with serial number " +
                     $"{metaData.ProbeSerialNumber}");
             }
 
-            if (!File.Exists(configuration.AdcCalibrationFile))
+            if (!File.Exists(configuration.AdcCalibrationFileName))
             {
                 throw new ArgumentException($"An ADC calibration file must be specified for the probe with serial number " +
                     $"{metaData.ProbeSerialNumber}");
             }
 
-            var adcCalibration = NeuropixelsV1Helper.TryParseAdcCalibrationFile(configuration.AdcCalibrationFile);
+            var adcCalibration = NeuropixelsV1Helper.TryParseAdcCalibrationFile(configuration.AdcCalibrationFileName);
 
             if (!adcCalibration.HasValue)
             {
-                throw new ArgumentException($"The calibration file \"{configuration.AdcCalibrationFile}\" is invalid.");
+                throw new ArgumentException($"The calibration file \"{configuration.AdcCalibrationFileName}\" is invalid.");
             }
 
             if (adcCalibration.Value.SerialNumber != metaData.ProbeSerialNumber)
@@ -52,12 +52,12 @@ namespace OpenEphys.Onix1
                     $"match the ADC calibration file serial number ({adcCalibration.Value.SerialNumber}).");
             }
 
-            var gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(configuration.GainCalibrationFile,
+            var gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(configuration.GainCalibrationFileName,
                 configuration.SpikeAmplifierGain, configuration.LfpAmplifierGain, NeuropixelsV1.ElectrodeCount);
 
             if (!gainCorrection.HasValue)
             {
-                throw new ArgumentException($"The calibration file \"{configuration.GainCalibrationFile}\" is invalid.");
+                throw new ArgumentException($"The calibration file \"{configuration.GainCalibrationFileName}\" is invalid.");
             }
 
             if (gainCorrection.Value.SerialNumber != metaData.ProbeSerialNumber)

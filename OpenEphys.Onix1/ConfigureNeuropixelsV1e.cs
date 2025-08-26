@@ -135,7 +135,7 @@ namespace OpenEphys.Onix1
                 ProbeConfiguration = new(ProbeGroupHelper.LoadExternalProbeGroupFile<NeuropixelsV1eProbeGroup>(filename),
                                             ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain,
                                             ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter,
-                                            ProbeConfiguration.AdcCalibrationFile, ProbeConfiguration.GainCalibrationFile);
+                                            ProbeConfiguration.AdcCalibrationFileName, ProbeConfiguration.GainCalibrationFileName);
             }
         }
 

@@ -91,39 +91,39 @@ namespace OpenEphys.Onix1
             }
         }
 
-        public static T LoadExternalProbeGroupFile<T>(string probeConfigurationFile) where T : ProbeGroup
+        public static T LoadExternalProbeGroupFile<T>(string probeConfigurationFileName) where T : ProbeGroup
         {
-            if (string.IsNullOrEmpty(probeConfigurationFile))
+            if (string.IsNullOrEmpty(probeConfigurationFileName))
             {
-                throw new ArgumentNullException(nameof(probeConfigurationFile), "Probe configuration file path cannot be null or empty.");
+                throw new ArgumentNullException(nameof(probeConfigurationFileName), "Probe configuration file path cannot be null or empty.");
             }
 
-            if (!File.Exists(probeConfigurationFile))
+            if (!File.Exists(probeConfigurationFileName))
             {
-                throw new FileNotFoundException($"The Probe Group file '{probeConfigurationFile}' does not exist.");
+                throw new FileNotFoundException($"The Probe Group file '{probeConfigurationFileName}' does not exist.");
             }
 
             try
             {
-                string jsonContent = File.ReadAllText(probeConfigurationFile);
-                var result = DeserializeString<T>(jsonContent) ?? throw new InvalidDataException($"Failed to parse Probe Group file: {probeConfigurationFile}");
+                string jsonContent = File.ReadAllText(probeConfigurationFileName);
+                var result = DeserializeString<T>(jsonContent) ?? throw new InvalidDataException($"Failed to parse Probe Group file: {probeConfigurationFileName}");
                 return result;
             }
             catch (UnauthorizedAccessException e)
             {
-                throw new IOException($"Access denied reading '{probeConfigurationFile}'. Check file permissions.", e);
+                throw new IOException($"Access denied reading '{probeConfigurationFileName}'. Check file permissions.", e);
             }
             catch (PathTooLongException e)
             {
-                throw new IOException($"File path '{probeConfigurationFile}' exceeds system maximum length.", e);
+                throw new IOException($"File path '{probeConfigurationFileName}' exceeds system maximum length.", e);
             }
             catch (IOException e)
             {
-                throw new IOException($"Unable to read '{probeConfigurationFile}'. The file may be in use.", e);
+                throw new IOException($"Unable to read '{probeConfigurationFileName}'. The file may be in use.", e);
             }
             catch (Exception e)
             {
-                throw new IOException($"Unexpected error reading '{probeConfigurationFile}'.", e);
+                throw new IOException($"Unexpected error reading '{probeConfigurationFileName}'.", e);
             }
         }
 

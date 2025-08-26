@@ -86,9 +86,9 @@ namespace OpenEphys.Onix1.Design
             checkBoxInvertPolarity.Checked = InvertPolarity;
             checkBoxInvertPolarity.CheckedChanged += InvertPolarityIndexChanged;
 
-            textBoxAdcCalibrationFile.Text = ProbeConfiguration.AdcCalibrationFile;
+            textBoxAdcCalibrationFile.Text = ProbeConfiguration.AdcCalibrationFileName;
 
-            textBoxGainCalibrationFile.Text = ProbeConfiguration.GainCalibrationFile;
+            textBoxGainCalibrationFile.Text = ProbeConfiguration.GainCalibrationFileName;
 
             comboBoxChannelPresets.DataSource = Enum.GetValues(typeof(ChannelPreset));
             CheckForExistingChannelPreset();
@@ -126,13 +126,13 @@ namespace OpenEphys.Onix1.Design
         private void GainCalibrationFileTextChanged(object sender, EventArgs e)
         {
             CheckStatus();
-            ProbeConfiguration.GainCalibrationFile = ((TextBox)sender).Text;
+            ProbeConfiguration.GainCalibrationFileName = ((TextBox)sender).Text;
         }
 
         private void AdcCalibrationFileTextChanged(object sender, EventArgs e)
         {
             CheckStatus();
-            ProbeConfiguration.AdcCalibrationFile = ((TextBox)sender).Text;
+            ProbeConfiguration.AdcCalibrationFileName = ((TextBox)sender).Text;
         }
 
         private void SpikeAmplifierGainIndexChanged(object sender, EventArgs e)
