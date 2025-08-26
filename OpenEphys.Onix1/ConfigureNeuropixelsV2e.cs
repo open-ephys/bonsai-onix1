@@ -33,8 +33,8 @@ namespace OpenEphys.Onix1
             Enable = configureNode.Enable;
             ProbeConfigurationA = configureNode.ProbeConfigurationA;
             ProbeConfigurationB = configureNode.ProbeConfigurationB;
-            ProbeInterfaceFileNameA = configureNode.ProbeInterfaceFileNameA;
-            ProbeInterfaceFileNameB = configureNode.ProbeInterfaceFileNameB;
+            ProbeGroupFileNameA = configureNode.ProbeGroupFileNameA;
+            ProbeGroupFileNameB = configureNode.ProbeGroupFileNameB;
             DeviceName = configureNode.DeviceName;
             DeviceAddress = configureNode.DeviceAddress;
             InvertPolarity = configureNode.InvertPolarity;
@@ -80,16 +80,17 @@ namespace OpenEphys.Onix1
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new(NeuropixelsV2Probe.ProbeA);
 
         /// <summary>
-        /// Gets or sets the file path to a configuration file holding the Probe Interface JSON specifications for this probe.
+        /// Gets or sets the file path to a configuration file holding the Probe Group JSON specifications for this probe.
         /// </summary>
         [XmlIgnore]
         [Category(ConfigurationCategory)]
-        [Description("File path to a configuration file holding the Probe Interface JSON specifications for this probe. If left empty, a default file will be created next to the *.bonsai file when it is saved.")]
-        [FileNameFilter(ProbeGroupHelper.ProbeInterfaceFileNameFilter)]
+        [Description("File path to a configuration file holding the Probe Group JSON specifications for this probe. If left empty, a default file will be created next to the *.bonsai file when it is saved.")]
+        [FileNameFilter(ProbeGroupHelper.ProbeGroupFileNameFilter)]
         [Editor("Bonsai.Design.SaveFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
-        public string ProbeInterfaceFileNameA { get; set; } = "";
+        [TypeConverter(typeof(ProbeGroupHelper.ProbeGroupFileNameConverter))]
+        public string ProbeGroupFileNameA { get; set; } = "";
 
-        private string GetProbeInterfaceFilename(NeuropixelsV2Probe probe)
+        private string GetProbeGroupFileName(NeuropixelsV2Probe probe)
         {
             var name = probe switch
             {
@@ -98,42 +99,42 @@ namespace OpenEphys.Onix1
                 _ => throw new NotImplementedException(),
             };
 
-            return ProbeGroupHelper.GenerateProbeInterfaceFilename(DeviceAddress, name);
+            return ProbeGroupHelper.GenerateProbeGroupFileName(DeviceAddress, name);
         }
 
         /// <summary>
-        /// Gets or sets a string defining the path to an external ProbeInterface JSON file.
+        /// Gets or sets a string defining the path to an external ProbeGroup JSON file.
         /// This variable is needed to properly save a workflow in Bonsai, but it is not
         /// directly accessible in the Bonsai editor.
         /// </summary>
         [Browsable(false)]
         [Externalizable(false)]
-        [XmlElement(nameof(ProbeInterfaceFileNameA))]
-        public string ProbeInterfaceFileSerializeA
+        [XmlElement(nameof(ProbeGroupFileNameA))]
+        public string ProbeGroupFileSerializeA
         {
             get
             {
-                var filename = string.IsNullOrEmpty(ProbeInterfaceFileNameA)
-                                ? GetProbeInterfaceFilename(NeuropixelsV2Probe.ProbeA)
-                                : ProbeInterfaceFileNameA;
+                var filename = string.IsNullOrEmpty(ProbeGroupFileNameA)
+                                ? GetProbeGroupFileName(NeuropixelsV2Probe.ProbeA)
+                                : ProbeGroupFileNameA;
 
-                ProbeGroupHelper.SaveExternalProbeInterfaceFile(ProbeConfigurationA.ProbeGroup, filename);
-                return ProbeInterfaceFileNameA;
+                ProbeGroupHelper.SaveExternalProbeGroupFile(ProbeConfigurationA.ProbeGroup, filename);
+                return ProbeGroupFileNameA;
             }
             set
             {
-                ProbeInterfaceFileNameA = value;
-                var filename = string.IsNullOrEmpty(ProbeInterfaceFileNameA)
-                                ? GetProbeInterfaceFilename(NeuropixelsV2Probe.ProbeA)
-                                : ProbeInterfaceFileNameA;
+                ProbeGroupFileNameA = value;
+                var filename = string.IsNullOrEmpty(ProbeGroupFileNameA)
+                                ? GetProbeGroupFileName(NeuropixelsV2Probe.ProbeA)
+                                : ProbeGroupFileNameA;
 
                 // NB: If a file does not exist at the default file path, leave the default probe group settings as-is
-                if (string.IsNullOrEmpty(ProbeInterfaceFileNameA) && !File.Exists(filename))
+                if (string.IsNullOrEmpty(ProbeGroupFileNameA) && !File.Exists(filename))
                 {
                     return;
                 }
 
-                ProbeConfigurationA = new(ProbeGroupHelper.LoadExternalProbeInterfaceFile<NeuropixelsV2eProbeGroup>(filename),
+                ProbeConfigurationA = new(ProbeGroupHelper.LoadExternalProbeGroupFile<NeuropixelsV2eProbeGroup>(filename),
                                         ProbeConfigurationA.Reference, ProbeConfigurationA.Probe, ProbeConfigurationA.GainCalibrationFile);
             }
         }
@@ -173,48 +174,48 @@ namespace OpenEphys.Onix1
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new(NeuropixelsV2Probe.ProbeB);
 
         /// <summary>
-        /// Gets or sets the file path to a configuration file holding the Probe Interface JSON specifications for this probe.
+        /// Gets or sets the file path to a configuration file holding the Probe Group JSON specifications for this probe.
         /// </summary>
         [XmlIgnore]
         [Category(ConfigurationCategory)]
-        [Description("File path to a configuration file holding the Probe Interface JSON specifications for this probe. If left empty, a default file will be created next to the *.bonsai file when it is saved.")]
-        [FileNameFilter(ProbeGroupHelper.ProbeInterfaceFileNameFilter)]
+        [Description("File path to a configuration file holding the Probe Group JSON specifications for this probe. If left empty, a default file will be created next to the *.bonsai file when it is saved.")]
+        [FileNameFilter(ProbeGroupHelper.ProbeGroupFileNameFilter)]
         [Editor("Bonsai.Design.SaveFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
-        public string ProbeInterfaceFileNameB { get; set; } = "";
+        public string ProbeGroupFileNameB { get; set; } = "";
 
         /// <summary>
-        /// Gets or sets a string defining the path to an external ProbeInterface JSON file.
+        /// Gets or sets a string defining the path to an external ProbeGroup JSON file.
         /// This variable is needed to properly save a workflow in Bonsai, but it is not
         /// directly accessible in the Bonsai editor.
         /// </summary>
         [Browsable(false)]
         [Externalizable(false)]
-        [XmlElement(nameof(ProbeInterfaceFileNameB))]
-        public string ProbeInterfaceFileSerializeB
+        [XmlElement(nameof(ProbeGroupFileNameB))]
+        public string ProbeGroupFileSerializeB
         {
             get
             {
-                var filename = string.IsNullOrEmpty(ProbeInterfaceFileNameB)
-                                ? GetProbeInterfaceFilename(NeuropixelsV2Probe.ProbeB)
-                                : ProbeInterfaceFileNameB;
+                var filename = string.IsNullOrEmpty(ProbeGroupFileNameB)
+                                ? GetProbeGroupFileName(NeuropixelsV2Probe.ProbeB)
+                                : ProbeGroupFileNameB;
 
-                ProbeGroupHelper.SaveExternalProbeInterfaceFile(ProbeConfigurationB.ProbeGroup, filename);
-                return ProbeInterfaceFileNameB;
+                ProbeGroupHelper.SaveExternalProbeGroupFile(ProbeConfigurationB.ProbeGroup, filename);
+                return ProbeGroupFileNameB;
             }
             set
             {
-                ProbeInterfaceFileNameB = value;
-                var filename = string.IsNullOrEmpty(ProbeInterfaceFileNameB)
-                                ? GetProbeInterfaceFilename(NeuropixelsV2Probe.ProbeB)
-                                : ProbeInterfaceFileNameB;
+                ProbeGroupFileNameB = value;
+                var filename = string.IsNullOrEmpty(ProbeGroupFileNameB)
+                                ? GetProbeGroupFileName(NeuropixelsV2Probe.ProbeB)
+                                : ProbeGroupFileNameB;
 
                 // NB: If a file does not exist at the default file path, leave the default probe group settings as-is
-                if (string.IsNullOrEmpty(ProbeInterfaceFileNameB) && !File.Exists(filename))
+                if (string.IsNullOrEmpty(ProbeGroupFileNameB) && !File.Exists(filename))
                 {
                     return;
                 }
 
-                ProbeConfigurationB = new(ProbeGroupHelper.LoadExternalProbeInterfaceFile<NeuropixelsV2eProbeGroup>(filename),
+                ProbeConfigurationB = new(ProbeGroupHelper.LoadExternalProbeGroupFile<NeuropixelsV2eProbeGroup>(filename),
                                         ProbeConfigurationB.Reference, ProbeConfigurationB.Probe, ProbeConfigurationB.GainCalibrationFile);
             }
         }

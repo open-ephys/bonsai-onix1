@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Globalization;
+using System.IO;
 using Newtonsoft.Json;
 using OpenEphys.ProbeInterface.NET;
-using System.IO;
 
 namespace OpenEphys.Onix1
 {
     internal static class ProbeGroupHelper
     {
-        public const string ProbeInterfaceFileStringPrefix = "pi";
-        public const string ProbeInterfaceExtension = ".json";
-        public const string ProbeInterfaceFileNameFilter = "Probe Interface Files|*.json|All Files|*.*";
+        public const string ProbeGroupFileStringPrefix = "pi_oni";
+        public const string ProbeGroupExtension = ".json";
+        public const string ProbeGroupFileNameFilter = "Probe Group Files|*.json|All Files|*.*";
 
         /// <summary>
         /// Given a string with a valid JSON structure, deserialize the string to the given type.
@@ -95,7 +97,7 @@ namespace OpenEphys.Onix1
             }
         }
 
-        public static T LoadExternalProbeInterfaceFile<T>(string probeConfigurationFile) where T : ProbeGroup
+        public static T LoadExternalProbeGroupFile<T>(string probeConfigurationFile) where T : ProbeGroup
         {
             if (string.IsNullOrEmpty(probeConfigurationFile))
             {
@@ -104,13 +106,13 @@ namespace OpenEphys.Onix1
 
             if (!File.Exists(probeConfigurationFile))
             {
-                throw new FileNotFoundException($"The Probe Interface file '{probeConfigurationFile}' does not exist.");
+                throw new FileNotFoundException($"The Probe Group file '{probeConfigurationFile}' does not exist.");
             }
 
             try
             {
                 string jsonContent = File.ReadAllText(probeConfigurationFile);
-                var result = DeserializeString<T>(jsonContent) ?? throw new InvalidDataException($"Failed to parse probe interface file: {probeConfigurationFile}");
+                var result = DeserializeString<T>(jsonContent) ?? throw new InvalidDataException($"Failed to parse Probe Group file: {probeConfigurationFile}");
                 return result;
             }
             catch (UnauthorizedAccessException e)
@@ -131,7 +133,7 @@ namespace OpenEphys.Onix1
             }
         }
 
-        public static void SaveExternalProbeInterfaceFile(ProbeGroup probeGroup, string probeConfigurationFile)
+        public static void SaveExternalProbeGroupFile(ProbeGroup probeGroup, string probeConfigurationFile)
         {
             SerializeObject(probeGroup, probeConfigurationFile);
         }
@@ -141,16 +143,41 @@ namespace OpenEphys.Onix1
         /// device address and device name.
         /// </summary>
         /// <param name="address">Unsigned integer defining the address of the device</param>
-        /// <param name="name">String defining the name of the device, including the headstage name and any other relevant information, if needed.</param>
-        /// <returns>Filename in the format {<see cref="ProbeInterfaceFileStringPrefix"/>_{address}_{name}.json}</returns>
-        public static string GenerateProbeInterfaceFilename(uint address, string name)
+        /// <param name="name">String defining the name of the device, which can be accessed via <code>DeviceType.Name</code>.</param>
+        /// <returns>Filename in the format {<see cref="ProbeGroupFileStringPrefix"/>-{address}_{deviceName}.json}</returns>
+        public static string GenerateProbeGroupFileName(uint address, string name)
         {
-            if (!string.IsNullOrEmpty(name))
-                name = name.Replace("/", "_");
+            return ProbeGroupFileStringPrefix + "-" + address + "_" + name + ProbeGroupExtension;
+        }
 
-            string filename = ProbeInterfaceFileStringPrefix + "_" + address + "_" + name + ProbeInterfaceExtension;
+        internal class ProbeGroupFileNameConverter : TypeConverter
+        {
+            public override bool CanConvertFrom(ITypeDescriptorContext context, Type destinationType)
+            {
+                return destinationType == typeof(string) || base.CanConvertTo(context, destinationType);
+            }
 
-            return filename;
+            public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+            {
+                return value?.ToString() ?? string.Empty;
+            }
+
+            public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+            {
+                if (destinationType == typeof(string))
+                {
+                    string strValue = value as string;
+
+                    if (string.IsNullOrEmpty(strValue) && context?.Instance is SingleDeviceFactory device)
+                    {
+                        return "[default]";
+                    }
+
+                    return strValue ?? string.Empty;
+                }
+
+                return base.ConvertTo(context, culture, value, destinationType);
+            }
         }
     }
 }

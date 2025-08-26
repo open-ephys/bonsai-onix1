@@ -210,7 +210,7 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Convert a ProbeInterface object to a list of electrodes, which includes all possible electrodes.
+        /// Convert a ProbeGroup object to a list of electrodes, which includes all possible electrodes.
         /// </summary>
         /// <param name="probeGroup">A <see cref="NeuropixelsV1eProbeGroup"/> object.</param>
         /// <returns>List of <see cref="NeuropixelsV1Electrode"/> electrodes.</returns>
