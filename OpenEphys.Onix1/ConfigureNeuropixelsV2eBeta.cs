@@ -108,8 +108,8 @@ namespace OpenEphys.Onix1
         {
             var name = probe switch
             {
-                NeuropixelsV2Probe.ProbeA => DeviceName + "_probeA",
-                NeuropixelsV2Probe.ProbeB => DeviceName + "_probeB",
+                NeuropixelsV2Probe.ProbeA => DeviceType.Name + "_probeA",
+                NeuropixelsV2Probe.ProbeB => DeviceType.Name + "_probeB",
                 _ => throw new NotImplementedException(),
             };
 
