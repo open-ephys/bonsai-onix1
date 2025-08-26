@@ -73,9 +73,7 @@ namespace OpenEphys.Onix1
         /// Gets or sets a string defining the <see cref="ProbeGroup"/> in Base64.
         /// </summary>
         /// <remarks>
-        /// This variable is needed to properly save a workflow in Bonsai, but it is not
-        /// directly accessible in the Bonsai editor.
-        /// Obsolete: Will be removed in 1.0.0.
+        /// [Obsolete]. Cannot tag this property with the Obsolete attribute due to https://github.com/dotnet/runtime/issues/100453
         /// </remarks>
         [Browsable(false)]
         [Externalizable(false)]
@@ -95,9 +93,10 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Prevent the ProbeGroup property from being serialized. Will be removed in 1.0.0.
+        /// Prevent the ProbeGroup property from being serialized.
         /// </summary>
         /// <returns>False</returns>
+        [Obsolete]
         public bool ShouldSerializeProbeGroupSerialize()
         {
             return false;
@@ -121,7 +120,7 @@ namespace OpenEphys.Onix1
         [Browsable(false)]
         [Externalizable(false)]
         [XmlElement(nameof(ProbeGroupFileName))]
-        public string ProbeGroupFileSerialize
+        public string ProbeGroupFileNameSerialize
         {
             get
             {

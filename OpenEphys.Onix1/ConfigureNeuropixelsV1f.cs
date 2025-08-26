@@ -109,7 +109,7 @@ namespace OpenEphys.Onix1
         [Browsable(false)]
         [Externalizable(false)]
         [XmlElement(nameof(ProbeGroupFileName))]
-        public string ProbeGroupFileSerialize
+        public string ProbeGroupFileNameSerialize
         {
             get
             {
@@ -141,9 +141,11 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Obsolete: Calibration files have been moved to the ProbeConfiguration class as of 0.6.1.
-        /// Will be removed in 1.0.0.
+        /// Gets or sets the path to the gain calibration file for this probe.
         /// </summary>
+        /// <remarks>
+        /// [Obsolete]. Cannot tag this property with the Obsolete attribute due to https://github.com/dotnet/runtime/issues/100453
+        /// </remarks>
         [Browsable(false)]
         [Externalizable(false)]
         public string GainCalibrationFile
@@ -153,17 +155,21 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Prevent the GainCalibrationFile property from being serialized. Will be removed in 1.0.0.
+        /// Prevent the GainCalibrationFile property from being serialized.
         /// </summary>
         /// <returns>False</returns>
+        [Obsolete]
         public bool ShouldSerializeGainCalibrationFile()
         {
             return false;
         }
 
         /// <summary>
-        /// Obsolete: Calibration files have been moved to the ProbeConfiguration class as of 0.6.1. Will be removed in 1.0.0.
+        /// Gets or sets the path to the ADC calibration file.
         /// </summary>
+        /// <remarks>
+        /// [Obsolete]. Cannot tag this property with the Obsolete attribute due to https://github.com/dotnet/runtime/issues/100453
+        /// </remarks>
         [Browsable(false)]
         [Externalizable(false)]
         public string AdcCalibrationFile
@@ -173,9 +179,10 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Prevent the AdcCalibrationFile property from being serialized. Will be removed in 1.0.0.
+        /// Prevent the AdcCalibrationFile property from being serialized.
         /// </summary>
         /// <returns>False</returns>
+        [Obsolete]
         public bool ShouldSerializeAdcCalibrationFile()
         {
             return false;

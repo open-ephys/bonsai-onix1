@@ -205,7 +205,7 @@ namespace OpenEphys.Onix1
         /// directly accessible in the Bonsai editor.
         /// </summary>
         /// <remarks>
-        /// Obsolete: Will be removed in 1.0.0.
+        /// [Obsolete]. Cannot tag this property with the Obsolete attribute due to https://github.com/dotnet/runtime/issues/100453
         /// </remarks>
         [Browsable(false)]
         [Externalizable(false)]

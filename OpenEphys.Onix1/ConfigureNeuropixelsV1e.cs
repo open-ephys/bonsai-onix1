@@ -108,7 +108,7 @@ namespace OpenEphys.Onix1
         [Browsable(false)]
         [Externalizable(false)]
         [XmlElement(nameof(ProbeGroupFileName))]
-        public string ProbeGroupFileSerialize
+        public string ProbeGroupFileNameSerialize
         {
             get
             {

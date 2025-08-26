@@ -124,7 +124,7 @@ namespace OpenEphys.Onix1
         [Browsable(false)]
         [Externalizable(false)]
         [XmlElement(nameof(ProbeGroupFileNameA))]
-        public string ProbeGroupFileSerializeA
+        public string ProbeGroupFileNameSerializeA
         {
             get
             {
@@ -154,9 +154,11 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Obsolete: Calibration files have been moved to the ProbeConfiguration class as of 0.6.1.
-        /// Will be removed in 1.0.0.
+        /// Gets or sets the path to the gain calibration file for this probe.
         /// </summary>
+        /// <remarks>
+        /// [Obsolete]. Cannot tag this property with the Obsolete attribute due to https://github.com/dotnet/runtime/issues/100453
+        /// </remarks>
         [Browsable(false)]
         [Externalizable(false)]
         public string GainCalibrationFileA
@@ -169,6 +171,7 @@ namespace OpenEphys.Onix1
         /// Prevent the GainCalibrationFile property from being serialized. Will be removed in 1.0.0.
         /// </summary>
         /// <returns>False</returns>
+        [Obsolete]
         public bool ShouldSerializeGainCalibrationFileA()
         {
             return false;
@@ -205,7 +208,7 @@ namespace OpenEphys.Onix1
         [Browsable(false)]
         [Externalizable(false)]
         [XmlElement(nameof(ProbeGroupFileNameB))]
-        public string ProbeGroupFileSerializeB
+        public string ProbeGroupFileNameSerializeB
         {
             get
             {
@@ -235,9 +238,11 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Obsolete: Calibration files have been moved to the ProbeConfiguration class as of 0.6.1.
-        /// Will be removed in 1.0.0.
+        /// Gets or sets the path to the gain calibration file for this probe.
         /// </summary>
+        /// <remarks>
+        /// [Obsolete]. Cannot tag this property with the Obsolete attribute due to https://github.com/dotnet/runtime/issues/100453
+        /// </remarks>
         [Browsable(false)]
         [Externalizable(false)]
         public string GainCalibrationFileB
@@ -247,9 +252,10 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Prevent the GainCalibrationFile property from being serialized. Will be removed in 1.0.0.
+        /// Prevent the GainCalibrationFile property from being serialized.
         /// </summary>
         /// <returns>False</returns>
+        [Obsolete]
         public bool ShouldSerializeGainCalibrationFileB()
         {
             return false;

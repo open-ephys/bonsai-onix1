@@ -14,12 +14,6 @@ namespace OpenEphys.Onix1
         public const string ProbeGroupExtension = ".json";
         public const string ProbeGroupFileNameFilter = "Probe Group Files|*.json|All Files|*.*";
 
-        /// <summary>
-        /// Given a string with a valid JSON structure, deserialize the string to the given type.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="jsonString"></param>
-        /// <returns></returns>
         public static T DeserializeString<T>(string jsonString) where T : class
         {
             var errors = new List<string>();
@@ -59,7 +53,7 @@ namespace OpenEphys.Onix1
             }
         }
 
-        public static void SerializeObject(object _object, string filepath)
+        public static void SerializeObject(object obj, string filepath)
         {
             if (string.IsNullOrEmpty(filepath))
                 return;
@@ -69,7 +63,7 @@ namespace OpenEphys.Onix1
                 NullValueHandling = NullValueHandling.Ignore,
             };
 
-            var stringJson = JsonConvert.SerializeObject(_object, Formatting.Indented, serializerSettings);
+            var stringJson = JsonConvert.SerializeObject(obj, Formatting.Indented, serializerSettings);
 
             try
             {
@@ -138,16 +132,9 @@ namespace OpenEphys.Onix1
             SerializeObject(probeGroup, probeConfigurationFile);
         }
 
-        /// <summary>
-        /// Creates a probe configuration filename located in the current working directory, using the given
-        /// device address and device name.
-        /// </summary>
-        /// <param name="address">Unsigned integer defining the address of the device</param>
-        /// <param name="name">String defining the name of the device, which can be accessed via <code>DeviceType.Name</code>.</param>
-        /// <returns>Filename in the format {<see cref="ProbeGroupFileStringPrefix"/>-{address}_{deviceName}.json}</returns>
-        public static string GenerateProbeGroupFileName(uint address, string name)
+        public static string GenerateProbeGroupFileName(uint deviceAddress, string deviceName)
         {
-            return ProbeGroupFileStringPrefix + "-" + address + "_" + name + ProbeGroupExtension;
+            return ProbeGroupFileStringPrefix + "-" + deviceAddress + "_" + deviceName + ProbeGroupExtension;
         }
 
         internal class ProbeGroupFileNameConverter : TypeConverter
