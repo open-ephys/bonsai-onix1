@@ -34,7 +34,11 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Specifies that the tip reference of shank 4 will be used.
         /// </summary>
-        Tip4
+        Tip4,
+        /// <summary>
+        /// Specifies that the ground reference will be used.
+        /// </summary>
+        Ground
     }
 
     /// <summary>
