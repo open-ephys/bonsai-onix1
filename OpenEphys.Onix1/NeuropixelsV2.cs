@@ -99,6 +99,7 @@ namespace OpenEphys.Onix1
                 NeuropixelsV2QuadShankReference.Tip2 => 2,
                 NeuropixelsV2QuadShankReference.Tip3 => 2,
                 NeuropixelsV2QuadShankReference.Tip4 => 2,
+                NeuropixelsV2QuadShankReference.Ground => 3,
                 _ => throw new InvalidOperationException("Invalid reference selection."),
             };
 

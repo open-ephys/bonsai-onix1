@@ -200,6 +200,12 @@ namespace OpenEphys.Onix1
                 // configure probe A streaming
                 if (probeAMetadata.ProbeSerialNumber != null)
                 {
+                    if (ProbeConfigurationA.Reference == NeuropixelsV2QuadShankReference.Ground)
+                    {
+                        throw new InvalidOperationException($"Neuropixels 2.0-Beta probes do not provide a Ground reference selection. Please select a different reference" +
+                            $" for {NeuropixelsV2Probe.ProbeA}.");
+                    }
+
                     var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(GainCalibrationFileA);
 
                     if (!gainCorrection.HasValue)
@@ -221,8 +227,14 @@ namespace OpenEphys.Onix1
                 }
 
                 // configure probe B streaming
-                if (probeAMetadata.ProbeSerialNumber != null)
+                if (probeBMetadata.ProbeSerialNumber != null)
                 {
+                    if (ProbeConfigurationB.Reference == NeuropixelsV2QuadShankReference.Ground)
+                    {
+                        throw new InvalidOperationException($"Neuropixels 2.0-Beta probes do not provide a Ground reference selection. Please select a different reference" +
+                            $" for {NeuropixelsV2Probe.ProbeB}.");
+                    }
+
                     var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(GainCalibrationFileB);
 
                     if (!gainCorrection.HasValue)
