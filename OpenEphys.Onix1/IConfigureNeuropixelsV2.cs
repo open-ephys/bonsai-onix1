@@ -16,19 +16,9 @@
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; }
 
         /// <summary>
-        /// Gets or sets the path to the ProbeGroup file for Probe A.
-        /// </summary>
-        public string ProbeGroupFileNameA { get; set; }
-
-        /// <summary>
         /// Gets or sets the electrode configuration for Probe B.
         /// </summary>
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; }
-
-        /// <summary>
-        /// Gets or sets the path to the ProbeGroup file for Probe B.
-        /// </summary>
-        public string ProbeGroupFileNameB { get; set; }
 
         /// <summary>
         /// Gets or sets the boolean to determine if neural data is inverted

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
@@ -264,5 +265,78 @@ namespace OpenEphys.Onix1
         [Description("Path to the gain calibration file for this probe.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string GainCalibrationFileName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the file path to a configuration file holding the Probe Group JSON specifications for this probe.
+        /// </summary>
+        [XmlIgnore]
+        [Category(DeviceFactory.ConfigurationCategory)]
+        [Description("File path to a configuration file holding the Probe Group JSON specifications for this probe. If left empty, a default file will be created next to the *.bonsai file when it is saved.")]
+        [FileNameFilter(ProbeGroupHelper.ProbeGroupFileNameFilter)]
+        [Editor("Bonsai.Design.SaveFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
+        [TypeConverter(typeof(ProbeGroupHelper.ProbeGroupFileNameConverter))]
+        public string ProbeGroupFileName { get; set; } = "";
+
+        /// <summary>
+        /// Gets or sets a string defining the path to an external ProbeGroup JSON file.
+        /// This variable is needed to properly save a workflow in Bonsai, but it is not
+        /// directly accessible in the Bonsai editor.
+        /// </summary>
+        [Browsable(false)]
+        [Externalizable(false)]
+        [XmlElement(nameof(ProbeGroupFileName))]
+        public string ProbeGroupFileNameSerialize
+        {
+            get
+            {
+                var filename = GetFileName();
+
+                ProbeGroupHelper.SaveExternalProbeGroupFile(ProbeGroup, filename);
+                return ProbeGroupFileName;
+            }
+            set
+            {
+                ProbeGroupFileName = value;
+                var filename = GetFileName();
+
+                // NB: If a file does not exist at the default file path, leave the default probe group settings as-is
+                if (string.IsNullOrEmpty(ProbeGroupFileName) && !File.Exists(filename))
+                {
+                    return;
+                }
+
+                ProbeGroup = new(ProbeGroupHelper.LoadExternalProbeGroupFile<NeuropixelsV2eProbeGroup>(filename));
+            }
+        }
+
+        private string GetFileName()
+        {
+            if (string.IsNullOrEmpty(ProbeGroupFileName))
+            {
+                if (string.IsNullOrEmpty(defaultFileName))
+                {
+                    throw new InvalidOperationException($"The default filename for {nameof(NeuropixelsV2QuadShankProbeConfiguration)} is not set. Cannot save the ProbeGroup file automatically.");
+                }
+
+                return defaultFileName;
+            }
+
+            return ProbeGroupFileName;
+        }
+
+        private string defaultFileName = "";
+
+        internal void SetProbeGroupFileName(string deviceName, uint deviceAddress, NeuropixelsV2Probe probe)
+        {
+            var name = probe switch
+            {
+                NeuropixelsV2Probe.ProbeA => deviceName + "_probeA",
+                NeuropixelsV2Probe.ProbeB => deviceName + "_probeB",
+                _ => throw new NotImplementedException(),
+            };
+
+            defaultFileName = ProbeGroupHelper.GenerateProbeGroupFileName(deviceAddress, name);
+        }
+
     }
 }
