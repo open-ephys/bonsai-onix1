@@ -285,7 +285,7 @@
             this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 0, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 24);
-            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
@@ -299,7 +299,7 @@
             this.panelProbe.Controls.Add(this.panelTrackBar);
             this.panelProbe.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelProbe.Location = new System.Drawing.Point(4, 4);
-            this.panelProbe.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.panelProbe.Margin = new System.Windows.Forms.Padding(4);
             this.panelProbe.Name = "panelProbe";
             this.panelProbe.Size = new System.Drawing.Size(982, 697);
             this.panelProbe.TabIndex = 0;
@@ -311,7 +311,7 @@
             this.panelTrackBar.Controls.Add(label3);
             this.panelTrackBar.Controls.Add(this.trackBarProbePosition);
             this.panelTrackBar.Location = new System.Drawing.Point(917, 5);
-            this.panelTrackBar.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.panelTrackBar.Margin = new System.Windows.Forms.Padding(4);
             this.panelTrackBar.Name = "panelTrackBar";
             this.panelTrackBar.Size = new System.Drawing.Size(61, 686);
             this.panelTrackBar.TabIndex = 33;
@@ -379,6 +379,9 @@
             this.checkBoxInvertPolarity.Size = new System.Drawing.Size(77, 20);
             this.checkBoxInvertPolarity.TabIndex = 43;
             this.checkBoxInvertPolarity.Text = "Enabled";
+            this.toolTip.SetToolTip(this.checkBoxInvertPolarity, "Inverts the polarity of the data if enabled. Neuropixels hardware\r\ninverts neural" +
+        " data, therefore enabling this option will match data\r\nrecorded by the Open Ephy" +
+        "s GUI or other hardware sources.");
             this.checkBoxInvertPolarity.UseVisualStyleBackColor = true;
             // 
             // textBoxLfpCorrection
