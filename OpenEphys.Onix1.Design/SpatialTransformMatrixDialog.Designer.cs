@@ -100,11 +100,12 @@ namespace OpenEphys.Onix1.Design
             this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanelMain.Size = new System.Drawing.Size(624, 540);
+            this.tableLayoutPanelMain.Size = new System.Drawing.Size(624, 640);
             this.tableLayoutPanelMain.TabIndex = 0;
             // 
             // groupBoxStatus
             // 
+            this.groupBoxStatus.AutoSize = true;
             this.groupBoxStatus.Controls.Add(this.richTextBoxStatus);
             this.groupBoxStatus.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBoxStatus.Location = new System.Drawing.Point(3, 406);
@@ -128,11 +129,12 @@ namespace OpenEphys.Onix1.Design
             // 
             // tableLayoutPanelCoordinates
             // 
+            this.tableLayoutPanelCoordinates.AutoSize = true;
             this.tableLayoutPanelCoordinates.ColumnCount = 6;
             this.tableLayoutPanelCoordinates.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanelCoordinates.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanelCoordinates.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 180F));
-            this.tableLayoutPanelCoordinates.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.tableLayoutPanelCoordinates.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33332F));
             this.tableLayoutPanelCoordinates.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33334F));
             this.tableLayoutPanelCoordinates.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33334F));
             this.tableLayoutPanelCoordinates.Controls.Add(this.labelZ, 6, 1);
@@ -540,8 +542,8 @@ namespace OpenEphys.Onix1.Design
             this.tableLayoutPanelSpatialMatrix.Location = new System.Drawing.Point(3, 340);
             this.tableLayoutPanelSpatialMatrix.Name = "tableLayoutPanelSpatialMatrix";
             this.tableLayoutPanelSpatialMatrix.RowCount = 1;
-            this.tableLayoutPanelSpatialMatrix.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 60F));
-            this.tableLayoutPanelSpatialMatrix.Size = new System.Drawing.Size(618, 60);
+            this.tableLayoutPanelSpatialMatrix.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 70F));
+            this.tableLayoutPanelSpatialMatrix.Size = new System.Drawing.Size(618, 80);
             this.tableLayoutPanelSpatialMatrix.TabIndex = 0;
             // 
             // labelSpatialMatrix
@@ -550,7 +552,7 @@ namespace OpenEphys.Onix1.Design
             this.labelSpatialMatrix.Dock = System.Windows.Forms.DockStyle.Fill;
             this.labelSpatialMatrix.Location = new System.Drawing.Point(3, 0);
             this.labelSpatialMatrix.Name = "labelSpatialMatrix";
-            this.labelSpatialMatrix.Size = new System.Drawing.Size(123, 60);
+            this.labelSpatialMatrix.Size = new System.Drawing.Size(123, 80);
             this.labelSpatialMatrix.TabIndex = 1000;
             this.labelSpatialMatrix.Text = "Spatial Transform Matrix:";
             // 
@@ -559,11 +561,12 @@ namespace OpenEphys.Onix1.Design
             this.textBoxSpatialTransformMatrix.AcceptsReturn = true;
             this.textBoxSpatialTransformMatrix.AcceptsTab = true;
             this.textBoxSpatialTransformMatrix.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.textBoxSpatialTransformMatrix.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBoxSpatialTransformMatrix.Location = new System.Drawing.Point(132, 3);
             this.textBoxSpatialTransformMatrix.Multiline = true;
             this.textBoxSpatialTransformMatrix.Name = "textBoxSpatialTransformMatrix";
             this.textBoxSpatialTransformMatrix.ReadOnly = true;
-            this.textBoxSpatialTransformMatrix.Size = new System.Drawing.Size(483, 54);
+            this.textBoxSpatialTransformMatrix.Size = new System.Drawing.Size(483, 74);
             this.textBoxSpatialTransformMatrix.TabIndex = 1000;
             this.textBoxSpatialTransformMatrix.TabStop = false;
             // 
@@ -576,7 +579,7 @@ namespace OpenEphys.Onix1.Design
             this.richTextBoxInstructions.Name = "richTextBoxInstructions";
             this.richTextBoxInstructions.ReadOnly = true;
             this.richTextBoxInstructions.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.None;
-            this.richTextBoxInstructions.Size = new System.Drawing.Size(618, 145);
+            this.richTextBoxInstructions.Size = new System.Drawing.Size(615, 145);
             this.richTextBoxInstructions.TabIndex = 1000;
             this.richTextBoxInstructions.TabStop = false;
             this.richTextBoxInstructions.Text = "Placeholder text";
@@ -587,7 +590,7 @@ namespace OpenEphys.Onix1.Design
             this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel});
             this.statusStrip.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.Flow;
-            this.statusStrip.Location = new System.Drawing.Point(0, 540);
+            this.statusStrip.Location = new System.Drawing.Point(0, 640);
             this.statusStrip.Name = "statusStrip";
             this.statusStrip.ShowItemToolTips = true;
             this.statusStrip.Size = new System.Drawing.Size(624, 21);
@@ -604,11 +607,11 @@ namespace OpenEphys.Onix1.Design
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(624, 561);
+            this.ClientSize = new System.Drawing.Size(624, 661);
             this.Controls.Add(this.tableLayoutPanelMain);
             this.Controls.Add(this.statusStrip);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MinimumSize = new System.Drawing.Size(640, 600);
+            this.MinimumSize = new System.Drawing.Size(640, 700);
             this.Name = "SpatialTransformMatrixDialog";
             this.Text = "TS4231V1 Calibration GUI";
             this.tableLayoutPanelMain.ResumeLayout(false);

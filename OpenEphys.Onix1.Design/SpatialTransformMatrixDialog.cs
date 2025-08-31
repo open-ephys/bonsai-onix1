@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Reactive.Linq;
+using System.Text;
 using System.Windows.Forms;
 using Bonsai.Design;
 
@@ -25,7 +26,7 @@ namespace OpenEphys.Onix1.Design
 
             richTextBoxInstructions.Clear();
             richTextBoxInstructions.BulletIndent = 16;
-            richTextBoxInstructions.SelectedText = "The following is a list of bulleted items:\n\n";
+            richTextBoxInstructions.SelectedText = "Follow the instructions below to transfom TS4231 position data from a generic base-station reference frame to a user-define reference frame:\n\n";
             richTextBoxInstructions.SelectionBullet = true;
             richTextBoxInstructions.SelectedText = "Determine a set of 4, well separated XYZ positions in the space in which the headstage will move. These positions should explore a large region of the territory that the headstage will explore and not be confined to a particular plane. Each position defined in this step corresponds to a row in the table below.\n";
             richTextBoxInstructions.SelectedText = "For the first position, place the headstage and click the first measure button on the GUI. After the TS4231 coordinate is obtained from the headstage, enter the known User coordinates in the X, Y, and Z text boxes to provide your spatial mapping. Repeat this process for the second, third, and fourth positions to populate the second, third, and fourth rows of the table.\n";
@@ -215,7 +216,7 @@ namespace OpenEphys.Onix1.Design
             {
                 toolStripStatusLabel.Image = Properties.Resources.StatusReadyImage;
                 toolStripStatusLabel.Text = "Spatial transform matrix is calculated.";
-                textBoxSpatialTransformMatrix.Text = SpatialTransform.M.ToString();
+                textBoxSpatialTransformMatrix.Text = Matrix4x4ToPrettyString(SpatialTransform.M);
             }
         }
 
@@ -252,6 +253,54 @@ namespace OpenEphys.Onix1.Design
         void richTextBoxInstructions_ContentsResized(object sender, ContentsResizedEventArgs e)
         {
             ((RichTextBox)sender).Height = e.NewRectangle.Height;
+        }
+
+        static string Matrix4x4ToPrettyString(Matrix4x4 matrix, int decimals = 5, int padding = 15)
+        {
+            string format = $"F{decimals}";
+
+            string[,] elements = new string[4, 4]
+            {
+            { matrix.M11.ToString(format).PadLeft(padding),
+              matrix.M12.ToString(format).PadLeft(padding),
+              matrix.M13.ToString(format).PadLeft(padding),
+              matrix.M14.ToString(format).PadLeft(padding) },
+            { matrix.M21.ToString(format).PadLeft(padding),
+              matrix.M22.ToString(format).PadLeft(padding),
+              matrix.M23.ToString(format).PadLeft(padding),
+              matrix.M24.ToString(format).PadLeft(padding) },
+            { matrix.M31.ToString(format).PadLeft(padding),
+              matrix.M32.ToString(format).PadLeft(padding),
+              matrix.M33.ToString(format).PadLeft(padding),
+              matrix.M34.ToString(format).PadLeft(padding) },
+            { matrix.M41.ToString(format).PadLeft(padding),
+              matrix.M42.ToString(format).PadLeft(padding),
+              matrix.M43.ToString(format).PadLeft(padding),
+              matrix.M44.ToString(format).PadLeft(padding) }
+            };
+
+            var sb = new StringBuilder();
+            sb.Append("[[");
+
+            for (int row = 0; row < 4; row++)
+            {
+                for (int col = 0; col < 4; col++)
+                {
+                    sb.Append(elements[row, col]);
+                    if (col < 3) sb.Append(",");
+                }
+                sb.Append("]");
+
+                if (row < 3)
+                {
+                    sb.Append(",");
+                    sb.AppendLine();
+                    sb.Append(" [");
+                }
+                else
+                    sb.Append("]");
+            }
+            return sb.ToString();
         }
     }
 }
