@@ -291,7 +291,21 @@ namespace OpenEphys.Onix1.Design
                 return false;
             }
 
-            if (ProbeGroup.NumberOfContacts == newConfiguration.NumberOfContacts)
+            bool skipContactNumberMismatchCheck = false;
+
+            if (ProbeGroup.Probes.First().Annotations.Name != newConfiguration.Probes.First().Annotations.Name)
+            {
+                var result = MessageBox.Show($"There is a mismatch between the current probe name ({ProbeGroup.Probes.First().Annotations.Name})" +
+                    $" and the new probe name ({newConfiguration.Probes.First().Annotations.Name}). Continue loading?", "Probe Name Mismatch", MessageBoxButtons.YesNo);
+
+                if (result == DialogResult.No)
+                    return false;
+
+                skipContactNumberMismatchCheck = true; // NB: If the probe names do not match, skip the check to see if the number of contacts match.
+                                                       // Example: loading a Neuropixels single-shank 2.0 probe, but the current probe is a quad-shank 2.0 probe.
+            }
+
+            if (skipContactNumberMismatchCheck || ProbeGroup.NumberOfContacts == newConfiguration.NumberOfContacts)
             {
                 newConfiguration.Validate();
 

@@ -28,12 +28,14 @@ namespace OpenEphys.Onix1
         {
         }
 
+        internal static string SingleShankProbeName = "Neuropixels 2.0 - single shank";
         internal static string QuadShankProbeName = "Neuropixels 2.0 - multishank";
 
         internal static string GetProbeName(NeuropixelsV2ProbeType probeType)
         {
             return probeType switch
             {
+                NeuropixelsV2ProbeType.SingleShank => SingleShankProbeName,
                 NeuropixelsV2ProbeType.QuadShank => QuadShankProbeName,
                 _ => throw new InvalidEnumArgumentException("Unknown probe type given.")
             };
@@ -41,11 +43,14 @@ namespace OpenEphys.Onix1
 
         internal static NeuropixelsV2ProbeType GetProbeTypeFromProbeName(string name)
         {
-            if (name == QuadShankProbeName)
+            if (name == SingleShankProbeName)
+                return NeuropixelsV2ProbeType.SingleShank;
+
+            else if (name == QuadShankProbeName)
                 return NeuropixelsV2ProbeType.QuadShank;
 
             else
-                throw new ArgumentException($"The type '{name}' does not match any implemented Neuropixels 2.0 probe types.");
+                throw new ArgumentException($"The name '{name}' does not match any known Neuropixels 2.0 probe names.");
         }
 
         private static Probe[] DefaultProbes(NeuropixelsV2ProbeType probeType)
@@ -54,6 +59,7 @@ namespace OpenEphys.Onix1
 
             int numberOfShanks = probeType switch
             {
+                NeuropixelsV2ProbeType.SingleShank => 1,
                 NeuropixelsV2ProbeType.QuadShank => 4,
                 _ => throw new InvalidEnumArgumentException("Unknown probe type given.")
             };
@@ -157,7 +163,10 @@ namespace OpenEphys.Onix1
         /// <exception cref="InvalidEnumArgumentException"></exception>
         public static float[][] DefaultProbePlanarContour(NeuropixelsV2ProbeType probeType)
         {
-            if (probeType == NeuropixelsV2ProbeType.QuadShank)
+            if (probeType == NeuropixelsV2ProbeType.SingleShank)
+                return DefaultProbePlanarContourSingleShank();
+
+            else if (probeType == NeuropixelsV2ProbeType.QuadShank)
                 return DefaultProbePlanarContourQuadShank();
 
             throw new InvalidEnumArgumentException(nameof(probeType));
@@ -202,14 +211,20 @@ namespace OpenEphys.Onix1
         /// <returns></returns>
         public static float[][] DefaultProbePlanarContourSingleShank()
         {
+            const float shankTipY = 0f;
+            const float shankBaseY = 155f;
+            const float shankLengthY = 9770f;
+            const float shankWidthX = 70f;
+            const float shankMidX = 35f;
+
             float[][] probePlanarContour = new float[6][];
 
-            probePlanarContour[0] = new float[2] { -11f, 155f };
-            probePlanarContour[1] = new float[2] { 24f, 0f };
-            probePlanarContour[2] = new float[2] { 59f, 155f };
-            probePlanarContour[3] = new float[2] { 59f, 10000f };
-            probePlanarContour[4] = new float[2] { -11f, 10000f };
-            probePlanarContour[5] = new float[2] { -11f, 155f };
+            probePlanarContour[0] = new float[2] { shankOffsetX + 0f, shankBaseY };
+            probePlanarContour[1] = new float[2] { shankOffsetX + shankMidX, shankTipY };
+            probePlanarContour[2] = new float[2] { shankOffsetX + shankWidthX, shankBaseY };
+            probePlanarContour[3] = new float[2] { shankOffsetX + shankWidthX, shankLengthY };
+            probePlanarContour[4] = new float[2] { shankOffsetX + 0f, shankLengthY };
+            probePlanarContour[5] = new float[2] { shankOffsetX + 0f, shankBaseY };
 
             return probePlanarContour;
         }
