@@ -51,7 +51,7 @@ namespace OpenEphys.Onix1.Design
             OnSelectHandler();
         }
 
-        private void OnSelectHandler()
+        void OnSelectHandler()
         {
             OnSelect?.Invoke(this, EventArgs.Empty);
         }
@@ -64,7 +64,7 @@ namespace OpenEphys.Onix1.Design
             RefreshZedGraph();
         }
 
-        private void OnZoomHandler()
+        void OnZoomHandler()
         {
             OnZoom?.Invoke(this, EventArgs.Empty);
         }
