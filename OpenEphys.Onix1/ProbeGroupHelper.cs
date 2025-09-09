@@ -166,35 +166,5 @@ namespace OpenEphys.Onix1
                 return base.ConvertTo(context, culture, value, destinationType);
             }
         }
-
-        internal class ProbeGroupFileNameConverter : TypeConverter
-        {
-            public override bool CanConvertFrom(ITypeDescriptorContext context, Type destinationType)
-            {
-                return destinationType == typeof(string) || base.CanConvertTo(context, destinationType);
-            }
-
-            public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-            {
-                return value?.ToString() ?? string.Empty;
-            }
-
-            public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
-            {
-                if (destinationType == typeof(string))
-                {
-                    string strValue = value as string;
-
-                    if (string.IsNullOrEmpty(strValue) && context?.Instance is SingleDeviceFactory device)
-                    {
-                        return "[default]";
-                    }
-
-                    return strValue ?? string.Empty;
-                }
-
-                return base.ConvertTo(context, culture, value, destinationType);
-            }
-        }
     }
 }

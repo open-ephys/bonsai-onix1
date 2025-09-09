@@ -224,26 +224,29 @@ namespace OpenEphys.Onix1
         {
             get
             {
-                var jsonString = JsonConvert.SerializeObject(ProbeGroup);
-                return Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonString));
+                return JsonConvert.SerializeObject(ProbeGroup);
+                //var jsonString = JsonConvert.SerializeObject(ProbeGroup);
+                //return Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonString));
             }
             set
             {
-                var jsonString = Encoding.UTF8.GetString(Convert.FromBase64String(value));
-                ProbeGroup = JsonConvert.DeserializeObject<NeuropixelsV2eProbeGroup>(jsonString);
+                ProbeGroup = JsonConvert.DeserializeObject<NeuropixelsV2eProbeGroup>(value);
                 SelectElectrodes(NeuropixelsV2eProbeGroup.ToChannelMap(ProbeGroup));
+                //var jsonString = Encoding.UTF8.GetString(Convert.FromBase64String(value));
+                //ProbeGroup = JsonConvert.DeserializeObject<NeuropixelsV2eProbeGroup>(jsonString);
+                //SelectElectrodes(NeuropixelsV2eProbeGroup.ToChannelMap(ProbeGroup));
             }
         }
 
-        /// <summary>
-        /// Prevent the ProbeGroup property from being serialized.
-        /// </summary>
-        /// <returns>False</returns>
-        [Obsolete]
-        public bool ShouldSerializeProbeGroupSerialize()
-        {
-            return false;
-        }
+        ///// <summary>
+        ///// Prevent the ProbeGroup property from being serialized.
+        ///// </summary>
+        ///// <returns>False</returns>
+        //[Obsolete]
+        //public bool ShouldSerializeProbeGroupSerialize()
+        //{
+        //    return false;
+        //}
 
         /// <summary>
         /// Gets or sets the path to the gain calibration file name for this probe.
@@ -289,7 +292,7 @@ namespace OpenEphys.Onix1
         {
             get
             {
-                var filename = GetFileName();
+                var filename = "temp";
 
                 ProbeGroupHelper.SaveExternalProbeGroupFile(ProbeGroup, filename);
                 return ProbeGroupFileName;
@@ -297,7 +300,7 @@ namespace OpenEphys.Onix1
             set
             {
                 ProbeGroupFileName = value;
-                var filename = GetFileName();
+                var filename = "temp";
 
                 // NB: If a file does not exist at the default file path, leave the default probe group settings as-is
                 if (string.IsNullOrEmpty(ProbeGroupFileName) && !File.Exists(filename))
