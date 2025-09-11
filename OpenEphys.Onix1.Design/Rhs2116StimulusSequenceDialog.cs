@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using ZedGraph;
-using System.IO;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -74,7 +74,7 @@ namespace OpenEphys.Onix1.Design
             }
 
             InitializeZedGraphWaveform();
-            DrawStimulusWaveform();
+            DrawStimulusWaveform(false);
 
             zedGraphWaveform.ZoomEvent += OnZoom_Waveform;
             zedGraphWaveform.MouseMoveEvent += MouseMoveEvent;
@@ -262,12 +262,20 @@ namespace OpenEphys.Onix1.Design
                 : Sequence.CurrentStepSizeuA * 1; // NB: Used to give a buffer when plotting the stimulus waveform
         }
 
-        private void DrawStimulusWaveform()
+        private void DrawStimulusWaveform(bool setZoomState = true)
         {
             bool plotAllContacts = ChannelDialog.SelectedContacts.All(x => x == false);
 
             zedGraphWaveform.GraphPane.CurveList.Clear();
             zedGraphWaveform.GraphPane.GraphObjList.Clear();
+
+            var (XMin, XMax, YMin, YMax)= (
+                zedGraphWaveform.GraphPane.XAxis.Scale.Min,
+                zedGraphWaveform.GraphPane.XAxis.Scale.Max,
+                zedGraphWaveform.GraphPane.YAxis.Scale.Min,
+                zedGraphWaveform.GraphPane.YAxis.Scale.Max
+            );
+
             zedGraphWaveform.ZoomOutAll(zedGraphWaveform.GraphPane);
 
             double peakToPeak = GetPeakToPeakAmplitudeInMicroAmps() * 1.1;
@@ -316,18 +324,29 @@ namespace OpenEphys.Onix1.Design
             zedGraphWaveform.GraphPane.YAxis.Scale.Min = -Sequence.Stimuli.Length - 2;
             zedGraphWaveform.GraphPane.YAxis.Scale.Max =  1;
 
-            zedGraphWaveform.GraphPane.YAxis.ScaleFormatEvent += (GraphPane gp, Axis axis, double val, int index) =>
+            zedGraphWaveform.GraphPane.YAxis.ScaleFormatEvent += (gp, axis, val, index) =>
             {
                 return Math.Abs(val).ToString("0");
             };
-
-            DrawScale();
 
             SetZoomOutBoundaries(zedGraphWaveform);
 
             ZoomInBoundaryX = (ZoomOutBoundaryRight - ZoomOutBoundaryLeft) * 0.05;
 
             dataGridViewStimulusTable.Refresh();
+
+            if (setZoomState)
+            {
+                zedGraphWaveform.GraphPane.XAxis.Scale.Min = XMin;
+                zedGraphWaveform.GraphPane.XAxis.Scale.Max = XMax;
+                zedGraphWaveform.GraphPane.YAxis.Scale.Min = YMin;
+                zedGraphWaveform.GraphPane.YAxis.Scale.Max = YMax;
+            }
+
+            if (!CheckZoomBoundaries(zedGraphWaveform))
+                zedGraphWaveform.ZoomOutAll(zedGraphWaveform.GraphPane);
+
+            DrawScale();
 
             zedGraphWaveform.AxisChange();
             zedGraphWaveform.Refresh();
