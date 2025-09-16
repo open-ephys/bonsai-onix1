@@ -67,6 +67,7 @@
             this.splitContainer1.Size = new System.Drawing.Size(609, 550);
             this.splitContainer1.SplitterDistance = 513;
             this.splitContainer1.TabIndex = 0;
+            this.splitContainer1.TabStop = false;
             // 
             // zedGraphChannels
             // 
@@ -84,6 +85,7 @@
             this.zedGraphChannels.ScrollMinY2 = 0D;
             this.zedGraphChannels.Size = new System.Drawing.Size(609, 513);
             this.zedGraphChannels.TabIndex = 4;
+            this.zedGraphChannels.TabStop = false;
             this.zedGraphChannels.UseExtendedPrintDialog = true;
             this.zedGraphChannels.ZoomEvent += new ZedGraph.ZedGraphControl.ZoomEventHandler(this.ZoomEvent);
             // 
@@ -95,7 +97,7 @@
             this.buttonCancel.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(144, 32);
-            this.buttonCancel.TabIndex = 4;
+            this.buttonCancel.TabIndex = 1;
             this.buttonCancel.Text = "Cancel";
             this.buttonCancel.UseVisualStyleBackColor = true;
             // 
@@ -106,7 +108,7 @@
             this.buttonOK.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(144, 32);
-            this.buttonOK.TabIndex = 3;
+            this.buttonOK.TabIndex = 0;
             this.buttonOK.Text = "OK";
             this.buttonOK.UseVisualStyleBackColor = true;
             this.buttonOK.Click += new System.EventHandler(this.ButtonOK);
