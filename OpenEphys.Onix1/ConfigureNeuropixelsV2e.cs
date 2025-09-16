@@ -47,48 +47,18 @@ namespace OpenEphys.Onix1
         [Description("Specifies whether the NeuropixelsV2 device is enabled.")]
         public bool Enable { get; set; } = true;
 
-        /// <summary>
-        /// Gets or sets a value determining if the polarity of the electrode voltages acquired by the probe
-        /// should be inverted.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// The analog channels on the probe ASIC have negative gain coefficients. This means that neural data
-        /// that is captured by the probe will be inverted compared to the physical signal that occurs at the
-        /// electrode: e.g. extracellular action potentials will tend to have positive deflections instead of
-        /// negative. Setting this property to true will apply a gain of -1 to neural data to undo this
-        /// effect.
-        /// </para>
-        /// </remarks>
+        /// <inheritdoc/>
         [Category(ConfigurationCategory)]
         [Description("Invert the polarity of the electrode voltages acquired by the probe.")]
         public bool InvertPolarity { get; set; } = true;
 
         /// <inheritdoc/>
-        /// <remarks>
-        /// Configuration is accomplished using a GUI to aid in channel selection and relevant configuration properties.
-        /// To open a probe configuration GUI, select the ellipses next the <see cref="ProbeConfigurationA"/> variable
-        /// in the property pane, or double-click <see cref="ConfigureHeadstageNeuropixelsV2e"/> to configure both
-        /// probes and the <see cref="ConfigurePolledBno055"/> simultaneously.
-        /// </remarks>
         [Category(ConfigurationCategory)]
-        [Description("Probe A electrode configuration.")]
+        [Description("Probe A configuration.")]
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new(NeuropixelsV2Probe.ProbeA);
 
         /// <inheritdoc/>
-        /// <remarks>
-        /// <para>
-        /// Each probe is linked to a gain calibration file that contains gain adjustments determined by IMEC during
-        /// factory testing. Electrode voltages are scaled using these values to ensure they can be accurately compared
-        /// across probes. Therefore, using the correct gain calibration file is mandatory to create standardized recordings.
-        /// </para>
-        /// <para>
-        /// Calibration files are probe-specific and not interchangeable across probes. Calibration files must contain the
-        /// serial number of the corresponding probe on their first line of text. If you have lost track of a calibration
-        /// file for your probe, email IMEC at neuropixels.info@imec.be with the probe serial number to retrieve a new copy.
-        /// </para>
-        /// </remarks>
         [Category(ConfigurationCategory)]
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the gain calibration file for probe A.")]
@@ -96,30 +66,12 @@ namespace OpenEphys.Onix1
         public string GainCalibrationFileA { get; set; }
 
         /// <inheritdoc/>
-        /// <remarks>
-        /// Configuration is accomplished using a GUI to aid in channel selection and relevant configuration properties.
-        /// To open a probe configuration GUI, select the ellipses next the <see cref="ProbeConfigurationB"/> variable
-        /// in the property pane, or double-click <see cref="ConfigureHeadstageNeuropixelsV2e"/> to configure both
-        /// probes and the <see cref="ConfigurePolledBno055"/> simultaneously.
-        /// </remarks>
         [Category(ConfigurationCategory)]
-        [Description("Probe B electrode configuration.")]
+        [Description("Probe B configuration.")]
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new(NeuropixelsV2Probe.ProbeB);
 
         /// <inheritdoc/>
-        /// <remarks>
-        /// <para>
-        /// Each probe is linked to a gain calibration file that contains gain adjustments determined by IMEC during
-        /// factory testing. Electrode voltages are scaled using these values to ensure they can be accurately compared
-        /// across probes. Therefore, using the correct gain calibration file is mandatory to create standardized recordings.
-        /// </para>
-        /// <para>
-        /// Calibration files are probe-specific and not interchangeable across probes. Calibration files must contain the
-        /// serial number of the corresponding probe on their first line of text. If you have lost track of a calibration
-        /// file for your probe, email IMEC at neuropixels.info@imec.be with the probe serial number to retrieve a new copy.
-        /// </para>
-        /// </remarks>
         [Category(ConfigurationCategory)]
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the gain calibration file for probe B.")]
