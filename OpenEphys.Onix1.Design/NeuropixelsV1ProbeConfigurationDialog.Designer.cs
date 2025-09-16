@@ -89,7 +89,6 @@
             this.statusStrip1.SuspendLayout();
             this.menuStrip.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
-            this.panelProbe.SuspendLayout();
             this.panelTrackBar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarProbePosition)).BeginInit();
             this.panelOptions.SuspendLayout();
@@ -100,7 +99,7 @@
             // 
             label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             label1.AutoSize = true;
-            label1.Location = new System.Drawing.Point(19, 671);
+            label1.Location = new System.Drawing.Point(8, 647);
             label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             label1.Name = "label1";
             label1.Size = new System.Drawing.Size(39, 16);
@@ -111,7 +110,7 @@
             // 
             label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             label3.AutoSize = true;
-            label3.Location = new System.Drawing.Point(15, 0);
+            label3.Location = new System.Drawing.Point(4, 0);
             label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             label3.Name = "label3";
             label3.Size = new System.Drawing.Size(46, 16);
@@ -236,10 +235,10 @@
             this.toolStripAdcCalSN,
             this.toolStripLabelGainCalibrationSn,
             this.toolStripGainCalSN});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 771);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 736);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 13, 0);
-            this.statusStrip1.Size = new System.Drawing.Size(1320, 25);
+            this.statusStrip1.Size = new System.Drawing.Size(1234, 25);
             this.statusStrip1.TabIndex = 35;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -265,7 +264,7 @@
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
             this.menuStrip.Padding = new System.Windows.Forms.Padding(5, 1, 0, 1);
-            this.menuStrip.Size = new System.Drawing.Size(1320, 24);
+            this.menuStrip.Size = new System.Drawing.Size(1234, 24);
             this.menuStrip.TabIndex = 36;
             this.menuStrip.Text = "menuStrip1";
             // 
@@ -277,43 +276,44 @@
             // 
             // tableLayoutPanel1
             // 
-            this.tableLayoutPanel1.ColumnCount = 2;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 75F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel1.ColumnCount = 3;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 60F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 315F));
+            this.tableLayoutPanel1.Controls.Add(this.panelTrackBar, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.panelProbe, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.panelOptions, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.panelOptions, 2, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 24);
-            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 42F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(1320, 747);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(1234, 712);
             this.tableLayoutPanel1.TabIndex = 37;
             // 
             // panelProbe
             // 
             this.panelProbe.BackColor = System.Drawing.SystemColors.Control;
-            this.panelProbe.Controls.Add(this.panelTrackBar);
             this.panelProbe.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelProbe.Location = new System.Drawing.Point(4, 4);
-            this.panelProbe.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.panelProbe.Margin = new System.Windows.Forms.Padding(4);
             this.panelProbe.Name = "panelProbe";
-            this.panelProbe.Size = new System.Drawing.Size(982, 697);
+            this.panelProbe.Size = new System.Drawing.Size(851, 662);
             this.panelProbe.TabIndex = 0;
             // 
             // panelTrackBar
             // 
-            this.panelTrackBar.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.panelTrackBar.Controls.Add(label1);
             this.panelTrackBar.Controls.Add(label3);
             this.panelTrackBar.Controls.Add(this.trackBarProbePosition);
-            this.panelTrackBar.Location = new System.Drawing.Point(917, 5);
-            this.panelTrackBar.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.panelTrackBar.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelTrackBar.Location = new System.Drawing.Point(863, 4);
+            this.panelTrackBar.Margin = new System.Windows.Forms.Padding(4);
             this.panelTrackBar.Name = "panelTrackBar";
-            this.panelTrackBar.Size = new System.Drawing.Size(61, 686);
+            this.panelTrackBar.Size = new System.Drawing.Size(52, 662);
             this.panelTrackBar.TabIndex = 33;
             // 
             // trackBarProbePosition
@@ -321,13 +321,14 @@
             this.trackBarProbePosition.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.trackBarProbePosition.AutoSize = false;
             this.trackBarProbePosition.BackColor = System.Drawing.SystemColors.Control;
-            this.trackBarProbePosition.Location = new System.Drawing.Point(4, 9);
+            this.trackBarProbePosition.Location = new System.Drawing.Point(9, 9);
             this.trackBarProbePosition.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.trackBarProbePosition.Maximum = 100;
             this.trackBarProbePosition.Name = "trackBarProbePosition";
             this.trackBarProbePosition.Orientation = System.Windows.Forms.Orientation.Vertical;
-            this.trackBarProbePosition.Size = new System.Drawing.Size(45, 670);
+            this.trackBarProbePosition.Size = new System.Drawing.Size(36, 645);
             this.trackBarProbePosition.TabIndex = 30;
             this.trackBarProbePosition.TickFrequency = 2;
             this.trackBarProbePosition.TickStyle = System.Windows.Forms.TickStyle.TopLeft;
@@ -364,10 +365,10 @@
             this.panelOptions.Controls.Add(this.comboBoxApGain);
             this.panelOptions.Controls.Add(apGain);
             this.panelOptions.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelOptions.Location = new System.Drawing.Point(993, 2);
+            this.panelOptions.Location = new System.Drawing.Point(922, 2);
             this.panelOptions.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panelOptions.Name = "panelOptions";
-            this.panelOptions.Size = new System.Drawing.Size(324, 701);
+            this.panelOptions.Size = new System.Drawing.Size(309, 666);
             this.panelOptions.TabIndex = 2;
             // 
             // checkBoxInvertPolarity
@@ -389,7 +390,7 @@
             this.textBoxLfpCorrection.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textBoxLfpCorrection.Name = "textBoxLfpCorrection";
             this.textBoxLfpCorrection.ReadOnly = true;
-            this.textBoxLfpCorrection.Size = new System.Drawing.Size(210, 22);
+            this.textBoxLfpCorrection.Size = new System.Drawing.Size(195, 22);
             this.textBoxLfpCorrection.TabIndex = 41;
             // 
             // textBoxApCorrection
@@ -400,7 +401,7 @@
             this.textBoxApCorrection.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textBoxApCorrection.Name = "textBoxApCorrection";
             this.textBoxApCorrection.ReadOnly = true;
-            this.textBoxApCorrection.Size = new System.Drawing.Size(210, 22);
+            this.textBoxApCorrection.Size = new System.Drawing.Size(195, 22);
             this.textBoxApCorrection.TabIndex = 39;
             // 
             // buttonViewAdcs
@@ -411,7 +412,7 @@
             this.buttonViewAdcs.Location = new System.Drawing.Point(13, 66);
             this.buttonViewAdcs.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonViewAdcs.Name = "buttonViewAdcs";
-            this.buttonViewAdcs.Size = new System.Drawing.Size(299, 38);
+            this.buttonViewAdcs.Size = new System.Drawing.Size(284, 38);
             this.buttonViewAdcs.TabIndex = 37;
             this.buttonViewAdcs.Text = "View ADC Correction Values";
             this.buttonViewAdcs.UseVisualStyleBackColor = true;
@@ -420,7 +421,7 @@
             // buttonChooseAdcCalibrationFile
             // 
             this.buttonChooseAdcCalibrationFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonChooseAdcCalibrationFile.Location = new System.Drawing.Point(275, 30);
+            this.buttonChooseAdcCalibrationFile.Location = new System.Drawing.Point(260, 30);
             this.buttonChooseAdcCalibrationFile.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonChooseAdcCalibrationFile.Name = "buttonChooseAdcCalibrationFile";
             this.buttonChooseAdcCalibrationFile.Size = new System.Drawing.Size(37, 25);
@@ -432,7 +433,7 @@
             // buttonChooseGainCalibrationFile
             // 
             this.buttonChooseGainCalibrationFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonChooseGainCalibrationFile.Location = new System.Drawing.Point(275, 133);
+            this.buttonChooseGainCalibrationFile.Location = new System.Drawing.Point(260, 133);
             this.buttonChooseGainCalibrationFile.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonChooseGainCalibrationFile.Name = "buttonChooseGainCalibrationFile";
             this.buttonChooseGainCalibrationFile.Size = new System.Drawing.Size(37, 25);
@@ -448,7 +449,7 @@
             this.buttonEnableContacts.Location = new System.Drawing.Point(13, 464);
             this.buttonEnableContacts.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonEnableContacts.Name = "buttonEnableContacts";
-            this.buttonEnableContacts.Size = new System.Drawing.Size(299, 44);
+            this.buttonEnableContacts.Size = new System.Drawing.Size(284, 44);
             this.buttonEnableContacts.TabIndex = 28;
             this.buttonEnableContacts.Text = "Enable Selected Electrodes";
             this.buttonEnableContacts.UseVisualStyleBackColor = true;
@@ -461,7 +462,7 @@
             this.buttonClearSelections.Location = new System.Drawing.Point(13, 512);
             this.buttonClearSelections.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonClearSelections.Name = "buttonClearSelections";
-            this.buttonClearSelections.Size = new System.Drawing.Size(299, 44);
+            this.buttonClearSelections.Size = new System.Drawing.Size(284, 44);
             this.buttonClearSelections.TabIndex = 27;
             this.buttonClearSelections.Text = "Clear Electrode Selection";
             this.buttonClearSelections.UseVisualStyleBackColor = true;
@@ -476,7 +477,7 @@
             this.comboBoxChannelPresets.Location = new System.Drawing.Point(101, 411);
             this.comboBoxChannelPresets.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.comboBoxChannelPresets.Name = "comboBoxChannelPresets";
-            this.comboBoxChannelPresets.Size = new System.Drawing.Size(210, 24);
+            this.comboBoxChannelPresets.Size = new System.Drawing.Size(195, 24);
             this.comboBoxChannelPresets.TabIndex = 26;
             // 
             // buttonResetZoom
@@ -486,7 +487,7 @@
             this.buttonResetZoom.Location = new System.Drawing.Point(13, 562);
             this.buttonResetZoom.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonResetZoom.Name = "buttonResetZoom";
-            this.buttonResetZoom.Size = new System.Drawing.Size(299, 44);
+            this.buttonResetZoom.Size = new System.Drawing.Size(284, 44);
             this.buttonResetZoom.TabIndex = 22;
             this.buttonResetZoom.Text = "Reset Zoom";
             this.buttonResetZoom.UseVisualStyleBackColor = true;
@@ -510,7 +511,7 @@
             this.textBoxAdcCalibrationFile.Location = new System.Drawing.Point(13, 30);
             this.textBoxAdcCalibrationFile.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textBoxAdcCalibrationFile.Name = "textBoxAdcCalibrationFile";
-            this.textBoxAdcCalibrationFile.Size = new System.Drawing.Size(255, 22);
+            this.textBoxAdcCalibrationFile.Size = new System.Drawing.Size(240, 22);
             this.textBoxAdcCalibrationFile.TabIndex = 12;
             this.textBoxAdcCalibrationFile.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.textBoxAdcCalibrationFile.TextChanged += new System.EventHandler(this.AdcCalibrationFileTextChanged);
@@ -522,7 +523,7 @@
             this.textBoxGainCalibrationFile.Location = new System.Drawing.Point(13, 133);
             this.textBoxGainCalibrationFile.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textBoxGainCalibrationFile.Name = "textBoxGainCalibrationFile";
-            this.textBoxGainCalibrationFile.Size = new System.Drawing.Size(255, 22);
+            this.textBoxGainCalibrationFile.Size = new System.Drawing.Size(240, 22);
             this.textBoxGainCalibrationFile.TabIndex = 9;
             this.textBoxGainCalibrationFile.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.textBoxGainCalibrationFile.TextChanged += new System.EventHandler(this.GainCalibrationFileTextChanged);
@@ -536,7 +537,7 @@
             this.comboBoxReference.Location = new System.Drawing.Point(101, 373);
             this.comboBoxReference.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.comboBoxReference.Name = "comboBoxReference";
-            this.comboBoxReference.Size = new System.Drawing.Size(210, 24);
+            this.comboBoxReference.Size = new System.Drawing.Size(195, 24);
             this.comboBoxReference.TabIndex = 5;
             // 
             // comboBoxLfpGain
@@ -548,7 +549,7 @@
             this.comboBoxLfpGain.Location = new System.Drawing.Point(101, 240);
             this.comboBoxLfpGain.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.comboBoxLfpGain.Name = "comboBoxLfpGain";
-            this.comboBoxLfpGain.Size = new System.Drawing.Size(210, 24);
+            this.comboBoxLfpGain.Size = new System.Drawing.Size(195, 24);
             this.comboBoxLfpGain.TabIndex = 3;
             // 
             // comboBoxApGain
@@ -560,26 +561,26 @@
             this.comboBoxApGain.Location = new System.Drawing.Point(101, 174);
             this.comboBoxApGain.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.comboBoxApGain.Name = "comboBoxApGain";
-            this.comboBoxApGain.Size = new System.Drawing.Size(210, 24);
+            this.comboBoxApGain.Size = new System.Drawing.Size(195, 24);
             this.comboBoxApGain.TabIndex = 1;
             // 
             // flowLayoutPanel1
             // 
-            this.tableLayoutPanel1.SetColumnSpan(this.flowLayoutPanel1, 2);
+            this.tableLayoutPanel1.SetColumnSpan(this.flowLayoutPanel1, 3);
             this.flowLayoutPanel1.Controls.Add(this.buttonCancel);
             this.flowLayoutPanel1.Controls.Add(this.buttonOkay);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 707);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 672);
             this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(1314, 38);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(1228, 38);
             this.flowLayoutPanel1.TabIndex = 0;
             // 
             // buttonCancel
             // 
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.buttonCancel.Location = new System.Drawing.Point(1200, 2);
+            this.buttonCancel.Location = new System.Drawing.Point(1114, 2);
             this.buttonCancel.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(111, 34);
@@ -590,7 +591,7 @@
             // buttonOkay
             // 
             this.buttonOkay.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.buttonOkay.Location = new System.Drawing.Point(1083, 2);
+            this.buttonOkay.Location = new System.Drawing.Point(997, 2);
             this.buttonOkay.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonOkay.Name = "buttonOkay";
             this.buttonOkay.Size = new System.Drawing.Size(111, 34);
@@ -602,7 +603,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1320, 796);
+            this.ClientSize = new System.Drawing.Size(1234, 761);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.menuStrip);
             this.Controls.Add(this.statusStrip1);
@@ -616,7 +617,6 @@
             this.menuStrip.ResumeLayout(false);
             this.menuStrip.PerformLayout();
             this.tableLayoutPanel1.ResumeLayout(false);
-            this.panelProbe.ResumeLayout(false);
             this.panelTrackBar.ResumeLayout(false);
             this.panelTrackBar.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarProbePosition)).EndInit();

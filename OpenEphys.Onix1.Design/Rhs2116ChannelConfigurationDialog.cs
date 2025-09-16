@@ -25,6 +25,8 @@ namespace OpenEphys.Onix1.Design
             InitializeComponent();
             ProbeGroup = probeGroup;
 
+            OnDrawProbeGroup += CustomTextHandler;
+
             zedGraphChannels.ZoomButtons = MouseButtons.None;
             zedGraphChannels.ZoomButtons2 = MouseButtons.None;
 
@@ -33,6 +35,7 @@ namespace OpenEphys.Onix1.Design
             ZoomInBoundaryX = 5;
             ZoomInBoundaryY = 5;
 
+            DrawProbeGroup();
             RefreshZedGraph();
         }
 
@@ -106,34 +109,38 @@ namespace OpenEphys.Onix1.Design
             return s;
         }
 
+        void CustomTextHandler(object sender, EventArgs eventArgs)
+        {
+            // TODO: This could be optimized so we aren't serializing and comparing strings.
+            // Potential methods: reflection to compare all properties, or
+            // implementing IEquatable<T> and writing out all possible properties.
+            if (JsonConvert.SerializeObject(ProbeGroup) == JsonConvert.SerializeObject(new Rhs2116ProbeGroup()))
+                DrawCustomText();
+        }
+
         // NB: Currently there is only a text label drawn as the scale for this dialog, used to denote the
         // absolute orientation of the default probe group
-        internal override void DrawScale()
+        void DrawCustomText()
         {
-            const string scaleTag = "scale";
+            const string customTag = "custom";
 
-            zedGraphChannels.GraphPane.GraphObjList.RemoveAll(obj => obj.Tag is string tag && tag == scaleTag);
+            zedGraphChannels.GraphPane.GraphObjList.RemoveAll(obj => obj.Tag is string tag && tag == customTag);
 
-            bool isDefault = JsonConvert.SerializeObject(ProbeGroup) == JsonConvert.SerializeObject(new Rhs2116ProbeGroup());
+            var middle = GetProbeContourLeft(zedGraphChannels.GraphPane.GraphObjList)
+                + (GetProbeContourRight(zedGraphChannels.GraphPane.GraphObjList) - GetProbeContourLeft(zedGraphChannels.GraphPane.GraphObjList)) / 2;
+            var top = GetProbeContourTop(zedGraphChannels.GraphPane.GraphObjList);
 
-            if (isDefault)
+            TextObj textObj = new("Tether Side", middle, top + 0.5, CoordType.AxisXYScale, AlignH.Center, AlignV.Center)
             {
-                var middle = GetProbeContourLeft(zedGraphChannels.GraphPane.GraphObjList)
-                    + (GetProbeContourRight(zedGraphChannels.GraphPane.GraphObjList) - GetProbeContourLeft(zedGraphChannels.GraphPane.GraphObjList)) / 2;
-                var top = GetProbeContourTop(zedGraphChannels.GraphPane.GraphObjList);
+                ZOrder = ZOrder.A_InFront,
+                Tag = customTag
+            };
 
-                TextObj textObj = new("Tether Side", middle, top + 0.5, CoordType.AxisXYScale, AlignH.Center, AlignV.Center)
-                {
-                    ZOrder = ZOrder.A_InFront,
-                    Tag = scaleTag
-                };
+            SetTextObj(textObj);
 
-                SetTextObj(textObj);
+            textObj.FontSpec.Size = CalculateFontSize(4.0);
 
-                textObj.FontSpec.Size = CalculateFontSize(4.0);
-
-                zedGraphChannels.GraphPane.GraphObjList.Add(textObj);
-            }
+            zedGraphChannels.GraphPane.GraphObjList.Add(textObj);
         }
     }
 }
