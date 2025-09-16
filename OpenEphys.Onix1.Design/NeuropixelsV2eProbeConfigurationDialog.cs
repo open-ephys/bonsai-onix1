@@ -643,7 +643,6 @@ namespace OpenEphys.Onix1.Design
         private void ResetZoom()
         {
             ChannelConfiguration.ResetZoom();
-            ChannelConfiguration.DrawScale();
             ChannelConfiguration.RefreshZedGraph();
         }
 
