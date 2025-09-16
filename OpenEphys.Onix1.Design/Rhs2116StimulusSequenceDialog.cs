@@ -383,15 +383,19 @@ namespace OpenEphys.Onix1.Design
 
             PointPairList points = new()
             {
-                { zeroOffsetX, zeroOffsetY },
                 { zeroOffsetX, zeroOffsetY + y },
                 { zeroOffsetX, zeroOffsetY },
                 { zeroOffsetX + x, zeroOffsetY }
             };
 
-            var line = zedGraphWaveform.GraphPane.AddCurve("scale", points, Color.Black, SymbolType.None);
-            line.Line.Width = 3;
+            float lineWidth = 3;
+
+            var line = zedGraphWaveform.GraphPane.AddCurve("scale", points, Color.Black, SymbolType.Square);
+            line.Line.Width = lineWidth;
             line.Label.IsVisible = false;
+            line.Symbol.Size = lineWidth;
+            line.Symbol.Border.IsVisible = false;
+            line.Symbol.Fill = new Fill(Color.Black);
             zedGraphWaveform.GraphPane.CurveList.Move(zedGraphWaveform.GraphPane.CurveList.Count - 1, -99);
 
             const double TextObjScaleFactor = 1.02;
