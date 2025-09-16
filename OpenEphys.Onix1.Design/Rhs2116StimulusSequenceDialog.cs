@@ -330,8 +330,6 @@ namespace OpenEphys.Onix1.Design
                 return Math.Abs(val).ToString("0");
             };
 
-            DrawScale();
-
             SetZoomOutBoundaries(zedGraphWaveform);
 
             dataGridViewStimulusTable.Refresh();
@@ -346,6 +344,8 @@ namespace OpenEphys.Onix1.Design
 
             if (!CheckZoomBoundaries(zedGraphWaveform))
                 zedGraphWaveform.ZoomOutAll(zedGraphWaveform.GraphPane);
+
+            DrawScale();
 
             zedGraphWaveform.AxisChange();
             zedGraphWaveform.Refresh();
