@@ -1295,6 +1295,14 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
+        private void ButtonResetZoomClick(object sender, EventArgs e)
+        {
+            zedGraphWaveform.ZoomOutAll(zedGraphWaveform.GraphPane);
+            DrawStimulusWaveform(false);
+            zedGraphWaveform.AxisChange();
+            zedGraphWaveform.Refresh();
+        }
+
         private void DataGridViewStimulusTable_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
             if ((e.Context & DataGridViewDataErrorContexts.Parsing) == DataGridViewDataErrorContexts.Parsing)
