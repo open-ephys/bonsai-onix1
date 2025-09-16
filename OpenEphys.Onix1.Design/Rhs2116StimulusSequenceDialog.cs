@@ -280,8 +280,6 @@ namespace OpenEphys.Onix1.Design
 
             double peakToPeak = GetPeakToPeakAmplitudeInMicroAmps() * 1.1;
 
-            ZoomInBoundaryY = 3;
-
             double maxLength = 0;
 
             for (int i = 0; i < Sequence.Stimuli.Length; i++)
@@ -331,8 +329,6 @@ namespace OpenEphys.Onix1.Design
 
             SetZoomOutBoundaries(zedGraphWaveform);
 
-            ZoomInBoundaryX = (ZoomOutBoundaryRight - ZoomOutBoundaryLeft) * 0.05;
-
             dataGridViewStimulusTable.Refresh();
 
             if (setZoomState)
@@ -363,11 +359,27 @@ namespace OpenEphys.Onix1.Design
                 zedGraphWaveform.GraphPane.GraphObjList.RemoveAll(x => x is TextObj);
             }
 
-            var zeroOffsetX = zedGraphWaveform.GraphPane.XAxis.Scale.Min + CalculateScaleRange(zedGraphWaveform.GraphPane.XAxis.Scale) * 0.025;
-            var zeroOffsetY = zedGraphWaveform.GraphPane.YAxis.Scale.Min + CalculateScaleRange(zedGraphWaveform.GraphPane.YAxis.Scale) * 0.025;
+            var xScaleRange = CalculateScaleRange(zedGraphWaveform.GraphPane.XAxis.Scale);
+            var yScaleRange = CalculateScaleRange(zedGraphWaveform.GraphPane.YAxis.Scale);
 
-            var x = CalculateScaleRange(zedGraphWaveform.GraphPane.XAxis.Scale) * 0.05;
+            const double ScaleFactor = 0.025;
+
+            var zeroOffsetX = zedGraphWaveform.GraphPane.XAxis.Scale.Min + xScaleRange * ScaleFactor;
+            var zeroOffsetY = zedGraphWaveform.GraphPane.YAxis.Scale.Min + yScaleRange * ScaleFactor;
+
+            var x = xScaleRange * ScaleFactor * 2;
             var y = 1 / 2.2; // NB: Equal to 1/2 of the max peak-to-peak amplitude
+
+            double maxValueY = yScaleRange * 0.25;
+
+            double yScaleValue = GetPeakToPeakAmplitudeInMicroAmps() / 2;
+
+            if (y > maxValueY)
+            {
+                double ratio = y / maxValueY;
+                yScaleValue /= ratio;
+                y /= ratio;
+            }
 
             PointPairList points = new()
             {
@@ -382,13 +394,15 @@ namespace OpenEphys.Onix1.Design
             line.Label.IsVisible = false;
             zedGraphWaveform.GraphPane.CurveList.Move(zedGraphWaveform.GraphPane.CurveList.Count - 1, -99);
 
-            TextObj timeScale = new(GetTimeScaleString(x) + " ms", zeroOffsetX + x * 1.02, zeroOffsetY, CoordType.AxisXYScale, AlignH.Left, AlignV.Center);
+            const double TextObjScaleFactor = 1.02;
+
+            TextObj timeScale = new(GetTimeScaleString(x) + " ms", zeroOffsetX + x * TextObjScaleFactor, zeroOffsetY, CoordType.AxisXYScale, AlignH.Left, AlignV.Center);
             timeScale.FontSpec.Border.IsVisible = false;
             timeScale.FontSpec.Fill.IsVisible = false;
             timeScale.ZOrder = ZOrder.A_InFront;
             zedGraphWaveform.GraphPane.GraphObjList.Add(timeScale);
 
-            TextObj amplitudeScale = new((GetPeakToPeakAmplitudeInMicroAmps() / 2).ToString() + " µA", zeroOffsetX, zeroOffsetY + y * 1.02, CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom);
+            TextObj amplitudeScale = new(yScaleValue.ToString("0.##") + " µA", zeroOffsetX, zeroOffsetY + y * TextObjScaleFactor, CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom);
             amplitudeScale.FontSpec.Border.IsVisible = false;
             amplitudeScale.FontSpec.Fill.IsVisible = false;
             amplitudeScale.ZOrder = ZOrder.A_InFront;
@@ -479,8 +493,6 @@ namespace OpenEphys.Onix1.Design
         private double ZoomOutBoundaryRight = default;
         private double ZoomOutBoundaryBottom = default;
         private double ZoomOutBoundaryTop = default;
-        private double? ZoomInBoundaryX = 5;
-        private double? ZoomInBoundaryY = 2;
 
         private void SetZoomOutBoundaries(ZedGraphControl zedGraphControl)
         {
@@ -511,9 +523,7 @@ namespace OpenEphys.Onix1.Design
             if ((zedGraphControl.GraphPane.XAxis.Scale.Min == ZoomOutBoundaryLeft &&
                 zedGraphControl.GraphPane.XAxis.Scale.Max == ZoomOutBoundaryRight &&
                 zedGraphControl.GraphPane.YAxis.Scale.Min == ZoomOutBoundaryBottom &&
-                zedGraphControl.GraphPane.YAxis.Scale.Max == ZoomOutBoundaryTop) ||
-                ZoomInBoundaryX.HasValue && CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale) == ZoomInBoundaryX.Value ||
-                ZoomInBoundaryY.HasValue && CalculateScaleRange(zedGraphControl.GraphPane.YAxis.Scale) == ZoomInBoundaryY.Value)
+                zedGraphControl.GraphPane.YAxis.Scale.Max == ZoomOutBoundaryTop))
             {
                 return;
             }
@@ -525,7 +535,6 @@ namespace OpenEphys.Onix1.Design
             var currentMousePosition = TransformPixelsToCoordinates(mouseClientPosition, zedGraphControl.GraphPane);
 
             var centerX = CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale) / 2 + zedGraphControl.GraphPane.XAxis.Scale.Min;
-
             var centerY = CalculateScaleRange(zedGraphControl.GraphPane.YAxis.Scale) / 2 + zedGraphControl.GraphPane.YAxis.Scale.Min;
 
             var diffX = centerX - currentMousePosition.X;
@@ -538,50 +547,8 @@ namespace OpenEphys.Onix1.Design
             zedGraphControl.GraphPane.YAxis.Scale.Max += diffY;
         }
 
-        /// <summary>
-        /// Checks if the <see cref="ZedGraphControl"/> is too zoomed in or out. If the graph is too zoomed in,
-        /// reset the boundaries to match <see cref="ZoomInBoundaryX"/> and <see cref="ZoomInBoundaryY"/>. If the graph is too zoomed out,
-        /// reset the boundaries to match the automatically generated boundaries based on the size of the waveforms.
-        /// </summary>
-        /// <param name="zedGraphControl">A <see cref="ZedGraphControl"/> object.</param>
-        /// <returns>True if the zoom boundary has been correctly handled, False if the previous zoom state should be reinstated.</returns>
         private bool CheckZoomBoundaries(ZedGraphControl zedGraphControl)
         {
-            var rangeX = CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale);
-            var rangeY = CalculateScaleRange(zedGraphControl.GraphPane.YAxis.Scale);
-
-            if (ZoomInBoundaryX.HasValue && rangeX < ZoomInBoundaryX)
-            {
-                if (ZoomInBoundaryX.HasValue && rangeX / ZoomInBoundaryX == zedGraphControl.ZoomStepFraction)
-                {
-                    return false;
-                }
-                else
-                {
-                    if (ZoomInBoundaryX.HasValue && ZoomInBoundaryX.Value > 0)
-                    {
-                        var diffX = (ZoomInBoundaryX.Value - rangeX) / 2;
-                        zedGraphControl.GraphPane.XAxis.Scale.Min -= diffX;
-                        zedGraphControl.GraphPane.XAxis.Scale.Max += diffX;
-                    }
-                }
-            }
-
-            if (ZoomInBoundaryY.HasValue && rangeY < ZoomInBoundaryY)
-            {
-                if (ZoomInBoundaryY.HasValue && rangeY / ZoomInBoundaryY == zedGraphControl.ZoomStepFraction)
-                    return false;
-                else
-                {
-                    if (ZoomInBoundaryY.HasValue && ZoomInBoundaryY.Value > 0)
-                    {
-                        var diffY = (ZoomInBoundaryY.Value - rangeY) / 2;
-                        zedGraphControl.GraphPane.YAxis.Scale.Min -= diffY;
-                        zedGraphControl.GraphPane.YAxis.Scale.Max += diffY;
-                    }
-                }
-            }
-
             if (CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale) >= ZoomOutBoundaryRight - ZoomOutBoundaryLeft)
             {
                 zedGraphControl.GraphPane.XAxis.Scale.Min = ZoomOutBoundaryLeft;
