@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-
-namespace OpenEphys.Onix1
+﻿namespace OpenEphys.Onix1
 {
     /// <summary>
     /// Public interface that defines common properties in NeuropixelsV1 devices.
@@ -15,11 +13,6 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets the probe configuration.
         /// </summary>
-        /// <remarks>
-        /// Configuration is accomplished using a GUI to aid in channel selection and relevant configuration properties.
-        /// To open a probe configuration GUI, select the ellipses next the ProbeConfiguration variable
-        /// in the property pane, or double-click the configuration node to configure the probe and the Bno055 simultaneously.
-        /// </remarks>
         public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; set; }
 
         /// <summary>
@@ -63,10 +56,10 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Neuropixels contain inverting amplifiers.This means that neural data that is captured by the probe
-        /// will be inverted compared to the physical signal that occurs at the electrode: e.g. extracellular
-        /// action potentials will tend to have positive deflections instead of negative. Enabling this
-        /// setting this property to true will apply a gain of -1 to undo this effect.
+        /// Neuropixels contain inverting amplifiers. This means that neural data that is captured by the probe
+        /// will be inverted compared to the physical signal that occurs at the electrode: e.g., extracellular
+        /// action potentials will tend to have positive deflections instead of negative. Setting this
+        /// property to true will apply a gain of -1 to undo this effect.
         /// </para>
         /// </remarks>
         public bool InvertPolarity { get; set; }
