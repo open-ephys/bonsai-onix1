@@ -278,7 +278,7 @@ namespace OpenEphys.Onix1.Design
 
             for (int i = 0; i < Sequence.Stimuli.Length; i++)
             {
-                var channelOffset = peakToPeak * i;
+                var channelOffset = -peakToPeak * i;
 
                 if (ChannelDialog.SelectedContacts[i] || plotAllContacts)
                 {
@@ -304,7 +304,7 @@ namespace OpenEphys.Onix1.Design
             }
 
             zedGraphWaveform.GraphPane.YAxis.Scale.MajorStep = 1;
-            zedGraphWaveform.GraphPane.YAxis.Scale.BaseTic = 0;
+            zedGraphWaveform.GraphPane.YAxis.Scale.BaseTic = -Sequence.Stimuli.Length + 1;
 
             HighlightInvalidContacts();
 
@@ -313,8 +313,13 @@ namespace OpenEphys.Onix1.Design
 
             zedGraphWaveform.GraphPane.XAxis.Scale.Max = maxLength;
             zedGraphWaveform.GraphPane.XAxis.Scale.Min = -(maxLength * 0.02);
-            zedGraphWaveform.GraphPane.YAxis.Scale.Min = -2;
-            zedGraphWaveform.GraphPane.YAxis.Scale.Max = Sequence.Stimuli.Length - 0.2;
+            zedGraphWaveform.GraphPane.YAxis.Scale.Min = -Sequence.Stimuli.Length - 2;
+            zedGraphWaveform.GraphPane.YAxis.Scale.Max =  1;
+
+            zedGraphWaveform.GraphPane.YAxis.ScaleFormatEvent += (GraphPane gp, Axis axis, double val, int index) =>
+            {
+                return Math.Abs(val).ToString("0");
+            };
 
             DrawScale();
 
@@ -1077,7 +1082,7 @@ namespace OpenEphys.Onix1.Design
             {
                 StepSize = validStepSizes.First();
                 textBoxStepSize.Text = GetStepSizeStringuA(StepSize);
-                
+
                 return true;
             }
 
