@@ -44,12 +44,12 @@ namespace OpenEphys.Onix1.Design
             RefreshZedGraph();
         }
 
-        internal override ProbeGroup DefaultChannelLayout()
+        internal override ProbeGroup DefaultProbeGroup()
         {
             return new NeuropixelsV2eProbeGroup();
         }
 
-        internal override void LoadDefaultChannelLayout()
+        internal override void LoadDefaultProbeGroup()
         {
             ProbeConfiguration = new(ProbeConfiguration.Probe, ProbeConfiguration.Reference);
             ProbeGroup = ProbeConfiguration.ProbeGroup;

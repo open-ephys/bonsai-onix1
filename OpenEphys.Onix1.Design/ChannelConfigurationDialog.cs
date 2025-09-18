@@ -35,7 +35,7 @@ namespace OpenEphys.Onix1.Design
 
             if (probeGroup == null)
             {
-                LoadDefaultChannelLayout();
+                LoadDefaultProbeGroup();
             }
             else
             {
@@ -68,11 +68,11 @@ namespace OpenEphys.Onix1.Design
         /// </code>
         /// </example>
         /// <returns>Returns an object that inherits from <see cref="ProbeInterface.NET.ProbeGroup"/></returns>
-        internal abstract ProbeGroup DefaultChannelLayout();
+        internal abstract ProbeGroup DefaultProbeGroup();
 
-        internal virtual void LoadDefaultChannelLayout()
+        internal virtual void LoadDefaultProbeGroup()
         {
-            ProbeGroup = DefaultChannelLayout();
+            ProbeGroup = DefaultProbeGroup();
         }
 
         /// <summary>
@@ -1081,7 +1081,7 @@ namespace OpenEphys.Onix1.Design
 
         private void MenuItemLoadDefaultConfig(object sender, EventArgs e)
         {
-            LoadDefaultChannelLayout();
+            LoadDefaultProbeGroup();
             DrawProbeGroup();
             UpdateFontSize();
             RefreshZedGraph();
