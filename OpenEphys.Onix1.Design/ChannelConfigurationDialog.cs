@@ -22,7 +22,7 @@ namespace OpenEphys.Onix1.Design
 
         internal readonly List<int> ReferenceContacts = new();
 
-        internal readonly bool[] SelectedContacts = null;
+        internal bool[] SelectedContacts { get; private set; } = null;
 
         /// <summary>
         /// Constructs the dialog window using the given probe group, and plots all contacts after loading.
@@ -73,6 +73,7 @@ namespace OpenEphys.Onix1.Design
         internal virtual void LoadDefaultProbeGroup()
         {
             ProbeGroup = DefaultProbeGroup();
+            SelectedContacts = new bool[ProbeGroup.NumberOfContacts];
         }
 
         /// <summary>
@@ -432,13 +433,26 @@ namespace OpenEphys.Onix1.Design
                 return false;
             }
 
-            if (ProbeGroup.NumberOfContacts == newConfiguration.NumberOfContacts)
+            bool skipContactNumberMismatchCheck = false;
+
+            if (ProbeGroup.Probes.First().Annotations.Name != newConfiguration.Probes.First().Annotations.Name)
+            {
+                var result = MessageBox.Show($"There is a mismatch between the current probe name ({ProbeGroup.Probes.First().Annotations.Name})" +
+                    $" and the new probe name ({newConfiguration.Probes.First().Annotations.Name}). Continue loading?", "Probe Name Mismatch", MessageBoxButtons.YesNo);
+
+                if (result == DialogResult.No)
+                    return false;
+
+                skipContactNumberMismatchCheck = true; // NB: If the probe names do not match, skip the check to see if the number of contacts match.
+                                                       // Example: loading a Neuropixels 1.0 probe, but the current probe is a 1.0 UHD probe.
+            }
+
+            if (skipContactNumberMismatchCheck || ProbeGroup.NumberOfContacts == newConfiguration.NumberOfContacts)
             {
                 newConfiguration.Validate();
 
                 ProbeGroup = newConfiguration;
-                DrawProbeGroup();
-                RefreshZedGraph();
+                SelectedContacts = new bool[ProbeGroup.NumberOfContacts];
 
                 return true;
             }
@@ -1155,9 +1169,13 @@ namespace OpenEphys.Onix1.Design
 
         PointD clickStart = new(0.0, 0.0);
 
+        bool selectElectrodes = true;
+
+        internal void SetSelectElectrodesStatus(bool status) => selectElectrodes = status;
+
         private bool MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left)
+            if (selectElectrodes && e.Button == MouseButtons.Left)
             {
                 clickStart = TransformPixelsToCoordinates(e.Location, sender.GraphPane);
             }
@@ -1171,6 +1189,12 @@ namespace OpenEphys.Onix1.Design
         {
             if (e.Button == MouseButtons.Left)
             {
+                if (!selectElectrodes)
+                {
+                    sender.Cursor = Cursors.Arrow;
+                    return true;
+                }
+
                 sender.Cursor = Cursors.Cross;
 
                 if (clickStart.X == default && clickStart.Y == default)
@@ -1232,7 +1256,7 @@ namespace OpenEphys.Onix1.Design
         {
             sender.Cursor = Cursors.Arrow;
 
-            if (e.Button == MouseButtons.Left)
+            if (selectElectrodes && e.Button == MouseButtons.Left)
             {
                 if (sender.GraphPane.GraphObjList[SelectionAreaTag] is BoxObj selectionArea && selectionArea != null && ProbeGroup != null)
                 {
