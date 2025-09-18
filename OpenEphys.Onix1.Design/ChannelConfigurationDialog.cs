@@ -1124,7 +1124,7 @@ namespace OpenEphys.Onix1.Design
             var minY = GetProbeBottom(zedGraphChannels.GraphPane.GraphObjList);
             var maxY = GetProbeTop(zedGraphChannels.GraphPane.GraphObjList);
 
-            var newMinY = (maxY - minY - currentRange) * relativePosition;
+            var newMinY = (maxY - minY - currentRange) * relativePosition + minY;
 
             zedGraphChannels.GraphPane.YAxis.Scale.Min = newMinY;
             zedGraphChannels.GraphPane.YAxis.Scale.Max = newMinY + currentRange;
