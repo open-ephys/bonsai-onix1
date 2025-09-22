@@ -224,28 +224,11 @@ namespace OpenEphys.Onix1
                         observer.OnError,
                         observer.OnCompleted);
 
-                    // NB: fit from Fig. 10 of CAT4016 datasheet
-                    // x = (y/a)^(1/b)
-                    // a = 3.833e+05
-                    // b = -0.9632
-                    static uint mAToPotSetting(double currentMa)
-                    {
-                        double R = Math.Pow(currentMa / 3.833e+05, 1 / -0.9632);
-                        double s = 256 * (R - Headstage64OpticalStimulator.MinRheostatResistanceOhms) / Headstage64OpticalStimulator.PotResistanceOhms;
-                        return s > 255 ? 255 : s < 0 ? 0 : (uint)s;
-                    }
-
                     uint currentSourceMask = 0;
                     static uint percentToPulseMask(int channel, double percent, uint oldMask)
                     {
-                        uint mask = 0x00000000;
-                        var p = 0.0;
-                        while (p < percent)
-                        {
-                            mask = (mask << 1) | 1;
-                            p += 12.5;
-                        }
-
+                        var n = (int)(percent / 100 * 8);
+                        uint mask = (1u << n) - 1;
                         return channel == 0 ? (oldMask & 0x0000FF00) | mask : (mask << 8) | (oldMask & 0x000000FF);
                     }
 
@@ -263,7 +246,7 @@ namespace OpenEphys.Onix1
 
                     return new CompositeDisposable(
                         enable.SubscribeSafe(observer, value => device.WriteRegister(Headstage64OpticalStimulator.ENABLE, value ? 1u : 0u)),
-                        maxCurrent.SubscribeSafe(observer, value => device.WriteRegister(Headstage64OpticalStimulator.MAXCURRENT, mAToPotSetting(value))),
+                        maxCurrent.SubscribeSafe(observer, value => device.WriteRegister(Headstage64OpticalStimulator.MAXCURRENT, Headstage64OpticalStimulator.MilliampsToPotSetting(value))),
                         channelOneCurrent.SubscribeSafe(observer, value =>
                         {
                             currentSourceMask = percentToPulseMask(0, value, currentSourceMask);

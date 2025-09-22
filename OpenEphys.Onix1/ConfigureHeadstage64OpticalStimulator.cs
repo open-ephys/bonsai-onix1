@@ -71,6 +71,23 @@ namespace OpenEphys.Onix1
         public const uint MINRHEOR = 13; // The series resistor between the potentiometer (rheostat) and RSET bin on the CAT4016
         public const uint POTRES = 14; // The resistance value of the potentiometer connected in rheostat config to RSET on CAT4016
 
+        // NB: fit from Fig. 10 of CAT4016 datasheet
+        // x = (y/a)^(1/b)
+        // a = 3.833e+05
+        // b = -0.9632
+        internal static uint MilliampsToPotSetting(double currentMa)
+        {
+            double R = Math.Pow(currentMa / 3.833e+05, 1 / -0.9632);
+            uint s = (uint)Math.Round(256 * (R - MinRheostatResistanceOhms) / PotResistanceOhms);
+            return s > 255 ? 255 : s < 0 ? 0 :s;
+        }
+
+        internal static double PotSettingToMilliamps(uint potSetting)
+        {
+            var R = MinRheostatResistanceOhms + PotResistanceOhms * potSetting / 256; 
+            return 3.833e+05 * Math.Pow(R, -0.9632);
+        }
+
         internal class NameConverter : DeviceNameConverter
         {
             public NameConverter()

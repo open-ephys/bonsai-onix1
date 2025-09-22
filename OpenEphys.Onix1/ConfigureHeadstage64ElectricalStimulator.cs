@@ -23,6 +23,17 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
+        /// Gets or sets the data enable state.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, <see cref="Headstage64ElectricalStimulatorData"/> will produce data. If set to
+        /// false, <see cref="Headstage64ElectricalStimulatorData"/> will not produce data.
+        /// </remarks>
+        [Category(ConfigurationCategory)]
+        [Description("Specifies whether the digital IO device is enabled.")]
+        public bool Enable { get; set; }
+
+        /// <summary>
         /// Configure a headstage-64 onboard electrical stimulator.
         /// </summary>
         /// <remarks>
@@ -37,10 +48,12 @@ namespace OpenEphys.Onix1
         {
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
+            var enable = Enable;
             return source.ConfigureDevice(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
-                device.WriteRegister(Headstage64ElectricalStimulator.ENABLE, 0);
+                device.WriteRegister(Headstage64ElectricalStimulator.ENABLE, enable ? 1u : 0u);
+                device.WriteRegister(Headstage64ElectricalStimulator.STIMENABLE, 0);
                 return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
             });
         }
@@ -55,7 +68,7 @@ namespace OpenEphys.Onix1
         public const double AbsMaxMicroAmps = 2500;
 
         // managed registers
-        public const uint NULLPARM = 0; // No command
+        public const uint ENABLE = 0; // Eanble stimulus report stream
         public const uint BIPHASIC = 1; // Biphasic pulse (0 = monophasic, 1 = biphasic; NB: currently ignored)
         public const uint CURRENT1 = 2; // Phase 1 current
         public const uint CURRENT2 = 3; // Phase 2 current
@@ -69,10 +82,22 @@ namespace OpenEphys.Onix1
         public const uint TRAINDELAY = 11; // Pulse train delay, microseconds
         public const uint TRIGGER = 12; // Trigger stimulation (1 = deliver)
         public const uint POWERON = 13; // Control estim sub-circuit power (0 = off, 1 = on)
-        public const uint ENABLE = 14; // If 0 then stimulation triggers will be ignored, otherwise they will be applied 
+        public const uint STIMENABLE = 14; // If 0 then stimulation triggers will be ignored, otherwise they will be applied 
         public const uint RESTCURR = 15; // Resting current between pulse phases
         public const uint RESET = 16; // Reset all parameters to default
         public const uint REZ = 17; // Internal DAC resolution in bits
+
+        internal static uint MicroampsToCode(double currentuA)
+        {
+            var k = 1 / (2 * AbsMaxMicroAmps / (Math.Pow(2, DacBitDepth) - 1)); // NB: constexpr, if we get support for it.
+            return (uint)(k * (currentuA + AbsMaxMicroAmps));
+        }
+
+        internal static double CodeToMicroamps(uint code)
+        {
+            var k = 2 * AbsMaxMicroAmps / (Math.Pow(2, DacBitDepth) - 1); // NB: constexpr, if we get support for it.
+            return k * code - AbsMaxMicroAmps;
+        }
 
         internal class NameConverter : DeviceNameConverter
         {
