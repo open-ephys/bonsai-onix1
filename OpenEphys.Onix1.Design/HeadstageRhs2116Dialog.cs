@@ -13,7 +13,7 @@ namespace OpenEphys.Onix1.Design
     public partial class HeadstageRhs2116Dialog : Form
     {
         internal readonly Rhs2116StimulusSequenceDialog StimulusSequenceDialog;
-        internal readonly Rhs2116Dialog Rhs2116Dialog;
+        internal readonly GenericDeviceDialog Rhs2116Dialog;
 
         internal Rhs2116ProbeGroup ProbeGroup;
 
@@ -30,29 +30,14 @@ namespace OpenEphys.Onix1.Design
 
             ProbeGroup = new Rhs2116ProbeGroup(probeGroup);
 
-            StimulusSequenceDialog = new Rhs2116StimulusSequenceDialog(sequence, ProbeGroup)
-            {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this,
-            };
+            StimulusSequenceDialog = new Rhs2116StimulusSequenceDialog(sequence, ProbeGroup);
 
-            tabPageStimulusSequence.Controls.Add(StimulusSequenceDialog);
+            StimulusSequenceDialog.SetChildFormProperties(this).AddDialogToTab(tabPageStimulusSequence);
             this.AddMenuItemsFromDialogToFileOption(StimulusSequenceDialog);
 
-            StimulusSequenceDialog.Show();
+            Rhs2116Dialog = new(new ConfigureRhs2116Pair(rhs2116));
 
-            Rhs2116Dialog = new Rhs2116Dialog(rhs2116)
-            {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this,
-            };
-
-            tabPageRhs2116A.Controls.Add(Rhs2116Dialog);
-            Rhs2116Dialog.Show();
+            Rhs2116Dialog.SetChildFormProperties(this).AddDialogToTab(tabPageRhs2116);
         }
 
         void OnClickOK(object sender, EventArgs e)
