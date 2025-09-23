@@ -78,7 +78,8 @@ namespace OpenEphys.Onix1.Design
         /// <param name="configuration">A <see cref="NeuropixelsV2ProbeConfiguration"/> object holding the current configuration settings.</param>
         /// <param name="calibrationFile">String containing the path to the calibration file for this probe.</param>
         /// <param name="invertPolarity">Boolean denoting whether or not to invert the polarity of neural data.</param>
-        public NeuropixelsV2eProbeConfigurationDialog(NeuropixelsV2ProbeConfiguration configuration, string calibrationFile, bool invertPolarity)
+        /// <param name="isBeta">Boolean indicating if this is a beta probe or not.</param>
+        public NeuropixelsV2eProbeConfigurationDialog(NeuropixelsV2ProbeConfiguration configuration, string calibrationFile, bool invertPolarity, bool isBeta)
         {
             InitializeComponent();
             Shown += FormShown;
@@ -103,7 +104,11 @@ namespace OpenEphys.Onix1.Design
 
             comboBoxProbeType.DataSource = Enum.GetValues(typeof(NeuropixelsV2ProbeType));
             comboBoxProbeType.SelectedItem = ProbeConfiguration.ProbeType;
-            comboBoxProbeType.SelectedIndexChanged += SelectedProbeTypeChanged;
+
+            if (isBeta)
+                comboBoxProbeType.Enabled = false;
+            else
+                comboBoxProbeType.SelectedIndexChanged += SelectedProbeTypeChanged;
 
             comboBoxReference.DataSource = NeuropixelsV2ProbeConfiguration.FilterNeuropixelsV2ShankReference(ProbeConfiguration.ProbeType);
             comboBoxReference.SelectedItem = ProbeConfiguration.Reference;

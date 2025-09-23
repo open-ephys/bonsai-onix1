@@ -35,7 +35,7 @@ namespace OpenEphys.Onix1.Design
 
                     bool isBeta = instance is ConfigureNeuropixelsV2eBeta;
 
-                    using var editorDialog = new NeuropixelsV2eProbeConfigurationDialog(configuration, calibrationFile, instance.InvertPolarity);
+                    using var editorDialog = new NeuropixelsV2eProbeConfigurationDialog(configuration, calibrationFile, instance.InvertPolarity, isBeta);
 
                     if (isBeta)
                     {
