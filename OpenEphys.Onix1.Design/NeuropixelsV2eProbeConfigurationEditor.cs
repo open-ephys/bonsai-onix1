@@ -33,9 +33,11 @@ namespace OpenEphys.Onix1.Design
 
                     var calibrationFile = configuration.Probe == NeuropixelsV2Probe.ProbeA ? instance.GainCalibrationFileA : instance.GainCalibrationFileB;
 
-                    using var editorDialog = new NeuropixelsV2eProbeConfigurationDialog(configuration, calibrationFile, instance.InvertPolarity);
+                    bool isBeta = instance is ConfigureNeuropixelsV2eBeta;
 
-                    if (instance is ConfigureNeuropixelsV2eBeta)
+                    using var editorDialog = new NeuropixelsV2eProbeConfigurationDialog(configuration, calibrationFile, instance.InvertPolarity, isBeta);
+
+                    if (isBeta)
                     {
                         editorDialog.Text = editorDialog.Text.Replace("NeuropixelsV2e ", "NeuropixelsV2eBeta ");
                     }
