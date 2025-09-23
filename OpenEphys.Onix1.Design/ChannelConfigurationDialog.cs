@@ -62,6 +62,12 @@ namespace OpenEphys.Onix1.Design
 
             InitializeZedGraphControl(zedGraphChannels);
             InitializeProbePane(zedGraphChannels.GraphPane);
+
+            foreach (var pane in zedGraphChannels.MasterPane.PaneList)
+            {
+                pane.Chart.Fill = new Fill(Color.WhiteSmoke);
+            }
+
             DrawProbeGroup();
             RefreshZedGraph();
         }
@@ -926,7 +932,7 @@ namespace OpenEphys.Onix1.Design
             pane.YAxis.Scale.BaseTic = 0;
             pane.YAxis.Scale.IsLabelsInside = true;
             pane.YAxis.Scale.FontSpec.Size = 65f;
-            pane.YAxis.Scale.FontSpec.IsBold = true;
+            pane.YAxis.Scale.FontSpec.IsBold = false;
             pane.YAxis.Scale.LabelGap = 0.6f;
 
             pane.YAxis.MinorTic.IsInside = false;
@@ -937,7 +943,7 @@ namespace OpenEphys.Onix1.Design
             pane.YAxis.MajorTic.IsOutside = false;
             pane.YAxis.MajorTic.IsOpposite = false;
             pane.YAxis.MajorTic.Size = 40f;
-            pane.YAxis.MajorTic.PenWidth = 2f;
+            pane.YAxis.MajorTic.PenWidth = 1.5f;
         }
 
         static void InitializeProbePane(GraphPane graphPane)
@@ -1004,8 +1010,6 @@ namespace OpenEphys.Onix1.Design
 
                 zedGraphChannels.MasterPane.PaneList[0].Rect = new RectangleF(rect.Left, rect.Top, squareSize, squareSize);
                 zedGraphChannels.MasterPane.PaneList[1].Rect = new RectangleF(rect.Left + squareSize, rect.Top, rect.Width - squareSize, squareSize);
-
-                zedGraphChannels.MasterPane.PaneList[1].Margin.Left = 10;
             }
 
             UpdateFontSize();
@@ -1038,8 +1042,8 @@ namespace OpenEphys.Onix1.Design
                 width = desiredWidth;
             }
 
-            float x = rect.Left + (rect.Width - width) / 2f;
-            float y = rect.Top + (rect.Height - height) / 2f;
+            float x = MathF.Round(rect.Left + (rect.Width - width) / 2f);
+            float y = MathF.Round(rect.Top + (rect.Height - height) / 2f);
 
             var newRect = new RectangleF(x, y, width, height);
 
