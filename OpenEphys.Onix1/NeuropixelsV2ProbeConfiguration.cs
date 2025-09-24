@@ -102,11 +102,13 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Initializes a new instance of the <see cref="NeuropixelsV2ProbeConfiguration"/> class.
         /// </summary>
-        public NeuropixelsV2ProbeConfiguration(NeuropixelsV2Probe probe, NeuropixelsV2ProbeType type, NeuropixelsV2ShankReference reference) : this()
+        public NeuropixelsV2ProbeConfiguration(NeuropixelsV2Probe probe, NeuropixelsV2ProbeType type, NeuropixelsV2ShankReference reference)
         {
             Probe = probe;
             ProbeType = type;
             Reference = reference;
+            ProbeGroup = new(ProbeType);
+            ChannelMap = NeuropixelsV2eProbeGroup.ToChannelMap(ProbeGroup, ProbeType);
         }
 
         /// <summary>
