@@ -18,7 +18,17 @@ namespace OpenEphys.Onix1.Design
     {
         internal event EventHandler OnResizeZedGraph;
 
-        internal ProbeGroup ProbeGroup;
+        ProbeGroup probeGroup;
+
+        internal ProbeGroup ProbeGroup
+        {
+            get => probeGroup;
+            set
+            {
+                probeGroup = value;
+                SelectedContacts = new bool[probeGroup.NumberOfContacts];
+            }
+        }
 
         internal readonly List<int> ReferenceContacts = new();
 
@@ -41,8 +51,6 @@ namespace OpenEphys.Onix1.Design
             {
                 ProbeGroup = probeGroup;
             }
-
-            SelectedContacts = new bool[ProbeGroup.NumberOfContacts];
 
             ReferenceContacts = new List<int>();
 
@@ -73,7 +81,6 @@ namespace OpenEphys.Onix1.Design
         internal virtual void LoadDefaultChannelLayout()
         {
             ProbeGroup = DefaultChannelLayout();
-            SelectedContacts = new bool[ProbeGroup.NumberOfContacts];
         }
 
         /// <summary>
@@ -437,8 +444,8 @@ namespace OpenEphys.Onix1.Design
 
             if (ProbeGroup.Probes.First().Annotations.Name != newConfiguration.Probes.First().Annotations.Name)
             {
-                var result = MessageBox.Show($"There is a mismatch between the current probe name ({ProbeGroup.Probes.First().Annotations.Name})" +
-                    $" and the new probe name ({newConfiguration.Probes.First().Annotations.Name}). Continue loading?", "Probe Name Mismatch", MessageBoxButtons.YesNo);
+                var result = MessageBox.Show($"There is a mismatch between the current probe type ({ProbeGroup.Probes.First().Annotations.Name})" +
+                    $" and the new probe type ({newConfiguration.Probes.First().Annotations.Name}). Continue loading?", "Probe Type Mismatch", MessageBoxButtons.YesNo);
 
                 if (result == DialogResult.No)
                     return false;
@@ -452,7 +459,6 @@ namespace OpenEphys.Onix1.Design
                 newConfiguration.Validate();
 
                 ProbeGroup = newConfiguration;
-                SelectedContacts = new bool[ProbeGroup.NumberOfContacts];
 
                 return true;
             }

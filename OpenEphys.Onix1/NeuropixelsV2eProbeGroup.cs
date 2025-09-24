@@ -50,7 +50,7 @@ namespace OpenEphys.Onix1
                 return NeuropixelsV2ProbeType.QuadShank;
 
             else
-                throw new ArgumentException($"The name '{name}' does not match any known Neuropixels 2.0 probe names.");
+                throw new ArgumentException($"The type '{name}' does not match any implemented Neuropixels 2.0 probe types.");
         }
 
         private static Probe[] DefaultProbes(NeuropixelsV2ProbeType probeType)
