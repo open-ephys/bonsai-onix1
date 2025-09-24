@@ -71,7 +71,6 @@ namespace OpenEphys.Onix1
             // Create Configuration bit arrays
             ShankConfig = NeuropixelsV1.MakeShankBits(probeConfiguration);
             BaseConfigs = NeuropixelsV1.MakeConfigBits(probeConfiguration, Adcs);
-           
         }
 
         public void InitializeProbe()

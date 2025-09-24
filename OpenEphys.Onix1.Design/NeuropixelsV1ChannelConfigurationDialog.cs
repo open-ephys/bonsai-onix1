@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -16,7 +17,7 @@ namespace OpenEphys.Onix1.Design
         internal event EventHandler OnZoom;
         internal event EventHandler OnFileLoad;
 
-        readonly IReadOnlyList<int> ReferenceContactsList = new List<int> { 191, 575, 959 };
+        readonly IReadOnlyList<int> ReferenceContactsNp1 = new List<int> { 191, 575, 959 };
 
         /// <summary>
         /// Public <see cref="NeuropixelsV1ProbeConfiguration"/> object that is modified by
@@ -36,12 +37,12 @@ namespace OpenEphys.Onix1.Design
 
             zedGraphChannels.ZoomStepFraction = 0.5;
 
-            ReferenceContacts.AddRange(ReferenceContactsList);
+            UpdateReferenceContacts(probeConfiguration.ProbeType);
 
             ProbeConfiguration = probeConfiguration;
 
-            ZoomInBoundaryX = 400;
-            ZoomInBoundaryY = 400;
+            ZoomInBoundaryX = 100;
+            ZoomInBoundaryY = 100;
 
             HighlightEnabledContacts();
             UpdateContactLabels();
@@ -49,15 +50,35 @@ namespace OpenEphys.Onix1.Design
             RefreshZedGraph();
         }
 
-        internal override ProbeGroup DefaultChannelLayout()
+        void UpdateReferenceContacts(NeuropixelsV1ProbeType probeType)
         {
-            return new NeuropixelsV1eProbeGroup();
+            ReferenceContacts.Clear();
+            ReferenceContacts.AddRange(GetReferenceContacts(probeType));
         }
 
-        internal override void LoadDefaultChannelLayout()
+        List<int> GetReferenceContacts(NeuropixelsV1ProbeType probeType) => probeType switch
         {
-            ProbeConfiguration = new(ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain, ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter);
-            ProbeGroup = ProbeConfiguration.ProbeGroup;
+            NeuropixelsV1ProbeType.NP1 => ReferenceContactsNp1.ToList(),
+            NeuropixelsV1ProbeType.UHD => new List<int>(),
+            _ => throw new InvalidEnumArgumentException(nameof(NeuropixelsV1ProbeType))
+        };
+
+        internal override ProbeGroup DefaultProbeGroup()
+        {
+            return new NeuropixelsV1eProbeGroup(ProbeConfiguration.ProbeType);
+        }
+
+        internal override void LoadDefaultProbeGroup()
+        {
+            base.LoadDefaultProbeGroup();
+            ProbeConfiguration = new((NeuropixelsV1eProbeGroup)ProbeGroup,
+                ProbeConfiguration.ProbeType,
+                ProbeConfiguration.SpikeAmplifierGain,
+                ProbeConfiguration.LfpAmplifierGain,
+                ProbeConfiguration.Reference,
+                ProbeConfiguration.SpikeFilter);
+
+            UpdateReferenceContacts(ProbeConfiguration.ProbeType);
 
             OnFileOpenHandler();
         }
@@ -66,9 +87,8 @@ namespace OpenEphys.Onix1.Design
         {
             if (base.OpenFile<NeuropixelsV1eProbeGroup>())
             {
-                ProbeConfiguration = new((NeuropixelsV1eProbeGroup)ProbeGroup, ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain, ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter);
-                ProbeGroup = ProbeConfiguration.ProbeGroup;
-
+                ProbeConfiguration = new((NeuropixelsV1eProbeGroup)ProbeGroup, ProbeConfiguration.ProbeType, ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain, ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter);
+                UpdateReferenceContacts(ProbeConfiguration.ProbeType);
                 OnFileOpenHandler();
 
                 return true;
@@ -175,13 +195,14 @@ namespace OpenEphys.Onix1.Design
                 countMajorTicks++;
             }
 
-            var curve = zedGraphChannels.GraphPane.AddCurve(ScalePointsTag, pointList, Color.Black, SymbolType.None);
+            var curve = zedGraphChannels.GraphPane.AddCurve("", pointList, Color.Black, SymbolType.None);
 
             const float scaleBarWidth = 1;
 
             curve.Line.Width = scaleBarWidth;
             curve.Label.IsVisible = false;
             curve.Symbol.IsVisible = false;
+            curve.Tag = ScalePointsTag;
         }
 
         internal override void HighlightEnabledContacts()
@@ -202,7 +223,7 @@ namespace OpenEphys.Onix1.Design
             var contactsToEnable = contactObjects.Where(c =>
             {
                 var tag = c.Tag as ContactTag;
-                var channel = NeuropixelsV1Electrode.GetChannelNumber(tag.ContactIndex);
+                var channel = NeuropixelsV1Electrode.GetChannelNumber(tag.ContactIndex, ProbeConfiguration.ProbeType);
                 return ProbeConfiguration.ChannelMap[channel].Index == tag.ContactIndex;
             });
 
@@ -232,7 +253,7 @@ namespace OpenEphys.Onix1.Design
             textObjsToUpdate = textObjs.Where(c =>
             {
                 var tag = c.Tag as ContactTag;
-                var channel = NeuropixelsV1Electrode.GetChannelNumber(tag.ContactIndex);
+                var channel = NeuropixelsV1Electrode.GetChannelNumber(tag.ContactIndex, ProbeConfiguration.ProbeType);
                 return ProbeConfiguration.ChannelMap[channel].Index == tag.ContactIndex;
             });
 
