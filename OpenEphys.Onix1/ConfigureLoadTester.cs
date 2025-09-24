@@ -50,7 +50,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <remarks>
         /// These data are produced by the host and are used to impose a load on host to controller
-        /// commutation. They are discarded by the controller when they are received.
+        /// communication. They are discarded by the controller when they are received.
         /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Number of repetitions of the 32-bit integer dummy words sent with each write frame.")]
@@ -124,18 +124,11 @@ namespace OpenEphys.Onix1
         public const int ID = 27;
 
         public const uint ENABLE = 0;
-        public const uint CLK_DIV = 1;      // Heartbeat clock divider ratio. Default results in 10 Hz heartbeat.
-                                            // Values less than CLK_HZ / 10e6 Hz will result in 1kHz.
-        public const uint CLK_HZ = 2;       // The frequency parameter, CLK_HZ, used in the calculation of CLK_DIV
-        public const uint DT0H16_WORDS = 3; // Number of repetitions of 16-bit unsigned integer 42 sent with each frame. 
-                                            // Note: max here depends of CLK_HZ and CLK_DIV. There needs to be enough clock
-                                            // cycles to push the data at the requested CLK_HZ. Specifically,
-                                            // CLK_HZ / CLK_DIV >= DT0H16_WORDS + 9. Going above this will result in 
-                                            // decreased bandwidth as samples will be skipped.
-        public const uint HTOD32_WORDS = 4; // Number of 32-bit words in a write-frame. All write frame data is ignored except
-                                            // the first 64-bits, which are looped back into the device to host data frame for   
-                                            // testing loop latency. This value must be at least 2.
-
+        public const uint CLK_DIV = 1;
+        public const uint CLK_HZ = 2;
+        public const uint DT0H16_WORDS = 3;
+        public const uint HTOD32_WORDS = 4;
+        public const uint DTOH_START = 5;
 
         internal class NameConverter : DeviceNameConverter
         {
