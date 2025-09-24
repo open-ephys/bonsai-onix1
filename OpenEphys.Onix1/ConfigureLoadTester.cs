@@ -1,27 +1,21 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Linq;
-using System.Reactive.Disposables;
-using System.Reactive.Subjects;
 using Bonsai;
 
 namespace OpenEphys.Onix1
 {
-    // TODO: Add data IO operators, update XML comment to link to them (<see cref="LoadTesterData"/>)
     /// <summary>
-    /// Configures a load tester device.
+    /// Configures a load tester device for measuring system performance.
     /// </summary>
     /// <remarks>
-    /// This configuration operator can be linked to a data IO operator, such as LoadTesterData,
-    /// using a shared <c>DeviceName</c>. The load tester device can be configured
-    /// to produce data at user-settable size and rate to stress test various communication links and test
-    /// closed-loop response latency.
+    /// This configuration operator can be linked to a data IO operator, such as <see cref="LoadTesterData"/>,
+    /// using a shared <c>DeviceName</c>. The load tester device can be configured to produce and consume data
+    /// at user-defined sizes and rates to stress test various communication links and measure closed-loop
+    /// response latency using a high-resolution hardware timer.
     /// </remarks>
     [Description("Configures a load testing device.")]
     public class ConfigureLoadTester : SingleDeviceFactory
     {
-        readonly BehaviorSubject<uint> frameHz = new(1000);
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureLoadTester"/> class.
         /// </summary>
@@ -38,31 +32,37 @@ namespace OpenEphys.Onix1
         public bool Enable { get; set; } = false;
 
         /// <summary>
-        /// Gets or sets the number of repetitions of the 16-bit unsigned integer 42 sent with each read-frame.
+        /// Gets or sets the number of incrementing, unsigned 16-bit integers sent with each read frame.
         /// </summary>
+        /// <remarks>
+        /// These data are produced by the controller and are used to impose a load on the controller to host
+        /// communication. These data can be used in downstream computational operations that model the
+        /// computational load imposed by a closed-loop algorithm.
+        /// </remarks>
         [Category(ConfigurationCategory)]
-        [Description("Number of repetitions of the 16-bit unsigned integer 42 sent with each read-frame.")]
+        [Description("Number of incrementing, unsigned 16-bit integers sent with each read-frame.")]
         [Range(0, 10e6)]
         public uint ReceivedWords { get; set; }
 
         /// <summary>
-        /// Gets or sets the number of repetitions of the 32-bit integer 42 sent with each write frame.
+        /// Gets or sets the number of repetitions of the 32-bit integer dummy words sent with each write
+        /// frame.
         /// </summary>
+        /// <remarks>
+        /// These data are produced by the host and are used to impose a load on host to controller
+        /// communication. They are discarded by the controller when they are received.
+        /// </remarks>
         [Category(ConfigurationCategory)]
-        [Description("Number of repetitions of the 32-bit integer 42 sent with each write frame.")]
+        [Description("Number of repetitions of the 32-bit integer dummy words sent with each write frame.")]
         [Range(0, 10e6)]
         public uint TransmittedWords { get; set; }
 
         /// <summary>
-        /// Gets or sets a value specifying the rate at which frames are produced, in Hz.
+        /// Gets or sets a value specifying the rate at which frames are produced in Hz.
         /// </summary>
-        [Category(AcquisitionCategory)]
+        [Category(ConfigurationCategory)]
         [Description("Specifies the rate at which frames are produced (Hz).")]
-        public uint FramesPerSecond
-        {
-            get { return frameHz.Value; }
-            set { frameHz.OnNext(value); }
-        }
+        public uint FramesPerSecond { get; set; }
 
         /// <summary>
         /// Configures a load testing device.
@@ -83,6 +83,8 @@ namespace OpenEphys.Onix1
             var deviceAddress = DeviceAddress;
             var receivedWords = ReceivedWords;
             var transmittedWords = TransmittedWords;
+            var framesPerSecond = FramesPerSecond;
+
             return source.ConfigureDevice((context, observer) =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
@@ -90,33 +92,29 @@ namespace OpenEphys.Onix1
 
                 var clockHz = device.ReadRegister(LoadTester.CLK_HZ);
 
-                // Assumes 8-byte timer
-                uint ValidSize()
+                const int OverheadCycles = 9; // 4 cycles to produce hub clock, and 5 state machine overhead per the datasheet
+
+                var maxFramesPerSecond = clockHz / OverheadCycles;
+                if (framesPerSecond > maxFramesPerSecond)
                 {
-                    var clkDiv = device.ReadRegister(LoadTester.CLK_DIV);
-                    return clkDiv - 4 - 10; // -10 is overhead hack
+                    throw new ArgumentOutOfRangeException(nameof(FramesPerSecond), $"{nameof(FramesPerSecond)} must be less than {maxFramesPerSecond}.");
                 }
 
-                var maxSize = ValidSize();
-                var bounded = receivedWords > maxSize ? maxSize : receivedWords;
-                device.WriteRegister(LoadTester.DT0H16_WORDS, bounded);
+                device.WriteRegister(LoadTester.CLK_DIV, clockHz / framesPerSecond);
 
-                var writeArray = Enumerable.Repeat((uint)42, (int)(transmittedWords + 2)).ToArray();
-                device.WriteRegister(LoadTester.HTOD32_WORDS, transmittedWords);
-                var frameHzSubscription = frameHz.SubscribeSafe(observer, newValue =>
+                var maxSize = device.ReadRegister(LoadTester.CLK_DIV) - OverheadCycles;
+
+                if (receivedWords > maxSize)
                 {
-                    device.WriteRegister(LoadTester.CLK_DIV, clockHz / newValue);
-                    var maxSize = ValidSize();
-                    if (receivedWords > maxSize)
-                    {
-                        receivedWords = maxSize;
-                    }
-                });
+                    throw new ArgumentOutOfRangeException(nameof(ReceivedWords), 
+                        $"{nameof(ReceivedWords)} must be less than {maxSize} for the requested frame rate of {framesPerSecond} Hz.");
+                }
 
-                return new CompositeDisposable(
-                    DeviceManager.RegisterDevice(deviceName, device, DeviceType),
-                    frameHzSubscription
-                );
+                device.WriteRegister(LoadTester.DT0H16_WORDS, receivedWords);
+                device.WriteRegister(LoadTester.HTOD32_WORDS, transmittedWords);
+                
+                var deviceInfo = new LoadTesterDeviceInfo(context, DeviceType, deviceAddress, ReceivedWords, TransmittedWords);
+                return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
         }
     }
@@ -126,17 +124,11 @@ namespace OpenEphys.Onix1
         public const int ID = 27;
 
         public const uint ENABLE = 0;
-        public const uint CLK_DIV = 1;      // Heartbeat clock divider ratio. Default results in 10 Hz heartbeat.
-                                            // Values less than CLK_HZ / 10e6 Hz will result in 1kHz.
-        public const uint CLK_HZ = 2;       // The frequency parameter, CLK_HZ, used in the calculation of CLK_DIV
-        public const uint DT0H16_WORDS = 3; // Number of repetitions of 16-bit unsigned integer 42 sent with each frame. 
-                                            // Note: max here depends of CLK_HZ and CLK_DIV. There needs to be enough clock
-                                            // cycles to push the data at the requested CLK_HZ. Specifically,
-                                            // CLK_HZ / CLK_DIV >= TX16_WORDS + 9. Going above this will result in 
-                                            // decreased bandwidth as samples will be skipped.
-        public const uint HTOD32_WORDS = 4; // Number of 32-bit words in a write-frame. All write frame data is ignored except
-                                            // the first 64-bits, which are looped back into the device to host data frame for   
-                                            // testing loop latency. This value must be at least 2.
+        public const uint CLK_DIV = 1;
+        public const uint CLK_HZ = 2;
+        public const uint DT0H16_WORDS = 3;
+        public const uint HTOD32_WORDS = 4;
+        public const uint DTOH_START = 5;
 
         internal class NameConverter : DeviceNameConverter
         {
