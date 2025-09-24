@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -69,6 +70,8 @@ namespace OpenEphys.Onix1.Design
             get => ChannelConfiguration.ProbeConfiguration;
         }
 
+        readonly Dictionary<NeuropixelsV2ProbeType, NeuropixelsV2ProbeConfiguration> probeConfigurations;
+
         /// <inheritdoc cref="ConfigureNeuropixelsV2e.InvertPolarity"/>
         public bool InvertPolarity { get; set; }
 
@@ -86,7 +89,15 @@ namespace OpenEphys.Onix1.Design
 
             textBoxProbeCalibrationFile.Text = calibrationFile;
 
-            ChannelConfiguration = new(configuration)
+            probeConfigurations = new()
+            {
+                [NeuropixelsV2ProbeType.SingleShank] = new(configuration.Probe, NeuropixelsV2ProbeType.SingleShank, configuration.Reference),
+                [NeuropixelsV2ProbeType.QuadShank] = new(configuration.Probe, NeuropixelsV2ProbeType.QuadShank, configuration.Reference)
+            };
+
+            probeConfigurations[configuration.ProbeType].SelectElectrodes(configuration.ChannelMap);
+
+            ChannelConfiguration = new(probeConfigurations[configuration.ProbeType])
             {
                 TopLevel = false,
                 FormBorderStyle = FormBorderStyle.None,
@@ -110,21 +121,17 @@ namespace OpenEphys.Onix1.Design
             else
                 comboBoxProbeType.SelectedIndexChanged += SelectedProbeTypeChanged;
 
-            comboBoxReference.DataSource = NeuropixelsV2ProbeConfiguration.FilterNeuropixelsV2ShankReference(ProbeConfiguration.ProbeType);
-            comboBoxReference.SelectedItem = ProbeConfiguration.Reference;
-            comboBoxReference.SelectedIndexChanged += SelectedReferenceChanged;
-
             comboBoxChannelPresets.DataSource = GetComboBoxChannelPresets(ProbeConfiguration.ProbeType);
             comboBoxChannelPresets.SelectedIndexChanged += SelectedChannelPresetChanged;
 
             checkBoxInvertPolarity.Checked = InvertPolarity;
             checkBoxInvertPolarity.CheckedChanged += InvertPolarityIndexChanged;
 
-            CheckForExistingChannelPreset();
-
             CheckStatus();
 
             Text += ": " + ProbeConfiguration.Probe.ToString();
+
+            UpdateProbeConfiguration();
         }
 
         static Array GetComboBoxChannelPresets(NeuropixelsV2ProbeType probeType)
@@ -173,27 +180,30 @@ namespace OpenEphys.Onix1.Design
 
         void UpdateProbeConfiguration()
         {
+            var probeType = (NeuropixelsV2ProbeType)comboBoxProbeType.SelectedItem;
+
+            ChannelConfiguration.ProbeConfiguration = probeConfigurations[probeType];
+            ChannelConfiguration.ProbeGroup = ProbeConfiguration.ProbeGroup;
+
             ChannelConfiguration.DrawProbeGroup();
             ChannelConfiguration.ResetZoom();
             ChannelConfiguration.RefreshZedGraph();
 
-            comboBoxReference.DataSource = NeuropixelsV2ProbeConfiguration.FilterNeuropixelsV2ShankReference(ProbeConfiguration.ProbeType);
-
             comboBoxChannelPresets.SelectedIndexChanged -= SelectedChannelPresetChanged; // NB: Temporarily detach handler so the loaded electrode configuration is respected
             comboBoxChannelPresets.DataSource = GetComboBoxChannelPresets(ProbeConfiguration.ProbeType);
             comboBoxChannelPresets.SelectedIndexChanged += SelectedChannelPresetChanged;
+
+            comboBoxReference.SelectedIndexChanged -= SelectedReferenceChanged;
+            comboBoxReference.DataSource = NeuropixelsV2ProbeConfiguration.FilterNeuropixelsV2ShankReference(ProbeConfiguration.ProbeType);
+            comboBoxReference.SelectedItem = ProbeConfiguration.Reference;
+            comboBoxReference.SelectedIndexChanged += SelectedReferenceChanged;
+
+            CheckForExistingChannelPreset();
         }
 
         void SelectedProbeTypeChanged(object sender, EventArgs e)
         {
-            var probeType = (NeuropixelsV2ProbeType)((ComboBox)sender).SelectedItem;
-
-            if (probeType != ProbeConfiguration.ProbeType)
-            {
-                ProbeConfiguration.ProbeType = probeType;
-                ChannelConfiguration.LoadDefaultChannelLayout();
-                UpdateProbeConfiguration();
-            }
+            UpdateProbeConfiguration();
         }
 
         private void SelectedReferenceChanged(object sender, EventArgs e)
@@ -650,10 +660,25 @@ namespace OpenEphys.Onix1.Design
 
         private void OnFileLoadEvent(object sender, EventArgs e)
         {
-            ProbeConfiguration.ProbeType = NeuropixelsV2eProbeGroup.GetProbeTypeFromProbeName(ChannelConfiguration.ProbeGroup.Probes.First().Annotations.Name);
-            comboBoxProbeType.SelectedItem = ProbeConfiguration.ProbeType;
+            NeuropixelsV2ProbeType probeType;
+
+            try
+            {
+                probeType = NeuropixelsV2eProbeGroup.GetProbeTypeFromProbeName(ChannelConfiguration.ProbeGroup.Probes.First().Annotations.Name);
+            }
+            catch (ArgumentException ex)
+            {
+                MessageBox.Show(ex.Message);
+                return;
+            }
+
+            probeConfigurations[probeType] = new((NeuropixelsV2eProbeGroup)ChannelConfiguration.ProbeGroup,
+                probeConfigurations[probeType].Probe,
+                probeConfigurations[probeType].ProbeType,
+                probeConfigurations[probeType].Reference);
+
+            comboBoxProbeType.SelectedItem = probeType;
             UpdateProbeConfiguration();
-            CheckForExistingChannelPreset();
         }
 
         private void FileTextChanged(object sender, EventArgs e)
