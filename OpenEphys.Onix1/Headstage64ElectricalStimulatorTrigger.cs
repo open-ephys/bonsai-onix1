@@ -233,17 +233,11 @@ namespace OpenEphys.Onix1
                         observer.OnError,
                         observer.OnCompleted);
 
-                    static uint uAToCode(double currentuA)
-                    {
-                        var k = 1 / (2 * Headstage64ElectricalStimulator.AbsMaxMicroAmps / (Math.Pow(2, Headstage64ElectricalStimulator.DacBitDepth) - 1)); // static
-                        return (uint)(k * (currentuA + Headstage64ElectricalStimulator.AbsMaxMicroAmps));
-                    }
-
                     return new CompositeDisposable(
-                        enable.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.ENABLE, value ? 1u : 0u)),
-                        phaseOneCurrent.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.CURRENT1, uAToCode(value))),
-                        interPhaseCurrent.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.RESTCURR, uAToCode(value))),
-                        phaseTwoCurrent.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.CURRENT2, uAToCode(value))),
+                        enable.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.STIMENABLE, value ? 1u : 0u)),
+                        phaseOneCurrent.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.CURRENT1, Headstage64ElectricalStimulator.MicroampsToCode(value))),
+                        interPhaseCurrent.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.RESTCURR, Headstage64ElectricalStimulator.MicroampsToCode(value))),
+                        phaseTwoCurrent.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.CURRENT2, Headstage64ElectricalStimulator.MicroampsToCode(value))),
                         triggerDelay.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.TRAINDELAY, value)),
                         phaseOneDuration.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.PULSEDUR1, value)),
                         interPhaseInterval.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.INTERPHASEINTERVAL, value)),

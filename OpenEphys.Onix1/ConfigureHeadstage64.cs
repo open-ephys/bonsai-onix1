@@ -167,7 +167,7 @@ namespace OpenEphys.Onix1
                 // between cycles to fix.
                 const double MinVoltage = 3.3;
                 const double MaxVoltage = 6.0;
-                const double VoltageOffset = 3.4;
+                const double VoltageOffset = 4.0;
                 const double VoltageIncrement = 0.2;
 
                 // NB: Wait for 1 second to discharge the headstage in the case that they have e.g. just
