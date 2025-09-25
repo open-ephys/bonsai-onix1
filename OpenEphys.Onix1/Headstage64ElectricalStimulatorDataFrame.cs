@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A headstage-64 onboard electrical stimulator report.
+    /// A headstage-64 electrical stimulus report.
     /// </summary>
     /// <remarks>
     /// These frames provide synchronized information about the stimulus timing, trigger source, and stimulus
@@ -15,7 +15,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Initializes a new instance of the <see cref="Headstage64ElectricalStimulatorDataFrame"/> class.
         /// </summary>
-        /// <param name="frame">An ONI containing a headstage-64 onboard electrical stimulator report.</param>
+        /// <param name="frame">An ONI frame containing a electrical stimulus report.</param>
         public unsafe Headstage64ElectricalStimulatorDataFrame(oni.Frame frame)
             : base(frame.Clock)
         {
@@ -87,12 +87,12 @@ namespace OpenEphys.Onix1
         public uint PulsesPerBurst { get; }
 
         /// <summary>
-        /// Gets inter-burst interval duration in microseconds.
+        /// Gets the inter-burst interval duration in microseconds.
         /// </summary>
         public uint InterBurstInterval { get; }
 
         /// <summary>
-        /// Gets the number of burst per train.
+        /// Gets the number of bursts per train.
         /// </summary>
         public uint BurstsPerTrain { get; }
 

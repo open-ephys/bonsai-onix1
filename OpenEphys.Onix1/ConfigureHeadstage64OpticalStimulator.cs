@@ -4,14 +4,14 @@ using System.ComponentModel;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Configures a headstage-64 dual-channel optical stimulator.
+    /// Configures a headstage-64 optical stimulator.
     /// </summary>
     /// <remarks>
     /// This configuration operator can be linked to a data IO operator, such as <see
     /// cref="Headstage64OpticalStimulatorTrigger"/>, using a shared
     /// <c>DeviceName</c>.
     /// </remarks>
-    [Description("Configures a headstage-64 dual-channel optical stimulator.")]
+    [Description("Configures a headstage-64 optical stimulator.")]
     public class ConfigureHeadstage64OpticalStimulator : SingleDeviceFactory
     {
         /// <summary>
@@ -21,6 +21,17 @@ namespace OpenEphys.Onix1
             : base(typeof(Headstage64OpticalStimulator))
         {
         }
+
+        /// <summary>
+        /// Gets or sets the data enable state.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, <see cref="Headstage64OpticalStimulatorData"/> will produce data. If set to
+        /// false, <see cref="Headstage64OpticalStimulatorData"/> will not produce data.
+        /// </remarks>
+        [Category(ConfigurationCategory)]
+        [Description("Specifies whether the headstage-64 optical stimulator will produce stimulus reports.")]
+        public bool Enable { get; set; }
 
         /// <summary>
         /// Configure a headstage-64 dual-channel optical stimulator.
@@ -37,10 +48,12 @@ namespace OpenEphys.Onix1
         {
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
+            var enable = Enable;
             return source.ConfigureDevice(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
-                device.WriteRegister(Headstage64OpticalStimulator.ENABLE, 0);
+                device.WriteRegister(Headstage64OpticalStimulator.ENABLE, enable ? 1u : 0u);
+                device.WriteRegister(Headstage64OpticalStimulator.STIMENABLE, 0u);
                 return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
             });
         }
@@ -55,7 +68,7 @@ namespace OpenEphys.Onix1
         public const uint PotResistanceOhms = 100_000;
 
         // managed registers
-        public const uint NULLPARM = 0; // No command
+        public const uint ENABLE = 0; // Enable stimulus report stream
         public const uint MAXCURRENT = 1; // Max LED/LD current, (0 to 255 = 800mA to 0 mA.See fig XX of CAT4016 datasheet)
         public const uint PULSEMASK = 2; // Bitmask determining which of the(up to 32) channels is affected by trigger
         public const uint PULSEDUR = 3; // Pulse duration, microseconds
@@ -65,7 +78,7 @@ namespace OpenEphys.Onix1
         public const uint TRAINCOUNT = 7; // Number of bursts in train
         public const uint TRAINDELAY = 8; // Stimulus start delay, microseconds
         public const uint TRIGGER = 9; // Trigger stimulation (0 = off, 1 = deliver)
-        public const uint ENABLE = 10; // 1: enables the stimulator, 0: stimulator ignores triggers (so that a common trigger can be used)
+        public const uint STIMENABLE = 10; // 1: enables the stimulator, 0: stimulator ignores triggers (so that a common trigger can be used)
         public const uint RESTMASK = 11; // Bitmask determining the off state of the up to 32 current channels
         public const uint RESET = 12; // None If 1, Reset all parameters to default (not implemented)
         public const uint MINRHEOR = 13; // The series resistor between the potentiometer (rheostat) and RSET bin on the CAT4016

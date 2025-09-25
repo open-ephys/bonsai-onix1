@@ -30,7 +30,7 @@ namespace OpenEphys.Onix1
         /// false, <see cref="Headstage64ElectricalStimulatorData"/> will not produce data.
         /// </remarks>
         [Category(ConfigurationCategory)]
-        [Description("Specifies whether the digital IO device is enabled.")]
+        [Description("Specifies whether the headstage-64 electrical stimulator will produce stimulus reports.")]
         public bool Enable { get; set; }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace OpenEphys.Onix1
         public const double AbsMaxMicroAmps = 2500;
 
         // managed registers
-        public const uint ENABLE = 0; // Eanble stimulus report stream
+        public const uint ENABLE = 0; // Enable stimulus report stream
         public const uint BIPHASIC = 1; // Biphasic pulse (0 = monophasic, 1 = biphasic; NB: currently ignored)
         public const uint CURRENT1 = 2; // Phase 1 current
         public const uint CURRENT2 = 3; // Phase 2 current

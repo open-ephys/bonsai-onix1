@@ -3,7 +3,7 @@
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A headstage-64 onboard optical stimulator report.
+    /// A headstage-64 optical stimulus report.
     /// </summary>
     /// <remarks>
     /// These frames provide synchronized information about the stimulus timing, trigger source, and stimulus
@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Initializes a new instance of the <see cref="Headstage64OpticalStimulatorDataFrame"/> class.
         /// </summary>
-        /// <param name="frame">An ONI containing a headstage-64 onboard optical stimulator report.</param>
+        /// <param name="frame">An ONI frame containing a headstage-64 optical stimulus report.</param>
         public unsafe Headstage64OpticalStimulatorDataFrame(oni.Frame frame)
             : base(frame.Clock)
         {
@@ -80,12 +80,12 @@ namespace OpenEphys.Onix1
         public uint PulsesPerBurst { get; }
 
         /// <summary>
-        /// Gets inter-burst interval duration in milliseconds.
+        /// Gets the inter-burst interval duration in milliseconds.
         /// </summary>
         public double InterBurstInterval { get; }
 
         /// <summary>
-        /// Gets the number of burst per train.
+        /// Gets the number of bursts per train.
         /// </summary>
         public uint BurstsPerTrain { get; }
 

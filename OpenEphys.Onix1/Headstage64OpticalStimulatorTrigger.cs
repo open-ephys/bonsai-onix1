@@ -245,8 +245,10 @@ namespace OpenEphys.Onix1
                     }
 
                     return new CompositeDisposable(
-                        enable.SubscribeSafe(observer, value => device.WriteRegister(Headstage64OpticalStimulator.ENABLE, value ? 1u : 0u)),
-                        maxCurrent.SubscribeSafe(observer, value => device.WriteRegister(Headstage64OpticalStimulator.MAXCURRENT, Headstage64OpticalStimulator.MilliampsToPotSetting(value))),
+                        enable.SubscribeSafe(observer, value => 
+                            device.WriteRegister(Headstage64OpticalStimulator.STIMENABLE, value ? 1u : 0u)),
+                        maxCurrent.SubscribeSafe(observer, value => 
+                            device.WriteRegister(Headstage64OpticalStimulator.MAXCURRENT, Headstage64OpticalStimulator.MilliampsToPotSetting(value))),
                         channelOneCurrent.SubscribeSafe(observer, value =>
                         {
                             currentSourceMask = percentToPulseMask(0, value, currentSourceMask);
@@ -257,12 +259,18 @@ namespace OpenEphys.Onix1
                             currentSourceMask = percentToPulseMask(1, value, currentSourceMask);
                             device.WriteRegister(Headstage64OpticalStimulator.PULSEMASK, currentSourceMask);
                         }),
-                        pulseDuration.SubscribeSafe(observer, value => device.WriteRegister(Headstage64OpticalStimulator.PULSEDUR, pulseDurationToRegister(value, PulsesPerSecond))),
-                        pulsesPerSecond.SubscribeSafe(observer, value => device.WriteRegister(Headstage64OpticalStimulator.PULSEPERIOD, pulseFrequencyToRegister(value, PulseDuration))),
-                        pulsesPerBurst.SubscribeSafe(observer, value => device.WriteRegister(Headstage64OpticalStimulator.BURSTCOUNT, value)),
-                        interBurstInterval.SubscribeSafe(observer, value => device.WriteRegister(Headstage64OpticalStimulator.IBI, (uint)(1000 * value))),
-                        burstsPerTrain.SubscribeSafe(observer, value => device.WriteRegister(Headstage64OpticalStimulator.TRAINCOUNT, value)),
-                        delay.SubscribeSafe(observer, value => device.WriteRegister(Headstage64OpticalStimulator.TRAINDELAY, (uint)(1000 * value))),
+                        pulseDuration.SubscribeSafe(observer, value => 
+                            device.WriteRegister(Headstage64OpticalStimulator.PULSEDUR, pulseDurationToRegister(value, PulsesPerSecond))),
+                        pulsesPerSecond.SubscribeSafe(observer, value => 
+                            device.WriteRegister(Headstage64OpticalStimulator.PULSEPERIOD, pulseFrequencyToRegister(value, PulseDuration))),
+                        pulsesPerBurst.SubscribeSafe(observer, value => 
+                            device.WriteRegister(Headstage64OpticalStimulator.BURSTCOUNT, value)),
+                        interBurstInterval.SubscribeSafe(observer, value => 
+                            device.WriteRegister(Headstage64OpticalStimulator.IBI, (uint)(1000 * value))),
+                        burstsPerTrain.SubscribeSafe(observer, value => 
+                            device.WriteRegister(Headstage64OpticalStimulator.TRAINCOUNT, value)),
+                        delay.SubscribeSafe(observer, value => 
+                            device.WriteRegister(Headstage64OpticalStimulator.TRAINDELAY, (uint)(1000 * value))),
                         source.SubscribeSafe(triggerObserver)
                     );
                 }));
