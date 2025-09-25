@@ -30,7 +30,6 @@ namespace OpenEphys.Onix1
         readonly BehaviorSubject<uint> burstsPerTrain = new(1);
         readonly BehaviorSubject<double> delay = new(0);
 
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureHeadstage64OpticalStimulator"/> class.
         /// </summary>
@@ -48,6 +47,7 @@ namespace OpenEphys.Onix1
             DeviceName = opticalStimulator.DeviceName;
             DeviceAddress = opticalStimulator.DeviceAddress;
             Enable = opticalStimulator.Enable;
+            StimEnable = opticalStimulator.StimEnable;
             Delay = opticalStimulator.Delay;
             MaxCurrent = opticalStimulator.MaxCurrent;
             ChannelOneCurrent = opticalStimulator.ChannelOneCurrent;
@@ -58,12 +58,6 @@ namespace OpenEphys.Onix1
             InterBurstInterval = opticalStimulator.InterBurstInterval;
             BurstsPerTrain = opticalStimulator.BurstsPerTrain;
         }
-
-        static double VerifyValueLimits(double value, double min, double max) =>
-            Math.Min(Math.Max(value, min), max);
-
-        static uint VerifyValueLimits(uint value, uint min, uint max) =>
-            Math.Min(Math.Max(value, min), max);
 
         /// <summary>
         /// Gets or sets the data enable state.
@@ -101,7 +95,7 @@ namespace OpenEphys.Onix1
         public double Delay
         {
             get => delay.Value;
-            set => delay.OnNext(VerifyValueLimits(value, Headstage64OpticalStimulator.MinDelay, Headstage64OpticalStimulator.MaxDelay));
+            set => delay.OnNext(Clamp(value, Headstage64OpticalStimulator.MinDelay, Headstage64OpticalStimulator.MaxDelay));
         }
 
         /// <summary>
@@ -122,12 +116,12 @@ namespace OpenEphys.Onix1
         public double MaxCurrent
         {
             get => maxCurrent.Value;
-            set => maxCurrent.OnNext(VerifyValueLimits(value, Headstage64OpticalStimulator.MinCurrent, Headstage64OpticalStimulator.MaxCurrent));
+            set => maxCurrent.OnNext(Clamp(value, Headstage64OpticalStimulator.MinCurrent, Headstage64OpticalStimulator.MaxCurrent));
         }
 
         static double VerifyChannelPercentage(double value, double min, double max, double step)
         {
-            value = VerifyValueLimits(value, min, max);
+            value = Clamp(value, min, max);
 
             return Math.Round(value / step) * step;
         }
@@ -177,7 +171,7 @@ namespace OpenEphys.Onix1
         public double PulseDuration
         {
             get => pulseDuration.Value;
-            set => pulseDuration.OnNext(VerifyValueLimits(value, Headstage64OpticalStimulator.MinPulseDuration, Headstage64OpticalStimulator.MaxPulseDuration));
+            set => pulseDuration.OnNext(Clamp(value, Headstage64OpticalStimulator.MinPulseDuration, Headstage64OpticalStimulator.MaxPulseDuration));
         }
 
         /// <summary>
@@ -191,7 +185,7 @@ namespace OpenEphys.Onix1
         public double PulsesPerSecond
         {
             get => pulsesPerSecond.Value;
-            set => pulsesPerSecond.OnNext(VerifyValueLimits(value, Headstage64OpticalStimulator.MinPulsePeriod, Headstage64OpticalStimulator.MaxPulsePeriod));
+            set => pulsesPerSecond.OnNext(Clamp(value, Headstage64OpticalStimulator.MinPulsePeriod, Headstage64OpticalStimulator.MaxPulsePeriod));
         }
 
         /// <summary>
@@ -205,7 +199,7 @@ namespace OpenEphys.Onix1
         public uint PulsesPerBurst
         {
             get => pulsesPerBurst.Value;
-            set => pulsesPerBurst.OnNext(VerifyValueLimits(value, 1, int.MaxValue));
+            set => pulsesPerBurst.OnNext(Clamp(value, 1, int.MaxValue));
         }
 
         /// <summary>
@@ -219,7 +213,7 @@ namespace OpenEphys.Onix1
         public double InterBurstInterval
         {
             get => interBurstInterval.Value;
-            set => interBurstInterval.OnNext(VerifyValueLimits(value, Headstage64OpticalStimulator.MinInterBurstInterval, Headstage64OpticalStimulator.MaxInterBurstInterval));
+            set => interBurstInterval.OnNext(Clamp(value, Headstage64OpticalStimulator.MinInterBurstInterval, Headstage64OpticalStimulator.MaxInterBurstInterval));
         }
 
         /// <summary>
@@ -233,7 +227,7 @@ namespace OpenEphys.Onix1
         public uint BurstsPerTrain
         {
             get => burstsPerTrain.Value;
-            set => burstsPerTrain.OnNext(VerifyValueLimits(value, 1, int.MaxValue));
+            set => burstsPerTrain.OnNext(Clamp(value, 1, int.MaxValue));
         }
 
         // TODO: Should this be checked before TRIGGER is written to below and an error thrown if
@@ -253,6 +247,12 @@ namespace OpenEphys.Onix1
             }
         }
 
+        static double Clamp(double value, double min, double max) =>
+            Math.Min(Math.Max(value, min), max);
+
+        static uint Clamp(uint value, uint min, uint max) =>
+            Math.Min(Math.Max(value, min), max);
+
         /// <summary>
         /// Configure a headstage-64 dual-channel optical stimulator.
         /// </summary>
@@ -269,13 +269,11 @@ namespace OpenEphys.Onix1
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
             var enable = Enable;
-
             return source.ConfigureDevice((context, observer) =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
 
                 device.WriteRegister(Headstage64OpticalStimulator.ENABLE, enable ? 1u : 0u);
-                device.WriteRegister(Headstage64OpticalStimulator.STIMENABLE, 0u);
 
                 uint currentSourceMask = 0;
                 static uint percentToPulseMask(int channel, double percent, uint oldMask)
