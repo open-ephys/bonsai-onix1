@@ -41,11 +41,14 @@ namespace OpenEphys.Onix1
     [Description("Starts data acquisition and frame distribution on a ContextTask.")]
     public class StartAcquisition : Combinator<ContextTask, IGroupedObservable<uint, oni.Frame>>
     {
+        int readSize = 2048;
+
         /// <summary>
         /// Gets or sets the number of bytes read per cycle of the <see cref="ContextTask"/>'s acquisition
         /// thread.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// This option allows control over a fundamental trade-off between closed-loop response time and
         /// available bandwidth. A minimal value, which is determined by <see
         /// cref="ContextTask.MaxReadFrameSize"/>, will provide the lowest response latency, so long as data
@@ -55,10 +58,18 @@ namespace OpenEphys.Onix1
         /// performance for high-bandwidth data sources. The optimal value depends on the host computer and
         /// hardware configuration and must be determined via testing (e.g. using <see
         /// cref="MemoryMonitorData"/>).
+        /// </para>
+        /// <para>
+        /// The number of bytes set will be rounded up to the next multiple of four.
+        /// </para>
         /// </remarks>
         [Description("Number of bytes read per cycle of the acquisition thread.")]
         [Category(DeviceFactory.ConfigurationCategory)]
-        public int ReadSize { get; set; } = 2048;
+        public int ReadSize
+        {
+            get => readSize;
+            set => readSize = (value + 3) & ~3; // NB: Round up to the next multiple of four to align with word boundaries in liboni
+        }
 
         /// <summary>
         /// Gets or sets the number of bytes that are pre-allocated for writing data to hardware.
