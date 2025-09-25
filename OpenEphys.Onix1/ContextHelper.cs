@@ -19,6 +19,13 @@ namespace OpenEphys.Onix1
                 ThrowInvalidDeviceException(expectedType, address);
             }
 
+            var minVersion = GetMinimumFirmwareVersion(expectedType);
+
+            if (device.Version < minVersion)
+            {
+                ThrowInvalidDeviceVersionException(expectedType, address, device.Version, minVersion);
+            }
+
             return new DeviceContext(context, device);
         }
 
@@ -60,6 +67,23 @@ namespace OpenEphys.Onix1
             return (int)fieldInfo.GetRawConstantValue();
         }
 
+        static uint GetMinimumFirmwareVersion(Type deviceType)
+        {
+            var fieldInfo = deviceType.GetField(
+                "MinimumVersion",
+                BindingFlags.Static |
+                BindingFlags.Public |
+                BindingFlags.NonPublic |
+                BindingFlags.IgnoreCase);
+            if (fieldInfo == null || !fieldInfo.IsLiteral)
+            {
+                throw new ArgumentException($"The specified device type {deviceType} does not have a const MinimumVersion field.", nameof(deviceType));
+            }
+
+            return (uint)fieldInfo.GetRawConstantValue();
+        }
+
+
         static void ThrowDeviceNotFoundException(Type expectedType, uint address)
         {
             throw new InvalidOperationException($"Device '{expectedType.Name}' was not found in the device table at address {address}.");
@@ -68,6 +92,11 @@ namespace OpenEphys.Onix1
         static void ThrowInvalidDeviceException(Type expectedType, uint address)
         {
             throw new InvalidOperationException($"Invalid device ID. The device found at address {address} is not a '{expectedType.Name}' device.");
+        }
+
+        static void ThrowInvalidDeviceVersionException(Type expectedType, uint address, uint deviceVersion, uint minimumVersion)
+        {
+            throw new InvalidOperationException($"Invalid device version. Detected {expectedType.Name} v{deviceVersion} at {address}, but v{minimumVersion} is required. A firmware update is recommended.");
         }
 
         internal static bool CheckDeviceType(Type deviceType, Type targetType)

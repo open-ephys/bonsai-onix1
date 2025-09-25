@@ -122,6 +122,7 @@ namespace OpenEphys.Onix1
     static class LoadTester
     {
         public const int ID = 27;
+        public const uint MinimumVersion = 2;
 
         public const uint ENABLE = 0;
         public const uint CLK_DIV = 1;

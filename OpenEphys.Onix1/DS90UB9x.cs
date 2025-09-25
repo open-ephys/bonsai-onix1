@@ -6,6 +6,7 @@ namespace OpenEphys.Onix1
     static class DS90UB9x
     {
         public const int ID = 24;
+        public const uint MinimumVersion = 3;
 
         // managed registers
         public const uint ENABLE = 0x8000;

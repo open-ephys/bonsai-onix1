@@ -70,6 +70,7 @@ namespace OpenEphys.Onix1
     static class Bno055
     {
         public const int ID = 9;
+        public const uint MinimumVersion = 2;
 
         // constants
         public const float EulerAngleScale = 1f / 16; // 1 degree = 16 LSB

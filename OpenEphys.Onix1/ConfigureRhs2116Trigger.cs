@@ -209,6 +209,7 @@ namespace OpenEphys.Onix1
     static class Rhs2116Trigger
     {
         public const int ID = 32;
+        public const uint MinimumVersion = 2;
 
         // managed registers
         public const uint ENABLE = 0; // Enable or disable the trigger event datastream
