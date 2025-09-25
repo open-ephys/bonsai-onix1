@@ -34,20 +34,17 @@ namespace OpenEphys.Onix1.Design
                 ConfigureNode = new ConfigureNeuropixelsV1f(configureV1f);
             }
 
-            ProbeConfigurationDialog = new(ConfigureNode.ProbeConfiguration, ConfigureNode.AdcCalibrationFile, ConfigureNode.GainCalibrationFile, ConfigureNode.InvertPolarity)
-            {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this
-            };
+            ProbeConfigurationDialog = new(ConfigureNode.ProbeConfiguration,
+                ConfigureNode.AdcCalibrationFile,
+                ConfigureNode.GainCalibrationFile,
+                ConfigureNode.InvertPolarity);
 
-            panelProbe.Controls.Add(ProbeConfigurationDialog);
+            ProbeConfigurationDialog.SetChildFormProperties(this).AddDialogToPanel(panelProbe);
 
             this.AddMenuItemsFromDialogToFileOption(ProbeConfigurationDialog);
         }
 
-        private void FormShown(object sender, EventArgs e)
+        void FormShown(object sender, EventArgs e)
         {
             if (!TopLevel)
             {

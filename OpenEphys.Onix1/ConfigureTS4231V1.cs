@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Drawing.Design;
 
 namespace OpenEphys.Onix1
 {
@@ -14,6 +15,7 @@ namespace OpenEphys.Onix1
     /// arena.
     /// </remarks>
     [Description("Configures a TS4231 receiver array.")]
+    [DefaultProperty(nameof(Enable))]
     public class ConfigureTS4231V1 : SingleDeviceFactory
     {
         /// <summary>
@@ -25,6 +27,18 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
+        /// Initializes a copy instance of the <see cref="ConfigureTS4231V1"/> class with the given values.
+        /// </summary>
+        /// <param name="configureTS4231V1">Existing configuration settings.</param>
+        public ConfigureTS4231V1(ConfigureTS4231V1 configureTS4231V1)
+            : this()
+        {
+            Enable = configureTS4231V1.Enable;
+            DeviceAddress = configureTS4231V1.DeviceAddress;
+            DeviceName = configureTS4231V1.DeviceName;
+        }
+
+        /// <summary>
         /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>
@@ -33,6 +47,7 @@ namespace OpenEphys.Onix1
         /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Specifies whether the TS4231 device is enabled.")]
+        [Editor("OpenEphys.Onix1.Design.TS4231V1Editor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         public bool Enable { get; set; } = true;
 
         /// <summary>

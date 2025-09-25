@@ -30,34 +30,19 @@ namespace OpenEphys.Onix1.Design
 
             ProbeGroup = new Rhs2116ProbeGroup(probeGroup);
 
-            StimulusSequenceDialog = new Rhs2116StimulusSequenceDialog(sequence, ProbeGroup)
-            {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this,
-            };
+            StimulusSequenceDialog = new Rhs2116StimulusSequenceDialog(sequence, ProbeGroup);
 
-            tabPageStimulusSequence.Controls.Add(StimulusSequenceDialog);
+            StimulusSequenceDialog.SetChildFormProperties(this).AddDialogToTab(tabPageStimulusSequence);
             this.AddMenuItemsFromDialogToFileOption(StimulusSequenceDialog);
 
-            StimulusSequenceDialog.Show();
+            Rhs2116Dialog = new Rhs2116Dialog(rhs2116);
 
-            Rhs2116Dialog = new Rhs2116Dialog(rhs2116)
-            {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this,
-            };
-
-            tabPageRhs2116A.Controls.Add(Rhs2116Dialog);
-            Rhs2116Dialog.Show();
+            Rhs2116Dialog.SetChildFormProperties(this).AddDialogToTab(tabPageRhs2116);
         }
 
-        private void OnClickOK(object sender, EventArgs e)
+        void OnClickOK(object sender, EventArgs e)
         {
-            if (Rhs2116StimulusSequenceDialog.CanCloseForm(StimulusSequenceDialog.Sequence, out DialogResult result))
+            if (StimulusSequenceDialog.CanCloseForm(out DialogResult result))
             {
                 DialogResult = result;
                 Close();

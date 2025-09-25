@@ -22,11 +22,7 @@ namespace OpenEphys.Onix1.Design
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
-                        configureNode.AnalogHighCutoff = editorDialog.ConfigureNode.AnalogHighCutoff;
-                        configureNode.AnalogLowCutoff = editorDialog.ConfigureNode.AnalogLowCutoff;
-                        configureNode.AnalogLowCutoffRecovery = editorDialog.ConfigureNode.AnalogLowCutoffRecovery;
-                        configureNode.DspCutoff = editorDialog.ConfigureNode.DspCutoff;
-                        configureNode.Enable = editorDialog.ConfigureNode.Enable;
+                        DesignHelper.CopyProperties(editorDialog.ConfigureNode, configureNode);
 
                         return true;
                     }
