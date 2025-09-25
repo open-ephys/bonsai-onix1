@@ -40,8 +40,6 @@ namespace OpenEphys.Onix1
         {
         }
 
-
-
         /// Copy constructor for the <see cref="ConfigureHeadstage64ElectricalStimulator"/> class.
         /// </summary>
         /// <param name="electricalStimulator">Existing <see cref="ConfigureHeadstage64ElectricalStimulator"/> object.</param>
@@ -49,6 +47,7 @@ namespace OpenEphys.Onix1
         {
             DeviceName = electricalStimulator.DeviceName;
             DeviceAddress = electricalStimulator.DeviceAddress;
+            Enable = electricalStimulator.Enable;
             StimEnable = electricalStimulator.StimEnable;
             PowerEnable = electricalStimulator.PowerEnable;
             TriggerDelay = electricalStimulator.TriggerDelay;
@@ -63,7 +62,6 @@ namespace OpenEphys.Onix1
             BurstPulseCount = electricalStimulator.BurstPulseCount;
             TrainBurstCount = electricalStimulator.TrainBurstCount;
         }
-
 
         /// <summary>
         /// Gets or sets the data enable state.
@@ -90,16 +88,16 @@ namespace OpenEphys.Onix1
             set => stimEnable.OnNext(value);
         }
 
-    /// <summary>
-    /// Gets or sets the electrical stimulator's power state.
-    /// </summary>
-    /// <remarks>
-    /// If set to true, then the electrical stimulator's ±15V power supplies will be turned on. If set to false,
-    /// they will be turned off. It may be desirable to power down the electrical stimulator's power supplies outside
-    /// of stimulation windows to reduce power consumption and electrical noise. This property must be set to true
-    /// in order for electrical stimuli to be delivered properly. It takes ~10 milliseconds for these supplies to stabilize.
-    /// </remarks>
-    [Description("Stimulator power on/off.")]
+        /// <summary>
+        /// Gets or sets the electrical stimulator's power state.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, then the electrical stimulator's ±15V power supplies will be turned on. If set to false,
+        /// they will be turned off. It may be desirable to power down the electrical stimulator's power supplies outside
+        /// of stimulation windows to reduce power consumption and electrical noise. This property must be set to true
+        /// in order for electrical stimuli to be delivered properly. It takes ~10 milliseconds for these supplies to stabilize.
+        /// </remarks>
+        [Description("Stimulator power on/off.")]
         [Category(AcquisitionCategory)]
         public bool PowerEnable
         {
@@ -119,7 +117,7 @@ namespace OpenEphys.Onix1
             set => triggerDelay.OnNext(value);
         }
 
-        static double VerifyCurrentLimits(double value)
+        static double ClampCurrent(double value)
         {
             if (value > Headstage64ElectricalStimulator.AbsMaxMicroAmps)
                 return Headstage64ElectricalStimulator.AbsMaxMicroAmps;
@@ -140,7 +138,7 @@ namespace OpenEphys.Onix1
         public double PhaseOneCurrent
         {
             get => phaseOneCurrent.Value;
-            set => phaseOneCurrent.OnNext(VerifyCurrentLimits(value));
+            set => phaseOneCurrent.OnNext(ClampCurrent(value));
         }
 
         /// <summary>
@@ -154,7 +152,7 @@ namespace OpenEphys.Onix1
         public double InterPhaseCurrent
         {
             get => interPhaseCurrent.Value;
-            set => interPhaseCurrent.OnNext(VerifyCurrentLimits(value));
+            set => interPhaseCurrent.OnNext(ClampCurrent(value));
         }
 
         /// <summary>
@@ -168,7 +166,7 @@ namespace OpenEphys.Onix1
         public double PhaseTwoCurrent
         {
             get => phaseTwoCurrent.Value;
-            set => phaseTwoCurrent.OnNext(VerifyCurrentLimits(value));
+            set => phaseTwoCurrent.OnNext(ClampCurrent(value));
         }
 
         /// <summary>
@@ -276,11 +274,10 @@ namespace OpenEphys.Onix1
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
                 device.WriteRegister(Headstage64ElectricalStimulator.ENABLE, enable ? 1u : 0u);
-                device.WriteRegister(Headstage64ElectricalStimulator.STIMENABLE, 0);
 
                 return new CompositeDisposable(
                     stimEnable.SubscribeSafe(observer, value =>
-                        device.WriteRegister(Headstage64ElectricalStimulator.ENABLE, value ? 1u : 0u)),
+                        device.WriteRegister(Headstage64ElectricalStimulator.STIMENABLE, value ? 1u : 0u)),
                     phaseOneCurrent.SubscribeSafe(observer, value => 
                         device.WriteRegister(Headstage64ElectricalStimulator.CURRENT1, Headstage64ElectricalStimulator.MicroampsToCode(value))),
                     interPhaseCurrent.SubscribeSafe(observer, value => 
