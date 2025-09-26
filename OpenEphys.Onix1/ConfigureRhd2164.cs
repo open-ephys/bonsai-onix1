@@ -120,7 +120,7 @@ namespace OpenEphys.Onix1
     static class Rhd2164
     {
         public const int ID = 3;
-        public const uint MinimumVersion = 2; // TODO: Version 3 resolves a sampling rate issue, should we bump this to force an update even though 2 is functional?
+        public const uint MinimumVersion = 2;
 
         // constants
         public const int AmplifierChannelCount = 64;

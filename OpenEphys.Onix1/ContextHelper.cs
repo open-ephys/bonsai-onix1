@@ -96,7 +96,17 @@ namespace OpenEphys.Onix1
 
         static void ThrowInvalidDeviceVersionException(Type expectedType, uint address, uint deviceVersion, uint minimumVersion)
         {
-            throw new InvalidOperationException($"Invalid device version. Detected {expectedType.Name} v{deviceVersion} at {address}, but v{minimumVersion} is required. A firmware update is recommended.");
+            var assembly = Assembly.GetExecutingAssembly();
+            string libraryName = assembly.GetName().Name ?? "Unknown";
+            string libraryVersion = assembly.GetName().Version.ToString() ?? "Unknown";
+
+            Console.Error.WriteLine($"Error: The {expectedType.Name} device at address {address} is v{deviceVersion}, " +
+                $"but v{minimumVersion} is required by {libraryName} {libraryVersion}.");
+            Console.Error.WriteLine($"In order to use {libraryName} {libraryVersion} with this device, you will need to update it firmware. " +
+                $"Firmware update files and instructions can be found at https://open-ephys.github.io/onix-docs/index.html.");
+
+            throw new InvalidOperationException($"Invalid device version. The {expectedType.Name} device at address {address} is v{deviceVersion}, " +
+                $"but v{minimumVersion} is required.");
         }
 
         internal static bool CheckDeviceType(Type deviceType, Type targetType)
