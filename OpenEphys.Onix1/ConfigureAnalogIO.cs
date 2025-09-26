@@ -286,6 +286,7 @@ namespace OpenEphys.Onix1
     static class AnalogIO
     {
         public const int ID = 22;
+        public const uint MinimumVersion = 2;
 
         // constants
         public const int ChannelCount = 12;

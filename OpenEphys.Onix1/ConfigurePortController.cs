@@ -104,6 +104,7 @@ namespace OpenEphys.Onix1
     internal static class PortController
     {
         public const int ID = 23;
+        public const uint MinimumVersion = 2;
 
         public const uint ENABLE = 0; // The LSB is used to enable or disable the device data stream
         public const uint GPOSTATE = 1; // GPO output state (bits 31 downto 3: ignore. bits 2 downto 0: ‘1’ = high, ‘0’ = low)

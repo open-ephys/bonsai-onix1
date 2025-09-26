@@ -84,6 +84,7 @@ namespace OpenEphys.Onix1
     static class Heartbeat
     {
         public const int ID = 12;
+        public const uint MinimumVersion = 1;
 
         public const uint ENABLE = 0;  // Enable the heartbeat
         public const uint CLK_DIV = 1;  // Heartbeat clock divider ratio. Default results in 10 Hz heartbeat. Values less than CLK_HZ / 10e6 Hz will result in 1kHz.

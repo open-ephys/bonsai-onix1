@@ -174,6 +174,7 @@ namespace OpenEphys.Onix1
     static class OutputClock
     {
         public const int ID = 20;
+        public const uint MinimumVersion = 1;
 
         public const uint NULL = 0; // No command
         public const uint CLOCK_GATE = 1;  // Output gate. Bit 0 = 0 is disabled, Bit 0 = 1 is enabled.

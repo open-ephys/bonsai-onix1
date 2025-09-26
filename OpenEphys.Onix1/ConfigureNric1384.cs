@@ -141,6 +141,7 @@ namespace OpenEphys.Onix1
     static class Nric1384
     {
         public const int ID = 33;
+        public const uint MinimumVersion = 1;
 
         public const int I2cAddress = 0x70;
         public const int ChannelCount = 384;

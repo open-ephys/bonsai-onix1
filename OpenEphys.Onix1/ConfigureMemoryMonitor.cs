@@ -87,6 +87,7 @@ namespace OpenEphys.Onix1
     static class MemoryMonitor
     {
         public const int ID = 28;
+        public const uint MinimumVersion = 2;
 
         public const uint ENABLE = 0; // Enable the monitor
         public const uint CLK_DIV = 1; // Sample clock divider ratio. Values less than CLK_HZ / 10e6 Hz will result in 1kHz.
