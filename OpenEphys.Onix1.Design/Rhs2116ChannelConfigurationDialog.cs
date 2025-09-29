@@ -36,7 +36,7 @@ namespace OpenEphys.Onix1.Design
             RefreshZedGraph();
         }
 
-        internal override ProbeGroup DefaultChannelLayout()
+        internal override ProbeGroup DefaultProbeGroup()
         {
             return new Rhs2116ProbeGroup();
         }

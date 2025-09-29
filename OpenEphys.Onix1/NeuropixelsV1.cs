@@ -29,6 +29,7 @@ namespace OpenEphys.Onix1
         public const int AdcCount = 32;
         public const int ChannelCount = 384;
         public const int ElectrodeCount = 960;
+        public const int ElectrodeCountUHD = 6144;
         public const int FrameWords = 40;
 
         internal static BitArray MakeShankBits(NeuropixelsV1ProbeConfiguration configuration)
@@ -81,7 +82,7 @@ namespace OpenEphys.Onix1
                                        new(BaseConfigurationBitCount, false) }; // Ch 1, 3, 5, ...
 
             // create base shift-register bit arrays
-            for (int i = 0; i < NeuropixelsV1.ChannelCount; i++)
+            for (int i = 0; i < ChannelCount; i++)
             {
                 var configIdx = i % 2;
 
