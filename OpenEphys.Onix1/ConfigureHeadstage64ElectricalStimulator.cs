@@ -62,6 +62,7 @@ namespace OpenEphys.Onix1
     static class Headstage64ElectricalStimulator
     {
         public const int ID = 4;
+        public const uint MinimumVersion = 3;
 
         // NB: could be read from REZ but these are constant
         public const double DacBitDepth = 16;

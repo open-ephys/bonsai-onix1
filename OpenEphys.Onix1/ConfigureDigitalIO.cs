@@ -131,6 +131,7 @@ namespace OpenEphys.Onix1
     static class DigitalIO
     {
         public const int ID = 18;
+        public const uint MinimumVersion = 2;
 
         // managed registers
         public const uint ENABLE = 0x0;

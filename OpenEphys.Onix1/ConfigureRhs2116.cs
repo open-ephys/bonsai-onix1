@@ -200,6 +200,7 @@ namespace OpenEphys.Onix1
     static class Rhs2116
     {
         public const int ID = 31;
+        public const uint MinimumVersion = 3;
 
         // constants
         public const int AmplifierChannelCount = 16;
