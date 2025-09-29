@@ -60,7 +60,8 @@ namespace OpenEphys.Onix1
         /// cref="MemoryMonitorData"/>).
         /// </para>
         /// <para>
-        /// The number of bytes set will be rounded up to the next multiple of four.
+        /// If a value is set that is not aligned to a 32-bit word boundary, it will be rounded up
+        /// to the next 32-bit aligned value.
         /// </para>
         /// </remarks>
         [Description("Number of bytes read per cycle of the acquisition thread.")]
