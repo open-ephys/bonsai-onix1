@@ -777,11 +777,7 @@ namespace OpenEphys.Onix1.Design
                         Sequence.Stimuli[i].InterStimulusIntervalSamples = (uint)textboxInterStimulusInterval.Tag;
                     }
 
-                    if (uint.TryParse(textboxNumberOfStimuli.Text, out uint numberOfStimuliValue))
-                    {
-                        Sequence.Stimuli[i].NumberOfStimuli = numberOfStimuliValue;
-                    }
-
+                    Sequence.Stimuli[i].NumberOfStimuli = (uint)numericUpDownNumberOfPulses.Value;
                     Sequence.Stimuli[i].AnodicFirst = checkBoxAnodicFirst.Checked;
                 }
             }
@@ -789,14 +785,41 @@ namespace OpenEphys.Onix1.Design
             Sequence.CurrentStepSize = StepSize;
 
             ChannelDialog.HighlightEnabledContacts();
+            
             DrawStimulusWaveform();
         }
 
-        private void ParameterKeyPress_Time(object sender, KeyPressEventArgs e)
+        private void ParameterKeyPress_Time(object sender, KeyEventArgs e)
         {
-            if (e.KeyChar == '\r')
+            if (e.KeyCode == Keys.Enter)
             {
                 Samples_TextChanged(sender, e);
+                ButtonAddPulses_Click(sender, e);
+
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        private void ParameterKeyPress_Amplitude(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                Amplitude_TextChanged(sender, e);
+                ButtonAddPulses_Click(sender, e);
+
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        private void numericUpDownNumberOfPulses_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                ButtonAddPulses_Click(sender, e);
+                e.Handled = true;
+                e.SuppressKeyPress = true;
             }
         }
 
@@ -925,6 +948,13 @@ namespace OpenEphys.Onix1.Design
                 textboxPulseWidthAnodic.Text = textBox.Text;
                 textboxPulseWidthAnodic.Tag = textBox.Tag;
             }
+
+            ButtonAddPulses_Click(sender, e);
+        }
+
+        private void numericUpDownNumberOfPulses_Leave(object sender, EventArgs e)
+        {
+            ButtonAddPulses_Click(sender, e);
         }
 
         private bool GetSampleFromTime(double value, out uint samples)
@@ -1234,7 +1264,7 @@ namespace OpenEphys.Onix1.Design
             textboxInterStimulusInterval.Text = GetTimeString(Sequence.Stimuli[index].InterStimulusIntervalSamples);
             textboxInterStimulusInterval.Tag = Sequence.Stimuli[index].InterStimulusIntervalSamples;
 
-            textboxNumberOfStimuli.Text = Sequence.Stimuli[index].NumberOfStimuli.ToString();
+            numericUpDownNumberOfPulses.Value = Sequence.Stimuli[index].NumberOfStimuli;
         }
 
         private void MenuItemSaveFile_Click(object sender, EventArgs e)
