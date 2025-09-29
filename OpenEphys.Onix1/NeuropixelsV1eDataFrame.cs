@@ -4,8 +4,10 @@ namespace OpenEphys.Onix1
 {
     class NeuropixelsV1eDataFrame
     {
-        internal static unsafe void CopyAmplifierBuffer(ushort* amplifierData, int[] frameCountBuffer, ushort[,] spikeBuffer, ushort[,] lfpBuffer, int index, double apGainCorrection, double lfpGainCorrection, ushort[] thresholds, ushort[] offsets, bool invertPolarity)
+        internal static unsafe void CopyAmplifierBuffer(ushort* amplifierData, int[] frameCountBuffer, ushort[,] spikeBuffer, ushort[,] lfpBuffer, int index, double apGainCorrection, double lfpGainCorrection, ushort[] thresholds, ushort[] offsets, bool invertPolarity, int[,] channelOrder = null)
         {
+            channelOrder ??= RawToChannel;
+
             var frameCountStartIndex = index * NeuropixelsV1.FramesPerSuperFrame;
             frameCountBuffer[frameCountStartIndex] = (amplifierData[31] << 10) | (amplifierData[39] << 0);
 
@@ -23,7 +25,7 @@ namespace OpenEphys.Onix1
                 for (int k = 0; k < NeuropixelsV1.AdcCount; k++)
                 {
                     var a = amplifierData[adcToFrameIndex[k]];
-                    lfpBuffer[RawToChannel[k, lfpFrameIndex], lfpBufferIndex] = (ushort)(lfpInversionOffset - lfpGainCorrection * (a > thresholds[k] ? a - offsets[k] : a));
+                    lfpBuffer[channelOrder[k, lfpFrameIndex], lfpBufferIndex] = (ushort)(lfpInversionOffset - lfpGainCorrection * (a > thresholds[k] ? a - offsets[k] : a));
                 }
 
                 // Loop over 12 AP frames within each "super-frame"
@@ -35,7 +37,7 @@ namespace OpenEphys.Onix1
                     for (int k = 0; k < NeuropixelsV1.AdcCount; k++)
                     {
                         var a = amplifierData[adcToFrameIndex[k] + adcDataOffset];
-                        spikeBuffer[RawToChannel[k, i], index] = (ushort)(apInversionOffset - apGainCorrection * (a > thresholds[k] ? a - offsets[k] : a));
+                        spikeBuffer[channelOrder[k, i], index] = (ushort)(apInversionOffset - apGainCorrection * (a > thresholds[k] ? a - offsets[k] : a));
                     }
 
                     frameCountBuffer[frameCountStartIndex + i + 1] = (amplifierData[adcDataOffset + 31] << 10) | (amplifierData[adcDataOffset + 39] << 0);
@@ -46,7 +48,7 @@ namespace OpenEphys.Onix1
                 for (int k = 0; k < NeuropixelsV1.AdcCount; k++)
                 {
                     var a = amplifierData[adcToFrameIndex[k]];
-                    lfpBuffer[RawToChannel[k, lfpFrameIndex], lfpBufferIndex] = (ushort)(lfpGainCorrection * (a > thresholds[k] ? a - offsets[k] : a));
+                    lfpBuffer[channelOrder[k, lfpFrameIndex], lfpBufferIndex] = (ushort)(lfpGainCorrection * (a > thresholds[k] ? a - offsets[k] : a));
                 }
 
                 // Loop over 12 AP frames within each "super-frame"
@@ -58,7 +60,7 @@ namespace OpenEphys.Onix1
                     for (int k = 0; k < NeuropixelsV1.AdcCount; k++)
                     {
                         var a = amplifierData[adcToFrameIndex[k] + adcDataOffset];
-                        spikeBuffer[RawToChannel[k, i], index] = (ushort)(apGainCorrection * (a > thresholds[k] ? a - offsets[k] : a));
+                        spikeBuffer[channelOrder[k, i], index] = (ushort)(apGainCorrection * (a > thresholds[k] ? a - offsets[k] : a));
                     }
 
                     frameCountBuffer[frameCountStartIndex + i + 1] = (amplifierData[adcDataOffset + 31] << 10) | (amplifierData[adcDataOffset + 39] << 0);
@@ -114,6 +116,11 @@ namespace OpenEphys.Onix1
             {337, 339, 341, 343, 345, 347, 349, 351, 353, 355, 357, 359 },
             {360, 362, 364, 366, 368, 370, 372, 374, 376, 378, 380, 382 },
             {361, 363, 365, 367, 369, 371, 373, 375, 377, 379, 381, 383 } };
+
+        internal static int[,] OrderChannelsByDepth(Electrode[] channelMap)
+        {
+            return ChannelHelper.OrderChannelsByDepth(channelMap, RawToChannel);
+        }
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]

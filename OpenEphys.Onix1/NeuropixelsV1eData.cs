@@ -45,6 +45,18 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
+        /// Gets or sets a boolean value that controls if the channels are ordered by depth.
+        /// </summary>
+        /// <remarks>
+        /// If <see cref="OrderByDepth"/> is false, then channels are ordered from 0 to 383. 
+        /// If <see cref="OrderByDepth"/> is true, then channels are ordered based on the depth
+        /// of the electrodes
+        /// </remarks>
+        [Description("Determines if the channels are returned ordered by depth.")]
+        [Category(DeviceFactory.ConfigurationCategory)]
+        public bool OrderByDepth { get; set; } = false;
+
+        /// <summary>
         /// Generates a sequence of <see cref="NeuropixelsV1DataFrame"/> objects.
         /// </summary>
         /// <returns>A sequence of <see cref="NeuropixelsV1DataFrame"/> objects.</returns>
@@ -52,6 +64,7 @@ namespace OpenEphys.Onix1
         {
             var spikeBufferSize = BufferSize;
             var lfpBufferSize = spikeBufferSize / NeuropixelsV1.FramesPerRoundRobin;
+            var orderByDepth = OrderByDepth;
 
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
@@ -59,6 +72,7 @@ namespace OpenEphys.Onix1
                 var device = info.GetDeviceContext(typeof(NeuropixelsV1e));
                 var passthrough = device.GetPassthroughDeviceContext(typeof(DS90UB9x));
                 var probeData = device.Context.GetDeviceFrames(passthrough.Address);
+                int[,] channelOrder = orderByDepth ? NeuropixelsV1eDataFrame.OrderChannelsByDepth(info.ProbeConfiguration.ChannelMap) : null;
 
                 return Observable.Create<NeuropixelsV1DataFrame>(observer =>
                 {
@@ -73,7 +87,7 @@ namespace OpenEphys.Onix1
                         frame =>
                         {
                             var payload = (NeuropixelsV1ePayload*)frame.Data.ToPointer();
-                            NeuropixelsV1eDataFrame.CopyAmplifierBuffer(payload->AmplifierData, frameCountBuffer, spikeBuffer, lfpBuffer, sampleIndex, info.ApGainCorrection, info.LfpGainCorrection, info.AdcThresholds, info.AdcOffsets, info.InvertPolarity);
+                            NeuropixelsV1eDataFrame.CopyAmplifierBuffer(payload->AmplifierData, frameCountBuffer, spikeBuffer, lfpBuffer, sampleIndex, info.ApGainCorrection, info.LfpGainCorrection, info.AdcThresholds, info.AdcOffsets, info.InvertPolarity, channelOrder);
                             hubClockBuffer[sampleIndex] = payload->HubClock;
                             clockBuffer[sampleIndex] = frame.Clock;
                             if (++sampleIndex >= spikeBufferSize)
