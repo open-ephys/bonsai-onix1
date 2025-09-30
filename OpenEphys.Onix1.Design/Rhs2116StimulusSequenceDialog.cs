@@ -331,7 +331,7 @@ namespace OpenEphys.Onix1.Design
 
             dataGridViewStimulusTable.Refresh();
 
-            if (setZoomState)
+            if (setZoomState && XMin != 0 && XMax != 0)
             {
                 zedGraphWaveform.GraphPane.XAxis.Scale.Min = XMin;
                 zedGraphWaveform.GraphPane.XAxis.Scale.Max = XMax;
@@ -638,12 +638,6 @@ namespace OpenEphys.Onix1.Design
 
         private void ButtonAddPulses_Click(object sender, EventArgs e)
         {
-            if (ChannelDialog.SelectedContacts.All(x => x == false))
-            {
-                MessageBox.Show("No contacts selected. Please select contact(s) before trying to add pulses.");
-                return;
-            }
-
             var stimuli = Sequence.Stimuli
                             .Select((s, ind) => { return (Index: ind, Stimulus: s); })
                             .Where(s => s.Stimulus.Valid
@@ -813,7 +807,7 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        private void numericUpDownNumberOfPulses_KeyDown(object sender, KeyEventArgs e)
+        private void NumericUpDownNumberOfPulses_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             {
@@ -952,7 +946,7 @@ namespace OpenEphys.Onix1.Design
             ButtonAddPulses_Click(sender, e);
         }
 
-        private void numericUpDownNumberOfPulses_Leave(object sender, EventArgs e)
+        private void NumericUpDownNumberOfPulses_Leave(object sender, EventArgs e)
         {
             ButtonAddPulses_Click(sender, e);
         }
@@ -1330,6 +1324,11 @@ namespace OpenEphys.Onix1.Design
         }
 
         private void ButtonResetZoomClick(object sender, EventArgs e)
+        {
+            ResetZoom();
+        }
+
+        void ResetZoom()
         {
             zedGraphWaveform.ZoomOutAll(zedGraphWaveform.GraphPane);
             DrawStimulusWaveform(false);
