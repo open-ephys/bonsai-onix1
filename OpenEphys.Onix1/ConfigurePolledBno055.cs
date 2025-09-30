@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Linq;
 
 namespace OpenEphys.Onix1
 {
@@ -14,7 +13,6 @@ namespace OpenEphys.Onix1
     /// for an explanation of NDOF mode. This configuration operator can be linked to a data IO operator,
     /// such as <see cref="PolledBno055Data"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
-    [Editor("OpenEphys.Onix1.Design.PolledBno055Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a PolledBno055 device.")]
     public class ConfigurePolledBno055 : SingleDeviceFactory
     {

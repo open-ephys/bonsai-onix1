@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using System.Reflection;
 using Newtonsoft.Json;
 
 namespace OpenEphys.Onix1.Design
@@ -95,7 +96,7 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <param name="thisForm"></param>
         /// <param name="childForm"></param>
-        public static void AddMenuItemsFromDialogToFileOption(this Form thisForm, Form childForm)
+        public static Form AddMenuItemsFromDialogToFileOption(this Form thisForm, Form childForm)
         {
             const string FileString = "File";
 
@@ -130,6 +131,8 @@ namespace OpenEphys.Onix1.Design
                     }
                 }
             }
+
+            return thisForm;
         }
 
         /// <summary>
@@ -139,7 +142,7 @@ namespace OpenEphys.Onix1.Design
         /// <param name="thisForm"></param>
         /// <param name="childForm"></param>
         /// <param name="subMenuName"></param>
-        public static void AddMenuItemsFromDialogToFileOption(this Form thisForm, Form childForm, string subMenuName)
+        public static Form AddMenuItemsFromDialogToFileOption(this Form thisForm, Form childForm, string subMenuName)
         {
             const string FileString = "File";
 
@@ -180,6 +183,58 @@ namespace OpenEphys.Onix1.Design
                 }
 
                 thisFileMenuItem.DropDownItems.Add(newChildMenuItems);
+            }
+
+            return thisForm;
+        }
+
+        public static Form AddDialogToTab(this Form form, TabPage tabPage)
+        {
+            tabPage.Controls.Add(form);
+            form.Show();
+
+            return form;
+        }
+
+        public static Form AddDialogToPanel(this Form form, Panel panel)
+        {
+            panel.Controls.Add(form);
+            form.Show();
+
+            return form;
+        }
+
+        public static Form SetChildFormProperties(this Form child, Form parent)
+        {
+            child.TopLevel = false;
+            child.FormBorderStyle = FormBorderStyle.None;
+            child.Dock = DockStyle.Fill;
+            child.Parent = parent;
+
+            return child;
+        }
+
+        internal static readonly IEnumerable<string> PropertiesToIgnore = new[] { "DeviceName", "DeviceAddress" };
+
+        public static void CopyProperties<T>(T source, T target, IEnumerable<string> propertiesToIgnore = null) where T : class
+        {
+            if (source == null || target == null)
+                throw new NullReferenceException("Null objects cannot have their properties copied from/to.");
+
+            var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            propertiesToIgnore ??= Array.Empty<string>();
+
+            foreach (var property in properties)
+            {
+                if (propertiesToIgnore.Contains(property.Name))
+                    continue;
+
+                if (property.CanRead && property.CanWrite)
+                {
+                    var value = property.GetValue(source);
+                    property.SetValue(target, value);
+                }
             }
         }
     }

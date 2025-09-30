@@ -1,26 +1,24 @@
 ﻿using System;
 using System.ComponentModel;
-using Bonsai.Design;
 using System.Windows.Forms;
+using Bonsai.Design;
 
 namespace OpenEphys.Onix1.Design
 {
-    internal class PolledBno055Editor : WorkflowComponentEditor
+    internal class Headstage64OpticalStimulatorComponentEditor : WorkflowComponentEditor
     {
         public override bool EditComponent(ITypeDescriptorContext context, object component, IServiceProvider provider, IWin32Window owner)
         {
             if (provider != null)
             {
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
-                if (editorState != null && !editorState.WorkflowRunning && component is ConfigurePolledBno055 configureBno055)
+                if (editorState != null && !editorState.WorkflowRunning && component is ConfigureHeadstage64OpticalStimulator configureNode)
                 {
-                    using var editorDialog = new PolledBno055Dialog(configureBno055);
+                    using var editorDialog = new Headstage64OpticalStimulatorSequenceDialog(configureNode);
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
-                        configureBno055.Enable = editorDialog.ConfigureNode.Enable;
-                        configureBno055.DeviceAddress = editorDialog.ConfigureNode.DeviceAddress;
-                        configureBno055.DeviceName = editorDialog.ConfigureNode.DeviceName;
+                        DesignHelper.CopyProperties(editorDialog.OpticalStimulator, configureNode);
 
                         return true;
                     }

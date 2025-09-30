@@ -25,7 +25,7 @@ namespace OpenEphys.Onix1.Design
                     {
                         configureNode.StimulusTrigger.StimulusSequence = editorDialog.StimulusSequenceDialog.Sequence;
                         configureNode.StimulusTrigger.ProbeGroup = (Rhs2116ProbeGroup)editorDialog.StimulusSequenceDialog.ChannelDialog.ProbeGroup;
-                        configureNode.Rhs2116Pair = editorDialog.Rhs2116Dialog.ConfigureNode;
+                        DesignHelper.CopyProperties((ConfigureRhs2116Pair)editorDialog.Rhs2116Dialog.Device, configureNode.Rhs2116Pair, DesignHelper.PropertiesToIgnore);
 
                         return true;
                     }

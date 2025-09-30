@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing.Design;
 using System.Threading;
 
 namespace OpenEphys.Onix1
@@ -22,6 +23,7 @@ namespace OpenEphys.Onix1
     /// <item><description>Two optical stimulators (800 mA peak current per channel).</description></item>
     /// </list>
     /// </remarks>
+    [Editor("OpenEphys.Onix1.Design.Headstage64Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures an ONIX multifunction 64-channel headstage.")]
     public class ConfigureHeadstage64 : MultiDeviceFactory
     {
@@ -73,6 +75,7 @@ namespace OpenEphys.Onix1
         [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the ElectricalStimulator device in the headstage-64.")]
+        [Editor("OpenEphys.Onix1.Design.Headstage64ElectricalStimulatorUITypeEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         public ConfigureHeadstage64ElectricalStimulator ElectricalStimulator { get; set; } = new();
 
         /// <summary>
@@ -82,6 +85,7 @@ namespace OpenEphys.Onix1
         [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the OpticalStimulator device in the headstage-64.")]
+        [Editor("OpenEphys.Onix1.Design.Headstage64OpticalStimulatorUITypeEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         public ConfigureHeadstage64OpticalStimulator OpticalStimulator { get; set; } = new();
 
         /// <summary>
@@ -148,7 +152,6 @@ namespace OpenEphys.Onix1
 
         class ConfigureHeadstage64PortController : ConfigurePortController
         {
-
             protected override bool ConfigurePortVoltageOverride(DeviceContext device, double voltage)
             {
                 // NB: Wait for 1 second to discharge the headstage in the case that they have e.g. just
@@ -200,6 +203,4 @@ namespace OpenEphys.Onix1
             }
         }
     }
-
-
 }

@@ -12,14 +12,14 @@ namespace OpenEphys.Onix1.Design
     public partial class NeuropixelsV1eHeadstageDialog : Form
     {
         /// <summary>
-        /// Public method that provides access to the <see cref="NeuropixelsV1Dialog"/>.
+        /// Gets the <see cref="NeuropixelsV1Dialog"/>.
         /// </summary>
         public readonly NeuropixelsV1Dialog DialogNeuropixelsV1e;
 
         /// <summary>
-        /// Public method that provides access to the <see cref="PolledBno055Dialog"/>.
+        /// Gets the <see cref="GenericDeviceDialog"/> for the Bno055.
         /// </summary>
-        public readonly PolledBno055Dialog DialogBno055;
+        public readonly GenericDeviceDialog DialogBno055;
 
         /// <summary>
         /// Initializes a new instance of a <see cref="NeuropixelsV1eHeadstageDialog"/>.
@@ -30,29 +30,15 @@ namespace OpenEphys.Onix1.Design
         {
             InitializeComponent();
 
-            DialogNeuropixelsV1e = new(configureNeuropixelsV1e)
-            {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this
-            };
+            DialogNeuropixelsV1e = new(configureNeuropixelsV1e);
 
-            panelNeuropixelsV1e.Controls.Add(DialogNeuropixelsV1e);
+            DialogNeuropixelsV1e.SetChildFormProperties(this).AddDialogToPanel(panelNeuropixelsV1e);
+
             this.AddMenuItemsFromDialogToFileOption(DialogNeuropixelsV1e, "NeuropixelsV1e");
-            DialogNeuropixelsV1e.Show();
 
-            DialogBno055 = new(configureBno055)
-            {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this
-            };
+            DialogBno055 = new(new ConfigurePolledBno055(configureBno055));
 
-            panelBno055.Controls.Add(DialogBno055);
-            DialogBno055.Show();
-            DialogBno055.Invalidate();
+            DialogBno055.SetChildFormProperties(this).AddDialogToPanel(panelBno055);
         }
 
         private void Okay_Click(object sender, System.EventArgs e)
