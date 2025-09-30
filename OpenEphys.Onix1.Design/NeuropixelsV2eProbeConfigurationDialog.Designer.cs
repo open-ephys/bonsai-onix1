@@ -43,7 +43,6 @@
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.buttonEnableContacts = new System.Windows.Forms.Button();
             this.buttonClearSelections = new System.Windows.Forms.Button();
-            this.buttonResetZoom = new System.Windows.Forms.Button();
             this.buttonChooseCalibrationFile = new System.Windows.Forms.Button();
             this.panelProbe = new System.Windows.Forms.Panel();
             this.panelTrackBar = new System.Windows.Forms.Panel();
@@ -200,20 +199,6 @@
             this.buttonClearSelections.UseVisualStyleBackColor = true;
             this.buttonClearSelections.Click += new System.EventHandler(this.ClearSelection_Click);
             // 
-            // buttonResetZoom
-            // 
-            this.buttonResetZoom.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonResetZoom.Location = new System.Drawing.Point(15, 325);
-            this.buttonResetZoom.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.buttonResetZoom.Name = "buttonResetZoom";
-            this.buttonResetZoom.Size = new System.Drawing.Size(280, 44);
-            this.buttonResetZoom.TabIndex = 4;
-            this.buttonResetZoom.Text = "Reset Zoom";
-            this.toolTip.SetToolTip(this.buttonResetZoom, "Reset the zoom in the probe view so that the probe is zoomed out and centered.");
-            this.buttonResetZoom.UseVisualStyleBackColor = true;
-            this.buttonResetZoom.Click += new System.EventHandler(this.ResetZoom_Click);
-            // 
             // buttonChooseCalibrationFile
             // 
             this.buttonChooseCalibrationFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -244,7 +229,7 @@
             this.panelTrackBar.Controls.Add(this.trackBarProbePosition);
             this.panelTrackBar.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelTrackBar.Location = new System.Drawing.Point(863, 4);
-            this.panelTrackBar.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.panelTrackBar.Margin = new System.Windows.Forms.Padding(4);
             this.panelTrackBar.Name = "panelTrackBar";
             this.panelTrackBar.Size = new System.Drawing.Size(52, 658);
             this.panelTrackBar.TabIndex = 30;
@@ -284,7 +269,6 @@
             this.panelChannelOptions.Controls.Add(labelPresets);
             this.panelChannelOptions.Controls.Add(this.buttonEnableContacts);
             this.panelChannelOptions.Controls.Add(this.buttonClearSelections);
-            this.panelChannelOptions.Controls.Add(this.buttonResetZoom);
             this.panelChannelOptions.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelChannelOptions.Location = new System.Drawing.Point(922, 2);
             this.panelChannelOptions.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
@@ -390,7 +374,7 @@
             this.tableLayoutPanel1.Controls.Add(this.panelChannelOptions, 2, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 24);
-            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
@@ -406,7 +390,7 @@
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(4, 670);
-            this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(4);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(1226, 38);
             this.flowLayoutPanel1.TabIndex = 2;
@@ -480,7 +464,6 @@
         private System.Windows.Forms.ComboBox comboBoxChannelPresets;
         private System.Windows.Forms.Button buttonEnableContacts;
         private System.Windows.Forms.Button buttonClearSelections;
-        private System.Windows.Forms.Button buttonResetZoom;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
         private System.Windows.Forms.TextBox textBoxGainCorrection;

@@ -115,8 +115,6 @@ namespace OpenEphys.Onix1.Design
                 }
             }
 
-            CheckProbeIsInView(sender);
-
             if (IsDrawScale())
                 SyncYAxes(zedGraphChannels.MasterPane.PaneList[0], zedGraphChannels.MasterPane.PaneList[1]);
         }
@@ -181,56 +179,6 @@ namespace OpenEphys.Onix1.Design
 
             zedGraphControl.GraphPane.YAxis.Scale.Min += diffY;
             zedGraphControl.GraphPane.YAxis.Scale.Max += diffY;
-        }
-
-        private static void CheckProbeIsInView(ZedGraphControl zedGraphControl)
-        {
-            var probe = (
-                XMin: GetProbeLeft(zedGraphControl.GraphPane.GraphObjList),
-                XMax: GetProbeRight(zedGraphControl.GraphPane.GraphObjList),
-                YMin: GetProbeBottom(zedGraphControl.GraphPane.GraphObjList),
-                YMax: GetProbeTop(zedGraphControl.GraphPane.GraphObjList)
-            );
-
-            var axis = (
-                XMin: zedGraphControl.GraphPane.XAxis.Scale.Min,
-                XMax: zedGraphControl.GraphPane.XAxis.Scale.Max,
-                YMin: zedGraphControl.GraphPane.YAxis.Scale.Min,
-                YMax: zedGraphControl.GraphPane.YAxis.Scale.Max
-            );
-
-            var pane = zedGraphControl.GraphPane;
-
-            static void EnsureVisible(ref double axisMin, ref double axisMax, double probeMin, double probeMax)
-            {
-                if (axisMin > probeMin && axisMax > probeMax)
-                {
-                    double diffMin = Math.Abs(axisMin - probeMin);
-                    double diffMax = Math.Abs(axisMax - probeMax);
-
-                    double shift = (axisMax - diffMin > probeMax) ? diffMin : diffMax;
-                    axisMin -= shift;
-                    axisMax -= shift;
-                }
-                else if (axisMax < probeMax && axisMin < probeMin)
-                {
-                    double diffMin = Math.Abs(axisMin - probeMin);
-                    double diffMax = Math.Abs(axisMax - probeMax);
-
-                    double shift = (axisMin + diffMax > probeMin) ? diffMin : diffMax;
-                    axisMin += shift;
-                    axisMax += shift;
-                }
-            }
-
-            EnsureVisible(ref axis.XMin, ref axis.XMax, probe.XMin, probe.XMax);
-            EnsureVisible(ref axis.YMax, ref axis.YMin, probe.YMax, probe.YMin);
-
-            pane.XAxis.Scale.Min = axis.XMin;
-            pane.XAxis.Scale.Max = axis.XMax;
-
-            pane.YAxis.Scale.Min = axis.YMin;
-            pane.YAxis.Scale.Max = axis.YMax;
         }
 
         internal static double CalculateScaleRange(Scale scale)
@@ -929,7 +877,6 @@ namespace OpenEphys.Onix1.Design
 
             pane.YAxis.Scale.IsPreventLabelOverlap = true;
             pane.YAxis.Scale.MajorStep = 100;
-            pane.YAxis.Scale.BaseTic = 0;
             pane.YAxis.Scale.IsLabelsInside = true;
             pane.YAxis.Scale.FontSpec.Size = 65f;
             pane.YAxis.Scale.FontSpec.IsBold = false;
@@ -1196,8 +1143,6 @@ namespace OpenEphys.Onix1.Design
                 if (IsDrawScale())
                     SyncYAxes(zedGraphChannels.MasterPane.PaneList[0], zedGraphChannels.MasterPane.PaneList[1]);
 
-                CheckProbeIsInView(sender);
-
                 return false;
             }
             else if (e.Button == MouseButtons.None)
@@ -1365,6 +1310,16 @@ namespace OpenEphys.Onix1.Design
             }
 
             return false;
+        }
+
+        private void ButtonResetZoom_Click(object sender, EventArgs e)
+        {
+            ResetZoom();
+
+            if (IsDrawScale())
+                SyncYAxes(zedGraphChannels.MasterPane.PaneList[0], zedGraphChannels.MasterPane.PaneList[1]);
+
+            RefreshZedGraph();
         }
     }
 }

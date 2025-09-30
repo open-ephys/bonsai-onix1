@@ -34,9 +34,6 @@ namespace OpenEphys.Onix1.Design
 
             ProbeConfiguration = probeConfiguration;
 
-            ZoomInBoundaryX = 300;
-            ZoomInBoundaryY = 300;
-
             HighlightEnabledContacts();
             UpdateContactLabels();
             DrawScale();

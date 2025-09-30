@@ -51,9 +51,12 @@
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.panelProbe = new System.Windows.Forms.Panel();
             this.panelTrackBar = new System.Windows.Forms.Panel();
             this.trackBarProbePosition = new System.Windows.Forms.TrackBar();
+            this.panelProbe = new System.Windows.Forms.Panel();
+            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.buttonCancel = new System.Windows.Forms.Button();
+            this.buttonOkay = new System.Windows.Forms.Button();
             this.panelOptions = new System.Windows.Forms.Panel();
             this.checkBoxInvertPolarity = new System.Windows.Forms.CheckBox();
             this.textBoxLfpCorrection = new System.Windows.Forms.TextBox();
@@ -64,16 +67,12 @@
             this.buttonEnableContacts = new System.Windows.Forms.Button();
             this.buttonClearSelections = new System.Windows.Forms.Button();
             this.comboBoxChannelPresets = new System.Windows.Forms.ComboBox();
-            this.buttonResetZoom = new System.Windows.Forms.Button();
             this.checkBoxSpikeFilter = new System.Windows.Forms.CheckBox();
             this.textBoxAdcCalibrationFile = new System.Windows.Forms.TextBox();
             this.textBoxGainCalibrationFile = new System.Windows.Forms.TextBox();
             this.comboBoxReference = new System.Windows.Forms.ComboBox();
             this.comboBoxLfpGain = new System.Windows.Forms.ComboBox();
             this.comboBoxApGain = new System.Windows.Forms.ComboBox();
-            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
-            this.buttonCancel = new System.Windows.Forms.Button();
-            this.buttonOkay = new System.Windows.Forms.Button();
             label1 = new System.Windows.Forms.Label();
             label3 = new System.Windows.Forms.Label();
             label4 = new System.Windows.Forms.Label();
@@ -91,8 +90,8 @@
             this.tableLayoutPanel1.SuspendLayout();
             this.panelTrackBar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarProbePosition)).BeginInit();
-            this.panelOptions.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
+            this.panelOptions.SuspendLayout();
             this.SuspendLayout();
             // 
             // label1
@@ -294,16 +293,6 @@
             this.tableLayoutPanel1.Size = new System.Drawing.Size(1234, 712);
             this.tableLayoutPanel1.TabIndex = 37;
             // 
-            // panelProbe
-            // 
-            this.panelProbe.BackColor = System.Drawing.SystemColors.Control;
-            this.panelProbe.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelProbe.Location = new System.Drawing.Point(4, 4);
-            this.panelProbe.Margin = new System.Windows.Forms.Padding(4);
-            this.panelProbe.Name = "panelProbe";
-            this.panelProbe.Size = new System.Drawing.Size(851, 662);
-            this.panelProbe.TabIndex = 0;
-            // 
             // panelTrackBar
             // 
             this.panelTrackBar.Controls.Add(label1);
@@ -335,6 +324,51 @@
             this.trackBarProbePosition.Value = 50;
             this.trackBarProbePosition.Scroll += new System.EventHandler(this.TrackBarScroll);
             // 
+            // panelProbe
+            // 
+            this.panelProbe.BackColor = System.Drawing.SystemColors.Control;
+            this.panelProbe.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelProbe.Location = new System.Drawing.Point(4, 4);
+            this.panelProbe.Margin = new System.Windows.Forms.Padding(4);
+            this.panelProbe.Name = "panelProbe";
+            this.panelProbe.Size = new System.Drawing.Size(851, 662);
+            this.panelProbe.TabIndex = 0;
+            // 
+            // flowLayoutPanel1
+            // 
+            this.tableLayoutPanel1.SetColumnSpan(this.flowLayoutPanel1, 3);
+            this.flowLayoutPanel1.Controls.Add(this.buttonCancel);
+            this.flowLayoutPanel1.Controls.Add(this.buttonOkay);
+            this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 672);
+            this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(1228, 38);
+            this.flowLayoutPanel1.TabIndex = 0;
+            // 
+            // buttonCancel
+            // 
+            this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.buttonCancel.Location = new System.Drawing.Point(1114, 2);
+            this.buttonCancel.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.buttonCancel.Name = "buttonCancel";
+            this.buttonCancel.Size = new System.Drawing.Size(111, 34);
+            this.buttonCancel.TabIndex = 1;
+            this.buttonCancel.Text = "Cancel";
+            this.buttonCancel.UseVisualStyleBackColor = true;
+            // 
+            // buttonOkay
+            // 
+            this.buttonOkay.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.buttonOkay.Location = new System.Drawing.Point(997, 2);
+            this.buttonOkay.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.buttonOkay.Name = "buttonOkay";
+            this.buttonOkay.Size = new System.Drawing.Size(111, 34);
+            this.buttonOkay.TabIndex = 0;
+            this.buttonOkay.Text = "OK";
+            this.buttonOkay.UseVisualStyleBackColor = true;
+            // 
             // panelOptions
             // 
             this.panelOptions.BackColor = System.Drawing.SystemColors.ControlLightLight;
@@ -351,7 +385,6 @@
             this.panelOptions.Controls.Add(this.buttonClearSelections);
             this.panelOptions.Controls.Add(this.comboBoxChannelPresets);
             this.panelOptions.Controls.Add(labelPresets);
-            this.panelOptions.Controls.Add(this.buttonResetZoom);
             this.panelOptions.Controls.Add(this.checkBoxSpikeFilter);
             this.panelOptions.Controls.Add(this.textBoxAdcCalibrationFile);
             this.panelOptions.Controls.Add(adcCalibrationFile);
@@ -480,19 +513,6 @@
             this.comboBoxChannelPresets.Size = new System.Drawing.Size(195, 24);
             this.comboBoxChannelPresets.TabIndex = 26;
             // 
-            // buttonResetZoom
-            // 
-            this.buttonResetZoom.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonResetZoom.Location = new System.Drawing.Point(13, 562);
-            this.buttonResetZoom.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.buttonResetZoom.Name = "buttonResetZoom";
-            this.buttonResetZoom.Size = new System.Drawing.Size(284, 44);
-            this.buttonResetZoom.TabIndex = 22;
-            this.buttonResetZoom.Text = "Reset Zoom";
-            this.buttonResetZoom.UseVisualStyleBackColor = true;
-            this.buttonResetZoom.Click += new System.EventHandler(this.ResetZoom_Click);
-            // 
             // checkBoxSpikeFilter
             // 
             this.checkBoxSpikeFilter.AutoSize = true;
@@ -564,41 +584,6 @@
             this.comboBoxApGain.Size = new System.Drawing.Size(195, 24);
             this.comboBoxApGain.TabIndex = 1;
             // 
-            // flowLayoutPanel1
-            // 
-            this.tableLayoutPanel1.SetColumnSpan(this.flowLayoutPanel1, 3);
-            this.flowLayoutPanel1.Controls.Add(this.buttonCancel);
-            this.flowLayoutPanel1.Controls.Add(this.buttonOkay);
-            this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 672);
-            this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(1228, 38);
-            this.flowLayoutPanel1.TabIndex = 0;
-            // 
-            // buttonCancel
-            // 
-            this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.buttonCancel.Location = new System.Drawing.Point(1114, 2);
-            this.buttonCancel.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.buttonCancel.Name = "buttonCancel";
-            this.buttonCancel.Size = new System.Drawing.Size(111, 34);
-            this.buttonCancel.TabIndex = 1;
-            this.buttonCancel.Text = "Cancel";
-            this.buttonCancel.UseVisualStyleBackColor = true;
-            // 
-            // buttonOkay
-            // 
-            this.buttonOkay.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.buttonOkay.Location = new System.Drawing.Point(997, 2);
-            this.buttonOkay.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.buttonOkay.Name = "buttonOkay";
-            this.buttonOkay.Size = new System.Drawing.Size(111, 34);
-            this.buttonOkay.TabIndex = 0;
-            this.buttonOkay.Text = "OK";
-            this.buttonOkay.UseVisualStyleBackColor = true;
-            // 
             // NeuropixelsV1ProbeConfigurationDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -620,9 +605,9 @@
             this.panelTrackBar.ResumeLayout(false);
             this.panelTrackBar.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarProbePosition)).EndInit();
+            this.flowLayoutPanel1.ResumeLayout(false);
             this.panelOptions.ResumeLayout(false);
             this.panelOptions.PerformLayout();
-            this.flowLayoutPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -649,7 +634,6 @@
         private System.Windows.Forms.Button buttonEnableContacts;
         private System.Windows.Forms.Button buttonClearSelections;
         private System.Windows.Forms.ComboBox comboBoxChannelPresets;
-        private System.Windows.Forms.Button buttonResetZoom;
         private System.Windows.Forms.CheckBox checkBoxSpikeFilter;
         internal System.Windows.Forms.TextBox textBoxAdcCalibrationFile;
         internal System.Windows.Forms.TextBox textBoxGainCalibrationFile;

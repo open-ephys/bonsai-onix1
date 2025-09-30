@@ -376,11 +376,6 @@ namespace OpenEphys.Onix1.Design
             CheckStatus();
         }
 
-        private void ResetZoom_Click(object sender, EventArgs e)
-        {
-            ResetZoom();
-        }
-
         private void ClearSelection_Click(object sender, EventArgs e)
         {
             DeselectContacts();
@@ -447,12 +442,6 @@ namespace OpenEphys.Onix1.Design
             ChannelConfiguration.HighlightEnabledContacts();
             ChannelConfiguration.HighlightSelectedContacts();
             ChannelConfiguration.UpdateContactLabels();
-            ChannelConfiguration.RefreshZedGraph();
-        }
-
-        private void ResetZoom()
-        {
-            ChannelConfiguration.ResetZoom();
             ChannelConfiguration.RefreshZedGraph();
         }
 

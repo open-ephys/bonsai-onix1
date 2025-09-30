@@ -29,8 +29,8 @@ namespace OpenEphys.Onix1.Design
 
             zedGraphChannels.ZoomStepFraction = 0.5;
 
-            ZoomInBoundaryX = 5;
-            ZoomInBoundaryY = 5;
+            ZoomInBoundaryX = 2;
+            ZoomInBoundaryY = 2;
 
             DrawProbeGroup();
             RefreshZedGraph();
