@@ -6,7 +6,7 @@ namespace OpenEphys.Onix1
 {
     class ChannelHelper
     {
-        internal static int[,] OrderChannelsByDepth(Electrode[] channelMap, int[,] originalOrder)
+        internal static int[,] OrderNeuropixelsChannelsByDepth(Electrode[] channelMap, int[,] originalOrder)
         {
             int rows = originalOrder.GetLength(0);
             int cols = originalOrder.GetLength(1);
