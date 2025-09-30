@@ -100,12 +100,22 @@ namespace OpenEphys.Onix1.Design
                 { StimulusSequenceOptions.textBoxPulsesPerBurst,
                     new TextBoxBinding<uint>(
                         StimulusSequenceOptions.textBoxPulsesPerBurst,
-                        value => { OpticalStimulator.PulsesPerBurst = value; return OpticalStimulator.PulsesPerBurst; },
+                        value =>
+                        {
+                            OpticalStimulator.PulsesPerBurst = value;
+                            StimulusSequenceOptions.textBoxPulsePeriod.Enabled = OpticalStimulator.PulsesPerBurst > 1;
+                            return OpticalStimulator.PulsesPerBurst;
+                        },
                         uint.Parse) },
                 { StimulusSequenceOptions.textBoxBurstsPerTrain,
                     new TextBoxBinding<uint>(
                         StimulusSequenceOptions.textBoxBurstsPerTrain,
-                        value => { OpticalStimulator.BurstsPerTrain = value; return OpticalStimulator.BurstsPerTrain; },
+                        value =>
+                        {
+                            OpticalStimulator.BurstsPerTrain = value;
+                            StimulusSequenceOptions.textBoxInterBurstInterval.Enabled = OpticalStimulator.BurstsPerTrain > 1;
+                            return OpticalStimulator.BurstsPerTrain;
+                        },
                         uint.Parse) }
             };
 
@@ -281,9 +291,9 @@ namespace OpenEphys.Onix1.Design
                 reason = "Maximum current is invalid.";
                 return false;
             }
-            else if (sequence.PulsesPerSecond <= sequence.PulseDuration)
+            else if (sequence.PulsesPerBurst > 1 && sequence.PulsesPerSecond <= sequence.PulseDuration)
             {
-                reason = "Pulse duration is too short compared to the pulse period.";
+                reason = "Pulse period is too short compared to the pulse duration.";
                 return false;
             }
 
