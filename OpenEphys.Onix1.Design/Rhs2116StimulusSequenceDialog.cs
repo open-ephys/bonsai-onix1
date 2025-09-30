@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using ZedGraph;
-using System.IO;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -74,7 +74,7 @@ namespace OpenEphys.Onix1.Design
             }
 
             InitializeZedGraphWaveform();
-            DrawStimulusWaveform();
+            DrawStimulusWaveform(false);
 
             zedGraphWaveform.ZoomEvent += OnZoom_Waveform;
             zedGraphWaveform.MouseMoveEvent += MouseMoveEvent;
@@ -262,17 +262,23 @@ namespace OpenEphys.Onix1.Design
                 : Sequence.CurrentStepSizeuA * 1; // NB: Used to give a buffer when plotting the stimulus waveform
         }
 
-        private void DrawStimulusWaveform()
+        private void DrawStimulusWaveform(bool setZoomState = true)
         {
             bool plotAllContacts = ChannelDialog.SelectedContacts.All(x => x == false);
 
             zedGraphWaveform.GraphPane.CurveList.Clear();
             zedGraphWaveform.GraphPane.GraphObjList.Clear();
+
+            var (XMin, XMax, YMin, YMax)= (
+                zedGraphWaveform.GraphPane.XAxis.Scale.Min,
+                zedGraphWaveform.GraphPane.XAxis.Scale.Max,
+                zedGraphWaveform.GraphPane.YAxis.Scale.Min,
+                zedGraphWaveform.GraphPane.YAxis.Scale.Max
+            );
+
             zedGraphWaveform.ZoomOutAll(zedGraphWaveform.GraphPane);
 
             double peakToPeak = GetPeakToPeakAmplitudeInMicroAmps() * 1.1;
-
-            ZoomInBoundaryY = 3;
 
             double maxLength = 0;
 
@@ -316,18 +322,27 @@ namespace OpenEphys.Onix1.Design
             zedGraphWaveform.GraphPane.YAxis.Scale.Min = -Sequence.Stimuli.Length - 2;
             zedGraphWaveform.GraphPane.YAxis.Scale.Max =  1;
 
-            zedGraphWaveform.GraphPane.YAxis.ScaleFormatEvent += (GraphPane gp, Axis axis, double val, int index) =>
+            zedGraphWaveform.GraphPane.YAxis.ScaleFormatEvent += (gp, axis, val, index) =>
             {
                 return Math.Abs(val).ToString("0");
             };
 
-            DrawScale();
-
             SetZoomOutBoundaries(zedGraphWaveform);
 
-            ZoomInBoundaryX = (ZoomOutBoundaryRight - ZoomOutBoundaryLeft) * 0.05;
-
             dataGridViewStimulusTable.Refresh();
+
+            if (setZoomState && XMin != 0 && XMax != 0)
+            {
+                zedGraphWaveform.GraphPane.XAxis.Scale.Min = XMin;
+                zedGraphWaveform.GraphPane.XAxis.Scale.Max = XMax;
+                zedGraphWaveform.GraphPane.YAxis.Scale.Min = YMin;
+                zedGraphWaveform.GraphPane.YAxis.Scale.Max = YMax;
+            }
+
+            if (!CheckZoomBoundaries(zedGraphWaveform))
+                zedGraphWaveform.ZoomOutAll(zedGraphWaveform.GraphPane);
+
+            DrawScale();
 
             zedGraphWaveform.AxisChange();
             zedGraphWaveform.Refresh();
@@ -344,32 +359,54 @@ namespace OpenEphys.Onix1.Design
                 zedGraphWaveform.GraphPane.GraphObjList.RemoveAll(x => x is TextObj);
             }
 
-            var zeroOffsetX = zedGraphWaveform.GraphPane.XAxis.Scale.Min + CalculateScaleRange(zedGraphWaveform.GraphPane.XAxis.Scale) * 0.025;
-            var zeroOffsetY = zedGraphWaveform.GraphPane.YAxis.Scale.Min + CalculateScaleRange(zedGraphWaveform.GraphPane.YAxis.Scale) * 0.025;
+            var xScaleRange = CalculateScaleRange(zedGraphWaveform.GraphPane.XAxis.Scale);
+            var yScaleRange = CalculateScaleRange(zedGraphWaveform.GraphPane.YAxis.Scale);
 
-            var x = CalculateScaleRange(zedGraphWaveform.GraphPane.XAxis.Scale) * 0.05;
+            const double ScaleFactor = 0.025;
+
+            var zeroOffsetX = zedGraphWaveform.GraphPane.XAxis.Scale.Min + xScaleRange * ScaleFactor;
+            var zeroOffsetY = zedGraphWaveform.GraphPane.YAxis.Scale.Min + yScaleRange * ScaleFactor;
+
+            var x = xScaleRange * ScaleFactor * 2;
             var y = 1 / 2.2; // NB: Equal to 1/2 of the max peak-to-peak amplitude
+
+            double maxValueY = yScaleRange * 0.25;
+
+            double yScaleValue = GetPeakToPeakAmplitudeInMicroAmps() / 2;
+
+            if (y > maxValueY)
+            {
+                double ratio = y / maxValueY;
+                yScaleValue /= ratio;
+                y /= ratio;
+            }
 
             PointPairList points = new()
             {
-                { zeroOffsetX, zeroOffsetY },
                 { zeroOffsetX, zeroOffsetY + y },
                 { zeroOffsetX, zeroOffsetY },
                 { zeroOffsetX + x, zeroOffsetY }
             };
 
-            var line = zedGraphWaveform.GraphPane.AddCurve("scale", points, Color.Black, SymbolType.None);
-            line.Line.Width = 3;
+            float lineWidth = 3;
+
+            var line = zedGraphWaveform.GraphPane.AddCurve("scale", points, Color.Black, SymbolType.Square);
+            line.Line.Width = lineWidth;
             line.Label.IsVisible = false;
+            line.Symbol.Size = lineWidth;
+            line.Symbol.Border.IsVisible = false;
+            line.Symbol.Fill = new Fill(Color.Black);
             zedGraphWaveform.GraphPane.CurveList.Move(zedGraphWaveform.GraphPane.CurveList.Count - 1, -99);
 
-            TextObj timeScale = new(GetTimeScaleString(x) + " ms", zeroOffsetX + x * 1.02, zeroOffsetY, CoordType.AxisXYScale, AlignH.Left, AlignV.Center);
+            const double TextObjScaleFactor = 1.02;
+
+            TextObj timeScale = new(GetTimeScaleString(x) + " ms", zeroOffsetX + x * TextObjScaleFactor, zeroOffsetY, CoordType.AxisXYScale, AlignH.Left, AlignV.Center);
             timeScale.FontSpec.Border.IsVisible = false;
             timeScale.FontSpec.Fill.IsVisible = false;
             timeScale.ZOrder = ZOrder.A_InFront;
             zedGraphWaveform.GraphPane.GraphObjList.Add(timeScale);
 
-            TextObj amplitudeScale = new((GetPeakToPeakAmplitudeInMicroAmps() / 2).ToString() + " µA", zeroOffsetX, zeroOffsetY + y * 1.02, CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom);
+            TextObj amplitudeScale = new(yScaleValue.ToString("0.##") + " µA", zeroOffsetX, zeroOffsetY + y * TextObjScaleFactor, CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom);
             amplitudeScale.FontSpec.Border.IsVisible = false;
             amplitudeScale.FontSpec.Fill.IsVisible = false;
             amplitudeScale.ZOrder = ZOrder.A_InFront;
@@ -460,8 +497,6 @@ namespace OpenEphys.Onix1.Design
         private double ZoomOutBoundaryRight = default;
         private double ZoomOutBoundaryBottom = default;
         private double ZoomOutBoundaryTop = default;
-        private double? ZoomInBoundaryX = 5;
-        private double? ZoomInBoundaryY = 2;
 
         private void SetZoomOutBoundaries(ZedGraphControl zedGraphControl)
         {
@@ -492,9 +527,7 @@ namespace OpenEphys.Onix1.Design
             if ((zedGraphControl.GraphPane.XAxis.Scale.Min == ZoomOutBoundaryLeft &&
                 zedGraphControl.GraphPane.XAxis.Scale.Max == ZoomOutBoundaryRight &&
                 zedGraphControl.GraphPane.YAxis.Scale.Min == ZoomOutBoundaryBottom &&
-                zedGraphControl.GraphPane.YAxis.Scale.Max == ZoomOutBoundaryTop) ||
-                ZoomInBoundaryX.HasValue && CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale) == ZoomInBoundaryX.Value ||
-                ZoomInBoundaryY.HasValue && CalculateScaleRange(zedGraphControl.GraphPane.YAxis.Scale) == ZoomInBoundaryY.Value)
+                zedGraphControl.GraphPane.YAxis.Scale.Max == ZoomOutBoundaryTop))
             {
                 return;
             }
@@ -506,7 +539,6 @@ namespace OpenEphys.Onix1.Design
             var currentMousePosition = TransformPixelsToCoordinates(mouseClientPosition, zedGraphControl.GraphPane);
 
             var centerX = CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale) / 2 + zedGraphControl.GraphPane.XAxis.Scale.Min;
-
             var centerY = CalculateScaleRange(zedGraphControl.GraphPane.YAxis.Scale) / 2 + zedGraphControl.GraphPane.YAxis.Scale.Min;
 
             var diffX = centerX - currentMousePosition.X;
@@ -519,50 +551,8 @@ namespace OpenEphys.Onix1.Design
             zedGraphControl.GraphPane.YAxis.Scale.Max += diffY;
         }
 
-        /// <summary>
-        /// Checks if the <see cref="ZedGraphControl"/> is too zoomed in or out. If the graph is too zoomed in,
-        /// reset the boundaries to match <see cref="ZoomInBoundaryX"/> and <see cref="ZoomInBoundaryY"/>. If the graph is too zoomed out,
-        /// reset the boundaries to match the automatically generated boundaries based on the size of the waveforms.
-        /// </summary>
-        /// <param name="zedGraphControl">A <see cref="ZedGraphControl"/> object.</param>
-        /// <returns>True if the zoom boundary has been correctly handled, False if the previous zoom state should be reinstated.</returns>
         private bool CheckZoomBoundaries(ZedGraphControl zedGraphControl)
         {
-            var rangeX = CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale);
-            var rangeY = CalculateScaleRange(zedGraphControl.GraphPane.YAxis.Scale);
-
-            if (ZoomInBoundaryX.HasValue && rangeX < ZoomInBoundaryX)
-            {
-                if (ZoomInBoundaryX.HasValue && rangeX / ZoomInBoundaryX == zedGraphControl.ZoomStepFraction)
-                {
-                    return false;
-                }
-                else
-                {
-                    if (ZoomInBoundaryX.HasValue && ZoomInBoundaryX.Value > 0)
-                    {
-                        var diffX = (ZoomInBoundaryX.Value - rangeX) / 2;
-                        zedGraphControl.GraphPane.XAxis.Scale.Min -= diffX;
-                        zedGraphControl.GraphPane.XAxis.Scale.Max += diffX;
-                    }
-                }
-            }
-
-            if (ZoomInBoundaryY.HasValue && rangeY < ZoomInBoundaryY)
-            {
-                if (ZoomInBoundaryY.HasValue && rangeY / ZoomInBoundaryY == zedGraphControl.ZoomStepFraction)
-                    return false;
-                else
-                {
-                    if (ZoomInBoundaryY.HasValue && ZoomInBoundaryY.Value > 0)
-                    {
-                        var diffY = (ZoomInBoundaryY.Value - rangeY) / 2;
-                        zedGraphControl.GraphPane.YAxis.Scale.Min -= diffY;
-                        zedGraphControl.GraphPane.YAxis.Scale.Max += diffY;
-                    }
-                }
-            }
-
             if (CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale) >= ZoomOutBoundaryRight - ZoomOutBoundaryLeft)
             {
                 zedGraphControl.GraphPane.XAxis.Scale.Min = ZoomOutBoundaryLeft;
@@ -648,12 +638,6 @@ namespace OpenEphys.Onix1.Design
 
         private void ButtonAddPulses_Click(object sender, EventArgs e)
         {
-            if (ChannelDialog.SelectedContacts.All(x => x == false))
-            {
-                MessageBox.Show("No contacts selected. Please select contact(s) before trying to add pulses.");
-                return;
-            }
-
             var stimuli = Sequence.Stimuli
                             .Select((s, ind) => { return (Index: ind, Stimulus: s); })
                             .Where(s => s.Stimulus.Valid
@@ -787,11 +771,7 @@ namespace OpenEphys.Onix1.Design
                         Sequence.Stimuli[i].InterStimulusIntervalSamples = (uint)textboxInterStimulusInterval.Tag;
                     }
 
-                    if (uint.TryParse(textboxNumberOfStimuli.Text, out uint numberOfStimuliValue))
-                    {
-                        Sequence.Stimuli[i].NumberOfStimuli = numberOfStimuliValue;
-                    }
-
+                    Sequence.Stimuli[i].NumberOfStimuli = (uint)numericUpDownNumberOfPulses.Value;
                     Sequence.Stimuli[i].AnodicFirst = checkBoxAnodicFirst.Checked;
                 }
             }
@@ -799,14 +779,41 @@ namespace OpenEphys.Onix1.Design
             Sequence.CurrentStepSize = StepSize;
 
             ChannelDialog.HighlightEnabledContacts();
+            
             DrawStimulusWaveform();
         }
 
-        private void ParameterKeyPress_Time(object sender, KeyPressEventArgs e)
+        private void ParameterKeyPress_Time(object sender, KeyEventArgs e)
         {
-            if (e.KeyChar == '\r')
+            if (e.KeyCode == Keys.Enter)
             {
                 Samples_TextChanged(sender, e);
+                ButtonAddPulses_Click(sender, e);
+
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        private void ParameterKeyPress_Amplitude(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                Amplitude_TextChanged(sender, e);
+                ButtonAddPulses_Click(sender, e);
+
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        private void NumericUpDownNumberOfPulses_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                ButtonAddPulses_Click(sender, e);
+                e.Handled = true;
+                e.SuppressKeyPress = true;
             }
         }
 
@@ -935,6 +942,13 @@ namespace OpenEphys.Onix1.Design
                 textboxPulseWidthAnodic.Text = textBox.Text;
                 textboxPulseWidthAnodic.Tag = textBox.Tag;
             }
+
+            ButtonAddPulses_Click(sender, e);
+        }
+
+        private void NumericUpDownNumberOfPulses_Leave(object sender, EventArgs e)
+        {
+            ButtonAddPulses_Click(sender, e);
         }
 
         private bool GetSampleFromTime(double value, out uint samples)
@@ -1244,7 +1258,7 @@ namespace OpenEphys.Onix1.Design
             textboxInterStimulusInterval.Text = GetTimeString(Sequence.Stimuli[index].InterStimulusIntervalSamples);
             textboxInterStimulusInterval.Tag = Sequence.Stimuli[index].InterStimulusIntervalSamples;
 
-            textboxNumberOfStimuli.Text = Sequence.Stimuli[index].NumberOfStimuli.ToString();
+            numericUpDownNumberOfPulses.Value = Sequence.Stimuli[index].NumberOfStimuli;
         }
 
         private void MenuItemSaveFile_Click(object sender, EventArgs e)
@@ -1307,6 +1321,19 @@ namespace OpenEphys.Onix1.Design
 
                 DrawStimulusWaveform();
             }
+        }
+
+        private void ButtonResetZoomClick(object sender, EventArgs e)
+        {
+            ResetZoom();
+        }
+
+        void ResetZoom()
+        {
+            zedGraphWaveform.ZoomOutAll(zedGraphWaveform.GraphPane);
+            DrawStimulusWaveform(false);
+            zedGraphWaveform.AxisChange();
+            zedGraphWaveform.Refresh();
         }
 
         private void DataGridViewStimulusTable_DataError(object sender, DataGridViewDataErrorEventArgs e)
