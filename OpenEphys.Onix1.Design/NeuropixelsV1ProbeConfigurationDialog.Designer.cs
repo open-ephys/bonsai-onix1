@@ -41,6 +41,7 @@
             System.Windows.Forms.Label lfpGain;
             System.Windows.Forms.Label apGain;
             System.Windows.Forms.Label invertPolarity;
+            System.Windows.Forms.Label labelProbeType;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(NeuropixelsV1ProbeConfigurationDialog));
             this.toolStripLabelAdcCalibrationSN = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripLabelGainCalibrationSn = new System.Windows.Forms.ToolStripStatusLabel();
@@ -74,6 +75,7 @@
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonOkay = new System.Windows.Forms.Button();
+            this.comboBoxProbeType = new System.Windows.Forms.ComboBox();
             label1 = new System.Windows.Forms.Label();
             label3 = new System.Windows.Forms.Label();
             label4 = new System.Windows.Forms.Label();
@@ -86,6 +88,7 @@
             lfpGain = new System.Windows.Forms.Label();
             apGain = new System.Windows.Forms.Label();
             invertPolarity = new System.Windows.Forms.Label();
+            labelProbeType = new System.Windows.Forms.Label();
             this.statusStrip1.SuspendLayout();
             this.menuStrip.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -121,7 +124,7 @@
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new System.Drawing.Point(13, 277);
+            label4.Location = new System.Drawing.Point(13, 306);
             label4.Name = "label4";
             label4.Size = new System.Drawing.Size(71, 16);
             label4.TabIndex = 40;
@@ -130,7 +133,7 @@
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new System.Drawing.Point(13, 210);
+            label2.Location = new System.Drawing.Point(13, 239);
             label2.Name = "label2";
             label2.Size = new System.Drawing.Size(71, 16);
             label2.TabIndex = 38;
@@ -139,7 +142,7 @@
             // labelPresets
             // 
             labelPresets.AutoSize = true;
-            labelPresets.Location = new System.Drawing.Point(13, 405);
+            labelPresets.Location = new System.Drawing.Point(13, 434);
             labelPresets.Name = "labelPresets";
             labelPresets.Size = new System.Drawing.Size(56, 32);
             labelPresets.TabIndex = 25;
@@ -168,7 +171,7 @@
             // spikeFilter
             // 
             spikeFilter.AutoSize = true;
-            spikeFilter.Location = new System.Drawing.Point(13, 310);
+            spikeFilter.Location = new System.Drawing.Point(13, 339);
             spikeFilter.Name = "spikeFilter";
             spikeFilter.Size = new System.Drawing.Size(77, 16);
             spikeFilter.TabIndex = 6;
@@ -177,7 +180,7 @@
             // Reference
             // 
             Reference.AutoSize = true;
-            Reference.Location = new System.Drawing.Point(13, 378);
+            Reference.Location = new System.Drawing.Point(13, 407);
             Reference.Name = "Reference";
             Reference.Size = new System.Drawing.Size(73, 16);
             Reference.TabIndex = 4;
@@ -186,7 +189,7 @@
             // lfpGain
             // 
             lfpGain.AutoSize = true;
-            lfpGain.Location = new System.Drawing.Point(13, 244);
+            lfpGain.Location = new System.Drawing.Point(13, 273);
             lfpGain.Name = "lfpGain";
             lfpGain.Size = new System.Drawing.Size(65, 16);
             lfpGain.TabIndex = 2;
@@ -195,7 +198,7 @@
             // apGain
             // 
             apGain.AutoSize = true;
-            apGain.Location = new System.Drawing.Point(13, 178);
+            apGain.Location = new System.Drawing.Point(13, 207);
             apGain.Name = "apGain";
             apGain.Size = new System.Drawing.Size(59, 16);
             apGain.TabIndex = 0;
@@ -204,7 +207,7 @@
             // invertPolarity
             // 
             invertPolarity.AutoSize = true;
-            invertPolarity.Location = new System.Drawing.Point(13, 332);
+            invertPolarity.Location = new System.Drawing.Point(13, 361);
             invertPolarity.Name = "invertPolarity";
             invertPolarity.Size = new System.Drawing.Size(55, 32);
             invertPolarity.TabIndex = 42;
@@ -338,6 +341,8 @@
             // panelOptions
             // 
             this.panelOptions.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.panelOptions.Controls.Add(this.comboBoxProbeType);
+            this.panelOptions.Controls.Add(labelProbeType);
             this.panelOptions.Controls.Add(this.checkBoxInvertPolarity);
             this.panelOptions.Controls.Add(invertPolarity);
             this.panelOptions.Controls.Add(this.textBoxLfpCorrection);
@@ -374,7 +379,7 @@
             // checkBoxInvertPolarity
             // 
             this.checkBoxInvertPolarity.AutoSize = true;
-            this.checkBoxInvertPolarity.Location = new System.Drawing.Point(101, 338);
+            this.checkBoxInvertPolarity.Location = new System.Drawing.Point(101, 367);
             this.checkBoxInvertPolarity.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.checkBoxInvertPolarity.Name = "checkBoxInvertPolarity";
             this.checkBoxInvertPolarity.Size = new System.Drawing.Size(77, 20);
@@ -386,7 +391,7 @@
             // 
             this.textBoxLfpCorrection.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxLfpCorrection.Location = new System.Drawing.Point(101, 274);
+            this.textBoxLfpCorrection.Location = new System.Drawing.Point(101, 303);
             this.textBoxLfpCorrection.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textBoxLfpCorrection.Name = "textBoxLfpCorrection";
             this.textBoxLfpCorrection.ReadOnly = true;
@@ -398,7 +403,7 @@
             // 
             this.textBoxApCorrection.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxApCorrection.Location = new System.Drawing.Point(101, 207);
+            this.textBoxApCorrection.Location = new System.Drawing.Point(101, 236);
             this.textBoxApCorrection.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textBoxApCorrection.Name = "textBoxApCorrection";
             this.textBoxApCorrection.ReadOnly = true;
@@ -448,7 +453,7 @@
             // 
             this.buttonEnableContacts.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonEnableContacts.Location = new System.Drawing.Point(13, 464);
+            this.buttonEnableContacts.Location = new System.Drawing.Point(13, 493);
             this.buttonEnableContacts.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonEnableContacts.Name = "buttonEnableContacts";
             this.buttonEnableContacts.Size = new System.Drawing.Size(299, 44);
@@ -461,7 +466,7 @@
             // 
             this.buttonClearSelections.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonClearSelections.Location = new System.Drawing.Point(13, 512);
+            this.buttonClearSelections.Location = new System.Drawing.Point(13, 541);
             this.buttonClearSelections.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonClearSelections.Name = "buttonClearSelections";
             this.buttonClearSelections.Size = new System.Drawing.Size(299, 44);
@@ -476,7 +481,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.comboBoxChannelPresets.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxChannelPresets.FormattingEnabled = true;
-            this.comboBoxChannelPresets.Location = new System.Drawing.Point(101, 411);
+            this.comboBoxChannelPresets.Location = new System.Drawing.Point(101, 440);
             this.comboBoxChannelPresets.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.comboBoxChannelPresets.Name = "comboBoxChannelPresets";
             this.comboBoxChannelPresets.Size = new System.Drawing.Size(210, 24);
@@ -486,7 +491,7 @@
             // 
             this.buttonResetZoom.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonResetZoom.Location = new System.Drawing.Point(13, 562);
+            this.buttonResetZoom.Location = new System.Drawing.Point(13, 591);
             this.buttonResetZoom.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonResetZoom.Name = "buttonResetZoom";
             this.buttonResetZoom.Size = new System.Drawing.Size(299, 44);
@@ -498,7 +503,7 @@
             // checkBoxSpikeFilter
             // 
             this.checkBoxSpikeFilter.AutoSize = true;
-            this.checkBoxSpikeFilter.Location = new System.Drawing.Point(101, 309);
+            this.checkBoxSpikeFilter.Location = new System.Drawing.Point(101, 338);
             this.checkBoxSpikeFilter.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.checkBoxSpikeFilter.Name = "checkBoxSpikeFilter";
             this.checkBoxSpikeFilter.Size = new System.Drawing.Size(77, 20);
@@ -540,7 +545,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.comboBoxReference.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxReference.FormattingEnabled = true;
-            this.comboBoxReference.Location = new System.Drawing.Point(101, 373);
+            this.comboBoxReference.Location = new System.Drawing.Point(101, 402);
             this.comboBoxReference.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.comboBoxReference.Name = "comboBoxReference";
             this.comboBoxReference.Size = new System.Drawing.Size(210, 24);
@@ -552,7 +557,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.comboBoxLfpGain.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxLfpGain.FormattingEnabled = true;
-            this.comboBoxLfpGain.Location = new System.Drawing.Point(101, 240);
+            this.comboBoxLfpGain.Location = new System.Drawing.Point(101, 269);
             this.comboBoxLfpGain.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.comboBoxLfpGain.Name = "comboBoxLfpGain";
             this.comboBoxLfpGain.Size = new System.Drawing.Size(210, 24);
@@ -564,7 +569,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.comboBoxApGain.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxApGain.FormattingEnabled = true;
-            this.comboBoxApGain.Location = new System.Drawing.Point(101, 174);
+            this.comboBoxApGain.Location = new System.Drawing.Point(101, 203);
             this.comboBoxApGain.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.comboBoxApGain.Name = "comboBoxApGain";
             this.comboBoxApGain.Size = new System.Drawing.Size(210, 24);
@@ -604,6 +609,27 @@
             this.buttonOkay.TabIndex = 0;
             this.buttonOkay.Text = "OK";
             this.buttonOkay.UseVisualStyleBackColor = true;
+            // 
+            // comboBoxProbeType
+            // 
+            this.comboBoxProbeType.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.comboBoxProbeType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxProbeType.FormattingEnabled = true;
+            this.comboBoxProbeType.Location = new System.Drawing.Point(101, 170);
+            this.comboBoxProbeType.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.comboBoxProbeType.Name = "comboBoxProbeType";
+            this.comboBoxProbeType.Size = new System.Drawing.Size(210, 24);
+            this.comboBoxProbeType.TabIndex = 44;
+            // 
+            // labelProbeType
+            // 
+            labelProbeType.AutoSize = true;
+            labelProbeType.Location = new System.Drawing.Point(13, 174);
+            labelProbeType.Name = "labelProbeType";
+            labelProbeType.Size = new System.Drawing.Size(82, 16);
+            labelProbeType.TabIndex = 43;
+            labelProbeType.Text = "Probe Type:";
             // 
             // NeuropixelsV1ProbeConfigurationDialog
             // 
@@ -669,5 +695,6 @@
         private System.Windows.Forms.ToolStripStatusLabel toolStripLabelAdcCalibrationSN;
         private System.Windows.Forms.ToolStripStatusLabel toolStripLabelGainCalibrationSn;
         private System.Windows.Forms.CheckBox checkBoxInvertPolarity;
+        private System.Windows.Forms.ComboBox comboBoxProbeType;
     }
 }

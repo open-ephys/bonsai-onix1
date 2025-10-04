@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -15,7 +16,7 @@ namespace OpenEphys.Onix1.Design
 
         private NeuropixelsV1Adc[] Adcs = null;
 
-        private enum ChannelPreset
+        enum ChannelPresetNp1
         {
             BankA,
             BankB,
@@ -25,17 +26,34 @@ namespace OpenEphys.Onix1.Design
             None
         }
 
+        enum ChannelPresetUhd
+        {
+            BankA,
+            BankB,
+            BankC,
+            BankD,
+            BankE,
+            BankF,
+            BankG,
+            BankH,
+            BankI,
+            BankJ,
+            BankK,
+            BankL,
+            BankM,
+            BankN,
+            BankO,
+            BankP,
+            None
+        }
+
         /// <summary>
-        /// Public <see cref="IConfigureNeuropixelsV2"/> interface that is manipulated by
-        /// <see cref="NeuropixelsV2eDialog"/>.
+        /// Gets the <see cref="NeuropixelsV1ProbeConfiguration"/> object.
         /// </summary>
-        /// <remarks>
-        /// When a <see cref="IConfigureNeuropixelsV2"/> is passed to 
-        /// <see cref="NeuropixelsV1Dialog"/>, it is copied and stored in this
-        /// variable so that any modifications made to configuration settings can be easily reversed
-        /// by not copying the new settings back to the original instance.
-        /// </remarks>
-        public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; set; }
+        public NeuropixelsV1ProbeConfiguration ProbeConfiguration
+        {
+            get => ChannelConfiguration.ProbeConfiguration;
+        }
 
         /// <inheritdoc cref="ConfigureNeuropixelsV1e.InvertPolarity"/>
         public bool InvertPolarity { get; set; }
@@ -52,9 +70,7 @@ namespace OpenEphys.Onix1.Design
             InitializeComponent();
             Shown += FormShown;
 
-            ProbeConfiguration = new(probeConfiguration);
-
-            ChannelConfiguration = new(ProbeConfiguration)
+            ChannelConfiguration = new(probeConfiguration)
             {
                 TopLevel = false,
                 FormBorderStyle = FormBorderStyle.None,
@@ -69,6 +85,10 @@ namespace OpenEphys.Onix1.Design
 
             ChannelConfiguration.OnZoom += UpdateTrackBarLocation;
             ChannelConfiguration.OnFileLoad += OnFileLoadEvent;
+
+            comboBoxProbeType.DataSource = Enum.GetValues(typeof(NeuropixelsV1ProbeType));
+            comboBoxProbeType.SelectedItem = ProbeConfiguration.ProbeType;
+            comboBoxProbeType.SelectedIndexChanged += ProbeTypeIndexChanged;
 
             comboBoxApGain.DataSource = Enum.GetValues(typeof(NeuropixelsV1Gain));
             comboBoxApGain.SelectedItem = ProbeConfiguration.SpikeAmplifierGain;
@@ -92,11 +112,70 @@ namespace OpenEphys.Onix1.Design
 
             textBoxGainCalibrationFile.Text = gainCalibrationFile;
 
-            comboBoxChannelPresets.DataSource = Enum.GetValues(typeof(ChannelPreset));
-            CheckForExistingChannelPreset();
+            comboBoxChannelPresets.DataSource = GetComboBoxChannelPresets(ProbeConfiguration.ProbeType);
+            CheckForExistingChannelPreset(ProbeConfiguration.ProbeType);
             comboBoxChannelPresets.SelectedIndexChanged += ChannelPresetIndexChanged;
 
+            ConfigureControls(ProbeConfiguration.ProbeType);
+
             CheckStatus();
+        }
+
+        void UpdateProbeConfiguration()
+        {
+            ChannelConfiguration.ProbeConfiguration = new((NeuropixelsV1eProbeGroup)ChannelConfiguration.ProbeGroup, ProbeConfiguration.ProbeType,
+                ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain, ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter);
+
+            ChannelConfiguration.DrawProbeGroup();
+            ChannelConfiguration.ResetZoom();
+            ChannelConfiguration.RefreshZedGraph();
+
+            comboBoxChannelPresets.SelectedIndexChanged -= ChannelPresetIndexChanged; // NB: Temporarily detach handler so the loaded electrode configuration is respected
+            comboBoxChannelPresets.DataSource = GetComboBoxChannelPresets(ProbeConfiguration.ProbeType);
+            comboBoxChannelPresets.SelectedIndexChanged += ChannelPresetIndexChanged;
+        }
+
+        private void ProbeTypeIndexChanged(object sender, EventArgs e)
+        {
+            var probeType = (NeuropixelsV1ProbeType)((ComboBox)sender).SelectedItem;
+
+            if (probeType != ProbeConfiguration.ProbeType)
+            {
+                ProbeConfiguration.ProbeType = probeType;
+                ChannelConfiguration.LoadDefaultProbeGroup();
+                UpdateProbeConfiguration();
+            }
+
+            ConfigureControls(ProbeConfiguration.ProbeType);
+        }
+
+        void ConfigureControls(NeuropixelsV1ProbeType probeType)
+        {
+            if (probeType == NeuropixelsV1ProbeType.NP1)
+            {
+                buttonEnableContacts.Enabled = true;
+                buttonClearSelections.Enabled = true;
+                ChannelConfiguration.SetSelectElectrodesStatus(true);
+
+            }
+            else if (probeType == NeuropixelsV1ProbeType.UHD)
+            {
+                buttonEnableContacts.Enabled = false;
+                buttonClearSelections.Enabled = false;
+                ChannelConfiguration.SetSelectElectrodesStatus(false);
+            }
+            else
+                throw new InvalidEnumArgumentException(nameof(NeuropixelsV1ProbeType));
+        }
+
+        static Array GetComboBoxChannelPresets(NeuropixelsV1ProbeType probeType)
+        {
+            return probeType switch
+            {
+                NeuropixelsV1ProbeType.NP1 => Enum.GetValues(typeof(ChannelPresetNp1)),
+                NeuropixelsV1ProbeType.UHD => Enum.GetValues(typeof(ChannelPresetUhd)),
+                _ => throw new InvalidEnumArgumentException(nameof(NeuropixelsV1ProbeType))
+            };
         }
 
         private void InvertPolarityIndexChanged(object sender, EventArgs e)
@@ -154,48 +233,23 @@ namespace OpenEphys.Onix1.Design
 
         private void ChannelPresetIndexChanged(object sender, EventArgs e)
         {
-            var channelPreset = (ChannelPreset)((ComboBox)sender).SelectedItem;
-
-            if (channelPreset != ChannelPreset.None)
+            if (ProbeConfiguration.ProbeType == NeuropixelsV1ProbeType.NP1)
             {
-                SetChannelPreset(channelPreset);
+                var channelPreset = (ChannelPresetNp1)((ComboBox)sender).SelectedItem;
+
+                if (channelPreset != ChannelPresetNp1.None)
+                {
+                    SetChannelPreset(channelPreset);
+                }
             }
-        }
-
-        private void SpikeFilterIndexChanged(object sender, EventArgs e)
-        {
-            ProbeConfiguration.SpikeFilter = ((CheckBox)sender).Checked;
-        }
-
-        private void SetChannelPreset(ChannelPreset preset)
-        {
-            var probeConfiguration = ChannelConfiguration.ProbeConfiguration;
-            var electrodes = NeuropixelsV1eProbeGroup.ToElectrodes(ChannelConfiguration.ProbeConfiguration.ProbeGroup);
-
-            switch (preset)
+            else if (ProbeConfiguration.ProbeType == NeuropixelsV1ProbeType.UHD)
             {
-                case ChannelPreset.BankA:
-                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.A).ToArray());
-                    break;
+                var channelPreset = (ChannelPresetUhd)((ComboBox)sender).SelectedItem;
 
-                case ChannelPreset.BankB:
-                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.B).ToArray());
-                    break;
-
-                case ChannelPreset.BankC:
-                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.C ||
-                                                                             (e.Bank == NeuropixelsV1Bank.B && e.Index >= 576)).ToArray());
-                    break;
-
-                case ChannelPreset.SingleColumn:
-                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Index % 2 == 0 && e.Bank == NeuropixelsV1Bank.A) ||
-                                                                              (e.Index % 2 == 1 && e.Bank == NeuropixelsV1Bank.B)).ToArray());
-                    break;
-
-                case ChannelPreset.Tetrodes:
-                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Index % 8 < 4 && e.Bank == NeuropixelsV1Bank.A) ||
-                                                                              (e.Index % 8 > 3 && e.Bank == NeuropixelsV1Bank.B)).ToArray());
-                    break;
+                if (channelPreset != ChannelPresetUhd.None)
+                {
+                    SetChannelPreset(channelPreset);
+                }
             }
 
             ChannelConfiguration.HighlightEnabledContacts();
@@ -204,44 +258,235 @@ namespace OpenEphys.Onix1.Design
             ChannelConfiguration.RefreshZedGraph();
         }
 
-        private void CheckForExistingChannelPreset()
+        private void SpikeFilterIndexChanged(object sender, EventArgs e)
         {
-            var channelMap = ChannelConfiguration.ProbeConfiguration.ChannelMap;
+            ProbeConfiguration.SpikeFilter = ((CheckBox)sender).Checked;
+        }
+
+        void SetChannelPreset(ChannelPresetUhd preset)
+        {
+            var electrodes = NeuropixelsV1eProbeGroup.ToElectrodes(ProbeConfiguration.ProbeGroup, ProbeConfiguration.ProbeType);
+
+            switch (preset)
+            {
+                case ChannelPresetUhd.BankA:
+                    ProbeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.A).ToArray());
+                    break;
+
+                case ChannelPresetUhd.BankB:
+                    ProbeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.B).ToArray());
+                    break;
+
+                case ChannelPresetUhd.BankC:
+                    ProbeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.C).ToArray());
+                    break;
+
+                case ChannelPresetUhd.BankD:
+                    ProbeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.D).ToArray());
+                    break;
+
+                case ChannelPresetUhd.BankE:
+                    ProbeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.E).ToArray());
+                    break;
+
+                case ChannelPresetUhd.BankF:
+                    ProbeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.F).ToArray());
+                    break;
+
+                case ChannelPresetUhd.BankG:
+                    ProbeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.G).ToArray());
+                    break;
+
+                case ChannelPresetUhd.BankH:
+                    ProbeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.H).ToArray());
+                    break;
+
+                case ChannelPresetUhd.BankI:
+                    ProbeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.I).ToArray());
+                    break;
+
+                case ChannelPresetUhd.BankJ:
+                    ProbeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.J).ToArray());
+                    break;
+
+                case ChannelPresetUhd.BankK:
+                    ProbeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.K).ToArray());
+                    break;
+
+                case ChannelPresetUhd.BankL:
+                    ProbeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.L).ToArray());
+                    break;
+
+                case ChannelPresetUhd.BankM:
+                    ProbeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.M).ToArray());
+                    break;
+
+                case ChannelPresetUhd.BankN:
+                    ProbeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.N).ToArray());
+                    break;
+
+                case ChannelPresetUhd.BankO:
+                    ProbeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.O).ToArray());
+                    break;
+
+                case ChannelPresetUhd.BankP:
+                    ProbeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.P).ToArray());
+                    break;
+            }
+        }
+
+        void SetChannelPreset(ChannelPresetNp1 preset)
+        {
+            var electrodes = NeuropixelsV1eProbeGroup.ToElectrodes(ProbeConfiguration.ProbeGroup, ProbeConfiguration.ProbeType);
+
+            switch (preset)
+            {
+                case ChannelPresetNp1.BankA:
+                    ProbeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.A).ToArray());
+                    break;
+
+                case ChannelPresetNp1.BankB:
+                    ProbeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.B).ToArray());
+                    break;
+
+                case ChannelPresetNp1.BankC:
+                    ProbeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.C ||
+                                                                             (e.Bank == NeuropixelsV1Bank.B && e.Index >= 576)).ToArray());
+                    break;
+
+                case ChannelPresetNp1.SingleColumn:
+                    ProbeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Index % 2 == 0 && e.Bank == NeuropixelsV1Bank.A) ||
+                                                                              (e.Index % 2 == 1 && e.Bank == NeuropixelsV1Bank.B)).ToArray());
+                    break;
+
+                case ChannelPresetNp1.Tetrodes:
+                    ProbeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Index % 8 < 4 && e.Bank == NeuropixelsV1Bank.A) ||
+                                                                              (e.Index % 8 > 3 && e.Bank == NeuropixelsV1Bank.B)).ToArray());
+                    break;
+            }
+        }
+
+        void CheckForExistingChannelPreset(NeuropixelsV1ProbeType probeType)
+        {
+            if (probeType == NeuropixelsV1ProbeType.NP1)
+                CheckForChannelPresetNp1();
+
+            else if (probeType == NeuropixelsV1ProbeType.UHD)
+                CheckForChannelPresetUhd();
+        }
+
+        void CheckForChannelPresetNp1()
+        {
+            var channelMap = ProbeConfiguration.ChannelMap;
 
             if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.A))
             {
-                comboBoxChannelPresets.SelectedItem = ChannelPreset.BankA;
+                comboBoxChannelPresets.SelectedItem = ChannelPresetNp1.BankA;
             }
             else if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.B))
             {
-                comboBoxChannelPresets.SelectedItem = ChannelPreset.BankB;
+                comboBoxChannelPresets.SelectedItem = ChannelPresetNp1.BankB;
             }
             else if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.C ||
                                         (e.Bank == NeuropixelsV1Bank.B && e.Index >= 576)))
             {
-                comboBoxChannelPresets.SelectedItem = ChannelPreset.BankC;
+                comboBoxChannelPresets.SelectedItem = ChannelPresetNp1.BankC;
             }
             else if (channelMap.All(e => (e.Index % 2 == 0 && e.Bank == NeuropixelsV1Bank.A) ||
                                          (e.Index % 2 == 1 && e.Bank == NeuropixelsV1Bank.B)))
             {
-                comboBoxChannelPresets.SelectedItem = ChannelPreset.SingleColumn;
+                comboBoxChannelPresets.SelectedItem = ChannelPresetNp1.SingleColumn;
             }
             else if (channelMap.All(e => (e.Index % 8 < 4 && e.Bank == NeuropixelsV1Bank.A) ||
                                          (e.Index % 8 > 3 && e.Bank == NeuropixelsV1Bank.B)))
             {
-                comboBoxChannelPresets.SelectedItem = ChannelPreset.Tetrodes;
+                comboBoxChannelPresets.SelectedItem = ChannelPresetNp1.Tetrodes;
             }
             else
             {
-                comboBoxChannelPresets.SelectedItem = ChannelPreset.None;
+                comboBoxChannelPresets.SelectedItem = ChannelPresetNp1.None;
             }
+        }
+
+        void CheckForChannelPresetUhd()
+        {
+            var channelMap = ProbeConfiguration.ChannelMap;
+
+            if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.A))
+            {
+                comboBoxChannelPresets.SelectedItem = ChannelPresetUhd.BankA;
+            }
+            else if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.B))
+            {
+                comboBoxChannelPresets.SelectedItem = ChannelPresetUhd.BankB;
+            }
+            else if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.C))
+            {
+                comboBoxChannelPresets.SelectedItem = ChannelPresetUhd.BankC;
+            }
+            else if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.D))
+            {
+                comboBoxChannelPresets.SelectedItem = ChannelPresetUhd.BankD;
+            }
+            else if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.E))
+            {
+                comboBoxChannelPresets.SelectedItem = ChannelPresetUhd.BankE;
+            }
+            else if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.F))
+            {
+                comboBoxChannelPresets.SelectedItem = ChannelPresetUhd.BankF;
+            }
+            else if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.G))
+            {
+                comboBoxChannelPresets.SelectedItem = ChannelPresetUhd.BankG;
+            }
+            else if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.H))
+            {
+                comboBoxChannelPresets.SelectedItem = ChannelPresetUhd.BankH;
+            }
+            else if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.I))
+            {
+                comboBoxChannelPresets.SelectedItem = ChannelPresetUhd.BankI;
+            }
+            else if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.J))
+            {
+                comboBoxChannelPresets.SelectedItem = ChannelPresetUhd.BankJ;
+            }
+            else if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.K))
+            {
+                comboBoxChannelPresets.SelectedItem = ChannelPresetUhd.BankK;
+            }
+            else if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.L))
+            {
+                comboBoxChannelPresets.SelectedItem = ChannelPresetUhd.BankL;
+            }
+            else if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.M))
+            {
+                comboBoxChannelPresets.SelectedItem = ChannelPresetUhd.BankM;
+            }
+            else if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.N))
+            {
+                comboBoxChannelPresets.SelectedItem = ChannelPresetUhd.BankN;
+            }
+            else if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.O))
+            {
+                comboBoxChannelPresets.SelectedItem = ChannelPresetUhd.BankO;
+            }
+            else if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.P))
+            {
+                comboBoxChannelPresets.SelectedItem = ChannelPresetUhd.BankP;
+            }
+            else
+                comboBoxChannelPresets.SelectedItem = ChannelPresetUhd.None;
         }
 
         private void OnFileLoadEvent(object sender, EventArgs e)
         {
-            // NB: Ensure that the newly loaded ProbeConfiguration in the ChannelConfigurationDialog is reflected here.
-            ProbeConfiguration = ChannelConfiguration.ProbeConfiguration;
-            CheckForExistingChannelPreset();
+            ProbeConfiguration.ProbeType = NeuropixelsV1eProbeGroup.GetProbeTypeFromProbeName(ChannelConfiguration.ProbeGroup.Probes.First().Annotations.Name);
+            comboBoxProbeType.SelectedItem = ProbeConfiguration.ProbeType;
+            UpdateProbeConfiguration();
+            ConfigureControls(ProbeConfiguration.ProbeType);
+            CheckForExistingChannelPreset(ProbeConfiguration.ProbeType);
         }
 
         private void CheckStatus()
@@ -317,22 +562,22 @@ namespace OpenEphys.Onix1.Design
 
             panelProbe.Visible = adcCalibration.HasValue && gainCorrection.HasValue;
 
-            if (toolStripAdcCalSN.Text == NoFileSelected) 
+            if (toolStripAdcCalSN.Text == NoFileSelected)
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusWarningImage;
-            else if (toolStripAdcCalSN.Text == InvalidFile) 
+            else if (toolStripAdcCalSN.Text == InvalidFile)
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusCriticalImage;
             else if (toolStripGainCalSN.Text != NoFileSelected && toolStripGainCalSN.Text != InvalidFile && toolStripAdcCalSN.Text != toolStripGainCalSN.Text)
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusBlockedImage;
-            else 
+            else
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusReadyImage;
 
-            if (toolStripGainCalSN.Text == NoFileSelected) 
+            if (toolStripGainCalSN.Text == NoFileSelected)
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusWarningImage;
-            else if (toolStripGainCalSN.Text == InvalidFile) 
+            else if (toolStripGainCalSN.Text == InvalidFile)
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusCriticalImage;
             else if (toolStripAdcCalSN.Text != NoFileSelected && toolStripAdcCalSN.Text != InvalidFile && toolStripAdcCalSN.Text != toolStripGainCalSN.Text)
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusBlockedImage;
-            else 
+            else
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusReadyImage;
         }
 
@@ -432,14 +677,14 @@ namespace OpenEphys.Onix1.Design
 
         private void EnableSelectedContacts()
         {
-            var electrodes = NeuropixelsV1eProbeGroup.ToElectrodes(ChannelConfiguration.ProbeConfiguration.ProbeGroup);
+            var electrodes = NeuropixelsV1eProbeGroup.ToElectrodes(ProbeConfiguration.ProbeGroup, ProbeConfiguration.ProbeType);
 
             var selectedElectrodes = electrodes.Where((e, ind) => ChannelConfiguration.SelectedContacts[ind])
                                                .ToArray();
 
             ChannelConfiguration.EnableElectrodes(selectedElectrodes);
 
-            CheckForExistingChannelPreset();
+            CheckForExistingChannelPreset(ProbeConfiguration.ProbeType);
         }
 
         private void DeselectContacts()

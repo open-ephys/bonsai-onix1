@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 
@@ -181,6 +183,21 @@ namespace OpenEphys.Onix1.Design
 
                 thisFileMenuItem.DropDownItems.Add(newChildMenuItems);
             }
+        }
+
+        internal static string GetEnumDescription(this Enum value)
+        {
+            FieldInfo field = value.GetType().GetField(value.ToString());
+            if (field != null)
+            {
+                DescriptionAttribute attribute = field.GetCustomAttribute<DescriptionAttribute>();
+                if (attribute != null)
+                {
+                    return attribute.Description;
+                }
+            }
+
+            return value.ToString();
         }
     }
 }
