@@ -1,6 +1,6 @@
 ﻿namespace OpenEphys.Onix1.Design
 {
-    partial class Bno055Dialog
+    partial class Headstage64ElectricalStimulatorSequenceDialog
     {
         /// <summary>
         /// Required designer variable.
@@ -28,10 +28,19 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Headstage64ElectricalStimulatorSequenceDialog));
+            this.SuspendLayout();
+            // 
+            // Headstage64ElectricalStimulatorSequenceDialog
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Text = "Bno055Dialog";
+            this.ClientSize = new System.Drawing.Size(1189, 592);
+            this.Name = "Headstage64ElectricalStimulatorSequenceDialog";
+            this.Text = "Headstage 64 Electrical Stimulus Sequence";
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
         }
 
         #endregion

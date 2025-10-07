@@ -8,14 +8,14 @@ namespace OpenEphys.Onix1.Design
     public partial class NeuropixelsV2eHeadstageDialog : Form
     {
         /// <summary>
-        /// A <see cref="NeuropixelsV2eDialog"/> that configures a <see cref="ConfigureNeuropixelsV2e"/>.
+        /// Gets the <see cref="NeuropixelsV2eDialog"/>.
         /// </summary>
         public readonly NeuropixelsV2eDialog DialogNeuropixelsV2e;
 
         /// <summary>
-        /// A <see cref="PolledBno055Dialog"/> that configures a <see cref="ConfigurePolledBno055"/>.
+        /// Gets the <see cref="GenericDeviceDialog"/> for the Bno055.
         /// </summary>
-        public readonly PolledBno055Dialog DialogBno055;
+        public readonly GenericDeviceDialog DialogBno055;
 
         /// <summary>
         /// Initializes a new instance of a <see cref="NeuropixelsV2eHeadstageDialog"/>.
@@ -26,15 +26,9 @@ namespace OpenEphys.Onix1.Design
         {
             InitializeComponent();
 
-            DialogNeuropixelsV2e = new(configureNeuropixelsV2e)
-            {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this
-            };
+            DialogNeuropixelsV2e = new(configureNeuropixelsV2e);
 
-            panelNeuropixelsV2e.Controls.Add(DialogNeuropixelsV2e);
+            DialogNeuropixelsV2e.SetChildFormProperties(this).AddDialogToPanel(panelNeuropixelsV2e);
 
             if (configureNeuropixelsV2e is ConfigureNeuropixelsV2e)
             {
@@ -47,19 +41,9 @@ namespace OpenEphys.Onix1.Design
                 tabPageNeuropixelsV2e.Text = "NeuropixelsV2eBeta";
             }
 
-            DialogNeuropixelsV2e.Show();
+            DialogBno055 = new(new ConfigurePolledBno055(configureBno055));
 
-            DialogBno055 = new(configureBno055)
-            {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this
-            };
-
-            panelBno055.Controls.Add(DialogBno055);
-            DialogBno055.Show();
-            DialogBno055.Invalidate();
+            DialogBno055.SetChildFormProperties(this).AddDialogToPanel(panelBno055);
         }
 
         private void Okay_Click(object sender, System.EventArgs e)

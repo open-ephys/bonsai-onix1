@@ -11,7 +11,6 @@ namespace OpenEphys.Onix1
     /// using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Configures a Bosch Bno055 9-axis inertial measurement unit.")]
-    [Editor("OpenEphys.Onix1.Design.Bno055Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureBno055 : SingleDeviceFactory
     {
         /// <summary>
