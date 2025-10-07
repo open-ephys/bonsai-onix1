@@ -231,13 +231,9 @@ namespace OpenEphys.Onix1.Design
                 SetTextBoxBackgroundError(StimulusSequenceOptions.textBoxPhaseTwoDuration);
                 return false;
             }
-            else if (AnyCurrentIsSet(electricalStimulator) && electricalStimulator.InterPulseInterval == 0)
-            {
-                reason = "Pulse period has not been set.";
-                SetTextBoxBackgroundError(StimulusSequenceOptions.textBoxPulsePeriod);
-                return false;
-            }
-            else if (AnyCurrentIsSet(electricalStimulator) && electricalStimulator.InterPulseInterval < electricalStimulator.PhaseOneDuration + electricalStimulator.InterPhaseInterval + electricalStimulator.PhaseTwoDuration)
+            else if (AnyCurrentIsSet(electricalStimulator) && electricalStimulator.BurstPulseCount > 1
+                && (electricalStimulator.InterPulseInterval == 0
+                   || electricalStimulator.InterPulseInterval < electricalStimulator.PhaseOneDuration + electricalStimulator.InterPhaseInterval + electricalStimulator.PhaseTwoDuration))
             {
                 reason = "Pulse period is too short.";
                 SetTextBoxBackgroundError(StimulusSequenceOptions.textBoxPulsePeriod);

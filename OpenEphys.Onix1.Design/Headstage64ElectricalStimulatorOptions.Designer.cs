@@ -204,6 +204,7 @@
             this.textBoxBurstPulseCount.Name = "textBoxBurstPulseCount";
             this.textBoxBurstPulseCount.Size = new System.Drawing.Size(75, 22);
             this.textBoxBurstPulseCount.TabIndex = 2;
+            this.textBoxBurstPulseCount.TextChanged += new System.EventHandler(this.BurstPulseCountChanged);
             // 
             // labelBurstPulseCount
             // 
@@ -243,6 +244,7 @@
             this.textBoxTrainBurstCount.Name = "textBoxTrainBurstCount";
             this.textBoxTrainBurstCount.Size = new System.Drawing.Size(75, 22);
             this.textBoxTrainBurstCount.TabIndex = 4;
+            this.textBoxTrainBurstCount.TextChanged += new System.EventHandler(this.TrainBurstCountChanged);
             // 
             // labelTrainBurstCount
             // 

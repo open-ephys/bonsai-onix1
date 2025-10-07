@@ -74,6 +74,7 @@
             this.textBoxBurstsPerTrain.Name = "textBoxBurstsPerTrain";
             this.textBoxBurstsPerTrain.Size = new System.Drawing.Size(75, 22);
             this.textBoxBurstsPerTrain.TabIndex = 17;
+            this.textBoxBurstsPerTrain.TextChanged += new System.EventHandler(this.BurstsPerTrainChanged);
             // 
             // labelBurstsPerTrain
             // 
@@ -105,6 +106,7 @@
             this.textBoxPulsesPerBurst.Name = "textBoxPulsesPerBurst";
             this.textBoxPulsesPerBurst.Size = new System.Drawing.Size(75, 22);
             this.textBoxPulsesPerBurst.TabIndex = 13;
+            this.textBoxPulsesPerBurst.TextChanged += new System.EventHandler(this.PulsesPerBurstChanged);
             // 
             // labelPulsesPerBurst
             // 

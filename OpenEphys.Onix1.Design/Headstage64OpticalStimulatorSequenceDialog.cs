@@ -100,22 +100,12 @@ namespace OpenEphys.Onix1.Design
                 { StimulusSequenceOptions.textBoxPulsesPerBurst,
                     new TextBoxBinding<uint>(
                         StimulusSequenceOptions.textBoxPulsesPerBurst,
-                        value =>
-                        {
-                            OpticalStimulator.PulsesPerBurst = value;
-                            StimulusSequenceOptions.textBoxPulsePeriod.Enabled = OpticalStimulator.PulsesPerBurst > 1;
-                            return OpticalStimulator.PulsesPerBurst;
-                        },
+                        value => { OpticalStimulator.PulsesPerBurst = value; return OpticalStimulator.PulsesPerBurst; },
                         uint.Parse) },
                 { StimulusSequenceOptions.textBoxBurstsPerTrain,
                     new TextBoxBinding<uint>(
                         StimulusSequenceOptions.textBoxBurstsPerTrain,
-                        value =>
-                        {
-                            OpticalStimulator.BurstsPerTrain = value;
-                            StimulusSequenceOptions.textBoxInterBurstInterval.Enabled = OpticalStimulator.BurstsPerTrain > 1;
-                            return OpticalStimulator.BurstsPerTrain;
-                        },
+                        value => { OpticalStimulator.BurstsPerTrain = value; return OpticalStimulator.BurstsPerTrain; },
                         uint.Parse) }
             };
 
@@ -180,7 +170,7 @@ namespace OpenEphys.Onix1.Design
                 }
                 else
                 {
-                    throw new NotImplementedException($"No valid text box found when updating parameters in {nameof(Headstage64ElectricalStimulatorSequenceDialog)}");
+                    throw new NotImplementedException($"No valid text box found when updating parameters in {nameof(Headstage64OpticalStimulatorSequenceDialog)}");
                 }
 
                 SetTextBoxBackgroundDefault(textBox);
