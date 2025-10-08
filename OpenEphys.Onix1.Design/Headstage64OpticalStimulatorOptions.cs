@@ -49,5 +49,21 @@ namespace OpenEphys.Onix1.Design
 
         internal readonly double channelOneScalingFactor;
         internal readonly double channelTwoScalingFactor;
+
+        void PulsesPerBurstChanged(object sender, System.EventArgs e)
+        {
+            if (int.TryParse(textBoxPulsesPerBurst.Text, out int result))
+            {
+                textBoxPulsePeriod.Enabled = result > 1;
+            }
+        }
+
+        void BurstsPerTrainChanged(object sender, System.EventArgs e)
+        {
+            if (int.TryParse(textBoxBurstsPerTrain.Text, out int result))
+            {
+                textBoxInterBurstInterval.Enabled = result > 1;
+            }
+        }
     }
 }
