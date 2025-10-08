@@ -63,6 +63,16 @@ namespace OpenEphys.Onix1.Design.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap MagnifyingGlass {
+            get {
+                object obj = ResourceManager.GetObject("MagnifyingGlass", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap StatusBlockedImage {
             get {
                 object obj = ResourceManager.GetObject("StatusBlockedImage", resourceCulture);

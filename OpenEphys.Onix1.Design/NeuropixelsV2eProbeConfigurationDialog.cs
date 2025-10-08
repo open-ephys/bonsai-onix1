@@ -138,16 +138,6 @@ namespace OpenEphys.Onix1.Design
 
             ChannelConfiguration.Show();
             ChannelConfiguration.ConnectResizeEventHandler();
-            ChannelConfiguration.OnResizeZedGraph += ResizeTrackBar;
-        }
-
-        private void ResizeTrackBar(object sender, EventArgs e)
-        {
-            if (sender is ChannelConfigurationDialog dialog)
-            {
-                panelTrackBar.Height = dialog.zedGraphChannels.Size.Height;
-                panelTrackBar.Location = new Point(panelProbe.Size.Width - panelTrackBar.Width, ChannelConfiguration.zedGraphChannels.Location.Y);
-            }
         }
 
         private void SelectedReferenceChanged(object sender, EventArgs e)
@@ -604,11 +594,6 @@ namespace OpenEphys.Onix1.Design
             CheckStatus();
         }
 
-        internal void ResetZoom_Click(object sender, EventArgs e)
-        {
-            ResetZoom();
-        }
-
         internal void ClearSelection_Click(object sender, EventArgs e)
         {
             DeselectContacts();
@@ -637,13 +622,6 @@ namespace OpenEphys.Onix1.Design
             ChannelConfiguration.HighlightEnabledContacts();
             ChannelConfiguration.HighlightSelectedContacts();
             ChannelConfiguration.UpdateContactLabels();
-            ChannelConfiguration.RefreshZedGraph();
-        }
-
-        private void ResetZoom()
-        {
-            ChannelConfiguration.ResetZoom();
-            ChannelConfiguration.DrawScale();
             ChannelConfiguration.RefreshZedGraph();
         }
 

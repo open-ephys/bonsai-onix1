@@ -116,13 +116,6 @@ namespace OpenEphys.Onix1.Design
 
             ChannelConfiguration.Show();
             ChannelConfiguration.ConnectResizeEventHandler();
-            ChannelConfiguration.OnResizeZedGraph += ResizeTrackBar;
-        }
-
-        private void ResizeTrackBar(object sender, EventArgs e)
-        {
-            panelTrackBar.Height = ((ChannelConfigurationDialog)sender).zedGraphChannels.Size.Height;
-            panelTrackBar.Location = new Point(panelProbe.Size.Width - panelTrackBar.Width, ChannelConfiguration.zedGraphChannels.Location.Y);
         }
 
         private void GainCalibrationFileTextChanged(object sender, EventArgs e)
@@ -317,22 +310,22 @@ namespace OpenEphys.Onix1.Design
 
             panelProbe.Visible = adcCalibration.HasValue && gainCorrection.HasValue;
 
-            if (toolStripAdcCalSN.Text == NoFileSelected) 
+            if (toolStripAdcCalSN.Text == NoFileSelected)
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusWarningImage;
-            else if (toolStripAdcCalSN.Text == InvalidFile) 
+            else if (toolStripAdcCalSN.Text == InvalidFile)
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusCriticalImage;
             else if (toolStripGainCalSN.Text != NoFileSelected && toolStripGainCalSN.Text != InvalidFile && toolStripAdcCalSN.Text != toolStripGainCalSN.Text)
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusBlockedImage;
-            else 
+            else
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusReadyImage;
 
-            if (toolStripGainCalSN.Text == NoFileSelected) 
+            if (toolStripGainCalSN.Text == NoFileSelected)
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusWarningImage;
-            else if (toolStripGainCalSN.Text == InvalidFile) 
+            else if (toolStripGainCalSN.Text == InvalidFile)
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusCriticalImage;
             else if (toolStripAdcCalSN.Text != NoFileSelected && toolStripAdcCalSN.Text != InvalidFile && toolStripAdcCalSN.Text != toolStripGainCalSN.Text)
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusBlockedImage;
-            else 
+            else
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusReadyImage;
         }
 
@@ -375,11 +368,6 @@ namespace OpenEphys.Onix1.Design
             }
 
             CheckStatus();
-        }
-
-        private void ResetZoom_Click(object sender, EventArgs e)
-        {
-            ResetZoom();
         }
 
         private void ClearSelection_Click(object sender, EventArgs e)
@@ -449,13 +437,6 @@ namespace OpenEphys.Onix1.Design
             ChannelConfiguration.HighlightSelectedContacts();
             ChannelConfiguration.UpdateContactLabels();
             ChannelConfiguration.RefreshZedGraph();
-        }
-
-        private void ResetZoom()
-        {
-            ChannelConfiguration.ResetZoom();
-            ChannelConfiguration.RefreshZedGraph();
-            ChannelConfiguration.DrawScale();
         }
 
         private void MoveToVerticalPosition(float relativePosition)
