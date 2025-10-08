@@ -12,19 +12,19 @@ namespace OpenEphys.Onix1.Design
     public partial class NeuropixelsV1fHeadstageDialog : Form
     {
         /// <summary>
-        /// Public method that provides access to <see cref="NeuropixelsV1Dialog"/> A.
+        /// Gets the <see cref="NeuropixelsV1Dialog"/> for ProbeA.
         /// </summary>
         public readonly NeuropixelsV1Dialog DialogNeuropixelsV1A;
 
         /// <summary>
-        /// Public method that provides access to <see cref="NeuropixelsV1Dialog"/> B.
+        /// Gets the <see cref="NeuropixelsV1Dialog"/> for ProbeB.
         /// </summary>
         public readonly NeuropixelsV1Dialog DialogNeuropixelsV1B;
 
         /// <summary>
-        /// Public method that provides access to the <see cref="Bno055Dialog"/>.
+        /// Gets the <see cref="GenericDeviceDialog"/> for the Bno055.
         /// </summary>
-        public readonly Bno055Dialog DialogBno055;
+        public readonly GenericDeviceDialog DialogBno055;
 
         /// <summary>
         /// Initializes a new instance of a <see cref="NeuropixelsV1fHeadstageDialog"/>.
@@ -38,41 +38,25 @@ namespace OpenEphys.Onix1.Design
 
             DialogNeuropixelsV1A = new(configureNeuropixelsV1A)
             {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this,
                 Tag = configureNeuropixelsV1A.ProbeName
             };
 
-            panelNeuropixelsV1A.Controls.Add(DialogNeuropixelsV1A);
+            DialogNeuropixelsV1A.SetChildFormProperties(this).AddDialogToPanel(panelNeuropixelsV1A);
+
             this.AddMenuItemsFromDialogToFileOption(DialogNeuropixelsV1A, "NeuropixelsV1A");
-            DialogNeuropixelsV1A.Show();
 
             DialogNeuropixelsV1B = new(configureNeuropixelsV1B)
             {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this,
                 Tag = configureNeuropixelsV1B.ProbeName
             };
 
-            panelNeuropixelsV1B.Controls.Add(DialogNeuropixelsV1B);
+            DialogNeuropixelsV1B.SetChildFormProperties(this).AddDialogToPanel(panelNeuropixelsV1B);
+
             this.AddMenuItemsFromDialogToFileOption(DialogNeuropixelsV1B, "NeuropixelsV1B");
-            DialogNeuropixelsV1B.Show();
 
-            DialogBno055 = new(configureBno055)
-            {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this
-            };
+            DialogBno055 = new(new ConfigureBno055(configureBno055));
 
-            panelBno055.Controls.Add(DialogBno055);
-            DialogBno055.Show();
-            DialogBno055.Invalidate();
+            DialogBno055.SetChildFormProperties(this).AddDialogToPanel(panelBno055);
         }
 
         private void Okay_Click(object sender, System.EventArgs e)

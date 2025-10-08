@@ -64,8 +64,8 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.buttonCancel);
             this.splitContainer1.Panel2.Controls.Add(this.buttonOK);
-            this.splitContainer1.Size = new System.Drawing.Size(609, 550);
-            this.splitContainer1.SplitterDistance = 513;
+            this.splitContainer1.Size = new System.Drawing.Size(609, 562);
+            this.splitContainer1.SplitterDistance = 525;
             this.splitContainer1.TabIndex = 0;
             this.splitContainer1.TabStop = false;
             // 
@@ -83,7 +83,7 @@
             this.zedGraphChannels.ScrollMinX = 0D;
             this.zedGraphChannels.ScrollMinY = 0D;
             this.zedGraphChannels.ScrollMinY2 = 0D;
-            this.zedGraphChannels.Size = new System.Drawing.Size(609, 513);
+            this.zedGraphChannels.Size = new System.Drawing.Size(609, 525);
             this.zedGraphChannels.TabIndex = 4;
             this.zedGraphChannels.TabStop = false;
             this.zedGraphChannels.UseExtendedPrintDialog = true;
@@ -160,7 +160,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(609, 574);
+            this.ClientSize = new System.Drawing.Size(609, 586);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.menuStrip);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
