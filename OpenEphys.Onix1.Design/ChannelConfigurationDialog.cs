@@ -18,11 +18,21 @@ namespace OpenEphys.Onix1.Design
     {
         internal event EventHandler OnResizeZedGraph;
 
-        internal ProbeGroup ProbeGroup;
+        ProbeGroup probeGroup;
+
+        internal ProbeGroup ProbeGroup
+        {
+            get => probeGroup;
+            set
+            {
+                probeGroup = value;
+                SelectedContacts = new bool[probeGroup.NumberOfContacts];
+            }
+        }
 
         internal readonly List<int> ReferenceContacts = new();
 
-        internal readonly bool[] SelectedContacts = null;
+        internal bool[] SelectedContacts { get; private set; } = null;
 
         [Obsolete("Designer only.", true)]
         ChannelConfigurationDialog()
@@ -47,8 +57,6 @@ namespace OpenEphys.Onix1.Design
             {
                 ProbeGroup = probeGroup;
             }
-
-            SelectedContacts = new bool[ProbeGroup.NumberOfContacts];
 
             ReferenceContacts = new List<int>();
 
@@ -441,13 +449,25 @@ namespace OpenEphys.Onix1.Design
                 return false;
             }
 
-            if (ProbeGroup.NumberOfContacts == newConfiguration.NumberOfContacts)
+            bool skipContactNumberMismatchCheck = false;
+
+            if (ProbeGroup.Probes.First().Annotations.Name != newConfiguration.Probes.First().Annotations.Name)
+            {
+                var result = MessageBox.Show($"There is a mismatch between the current probe type ({ProbeGroup.Probes.First().Annotations.Name})" +
+                    $" and the new probe type ({newConfiguration.Probes.First().Annotations.Name}). Continue loading?", "Probe Type Mismatch", MessageBoxButtons.YesNo);
+
+                if (result == DialogResult.No)
+                    return false;
+
+                skipContactNumberMismatchCheck = true; // NB: If the probe names do not match, skip the check to see if the number of contacts match.
+                                                       // Example: loading a Neuropixels single-shank 2.0 probe, but the current probe is a quad-shank 2.0 probe.
+            }
+
+            if (skipContactNumberMismatchCheck || ProbeGroup.NumberOfContacts == newConfiguration.NumberOfContacts)
             {
                 newConfiguration.Validate();
 
                 ProbeGroup = newConfiguration;
-                DrawProbeGroup();
-                RefreshZedGraph();
 
                 return true;
             }
@@ -1084,6 +1104,8 @@ namespace OpenEphys.Onix1.Design
             if (OpenFile<ProbeGroup>())
             {
                 DrawProbeGroup();
+                ResetZoom();
+                UpdateFontSize();
                 RefreshZedGraph();
             }
         }
@@ -1092,6 +1114,7 @@ namespace OpenEphys.Onix1.Design
         {
             LoadDefaultChannelLayout();
             DrawProbeGroup();
+            ResetZoom();
             UpdateFontSize();
             RefreshZedGraph();
         }
@@ -1351,8 +1374,8 @@ namespace OpenEphys.Onix1.Design
         {
             foreach (var probe in probeGroup.Probes)
             {
-                if (probe.ContactAnnotations != null 
-                    && probe.ContactAnnotations.Annotations != null 
+                if (probe.ContactAnnotations != null
+                    && probe.ContactAnnotations.Annotations != null
                     && probe.ContactAnnotations.Annotations.Length > 0)
                 {
                     return true;
