@@ -260,14 +260,7 @@ namespace OpenEphys.Onix1.Design
         {
             if (!TopLevel)
             {
-                DisconnectResizeEventHandler();
-
-                splitContainer1.Panel2Collapsed = true;
-                splitContainer1.Panel2.Hide();
-
                 menuStrip.Visible = false;
-
-                ConnectResizeEventHandler();
                 ResizeZedGraph();
             }
         }
