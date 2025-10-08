@@ -29,8 +29,6 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.Label label6;
-            System.Windows.Forms.Label label7;
             System.Windows.Forms.Label probeCalibrationFile;
             System.Windows.Forms.Label Reference;
             System.Windows.Forms.Label labelPresets;
@@ -59,8 +57,6 @@
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripGainCalSN = new System.Windows.Forms.ToolStripStatusLabel();
-            label6 = new System.Windows.Forms.Label();
-            label7 = new System.Windows.Forms.Label();
             probeCalibrationFile = new System.Windows.Forms.Label();
             Reference = new System.Windows.Forms.Label();
             labelPresets = new System.Windows.Forms.Label();
@@ -75,27 +71,6 @@
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // label6
-            // 
-            label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            label6.AutoSize = true;
-            label6.Location = new System.Drawing.Point(3, 641);
-            label6.Name = "label6";
-            label6.Size = new System.Drawing.Size(39, 16);
-            label6.TabIndex = 28;
-            label6.Text = "0 mm";
-            // 
-            // label7
-            // 
-            label7.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            label7.AutoSize = true;
-            label7.Location = new System.Drawing.Point(3, 0);
-            label7.Name = "label7";
-            label7.Size = new System.Drawing.Size(46, 16);
-            label7.TabIndex = 29;
-            label7.Text = "10 mm";
-            label7.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
             // probeCalibrationFile
             // 
             probeCalibrationFile.AutoSize = true;
@@ -103,7 +78,7 @@
             probeCalibrationFile.MaximumSize = new System.Drawing.Size(177, 36);
             probeCalibrationFile.Name = "probeCalibrationFile";
             probeCalibrationFile.Size = new System.Drawing.Size(139, 16);
-            probeCalibrationFile.TabIndex = 32;
+            probeCalibrationFile.TabIndex = 0;
             probeCalibrationFile.Text = "Probe Calibration File:";
             // 
             // Reference
@@ -112,7 +87,7 @@
             Reference.Location = new System.Drawing.Point(15, 114);
             Reference.Name = "Reference";
             Reference.Size = new System.Drawing.Size(73, 16);
-            Reference.TabIndex = 30;
+            Reference.TabIndex = 5;
             Reference.Text = "Reference:";
             // 
             // labelPresets
@@ -121,7 +96,7 @@
             labelPresets.Location = new System.Drawing.Point(15, 146);
             labelPresets.Name = "labelPresets";
             labelPresets.Size = new System.Drawing.Size(59, 32);
-            labelPresets.TabIndex = 23;
+            labelPresets.TabIndex = 7;
             labelPresets.Text = "Channel \nPresets:";
             // 
             // label1
@@ -130,7 +105,7 @@
             label1.Location = new System.Drawing.Point(15, 63);
             label1.Name = "label1";
             label1.Size = new System.Drawing.Size(71, 32);
-            label1.TabIndex = 35;
+            label1.TabIndex = 3;
             label1.Text = "Gain\r\nCorrection:";
             // 
             // invertPolarity
@@ -139,7 +114,7 @@
             invertPolarity.Location = new System.Drawing.Point(15, 187);
             invertPolarity.Name = "invertPolarity";
             invertPolarity.Size = new System.Drawing.Size(55, 32);
-            invertPolarity.TabIndex = 44;
+            invertPolarity.TabIndex = 9;
             invertPolarity.Text = "Invert\r\nPolarity:";
             // 
             // toolStripLabelGainCalibrationSN
@@ -173,11 +148,11 @@
             // 
             this.buttonEnableContacts.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonEnableContacts.Location = new System.Drawing.Point(15, 226);
+            this.buttonEnableContacts.Location = new System.Drawing.Point(15, 232);
             this.buttonEnableContacts.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonEnableContacts.Name = "buttonEnableContacts";
             this.buttonEnableContacts.Size = new System.Drawing.Size(280, 44);
-            this.buttonEnableContacts.TabIndex = 20;
+            this.buttonEnableContacts.TabIndex = 11;
             this.buttonEnableContacts.Text = "Enable Selected Electrodes";
             this.toolTip.SetToolTip(this.buttonEnableContacts, "Click and drag to select electrodes in the probe view. \r\nPress this button to ena" +
         "ble the selected electrodes. \r\nNot all electrode combinations are possible.");
@@ -188,11 +163,11 @@
             // 
             this.buttonClearSelections.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonClearSelections.Location = new System.Drawing.Point(15, 276);
+            this.buttonClearSelections.Location = new System.Drawing.Point(15, 282);
             this.buttonClearSelections.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonClearSelections.Name = "buttonClearSelections";
             this.buttonClearSelections.Size = new System.Drawing.Size(280, 44);
-            this.buttonClearSelections.TabIndex = 19;
+            this.buttonClearSelections.TabIndex = 12;
             this.buttonClearSelections.Text = "Clear Electrode Selection";
             this.toolTip.SetToolTip(this.buttonClearSelections, "Deselect all electrodes in the probe view. \r\nNote that this does not disable elec" +
         "trodes, but simply deselects them.");
@@ -202,11 +177,11 @@
             // buttonChooseCalibrationFile
             // 
             this.buttonChooseCalibrationFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonChooseCalibrationFile.Location = new System.Drawing.Point(257, 30);
+            this.buttonChooseCalibrationFile.Location = new System.Drawing.Point(258, 29);
             this.buttonChooseCalibrationFile.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonChooseCalibrationFile.Name = "buttonChooseCalibrationFile";
             this.buttonChooseCalibrationFile.Size = new System.Drawing.Size(37, 25);
-            this.buttonChooseCalibrationFile.TabIndex = 34;
+            this.buttonChooseCalibrationFile.TabIndex = 2;
             this.buttonChooseCalibrationFile.Text = "...";
             this.toolTip.SetToolTip(this.buttonChooseCalibrationFile, "Browse for a gain calibration file.");
             this.buttonChooseCalibrationFile.UseVisualStyleBackColor = true;
@@ -219,33 +194,31 @@
             this.panelProbe.Location = new System.Drawing.Point(3, 2);
             this.panelProbe.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panelProbe.Name = "panelProbe";
-            this.panelProbe.Size = new System.Drawing.Size(853, 662);
+            this.panelProbe.Size = new System.Drawing.Size(858, 662);
             this.panelProbe.TabIndex = 1;
             // 
             // panelTrackBar
             // 
-            this.panelTrackBar.Controls.Add(label6);
-            this.panelTrackBar.Controls.Add(label7);
             this.panelTrackBar.Controls.Add(this.trackBarProbePosition);
             this.panelTrackBar.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelTrackBar.Location = new System.Drawing.Point(863, 4);
+            this.panelTrackBar.Location = new System.Drawing.Point(868, 4);
             this.panelTrackBar.Margin = new System.Windows.Forms.Padding(4);
             this.panelTrackBar.Name = "panelTrackBar";
-            this.panelTrackBar.Size = new System.Drawing.Size(52, 658);
+            this.panelTrackBar.Size = new System.Drawing.Size(47, 658);
             this.panelTrackBar.TabIndex = 30;
             // 
             // trackBarProbePosition
             // 
-            this.trackBarProbePosition.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.trackBarProbePosition.AutoSize = false;
-            this.trackBarProbePosition.Location = new System.Drawing.Point(8, 11);
+            this.trackBarProbePosition.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.trackBarProbePosition.Location = new System.Drawing.Point(0, 0);
             this.trackBarProbePosition.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.trackBarProbePosition.Maximum = 100;
             this.trackBarProbePosition.Name = "trackBarProbePosition";
             this.trackBarProbePosition.Orientation = System.Windows.Forms.Orientation.Vertical;
-            this.trackBarProbePosition.Size = new System.Drawing.Size(36, 645);
+            this.trackBarProbePosition.Size = new System.Drawing.Size(47, 658);
             this.trackBarProbePosition.TabIndex = 22;
+            this.trackBarProbePosition.TabStop = false;
             this.trackBarProbePosition.TickFrequency = 2;
             this.trackBarProbePosition.TickStyle = System.Windows.Forms.TickStyle.TopLeft;
             this.trackBarProbePosition.Value = 50;
@@ -283,7 +256,7 @@
             this.checkBoxInvertPolarity.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.checkBoxInvertPolarity.Name = "checkBoxInvertPolarity";
             this.checkBoxInvertPolarity.Size = new System.Drawing.Size(77, 20);
-            this.checkBoxInvertPolarity.TabIndex = 45;
+            this.checkBoxInvertPolarity.TabIndex = 10;
             this.checkBoxInvertPolarity.Text = "Enabled";
             this.checkBoxInvertPolarity.UseVisualStyleBackColor = true;
             // 
@@ -296,7 +269,7 @@
             this.textBoxGainCorrection.Name = "textBoxGainCorrection";
             this.textBoxGainCorrection.ReadOnly = true;
             this.textBoxGainCorrection.Size = new System.Drawing.Size(188, 22);
-            this.textBoxGainCorrection.TabIndex = 36;
+            this.textBoxGainCorrection.TabIndex = 4;
             this.textBoxGainCorrection.TabStop = false;
             // 
             // textBoxProbeCalibrationFile
@@ -306,8 +279,10 @@
             this.textBoxProbeCalibrationFile.Location = new System.Drawing.Point(15, 30);
             this.textBoxProbeCalibrationFile.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textBoxProbeCalibrationFile.Name = "textBoxProbeCalibrationFile";
+            this.textBoxProbeCalibrationFile.ReadOnly = true;
             this.textBoxProbeCalibrationFile.Size = new System.Drawing.Size(235, 22);
-            this.textBoxProbeCalibrationFile.TabIndex = 33;
+            this.textBoxProbeCalibrationFile.TabIndex = 1;
+            this.textBoxProbeCalibrationFile.TabStop = false;
             this.textBoxProbeCalibrationFile.TextChanged += new System.EventHandler(this.FileTextChanged);
             // 
             // comboBoxReference
@@ -320,7 +295,7 @@
             this.comboBoxReference.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.comboBoxReference.Name = "comboBoxReference";
             this.comboBoxReference.Size = new System.Drawing.Size(188, 24);
-            this.comboBoxReference.TabIndex = 31;
+            this.comboBoxReference.TabIndex = 6;
             // 
             // comboBoxChannelPresets
             // 
@@ -332,7 +307,7 @@
             this.comboBoxChannelPresets.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.comboBoxChannelPresets.Name = "comboBoxChannelPresets";
             this.comboBoxChannelPresets.Size = new System.Drawing.Size(188, 24);
-            this.comboBoxChannelPresets.TabIndex = 24;
+            this.comboBoxChannelPresets.TabIndex = 8;
             // 
             // buttonCancel
             // 
@@ -366,7 +341,7 @@
             this.tableLayoutPanel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.tableLayoutPanel1.ColumnCount = 3;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 60F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 55F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 315F));
             this.tableLayoutPanel1.Controls.Add(this.panelTrackBar, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.panelProbe, 0, 0);
@@ -380,7 +355,7 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 46F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(1234, 712);
-            this.tableLayoutPanel1.TabIndex = 3;
+            this.tableLayoutPanel1.TabIndex = 0;
             // 
             // flowLayoutPanel1
             // 
@@ -433,7 +408,6 @@
             this.menuStrip.ResumeLayout(false);
             this.menuStrip.PerformLayout();
             this.panelTrackBar.ResumeLayout(false);
-            this.panelTrackBar.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarProbePosition)).EndInit();
             this.panelChannelOptions.ResumeLayout(false);
             this.panelChannelOptions.PerformLayout();

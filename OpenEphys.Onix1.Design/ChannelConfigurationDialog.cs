@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1.Design
     /// Within, there are a number of useful methods for initializing, resizing, and drawing channels.
     /// Each device must implement their own ChannelConfigurationDialog.
     /// </summary>
-    public abstract partial class ChannelConfigurationDialog : Form
+    public partial class ChannelConfigurationDialog : Form
     {
         internal event EventHandler OnResizeZedGraph;
         internal event EventHandler OnDrawProbeGroup;
@@ -24,6 +24,12 @@ namespace OpenEphys.Onix1.Design
         internal readonly List<int> ReferenceContacts = new();
 
         internal readonly bool[] SelectedContacts = null;
+
+        [Obsolete("Designer only.", true)]
+        ChannelConfigurationDialog()
+        {
+            InitializeComponent();
+        }
 
         /// <summary>
         /// Constructs the dialog window using the given probe group, and plots all contacts after loading.
@@ -85,7 +91,10 @@ namespace OpenEphys.Onix1.Design
         /// </code>
         /// </example>
         /// <returns>Returns an object that inherits from <see cref="ProbeInterface.NET.ProbeGroup"/></returns>
-        internal abstract ProbeGroup DefaultChannelLayout();
+        internal virtual ProbeGroup DefaultChannelLayout()
+        {
+            throw new NotImplementedException();
+        }
 
         internal virtual void LoadDefaultChannelLayout()
         {

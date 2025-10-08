@@ -23,7 +23,7 @@ namespace OpenEphys.Onix1.Design
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
-                        configureHeadstage.Bno055.Enable = editorDialog.DialogBno055.ConfigureNode.Enable;
+                        configureHeadstage.Bno055.Enable = ((ConfigurePolledBno055)editorDialog.DialogBno055.Device).Enable;
 
                         configureHeadstage.NeuropixelsV1e.AdcCalibrationFile = editorDialog.DialogNeuropixelsV1e.ConfigureNode.AdcCalibrationFile;
                         configureHeadstage.NeuropixelsV1e.GainCalibrationFile = editorDialog.DialogNeuropixelsV1e.ConfigureNode.GainCalibrationFile;

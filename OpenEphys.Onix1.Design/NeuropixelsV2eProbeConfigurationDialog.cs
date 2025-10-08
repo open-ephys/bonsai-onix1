@@ -138,16 +138,6 @@ namespace OpenEphys.Onix1.Design
 
             ChannelConfiguration.Show();
             ChannelConfiguration.ConnectResizeEventHandler();
-            ChannelConfiguration.OnResizeZedGraph += ResizeTrackBar;
-        }
-
-        private void ResizeTrackBar(object sender, EventArgs e)
-        {
-            if (sender is ChannelConfigurationDialog dialog)
-            {
-                panelTrackBar.Height = dialog.zedGraphChannels.Size.Height;
-                panelTrackBar.Location = new Point(panelProbe.Size.Width - panelTrackBar.Width, ChannelConfiguration.zedGraphChannels.Location.Y);
-            }
         }
 
         private void SelectedReferenceChanged(object sender, EventArgs e)

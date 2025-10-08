@@ -60,6 +60,7 @@
             this.zedGraphChannels.ScrollMinY2 = 0D;
             this.zedGraphChannels.Size = new System.Drawing.Size(599, 496);
             this.zedGraphChannels.TabIndex = 4;
+            this.zedGraphChannels.TabStop = false;
             this.zedGraphChannels.UseExtendedPrintDialog = true;
             this.zedGraphChannels.ZoomEvent += new ZedGraph.ZedGraphControl.ZoomEventHandler(this.ZoomEvent);
             // 
