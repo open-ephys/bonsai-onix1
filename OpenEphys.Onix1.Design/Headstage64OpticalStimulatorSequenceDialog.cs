@@ -136,9 +136,6 @@ namespace OpenEphys.Onix1.Design
 
             DisableVerticalZoom();
 
-            YAxisMax = NumberOfChannels + 1;
-            YAxisMin = 0;
-
             DrawStimulusWaveform();
 
             stimulusWaveformToolStripMenuItem.Text = "Optical Stimulus Sequence";
@@ -213,11 +210,16 @@ namespace OpenEphys.Onix1.Design
             return (GetChannelCurrent(maxCurrent, channelPercent) / 100.0) / scale;
         }
 
+        internal override double GetPeakToPeakAmplitudeInMicroAmps()
+        {
+            return OpticalStimulator.MaxCurrent == 0 ? ZeroPeakToPeak : OpticalStimulator.MaxCurrent * ChannelScale;
+        }
+
         internal override PointPairList[] CreateStimulusWaveforms()
         {
             PointPairList[] waveforms = new PointPairList[NumberOfChannels];
 
-            PeakToPeak = OpticalStimulator.MaxCurrent == 0 ? ZeroPeakToPeak : OpticalStimulator.MaxCurrent * ChannelScale;
+            var peakToPeak = GetPeakToPeakAmplitudeInMicroAmps();
 
             for (int channel = 0; channel < NumberOfChannels; channel++)
             {
@@ -230,7 +232,7 @@ namespace OpenEphys.Onix1.Design
 
                 var stimulusCurrent = offset + GetChannelCurrentScaled(OpticalStimulator.MaxCurrent,
                                                                        channel == 0 ? OpticalStimulator.ChannelOneCurrent : OpticalStimulator.ChannelTwoCurrent,
-                                                                       PeakToPeak);
+                                                                       peakToPeak);
 
                 for (int i = 0; i < OpticalStimulator.BurstsPerTrain; i++)
                 {

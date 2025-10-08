@@ -30,6 +30,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Rhs2116StimulusSequenceOptions));
             this.panelParameters = new System.Windows.Forms.Panel();
+            this.numericUpDownNumberOfPulses = new System.Windows.Forms.NumericUpDown();
             this.textBoxStepSize = new System.Windows.Forms.TextBox();
             this.groupBoxCathode = new System.Windows.Forms.GroupBox();
             this.textboxAmplitudeCathodic = new System.Windows.Forms.TextBox();
@@ -53,11 +54,11 @@
             this.textboxDelay = new System.Windows.Forms.TextBox();
             this.labelNumberOfPulses = new System.Windows.Forms.Label();
             this.labelDelay = new System.Windows.Forms.Label();
-            this.textboxNumberOfStimuli = new System.Windows.Forms.TextBox();
             this.checkboxBiphasicSymmetrical = new System.Windows.Forms.CheckBox();
             this.textboxInterStimulusInterval = new System.Windows.Forms.TextBox();
             this.labelInterStimulusInterval = new System.Windows.Forms.Label();
             this.panelParameters.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownNumberOfPulses)).BeginInit();
             this.groupBoxCathode.SuspendLayout();
             this.groupBoxAnode.SuspendLayout();
             this.SuspendLayout();
@@ -65,6 +66,7 @@
             // panelParameters
             // 
             this.panelParameters.AutoScroll = true;
+            this.panelParameters.Controls.Add(this.numericUpDownNumberOfPulses);
             this.panelParameters.Controls.Add(this.textBoxStepSize);
             this.panelParameters.Controls.Add(this.groupBoxCathode);
             this.panelParameters.Controls.Add(this.groupBoxAnode);
@@ -78,7 +80,6 @@
             this.panelParameters.Controls.Add(this.textboxDelay);
             this.panelParameters.Controls.Add(this.labelNumberOfPulses);
             this.panelParameters.Controls.Add(this.labelDelay);
-            this.panelParameters.Controls.Add(this.textboxNumberOfStimuli);
             this.panelParameters.Controls.Add(this.checkboxBiphasicSymmetrical);
             this.panelParameters.Controls.Add(this.textboxInterStimulusInterval);
             this.panelParameters.Controls.Add(this.labelInterStimulusInterval);
@@ -88,6 +89,23 @@
             this.panelParameters.Name = "panelParameters";
             this.panelParameters.Size = new System.Drawing.Size(438, 289);
             this.panelParameters.TabIndex = 1;
+            // 
+            // numericUpDownNumberOfPulses
+            // 
+            this.numericUpDownNumberOfPulses.Location = new System.Drawing.Point(363, 203);
+            this.numericUpDownNumberOfPulses.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.numericUpDownNumberOfPulses.Name = "numericUpDownNumberOfPulses";
+            this.numericUpDownNumberOfPulses.Size = new System.Drawing.Size(55, 22);
+            this.numericUpDownNumberOfPulses.TabIndex = 13;
+            this.numericUpDownNumberOfPulses.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             // 
             // textBoxStepSize
             // 
@@ -320,14 +338,6 @@
             this.labelDelay.TabIndex = 4;
             this.labelDelay.Text = "Delay [ms]";
             // 
-            // textboxNumberOfStimuli
-            // 
-            this.textboxNumberOfStimuli.Location = new System.Drawing.Point(363, 202);
-            this.textboxNumberOfStimuli.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.textboxNumberOfStimuli.Name = "textboxNumberOfStimuli";
-            this.textboxNumberOfStimuli.Size = new System.Drawing.Size(55, 22);
-            this.textboxNumberOfStimuli.TabIndex = 13;
-            // 
             // checkboxBiphasicSymmetrical
             // 
             this.checkboxBiphasicSymmetrical.AutoSize = true;
@@ -371,6 +381,7 @@
             this.Text = "Rhs2116StimulusSequenceOptions";
             this.panelParameters.ResumeLayout(false);
             this.panelParameters.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownNumberOfPulses)).EndInit();
             this.groupBoxCathode.ResumeLayout(false);
             this.groupBoxCathode.PerformLayout();
             this.groupBoxAnode.ResumeLayout(false);
@@ -405,9 +416,9 @@
         internal System.Windows.Forms.TextBox textboxDelay;
         private System.Windows.Forms.Label labelNumberOfPulses;
         private System.Windows.Forms.Label labelDelay;
-        internal System.Windows.Forms.TextBox textboxNumberOfStimuli;
         internal System.Windows.Forms.CheckBox checkboxBiphasicSymmetrical;
         internal System.Windows.Forms.TextBox textboxInterStimulusInterval;
         private System.Windows.Forms.Label labelInterStimulusInterval;
+        internal System.Windows.Forms.NumericUpDown numericUpDownNumberOfPulses;
     }
 }

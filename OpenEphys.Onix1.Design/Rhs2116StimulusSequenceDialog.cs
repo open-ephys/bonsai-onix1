@@ -1,9 +1,9 @@
-﻿using System.Windows.Forms;
-using System;
+﻿using System;
 using System.Drawing;
-using System.Linq;
-using ZedGraph;
 using System.IO;
+using System.Linq;
+using System.Windows.Forms;
+using ZedGraph;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -83,26 +83,29 @@ namespace OpenEphys.Onix1.Design
             StimulusSequenceOptions.checkBoxAnodicFirst.CheckedChanged += Checkbox_CheckedChanged;
             StimulusSequenceOptions.checkboxBiphasicSymmetrical.CheckedChanged += Checkbox_CheckedChanged;
 
-            StimulusSequenceOptions.textboxPulseWidthCathodic.KeyPress += ParameterKeyPress_Time;
+            StimulusSequenceOptions.textboxPulseWidthCathodic.KeyDown += ParameterKeyDown_Time;
             StimulusSequenceOptions.textboxPulseWidthCathodic.Leave += Samples_TextChanged;
 
-            StimulusSequenceOptions.textboxPulseWidthAnodic.KeyPress += ParameterKeyPress_Time;
+            StimulusSequenceOptions.textboxPulseWidthAnodic.KeyDown += ParameterKeyDown_Time;
             StimulusSequenceOptions.textboxPulseWidthAnodic.Leave += Samples_TextChanged;
 
-            StimulusSequenceOptions.textboxInterPulseInterval.KeyPress += ParameterKeyPress_Time;
+            StimulusSequenceOptions.textboxInterPulseInterval.KeyDown += ParameterKeyDown_Time;
             StimulusSequenceOptions.textboxInterPulseInterval.Leave += Samples_TextChanged;
 
-            StimulusSequenceOptions.textboxDelay.KeyPress += ParameterKeyPress_Time;
+            StimulusSequenceOptions.textboxDelay.KeyDown += ParameterKeyDown_Time;
             StimulusSequenceOptions.textboxDelay.Leave += Samples_TextChanged;
 
-            StimulusSequenceOptions.textboxInterStimulusInterval.KeyPress += ParameterKeyPress_Time;
+            StimulusSequenceOptions.textboxInterStimulusInterval.KeyDown += ParameterKeyDown_Time;
             StimulusSequenceOptions.textboxInterStimulusInterval.Leave += Samples_TextChanged;
 
             StimulusSequenceOptions.textboxAmplitudeAnodicRequested.Leave += Amplitude_TextChanged;
-            StimulusSequenceOptions.textboxAmplitudeAnodicRequested.KeyPress += ParameterKeyPress_Amplitude;
+            StimulusSequenceOptions.textboxAmplitudeAnodicRequested.KeyDown += ParameterKeyDown_Amplitude;
 
             StimulusSequenceOptions.textboxAmplitudeCathodicRequested.Leave += Amplitude_TextChanged;
-            StimulusSequenceOptions.textboxAmplitudeCathodicRequested.KeyPress += ParameterKeyPress_Amplitude;
+            StimulusSequenceOptions.textboxAmplitudeCathodicRequested.KeyDown += ParameterKeyDown_Amplitude;
+
+            StimulusSequenceOptions.numericUpDownNumberOfPulses.KeyDown += NumericUpDownNumberOfPulses_KeyDown;
+            StimulusSequenceOptions.numericUpDownNumberOfPulses.Leave += NumericUpDownNumberOfPulses_Leave;
 
             StimulusSequenceOptions.Show();
 
@@ -200,11 +203,11 @@ namespace OpenEphys.Onix1.Design
             ChannelDialog.RefreshZedGraph();
         }
 
-        double GetPeakToPeakAmplitudeInMicroAmps()
+        internal override double GetPeakToPeakAmplitudeInMicroAmps()
         {
             return Sequence.MaximumPeakToPeakAmplitudeSteps > 0
                 ? Sequence.GetMaxPeakToPeakAmplitudeuA()
-                : Sequence.CurrentStepSizeuA * 1; // NB: Used to give a buffer when plotting the stimulus waveform
+                : Sequence.CurrentStepSizeuA;
         }
 
         PointPairList CreateStimulusWaveform(Rhs2116Stimulus stimulus, double yOffset, double peakToPeak)
@@ -254,24 +257,21 @@ namespace OpenEphys.Onix1.Design
 
             bool plotAllContacts = ChannelDialog.SelectedContacts.All(x => x == false);
 
-            PeakToPeak = GetPeakToPeakAmplitudeInMicroAmps() * ChannelScale;
+            var peakToPeak = GetPeakToPeakAmplitudeInMicroAmps() * ChannelScale;
 
             for (int i = 0; i < Sequence.Stimuli.Length; i++)
             {
-                var channelOffset = -PeakToPeak * i;
+                var channelOffset = -peakToPeak * i;
 
                 if (ChannelDialog.SelectedContacts[i] || plotAllContacts)
                 {
-                    waveforms[i] = CreateStimulusWaveform(Sequence.Stimuli[i], channelOffset, PeakToPeak);
+                    waveforms[i] = CreateStimulusWaveform(Sequence.Stimuli[i], channelOffset, peakToPeak);
                 }
                 else
                 {
                     waveforms[i] = new PointPairList();
                 }
             }
-
-            YAxisMin = -2;
-            YAxisMax = NumberOfChannels;
 
             return waveforms;
         }
@@ -376,12 +376,6 @@ namespace OpenEphys.Onix1.Design
 
         void ButtonAddPulses_Click(object sender, EventArgs e)
         {
-            if (ChannelDialog.SelectedContacts.All(x => x == false))
-            {
-                MessageBox.Show("No contacts selected. Please select contact(s) before trying to add pulses.");
-                return;
-            }
-
             var stimuli = Sequence.Stimuli
                             .Select((s, ind) => { return (Index: ind, Stimulus: s); })
                             .Where(s => s.Stimulus.Valid
@@ -515,11 +509,7 @@ namespace OpenEphys.Onix1.Design
                         Sequence.Stimuli[i].InterStimulusIntervalSamples = (uint)StimulusSequenceOptions.textboxInterStimulusInterval.Tag;
                     }
 
-                    if (uint.TryParse(StimulusSequenceOptions.textboxNumberOfStimuli.Text, out uint numberOfStimuliValue))
-                    {
-                        Sequence.Stimuli[i].NumberOfStimuli = numberOfStimuliValue;
-                    }
-
+                    Sequence.Stimuli[i].NumberOfStimuli = (uint)StimulusSequenceOptions.numericUpDownNumberOfPulses.Value;
                     Sequence.Stimuli[i].AnodicFirst = StimulusSequenceOptions.checkBoxAnodicFirst.Checked;
                 }
             }
@@ -527,6 +517,7 @@ namespace OpenEphys.Onix1.Design
             Sequence.CurrentStepSize = StepSize;
 
             ChannelDialog.HighlightEnabledContacts();
+
             DrawStimulusWaveform();
         }
 
@@ -672,23 +663,46 @@ namespace OpenEphys.Onix1.Design
             StimulusSequenceOptions.textboxInterStimulusInterval.Text = GetTimeString(Sequence.Stimuli[index].InterStimulusIntervalSamples);
             StimulusSequenceOptions.textboxInterStimulusInterval.Tag = Sequence.Stimuli[index].InterStimulusIntervalSamples;
 
-            StimulusSequenceOptions.textboxNumberOfStimuli.Text = Sequence.Stimuli[index].NumberOfStimuli.ToString();
+            StimulusSequenceOptions.numericUpDownNumberOfPulses.Value = Sequence.Stimuli[index].NumberOfStimuli;
         }
 
-        void ParameterKeyPress_Time(object sender, KeyPressEventArgs e)
+        void ParameterKeyDown_Time(object sender, KeyEventArgs e)
         {
-            if (e.KeyChar == '\r')
+            if (e.KeyCode == Keys.Enter)
             {
                 Samples_TextChanged(sender, e);
+                ButtonAddPulses_Click(sender, e);
+
+                e.Handled = true;
+                e.SuppressKeyPress = true;
             }
         }
 
-        void ParameterKeyPress_Amplitude(object sender, KeyPressEventArgs e)
+        void ParameterKeyDown_Amplitude(object sender, KeyEventArgs e)
         {
-            if (e.KeyChar == '\r')
+            if (e.KeyCode == Keys.Enter)
             {
                 Amplitude_TextChanged(sender, e);
+                ButtonAddPulses_Click(sender, e);
+
+                e.Handled = true;
+                e.SuppressKeyPress = true;
             }
+        }
+
+        void NumericUpDownNumberOfPulses_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                ButtonAddPulses_Click(sender, e);
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        void NumericUpDownNumberOfPulses_Leave(object sender, EventArgs e)
+        {
+            ButtonAddPulses_Click(sender, e);
         }
 
         void Samples_TextChanged(object sender, EventArgs e)
@@ -758,6 +772,8 @@ namespace OpenEphys.Onix1.Design
                 StimulusSequenceOptions.textboxPulseWidthAnodic.Text = textBox.Text;
                 StimulusSequenceOptions.textboxPulseWidthAnodic.Tag = textBox.Tag;
             }
+
+            ButtonAddPulses_Click(sender, e);
         }
 
         bool GetSampleFromTime(double value, out uint samples)
