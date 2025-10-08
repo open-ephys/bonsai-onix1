@@ -287,14 +287,19 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
+        internal override double GetPeakToPeakAmplitudeInMicroAmps()
+        {
+            var peakToPeak = (Math.Max(Math.Max(ElectricalStimulator.PhaseOneCurrent, ElectricalStimulator.PhaseTwoCurrent), ElectricalStimulator.InterPhaseCurrent)
+                          + Math.Abs(Math.Min(Math.Min(ElectricalStimulator.PhaseOneCurrent, ElectricalStimulator.PhaseTwoCurrent), ElectricalStimulator.InterPhaseCurrent))) * ChannelScale;
+
+            return peakToPeak == 0 ? ZeroPeakToPeak : peakToPeak;
+        }
+
         internal override PointPairList[] CreateStimulusWaveforms()
         {
             PointPairList[] waveforms = new PointPairList[NumberOfChannels];
 
-            PeakToPeak = (Math.Max(Math.Max(ElectricalStimulator.PhaseOneCurrent, ElectricalStimulator.PhaseTwoCurrent), ElectricalStimulator.InterPhaseCurrent)
-                          + Math.Abs(Math.Min(Math.Min(ElectricalStimulator.PhaseOneCurrent, ElectricalStimulator.PhaseTwoCurrent), ElectricalStimulator.InterPhaseCurrent))) * ChannelScale;
-
-            PeakToPeak = PeakToPeak == 0 ? ZeroPeakToPeak : PeakToPeak;
+            var peakToPeak = GetPeakToPeakAmplitudeInMicroAmps();
 
             if (ElectricalStimulator != null)
             {
@@ -306,12 +311,12 @@ namespace OpenEphys.Onix1.Design
                     {
                         for (int j = 0; j < ElectricalStimulator.BurstPulseCount; j++)
                         {
-                            waveforms[channel].Add(new PointPair(waveforms[channel].Last().X, ElectricalStimulator.PhaseOneCurrent / PeakToPeak));
-                            waveforms[channel].Add(new PointPair(waveforms[channel].Last().X + ElectricalStimulator.PhaseOneDuration, ElectricalStimulator.PhaseOneCurrent / PeakToPeak));
-                            waveforms[channel].Add(new PointPair(waveforms[channel].Last().X, ElectricalStimulator.InterPhaseCurrent / PeakToPeak));
-                            waveforms[channel].Add(new PointPair(waveforms[channel].Last().X + ElectricalStimulator.InterPhaseInterval, ElectricalStimulator.InterPhaseCurrent / PeakToPeak));
-                            waveforms[channel].Add(new PointPair(waveforms[channel].Last().X, ElectricalStimulator.PhaseTwoCurrent / PeakToPeak));
-                            waveforms[channel].Add(new PointPair(waveforms[channel].Last().X + ElectricalStimulator.PhaseTwoDuration, ElectricalStimulator.PhaseTwoCurrent / PeakToPeak));
+                            waveforms[channel].Add(new PointPair(waveforms[channel].Last().X, ElectricalStimulator.PhaseOneCurrent / peakToPeak));
+                            waveforms[channel].Add(new PointPair(waveforms[channel].Last().X + ElectricalStimulator.PhaseOneDuration, ElectricalStimulator.PhaseOneCurrent / peakToPeak));
+                            waveforms[channel].Add(new PointPair(waveforms[channel].Last().X, ElectricalStimulator.InterPhaseCurrent / peakToPeak));
+                            waveforms[channel].Add(new PointPair(waveforms[channel].Last().X + ElectricalStimulator.InterPhaseInterval, ElectricalStimulator.InterPhaseCurrent / peakToPeak));
+                            waveforms[channel].Add(new PointPair(waveforms[channel].Last().X, ElectricalStimulator.PhaseTwoCurrent / peakToPeak));
+                            waveforms[channel].Add(new PointPair(waveforms[channel].Last().X + ElectricalStimulator.PhaseTwoDuration, ElectricalStimulator.PhaseTwoCurrent / peakToPeak));
                             waveforms[channel].Add(new PointPair(waveforms[channel].Last().X, 0));
 
                             if (j != ElectricalStimulator.BurstPulseCount - 1)

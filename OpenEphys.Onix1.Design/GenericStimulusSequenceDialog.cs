@@ -17,7 +17,6 @@ namespace OpenEphys.Onix1.Design
         readonly bool UseTable;
 
         internal const double ZeroPeakToPeak = 1e-12;
-        internal double PeakToPeak = 1;
         internal readonly double ChannelScale = 1.1;
 
         [Obsolete("Designer only", true)]
@@ -186,8 +185,6 @@ namespace OpenEphys.Onix1.Design
                 return Math.Abs(val).ToString("0");
             };
 
-            DrawScale();
-
             dataGridViewStimulusTable.Refresh();
 
             if (setZoomState && XMin != 0 && XMax != 0)
@@ -197,6 +194,8 @@ namespace OpenEphys.Onix1.Design
                 zedGraphWaveform.GraphPane.YAxis.Scale.Min = YMin;
                 zedGraphWaveform.GraphPane.YAxis.Scale.Max = YMax;
             }
+
+            DrawScale();
 
             zedGraphWaveform.AxisChange();
             zedGraphWaveform.Refresh();

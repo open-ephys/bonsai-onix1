@@ -257,15 +257,15 @@ namespace OpenEphys.Onix1.Design
 
             bool plotAllContacts = ChannelDialog.SelectedContacts.All(x => x == false);
 
-            PeakToPeak = GetPeakToPeakAmplitudeInMicroAmps() * ChannelScale;
+            var peakToPeak = GetPeakToPeakAmplitudeInMicroAmps() * ChannelScale;
 
             for (int i = 0; i < Sequence.Stimuli.Length; i++)
             {
-                var channelOffset = -PeakToPeak * i;
+                var channelOffset = -peakToPeak * i;
 
                 if (ChannelDialog.SelectedContacts[i] || plotAllContacts)
                 {
-                    waveforms[i] = CreateStimulusWaveform(Sequence.Stimuli[i], channelOffset, PeakToPeak);
+                    waveforms[i] = CreateStimulusWaveform(Sequence.Stimuli[i], channelOffset, peakToPeak);
                 }
                 else
                 {
