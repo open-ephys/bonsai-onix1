@@ -4,19 +4,19 @@ using System.Linq;
 
 namespace OpenEphys.Onix1
 {
-    class ChannelHelper
+    static class Neuropixels
     {
-        internal static int[,] OrderNeuropixelsChannelsByDepth(Electrode[] channelMap, int[,] originalOrder)
+        internal static int[,] OrderChannelsByDepth(Electrode[] channelMap, int[,] frameIndex)
         {
-            int rows = originalOrder.GetLength(0);
-            int cols = originalOrder.GetLength(1);
+            int rows = frameIndex.GetLength(0);
+            int cols = frameIndex.GetLength(1);
 
             var channelToPosition = new Dictionary<int, (int row, int col)>();
             for (int row = 0; row < rows; row++)
             {
                 for (int col = 0; col < cols; col++)
                 {
-                    channelToPosition[originalOrder[row, col]] = (row, col);
+                    channelToPosition[frameIndex[row, col]] = (row, col);
                 }
             }
 
@@ -30,15 +30,14 @@ namespace OpenEphys.Onix1
 
             foreach (var e in spatiallyOrdered)
             {
-                var (newRow, newCol) = channelToPosition[index++];
                 var (origRow, origCol) = channelToPosition[e.Channel];
 
-                spatialRawToChannel[origRow, origCol] = originalOrder[newRow, newCol];
+                spatialRawToChannel[origRow, origCol] = index++;
             }
 
-            if (spatialRawToChannel.Cast<int>().Distinct().Count() != originalOrder.Length)
+            if (spatialRawToChannel.Cast<int>().Distinct().Count() != frameIndex.Length)
             {
-                throw new InvalidOperationException($"An error occurred reordering the channels by depth. Expected {originalOrder.Length} channels," +
+                throw new InvalidOperationException($"An error occurred reordering the channels by depth. Expected {frameIndex.Length} channels," +
                     $" but only found {spatialRawToChannel.Cast<int>().Distinct().Count()} unique channels.");
             }
 
