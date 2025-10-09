@@ -3,8 +3,6 @@ using System.Linq;
 using System.Xml.Serialization;
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("OpenEphys.Onix1.Design")]
-
 namespace OpenEphys.Onix1
 {
     /// <summary>
