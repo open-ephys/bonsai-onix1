@@ -44,7 +44,6 @@ namespace OpenEphys.Onix1.Design
             textBoxInterBurstInterval.Text = opticalStimulator.InterBurstInterval.ToString();
             textBoxInterBurstInterval.Enabled = opticalStimulator.BurstsPerTrain > 1;
             textBoxBurstsPerTrain.Text = opticalStimulator.BurstsPerTrain.ToString();
-            textBoxDelay.Text = opticalStimulator.Delay.ToString();
         }
 
         internal readonly double channelOneScalingFactor;

@@ -19,16 +19,16 @@ namespace OpenEphys.Onix1
     [Editor("OpenEphys.Onix1.Design.Headstage64OpticalStimulatorComponentEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureHeadstage64OpticalStimulator : SingleDeviceFactory
     {
-        readonly BehaviorSubject<bool> stimEnable = new(true);
-        readonly BehaviorSubject<double> maxCurrent = new(100);
-        readonly BehaviorSubject<double> channelOneCurrent = new(100);
+        readonly BehaviorSubject<bool> stimEnable = new(false);
+        readonly BehaviorSubject<bool> enableIndicationLed = new(false);
+        readonly BehaviorSubject<double> maxCurrent = new(0);
+        readonly BehaviorSubject<double> channelOneCurrent = new(0);
         readonly BehaviorSubject<double> channelTwoCurrent = new(0);
-        readonly BehaviorSubject<double> pulseDuration = new(5);
-        readonly BehaviorSubject<double> pulsesPerSecond = new(50);
-        readonly BehaviorSubject<uint> pulsesPerBurst = new(20);
+        readonly BehaviorSubject<double> pulseDuration = new(0);
+        readonly BehaviorSubject<double> pulsesPerSecond = new(0);
+        readonly BehaviorSubject<uint> pulsesPerBurst = new(0);
         readonly BehaviorSubject<double> interBurstInterval = new(0);
-        readonly BehaviorSubject<uint> burstsPerTrain = new(1);
-        readonly BehaviorSubject<double> delay = new(0);
+        readonly BehaviorSubject<uint> burstsPerTrain = new(0);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureHeadstage64OpticalStimulator"/> class.
@@ -48,7 +48,6 @@ namespace OpenEphys.Onix1
             DeviceAddress = opticalStimulator.DeviceAddress;
             Enable = opticalStimulator.Enable;
             StimEnable = opticalStimulator.StimEnable;
-            Delay = opticalStimulator.Delay;
             MaxCurrent = opticalStimulator.MaxCurrent;
             ChannelOneCurrent = opticalStimulator.ChannelOneCurrent;
             ChannelTwoCurrent = opticalStimulator.ChannelTwoCurrent;
@@ -71,6 +70,20 @@ namespace OpenEphys.Onix1
         public bool Enable { get; set; }
 
         /// <summary>
+        /// Gets or sets the indication LED enable state.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, the headstage's indication LED will turn on. When set to false, it will turn off. 
+        /// </remarks>
+        [Description("Specifies the state of the headstage indication LED")]
+        [Category(AcquisitionCategory)]
+        public bool EnableIndicationLed
+        {
+            get => enableIndicationLed.Value;
+            set => enableIndicationLed.OnNext(value);
+        }
+
+        /// <summary>
         /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>
@@ -84,19 +97,6 @@ namespace OpenEphys.Onix1
             set => stimEnable.OnNext(value);
         }
 
-        /// <summary>
-        /// Gets or sets a delay from receiving a trigger to the start of stimulus sequence application in msec.
-        /// </summary>
-        [Description("A delay from receiving a trigger to the start of stimulus sequence application (msec).")]
-        [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
-        [Range(Headstage64OpticalStimulator.MinDelay, Headstage64OpticalStimulator.MaxDelay)]
-        [Precision(3, 1)]
-        [Category(AcquisitionCategory)]
-        public double Delay
-        {
-            get => delay.Value;
-            set => delay.OnNext(Clamp(value, Headstage64OpticalStimulator.MinDelay, Headstage64OpticalStimulator.MaxDelay));
-        }
 
         /// <summary>
         /// Gets or sets the Maximum current per channel per pulse in mA.
@@ -295,9 +295,25 @@ namespace OpenEphys.Onix1
                     return pulsePeriod > pulseDuration ? (uint)(1000 * pulsePeriod) : (uint)(1000 * pulseDuration + 1);
                 }
 
+                uint stimEnableValue = 0;
+
                 return new CompositeDisposable(
+                    enableIndicationLed.SubscribeSafe(observer, value =>
+                    {
+                        if (value)
+                            stimEnableValue |= (1u << 8);
+                        else
+                            stimEnableValue &= ~(1u << 8);
+                        device.WriteRegister(Headstage64OpticalStimulator.STIMENABLE, stimEnableValue);
+                    }),
                     stimEnable.SubscribeSafe(observer, value =>
-                        device.WriteRegister(Headstage64OpticalStimulator.STIMENABLE, value ? 1u : 0u)),
+                    {
+                        if (value)
+                            stimEnableValue |= 1u;
+                        else
+                            stimEnableValue &= ~1u;
+                        device.WriteRegister(Headstage64OpticalStimulator.STIMENABLE, stimEnableValue);
+                    }),
                     maxCurrent.SubscribeSafe(observer, value =>
                         device.WriteRegister(Headstage64OpticalStimulator.MAXCURRENT, Headstage64OpticalStimulator.MilliampsToPotSetting(value))),
                     channelOneCurrent.SubscribeSafe(observer, value =>
@@ -320,9 +336,7 @@ namespace OpenEphys.Onix1
                         device.WriteRegister(Headstage64OpticalStimulator.IBI, (uint)(1000 * value))),
                     burstsPerTrain.SubscribeSafe(observer, value =>
                         device.WriteRegister(Headstage64OpticalStimulator.TRAINCOUNT, value)),
-                    delay.SubscribeSafe(observer, value =>
-                        device.WriteRegister(Headstage64OpticalStimulator.TRAINDELAY, (uint)(1000 * value))),
-                    DeviceManager.RegisterDevice(deviceName, device, DeviceType));
+                    DeviceManager.RegisterDevice(deviceName, device, DeviceType));;;
             });
         }
     }
@@ -335,9 +349,6 @@ namespace OpenEphys.Onix1
         // NB: can be read with MINRHEOR and POTRES, but will not change
         public const uint MinRheostatResistanceOhms = 590;
         public const uint PotResistanceOhms = 100_000;
-
-        public const double MinDelay = 0.0;
-        public const double MaxDelay = 1000.0;
 
         public const double MinCurrent = 0.0;
         public const double MaxCurrent = 300.0;
@@ -364,13 +375,10 @@ namespace OpenEphys.Onix1
         public const uint BURSTCOUNT = 5; // Number of pulses in burst
         public const uint IBI = 6; // Inter-burst interval, microseconds
         public const uint TRAINCOUNT = 7; // Number of bursts in train
-        public const uint TRAINDELAY = 8; // Stimulus start delay, microseconds
-        public const uint TRIGGER = 9; // Trigger stimulation (0 = off, 1 = deliver)
-        public const uint STIMENABLE = 10; // 1: enables the stimulator, 0: stimulator ignores triggers (so that a common trigger can be used)
-        public const uint RESTMASK = 11; // Bitmask determining the off state of the up to 32 current channels
-        public const uint RESET = 12; // None If 1, Reset all parameters to default (not implemented)
-        public const uint MINRHEOR = 13; // The series resistor between the potentiometer (rheostat) and RSET bin on the CAT4016
-        public const uint POTRES = 14; // The resistance value of the potentiometer connected in rheostat config to RSET on CAT4016
+        public const uint TRIGGER = 8; // Trigger stimulation (0 = off, 1 = deliver)
+        public const uint STIMENABLE = 9; // 1: enables the stimulator, 0: stimulator ignores triggers (so that a common trigger can be used)
+        public const uint MINRHEOR = 10; // The series resistor between the potentiometer (rheostat) and RSET bin on the CAT4016
+        public const uint POTRES = 11; // The resistance value of the potentiometer connected in rheostat config to RSET on CAT4016
 
         // NB: fit from Fig. 10 of CAT4016 datasheet
         // x = (y/a)^(1/b)

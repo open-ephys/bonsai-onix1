@@ -18,7 +18,7 @@ namespace OpenEphys.Onix1
     /// corresponding contact on a compatible electrode interface board.
     /// </remarks>
     [Description("Controls a headstage-64 onboard electrical stimulus sequencer.")]
-    public class Headstage64ElectricalStimulatorTrigger : Sink<bool>
+    public class Headstage64ElectricalStimulatorTrigger : Sink<double>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(Headstage64ElectricalStimulator.NameConverter))]
@@ -27,20 +27,23 @@ namespace OpenEphys.Onix1
         public string DeviceName { get; set; }
 
         /// <summary>
-        /// Start an electrical stimulus sequence.
+        /// Start an electrical stimulus sequence with an optional hardware delay.
         /// </summary>
-        /// <param name="source">A sequence of boolean values indicating the start of a stimulus sequence when true.</param>
-        /// <returns>A sequence of boolean values that is identical to <paramref name="source"/></returns>
-        public override IObservable<bool> Process(IObservable<bool> source)
+        /// <param name="source">A sequence of double values that serve as a combined stimulus trigger and
+        /// delay in microseconds. A value of 0 results in immediate stimulus delivery. A value of 100 results in
+        /// stimulus delivery following a 100 microsecond delay. Delays are implemented in hardware and are
+        /// exact. </param>
+        /// <returns>A sequence of double values that is identical to <paramref name="source"/></returns>
+        public override IObservable<double> Process(IObservable<double> source)
         {
             return DeviceManager.GetDevice(DeviceName).SelectMany(
-                deviceInfo => Observable.Create<bool>(observer =>
+                deviceInfo => Observable.Create<double>(observer =>
                 {
                     var device = deviceInfo.GetDeviceContext(typeof(Headstage64ElectricalStimulator));
-                    var triggerObserver = Observer.Create<bool>(
+                    var triggerObserver = Observer.Create<double>(
                         value =>
                         {
-                            device.WriteRegister(Headstage64ElectricalStimulator.TRIGGER, value ? 1u : 0u);
+                            device.WriteRegister(Headstage64ElectricalStimulator.TRIGGER, (uint)value << 8 | 0x1);
                             observer.OnNext(value);
                         },
                         observer.OnError,

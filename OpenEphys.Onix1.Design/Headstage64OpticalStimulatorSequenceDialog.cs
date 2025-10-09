@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using ZedGraph;
@@ -77,11 +76,6 @@ namespace OpenEphys.Onix1.Design
                     new TextBoxBinding<double>(
                         StimulusSequenceOptions.textBoxInterBurstInterval,
                         value => { OpticalStimulator.InterBurstInterval = value; return OpticalStimulator.InterBurstInterval; },
-                        double.Parse) },
-                { StimulusSequenceOptions.textBoxDelay,
-                    new TextBoxBinding<double>(
-                        StimulusSequenceOptions.textBoxDelay,
-                        value => { OpticalStimulator.Delay = value; return OpticalStimulator.Delay; },
                         double.Parse) },
                 { StimulusSequenceOptions.textBoxPulseDuration,
                     new TextBoxBinding<double>(
@@ -225,7 +219,7 @@ namespace OpenEphys.Onix1.Design
 
                 waveforms[channel] = new PointPairList
                 {
-                    new PointPairList { new PointPair(0, offset), new PointPair(OpticalStimulator.Delay, offset) }
+                    new PointPairList { new PointPair(0, offset), new PointPair(0, offset) }
                 };
 
                 var stimulusCurrent = offset + GetChannelCurrentScaled(OpticalStimulator.MaxCurrent,
