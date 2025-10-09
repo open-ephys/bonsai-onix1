@@ -102,22 +102,22 @@
             // dropDownOpenFile
             // 
             this.dropDownOpenFile.Name = "dropDownOpenFile";
-            this.dropDownOpenFile.Size = new System.Drawing.Size(265, 22);
-            this.dropDownOpenFile.Text = "Open Channel Configuration";
+            this.dropDownOpenFile.Size = new System.Drawing.Size(218, 22);
+            this.dropDownOpenFile.Text = "Open ProbeInterface File";
             this.dropDownOpenFile.Click += new System.EventHandler(this.MenuItemOpenFile);
             // 
             // dropDownSaveFile
             // 
             this.dropDownSaveFile.Name = "dropDownSaveFile";
-            this.dropDownSaveFile.Size = new System.Drawing.Size(265, 22);
-            this.dropDownSaveFile.Text = "Save Channel Configuration";
+            this.dropDownSaveFile.Size = new System.Drawing.Size(218, 22);
+            this.dropDownSaveFile.Text = "Save ProbeInterface File";
             this.dropDownSaveFile.Click += new System.EventHandler(this.MenuItemSaveFile);
             // 
             // dropDownLoadDefault
             // 
             this.dropDownLoadDefault.Name = "dropDownLoadDefault";
-            this.dropDownLoadDefault.Size = new System.Drawing.Size(265, 22);
-            this.dropDownLoadDefault.Text = "Load Default Channel Configuration";
+            this.dropDownLoadDefault.Size = new System.Drawing.Size(218, 22);
+            this.dropDownLoadDefault.Text = "Load Default Configuration";
             this.dropDownLoadDefault.Click += new System.EventHandler(this.MenuItemLoadDefaultConfig);
             // 
             // tableLayoutPanel1
