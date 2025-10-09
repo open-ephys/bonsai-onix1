@@ -30,8 +30,6 @@ namespace OpenEphys.Onix1
         readonly BehaviorSubject<uint> burstPulseCount = new(0);
         readonly BehaviorSubject<uint> interBurstInterval = new(0);
         readonly BehaviorSubject<uint> trainBurstCount = new(0);
-        readonly BehaviorSubject<uint> triggerDelay = new(0);
-        readonly BehaviorSubject<bool> powerEnable = new(false);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureHeadstage64ElectricalStimulator"/> class.
@@ -51,8 +49,6 @@ namespace OpenEphys.Onix1
             DeviceAddress = electricalStimulator.DeviceAddress;
             Enable = electricalStimulator.Enable;
             StimEnable = electricalStimulator.StimEnable;
-            PowerEnable = electricalStimulator.PowerEnable;
-            TriggerDelay = electricalStimulator.TriggerDelay;
             PhaseOneCurrent = electricalStimulator.PhaseOneCurrent;
             InterPhaseCurrent = electricalStimulator.InterPhaseCurrent;
             PhaseTwoCurrent = electricalStimulator.PhaseTwoCurrent;
@@ -80,39 +76,19 @@ namespace OpenEphys.Onix1
         /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>
-        /// If set to true, then the electrical stimulator circuit will respect triggers. If set to false, triggers will be ignored.
+        /// If set to true, then the electrical stimulator's ±15V power supplies will be turned on and the
+        /// electrical stimulator circuit will respect triggers. If set to false, the power supplies will be
+        /// shut down and triggers will be ignored.It may be desirable to power down the electrical
+        /// stimulator's power supplies outside of stimulation windows to reduce power consumption and
+        /// electrical noise. This property must be set to true in order for electrical stimuli to be
+        /// delivered properly. It takes ~10 milliseconds for these supplies to stabilize.
         /// </remarks>
         [Description("Specifies whether the electrical stimulator will respect triggers.")]
         [Category(AcquisitionCategory)]
-        public bool StimEnable { get; set; } = true;
-
-        /// <summary>
-        /// Gets or sets the electrical stimulator's power state.
-        /// </summary>
-        /// <remarks>
-        /// If set to true, then the electrical stimulator's ±15V power supplies will be turned on. If set to false,
-        /// they will be turned off. It may be desirable to power down the electrical stimulator's power supplies outside
-        /// of stimulation windows to reduce power consumption and electrical noise. This property must be set to true
-        /// in order for electrical stimuli to be delivered properly. It takes ~10 milliseconds for these supplies to stabilize.
-        /// </remarks>
-        [Description("Stimulator power on/off.")]
-        [Category(AcquisitionCategory)]
-        public bool PowerEnable
+        public bool StimEnable
         {
-            get => powerEnable.Value;
-            set => powerEnable.OnNext(value);
-        }
-
-        /// <summary>
-        /// Gets or sets a delay from receiving a trigger to the start of stimulus sequence application in μsec.
-        /// </summary>
-        [Description("A delay from receiving a trigger to the start of stimulus sequence application (uSec).")]
-        [Range(0, uint.MaxValue)]
-        [Category(AcquisitionCategory)]
-        public uint TriggerDelay
-        {
-            get => triggerDelay.Value;
-            set => triggerDelay.OnNext(value);
+            get => stimEnable.Value;
+            set => stimEnable.OnNext(value);
         }
 
         static double ClampCurrent(double value)
@@ -275,14 +251,11 @@ namespace OpenEphys.Onix1
 
                 return new CompositeDisposable(
                     stimEnable.SubscribeSafe(observer, value =>
-                        device.WriteRegister(Headstage64ElectricalStimulator.STIMENABLE, value ? 1u : 0u)),
+                        device.WriteRegister(Headstage64ElectricalStimulator.STIMENABLE, value ? 3u : 0u)),
                     phaseOneCurrent.SubscribeSafe(observer, value =>
                         device.WriteRegister(Headstage64ElectricalStimulator.CURRENT1, Headstage64ElectricalStimulator.MicroampsToCode(value))),
-                    interPhaseCurrent.SubscribeSafe(observer, value =>
-                        device.WriteRegister(Headstage64ElectricalStimulator.RESTCURR, Headstage64ElectricalStimulator.MicroampsToCode(value))),
                     phaseTwoCurrent.SubscribeSafe(observer, value =>
                         device.WriteRegister(Headstage64ElectricalStimulator.CURRENT2, Headstage64ElectricalStimulator.MicroampsToCode(value))),
-                    triggerDelay.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.TRAINDELAY, value)),
                     phaseOneDuration.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.PULSEDUR1, value)),
                     interPhaseInterval.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.INTERPHASEINTERVAL, value)),
                     phaseTwoDuration.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.PULSEDUR2, value)),
@@ -290,7 +263,6 @@ namespace OpenEphys.Onix1
                     interBurstInterval.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.INTERBURSTINTERVAL, value)),
                     burstPulseCount.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.BURSTCOUNT, value)),
                     trainBurstCount.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.TRAINCOUNT, value)),
-                    powerEnable.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.POWERON, value ? 1u : 0u)),
                     DeviceManager.RegisterDevice(deviceName, device, DeviceType));
             });
         }
@@ -307,23 +279,19 @@ namespace OpenEphys.Onix1
 
         // managed registers
         public const uint ENABLE = 0; // Enable stimulus report stream
-        public const uint BIPHASIC = 1; // Biphasic pulse (0 = monophasic, 1 = biphasic; NB: currently ignored)
-        public const uint CURRENT1 = 2; // Phase 1 current
-        public const uint CURRENT2 = 3; // Phase 2 current
-        public const uint PULSEDUR1 = 4; // Phase 1 duration, 1 microsecond steps
-        public const uint INTERPHASEINTERVAL = 5; // Inter-phase interval, 10 microsecond steps
-        public const uint PULSEDUR2 = 6; // Phase 2 duration, 1 microsecond steps
-        public const uint INTERPULSEINTERVAL = 7; // Inter-pulse interval, 10 microsecond steps
-        public const uint BURSTCOUNT = 8; // Burst duration, number of pulses in burst
-        public const uint INTERBURSTINTERVAL = 9; // Inter-burst interval, microseconds
-        public const uint TRAINCOUNT = 10; // Pulse train duration, number of bursts in train
-        public const uint TRAINDELAY = 11; // Pulse train delay, microseconds
-        public const uint TRIGGER = 12; // Trigger stimulation (1 = deliver)
-        public const uint POWERON = 13; // Control estim sub-circuit power (0 = off, 1 = on)
-        public const uint STIMENABLE = 14; // If 0 then stimulation triggers will be ignored, otherwise they will be applied 
-        public const uint RESTCURR = 15; // Resting current between pulse phases
-        public const uint RESET = 16; // Reset all parameters to default
-        public const uint REZ = 17; // Internal DAC resolution in bits
+        public const uint CURRENT1 = 1; // Phase 1 current
+        public const uint CURRENT2 = 2; // Phase 2 current
+        public const uint PULSEDUR1 = 3; // Phase 1 duration, 1 microsecond steps
+        public const uint INTERPHASEINTERVAL = 4; // Inter-phase interval, 10 microsecond steps
+        public const uint PULSEDUR2 = 5; // Phase 2 duration, 1 microsecond steps
+        public const uint INTERPULSEINTERVAL = 6; // Inter-pulse interval, 10 microsecond steps
+        public const uint BURSTCOUNT = 7; // Burst duration, number of pulses in burst
+        public const uint INTERBURSTINTERVAL = 8; // Inter-burst interval, microseconds
+        public const uint TRAINCOUNT = 9; // Pulse train duration, number of bursts in train
+        public const uint TRIGGER = 10; // Trigger stimulation (1 = deliver)
+        public const uint STIMENABLE = 11; // If 0 then stimulation triggers will be ignored, otherwise they will be applied 
+        public const uint RESTCURRENT = 12; // Resting current between pulse phases
+        public const uint REZ = 13; // Internal DAC resolution in bits
 
         internal static uint MicroampsToCode(double currentuA)
         {
