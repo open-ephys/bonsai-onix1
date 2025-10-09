@@ -35,12 +35,6 @@ namespace OpenEphys.Onix1
                 spatialRawToChannel[origRow, origCol] = index++;
             }
 
-            if (spatialRawToChannel.Cast<int>().Distinct().Count() != frameIndex.Length)
-            {
-                throw new InvalidOperationException($"An error occurred reordering the channels by depth. Expected {frameIndex.Length} channels," +
-                    $" but only found {spatialRawToChannel.Cast<int>().Distinct().Count()} unique channels.");
-            }
-
             return spatialRawToChannel;
         }
     }
