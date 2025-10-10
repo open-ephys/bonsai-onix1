@@ -89,6 +89,17 @@ namespace OpenEphys.Onix1
         public ConfigureHeadstage64OpticalStimulator OpticalStimulator { get; set; } = new();
 
         /// <summary>
+        /// Gets or sets the heartbeat configuration.
+        /// </summary>
+        /// <remarks>
+        /// This heartbeat is always enabled and beats at a minimum of 10 Hz.
+        /// </remarks>
+        [Category(DevicesCategory)]
+        [TypeConverter(typeof(SingleDeviceFactoryConverter))]
+        [Description("Specifies the configuration for the heartbeat device in the headstage-64.")]
+        public ConfigurePersistentHeartbeat Heartbeat { get; set; } = new ConfigurePersistentHeartbeat { BeatsPerSecond = 10 };
+
+        /// <summary>
         /// Gets or sets the port.
         /// </summary>
         /// <remarks>
@@ -109,7 +120,10 @@ namespace OpenEphys.Onix1
                 Bno055.DeviceAddress = offset + 1;
                 TS4231.DeviceAddress = offset + 2;
                 ElectricalStimulator.DeviceAddress = offset + 3;
+                ElectricalStimulator.PortControllerDeviceAddress = PortControl.DeviceAddress;
                 OpticalStimulator.DeviceAddress = offset + 4;
+                OpticalStimulator.PortControllerDeviceAddress = PortControl.DeviceAddress;
+                Heartbeat.DeviceAddress = offset + 5;
             }
         }
 
@@ -148,6 +162,7 @@ namespace OpenEphys.Onix1
             yield return TS4231;
             yield return ElectricalStimulator;
             yield return OpticalStimulator;
+            yield return Heartbeat;
         }
 
         class ConfigureHeadstage64PortController : ConfigurePortController
