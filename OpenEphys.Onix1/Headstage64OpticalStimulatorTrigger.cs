@@ -2,7 +2,9 @@
 using System.ComponentModel;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using Bonsai;
 
 namespace OpenEphys.Onix1
@@ -20,10 +22,26 @@ namespace OpenEphys.Onix1
     [Description("Controls a headstage-64 onboard optical stimulus sequencer.")]
     public class Headstage64OpticalStimulatorTrigger : Sink<double>
     {
+        readonly BehaviorSubject<bool> stimEnable = new(false);
+
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(Headstage64OpticalStimulator.NameConverter))]
         [Category(DeviceFactory.ConfigurationCategory)]
         public string DeviceName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the device enable state.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, then the optical stimulator circuit will respect triggers. If set to false, triggers will be ignored.
+        /// </remarks>
+        [Description("Specifies whether the optical stimulator will respect triggers.")]
+        [Category(DeviceFactory.AcquisitionCategory)]
+        public bool StimEnable
+        {
+            get => stimEnable.Value;
+            set => stimEnable.OnNext(value);
+        }
 
         /// <summary>
         /// Start an optical stimulus sequence with an optional hardware delay.
@@ -38,17 +56,56 @@ namespace OpenEphys.Onix1
             return DeviceManager.GetDevice(DeviceName).SelectMany(
                 deviceInfo => Observable.Create<double>(observer =>
                 {
-                    var device = deviceInfo.GetDeviceContext(typeof(Headstage64OpticalStimulator));
-                    var triggerObserver = Observer.Create<double>(
-                        value =>
+                    var info = (Headstage64StimulatorDeviceInfo)deviceInfo;
+                    var device = info.GetDeviceContext(typeof(Headstage64OpticalStimulator));
+                    IObserver<double> triggerObserver;
+
+                    if (info.PortControllerAddress != null)
+                    {
+                        var portController = device.Context.GetDeviceContext((uint)info.PortControllerAddress, typeof(PortController));
+                        triggerObserver = Observer.Create<double>(value =>
                         {
-                            device.WriteRegister(Headstage64OpticalStimulator.TRIGGER, (uint)value << 8 | 0x1);
+                            if (stimEnable.Value)
+                            {
+                                if (value == 0)
+                                {
+                                    portController.WriteRegister(PortController.GPOSTATE, (byte)PortControllerGpioState.Pin1);
+                                    portController.WriteRegister(PortController.GPOSTATE, 0);
+                                }
+                                else
+                                {
+                                    device.WriteRegister(Headstage64OpticalStimulator.TRIGGER, (uint)value << 8 | 0x1);
+                            }
+                            }
                             observer.OnNext(value);
                         },
                         observer.OnError,
                         observer.OnCompleted);
+                    }
+                    else
+                    {
+                        triggerObserver = Observer.Create<double>(value => {
+                            if (stimEnable.Value)
+                            {
+                                device.WriteRegister(Headstage64OpticalStimulator.TRIGGER, (uint)value << 8 | 0x1);
+                            }
+                            observer.OnNext(value);
+                        },
+                        observer.OnError,
+                        observer.OnCompleted);
+                    }
 
-                    return source.SubscribeSafe(triggerObserver);
+                    return new CompositeDisposable(stimEnable.SubscribeSafe(observer, value =>
+                    {
+                        var stimEnableValue = device.ReadRegister(Headstage64OpticalStimulator.STIMENABLE);
+                        if (value)
+                            stimEnableValue |= 1u;
+                        else
+                            stimEnableValue &= ~1u;
+                        device.WriteRegister(Headstage64OpticalStimulator.STIMENABLE, stimEnableValue);
+                    }),
+                    source.SubscribeSafe(triggerObserver));
+
                 }));
         }
     }

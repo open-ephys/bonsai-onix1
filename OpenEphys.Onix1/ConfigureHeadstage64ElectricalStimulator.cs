@@ -19,7 +19,8 @@ namespace OpenEphys.Onix1
     [Editor("OpenEphys.Onix1.Design.Headstage64ElectricalStimulatorComponentEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureHeadstage64ElectricalStimulator : SingleDeviceFactory
     {
-        readonly BehaviorSubject<bool> stimEnable = new(false);
+        internal uint? PortControllerDeviceAddress { get; set; }
+
         readonly BehaviorSubject<double> phaseOneCurrent = new(0);
         readonly BehaviorSubject<double> interPhaseCurrent = new(0);
         readonly BehaviorSubject<double> phaseTwoCurrent = new(0);
@@ -48,7 +49,6 @@ namespace OpenEphys.Onix1
             DeviceName = electricalStimulator.DeviceName;
             DeviceAddress = electricalStimulator.DeviceAddress;
             Enable = electricalStimulator.Enable;
-            StimEnable = electricalStimulator.StimEnable;
             PhaseOneCurrent = electricalStimulator.PhaseOneCurrent;
             InterPhaseCurrent = electricalStimulator.InterPhaseCurrent;
             PhaseTwoCurrent = electricalStimulator.PhaseTwoCurrent;
@@ -71,25 +71,6 @@ namespace OpenEphys.Onix1
         [Category(ConfigurationCategory)]
         [Description("Specifies whether the headstage-64 electrical stimulator will produce stimulus reports.")]
         public bool Enable { get; set; }
-
-        /// <summary>
-        /// Gets or sets the device enable state.
-        /// </summary>
-        /// <remarks>
-        /// If set to true, then the electrical stimulator's ±15V power supplies will be turned on and the
-        /// electrical stimulator circuit will respect triggers. If set to false, the power supplies will be
-        /// shut down and triggers will be ignored.It may be desirable to power down the electrical
-        /// stimulator's power supplies outside of stimulation windows to reduce power consumption and
-        /// electrical noise. This property must be set to true in order for electrical stimuli to be
-        /// delivered properly. It takes ~10 milliseconds for these supplies to stabilize.
-        /// </remarks>
-        [Description("Specifies whether the electrical stimulator will respect triggers.")]
-        [Category(AcquisitionCategory)]
-        public bool StimEnable
-        {
-            get => stimEnable.Value;
-            set => stimEnable.OnNext(value);
-        }
 
         static double ClampCurrent(double value)
         {
@@ -247,11 +228,11 @@ namespace OpenEphys.Onix1
             return source.ConfigureDevice((context, observer) =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
+                var deviceInfo = new Headstage64StimulatorDeviceInfo(context, DeviceType, deviceAddress, PortControllerDeviceAddress);
+
                 device.WriteRegister(Headstage64ElectricalStimulator.ENABLE, enable ? 1u : 0u);
 
                 return new CompositeDisposable(
-                    stimEnable.SubscribeSafe(observer, value =>
-                        device.WriteRegister(Headstage64ElectricalStimulator.STIMENABLE, value ? 3u : 0u)),
                     phaseOneCurrent.SubscribeSafe(observer, value =>
                         device.WriteRegister(Headstage64ElectricalStimulator.CURRENT1, Headstage64ElectricalStimulator.MicroampsToCode(value))),
                     phaseTwoCurrent.SubscribeSafe(observer, value =>
@@ -263,7 +244,7 @@ namespace OpenEphys.Onix1
                     interBurstInterval.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.INTERBURSTINTERVAL, value)),
                     burstPulseCount.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.BURSTCOUNT, value)),
                     trainBurstCount.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.TRAINCOUNT, value)),
-                    DeviceManager.RegisterDevice(deviceName, device, DeviceType));
+                    DeviceManager.RegisterDevice(deviceName, deviceInfo));
             });
         }
     }

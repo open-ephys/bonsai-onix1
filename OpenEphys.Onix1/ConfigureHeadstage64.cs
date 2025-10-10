@@ -120,7 +120,9 @@ namespace OpenEphys.Onix1
                 Bno055.DeviceAddress = offset + 1;
                 TS4231.DeviceAddress = offset + 2;
                 ElectricalStimulator.DeviceAddress = offset + 3;
+                ElectricalStimulator.PortControllerDeviceAddress = PortControl.DeviceAddress;
                 OpticalStimulator.DeviceAddress = offset + 4;
+                OpticalStimulator.PortControllerDeviceAddress = PortControl.DeviceAddress;
                 Heartbeat.DeviceAddress = offset + 5;
             }
         }

@@ -19,7 +19,8 @@ namespace OpenEphys.Onix1
     [Editor("OpenEphys.Onix1.Design.Headstage64OpticalStimulatorComponentEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureHeadstage64OpticalStimulator : SingleDeviceFactory
     {
-        readonly BehaviorSubject<bool> stimEnable = new(false);
+        internal uint? PortControllerDeviceAddress { get; set; }
+
         readonly BehaviorSubject<bool> enableIndicationLed = new(false);
         readonly BehaviorSubject<double> maxCurrent = new(0);
         readonly BehaviorSubject<double> channelOneCurrent = new(0);
@@ -47,7 +48,6 @@ namespace OpenEphys.Onix1
             DeviceName = opticalStimulator.DeviceName;
             DeviceAddress = opticalStimulator.DeviceAddress;
             Enable = opticalStimulator.Enable;
-            StimEnable = opticalStimulator.StimEnable;
             MaxCurrent = opticalStimulator.MaxCurrent;
             ChannelOneCurrent = opticalStimulator.ChannelOneCurrent;
             ChannelTwoCurrent = opticalStimulator.ChannelTwoCurrent;
@@ -82,21 +82,6 @@ namespace OpenEphys.Onix1
             get => enableIndicationLed.Value;
             set => enableIndicationLed.OnNext(value);
         }
-
-        /// <summary>
-        /// Gets or sets the device enable state.
-        /// </summary>
-        /// <remarks>
-        /// If set to true, then the optical stimulator circuit will respect triggers. If set to false, triggers will be ignored.
-        /// </remarks>
-        [Description("Specifies whether the optical stimulator will respect triggers.")]
-        [Category(AcquisitionCategory)]
-        public bool StimEnable
-        {
-            get => stimEnable.Value;
-            set => stimEnable.OnNext(value);
-        }
-
 
         /// <summary>
         /// Gets or sets the Maximum current per channel per pulse in mA.
@@ -272,6 +257,7 @@ namespace OpenEphys.Onix1
             return source.ConfigureDevice((context, observer) =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
+                var deviceInfo = new Headstage64StimulatorDeviceInfo(context, DeviceType, deviceAddress, PortControllerDeviceAddress);
 
                 device.WriteRegister(Headstage64OpticalStimulator.ENABLE, enable ? 1u : 0u);
 
@@ -306,14 +292,6 @@ namespace OpenEphys.Onix1
                             stimEnableValue &= ~(1u << 8);
                         device.WriteRegister(Headstage64OpticalStimulator.STIMENABLE, stimEnableValue);
                     }),
-                    stimEnable.SubscribeSafe(observer, value =>
-                    {
-                        if (value)
-                            stimEnableValue |= 1u;
-                        else
-                            stimEnableValue &= ~1u;
-                        device.WriteRegister(Headstage64OpticalStimulator.STIMENABLE, stimEnableValue);
-                    }),
                     maxCurrent.SubscribeSafe(observer, value =>
                         device.WriteRegister(Headstage64OpticalStimulator.MAXCURRENT, Headstage64OpticalStimulator.MilliampsToPotSetting(value))),
                     channelOneCurrent.SubscribeSafe(observer, value =>
@@ -336,7 +314,7 @@ namespace OpenEphys.Onix1
                         device.WriteRegister(Headstage64OpticalStimulator.IBI, (uint)(1000 * value))),
                     burstsPerTrain.SubscribeSafe(observer, value =>
                         device.WriteRegister(Headstage64OpticalStimulator.TRAINCOUNT, value)),
-                    DeviceManager.RegisterDevice(deviceName, device, DeviceType));;;
+                    DeviceManager.RegisterDevice(deviceName, deviceInfo));
             });
         }
     }
