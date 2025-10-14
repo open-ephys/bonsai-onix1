@@ -103,14 +103,14 @@
             // 
             this.dropDownOpenFile.Name = "dropDownOpenFile";
             this.dropDownOpenFile.Size = new System.Drawing.Size(218, 22);
-            this.dropDownOpenFile.Text = "Open ProbeInterface File";
+            this.dropDownOpenFile.Text = "Import ProbeInterface File";
             this.dropDownOpenFile.Click += new System.EventHandler(this.MenuItemOpenFile);
             // 
             // dropDownSaveFile
             // 
             this.dropDownSaveFile.Name = "dropDownSaveFile";
             this.dropDownSaveFile.Size = new System.Drawing.Size(218, 22);
-            this.dropDownSaveFile.Text = "Save ProbeInterface File";
+            this.dropDownSaveFile.Text = "Export ProbeInterface File";
             this.dropDownSaveFile.Click += new System.EventHandler(this.MenuItemSaveFile);
             // 
             // dropDownLoadDefault
