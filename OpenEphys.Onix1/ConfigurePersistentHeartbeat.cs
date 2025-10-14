@@ -26,6 +26,18 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
+        /// Initializes a copy instance of the <see cref="ConfigurePersistentHeartbeat"/> class with the given values.
+        /// </summary>
+        /// <param name="configurePersistentHeartbeat">Existing configuration settings.</param>
+        public ConfigurePersistentHeartbeat(ConfigurePersistentHeartbeat configurePersistentHeartbeat)
+            : this()
+        {
+            DeviceAddress = configurePersistentHeartbeat.DeviceAddress;
+            DeviceName = configurePersistentHeartbeat.DeviceName;
+            BeatsPerSecond = configurePersistentHeartbeat.BeatsPerSecond;
+        }
+
+        /// <summary>
         /// Gets or sets the rate at which beats are produced in Hz.
         /// </summary>
         [Range(100, 10e6)]
