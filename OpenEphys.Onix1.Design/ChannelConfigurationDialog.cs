@@ -313,7 +313,7 @@ namespace OpenEphys.Onix1.Design
 
             if (ofd.ShowDialog() == DialogResult.OK && File.Exists(ofd.FileName))
             {
-                var newConfiguration = DesignHelper.DeserializeString<T>(File.ReadAllText(ofd.FileName));
+                var newConfiguration = JsonHelper.DeserializeString<T>(File.ReadAllText(ofd.FileName));
 
                 return newConfiguration;
             }
@@ -927,7 +927,7 @@ namespace OpenEphys.Onix1.Design
 
             if (sfd.ShowDialog() == DialogResult.OK)
             {
-                DesignHelper.SerializeObject(ProbeGroup, sfd.FileName);
+                JsonHelper.SerializeObject(ProbeGroup, sfd.FileName);
             }
         }
 

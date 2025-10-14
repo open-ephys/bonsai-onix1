@@ -914,7 +914,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override void SerializeStimulusSequence(string fileName)
         {
-            DesignHelper.SerializeObject(Sequence, fileName);
+            JsonHelper.SerializeObject(Sequence, fileName);
         }
 
         internal override bool IsSequenceValid()
@@ -924,7 +924,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override void DeserializeStimulusSequence(string fileName)
         {
-            var sequence = DesignHelper.DeserializeString<Rhs2116StimulusSequencePair>(File.ReadAllText(fileName));
+            var sequence = JsonHelper.DeserializeString<Rhs2116StimulusSequencePair>(File.ReadAllText(fileName));
 
             if (sequence != null && sequence.Stimuli.Length == 32)
             {
