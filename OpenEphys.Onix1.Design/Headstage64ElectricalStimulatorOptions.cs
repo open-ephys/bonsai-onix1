@@ -35,7 +35,6 @@ namespace OpenEphys.Onix1.Design
             textBoxBurstPulseCount.Text = electricalStimulator.BurstPulseCount.ToString();
             textBoxInterBurstInterval.Text = electricalStimulator.InterBurstInterval.ToString();
             textBoxTrainBurstCount.Text = electricalStimulator.TrainBurstCount.ToString();
-            textBoxTrainDelay.Text = electricalStimulator.TriggerDelay.ToString();
         }
 
         void BurstPulseCountChanged(object sender, System.EventArgs e)
