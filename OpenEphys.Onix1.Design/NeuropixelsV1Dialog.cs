@@ -8,12 +8,13 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     public partial class NeuropixelsV1Dialog : Form
     {
-        readonly NeuropixelsV1ProbeConfigurationDialog ProbeConfigurationDialog;
+        internal readonly NeuropixelsV1ProbeConfigurationDialog ProbeConfigurationDialog;
 
         /// <summary>
         /// Public <see cref="IConfigureNeuropixelsV1"/> interface that is manipulated by
         /// <see cref="NeuropixelsV1Dialog"/>.
         /// </summary>
+        [Obsolete]
         public IConfigureNeuropixelsV1 ConfigureNode { get; set; }
 
         /// <summary>
@@ -25,24 +26,10 @@ namespace OpenEphys.Onix1.Design
             InitializeComponent();
             Shown += FormShown;
 
-            if (configureNode is ConfigureNeuropixelsV1e configureV1e)
-            {
-                ConfigureNode = new ConfigureNeuropixelsV1e(configureV1e);
-            }
-            else if (configureNode is ConfigureNeuropixelsV1f configureV1f)
-            {
-                ConfigureNode = new ConfigureNeuropixelsV1f(configureV1f);
-            }
-
-            ProbeConfigurationDialog = new(ConfigureNode.ProbeConfiguration, ConfigureNode.AdcCalibrationFile, ConfigureNode.GainCalibrationFile, ConfigureNode.InvertPolarity)
-            {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this
-            };
-
-            panelProbe.Controls.Add(ProbeConfigurationDialog);
+            ProbeConfigurationDialog = new(configureNode.ProbeConfiguration);
+            ProbeConfigurationDialog
+                .SetChildFormProperties(this)
+                .AddDialogToPanel(panelProbe);
 
             this.AddMenuItemsFromDialogToFileOption(ProbeConfigurationDialog);
         }
@@ -62,19 +49,7 @@ namespace OpenEphys.Onix1.Design
 
         internal void Okay_Click(object sender, EventArgs e)
         {
-            SaveVariables();
-
             DialogResult = DialogResult.OK;
-        }
-
-        internal void SaveVariables()
-        {
-            ConfigureNode.ProbeConfiguration = ProbeConfigurationDialog.ProbeConfiguration;
-
-            ConfigureNode.GainCalibrationFile = ProbeConfigurationDialog.textBoxGainCalibrationFile.Text;
-            ConfigureNode.AdcCalibrationFile = ProbeConfigurationDialog.textBoxAdcCalibrationFile.Text;
-
-            ConfigureNode.InvertPolarity = ProbeConfigurationDialog.InvertPolarity;
         }
     }
 }
