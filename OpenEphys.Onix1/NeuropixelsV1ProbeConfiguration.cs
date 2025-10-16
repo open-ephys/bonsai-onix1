@@ -255,8 +255,11 @@ namespace OpenEphys.Onix1
         {
             get
             {
-                if (string.IsNullOrEmpty(ProbeInterfaceFileName) || (probeGroup == null && File.Exists(ProbeInterfaceFileName)))
+                if (string.IsNullOrEmpty(ProbeInterfaceFileName))
                     return "";
+
+                if (probeGroup == null && File.Exists(ProbeInterfaceFileName))
+                    return ProbeInterfaceFileName;
 
                 ProbeInterfaceHelper.SaveExternalProbeInterfaceFile(probeGroup ?? new NeuropixelsV1eProbeGroup(), ProbeInterfaceFileName);
 
