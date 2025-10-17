@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
-using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Bonsai;
 using Newtonsoft.Json;
@@ -230,6 +230,8 @@ namespace OpenEphys.Onix1
         [Category(DeviceFactory.ConfigurationCategory)]
         public string AdcCalibrationFileName { get; set; }
 
+        string probeInterfaceFileName;
+
         /// <summary>
         /// Gets or sets the file path where the ProbeInterface configuration will be saved.
         /// </summary>
@@ -241,7 +243,33 @@ namespace OpenEphys.Onix1
         [Description("File path to where the ProbeInterface file will be saved for this probe. If the file exists, it will be overwritten.")]
         [FileNameFilter(ProbeInterfaceHelper.ProbeInterfaceFileNameFilter)]
         [Editor("Bonsai.Design.SaveFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
-        public string ProbeInterfaceFileName { get; set; } = "";
+        public string ProbeInterfaceFileName
+        {
+            get => probeInterfaceFileName;
+            set => probeInterfaceFileName = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the ProbeInterface file name, loading the given file asynchronously when set.
+        /// </summary>
+        [XmlIgnore]
+        [Browsable(false)]
+        [Externalizable(false)]
+        public string ProbeInterfaceLoadFileName
+        {
+            get => probeInterfaceFileName;
+            set
+            {
+                probeInterfaceFileName = value;
+                probeGroupTask = Task.Run(() =>
+                {
+                    if (string.IsNullOrEmpty(probeInterfaceFileName))
+                        return new NeuropixelsV1eProbeGroup();
+
+                    return ProbeInterfaceHelper.LoadExternalProbeInterfaceFile<NeuropixelsV1eProbeGroup>(probeInterfaceFileName);
+                });
+            }
+        }
 
         /// <summary>
         /// Gets or sets a string defining the path to an external ProbeInterface JSON file.
@@ -258,17 +286,12 @@ namespace OpenEphys.Onix1
                 if (string.IsNullOrEmpty(ProbeInterfaceFileName))
                     return "";
 
-                if (probeGroup == null && File.Exists(ProbeInterfaceFileName))
-                    return ProbeInterfaceFileName;
-
-                ProbeInterfaceHelper.SaveExternalProbeInterfaceFile(probeGroup ?? new NeuropixelsV1eProbeGroup(), ProbeInterfaceFileName);
+                if (probeGroup != null)
+                    ProbeInterfaceHelper.SaveExternalProbeInterfaceFile(ProbeGroup, ProbeInterfaceFileName);
 
                 return ProbeInterfaceFileName;
             }
-            set
-            {
-                ProbeInterfaceFileName = value;
-            }
+            set => ProbeInterfaceLoadFileName = value;
         }
 
         /// <summary>
@@ -311,6 +334,8 @@ namespace OpenEphys.Onix1
             ProbeGroup.UpdateDeviceChannelIndices(channelMap);
         }
 
+        Task<NeuropixelsV1eProbeGroup> probeGroupTask = null;
+
         NeuropixelsV1eProbeGroup probeGroup = null;
 
         /// <summary>
@@ -325,13 +350,17 @@ namespace OpenEphys.Onix1
         {
             get
             {
-                try
+                if (probeGroup == null)
                 {
-                    probeGroup ??= ProbeInterfaceHelper.LoadExternalProbeInterfaceFile<NeuropixelsV1eProbeGroup>(ProbeInterfaceFileName);
-                }
-                catch (ArgumentNullException)
-                {
-                    probeGroup = new();
+                    try
+                    {
+                        probeGroup = probeGroupTask?.Result ?? new NeuropixelsV1eProbeGroup();
+                    }
+                    catch (AggregateException ae)
+                    {
+                        probeGroup = new();
+                        throw new InvalidOperationException($"There was an error loading the ProbeInterface file, loading the default configuration instead.\n\nError: {ae.InnerException.Message}", ae.InnerException);
+                    }
                 }
 
                 return probeGroup;
