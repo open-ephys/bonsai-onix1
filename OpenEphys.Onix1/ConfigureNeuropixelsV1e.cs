@@ -35,12 +35,9 @@ namespace OpenEphys.Onix1
         {
             Enable = configureNeuropixelsV1e.Enable;
             EnableLed = configureNeuropixelsV1e.EnableLed;
-            GainCalibrationFile = configureNeuropixelsV1e.GainCalibrationFile;
-            AdcCalibrationFile = configureNeuropixelsV1e.AdcCalibrationFile;
             ProbeConfiguration = new(configureNeuropixelsV1e.ProbeConfiguration);
             DeviceName = configureNeuropixelsV1e.DeviceName;
             DeviceAddress = configureNeuropixelsV1e.DeviceAddress;
-            InvertPolarity = configureNeuropixelsV1e.InvertPolarity;
         }
 
         /// <inheritdoc/>
@@ -62,28 +59,83 @@ namespace OpenEphys.Onix1
         [Description("Specifies whether the headstage LED will turn on during acquisition.")]
         public bool EnableLed { get; set; } = true;
 
-        /// <inheritdoc/>
-        [Category(ConfigurationCategory)]
-        [Description("Invert the polarity of the electrode voltages acquired by the probe.")]
-        public bool InvertPolarity { get; set; } = true;
+        /// <summary>
+        /// Gets or sets a value determining if the polarity of the electrode voltages acquired by the probe
+        /// should be inverted.
+        /// </summary>
+        /// <remarks>
+        /// [Obsolete]. Cannot tag this property with the Obsolete attribute due to https://github.com/dotnet/runtime/issues/100453
+        /// </remarks>
+        [Browsable(false)]
+        [Externalizable(false)]
+        public bool InvertPolarity
+        {
+            get => ProbeConfiguration.InvertPolarity;
+            set => ProbeConfiguration.InvertPolarity = value;
+        }
 
-        /// <inheritdoc/>
-        [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
-        [Description("Path to the Neuropixels 1.0 gain calibration file.")]
-        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
-        [Category(ConfigurationCategory)]
-        public string GainCalibrationFile { get; set; }
+        /// <summary>
+        /// Prevent the InvertPolarity property from being serialized.
+        /// </summary>
+        /// <returns>False</returns>
+        [Obsolete]
+        public bool ShouldSerializeInvertPolarity()
+        {
+            return false;
+        }
 
-        /// <inheritdoc/>
-        [FileNameFilter("ADC calibration files (*_ADCCalibration.csv)|*_ADCCalibration.csv")]
-        [Description("Path to the Neuropixels 1.0 ADC calibration file.")]
-        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
-        [Category(ConfigurationCategory)]
-        public string AdcCalibrationFile { get; set; }
+        /// <summary>
+        /// Gets or sets the path to the gain calibration file for this probe.
+        /// </summary>
+        /// <remarks>
+        /// [Obsolete]. Cannot tag this property with the Obsolete attribute due to https://github.com/dotnet/runtime/issues/100453
+        /// </remarks>
+        [Browsable(false)]
+        [Externalizable(false)]
+        public string GainCalibrationFile
+        {
+            get => ProbeConfiguration.GainCalibrationFileName;
+            set => ProbeConfiguration.GainCalibrationFileName = value;
+        }
+
+        /// <summary>
+        /// Prevent the GainCalibrationFile property from being serialized.
+        /// </summary>
+        /// <returns>False</returns>
+        [Obsolete]
+        public bool ShouldSerializeGainCalibrationFile()
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// Gets or sets the path to the ADC calibration file.
+        /// </summary>
+        /// <remarks>
+        /// [Obsolete]. Cannot tag this property with the Obsolete attribute due to https://github.com/dotnet/runtime/issues/100453
+        /// </remarks>
+        [Browsable(false)]
+        [Externalizable(false)]
+        public string AdcCalibrationFile
+        {
+            get => ProbeConfiguration.AdcCalibrationFileName;
+            set => ProbeConfiguration.AdcCalibrationFileName = value;
+        }
+
+        /// <summary>
+        /// Prevent the AdcCalibrationFile property from being serialized.
+        /// </summary>
+        /// <returns>False</returns>
+        [Obsolete]
+        public bool ShouldSerializeAdcCalibrationFile()
+        {
+            return false;
+        }
 
         /// <inheritdoc/>
         [Category(ConfigurationCategory)]
         [Description("NeuropixelsV1 probe configuration")]
+        [TypeConverter(typeof(GenericPropertyConverter))]
         public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; set; } = new();
 
         /// <summary>
@@ -104,7 +156,7 @@ namespace OpenEphys.Onix1
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
             var ledEnabled = EnableLed;
-            var invertPolarity = InvertPolarity;
+            var invertPolarity = ProbeConfiguration.InvertPolarity;
             return source.ConfigureDevice(context =>
             {
                 // configure device via the DS90UB9x deserializer device
@@ -127,7 +179,7 @@ namespace OpenEphys.Onix1
 
                 // program shift registers
                 var probeControl = new NeuropixelsV1eRegisterContext(device, NeuropixelsV1.ProbeI2CAddress,
-                                        probeMetadata.ProbeSerialNumber, ProbeConfiguration, GainCalibrationFile, AdcCalibrationFile);
+                                        probeMetadata.ProbeSerialNumber, ProbeConfiguration);
                 probeControl.InitializeProbe();
                 probeControl.WriteConfiguration();
                 probeControl.StartAcquisition();
