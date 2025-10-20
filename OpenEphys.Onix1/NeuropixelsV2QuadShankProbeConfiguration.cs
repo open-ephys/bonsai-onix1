@@ -1,17 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections;
 using System.ComponentModel;
-using Bonsai;
-using Newtonsoft.Json;
 using System.Text;
 using System.Xml.Serialization;
-using System.Linq;
-using OpenEphys.ProbeInterface.NET;
+using Bonsai;
+using Newtonsoft.Json;
 
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Specifies the reference for a quad-shank probe.
+    /// Specifies the reference for a Neuropixels 2.0 probe.
     /// </summary>
     public enum NeuropixelsV2QuadShankReference : uint
     {
@@ -36,80 +34,35 @@ namespace OpenEphys.Onix1
         /// </summary>
         Tip4,
         /// <summary>
-        /// Specifies that the ground reference will be used.
+        /// Specifies that the Ground reference will be used.
         /// </summary>
         Ground
     }
 
     /// <summary>
-    /// Specifies the bank of electrodes within each shank.
-    /// </summary>
-    public enum NeuropixelsV2QuadShankBank
-    {
-        /// <summary>
-        /// Specifies that Bank A is the current bank.
-        /// </summary>
-        /// <remarks>Bank A is defined as shank index 0 to 383 along each shank.</remarks>
-        A,
-        /// <summary>
-        /// Specifies that Bank B is the current bank.
-        /// </summary>
-        /// <remarks>Bank B is defined as shank index 384 to 767 along each shank.</remarks>
-        B,
-        /// <summary>
-        /// Specifies that Bank C is the current bank.
-        /// </summary>
-        /// <remarks>Bank C is defined as shank index 768 to 1151 along each shank.</remarks>
-        C,
-        /// <summary>
-        /// Specifies that Bank D is the current bank.
-        /// </summary>
-        /// <remarks>
-        /// Bank D is defined as shank index 1152 to 1279 along each shank. Note that Bank D is not a full contingent
-        /// of 384 channels; to compensate for this, electrodes from Bank C (starting at shank index 896) are used to
-        /// generate a full 384 channel map.
-        /// </remarks>
-        D,
-    }
-
-    /// <summary>
     /// Defines a configuration for quad-shank, Neuropixels 2.0 and 2.0-beta probes.
     /// </summary>
-    public class NeuropixelsV2QuadShankProbeConfiguration
+    [DisplayName(XmlTypeName)]
+    [XmlType(TypeName = XmlTypeName, Namespace = Constants.XmlNamespace)]
+    public class NeuropixelsV2QuadShankProbeConfiguration : NeuropixelsV2ProbeConfiguration
     {
-        /// <summary>
-        /// Creates a model of the probe with all electrodes instantiated.
-        /// </summary>
-        [XmlIgnore]
-        public static readonly IReadOnlyList<NeuropixelsV2QuadShankElectrode> ProbeModel = CreateProbeModel();
+        const string XmlTypeName = "QuadShank";
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class.
+        /// Initializes a default instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class.
         /// </summary>
         public NeuropixelsV2QuadShankProbeConfiguration()
         {
-            ChannelMap = new NeuropixelsV2QuadShankElectrode[NeuropixelsV2.ChannelCount];
-            for (int i = 0; i < ChannelMap.Length; i++)
-            {
-                ChannelMap[i] = ProbeModel.FirstOrDefault(e => e.Channel == i);
-            }
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class.
         /// </summary>
-        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe probe) : this()
-        {
-            Probe = probe;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class.
-        /// </summary>
-        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe probe, NeuropixelsV2QuadShankReference reference) : this()
+        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe probe, NeuropixelsV2QuadShankReference reference)
         {
             Probe = probe;
             Reference = reference;
+            ProbeGroup = new NeuropixelsV2eQuadShankProbeGroup();
         }
 
         /// <summary>
@@ -119,55 +72,24 @@ namespace OpenEphys.Onix1
         public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2QuadShankProbeConfiguration probeConfiguration)
         {
             Reference = probeConfiguration.Reference;
-            var probes = probeConfiguration.ProbeGroup.Probes.ToList().Select(probe => new Probe(probe));
-            ProbeGroup = new(probeConfiguration.ProbeGroup.Specification, probeConfiguration.ProbeGroup.Version, probes.ToArray());
-            ChannelMap = NeuropixelsV2eProbeGroup.ToChannelMap(ProbeGroup);
+            ProbeGroup = probeConfiguration.ProbeGroup.Clone<NeuropixelsV2eQuadShankProbeGroup>();
             Probe = probeConfiguration.Probe;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class with the given
-        /// <see cref="NeuropixelsV2eProbeGroup"/> channel configuration. The <see cref="ChannelMap"/> is automatically 
-        /// generated from the <see cref="ProbeGroup"/>. 
+        /// <see cref="NeuropixelsV2eQuadShankProbeGroup"/> channel configuration. 
         /// </summary>
-        /// <param name="probeGroup">The existing <see cref="NeuropixelsV2eProbeGroup"/> instance to use.</param>
+        /// <param name="probeGroup">The existing <see cref="NeuropixelsV2eQuadShankProbeGroup"/> instance to use.</param>
         /// <param name="reference">The <see cref="NeuropixelsV2QuadShankReference"/> reference value.</param>
         /// <param name="probe">The <see cref="NeuropixelsV2Probe"/> for this probe.</param>
         [JsonConstructor]
-        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2eProbeGroup probeGroup, NeuropixelsV2QuadShankReference reference, NeuropixelsV2Probe probe)
+        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2eQuadShankProbeGroup probeGroup, NeuropixelsV2Probe probe, NeuropixelsV2QuadShankReference reference)
         {
-            ChannelMap = NeuropixelsV2eProbeGroup.ToChannelMap(probeGroup);
-            ProbeGroup = probeGroup;
+            ProbeGroup = probeGroup.Clone<NeuropixelsV2eQuadShankProbeGroup>();
             Reference = reference;
             Probe = probe;
         }
-
-        private static List<NeuropixelsV2QuadShankElectrode> CreateProbeModel()
-        {
-            var electrodes = new List<NeuropixelsV2QuadShankElectrode>(NeuropixelsV2.ElectrodePerShank * 4);
-            for (int i = 0; i < NeuropixelsV2.ElectrodePerShank * 4; i++)
-            {
-                electrodes.Add(new NeuropixelsV2QuadShankElectrode(i));
-            }
-            return electrodes;
-        }
-
-        /// <summary>
-        /// Gets or sets the <see cref="NeuropixelsV2Probe"/> for this probe.
-        /// </summary>
-        public NeuropixelsV2Probe Probe { get; set; } = NeuropixelsV2Probe.ProbeA;
-
-        /// <summary>
-        /// Gets or sets the reference for all electrodes.
-        /// </summary>
-        /// <remarks>
-        /// All electrodes are set to the same reference, which can be  
-        /// <see cref="NeuropixelsV2QuadShankReference.External"/> or any of the tip references 
-        /// (<see cref="NeuropixelsV2QuadShankReference.Tip1"/>, <see cref="NeuropixelsV2QuadShankReference.Tip2"/>, etc.). 
-        /// Setting to <see cref="NeuropixelsV2QuadShankReference.External"/> will use the external reference, while 
-        /// <see cref="NeuropixelsV2QuadShankReference.Tip1"/> sets the reference to the electrode at the tip of the first shank.
-        /// </remarks>
-        public NeuropixelsV2QuadShankReference Reference { get; set; } = NeuropixelsV2QuadShankReference.External;
 
         /// <summary>
         /// Gets the existing channel map listing all currently enabled electrodes.
@@ -176,47 +98,16 @@ namespace OpenEphys.Onix1
         /// The channel map will always be 384 channels, and will return the 384 enabled electrodes.
         /// </remarks>
         [XmlIgnore]
-        public NeuropixelsV2QuadShankElectrode[] ChannelMap { get; }
-
-        /// <summary>
-        /// Update the <see cref="ChannelMap"/> with the selected electrodes.
-        /// </summary>
-        /// <param name="electrodes">List of selected electrodes that are being added to the <see cref="ChannelMap"/></param>
-        public void SelectElectrodes(NeuropixelsV2QuadShankElectrode[] electrodes)
+        public override NeuropixelsV2Electrode[] ChannelMap
         {
-            foreach (var e in electrodes)
-            {
-                try
-                {
-                    ChannelMap[e.Channel] = e;
-                }
-                catch (IndexOutOfRangeException ex)
-                {
-                    throw new IndexOutOfRangeException($"Electrode {e.Index} specifies channel {e.Channel} but only channels " +
-                        $"0 to {ChannelMap.Length - 1} are supported.", ex);
-                }
-            }
-
-            ProbeGroup.UpdateDeviceChannelIndices(ChannelMap);
+            get => NeuropixelsV2eQuadShankProbeGroup.ToChannelMap((NeuropixelsV2eQuadShankProbeGroup)ProbeGroup);
         }
 
-        /// <summary>
-        /// Gets the <see cref="NeuropixelsV2eProbeGroup"/> channel configuration for this probe.
-        /// </summary>
-        [XmlIgnore]
-        [Category("Configuration")]
-        [Description("Defines the shape of the probe, and which contacts are currently selected for streaming")]
-        public NeuropixelsV2eProbeGroup ProbeGroup { get; private set; } = new();
-
-        /// <summary>
-        /// Gets or sets a string defining the <see cref="ProbeGroup"/> in Base64.
-        /// This variable is needed to properly save a workflow in Bonsai, but it is not
-        /// directly accessible in the Bonsai editor.
-        /// </summary>
+        /// <inheritdoc/>
         [Browsable(false)]
         [Externalizable(false)]
         [XmlElement(nameof(ProbeGroup))]
-        public string ProbeGroupString
+        public override string ProbeGroupString
         {
             get
             {
@@ -226,8 +117,127 @@ namespace OpenEphys.Onix1
             set
             {
                 var jsonString = Encoding.UTF8.GetString(Convert.FromBase64String(value));
-                ProbeGroup = JsonConvert.DeserializeObject<NeuropixelsV2eProbeGroup>(jsonString);
-                SelectElectrodes(NeuropixelsV2eProbeGroup.ToChannelMap(ProbeGroup));
+                ProbeGroup = JsonConvert.DeserializeObject<NeuropixelsV2eQuadShankProbeGroup>(jsonString);
+            }
+        }
+
+        /// <summary>
+        /// Update the <see cref="ChannelMap"/> with the selected electrodes.
+        /// </summary>
+        /// <param name="electrodes">List of selected electrodes that are being added to the <see cref="ChannelMap"/></param>
+        public override void SelectElectrodes(NeuropixelsV2Electrode[] electrodes)
+        {
+            var channelMap = ChannelMap;
+
+            foreach (var e in electrodes)
+            {
+                try
+                {
+                    channelMap[e.Channel] = e;
+                }
+                catch (IndexOutOfRangeException ex)
+                {
+                    throw new IndexOutOfRangeException($"Electrode {e.Index} specifies channel {e.Channel} but only channels " +
+                        $"0 to {channelMap.Length - 1} are supported.", ex);
+                }
+            }
+
+            ProbeGroup.UpdateDeviceChannelIndices(channelMap);
+        }
+
+        internal override BitArray[] CreateShankBits(Enum reference)
+        {
+            const int ReferencePixelCount = 4;
+            const int DummyRegisterCount = 4;
+            const int RegistersPerShank = NeuropixelsV2.ElectrodePerShank + ReferencePixelCount + DummyRegisterCount;
+
+            const int ShiftRegisterBitExternalElectrode0 = 1285;
+            const int ShiftRegisterBitExternalElectrode1 = 2;
+
+            const int ShiftRegisterBitTipElectrode0 = 644;
+            const int ShiftRegisterBitTipElectrode1 = 643;
+
+            var shankBits = new BitArray[]
+                {
+                    new(RegistersPerShank, false),
+                    new(RegistersPerShank, false),
+                    new(RegistersPerShank, false),
+                    new(RegistersPerShank, false)
+                };
+
+            NeuropixelsV2QuadShankReference quadShankReference = (NeuropixelsV2QuadShankReference)reference;
+
+            if (quadShankReference != NeuropixelsV2QuadShankReference.External && quadShankReference != NeuropixelsV2QuadShankReference.Ground)
+            {
+                var shank = reference switch
+                {
+                    NeuropixelsV2QuadShankReference.Tip1 => 0,
+                    NeuropixelsV2QuadShankReference.Tip2 => 1,
+                    NeuropixelsV2QuadShankReference.Tip3 => 2,
+                    NeuropixelsV2QuadShankReference.Tip4 => 3,
+                    _ => throw new InvalidOperationException($"Invalid reference chosen for quad-shank probe.")
+                };
+
+                // If tip reference is used, activate the tip electrode
+                shankBits[shank][ShiftRegisterBitTipElectrode1] = true;
+                shankBits[shank][ShiftRegisterBitTipElectrode0] = true;
+            }
+            else if (quadShankReference == NeuropixelsV2QuadShankReference.External)
+            {
+                // TODO: is this the right approach or should only those
+                // connections to external reference on shanks with active
+                // electrodes be activated?
+
+                // If external electrode is used, activate on each shank
+                shankBits[0][ShiftRegisterBitExternalElectrode1] = true;
+                shankBits[0][ShiftRegisterBitExternalElectrode0] = true;
+                shankBits[1][ShiftRegisterBitExternalElectrode1] = true;
+                shankBits[1][ShiftRegisterBitExternalElectrode0] = true;
+                shankBits[2][ShiftRegisterBitExternalElectrode1] = true;
+                shankBits[2][ShiftRegisterBitExternalElectrode0] = true;
+                shankBits[3][ShiftRegisterBitExternalElectrode1] = true;
+                shankBits[3][ShiftRegisterBitExternalElectrode0] = true;
+            }
+
+            return shankBits;
+        }
+
+        internal override int GetReferenceBit(Enum reference)
+        {
+            var quadShankReference = (NeuropixelsV2QuadShankReference)reference;
+
+            return quadShankReference switch
+            {
+                NeuropixelsV2QuadShankReference.External => 1,
+                NeuropixelsV2QuadShankReference.Tip1 => 2,
+                NeuropixelsV2QuadShankReference.Tip2 => 2,
+                NeuropixelsV2QuadShankReference.Tip3 => 2,
+                NeuropixelsV2QuadShankReference.Tip4 => 2,
+                NeuropixelsV2QuadShankReference.Ground => 3,
+                _ => throw new InvalidOperationException("Invalid reference selection."),
+            };
+        }
+
+        internal override bool IsGroundReference() => (NeuropixelsV2QuadShankReference)Reference == NeuropixelsV2QuadShankReference.Ground;
+
+        /// <inheritdoc/>
+        [XmlElement(nameof(Reference))]
+        [Browsable(false)]
+        [Externalizable(false)]
+        public override string ReferenceSerialized
+        {
+            get => Reference.ToString();
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    Reference = NeuropixelsV2QuadShankReference.External;
+                    return;
+                }
+
+                Reference = Enum.TryParse<NeuropixelsV2QuadShankReference>(value, out var result)
+                            ? result
+                            : NeuropixelsV2QuadShankReference.External;
             }
         }
     }

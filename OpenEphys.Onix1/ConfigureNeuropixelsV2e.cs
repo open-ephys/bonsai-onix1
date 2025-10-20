@@ -56,7 +56,7 @@ namespace OpenEphys.Onix1
         [Category(ConfigurationCategory)]
         [Description("Probe A configuration.")]
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
-        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new(NeuropixelsV2Probe.ProbeA);
+        public NeuropixelsV2ProbeConfiguration ProbeConfigurationA { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe.ProbeA, NeuropixelsV2QuadShankReference.External);
 
         /// <inheritdoc/>
         [Category(ConfigurationCategory)]
@@ -69,7 +69,7 @@ namespace OpenEphys.Onix1
         [Category(ConfigurationCategory)]
         [Description("Probe B configuration.")]
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
-        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new(NeuropixelsV2Probe.ProbeB);
+        public NeuropixelsV2ProbeConfiguration ProbeConfigurationB { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe.ProbeB, NeuropixelsV2QuadShankReference.External);
 
         /// <inheritdoc/>
         [Category(ConfigurationCategory)]
@@ -109,7 +109,7 @@ namespace OpenEphys.Onix1
 
                 // set I2C clock rate to ~400 kHz
                 DS90UB9x.Set933I2CRate(device, 400e3);
-                
+
                 // read probe metadata
                 var probeAMetadata = ReadProbeMetadata(serializer, NeuropixelsV2e.ProbeASelected);
                 var probeBMetadata = ReadProbeMetadata(serializer, NeuropixelsV2e.ProbeBSelected);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
 using OpenEphys.ProbeInterface.NET;
 using ZedGraph;
@@ -14,17 +15,15 @@ namespace OpenEphys.Onix1.Design
         internal event EventHandler OnZoom;
         internal event EventHandler OnFileLoad;
 
-        /// <summary>
-        /// Public <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> object that is manipulated by
-        /// <see cref="NeuropixelsV2eChannelConfigurationDialog"/>.
-        /// </summary>
-        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfiguration;
+        internal NeuropixelsV2ProbeConfiguration ProbeConfiguration;
+
+        readonly Func<int, int> GetChannelNumberFunc;
 
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV2eChannelConfigurationDialog"/>.
         /// </summary>
-        /// <param name="probeConfiguration">A <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> object holding the current configuration settings.</param>
-        public NeuropixelsV2eChannelConfigurationDialog(NeuropixelsV2QuadShankProbeConfiguration probeConfiguration)
+        /// <param name="probeConfiguration">A <see cref="NeuropixelsV2ProbeConfiguration"/> object holding the current configuration settings.</param>
+        public NeuropixelsV2eChannelConfigurationDialog(NeuropixelsV2ProbeConfiguration probeConfiguration)
             : base(probeConfiguration.ProbeGroup)
         {
             zedGraphChannels.ZoomButtons = MouseButtons.None;
@@ -32,7 +31,10 @@ namespace OpenEphys.Onix1.Design
 
             zedGraphChannels.ZoomStepFraction = 0.5;
 
-            ProbeConfiguration = probeConfiguration;
+            ProbeConfiguration = Activator.CreateInstance(probeConfiguration.GetType(), probeConfiguration) as NeuropixelsV2ProbeConfiguration;
+            ProbeConfiguration.ProbeGroup = (NeuropixelsV2eProbeGroup)ProbeGroup;
+
+            GetChannelNumberFunc = ProbeConfiguration.ChannelMap[0].GetChannelNumberFunc();
 
             HighlightEnabledContacts();
             UpdateContactLabels();
@@ -42,25 +44,33 @@ namespace OpenEphys.Onix1.Design
 
         internal override ProbeGroup DefaultChannelLayout()
         {
-            return new NeuropixelsV2eProbeGroup();
+            return Activator.CreateInstance(ProbeConfiguration.ProbeGroup.GetType()) as NeuropixelsV2eProbeGroup ?? throw new InvalidOperationException("Could not create new probe group of type " + ProbeConfiguration.ProbeGroup.GetType().Name);
         }
 
         internal override void LoadDefaultChannelLayout()
         {
-            ProbeConfiguration = new(ProbeConfiguration.Probe, ProbeConfiguration.Reference);
-            ProbeGroup = ProbeConfiguration.ProbeGroup;
+            base.LoadDefaultChannelLayout();
 
             OnFileOpenHandler();
         }
 
         internal override bool OpenFile<T>()
         {
-            if (base.OpenFile<NeuropixelsV2eProbeGroup>())
+            MethodInfo method = GetType().GetMethod(
+                nameof(OpenAndParseConfigurationFile),
+                BindingFlags.Instance | BindingFlags.NonPublic,
+                null,
+                Type.EmptyTypes,
+                null) ?? throw new InvalidOperationException($"Could not find the {nameof(OpenAndParseConfigurationFile)} method.");
+
+            MethodInfo genericMethod = method.MakeGenericMethod(ProbeGroup.GetType()) ?? throw new InvalidOperationException($"Could not create the generic {nameof(OpenAndParseConfigurationFile)} method.");
+
+            var newConfiguration = genericMethod.Invoke(this, null) as NeuropixelsV2eProbeGroup;
+
+            if (ValidateProbeGroup(newConfiguration))
             {
-                ProbeConfiguration = new((NeuropixelsV2eProbeGroup)ProbeGroup, ProbeConfiguration.Reference, ProbeConfiguration.Probe);
-
+                ProbeGroup = newConfiguration;
                 OnFileOpenHandler();
-
                 return true;
             }
 
@@ -70,6 +80,7 @@ namespace OpenEphys.Onix1.Design
         private void OnFileOpenHandler()
         {
             OnFileLoad?.Invoke(this, EventArgs.Empty);
+            ProbeConfiguration.ProbeGroup = (NeuropixelsV2eProbeGroup)ProbeGroup;
         }
 
         internal override void ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState)
@@ -106,7 +117,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override void HighlightEnabledContacts()
         {
-            if (ProbeConfiguration == null || ProbeConfiguration.ChannelMap == null)
+            if (ProbeConfiguration == null)
                 return;
 
             var contactObjects = zedGraphChannels.GraphPane.GraphObjList.OfType<BoxObj>()
@@ -119,12 +130,14 @@ namespace OpenEphys.Onix1.Design
                 contact.Fill.Color = DisabledContactFill;
             }
 
+            var channelMap = ProbeConfiguration.ChannelMap;
+
             var contactsToEnable = contactObjects.Where(c =>
-                                                        {
-                                                            var tag = c.Tag as ContactTag;
-                                                            var channel = NeuropixelsV2QuadShankElectrode.GetChannelNumber(tag.ContactIndex);
-                                                            return ProbeConfiguration.ChannelMap[channel].Index == tag.ContactIndex;
-                                                        });
+            {
+                var tag = c.Tag as ContactTag;
+                var channel = GetChannelNumberFunc(tag.ContactIndex);
+                return channelMap[channel].Index == tag.ContactIndex;
+            });
 
             foreach (var contact in contactsToEnable)
             {
@@ -149,12 +162,14 @@ namespace OpenEphys.Onix1.Design
                 textObj.FontSpec.FontColor = DisabledContactTextColor;
             }
 
+            var channelMap = ProbeConfiguration.ChannelMap;
+
             textObjsToUpdate = textObjs.Where(c =>
-                                              {
-                                                  var tag = c.Tag as ContactTag;
-                                                  var channel = NeuropixelsV2QuadShankElectrode.GetChannelNumber(tag.ContactIndex);
-                                                  return ProbeConfiguration.ChannelMap[channel].Index == tag.ContactIndex;
-                                              });
+            {
+                var tag = c.Tag as ContactTag;
+                var channel = GetChannelNumberFunc(tag.ContactIndex);
+                return channelMap[channel].Index == tag.ContactIndex;
+            });
 
             foreach (var textObj in textObjsToUpdate)
             {
@@ -167,7 +182,7 @@ namespace OpenEphys.Onix1.Design
             return index.ToString();
         }
 
-        internal void EnableElectrodes(NeuropixelsV2QuadShankElectrode[] electrodes)
+        internal void EnableElectrodes(NeuropixelsV2Electrode[] electrodes)
         {
             ProbeConfiguration.SelectElectrodes(electrodes);
         }

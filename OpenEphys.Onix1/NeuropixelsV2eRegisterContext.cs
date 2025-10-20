@@ -15,7 +15,7 @@ namespace OpenEphys.Onix1
         {
         }
 
-        public void WriteConfiguration(NeuropixelsV2QuadShankProbeConfiguration probe)
+        public void WriteConfiguration(NeuropixelsV2ProbeConfiguration probe)
         {
             var baseBits = NeuropixelsV2.GenerateBaseBits(probe);
             WriteShiftRegister(NeuropixelsV2e.SR_CHAIN5, baseBits[0]);

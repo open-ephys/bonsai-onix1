@@ -29,44 +29,10 @@ namespace OpenEphys.Onix1
         public const int ChannelCount = 384;
         public const int BaseBitsPerChannel = 4;
         public const int ElectrodePerShank = 1280;
-        public const int ElectrodePerBlock = 48;
-        public const int ReferencePixelCount = 4;
-        public const int DummyRegisterCount = 4;
-        public const int RegistersPerShank = ElectrodePerShank + ReferencePixelCount + DummyRegisterCount;
 
-        internal static BitArray[] GenerateShankBits(NeuropixelsV2QuadShankProbeConfiguration probe)
+        internal static BitArray[] GenerateShankBits(NeuropixelsV2ProbeConfiguration probe)
         {
-            BitArray[] shankBits =
-            {
-                new(RegistersPerShank, false),
-                new(RegistersPerShank, false),
-                new(RegistersPerShank, false),
-                new(RegistersPerShank, false)
-            };
-
-
-            if (probe.Reference != NeuropixelsV2QuadShankReference.External)
-            {
-                // If tip reference is used, activate the tip electrodes
-                shankBits[(int)probe.Reference - 1][643] = true;
-                shankBits[(int)probe.Reference - 1][644] = true;
-            }
-            else
-            {
-                // TODO: is this the right approach or should only those
-                // connections to external reference on shanks with active
-                // electrodes be activated?
-
-                // If external electrode is used, activate on each shank
-                shankBits[0][2] = true;
-                shankBits[0][1285] = true;
-                shankBits[1][2] = true;
-                shankBits[1][1285] = true;
-                shankBits[2][2] = true;
-                shankBits[2][1285] = true;
-                shankBits[3][2] = true;
-                shankBits[3][1285] = true;
-            }
+            BitArray[] shankBits = probe.CreateShankBits(probe.Reference);
 
             const int PixelOffset = (ElectrodePerShank - 1) / 2;
             const int ReferencePixelOffset = 3;
@@ -84,7 +50,7 @@ namespace OpenEphys.Onix1
             return shankBits;
         }
 
-        internal static BitArray[] GenerateBaseBits(NeuropixelsV2QuadShankProbeConfiguration probe)
+        internal static BitArray[] GenerateBaseBits(NeuropixelsV2ProbeConfiguration probe)
         {
             BitArray[] baseBits =
             {
@@ -92,16 +58,7 @@ namespace OpenEphys.Onix1
                 new(ChannelCount * BaseBitsPerChannel / 2, false)
             };
 
-            var referenceBit = probe.Reference switch
-            {
-                NeuropixelsV2QuadShankReference.External => 1,
-                NeuropixelsV2QuadShankReference.Tip1 => 2,
-                NeuropixelsV2QuadShankReference.Tip2 => 2,
-                NeuropixelsV2QuadShankReference.Tip3 => 2,
-                NeuropixelsV2QuadShankReference.Tip4 => 2,
-                NeuropixelsV2QuadShankReference.Ground => 3,
-                _ => throw new InvalidOperationException("Invalid reference selection."),
-            };
+            var referenceBit = probe.GetReferenceBit(probe.Reference);
 
             for (int i = 0; i < ChannelCount; i++)
             {
