@@ -97,7 +97,7 @@ namespace OpenEphys.Onix1.Design
 
         void OnZoom_Waveform(ZedGraphControl sender, ZoomState oldState, ZoomState newState)
         {
-            if (newState.Type == ZoomState.StateType.WheelZoom)
+            if (newState.Type == ZoomState.StateType.WheelZoom && sender.IsEnableHZoom && sender.IsEnableVZoom)
             {
                 CenterAxesOnCursor(sender);
             }

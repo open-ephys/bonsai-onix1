@@ -212,14 +212,14 @@ namespace OpenEphys.Onix1.Design
 
         internal override double GetPeakToPeakAmplitudeInMicroAmps()
         {
-            return OpticalStimulator.MaxCurrent == 0 ? ZeroPeakToPeak : OpticalStimulator.MaxCurrent * ChannelScale;
+            return OpticalStimulator.MaxCurrent == 0 ? ZeroPeakToPeak : OpticalStimulator.MaxCurrent;
         }
 
         internal override PointPairList[] CreateStimulusWaveforms()
         {
             PointPairList[] waveforms = new PointPairList[NumberOfChannels];
 
-            var peakToPeak = GetPeakToPeakAmplitudeInMicroAmps();
+            var peakToPeak = GetPeakToPeakAmplitudeInMicroAmps() * ChannelScale;
 
             for (int channel = 0; channel < NumberOfChannels; channel++)
             {
