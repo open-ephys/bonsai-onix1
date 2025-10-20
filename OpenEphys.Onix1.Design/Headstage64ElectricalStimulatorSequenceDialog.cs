@@ -289,8 +289,8 @@ namespace OpenEphys.Onix1.Design
 
         internal override double GetPeakToPeakAmplitudeInMicroAmps()
         {
-            var peakToPeak = (Math.Max(Math.Max(ElectricalStimulator.PhaseOneCurrent, ElectricalStimulator.PhaseTwoCurrent), ElectricalStimulator.InterPhaseCurrent)
-                          + Math.Abs(Math.Min(Math.Min(ElectricalStimulator.PhaseOneCurrent, ElectricalStimulator.PhaseTwoCurrent), ElectricalStimulator.InterPhaseCurrent))) * ChannelScale;
+            var peakToPeak = Math.Max(Math.Max(ElectricalStimulator.PhaseOneCurrent, ElectricalStimulator.PhaseTwoCurrent), ElectricalStimulator.InterPhaseCurrent)
+                          + Math.Abs(Math.Min(Math.Min(ElectricalStimulator.PhaseOneCurrent, ElectricalStimulator.PhaseTwoCurrent), ElectricalStimulator.InterPhaseCurrent));
 
             return peakToPeak == 0 ? ZeroPeakToPeak : peakToPeak;
         }
@@ -299,7 +299,7 @@ namespace OpenEphys.Onix1.Design
         {
             PointPairList[] waveforms = new PointPairList[NumberOfChannels];
 
-            var peakToPeak = GetPeakToPeakAmplitudeInMicroAmps();
+            var peakToPeak = GetPeakToPeakAmplitudeInMicroAmps() * ChannelScale;
 
             if (ElectricalStimulator != null)
             {
