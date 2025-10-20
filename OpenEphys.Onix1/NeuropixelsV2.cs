@@ -30,6 +30,7 @@ namespace OpenEphys.Onix1
         public const int BaseBitsPerChannel = 4;
         public const int ElectrodePerShank = 1280;
         public const int ElectrodePerBlockQuadShank = 48;
+        public const int ElectrodePerBlockSingleShank = 32;
         public const int ReferencePixelCount = 4;
         public const int DummyRegisterCount = 4;
         public const int RegistersPerShank = ElectrodePerShank + ReferencePixelCount + DummyRegisterCount;
@@ -44,7 +45,26 @@ namespace OpenEphys.Onix1
             const int ShiftRegisterBitTipElectrode0 = 644;
             const int ShiftRegisterBitTipElectrode1 = 643;
 
-            if (probe.ProbeType == NeuropixelsV2ProbeType.QuadShank)
+            if (probe.ProbeType == NeuropixelsV2ProbeType.SingleShank)
+            {
+                shankBits = new BitArray[]
+                {
+                    new(RegistersPerShank, false)
+                };
+                const int Shank = 0;
+
+                if (probe.Reference == NeuropixelsV2ShankReference.Tip)
+                {
+                    shankBits[Shank][ShiftRegisterBitTipElectrode1] = true;
+                    shankBits[Shank][ShiftRegisterBitTipElectrode0] = true;
+                }
+                else if (probe.Reference == NeuropixelsV2ShankReference.External)
+                {
+                    shankBits[Shank][ShiftRegisterBitExternalElectrode0] = true;
+                    shankBits[Shank][ShiftRegisterBitExternalElectrode1] = true;
+                }
+            }
+            else if (probe.ProbeType == NeuropixelsV2ProbeType.QuadShank)
             {
                 shankBits = new BitArray[]
                 {
@@ -117,6 +137,13 @@ namespace OpenEphys.Onix1
 
             var referenceBit = probe.ProbeType switch
             {
+                NeuropixelsV2ProbeType.SingleShank => probe.Reference switch
+                {
+                    NeuropixelsV2ShankReference.External => 1,
+                    NeuropixelsV2ShankReference.Tip => 2,
+                    NeuropixelsV2ShankReference.Ground => 3,
+                    _ => throw new InvalidOperationException("Invalid reference selection."),
+                },
                 NeuropixelsV2ProbeType.QuadShank => probe.Reference switch
                 {
                     NeuropixelsV2ShankReference.External => 1,

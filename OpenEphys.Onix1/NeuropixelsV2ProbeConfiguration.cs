@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
 using Bonsai;
@@ -32,6 +33,10 @@ namespace OpenEphys.Onix1
         /// Specifies that the tip reference of shank 4 will be used.
         /// </summary>
         Tip4,
+        /// <summary>
+        /// Specifies that the tip reference of a single-shank probe will be used.
+        /// </summary>
+        Tip,
         /// <summary>
         /// Specifies that the Ground reference will be used.
         /// </summary>
@@ -78,6 +83,10 @@ namespace OpenEphys.Onix1
         /// Specifies that there are four shanks.
         /// </summary>
         QuadShank = 0,
+        /// <summary>
+        /// Specifies that there is one shank.
+        /// </summary>
+        SingleShank
     }
 
     /// <summary>
@@ -143,6 +152,39 @@ namespace OpenEphys.Onix1
         [Description("Defines the type of probe, differentiated by the number of shanks present.")]
         public NeuropixelsV2ProbeType ProbeType { get; set; } = NeuropixelsV2ProbeType.QuadShank;
 
+        internal static Array FilterNeuropixelsV2ShankReference(NeuropixelsV2ProbeType probeType)
+        {
+            if (probeType == NeuropixelsV2ProbeType.SingleShank)
+            {
+                return Enum.GetValues(typeof(NeuropixelsV2ShankReference))
+                           .Cast<NeuropixelsV2ShankReference>()
+                           .Where(r =>
+                           {
+                               return r == NeuropixelsV2ShankReference.External
+                                      || r == NeuropixelsV2ShankReference.Tip
+                                      || r == NeuropixelsV2ShankReference.Ground;
+                           })
+                           .ToArray();
+            }
+            else if (probeType == NeuropixelsV2ProbeType.QuadShank)
+            {
+                return Enum.GetValues(typeof(NeuropixelsV2ShankReference))
+                           .Cast<NeuropixelsV2ShankReference>()
+                           .Where(r =>
+                           {
+                               return r == NeuropixelsV2ShankReference.External
+                                      || r == NeuropixelsV2ShankReference.Tip1
+                                      || r == NeuropixelsV2ShankReference.Tip2
+                                      || r == NeuropixelsV2ShankReference.Tip3
+                                      || r == NeuropixelsV2ShankReference.Tip4
+                                      || r == NeuropixelsV2ShankReference.Ground;
+                           })
+                           .ToArray();
+            }
+
+            throw new InvalidEnumArgumentException("Unknown probe type given.");
+        }
+
         /// <summary>
         /// Gets or sets the reference for all electrodes.
         /// </summary>
@@ -154,6 +196,7 @@ namespace OpenEphys.Onix1
         /// <see cref="NeuropixelsV2ShankReference.Tip1"/> sets the reference to the electrode at the tip of the first shank.
         /// </remarks>
         [Description("Defines what the reference for the probe will be, whether it is external, on a shank tip, or the ground reference.")]
+        [TypeConverter(typeof(ReferenceTypeConverter))]
         public NeuropixelsV2ShankReference Reference { get; set; } = NeuropixelsV2ShankReference.External;
 
         /// <summary>
@@ -218,6 +261,34 @@ namespace OpenEphys.Onix1
                 ProbeGroup = JsonConvert.DeserializeObject<NeuropixelsV2eProbeGroup>(jsonString);
                 SelectElectrodes(NeuropixelsV2eProbeGroup.ToChannelMap(ProbeGroup, ProbeType));
             }
+        }
+    }
+
+    internal class ReferenceTypeConverter : EnumConverter
+    {
+        public ReferenceTypeConverter()
+            : base(typeof(NeuropixelsV2ShankReference))
+        {
+        }
+
+        public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
+        {
+            return true;
+        }
+
+        public override bool GetStandardValuesExclusive(ITypeDescriptorContext context)
+        {
+            return true;
+        }
+
+        public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
+        {
+            if (context?.Instance == null)
+                return base.GetStandardValues(context);
+
+            var probeConfiguration = (NeuropixelsV2ProbeConfiguration)context.Instance;
+
+            return new StandardValuesCollection(NeuropixelsV2ProbeConfiguration.FilterNeuropixelsV2ShankReference(probeConfiguration.ProbeType));
         }
     }
 }

@@ -42,7 +42,11 @@ namespace OpenEphys.Onix1
             BlockIndex = GetBlockIndex(index, probeType);
             Position = GetPosition(index);
 
-            if (probeType == NeuropixelsV2ProbeType.QuadShank)
+            if (probeType == NeuropixelsV2ProbeType.SingleShank)
+            {
+                Channel = GetSingleShankChannelNumber(Bank, Block, GetRow(index), index % 2 == 0);
+            }
+            else if (probeType == NeuropixelsV2ProbeType.QuadShank)
             {
                 Channel = GetQuadShankChannelNumber(Shank, Block, BlockIndex);
             }
@@ -64,7 +68,10 @@ namespace OpenEphys.Onix1
 
         static int GetBlock(int index, NeuropixelsV2ProbeType probeType)
         {
-            if (probeType == NeuropixelsV2ProbeType.QuadShank)
+            if (probeType == NeuropixelsV2ProbeType.SingleShank)
+                return (index % NeuropixelsV2.ChannelCount) / NeuropixelsV2.ElectrodePerBlockSingleShank;
+
+            else if (probeType == NeuropixelsV2ProbeType.QuadShank)
                 return (GetIntraShankIndex(index) % NeuropixelsV2.ChannelCount) / NeuropixelsV2.ElectrodePerBlockQuadShank;
 
             else
@@ -73,9 +80,14 @@ namespace OpenEphys.Onix1
 
         const int ElectrodesPerRow = 2;
 
+        static int GetRow(int index) => (index % NeuropixelsV2.ElectrodePerBlockSingleShank) / ElectrodesPerRow;
+
         static int GetBlockIndex(int index, NeuropixelsV2ProbeType probeType)
         {
-            if (probeType == NeuropixelsV2ProbeType.QuadShank)
+            if (probeType == NeuropixelsV2ProbeType.SingleShank)
+                return GetIntraShankIndex(index) % NeuropixelsV2.ElectrodePerBlockSingleShank;
+
+            else if (probeType == NeuropixelsV2ProbeType.QuadShank)
                 return GetIntraShankIndex(index) % NeuropixelsV2.ElectrodePerBlockQuadShank;
 
             else
@@ -90,7 +102,16 @@ namespace OpenEphys.Onix1
         /// <returns>An integer between 0 and 383 defining the channel number.</returns>
         public static int GetChannelNumber(int electrodeIndex, NeuropixelsV2ProbeType probeType)
         {
-            if (probeType == NeuropixelsV2ProbeType.QuadShank)
+            if (probeType == NeuropixelsV2ProbeType.SingleShank)
+            {
+                var bank = GetBank(electrodeIndex);
+                var block = GetBlock(electrodeIndex, probeType);
+                var row = GetRow(electrodeIndex);
+                bool isEven = electrodeIndex % 2 == 0;
+
+                return GetSingleShankChannelNumber(bank, block, row, isEven);
+            }
+            else if (probeType == NeuropixelsV2ProbeType.QuadShank)
             {
                 var shank = GetShank(electrodeIndex);
                 var block = GetBlock(electrodeIndex, probeType);
@@ -100,6 +121,31 @@ namespace OpenEphys.Onix1
             }
             else
                 throw new InvalidOperationException("Unknown probe type given.");
+        }
+
+        internal static int GetSingleShankChannelNumber(NeuropixelsV2Bank bank, int block, int row, bool even)
+        {
+            const int MaxBlockValue = 11;
+            const int MaxRowValue = 15;
+
+            if (block > MaxBlockValue || block < 0)
+                throw new ArgumentOutOfRangeException($"Block value is out of range. Expected to be between 0 and {MaxBlockValue}, but value is {block}");
+
+            if (row > MaxRowValue || row < 0)
+                throw new ArgumentOutOfRangeException($"Row value is out of range. Expected to be between 0 and {MaxRowValue}, but value is {row}");
+
+            int offset = even ? 0 : 1; // NB: Left electrodes (even numbers) have no offset, while right electrodes (odd numbers) have +1
+
+            const int HalfBlock = 16;
+
+            return bank switch
+            {
+                NeuropixelsV2Bank.A => row * ElectrodesPerRow + block * NeuropixelsV2.ElectrodePerBlockSingleShank + offset,
+                NeuropixelsV2Bank.B => (row * 7 % HalfBlock) * ElectrodesPerRow + block * NeuropixelsV2.ElectrodePerBlockSingleShank + offset,
+                NeuropixelsV2Bank.C => (row * 5 % HalfBlock) * ElectrodesPerRow + block * NeuropixelsV2.ElectrodePerBlockSingleShank + offset,
+                NeuropixelsV2Bank.D => (row * 3 % HalfBlock) * ElectrodesPerRow + block * NeuropixelsV2.ElectrodePerBlockSingleShank + offset,
+                _ => throw new NotImplementedException($"Invalid {nameof(NeuropixelsV2Bank)} value given.")
+            };
         }
 
         internal static int GetQuadShankChannelNumber(int shank, int block, int blockIndex) => (shank, block) switch
