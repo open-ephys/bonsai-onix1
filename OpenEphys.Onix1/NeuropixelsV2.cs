@@ -29,43 +29,66 @@ namespace OpenEphys.Onix1
         public const int ChannelCount = 384;
         public const int BaseBitsPerChannel = 4;
         public const int ElectrodePerShank = 1280;
-        public const int ElectrodePerBlock = 48;
+        public const int ElectrodePerBlockQuadShank = 48;
         public const int ReferencePixelCount = 4;
         public const int DummyRegisterCount = 4;
         public const int RegistersPerShank = ElectrodePerShank + ReferencePixelCount + DummyRegisterCount;
 
-        internal static BitArray[] GenerateShankBits(NeuropixelsV2QuadShankProbeConfiguration probe)
+        internal static BitArray[] GenerateShankBits(NeuropixelsV2ProbeConfiguration probe)
         {
-            BitArray[] shankBits =
-            {
-                new(RegistersPerShank, false),
-                new(RegistersPerShank, false),
-                new(RegistersPerShank, false),
-                new(RegistersPerShank, false)
-            };
+            BitArray[] shankBits;
 
+            const int ShiftRegisterBitExternalElectrode0 = 1285;
+            const int ShiftRegisterBitExternalElectrode1 = 2;
 
-            if (probe.Reference != NeuropixelsV2QuadShankReference.External)
+            const int ShiftRegisterBitTipElectrode0 = 644;
+            const int ShiftRegisterBitTipElectrode1 = 643;
+
+            if (probe.ProbeType == NeuropixelsV2ProbeType.QuadShank)
             {
-                // If tip reference is used, activate the tip electrodes
-                shankBits[(int)probe.Reference - 1][643] = true;
-                shankBits[(int)probe.Reference - 1][644] = true;
+                shankBits = new BitArray[]
+                {
+                    new(RegistersPerShank, false),
+                    new(RegistersPerShank, false),
+                    new(RegistersPerShank, false),
+                    new(RegistersPerShank, false)
+                };
+
+                if (probe.Reference != NeuropixelsV2ShankReference.External && probe.Reference != NeuropixelsV2ShankReference.Ground)
+                {
+                    var shank = probe.Reference switch
+                    {
+                        NeuropixelsV2ShankReference.Tip1 => 0,
+                        NeuropixelsV2ShankReference.Tip2 => 1,
+                        NeuropixelsV2ShankReference.Tip3 => 2,
+                        NeuropixelsV2ShankReference.Tip4 => 3,
+                        _ => throw new InvalidOperationException($"Invalid reference chosen for {probe.ProbeType} probe.")
+                    };
+
+                    // If tip reference is used, activate the tip electrode
+                    shankBits[shank][ShiftRegisterBitTipElectrode1] = true;
+                    shankBits[shank][ShiftRegisterBitTipElectrode0] = true;
+                }
+                else if (probe.Reference == NeuropixelsV2ShankReference.External)
+                {
+                    // TODO: is this the right approach or should only those
+                    // connections to external reference on shanks with active
+                    // electrodes be activated?
+
+                    // If external electrode is used, activate on each shank
+                    shankBits[0][ShiftRegisterBitExternalElectrode1] = true;
+                    shankBits[0][ShiftRegisterBitExternalElectrode0] = true;
+                    shankBits[1][ShiftRegisterBitExternalElectrode1] = true;
+                    shankBits[1][ShiftRegisterBitExternalElectrode0] = true;
+                    shankBits[2][ShiftRegisterBitExternalElectrode1] = true;
+                    shankBits[2][ShiftRegisterBitExternalElectrode0] = true;
+                    shankBits[3][ShiftRegisterBitExternalElectrode1] = true;
+                    shankBits[3][ShiftRegisterBitExternalElectrode0] = true;
+                }
             }
             else
             {
-                // TODO: is this the right approach or should only those
-                // connections to external reference on shanks with active
-                // electrodes be activated?
-
-                // If external electrode is used, activate on each shank
-                shankBits[0][2] = true;
-                shankBits[0][1285] = true;
-                shankBits[1][2] = true;
-                shankBits[1][1285] = true;
-                shankBits[2][2] = true;
-                shankBits[2][1285] = true;
-                shankBits[3][2] = true;
-                shankBits[3][1285] = true;
+                throw new InvalidOperationException("Unknown probe configuration type given.");
             }
 
             const int PixelOffset = (ElectrodePerShank - 1) / 2;
@@ -84,7 +107,7 @@ namespace OpenEphys.Onix1
             return shankBits;
         }
 
-        internal static BitArray[] GenerateBaseBits(NeuropixelsV2QuadShankProbeConfiguration probe)
+        internal static BitArray[] GenerateBaseBits(NeuropixelsV2ProbeConfiguration probe)
         {
             BitArray[] baseBits =
             {
@@ -92,15 +115,19 @@ namespace OpenEphys.Onix1
                 new(ChannelCount * BaseBitsPerChannel / 2, false)
             };
 
-            var referenceBit = probe.Reference switch
+            var referenceBit = probe.ProbeType switch
             {
-                NeuropixelsV2QuadShankReference.External => 1,
-                NeuropixelsV2QuadShankReference.Tip1 => 2,
-                NeuropixelsV2QuadShankReference.Tip2 => 2,
-                NeuropixelsV2QuadShankReference.Tip3 => 2,
-                NeuropixelsV2QuadShankReference.Tip4 => 2,
-                NeuropixelsV2QuadShankReference.Ground => 3,
-                _ => throw new InvalidOperationException("Invalid reference selection."),
+                NeuropixelsV2ProbeType.QuadShank => probe.Reference switch
+                {
+                    NeuropixelsV2ShankReference.External => 1,
+                    NeuropixelsV2ShankReference.Tip1 => 2,
+                    NeuropixelsV2ShankReference.Tip2 => 2,
+                    NeuropixelsV2ShankReference.Tip3 => 2,
+                    NeuropixelsV2ShankReference.Tip4 => 2,
+                    NeuropixelsV2ShankReference.Ground => 3,
+                    _ => throw new InvalidOperationException("Invalid reference selection."),
+                },
+                _ => throw new InvalidOperationException("Invalid probe type given.")
             };
 
             for (int i = 0; i < ChannelCount; i++)

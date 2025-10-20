@@ -8,7 +8,7 @@ using Bonsai.Design;
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Class that opens a new dialog for a <see cref="NeuropixelsV2QuadShankProbeConfiguration"/>.
+    /// Class that opens a new dialog for a <see cref="NeuropixelsV2ProbeConfiguration"/>.
     /// </summary>
     public class NeuropixelsV2eProbeConfigurationEditor : UITypeEditor
     {
@@ -27,15 +27,17 @@ namespace OpenEphys.Onix1.Design
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
 
                 if (editorService != null && editorState != null && !editorState.WorkflowRunning &&
-                    value is NeuropixelsV2QuadShankProbeConfiguration configuration)
+                    value is NeuropixelsV2ProbeConfiguration configuration)
                 {
                     var instance = (IConfigureNeuropixelsV2)context.Instance;
 
                     var calibrationFile = configuration.Probe == NeuropixelsV2Probe.ProbeA ? instance.GainCalibrationFileA : instance.GainCalibrationFileB;
 
+                    bool isBeta = instance is ConfigureNeuropixelsV2eBeta;
+
                     using var editorDialog = new NeuropixelsV2eProbeConfigurationDialog(configuration, calibrationFile, instance.InvertPolarity);
 
-                    if (instance is ConfigureNeuropixelsV2eBeta)
+                    if (isBeta)
                     {
                         editorDialog.Text = editorDialog.Text.Replace("NeuropixelsV2e ", "NeuropixelsV2eBeta ");
                     }
