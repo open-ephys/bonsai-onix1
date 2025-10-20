@@ -36,8 +36,7 @@ namespace OpenEphys.Onix1.Design
             OpticalStimulatorSequenceDialog = new(configureNode.OpticalStimulator);
             OpticalStimulatorSequenceDialog.SetChildFormProperties(this).AddDialogToTab(tabPageOpticalStimulator);
 
-            this.AddMenuItemsFromDialogToFileOption(ElectricalStimulatorSequenceDialog)
-                .AddMenuItemsFromDialogToFileOption(OpticalStimulatorSequenceDialog);
+            menuStrip1.Visible = false;
         }
     }
 }
