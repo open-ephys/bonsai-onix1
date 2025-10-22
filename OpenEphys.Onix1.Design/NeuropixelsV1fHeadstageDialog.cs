@@ -61,9 +61,6 @@ namespace OpenEphys.Onix1.Design
 
         private void Okay_Click(object sender, System.EventArgs e)
         {
-            DialogNeuropixelsV1A.SaveVariables();
-            DialogNeuropixelsV1B.SaveVariables();
-
             DialogResult = DialogResult.OK;
         }
     }
