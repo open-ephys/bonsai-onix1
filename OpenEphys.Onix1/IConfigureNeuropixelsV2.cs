@@ -13,7 +13,7 @@
         /// <summary>
         /// Gets or sets the electrode configuration for Probe A.
         /// </summary>
-        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; }
+        public NeuropixelsV2ProbeConfiguration ProbeConfigurationA { get; set; }
 
         /// <summary>
         /// Gets or sets the path to the gain calibration file for Probe A.
@@ -35,7 +35,7 @@
         /// <summary>
         /// Gets or sets the electrode configuration for Probe B.
         /// </summary>
-        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; }
+        public NeuropixelsV2ProbeConfiguration ProbeConfigurationB { get; set; }
 
         /// <summary>
         /// Gets or sets the path to the gain calibration file for Probe B.
