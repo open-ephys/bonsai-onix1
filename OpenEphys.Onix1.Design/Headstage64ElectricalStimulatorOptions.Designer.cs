@@ -48,8 +48,6 @@
             this.labelInterBurstInterval = new System.Windows.Forms.Label();
             this.textBoxTrainBurstCount = new System.Windows.Forms.TextBox();
             this.labelTrainBurstCount = new System.Windows.Forms.Label();
-            this.textBoxTrainDelay = new System.Windows.Forms.TextBox();
-            this.labelTriggerDelay = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -94,6 +92,7 @@
             this.tableLayoutPanel1.Controls.Add(this.textBoxInterPhaseDuration, 2, 2);
             this.tableLayoutPanel1.Controls.Add(this.textBoxPhaseTwoDuration, 3, 2);
             this.tableLayoutPanel1.Location = new System.Drawing.Point(12, 31);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 3;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
@@ -138,8 +137,8 @@
             // textBoxPhaseOneCurrent
             // 
             this.textBoxPhaseOneCurrent.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.textBoxPhaseOneCurrent.Location = new System.Drawing.Point(120, 34);
-            this.textBoxPhaseOneCurrent.Margin = new System.Windows.Forms.Padding(15, 3, 15, 3);
+            this.textBoxPhaseOneCurrent.Location = new System.Drawing.Point(120, 33);
+            this.textBoxPhaseOneCurrent.Margin = new System.Windows.Forms.Padding(15, 2, 15, 2);
             this.textBoxPhaseOneCurrent.Name = "textBoxPhaseOneCurrent";
             this.textBoxPhaseOneCurrent.Size = new System.Drawing.Size(75, 22);
             this.textBoxPhaseOneCurrent.TabIndex = 0;
@@ -147,8 +146,8 @@
             // textBoxInterPhaseCurrent
             // 
             this.textBoxInterPhaseCurrent.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.textBoxInterPhaseCurrent.Location = new System.Drawing.Point(225, 34);
-            this.textBoxInterPhaseCurrent.Margin = new System.Windows.Forms.Padding(15, 3, 15, 3);
+            this.textBoxInterPhaseCurrent.Location = new System.Drawing.Point(225, 33);
+            this.textBoxInterPhaseCurrent.Margin = new System.Windows.Forms.Padding(15, 2, 15, 2);
             this.textBoxInterPhaseCurrent.Name = "textBoxInterPhaseCurrent";
             this.textBoxInterPhaseCurrent.Size = new System.Drawing.Size(75, 22);
             this.textBoxInterPhaseCurrent.TabIndex = 1;
@@ -156,8 +155,8 @@
             // textBoxPhaseTwoCurrent
             // 
             this.textBoxPhaseTwoCurrent.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.textBoxPhaseTwoCurrent.Location = new System.Drawing.Point(330, 34);
-            this.textBoxPhaseTwoCurrent.Margin = new System.Windows.Forms.Padding(15, 3, 15, 3);
+            this.textBoxPhaseTwoCurrent.Location = new System.Drawing.Point(330, 33);
+            this.textBoxPhaseTwoCurrent.Margin = new System.Windows.Forms.Padding(15, 2, 15, 2);
             this.textBoxPhaseTwoCurrent.Name = "textBoxPhaseTwoCurrent";
             this.textBoxPhaseTwoCurrent.Size = new System.Drawing.Size(75, 22);
             this.textBoxPhaseTwoCurrent.TabIndex = 2;
@@ -165,8 +164,8 @@
             // textBoxPhaseOneDuration
             // 
             this.textBoxPhaseOneDuration.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.textBoxPhaseOneDuration.Location = new System.Drawing.Point(120, 65);
-            this.textBoxPhaseOneDuration.Margin = new System.Windows.Forms.Padding(15, 3, 15, 3);
+            this.textBoxPhaseOneDuration.Location = new System.Drawing.Point(120, 64);
+            this.textBoxPhaseOneDuration.Margin = new System.Windows.Forms.Padding(15, 2, 15, 2);
             this.textBoxPhaseOneDuration.Name = "textBoxPhaseOneDuration";
             this.textBoxPhaseOneDuration.Size = new System.Drawing.Size(75, 22);
             this.textBoxPhaseOneDuration.TabIndex = 3;
@@ -174,8 +173,8 @@
             // textBoxInterPhaseDuration
             // 
             this.textBoxInterPhaseDuration.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.textBoxInterPhaseDuration.Location = new System.Drawing.Point(225, 65);
-            this.textBoxInterPhaseDuration.Margin = new System.Windows.Forms.Padding(15, 3, 15, 3);
+            this.textBoxInterPhaseDuration.Location = new System.Drawing.Point(225, 64);
+            this.textBoxInterPhaseDuration.Margin = new System.Windows.Forms.Padding(15, 2, 15, 2);
             this.textBoxInterPhaseDuration.Name = "textBoxInterPhaseDuration";
             this.textBoxInterPhaseDuration.Size = new System.Drawing.Size(75, 22);
             this.textBoxInterPhaseDuration.TabIndex = 4;
@@ -183,8 +182,8 @@
             // textBoxPhaseTwoDuration
             // 
             this.textBoxPhaseTwoDuration.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.textBoxPhaseTwoDuration.Location = new System.Drawing.Point(330, 65);
-            this.textBoxPhaseTwoDuration.Margin = new System.Windows.Forms.Padding(15, 3, 15, 3);
+            this.textBoxPhaseTwoDuration.Location = new System.Drawing.Point(330, 64);
+            this.textBoxPhaseTwoDuration.Margin = new System.Windows.Forms.Padding(15, 2, 15, 2);
             this.textBoxPhaseTwoDuration.Name = "textBoxPhaseTwoDuration";
             this.textBoxPhaseTwoDuration.Size = new System.Drawing.Size(75, 22);
             this.textBoxPhaseTwoDuration.TabIndex = 5;
@@ -192,7 +191,7 @@
             // labelPulsePeriod
             // 
             this.labelPulsePeriod.AutoSize = true;
-            this.labelPulsePeriod.Location = new System.Drawing.Point(106, 146);
+            this.labelPulsePeriod.Location = new System.Drawing.Point(107, 146);
             this.labelPulsePeriod.Name = "labelPulsePeriod";
             this.labelPulsePeriod.Size = new System.Drawing.Size(109, 16);
             this.labelPulsePeriod.TabIndex = 4;
@@ -200,7 +199,8 @@
             // 
             // textBoxBurstPulseCount
             // 
-            this.textBoxBurstPulseCount.Location = new System.Drawing.Point(132, 200);
+            this.textBoxBurstPulseCount.Location = new System.Drawing.Point(132, 199);
+            this.textBoxBurstPulseCount.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textBoxBurstPulseCount.Name = "textBoxBurstPulseCount";
             this.textBoxBurstPulseCount.Size = new System.Drawing.Size(75, 22);
             this.textBoxBurstPulseCount.TabIndex = 2;
@@ -218,13 +218,15 @@
             // textBoxPulsePeriod
             // 
             this.textBoxPulsePeriod.Location = new System.Drawing.Point(237, 146);
+            this.textBoxPulsePeriod.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textBoxPulsePeriod.Name = "textBoxPulsePeriod";
             this.textBoxPulsePeriod.Size = new System.Drawing.Size(75, 22);
             this.textBoxPulsePeriod.TabIndex = 1;
             // 
             // textBoxInterBurstInterval
             // 
-            this.textBoxInterBurstInterval.Location = new System.Drawing.Point(342, 203);
+            this.textBoxInterBurstInterval.Location = new System.Drawing.Point(341, 203);
+            this.textBoxInterBurstInterval.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textBoxInterBurstInterval.Name = "textBoxInterBurstInterval";
             this.textBoxInterBurstInterval.Size = new System.Drawing.Size(75, 22);
             this.textBoxInterBurstInterval.TabIndex = 3;
@@ -232,7 +234,7 @@
             // labelInterBurstInterval
             // 
             this.labelInterBurstInterval.AutoSize = true;
-            this.labelInterBurstInterval.Location = new System.Drawing.Point(245, 200);
+            this.labelInterBurstInterval.Location = new System.Drawing.Point(245, 199);
             this.labelInterBurstInterval.Name = "labelInterBurstInterval";
             this.labelInterBurstInterval.Size = new System.Drawing.Size(75, 32);
             this.labelInterBurstInterval.TabIndex = 8;
@@ -241,6 +243,7 @@
             // textBoxTrainBurstCount
             // 
             this.textBoxTrainBurstCount.Location = new System.Drawing.Point(132, 251);
+            this.textBoxTrainBurstCount.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textBoxTrainBurstCount.Name = "textBoxTrainBurstCount";
             this.textBoxTrainBurstCount.Size = new System.Drawing.Size(75, 22);
             this.textBoxTrainBurstCount.TabIndex = 4;
@@ -255,29 +258,11 @@
             this.labelTrainBurstCount.TabIndex = 10;
             this.labelTrainBurstCount.Text = "Train Burst Count";
             // 
-            // textBoxTrainDelay
-            // 
-            this.textBoxTrainDelay.Location = new System.Drawing.Point(342, 251);
-            this.textBoxTrainDelay.Name = "textBoxTrainDelay";
-            this.textBoxTrainDelay.Size = new System.Drawing.Size(75, 22);
-            this.textBoxTrainDelay.TabIndex = 5;
-            // 
-            // labelTriggerDelay
-            // 
-            this.labelTriggerDelay.AutoSize = true;
-            this.labelTriggerDelay.Location = new System.Drawing.Point(225, 254);
-            this.labelTriggerDelay.Name = "labelTriggerDelay";
-            this.labelTriggerDelay.Size = new System.Drawing.Size(102, 16);
-            this.labelTriggerDelay.TabIndex = 12;
-            this.labelTriggerDelay.Text = "Train Delay [µs]";
-            // 
             // Headstage64ElectricalStimulatorOptions
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(438, 289);
-            this.Controls.Add(this.textBoxTrainDelay);
-            this.Controls.Add(this.labelTriggerDelay);
+            this.ClientSize = new System.Drawing.Size(437, 289);
             this.Controls.Add(this.textBoxTrainBurstCount);
             this.Controls.Add(this.labelTrainBurstCount);
             this.Controls.Add(this.textBoxInterBurstInterval);
@@ -287,6 +272,7 @@
             this.Controls.Add(this.textBoxPulsePeriod);
             this.Controls.Add(this.labelPulsePeriod);
             this.Controls.Add(this.tableLayoutPanel1);
+            this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "Headstage64ElectricalStimulatorOptions";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Headstage64ElectricalStimulatorOptions";
@@ -319,7 +305,5 @@
         private System.Windows.Forms.Label labelInterBurstInterval;
         internal System.Windows.Forms.TextBox textBoxTrainBurstCount;
         private System.Windows.Forms.Label labelTrainBurstCount;
-        internal System.Windows.Forms.TextBox textBoxTrainDelay;
-        private System.Windows.Forms.Label labelTriggerDelay;
     }
 }
