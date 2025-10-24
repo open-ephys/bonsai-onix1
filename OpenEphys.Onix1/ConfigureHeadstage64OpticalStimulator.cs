@@ -47,7 +47,7 @@ namespace OpenEphys.Onix1
             DeviceName = opticalStimulator.DeviceName;
             DeviceAddress = opticalStimulator.DeviceAddress;
             Enable = opticalStimulator.Enable;
-            StimEnable = opticalStimulator.StimEnable;
+            Arm = opticalStimulator.Arm;
             MaxCurrent = opticalStimulator.MaxCurrent;
             ChannelOneCurrent = opticalStimulator.ChannelOneCurrent;
             ChannelTwoCurrent = opticalStimulator.ChannelTwoCurrent;
@@ -84,19 +84,18 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets or sets the device enable state.
+        /// Gets or sets the device arm state.
         /// </summary>
         /// <remarks>
         /// If set to true, then the optical stimulator circuit will respect triggers. If set to false, triggers will be ignored.
         /// </remarks>
         [Description("Specifies whether the optical stimulator will respect triggers.")]
         [Category(AcquisitionCategory)]
-        public bool StimEnable
+        public bool Arm
         {
             get => stimEnable.Value;
             set => stimEnable.OnNext(value);
         }
-
 
         /// <summary>
         /// Gets or sets the Maximum current per channel per pulse in mA.
@@ -350,8 +349,8 @@ namespace OpenEphys.Onix1
         public const uint MinRheostatResistanceOhms = 590;
         public const uint PotResistanceOhms = 100_000;
 
-        public const double MinCurrent = 0.0;
-        public const double MaxCurrent = 300.0;
+        public const double MinCurrent = 5.822; // NB: This is the lowest allowable maximum current
+        public const double MaxCurrent = 150.0; // NB: this is not the physical limit, but its a reasonable practical upper boundary
 
         public const double MinChannelPercentage = 0.0;
         public const double MaxChannelPercentage = 100.0;
@@ -393,7 +392,7 @@ namespace OpenEphys.Onix1
 
         internal static double PotSettingToMilliamps(uint potSetting)
         {
-            var R = MinRheostatResistanceOhms + PotResistanceOhms * potSetting / 256; 
+            var R = MinRheostatResistanceOhms + PotResistanceOhms * potSetting / 255; 
             return 3.833e+05 * Math.Pow(R, -0.9632);
         }
 

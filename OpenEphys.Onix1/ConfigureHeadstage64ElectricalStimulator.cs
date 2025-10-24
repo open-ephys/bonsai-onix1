@@ -48,7 +48,7 @@ namespace OpenEphys.Onix1
             DeviceName = electricalStimulator.DeviceName;
             DeviceAddress = electricalStimulator.DeviceAddress;
             Enable = electricalStimulator.Enable;
-            StimEnable = electricalStimulator.StimEnable;
+            Arm = electricalStimulator.Arm;
             PhaseOneCurrent = electricalStimulator.PhaseOneCurrent;
             InterPhaseCurrent = electricalStimulator.InterPhaseCurrent;
             PhaseTwoCurrent = electricalStimulator.PhaseTwoCurrent;
@@ -73,19 +73,17 @@ namespace OpenEphys.Onix1
         public bool Enable { get; set; }
 
         /// <summary>
-        /// Gets or sets the device enable state.
+        /// Gets or sets the device arm state.
         /// </summary>
         /// <remarks>
         /// If set to true, then the electrical stimulator's ±15V power supplies will be turned on and the
         /// electrical stimulator circuit will respect triggers. If set to false, the power supplies will be
-        /// shut down and triggers will be ignored.It may be desirable to power down the electrical
-        /// stimulator's power supplies outside of stimulation windows to reduce power consumption and
-        /// electrical noise. This property must be set to true in order for electrical stimuli to be
-        /// delivered properly. It takes ~10 milliseconds for these supplies to stabilize.
+        /// shut down and triggers will be ignored. It takes ~10 milliseconds for the power supplies to to
+        /// stabilize.
         /// </remarks>
         [Description("Specifies whether the electrical stimulator will respect triggers.")]
         [Category(AcquisitionCategory)]
-        public bool StimEnable
+        public bool Arm
         {
             get => stimEnable.Value;
             set => stimEnable.OnNext(value);

@@ -8,7 +8,7 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Controls a headstage-64 onboard electrical stimulus sequencer.
+    /// Trigger a headstage-64 onboard electrical stimulus sequencer.
     /// </summary>
     /// <remarks>
     /// This data IO operator must be linked to an appropriate configuration, such as a <see

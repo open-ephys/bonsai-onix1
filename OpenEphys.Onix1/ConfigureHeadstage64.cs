@@ -165,6 +165,11 @@ namespace OpenEphys.Onix1
 
         class ConfigureHeadstage64PortController : ConfigurePortController
         {
+            public ConfigureHeadstage64PortController()
+                : base(typeof(Headstage64PortController))
+            {
+            }
+
             protected override bool ConfigurePortVoltageOverride(DeviceContext device, double voltage)
             {
                 // NB: Wait for 1 second to discharge the headstage in the case that they have e.g. just
@@ -213,6 +218,20 @@ namespace OpenEphys.Onix1
                 device.WriteRegister(PortController.PORTVOLTAGE, (uint)(10 * voltage));
                 Thread.Sleep(200);
                 return CheckLinkState(device);
+            }
+        }
+
+        internal static class Headstage64PortController
+        {
+            public const int ID = PortController.ID;
+            public const uint MinimumVersion = PortController.MinimumVersion;
+
+            internal class NameConverter : DeviceNameConverter
+            {
+                public NameConverter()
+                    : base(typeof(Headstage64PortController))
+                {
+                }
             }
         }
     }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
+using static OpenEphys.Onix1.ConfigureHeadstage64;
 
 namespace OpenEphys.Onix1
 {
@@ -105,6 +106,11 @@ namespace OpenEphys.Onix1
 
         class ConfigureNeuropixelsV1ePortController : ConfigurePortController
         {
+            public ConfigureNeuropixelsV1ePortController()
+                : base(typeof(PortController))
+            {
+            }
+
             protected override bool ConfigurePortVoltage(DeviceContext device, out double voltage)
             {
                 const double MinVoltage = 3.3;

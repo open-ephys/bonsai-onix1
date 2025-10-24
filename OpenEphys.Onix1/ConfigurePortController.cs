@@ -8,8 +8,8 @@ namespace OpenEphys.Onix1
 {
     internal abstract class ConfigurePortController : SingleDeviceFactory
     {
-        public ConfigurePortController()
-            : base(typeof(PortController))
+        public ConfigurePortController(Type deviceType)
+            : base(deviceType)
         {
         }
 
