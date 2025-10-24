@@ -26,6 +26,18 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
+        /// Initializes a copy instance of the <see cref="ConfigurePersistentHeartbeat"/> class with the given values.
+        /// </summary>
+        /// <param name="configureHeartbeat">Existing configuration settings.</param>
+        public ConfigurePersistentHeartbeat(ConfigurePersistentHeartbeat configureHeartbeat)
+            : this()
+        {
+            DeviceAddress = configureHeartbeat.DeviceAddress;
+            DeviceName = configureHeartbeat.DeviceName;
+            BeatsPerSecond = configureHeartbeat.BeatsPerSecond;
+        }
+
+        /// <summary>
         /// Gets or sets the rate at which beats are produced in Hz.
         /// </summary>
         [Range(100, 10e6)]
@@ -50,7 +62,6 @@ namespace OpenEphys.Onix1
         /// configure a persistent heartbeat device./></returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
-            //var enable = Enable;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
             return source.ConfigureDevice((context, observer) =>
