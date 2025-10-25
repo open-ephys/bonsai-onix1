@@ -11,14 +11,15 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// This data IO operator must be linked to an appropriate configuration, such as a <see
-    /// cref="ConfigureHeadstage64.Headstage64PortController"/>, using a shared <c>DeviceName</c>. This
-    /// operator can be used to deliver stimuli with lower latencies than <see
-    /// cref="Headstage64ElectricalStimulatorTrigger"/> or <see cref="Headstage64OpticalStimulatorTrigger"/>
-    /// since it uses a dedicated GPO line rather than a register write to trigger stimulation. However, the
-    /// trigger will be delivered to both of the stimulators so care must be taken to ensure only the
-    /// appropriate stimulator is armed when the trigger is sent. 
+    /// cref="ConfigureHeadstage64.Headstage64PortController"/>, using a shared <c>DeviceName</c>. Each
+    /// headstage port has a GPO interface for sending digital signals to the headstage with low latency. This
+    /// operator uses a dedicated GPO line rather than a register write to trigger stimulation and therefore
+    /// has lower latencies than <see cref="Headstage64ElectricalStimulatorTrigger"/> or <see
+    /// cref="Headstage64OpticalStimulatorTrigger"/>. However, the trigger will be delivered to both of the
+    /// stimulators so care must be taken to ensure only the appropriate stimulator is armed when the trigger
+    /// is sent. 
     /// </remarks>
-    [Description("Controls a headstage-64 onboard optical stimulus sequencer.")]
+    [Description("Triggers a headstage-64 stimulator using the port controller's general purpose output (GPO)")]
     public class Headstage64GpoTrigger : Sink<bool>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>

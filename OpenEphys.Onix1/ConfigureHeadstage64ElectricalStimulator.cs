@@ -252,6 +252,8 @@ namespace OpenEphys.Onix1
                         device.WriteRegister(Headstage64ElectricalStimulator.STIMENABLE, value ? 3u : 0u)),
                     phaseOneCurrent.SubscribeSafe(observer, value =>
                         device.WriteRegister(Headstage64ElectricalStimulator.CURRENT1, Headstage64ElectricalStimulator.MicroampsToCode(value))),
+                    interPhaseCurrent.SubscribeSafe(observer, value => 
+                        device.WriteRegister(Headstage64ElectricalStimulator.RESTCURRENT, Headstage64ElectricalStimulator.MicroampsToCode(value))),
                     phaseTwoCurrent.SubscribeSafe(observer, value =>
                         device.WriteRegister(Headstage64ElectricalStimulator.CURRENT2, Headstage64ElectricalStimulator.MicroampsToCode(value))),
                     phaseOneDuration.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.PULSEDUR1, value)),

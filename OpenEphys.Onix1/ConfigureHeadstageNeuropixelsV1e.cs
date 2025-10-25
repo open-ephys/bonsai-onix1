@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
-using static OpenEphys.Onix1.ConfigureHeadstage64;
 
 namespace OpenEphys.Onix1
 {
