@@ -335,7 +335,7 @@ namespace OpenEphys.Onix1
                         device.WriteRegister(Headstage64OpticalStimulator.IBI, (uint)(1000 * value))),
                     burstsPerTrain.SubscribeSafe(observer, value =>
                         device.WriteRegister(Headstage64OpticalStimulator.TRAINCOUNT, value)),
-                    DeviceManager.RegisterDevice(deviceName, device, DeviceType));;;
+                    DeviceManager.RegisterDevice(deviceName, device, DeviceType));
             });
         }
     }
