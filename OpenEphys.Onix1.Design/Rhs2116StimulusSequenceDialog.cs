@@ -15,7 +15,9 @@ namespace OpenEphys.Onix1.Design
         const double SamplePeriodMilliSeconds = 1e3 / Rhs2116.SampleFrequencyHz;
         const int NumberOfChannels = 32;
 
-        internal Rhs2116StimulusSequencePair Sequence { get; set; }
+        internal Rhs2116StimulusSequencePair Sequence { get => Trigger.StimulusSequence; }
+
+        internal ConfigureRhs2116Trigger Trigger { get; set; }
 
         readonly Rhs2116StimulusSequencePair SequenceCopy = new();
 
@@ -35,19 +37,18 @@ namespace OpenEphys.Onix1.Design
         /// Opens a dialog allowing for easy changing of stimulus sequence parameters, with 
         /// visual feedback on what the resulting stimulus sequence looks like.
         /// </summary>
-        /// <param name="sequence">Stimulus sequence containing 32 channels of stimuli.</param>
-        /// <param name="probeGroup">Probe group containing ProbeInterface specifications for 32 contacts.</param>
-        public Rhs2116StimulusSequenceDialog(Rhs2116StimulusSequencePair sequence, Rhs2116ProbeGroup probeGroup)
+        /// <param name="rhs2116Trigger">Existing <see cref="ConfigureRhs2116Trigger"/> object.</param>
+        public Rhs2116StimulusSequenceDialog(ConfigureRhs2116Trigger rhs2116Trigger)
             : base(NumberOfChannels, true, true)
         {
-            if (probeGroup.NumberOfContacts != NumberOfChannels)
+            if (rhs2116Trigger.ProbeGroup.NumberOfContacts != NumberOfChannels)
             {
-                throw new ArgumentException($"Probe group is not valid: {NumberOfChannels} channels were expected, there are {probeGroup.NumberOfContacts} instead.");
+                throw new ArgumentException($"Probe group is not valid: {NumberOfChannels} channels were expected, there are {rhs2116Trigger.ProbeGroup.NumberOfContacts} instead.");
             }
 
             InitializeComponent();
 
-            Sequence = new Rhs2116StimulusSequencePair(sequence);
+            Trigger = new(rhs2116Trigger);
 
             dataGridViewStimulusTable.DataBindingComplete += DataBindingComplete;
             SetTableDataSource();
@@ -63,7 +64,7 @@ namespace OpenEphys.Onix1.Design
 
             StepSize = Sequence.CurrentStepSize;
 
-            ChannelDialog = new(probeGroup);
+            ChannelDialog = new(rhs2116Trigger.ProbeGroup);
 
             ChannelDialog.SetChildFormProperties(this).AddDialogToPanel(panelProbe);
             this.AddMenuItemsFromDialogToFileOption(ChannelDialog, "Channel Configuration");
@@ -278,11 +279,6 @@ namespace OpenEphys.Onix1.Design
 
         internal override void SetStatusValidity()
         {
-            if (Sequence == null)
-            {
-                return;
-            }
-
             if (Sequence.Valid && Sequence.FitsInHardware)
             {
                 toolStripStatusIsValid.Image = Properties.Resources.StatusReadyImage;
@@ -919,16 +915,16 @@ namespace OpenEphys.Onix1.Design
 
         internal override bool IsSequenceValid()
         {
-            return Sequence.Valid;
+            return Sequence.Valid && Sequence.FitsInHardware;
         }
 
         internal override void DeserializeStimulusSequence(string fileName)
         {
-            var sequence = DesignHelper.DeserializeString<Rhs2116StimulusSequencePair>(File.ReadAllText(fileName));
+            var newSequence = DesignHelper.DeserializeString<Rhs2116StimulusSequencePair>(File.ReadAllText(fileName));
 
-            if (sequence != null && sequence.Stimuli.Length == 32)
+            if (newSequence != null && newSequence.Stimuli.Length == 32)
             {
-                if (sequence == new Rhs2116StimulusSequencePair())
+                if (newSequence == new Rhs2116StimulusSequencePair())
                 {
                     var result = MessageBox.Show("The stimulus sequence loaded does not have any configuration settings applied. " +
                         "This could be because the file did not have the correct format. If this sequence is loaded, it will clear out " +
@@ -940,15 +936,15 @@ namespace OpenEphys.Onix1.Design
                     }
                 }
 
-                Sequence = sequence;
+                Trigger.StimulusSequence = newSequence;
 
-                for (int i = 0; i < Sequence.Stimuli.Length; i++)
+                for (int i = 0; i < newSequence.Stimuli.Length; i++)
                 {
-                    RequestedAnodicAmplitudeuA[i] = Sequence.Stimuli[i].AnodicAmplitudeSteps * Sequence.CurrentStepSizeuA;
-                    RequestedCathodicAmplitudeuA[i] = Sequence.Stimuli[i].CathodicAmplitudeSteps * Sequence.CurrentStepSizeuA;
+                    RequestedAnodicAmplitudeuA[i] = newSequence.Stimuli[i].AnodicAmplitudeSteps * newSequence.CurrentStepSizeuA;
+                    RequestedCathodicAmplitudeuA[i] = newSequence.Stimuli[i].CathodicAmplitudeSteps * newSequence.CurrentStepSizeuA;
                 }
 
-                if (!Sequence.Valid)
+                if (!newSequence.Valid)
                 {
                     MessageBox.Show("Warning: Invalid stimuli found in the recently opened file. Check all values to ensure they are what is expected.",
                         "Invalid Stimuli", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -962,10 +958,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override void SetTableDataSource()
         {
-            if (Sequence == null)
-                return;
-
-            dataGridViewStimulusTable.DataSource = Sequence.Stimuli;
+            dataGridViewStimulusTable.DataSource = Trigger?.StimulusSequence.Stimuli;
         }
 
         private void DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
