@@ -22,6 +22,11 @@ namespace OpenEphys.Onix1.Design
         public Headstage64ElectricalStimulatorOptions(ConfigureHeadstage64ElectricalStimulator electricalStimulator)
             : this()
         {
+            UpdateControls(electricalStimulator);
+        }
+
+        internal void UpdateControls(ConfigureHeadstage64ElectricalStimulator electricalStimulator)
+        {
             textBoxPhaseOneCurrent.Text = electricalStimulator.PhaseOneCurrent.ToString();
             textBoxPhaseOneDuration.Text = electricalStimulator.PhaseOneDuration.ToString();
 
