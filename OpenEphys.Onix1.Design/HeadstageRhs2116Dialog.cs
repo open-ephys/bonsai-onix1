@@ -15,22 +15,16 @@ namespace OpenEphys.Onix1.Design
         internal readonly Rhs2116StimulusSequenceDialog StimulusSequenceDialog;
         internal readonly GenericDeviceDialog Rhs2116Dialog;
 
-        internal Rhs2116ProbeGroup ProbeGroup;
-
         /// <summary>
         /// Initializes a new instance of a <see cref="HeadstageRhs2116Dialog"/>.
         /// </summary>
-        /// <param name="probeGroup">Current channel configuration settings for a <see cref="Rhs2116ProbeGroup"/>.</param>
-        /// <param name="sequence">Current stimulus sequence for a <see cref="Rhs2116StimulusSequencePair"/>.</param>
+        /// <param name="rhs2116Trigger">Current configuration settings for <see cref="ConfigureRhs2116Trigger"/>.</param>
         /// <param name="rhs2116">Current configuration settings for a single <see cref="ConfigureRhs2116"/>.</param>
-        public HeadstageRhs2116Dialog(Rhs2116ProbeGroup probeGroup, Rhs2116StimulusSequencePair sequence,
-            ConfigureRhs2116Pair rhs2116)
+        public HeadstageRhs2116Dialog(ConfigureRhs2116Trigger rhs2116Trigger, ConfigureRhs2116Pair rhs2116)
         {
             InitializeComponent();
 
-            ProbeGroup = new Rhs2116ProbeGroup(probeGroup);
-
-            StimulusSequenceDialog = new Rhs2116StimulusSequenceDialog(sequence, ProbeGroup);
+            StimulusSequenceDialog = new Rhs2116StimulusSequenceDialog(rhs2116Trigger);
 
             StimulusSequenceDialog.SetChildFormProperties(this).AddDialogToTab(tabPageStimulusSequence);
             this.AddMenuItemsFromDialogToFileOption(StimulusSequenceDialog);
