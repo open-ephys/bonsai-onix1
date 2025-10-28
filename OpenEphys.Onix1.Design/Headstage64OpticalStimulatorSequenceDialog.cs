@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using ZedGraph;
@@ -15,7 +14,10 @@ namespace OpenEphys.Onix1.Design
     {
         readonly static int NumberOfChannels = 2;
 
-        internal readonly ConfigureHeadstage64OpticalStimulator OpticalStimulator;
+        internal ConfigureHeadstage64OpticalStimulator OpticalStimulator
+        {
+            get => (ConfigureHeadstage64OpticalStimulator)Device;
+        }
         readonly Headstage64OpticalStimulatorOptions StimulusSequenceOptions;
 
         readonly Dictionary<TextBox, TextBoxBinding<double>> currentBindings;
@@ -28,19 +30,19 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <param name="opticalStimulator">Existing stimulus sequence.</param>
         public Headstage64OpticalStimulatorSequenceDialog(ConfigureHeadstage64OpticalStimulator opticalStimulator)
-            : base(NumberOfChannels, false)
+            : base(new ConfigureHeadstage64OpticalStimulator(opticalStimulator), NumberOfChannels, false)
         {
             InitializeComponent();
             HideMenuStrip();
 
-            OpticalStimulator = new(opticalStimulator);
-
             StimulusSequenceOptions = new(OpticalStimulator);
             StimulusSequenceOptions.SetChildFormProperties(this);
-            groupBoxDefineStimuli.Controls.Add(StimulusSequenceOptions);
+            tabPageDefineStimuli.Controls.Add(StimulusSequenceOptions);
 
             StimulusSequenceOptions.trackBarChannelOnePercent.Scroll += ChannelPercentTrackBarChanged;
             StimulusSequenceOptions.trackBarChannelTwoPercent.Scroll += ChannelPercentTrackBarChanged;
+
+            void refreshPropertyGrid() => propertyGrid.Refresh();
 
             currentBindings = new()
             {
@@ -48,7 +50,8 @@ namespace OpenEphys.Onix1.Design
                     new TextBoxBinding<double>(
                         StimulusSequenceOptions.textBoxMaxCurrent,
                         value => { OpticalStimulator.MaxCurrent = value; return OpticalStimulator.MaxCurrent; },
-                        double.Parse) },
+                        double.Parse,
+                        onChanged: refreshPropertyGrid) },
                 { StimulusSequenceOptions.textBoxChannelOnePercent,
                     new TextBoxBinding<double>(
                         StimulusSequenceOptions.textBoxChannelOnePercent,
@@ -58,7 +61,8 @@ namespace OpenEphys.Onix1.Design
                             StimulusSequenceOptions.trackBarChannelOnePercent.Value = (int)(OpticalStimulator.ChannelOneCurrent * StimulusSequenceOptions.channelOneScalingFactor);
                             return OpticalStimulator.ChannelOneCurrent;
                         },
-                        double.Parse) },
+                        double.Parse,
+                        onChanged: refreshPropertyGrid) },
                 { StimulusSequenceOptions.textBoxChannelTwoPercent,
                     new TextBoxBinding<double>(
                         StimulusSequenceOptions.textBoxChannelTwoPercent,
@@ -68,7 +72,8 @@ namespace OpenEphys.Onix1.Design
                             StimulusSequenceOptions.trackBarChannelTwoPercent.Value = (int)(OpticalStimulator.ChannelTwoCurrent * StimulusSequenceOptions.channelTwoScalingFactor);
                             return OpticalStimulator.ChannelTwoCurrent;
                         },
-                        double.Parse) }
+                        double.Parse,
+                        onChanged: refreshPropertyGrid) }
             };
 
             timeBindings = new()
@@ -77,22 +82,26 @@ namespace OpenEphys.Onix1.Design
                     new TextBoxBinding<double>(
                         StimulusSequenceOptions.textBoxInterBurstInterval,
                         value => { OpticalStimulator.InterBurstInterval = value; return OpticalStimulator.InterBurstInterval; },
-                        double.Parse) },
+                        double.Parse,
+                        onChanged: refreshPropertyGrid) },
                 { StimulusSequenceOptions.textBoxDelay,
                     new TextBoxBinding<double>(
                         StimulusSequenceOptions.textBoxDelay,
                         value => { OpticalStimulator.Delay = value; return OpticalStimulator.Delay; },
-                        double.Parse) },
+                        double.Parse,
+                        onChanged: refreshPropertyGrid) },
                 { StimulusSequenceOptions.textBoxPulseDuration,
                     new TextBoxBinding<double>(
                         StimulusSequenceOptions.textBoxPulseDuration,
                         value => { OpticalStimulator.PulseDuration = value; return OpticalStimulator.PulseDuration; },
-                        double.Parse) },
+                        double.Parse,
+                        onChanged: refreshPropertyGrid) },
                 { StimulusSequenceOptions.textBoxPulsePeriod,
                     new TextBoxBinding<double>(
                         StimulusSequenceOptions.textBoxPulsePeriod,
                         value => { OpticalStimulator.PulsesPerSecond = value; return OpticalStimulator.PulsesPerSecond; },
-                        double.Parse) },
+                        double.Parse,
+                        onChanged: refreshPropertyGrid) },
             };
 
             countBindings = new()
@@ -101,12 +110,14 @@ namespace OpenEphys.Onix1.Design
                     new TextBoxBinding<uint>(
                         StimulusSequenceOptions.textBoxPulsesPerBurst,
                         value => { OpticalStimulator.PulsesPerBurst = value; return OpticalStimulator.PulsesPerBurst; },
-                        uint.Parse) },
+                        uint.Parse,
+                        onChanged: refreshPropertyGrid) },
                 { StimulusSequenceOptions.textBoxBurstsPerTrain,
                     new TextBoxBinding<uint>(
                         StimulusSequenceOptions.textBoxBurstsPerTrain,
                         value => { OpticalStimulator.BurstsPerTrain = value; return OpticalStimulator.BurstsPerTrain; },
-                        uint.Parse) }
+                        uint.Parse,
+                        onChanged: refreshPropertyGrid) }
             };
 
             foreach (var binding in currentBindings)
@@ -195,6 +206,8 @@ namespace OpenEphys.Onix1.Design
                 {
                     throw new NotImplementedException($"Could not find a valid track bar when updating parameters in {nameof(Headstage64OpticalStimulatorSequenceDialog)}");
                 }
+
+                propertyGrid.Refresh();
 
                 DrawStimulusWaveform();
             }
@@ -304,6 +317,13 @@ namespace OpenEphys.Onix1.Design
                 toolStripStatusIsValid.Image = Properties.Resources.StatusBlockedImage;
                 toolStripStatusIsValid.Text = "Warning: " + reason;
             }
+        }
+
+        internal override void UpdateControls(object obj)
+        {
+            StimulusSequenceOptions.UpdateSequenceParameters((ConfigureHeadstage64OpticalStimulator)obj);
+
+            DrawStimulusWaveform();
         }
     }
 }

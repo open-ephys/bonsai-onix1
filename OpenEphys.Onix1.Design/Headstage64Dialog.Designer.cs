@@ -97,7 +97,7 @@
             this.buttonOK.UseVisualStyleBackColor = true;
             this.buttonOK.Click += new System.EventHandler(this.OnClickOk);
             // 
-            // tabControl
+            // tabControlProperties
             // 
             this.tabControl.Controls.Add(this.tabPageElectricalStimulator);
             this.tabControl.Controls.Add(this.tabPageOpticalStimulator);
@@ -107,7 +107,7 @@
             this.tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl.Location = new System.Drawing.Point(3, 2);
             this.tabControl.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabControl.Name = "tabControl";
+            this.tabControl.Name = "tabControlProperties";
             this.tabControl.SelectedIndex = 0;
             this.tabControl.Size = new System.Drawing.Size(1178, 541);
             this.tabControl.TabIndex = 1;

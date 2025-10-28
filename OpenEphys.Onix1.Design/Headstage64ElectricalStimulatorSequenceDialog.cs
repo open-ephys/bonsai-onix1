@@ -12,7 +12,10 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     public partial class Headstage64ElectricalStimulatorSequenceDialog : GenericStimulusSequenceDialog
     {
-        internal readonly ConfigureHeadstage64ElectricalStimulator ElectricalStimulator;
+        internal ConfigureHeadstage64ElectricalStimulator ElectricalStimulator
+        {
+            get => (ConfigureHeadstage64ElectricalStimulator)Device;
+        }
         readonly Headstage64ElectricalStimulatorOptions StimulusSequenceOptions;
 
         readonly static int NumberOfChannels = 1;
@@ -27,16 +30,16 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <param name="electricalStimulator">Existing stimulus sequence.</param>
         public Headstage64ElectricalStimulatorSequenceDialog(ConfigureHeadstage64ElectricalStimulator electricalStimulator)
-            : base(NumberOfChannels, false)
+            : base(new ConfigureHeadstage64ElectricalStimulator(electricalStimulator), NumberOfChannels, false)
         {
             InitializeComponent();
             HideMenuStrip();
 
-            ElectricalStimulator = new(electricalStimulator);
-
             StimulusSequenceOptions = new(ElectricalStimulator);
             StimulusSequenceOptions.SetChildFormProperties(this);
-            groupBoxDefineStimuli.Controls.Add(StimulusSequenceOptions);
+            tabPageDefineStimuli.Controls.Add(StimulusSequenceOptions);
+
+            void refreshPropertyGrid() => propertyGrid.Refresh();
 
             currentBindings = new()
             {
@@ -44,17 +47,20 @@ namespace OpenEphys.Onix1.Design
                     new TextBoxBinding<double>(
                         StimulusSequenceOptions.textBoxPhaseOneCurrent,
                         value => { ElectricalStimulator.PhaseOneCurrent = value; return ElectricalStimulator.PhaseOneCurrent; },
-                        double.Parse) },
+                        double.Parse,
+                        onChanged: refreshPropertyGrid) },
                 { StimulusSequenceOptions.textBoxInterPhaseCurrent,
                     new TextBoxBinding<double>(
                         StimulusSequenceOptions.textBoxInterPhaseCurrent,
                         value => { ElectricalStimulator.InterPhaseCurrent = value; return ElectricalStimulator.InterPhaseCurrent; },
-                        double.Parse) },
+                        double.Parse,
+                        onChanged: refreshPropertyGrid) },
                 { StimulusSequenceOptions.textBoxPhaseTwoCurrent,
                     new TextBoxBinding<double>(
                         StimulusSequenceOptions.textBoxPhaseTwoCurrent,
                         value => { ElectricalStimulator.PhaseTwoCurrent = value; return ElectricalStimulator.PhaseTwoCurrent; },
-                        double.Parse) }
+                        double.Parse,
+                        onChanged: refreshPropertyGrid) }
             };
 
             timeBindings = new Dictionary<TextBox, TextBoxBinding<uint>>
@@ -63,32 +69,38 @@ namespace OpenEphys.Onix1.Design
                     new TextBoxBinding<uint>(
                         StimulusSequenceOptions.textBoxPhaseOneDuration,
                         value => { ElectricalStimulator.PhaseOneDuration = value; return ElectricalStimulator.PhaseOneDuration; },
-                        uint.Parse) },
+                        uint.Parse,
+                        onChanged: refreshPropertyGrid) },
                 { StimulusSequenceOptions.textBoxPhaseTwoDuration,
                     new TextBoxBinding<uint>(
                         StimulusSequenceOptions.textBoxPhaseTwoDuration,
                         value => { ElectricalStimulator.PhaseTwoDuration = value; return ElectricalStimulator.PhaseTwoDuration; },
-                        uint.Parse) },
+                        uint.Parse,
+                        onChanged: refreshPropertyGrid) },
                 { StimulusSequenceOptions.textBoxInterPhaseDuration,
                     new TextBoxBinding<uint>(
                         StimulusSequenceOptions.textBoxInterPhaseDuration,
                         value => { ElectricalStimulator.InterPhaseInterval = value; return ElectricalStimulator.InterPhaseInterval; },
-                        uint.Parse) },
+                        uint.Parse,
+                        onChanged: refreshPropertyGrid) },
                 { StimulusSequenceOptions.textBoxInterBurstInterval,
                     new TextBoxBinding<uint>(
                         StimulusSequenceOptions.textBoxInterBurstInterval,
                         value => { ElectricalStimulator.InterBurstInterval = value; return ElectricalStimulator.InterBurstInterval; },
-                        uint.Parse) },
+                        uint.Parse,
+                        onChanged: refreshPropertyGrid) },
                 { StimulusSequenceOptions.textBoxPulsePeriod,
                     new TextBoxBinding<uint>(
                         StimulusSequenceOptions.textBoxPulsePeriod,
                         value => { ElectricalStimulator.InterPulseInterval = value; return ElectricalStimulator.InterPulseInterval; },
-                        uint.Parse) },
+                        uint.Parse,
+                        onChanged: refreshPropertyGrid) },
                 { StimulusSequenceOptions.textBoxTrainDelay,
                     new TextBoxBinding<uint>(
                         StimulusSequenceOptions.textBoxTrainDelay,
                         value => { ElectricalStimulator.TriggerDelay = value; return ElectricalStimulator.TriggerDelay; },
-                        uint.Parse) }
+                        uint.Parse,
+                        onChanged: refreshPropertyGrid) }
             };
 
             countBindings = new Dictionary<TextBox, TextBoxBinding<uint>>
@@ -97,12 +109,14 @@ namespace OpenEphys.Onix1.Design
                     new TextBoxBinding<uint>(
                         StimulusSequenceOptions.textBoxBurstPulseCount,
                         value => { ElectricalStimulator.BurstPulseCount = value; return ElectricalStimulator.BurstPulseCount; },
-                        uint.Parse) },
+                        uint.Parse,
+                        onChanged: refreshPropertyGrid) },
                 { StimulusSequenceOptions.textBoxTrainBurstCount,
                     new TextBoxBinding<uint>(
                         StimulusSequenceOptions.textBoxTrainBurstCount,
                         value => { ElectricalStimulator.TrainBurstCount = value; return ElectricalStimulator.TrainBurstCount; },
-                        uint.Parse) }
+                        uint.Parse,
+                        onChanged: refreshPropertyGrid) }
             };
 
             foreach (var binding in currentBindings)
@@ -157,7 +171,6 @@ namespace OpenEphys.Onix1.Design
                     throw new Exception($"No valid text box found when updating parameters in {nameof(Headstage64ElectricalStimulatorSequenceDialog)}");
                 }
 
-                SetStatusValidity();
                 DrawStimulusWaveform();
             }
         }
@@ -324,6 +337,13 @@ namespace OpenEphys.Onix1.Design
                 toolStripStatusIsValid.Image = Properties.Resources.StatusBlockedImage;
                 toolStripStatusIsValid.Text = "Warning: " + reason;
             }
+        }
+
+        internal override void UpdateControls(object obj)
+        {
+            StimulusSequenceOptions.UpdateControls((ConfigureHeadstage64ElectricalStimulator)obj);
+
+            DrawStimulusWaveform();
         }
     }
 }
