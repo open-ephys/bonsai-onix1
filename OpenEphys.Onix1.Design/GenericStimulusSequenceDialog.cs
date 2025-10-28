@@ -12,6 +12,12 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     public partial class GenericStimulusSequenceDialog : Form
     {
+        internal object Device
+        {
+            get => propertyGrid.SelectedObject;
+            set => propertyGrid.SelectedObject = value;
+        }
+
         readonly int NumberOfChannels;
         readonly bool UseProbeGroup;
         readonly bool UseTable;
@@ -29,12 +35,15 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// Opens a dialog allowing for easy changing of stimulus sequence parameters, with visual feedback on what the resulting stimulus sequence looks like.
+        /// Opens a dialog allowing for easy changing of stimulus sequence parameters,
+        /// with visual feedback on what the resulting stimulus sequence looks like.
         /// </summary>
-        public GenericStimulusSequenceDialog(int numberOfChannels, bool useProbeGroup, bool useTable = false)
+        public GenericStimulusSequenceDialog(object device, int numberOfChannels, bool useProbeGroup, bool useTable = false)
         {
             InitializeComponent();
             Shown += FormShown;
+
+            Device = device;
 
             NumberOfChannels = numberOfChannels;
             UseProbeGroup = useProbeGroup;
@@ -43,9 +52,9 @@ namespace OpenEphys.Onix1.Design
             if (!UseProbeGroup)
             {
                 tableLayoutPanel1.Controls.Remove(panelProbe);
-                GroupBox gb = tableLayoutPanel1.Controls[nameof(groupBoxDefineStimuli)] as GroupBox;
-                tableLayoutPanel1.SetRow(gb, 0);
-                tableLayoutPanel1.SetRowSpan(gb, 2);
+                var control = tableLayoutPanel1.Controls[nameof(tabControlProperties)] as TabControl;
+                tableLayoutPanel1.SetRow(control, 0);
+                tableLayoutPanel1.SetRowSpan(control, 3);
             }
 
             if (!UseTable)
@@ -499,5 +508,12 @@ namespace OpenEphys.Onix1.Design
             zedGraphWaveform.Refresh();
         }
 
+        void PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
+        {
+            var propertyGrid = (PropertyGrid)s;
+            UpdateControls(propertyGrid.SelectedObject);
+        }
+
+        internal virtual void UpdateControls(object obj) { throw new NotImplementedException(); }
     }
 }
