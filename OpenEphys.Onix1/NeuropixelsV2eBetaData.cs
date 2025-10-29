@@ -70,10 +70,10 @@ namespace OpenEphys.Onix1
                     .Where(frame => NeuropixelsV2eBetaDataFrame.GetProbeIndex(frame) == (int)ProbeIndex);
                 var invertPolarity = info.InvertPolarity;
 
-                var gainCorrection = ProbeIndex switch
+                double gainCorrection = ProbeIndex switch
                 {
-                    NeuropixelsV2Probe.ProbeA => (double)info.GainCorrectionA,
-                    NeuropixelsV2Probe.ProbeB => (double)info.GainCorrectionB,
+                    NeuropixelsV2Probe.ProbeA => info.GainCorrectionA ?? throw new NullReferenceException($"No gain correction value found for {ProbeIndex}. Ensure that the probe is connected and the gain correction file is selected."),
+                    NeuropixelsV2Probe.ProbeB => info.GainCorrectionB ?? throw new NullReferenceException($"No gain correction value found for {ProbeIndex}. Ensure that the probe is connected and the gain correction file is selected."),
                     _ => throw new InvalidEnumArgumentException($"Unexpected {nameof(ProbeIndex)} value: {ProbeIndex}")
                 };
 
