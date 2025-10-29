@@ -51,6 +51,18 @@ namespace OpenEphys.Onix1
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
                 var info = (NeuropixelsV2eDeviceInfo)deviceInfo;
+                var metadata = ProbeIndex switch
+                {
+                    NeuropixelsV2Probe.ProbeA => info.ProbeMetadataA,
+                    NeuropixelsV2Probe.ProbeB => info.ProbeMetadataB,
+                    _ => throw new InvalidEnumArgumentException($"Unexpected {nameof(ProbeIndex)} value: {ProbeIndex}")
+                };
+
+                if (metadata.ProbeSerialNumber == null)
+                {
+                    throw new InvalidOperationException($"{ProbeIndex} is not detected. Ensure that the flex connection is properly seated.");
+                }
+
                 var device = info.GetDeviceContext(typeof(NeuropixelsV2eBeta));
                 var passthrough = device.GetPassthroughDeviceContext(typeof(DS90UB9x));
                 var probeData = device.Context
@@ -62,7 +74,7 @@ namespace OpenEphys.Onix1
                 {
                     NeuropixelsV2Probe.ProbeA => (double)info.GainCorrectionA,
                     NeuropixelsV2Probe.ProbeB => (double)info.GainCorrectionB,
-                    _ => throw new ArgumentOutOfRangeException(nameof(ProbeIndex), $"Unexpected {nameof(ProbeIndex)} value: {ProbeIndex}"),
+                    _ => throw new InvalidEnumArgumentException($"Unexpected {nameof(ProbeIndex)} value: {ProbeIndex}")
                 };
 
                 return Observable.Create<NeuropixelsV2eBetaDataFrame>(observer =>

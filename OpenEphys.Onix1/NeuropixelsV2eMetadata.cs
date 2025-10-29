@@ -2,7 +2,7 @@
 
 namespace OpenEphys.Onix1
 {
-    class NeuropixelsV2eMetadata
+    class NeuropixelsV2eMetadata : INeuropixelsV2eMetadata
     {
         const uint OFFSET_PROBE_SN = 0x00;
         const uint OFFSET_FLEX_VERSION = 0x10;
@@ -39,6 +39,5 @@ namespace OpenEphys.Onix1
         public string FlexPartNumber { get; }
 
         public string FlexVersion { get; }
-
     }
 }
