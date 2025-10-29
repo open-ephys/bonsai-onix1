@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Windows.Forms;
 
 namespace OpenEphys.Onix1.Design
@@ -15,7 +16,11 @@ namespace OpenEphys.Onix1.Design
         /// Public <see cref="IConfigureNeuropixelsV2"/> interface that is manipulated by
         /// <see cref="NeuropixelsV2eDialog"/>.
         /// </summary>
-        public IConfigureNeuropixelsV2 ConfigureNode { get; set; }
+        public IConfigureNeuropixelsV2 ConfigureNode
+        {
+            get => (IConfigureNeuropixelsV2)propertyGrid.SelectedObject;
+            set => propertyGrid.SelectedObject = value;
+        }
 
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV2eDialog"/>.
@@ -55,17 +60,6 @@ namespace OpenEphys.Onix1.Design
                     Tag = NeuropixelsV2Probe.ProbeB
                 }
             };
-
-            foreach (var channelConfiguration in ProbeConfigurations)
-            {
-                channelConfiguration.InvertPolarityChanged += InvertPolarityChanged;
-
-                string probeName = GetProbeName((NeuropixelsV2Probe)channelConfiguration.Tag);
-
-                tabControlProbe.TabPages.Add(probeName, probeName);
-                tabControlProbe.TabPages[probeName].Controls.Add(channelConfiguration);
-                this.AddMenuItemsFromDialogToFileOption(channelConfiguration, probeName);
-            }
         }
 
         private void InvertPolarityChanged(object sender, EventArgs e)
@@ -78,6 +72,8 @@ namespace OpenEphys.Onix1.Design
                     channelConfiguration.SetInvertPolarity(sendingDialog.InvertPolarity);
                 }
             }
+
+            ConfigureNode.InvertPolarity = sendingDialog.InvertPolarity;
         }
 
         private string GetProbeName(NeuropixelsV2Probe probe)
@@ -105,10 +101,38 @@ namespace OpenEphys.Onix1.Design
                 menuStrip.Visible = false;
             }
 
+            int index = 0;
+
             foreach (var channelConfiguration in ProbeConfigurations)
             {
+                channelConfiguration.InvertPolarityChanged += InvertPolarityChanged;
+                channelConfiguration.ValueChanged += RefreshPropertyGrid;
+
+                string probeName = GetProbeName((NeuropixelsV2Probe)channelConfiguration.Tag);
+
+                tabControlProbe.TabPages.Insert(index++, probeName, probeName);
+                tabControlProbe.TabPages[probeName].Controls.Add(channelConfiguration);
+                this.AddMenuItemsFromDialogToFileOption(channelConfiguration, probeName);
+
                 channelConfiguration.Show();
             }
+
+            tabControlProbe.SelectedIndex = 0;
+        }
+
+        void RefreshPropertyGrid(object s, EventArgs e)
+        {
+            var dialog = (NeuropixelsV2eProbeConfigurationDialog)s;
+            if ((NeuropixelsV2Probe)dialog.Tag == NeuropixelsV2Probe.ProbeA)
+            {
+                ConfigureNode.GainCalibrationFileA = dialog.textBoxProbeCalibrationFile.Text;
+            }
+            else if ((NeuropixelsV2Probe)dialog.Tag == NeuropixelsV2Probe.ProbeB)
+            {
+                ConfigureNode.GainCalibrationFileB = dialog.textBoxProbeCalibrationFile.Text;
+            }
+
+            propertyGrid.Refresh();
         }
 
         internal void Okay_Click(object sender, EventArgs e)
@@ -127,6 +151,26 @@ namespace OpenEphys.Onix1.Design
             ConfigureNode.GainCalibrationFileB = ProbeConfigurations[GetProbeIndex(NeuropixelsV2Probe.ProbeB)].textBoxProbeCalibrationFile.Text;
 
             ConfigureNode.InvertPolarity = ProbeConfigurations[GetProbeIndex(NeuropixelsV2Probe.ProbeA)].InvertPolarity;
+        }
+
+        void PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
+        {
+            var propertyGrid = (PropertyGrid)s;
+            var configureNode = (IConfigureNeuropixelsV2)propertyGrid.SelectedObject;
+
+            foreach (var configuration in ProbeConfigurations)
+            {
+                if ((NeuropixelsV2Probe)configuration.Tag == NeuropixelsV2Probe.ProbeA)
+                {
+                    configuration.UpdateControls(configureNode.ProbeConfigurationA, configureNode.GainCalibrationFileA, configureNode.InvertPolarity);
+                }
+                else if ((NeuropixelsV2Probe)configuration.Tag == NeuropixelsV2Probe.ProbeB)
+                {
+                    configuration.UpdateControls(configureNode.ProbeConfigurationB, configureNode.GainCalibrationFileB, configureNode.InvertPolarity);
+                }
+                else
+                    throw new InvalidEnumArgumentException();
+            }
         }
     }
 }
