@@ -41,7 +41,7 @@ namespace OpenEphys.Onix1.Design
                 tabPageNeuropixelsV2e.Text = "NeuropixelsV2eBeta";
             }
 
-            DialogBno055 = new(new ConfigurePolledBno055(configureBno055));
+            DialogBno055 = new(configureBno055);
 
             DialogBno055.SetChildFormProperties(this).AddDialogToPanel(panelBno055);
         }

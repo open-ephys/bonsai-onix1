@@ -36,9 +36,13 @@
             this.buttonOkay = new System.Windows.Forms.Button();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.propertyGrid = new Bonsai.Design.PropertyGrid();
+            this.tabPageProperties = new System.Windows.Forms.TabPage();
             this.menuStrip.SuspendLayout();
+            this.tabControlProbe.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
+            this.tabPageProperties.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip
@@ -61,6 +65,7 @@
             // 
             // tabControlProbe
             // 
+            this.tabControlProbe.Controls.Add(this.tabPageProperties);
             this.tabControlProbe.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControlProbe.Location = new System.Drawing.Point(3, 2);
             this.tabControlProbe.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
@@ -121,6 +126,24 @@
             this.flowLayoutPanel1.Size = new System.Drawing.Size(1131, 41);
             this.flowLayoutPanel1.TabIndex = 2;
             // 
+            // propertyGrid
+            // 
+            this.propertyGrid.Dock = System.Windows.Forms.DockStyle.Right;
+            this.propertyGrid.Location = new System.Drawing.Point(832, 0);
+            this.propertyGrid.Name = "propertyGrid";
+            this.propertyGrid.Size = new System.Drawing.Size(293, 605);
+            this.propertyGrid.TabIndex = 0;
+            // 
+            // tabPageProperties
+            // 
+            this.tabPageProperties.Controls.Add(this.propertyGrid);
+            this.tabPageProperties.Location = new System.Drawing.Point(4, 25);
+            this.tabPageProperties.Name = "tabPageProperties";
+            this.tabPageProperties.Size = new System.Drawing.Size(1125, 605);
+            this.tabPageProperties.TabIndex = 0;
+            this.tabPageProperties.Text = "Properties";
+            this.tabPageProperties.UseVisualStyleBackColor = true;
+            // 
             // NeuropixelsV2eDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -137,8 +160,10 @@
             this.Text = "NeuropixelsV2e Configuration";
             this.menuStrip.ResumeLayout(false);
             this.menuStrip.PerformLayout();
+            this.tabControlProbe.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.flowLayoutPanel1.ResumeLayout(false);
+            this.tabPageProperties.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -153,5 +178,7 @@
         private System.Windows.Forms.TabControl tabControlProbe;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
+        private System.Windows.Forms.TabPage tabPageProperties;
+        private Bonsai.Design.PropertyGrid propertyGrid;
     }
 }

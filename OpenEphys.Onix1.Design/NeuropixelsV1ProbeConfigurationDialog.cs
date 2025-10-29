@@ -91,7 +91,6 @@ namespace OpenEphys.Onix1.Design
 
                 bindingSource.ResetCurrentItem();
             }
-            ;
 
             comboBoxApGain.DataSource = Enum.GetValues(typeof(NeuropixelsV1Gain));
             comboBoxApGain.DataBindings.Add("SelectedItem",
