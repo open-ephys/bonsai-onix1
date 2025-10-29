@@ -15,7 +15,11 @@ namespace OpenEphys.Onix1.Design
         const double SamplePeriodMilliSeconds = 1e3 / Rhs2116.SampleFrequencyHz;
         const int NumberOfChannels = 32;
 
-        internal ConfigureRhs2116Trigger Trigger { get; set; }
+        internal ConfigureRhs2116Trigger Trigger
+        {
+            get => (ConfigureRhs2116Trigger)Device;
+            private set => Device = value;
+        }
 
         readonly Rhs2116StimulusSequencePair SequenceCopy = new();
 
@@ -37,7 +41,7 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <param name="rhs2116Trigger">Existing <see cref="ConfigureRhs2116Trigger"/> object.</param>
         public Rhs2116StimulusSequenceDialog(ConfigureRhs2116Trigger rhs2116Trigger)
-            : base(NumberOfChannels, true, true)
+            : base(new ConfigureRhs2116Trigger(rhs2116Trigger), NumberOfChannels, true, true)
         {
             if (rhs2116Trigger.ProbeGroup.NumberOfContacts != NumberOfChannels)
             {
@@ -75,7 +79,7 @@ namespace OpenEphys.Onix1.Design
             ChannelDialog.Show();
 
             StimulusSequenceOptions = new();
-            groupBoxDefineStimuli.Controls.Add(StimulusSequenceOptions.SetChildFormProperties(this));
+            tabPageDefineStimuli.Controls.Add(StimulusSequenceOptions.SetChildFormProperties(this));
 
             StimulusSequenceOptions.buttonAddPulses.Click += ButtonAddPulses_Click;
             StimulusSequenceOptions.buttonReadPulses.Click += ButtonReadPulses_Click;

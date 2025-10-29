@@ -14,6 +14,7 @@ namespace OpenEphys.Onix1.Design
         readonly NeuropixelsV2eChannelConfigurationDialog ChannelConfiguration;
 
         internal event EventHandler InvertPolarityChanged;
+        internal event EventHandler ValueChanged;
 
         private enum ChannelPreset
         {
@@ -110,6 +111,8 @@ namespace OpenEphys.Onix1.Design
         {
             InvertPolarity = ((CheckBox)sender).Checked;
             OnInvertPolarityChangedHandler();
+
+            ValueChanged?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -143,6 +146,8 @@ namespace OpenEphys.Onix1.Design
         private void SelectedReferenceChanged(object sender, EventArgs e)
         {
             ProbeConfiguration.Reference = (NeuropixelsV2QuadShankReference)((ComboBox)sender).SelectedItem;
+
+            ValueChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void SelectedChannelPresetChanged(object sender, EventArgs e)
@@ -532,6 +537,8 @@ namespace OpenEphys.Onix1.Design
         private void FileTextChanged(object sender, EventArgs e)
         {
             CheckStatus();
+
+            ValueChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void CheckStatus()
@@ -592,6 +599,8 @@ namespace OpenEphys.Onix1.Design
             }
 
             CheckStatus();
+
+            ValueChanged?.Invoke(this, EventArgs.Empty);
         }
 
         internal void ClearSelection_Click(object sender, EventArgs e)
@@ -640,6 +649,13 @@ namespace OpenEphys.Onix1.Design
         private void UpdateTrackBarLocation(object sender, EventArgs e)
         {
             trackBarProbePosition.Value = (int)(ChannelConfiguration.GetRelativeVerticalPosition() * trackBarProbePosition.Maximum);
+        }
+
+        internal void UpdateControls(NeuropixelsV2QuadShankProbeConfiguration configuration, string calibrationFile, bool invertPolarity)
+        {
+            comboBoxReference.SelectedItem = configuration.Reference;
+            checkBoxInvertPolarity.Checked = invertPolarity;
+            textBoxProbeCalibrationFile.Text = calibrationFile;
         }
     }
 }

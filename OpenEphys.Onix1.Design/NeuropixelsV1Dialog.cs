@@ -14,7 +14,11 @@ namespace OpenEphys.Onix1.Design
         /// Public <see cref="IConfigureNeuropixelsV1"/> interface that is manipulated by
         /// <see cref="NeuropixelsV1Dialog"/>.
         /// </summary>
-        public IConfigureNeuropixelsV1 ConfigureNode { get; set; }
+        public IConfigureNeuropixelsV1 ConfigureNode
+        {
+            get => (IConfigureNeuropixelsV1)ProbeConfigurationDialog.propertyGrid.SelectedObject;
+            set => ProbeConfigurationDialog.propertyGrid.SelectedObject = value;
+        }
 
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV1Dialog"/>.
@@ -25,24 +29,8 @@ namespace OpenEphys.Onix1.Design
             InitializeComponent();
             Shown += FormShown;
 
-            if (configureNode is ConfigureNeuropixelsV1e configureV1e)
-            {
-                ConfigureNode = new ConfigureNeuropixelsV1e(configureV1e);
-            }
-            else if (configureNode is ConfigureNeuropixelsV1f configureV1f)
-            {
-                ConfigureNode = new ConfigureNeuropixelsV1f(configureV1f);
-            }
-
-            ProbeConfigurationDialog = new(ConfigureNode.ProbeConfiguration, ConfigureNode.AdcCalibrationFile, ConfigureNode.GainCalibrationFile, ConfigureNode.InvertPolarity)
-            {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this
-            };
-
-            panelProbe.Controls.Add(ProbeConfigurationDialog);
+            ProbeConfigurationDialog = new(configureNode);
+            ProbeConfigurationDialog.SetChildFormProperties(this).AddDialogToPanel(panelProbe);
 
             this.AddMenuItemsFromDialogToFileOption(ProbeConfigurationDialog);
         }
