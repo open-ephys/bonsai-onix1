@@ -454,5 +454,10 @@ namespace OpenEphys.Onix1.Design
         {
             trackBarProbePosition.Value = (int)(ChannelConfiguration.GetRelativeVerticalPosition() * 100);
         }
+
+        void TextBoxKeyPress(object sender, KeyPressEventArgs e)
+        {
+            CheckStatus();
+        }
     }
 }
