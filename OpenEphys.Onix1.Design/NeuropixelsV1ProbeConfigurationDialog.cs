@@ -26,16 +26,26 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// Public <see cref="IConfigureNeuropixelsV2"/> interface that is manipulated by
-        /// <see cref="NeuropixelsV2eDialog"/>.
+        /// Public <see cref="NeuropixelsV1ProbeConfiguration"/> interface that is manipulated by
+        /// <see cref="NeuropixelsV1ProbeConfigurationDialog"/>.
         /// </summary>
         /// <remarks>
-        /// When a <see cref="IConfigureNeuropixelsV2"/> is passed to 
-        /// <see cref="NeuropixelsV1Dialog"/>, it is copied and stored in this
+        /// When a <see cref="NeuropixelsV1ProbeConfiguration"/> is passed to 
+        /// <see cref="NeuropixelsV1ProbeConfigurationDialog"/>, it is copied and stored in this
         /// variable so that any modifications made to configuration settings can be easily reversed
         /// by not copying the new settings back to the original instance.
         /// </remarks>
-        public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; set; }
+        public NeuropixelsV1ProbeConfiguration ProbeConfiguration
+        {
+            get => ((IConfigureNeuropixelsV1)propertyGrid.SelectedObject).ProbeConfiguration;
+            set => ((IConfigureNeuropixelsV1)propertyGrid.SelectedObject).ProbeConfiguration = value;
+        }
+
+        IConfigureNeuropixelsV1 ConfigureNode
+        {
+            get => (IConfigureNeuropixelsV1)propertyGrid.SelectedObject;
+            set => propertyGrid.SelectedObject = value;
+        }
 
         /// <inheritdoc cref="ConfigureNeuropixelsV1e.InvertPolarity"/>
         public bool InvertPolarity { get; set; }
@@ -43,18 +53,13 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV1Dialog"/>.
         /// </summary>
-        /// <param name="probeConfiguration">A <see cref="NeuropixelsV1ProbeConfiguration"/> object holding the current configuration settings.</param>
-        /// <param name="adcCalibrationFile">String defining the path to the ADC calibration file.</param>
-        /// <param name="gainCalibrationFile">String defining the path to the gain calibration file.</param>
-        /// <param name="invertPolarity">Boolean denoting whether or not to invert the polarity of neural data.</param>
-        public NeuropixelsV1ProbeConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration, string adcCalibrationFile, string gainCalibrationFile, bool invertPolarity)
+        /// <param name="configureNode">Existing configuration node.</param>
+        public NeuropixelsV1ProbeConfigurationDialog(IConfigureNeuropixelsV1 configureNode)
         {
             InitializeComponent();
             Shown += FormShown;
 
-            ProbeConfiguration = new(probeConfiguration);
-
-            ChannelConfiguration = new(ProbeConfiguration)
+            ChannelConfiguration = new(configureNode.ProbeConfiguration)
             {
                 TopLevel = false,
                 FormBorderStyle = FormBorderStyle.None,
@@ -62,7 +67,7 @@ namespace OpenEphys.Onix1.Design
                 Parent = this,
             };
 
-            InvertPolarity = invertPolarity;
+            InvertPolarity = configureNode.InvertPolarity;
 
             panelProbe.Controls.Add(ChannelConfiguration);
             this.AddMenuItemsFromDialogToFileOption(ChannelConfiguration);
@@ -71,30 +76,31 @@ namespace OpenEphys.Onix1.Design
             ChannelConfiguration.OnFileLoad += OnFileLoadEvent;
 
             comboBoxApGain.DataSource = Enum.GetValues(typeof(NeuropixelsV1Gain));
-            comboBoxApGain.SelectedItem = ProbeConfiguration.SpikeAmplifierGain;
+            comboBoxApGain.SelectedItem = configureNode.ProbeConfiguration.SpikeAmplifierGain;
             comboBoxApGain.SelectedIndexChanged += SpikeAmplifierGainIndexChanged;
 
             comboBoxLfpGain.DataSource = Enum.GetValues(typeof(NeuropixelsV1Gain));
-            comboBoxLfpGain.SelectedItem = ProbeConfiguration.LfpAmplifierGain;
+            comboBoxLfpGain.SelectedItem = configureNode.ProbeConfiguration.LfpAmplifierGain;
             comboBoxLfpGain.SelectedIndexChanged += LfpAmplifierGainIndexChanged;
 
             comboBoxReference.DataSource = Enum.GetValues(typeof(NeuropixelsV1ReferenceSource));
-            comboBoxReference.SelectedItem = ProbeConfiguration.Reference;
+            comboBoxReference.SelectedItem = configureNode.ProbeConfiguration.Reference;
             comboBoxReference.SelectedIndexChanged += ReferenceIndexChanged;
 
-            checkBoxSpikeFilter.Checked = ProbeConfiguration.SpikeFilter;
+            checkBoxSpikeFilter.Checked = configureNode.ProbeConfiguration.SpikeFilter;
             checkBoxSpikeFilter.CheckedChanged += SpikeFilterIndexChanged;
 
             checkBoxInvertPolarity.Checked = InvertPolarity;
             checkBoxInvertPolarity.CheckedChanged += InvertPolarityIndexChanged;
 
-            textBoxAdcCalibrationFile.Text = adcCalibrationFile;
-
-            textBoxGainCalibrationFile.Text = gainCalibrationFile;
+            textBoxAdcCalibrationFile.Text = configureNode.AdcCalibrationFile;
+            textBoxGainCalibrationFile.Text = configureNode.GainCalibrationFile;
 
             comboBoxChannelPresets.DataSource = Enum.GetValues(typeof(ChannelPreset));
             CheckForExistingChannelPreset();
             comboBoxChannelPresets.SelectedIndexChanged += ChannelPresetIndexChanged;
+
+            propertyGrid.SelectedObject = configureNode;
 
             CheckStatus();
         }
@@ -102,6 +108,8 @@ namespace OpenEphys.Onix1.Design
         private void InvertPolarityIndexChanged(object sender, EventArgs e)
         {
             InvertPolarity = ((CheckBox)sender).Checked;
+
+            propertyGrid.Refresh();
         }
 
         private void FormShown(object sender, EventArgs e)
@@ -120,11 +128,13 @@ namespace OpenEphys.Onix1.Design
 
         private void GainCalibrationFileTextChanged(object sender, EventArgs e)
         {
+            ConfigureNode.GainCalibrationFile = ((TextBox)sender).Text;
             CheckStatus();
         }
 
         private void AdcCalibrationFileTextChanged(object sender, EventArgs e)
         {
+            ConfigureNode.AdcCalibrationFile = ((TextBox)sender).Text;
             CheckStatus();
         }
 
@@ -327,6 +337,8 @@ namespace OpenEphys.Onix1.Design
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusBlockedImage;
             else
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusReadyImage;
+
+            propertyGrid.Refresh();
         }
 
         private void ChooseGainCalibrationFile_Click(object sender, EventArgs e)
@@ -453,6 +465,25 @@ namespace OpenEphys.Onix1.Design
         private void UpdateTrackBarLocation(object sender, EventArgs e)
         {
             trackBarProbePosition.Value = (int)(ChannelConfiguration.GetRelativeVerticalPosition() * 100);
+        }
+
+        void PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
+        {
+            var propertyGrid = (PropertyGrid)s;
+            IConfigureNeuropixelsV1 configureNode = propertyGrid.SelectedObject as IConfigureNeuropixelsV1;
+
+            UpdateControls(configureNode);
+        }
+
+        void UpdateControls(IConfigureNeuropixelsV1 configureNode)
+        {
+            comboBoxApGain.SelectedItem = configureNode.ProbeConfiguration.SpikeAmplifierGain;
+            comboBoxLfpGain.SelectedItem = configureNode.ProbeConfiguration.LfpAmplifierGain;
+            comboBoxReference.SelectedItem = configureNode.ProbeConfiguration.Reference;
+            checkBoxSpikeFilter.Checked = configureNode.ProbeConfiguration.SpikeFilter;
+            checkBoxInvertPolarity.Checked = configureNode.InvertPolarity;
+            textBoxAdcCalibrationFile.Text = configureNode.AdcCalibrationFile;
+            textBoxGainCalibrationFile.Text = configureNode.GainCalibrationFile;
         }
     }
 }
