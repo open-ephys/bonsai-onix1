@@ -14,8 +14,11 @@ namespace OpenEphys.Onix1.Design
         /// Public <see cref="IConfigureNeuropixelsV1"/> interface that is manipulated by
         /// <see cref="NeuropixelsV1Dialog"/>.
         /// </summary>
-        [Obsolete]
-        public IConfigureNeuropixelsV1 ConfigureNode { get; set; }
+        public IConfigureNeuropixelsV1 ConfigureNode
+        {
+            get => (IConfigureNeuropixelsV1)ProbeConfigurationDialog.propertyGrid.SelectedObject;
+            set => ProbeConfigurationDialog.propertyGrid.SelectedObject = value;
+        }
 
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV1Dialog"/>.
@@ -26,10 +29,8 @@ namespace OpenEphys.Onix1.Design
             InitializeComponent();
             Shown += FormShown;
 
-            ProbeConfigurationDialog = new(configureNode.ProbeConfiguration);
-            ProbeConfigurationDialog
-                .SetChildFormProperties(this)
-                .AddDialogToPanel(panelProbe);
+            ProbeConfigurationDialog = new(configureNode);
+            ProbeConfigurationDialog.SetChildFormProperties(this).AddDialogToPanel(panelProbe);
 
             this.AddMenuItemsFromDialogToFileOption(ProbeConfigurationDialog);
         }

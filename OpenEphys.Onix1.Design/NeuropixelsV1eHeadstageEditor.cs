@@ -19,13 +19,15 @@ namespace OpenEphys.Onix1.Design
 
                 if (editorState != null && !editorState.WorkflowRunning && component is ConfigureHeadstageNeuropixelsV1e configureHeadstage)
                 {
-                    using var editorDialog = new NeuropixelsV1eHeadstageDialog(configureHeadstage.NeuropixelsV1e, configureHeadstage.Bno055);
+                    var configuration = new ConfigureHeadstageNeuropixelsV1e(configureHeadstage);
+
+                    using var editorDialog = new NeuropixelsV1eHeadstageDialog(configuration.NeuropixelsV1e, configuration.Bno055);
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
                         DesignHelper.CopyProperties((ConfigurePolledBno055)editorDialog.DialogBno055.Device, configureHeadstage.Bno055, DesignHelper.PropertiesToIgnore);
 
-                        configureHeadstage.NeuropixelsV1e.ProbeConfiguration = editorDialog.DialogNeuropixelsV1e.ProbeConfigurationDialog.ProbeConfiguration;
+                        DesignHelper.CopyProperties((ConfigureNeuropixelsV1e)editorDialog.DialogNeuropixelsV1e.ConfigureNode, configureHeadstage.NeuropixelsV1e, DesignHelper.PropertiesToIgnore);
 
                         return true;
                     }

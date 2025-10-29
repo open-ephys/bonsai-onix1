@@ -37,7 +37,7 @@ namespace OpenEphys.Onix1.Design
 
             ReferenceContacts.AddRange(ReferenceContactsList);
 
-            ProbeConfiguration = new(probeConfiguration);
+            ProbeConfiguration = probeConfiguration;
 
             HighlightEnabledContacts();
             UpdateContactLabels();
