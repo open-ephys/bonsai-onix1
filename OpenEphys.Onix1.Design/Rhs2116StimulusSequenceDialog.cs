@@ -15,7 +15,7 @@ namespace OpenEphys.Onix1.Design
         const double SamplePeriodMilliSeconds = 1e3 / Rhs2116.SampleFrequencyHz;
         const int NumberOfChannels = 32;
 
-        internal Rhs2116StimulusSequencePair Sequence { get; set; }
+        internal ConfigureRhs2116Trigger Trigger { get; set; }
 
         readonly Rhs2116StimulusSequencePair SequenceCopy = new();
 
@@ -35,35 +35,36 @@ namespace OpenEphys.Onix1.Design
         /// Opens a dialog allowing for easy changing of stimulus sequence parameters, with 
         /// visual feedback on what the resulting stimulus sequence looks like.
         /// </summary>
-        /// <param name="sequence">Stimulus sequence containing 32 channels of stimuli.</param>
-        /// <param name="probeGroup">Probe group containing ProbeInterface specifications for 32 contacts.</param>
-        public Rhs2116StimulusSequenceDialog(Rhs2116StimulusSequencePair sequence, Rhs2116ProbeGroup probeGroup)
+        /// <param name="rhs2116Trigger">Existing <see cref="ConfigureRhs2116Trigger"/> object.</param>
+        public Rhs2116StimulusSequenceDialog(ConfigureRhs2116Trigger rhs2116Trigger)
             : base(NumberOfChannels, true, true)
         {
-            if (probeGroup.NumberOfContacts != NumberOfChannels)
+            if (rhs2116Trigger.ProbeGroup.NumberOfContacts != NumberOfChannels)
             {
-                throw new ArgumentException($"Probe group is not valid: {NumberOfChannels} channels were expected, there are {probeGroup.NumberOfContacts} instead.");
+                throw new ArgumentException($"Probe group is not valid: {NumberOfChannels} channels were expected, there are {rhs2116Trigger.ProbeGroup.NumberOfContacts} instead.");
             }
 
             InitializeComponent();
 
-            Sequence = new Rhs2116StimulusSequencePair(sequence);
+            Trigger = new(rhs2116Trigger);
 
             dataGridViewStimulusTable.DataBindingComplete += DataBindingComplete;
             SetTableDataSource();
 
-            RequestedAnodicAmplitudeuA = new double[Sequence.Stimuli.Length];
-            RequestedCathodicAmplitudeuA = new double[Sequence.Stimuli.Length];
+            var sequence = Trigger.StimulusSequence;
 
-            for (int i = 0; i < Sequence.Stimuli.Length; i++)
+            RequestedAnodicAmplitudeuA = new double[sequence.Stimuli.Length];
+            RequestedCathodicAmplitudeuA = new double[sequence.Stimuli.Length];
+
+            for (int i = 0; i < sequence.Stimuli.Length; i++)
             {
-                RequestedAnodicAmplitudeuA[i] = Sequence.Stimuli[i].AnodicAmplitudeSteps * Sequence.CurrentStepSizeuA;
-                RequestedCathodicAmplitudeuA[i] = Sequence.Stimuli[i].CathodicAmplitudeSteps * Sequence.CurrentStepSizeuA;
+                RequestedAnodicAmplitudeuA[i] = sequence.Stimuli[i].AnodicAmplitudeSteps * sequence.CurrentStepSizeuA;
+                RequestedCathodicAmplitudeuA[i] = sequence.Stimuli[i].CathodicAmplitudeSteps * sequence.CurrentStepSizeuA;
             }
 
-            StepSize = Sequence.CurrentStepSize;
+            StepSize = sequence.CurrentStepSize;
 
-            ChannelDialog = new(probeGroup);
+            ChannelDialog = new(rhs2116Trigger.ProbeGroup);
 
             ChannelDialog.SetChildFormProperties(this).AddDialogToPanel(panelProbe);
             this.AddMenuItemsFromDialogToFileOption(ChannelDialog, "Channel Configuration");
@@ -116,9 +117,9 @@ namespace OpenEphys.Onix1.Design
 
         internal override bool CanCloseForm(out DialogResult result)
         {
-            if (Sequence != null)
+            if (Trigger.StimulusSequence != null)
             {
-                if (!Sequence.Valid)
+                if (!Trigger.StimulusSequence.Valid)
                 {
                     DialogResult resultContinue = MessageBox.Show("Warning: Stimulus sequence is not valid. " +
                         "If you continue, the current settings will be discarded. " +
@@ -170,6 +171,8 @@ namespace OpenEphys.Onix1.Design
                                  .OfType<BoxObj>()
                                  .Where(c => c is not PolyObj);
 
+            var sequence = Trigger.StimulusSequence;
+
             foreach (var contact in contactObjects)
             {
                 if (contact.Tag is ContactTag contactTag)
@@ -180,7 +183,7 @@ namespace OpenEphys.Onix1.Design
                                                             .Take(contactTag.ProbeIndex)
                                                             .Aggregate(0, (total, next) => total + next.NumberOfContacts);
 
-                    if (!Sequence.Stimuli[contactIndex].IsValid())
+                    if (!sequence.Stimuli[contactIndex].IsValid())
                     {
                         contact.Fill.Color = Color.Red;
 
@@ -194,7 +197,7 @@ namespace OpenEphys.Onix1.Design
             {
                 int waveformIndex = int.Parse(waveform.Label.Text.ToLowerInvariant().TrimStart('c', 'h'));
 
-                if (!Sequence.Stimuli[waveformIndex].IsValid())
+                if (!sequence.Stimuli[waveformIndex].IsValid())
                 {
                     waveform.Color = Color.Red;
                 }
@@ -205,9 +208,9 @@ namespace OpenEphys.Onix1.Design
 
         internal override double GetPeakToPeakAmplitudeInMicroAmps()
         {
-            return Sequence.MaximumPeakToPeakAmplitudeSteps > 0
-                ? Sequence.GetMaxPeakToPeakAmplitudeuA()
-                : Sequence.CurrentStepSizeuA;
+            return Trigger.StimulusSequence.MaximumPeakToPeakAmplitudeSteps > 0
+                ? Trigger.StimulusSequence.GetMaxPeakToPeakAmplitudeuA()
+                : Trigger.StimulusSequence.CurrentStepSizeuA;
         }
 
         PointPairList CreateStimulusWaveform(Rhs2116Stimulus stimulus, double yOffset, double peakToPeak)
@@ -220,9 +223,11 @@ namespace OpenEphys.Onix1.Design
                 { stimulus.DelaySamples * SamplePeriodMilliSeconds, yOffset }
             };
 
+            var sequence = Trigger.StimulusSequence;
+
             for (int i = 0; i < stimulus.NumberOfStimuli; i++)
             {
-                double amplitude = (stimulus.AnodicFirst ? stimulus.AnodicAmplitudeSteps : -stimulus.CathodicAmplitudeSteps) * Sequence.CurrentStepSizeuA / peakToPeak + yOffset;
+                double amplitude = (stimulus.AnodicFirst ? stimulus.AnodicAmplitudeSteps : -stimulus.CathodicAmplitudeSteps) * sequence.CurrentStepSizeuA / peakToPeak + yOffset;
                 double width = (stimulus.AnodicFirst ? stimulus.AnodicWidthSamples : stimulus.CathodicWidthSamples) * SamplePeriodMilliSeconds;
 
                 points.Add(points[points.Count - 1].X, amplitude);
@@ -231,7 +236,7 @@ namespace OpenEphys.Onix1.Design
 
                 points.Add(points[points.Count - 1].X + stimulus.DwellSamples * SamplePeriodMilliSeconds, yOffset);
 
-                amplitude = (stimulus.AnodicFirst ? -stimulus.CathodicAmplitudeSteps : stimulus.AnodicAmplitudeSteps) * Sequence.CurrentStepSizeuA / peakToPeak + yOffset;
+                amplitude = (stimulus.AnodicFirst ? -stimulus.CathodicAmplitudeSteps : stimulus.AnodicAmplitudeSteps) * sequence.CurrentStepSizeuA / peakToPeak + yOffset;
                 width = (stimulus.AnodicFirst ? stimulus.CathodicWidthSamples : stimulus.AnodicWidthSamples) * SamplePeriodMilliSeconds;
 
                 points.Add(points[points.Count - 1].X, amplitude);
@@ -241,7 +246,7 @@ namespace OpenEphys.Onix1.Design
                 points.Add(points[points.Count - 1].X + stimulus.InterStimulusIntervalSamples * SamplePeriodMilliSeconds, yOffset);
             }
 
-            points.Add(Sequence.SequenceLengthSamples * SamplePeriodMilliSeconds, yOffset);
+            points.Add(sequence.SequenceLengthSamples * SamplePeriodMilliSeconds, yOffset);
 
             return points;
         }
@@ -258,14 +263,15 @@ namespace OpenEphys.Onix1.Design
             bool plotAllContacts = ChannelDialog.SelectedContacts.All(x => x == false);
 
             var peakToPeak = GetPeakToPeakAmplitudeInMicroAmps() * ChannelScale;
+            var sequence = Trigger.StimulusSequence;
 
-            for (int i = 0; i < Sequence.Stimuli.Length; i++)
+            for (int i = 0; i < sequence.Stimuli.Length; i++)
             {
                 var channelOffset = -peakToPeak * i;
 
                 if (ChannelDialog.SelectedContacts[i] || plotAllContacts)
                 {
-                    waveforms[i] = CreateStimulusWaveform(Sequence.Stimuli[i], channelOffset, peakToPeak);
+                    waveforms[i] = CreateStimulusWaveform(sequence.Stimuli[i], channelOffset, peakToPeak);
                 }
                 else
                 {
@@ -278,26 +284,23 @@ namespace OpenEphys.Onix1.Design
 
         internal override void SetStatusValidity()
         {
-            if (Sequence == null)
-            {
-                return;
-            }
+            var sequence = Trigger.StimulusSequence;
 
-            if (Sequence.Valid && Sequence.FitsInHardware)
+            if (sequence.Valid && sequence.FitsInHardware)
             {
                 toolStripStatusIsValid.Image = Properties.Resources.StatusReadyImage;
                 toolStripStatusIsValid.Text = "Valid stimulus sequence";
             }
             else
             {
-                if (!Sequence.FitsInHardware)
+                if (!sequence.FitsInHardware)
                 {
                     toolStripStatusIsValid.Image = Properties.Resources.StatusBlockedImage;
                     toolStripStatusIsValid.Text = "Invalid sequence - Too many pulses defined";
                 }
                 else
                 {
-                    var reason = Sequence.Stimuli.Select((s, ind) =>
+                    var reason = sequence.Stimuli.Select((s, ind) =>
                     {
                         s.IsValid(out string reason);
                         return (reason, ind);
@@ -315,7 +318,7 @@ namespace OpenEphys.Onix1.Design
 
         void SetPercentOfSlotsUsed()
         {
-            toolStripStatusText.Text = string.Format("{0, 0:P1} of slots used", (double)Sequence.StimulusSlotsRequired / Sequence.MaxMemorySlotsAvailable);
+            toolStripStatusText.Text = string.Format("{0, 0:P1} of slots used", (double)Trigger.StimulusSequence.StimulusSlotsRequired / Trigger.StimulusSequence.MaxMemorySlotsAvailable);
         }
 
         /// <inheritdoc cref="GetSampleFromAmplitude(double, Rhs2116StepSize, out byte)"/>
@@ -376,7 +379,9 @@ namespace OpenEphys.Onix1.Design
 
         void ButtonAddPulses_Click(object sender, EventArgs e)
         {
-            var stimuli = Sequence.Stimuli
+            var sequence = Trigger.StimulusSequence;
+
+            var stimuli = sequence.Stimuli
                             .Select((s, ind) => { return (Index: ind, Stimulus: s); })
                             .Where(s => s.Stimulus.Valid
                                         && (s.Stimulus.AnodicAmplitudeSteps != 0
@@ -403,21 +408,21 @@ namespace OpenEphys.Onix1.Design
                                         StepsCathodic: requestedCathodicSteps);
                             });
 
-            if (Sequence.CurrentStepSize != StepSize && stimuli.Any(e => e.ErrorCathodic != 0 || e.ErrorAnodic != 0 &&
-                                                                         ((Sequence.Stimuli[e.Index].AnodicAmplitudeSteps == 0 && e.StepsAnodic != 0) ||
-                                                                          (Sequence.Stimuli[e.Index].CathodicAmplitudeSteps == 0 && e.StepsCathodic != 0))))
+            if (sequence.CurrentStepSize != StepSize && stimuli.Any(e => e.ErrorCathodic != 0 || e.ErrorAnodic != 0 &&
+                                                                         ((sequence.Stimuli[e.Index].AnodicAmplitudeSteps == 0 && e.StepsAnodic != 0) ||
+                                                                          (sequence.Stimuli[e.Index].CathodicAmplitudeSteps == 0 && e.StepsCathodic != 0))))
             {
-                var message = $"The step size is changing from {GetStepSizeStringuA(Sequence.CurrentStepSize)} to {GetStepSizeStringuA(StepSize)}, " +
+                var message = $"The step size is changing from {GetStepSizeStringuA(sequence.CurrentStepSize)} to {GetStepSizeStringuA(StepSize)}, " +
                     $"which will adjust some amplitudes. If applied, the following values will be modified:\n";
 
                 foreach (var (Index, ErrorAnodic, ErrorCathodic, StepsAnodic, StepsCathodic) in stimuli)
                 {
-                    if (ErrorAnodic != 0 || ErrorCathodic != 0 && ((Sequence.Stimuli[Index].AnodicAmplitudeSteps == 0 && StepsAnodic != 0) || (Sequence.Stimuli[Index].CathodicAmplitudeSteps == 0 && StepsCathodic != 0)))
+                    if (ErrorAnodic != 0 || ErrorCathodic != 0 && ((sequence.Stimuli[Index].AnodicAmplitudeSteps == 0 && StepsAnodic != 0) || (sequence.Stimuli[Index].CathodicAmplitudeSteps == 0 && StepsCathodic != 0)))
                     {
-                        var oldAnodicAmplitude = GetAmplitudeFromSample(Sequence.Stimuli[Index].AnodicAmplitudeSteps, Sequence.CurrentStepSize);
+                        var oldAnodicAmplitude = GetAmplitudeFromSample(sequence.Stimuli[Index].AnodicAmplitudeSteps, sequence.CurrentStepSize);
                         var newAnodicAmplitude = GetAmplitudeFromSample(StepsAnodic, StepSize);
 
-                        var oldCathodicAmplitude = GetAmplitudeFromSample(Sequence.Stimuli[Index].CathodicAmplitudeSteps, Sequence.CurrentStepSize);
+                        var oldCathodicAmplitude = GetAmplitudeFromSample(sequence.Stimuli[Index].CathodicAmplitudeSteps, sequence.CurrentStepSize);
                         var newCathodicAmplitude = GetAmplitudeFromSample(StepsCathodic, StepSize);
 
                         if (oldAnodicAmplitude == newAnodicAmplitude && oldCathodicAmplitude == newCathodicAmplitude) continue;
@@ -439,22 +444,22 @@ namespace OpenEphys.Onix1.Design
             {
                 if (StepsAnodic == 0 && StepsCathodic == 0)
                 {
-                    if (Sequence.Stimuli[Index].AnodicAmplitudeSteps != 0 && Sequence.Stimuli[Index].CathodicAmplitudeSteps != 0)
+                    if (sequence.Stimuli[Index].AnodicAmplitudeSteps != 0 && sequence.Stimuli[Index].CathodicAmplitudeSteps != 0)
                     {
-                        SequenceCopy.UpdateStimulus(Sequence.Stimuli[Index], Index); // NB: Store the current pulse pattern before clearing
-                        Sequence.Stimuli[Index].Clear();
+                        SequenceCopy.UpdateStimulus(sequence.Stimuli[Index], Index); // NB: Store the current pulse pattern before clearing
+                        sequence.Stimuli[Index].Clear();
                     }
                 }
                 else
                 {
-                    if (Sequence.Stimuli[Index].NumberOfStimuli == 0 && SequenceCopy.Stimuli[Index].IsValid() && SequenceCopy.Stimuli[Index].NumberOfStimuli != 0)
+                    if (sequence.Stimuli[Index].NumberOfStimuli == 0 && SequenceCopy.Stimuli[Index].IsValid() && SequenceCopy.Stimuli[Index].NumberOfStimuli != 0)
                     {
-                        Sequence.UpdateStimulus(SequenceCopy.Stimuli[Index], Index); // NB: Restore pulse timings before adding amplitude steps
+                        sequence.UpdateStimulus(SequenceCopy.Stimuli[Index], Index); // NB: Restore pulse timings before adding amplitude steps
                     }
-                    else if (Sequence.Stimuli[Index].NumberOfStimuli == 0 && SequenceCopy.Stimuli[Index].NumberOfStimuli != 0) continue;
+                    else if (sequence.Stimuli[Index].NumberOfStimuli == 0 && SequenceCopy.Stimuli[Index].NumberOfStimuli != 0) continue;
 
-                    Sequence.Stimuli[Index].AnodicAmplitudeSteps = StepsAnodic;
-                    Sequence.Stimuli[Index].CathodicAmplitudeSteps = StepsCathodic;
+                    sequence.Stimuli[Index].AnodicAmplitudeSteps = StepsAnodic;
+                    sequence.Stimuli[Index].CathodicAmplitudeSteps = StepsCathodic;
                 }
             }
 
@@ -466,7 +471,7 @@ namespace OpenEphys.Onix1.Design
                 {
                     if (StimulusSequenceOptions.textboxDelay.Tag != null)
                     {
-                        Sequence.Stimuli[i].DelaySamples = (uint)StimulusSequenceOptions.textboxDelay.Tag;
+                        sequence.Stimuli[i].DelaySamples = (uint)StimulusSequenceOptions.textboxDelay.Tag;
                     }
 
                     if (StimulusSequenceOptions.textboxAmplitudeAnodicRequested.Tag != null)
@@ -476,17 +481,17 @@ namespace OpenEphys.Onix1.Design
 
                     if (StimulusSequenceOptions.textboxAmplitudeAnodic.Tag != null)
                     {
-                        Sequence.Stimuli[i].AnodicAmplitudeSteps = (byte)StimulusSequenceOptions.textboxAmplitudeAnodic.Tag;
+                        sequence.Stimuli[i].AnodicAmplitudeSteps = (byte)StimulusSequenceOptions.textboxAmplitudeAnodic.Tag;
                     }
 
                     if (StimulusSequenceOptions.textboxPulseWidthAnodic.Tag != null)
                     {
-                        Sequence.Stimuli[i].AnodicWidthSamples = (uint)StimulusSequenceOptions.textboxPulseWidthAnodic.Tag;
+                        sequence.Stimuli[i].AnodicWidthSamples = (uint)StimulusSequenceOptions.textboxPulseWidthAnodic.Tag;
                     }
 
                     if (StimulusSequenceOptions.textboxInterPulseInterval.Tag != null)
                     {
-                        Sequence.Stimuli[i].DwellSamples = (uint)StimulusSequenceOptions.textboxInterPulseInterval.Tag;
+                        sequence.Stimuli[i].DwellSamples = (uint)StimulusSequenceOptions.textboxInterPulseInterval.Tag;
                     }
 
                     if (StimulusSequenceOptions.textboxAmplitudeCathodicRequested.Tag != null)
@@ -496,25 +501,25 @@ namespace OpenEphys.Onix1.Design
 
                     if (StimulusSequenceOptions.textboxAmplitudeCathodic.Tag != null)
                     {
-                        Sequence.Stimuli[i].CathodicAmplitudeSteps = (byte)StimulusSequenceOptions.textboxAmplitudeCathodic.Tag;
+                        sequence.Stimuli[i].CathodicAmplitudeSteps = (byte)StimulusSequenceOptions.textboxAmplitudeCathodic.Tag;
                     }
 
                     if (StimulusSequenceOptions.textboxPulseWidthCathodic.Tag != null)
                     {
-                        Sequence.Stimuli[i].CathodicWidthSamples = (uint)StimulusSequenceOptions.textboxPulseWidthCathodic.Tag;
+                        sequence.Stimuli[i].CathodicWidthSamples = (uint)StimulusSequenceOptions.textboxPulseWidthCathodic.Tag;
                     }
 
                     if (StimulusSequenceOptions.textboxInterStimulusInterval.Tag != null)
                     {
-                        Sequence.Stimuli[i].InterStimulusIntervalSamples = (uint)StimulusSequenceOptions.textboxInterStimulusInterval.Tag;
+                        sequence.Stimuli[i].InterStimulusIntervalSamples = (uint)StimulusSequenceOptions.textboxInterStimulusInterval.Tag;
                     }
 
-                    Sequence.Stimuli[i].NumberOfStimuli = (uint)StimulusSequenceOptions.numericUpDownNumberOfPulses.Value;
-                    Sequence.Stimuli[i].AnodicFirst = StimulusSequenceOptions.checkBoxAnodicFirst.Checked;
+                    sequence.Stimuli[i].NumberOfStimuli = (uint)StimulusSequenceOptions.numericUpDownNumberOfPulses.Value;
+                    sequence.Stimuli[i].AnodicFirst = StimulusSequenceOptions.checkBoxAnodicFirst.Checked;
                 }
             }
 
-            Sequence.CurrentStepSize = StepSize;
+            sequence.CurrentStepSize = StepSize;
 
             ChannelDialog.HighlightEnabledContacts();
 
@@ -578,7 +583,7 @@ namespace OpenEphys.Onix1.Design
             {
                 if (ChannelDialog.SelectedContacts[i])
                 {
-                    Sequence.Stimuli[i].Clear();
+                    Trigger.StimulusSequence.Stimuli[i].Clear();
                     RequestedAnodicAmplitudeuA[i] = 0.0;
                     RequestedCathodicAmplitudeuA[i] = 0.0;
                 }
@@ -603,8 +608,10 @@ namespace OpenEphys.Onix1.Design
                         .Select(c => c.Ind)
                         .First();
 
-            if (Sequence.Stimuli[index].AnodicAmplitudeSteps == Sequence.Stimuli[index].CathodicAmplitudeSteps &&
-                Sequence.Stimuli[index].AnodicWidthSamples == Sequence.Stimuli[index].CathodicWidthSamples)
+            var sequence = Trigger.StimulusSequence;
+
+            if (sequence.Stimuli[index].AnodicAmplitudeSteps == sequence.Stimuli[index].CathodicAmplitudeSteps &&
+                sequence.Stimuli[index].AnodicWidthSamples == sequence.Stimuli[index].CathodicWidthSamples)
             {
                 StimulusSequenceOptions.checkboxBiphasicSymmetrical.Checked = true;
             }
@@ -613,18 +620,18 @@ namespace OpenEphys.Onix1.Design
                 StimulusSequenceOptions.checkboxBiphasicSymmetrical.Checked = false;
             }
 
-            StepSize = Sequence.CurrentStepSize;
+            StepSize = sequence.CurrentStepSize;
             StimulusSequenceOptions.textBoxStepSize.Text = GetStepSizeStringuA(StepSize);
 
-            StimulusSequenceOptions.checkBoxAnodicFirst.Checked = Sequence.Stimuli[index].AnodicFirst;
+            StimulusSequenceOptions.checkBoxAnodicFirst.Checked = sequence.Stimuli[index].AnodicFirst;
 
             Checkbox_CheckedChanged(StimulusSequenceOptions.checkboxBiphasicSymmetrical, e);
 
-            StimulusSequenceOptions.textboxDelay.Text = GetTimeString(Sequence.Stimuli[index].DelaySamples);
-            StimulusSequenceOptions.textboxDelay.Tag = Sequence.Stimuli[index].DelaySamples;
+            StimulusSequenceOptions.textboxDelay.Text = GetTimeString(sequence.Stimuli[index].DelaySamples);
+            StimulusSequenceOptions.textboxDelay.Tag = sequence.Stimuli[index].DelaySamples;
 
-            StimulusSequenceOptions.textboxAmplitudeAnodic.Text = GetAmplitudeString(Sequence.Stimuli[index].AnodicAmplitudeSteps);
-            StimulusSequenceOptions.textboxAmplitudeAnodic.Tag = Sequence.Stimuli[index].AnodicAmplitudeSteps;
+            StimulusSequenceOptions.textboxAmplitudeAnodic.Text = GetAmplitudeString(sequence.Stimuli[index].AnodicAmplitudeSteps);
+            StimulusSequenceOptions.textboxAmplitudeAnodic.Tag = sequence.Stimuli[index].AnodicAmplitudeSteps;
 
             if (RequestedAnodicAmplitudeuA[index] != 0.0)
             {
@@ -637,11 +644,11 @@ namespace OpenEphys.Onix1.Design
                 StimulusSequenceOptions.textboxAmplitudeAnodicRequested.Tag = null;
             }
 
-            StimulusSequenceOptions.textboxPulseWidthAnodic.Text = GetTimeString(Sequence.Stimuli[index].AnodicWidthSamples);
-            StimulusSequenceOptions.textboxPulseWidthAnodic.Tag = Sequence.Stimuli[index].AnodicWidthSamples;
+            StimulusSequenceOptions.textboxPulseWidthAnodic.Text = GetTimeString(sequence.Stimuli[index].AnodicWidthSamples);
+            StimulusSequenceOptions.textboxPulseWidthAnodic.Tag = sequence.Stimuli[index].AnodicWidthSamples;
 
-            StimulusSequenceOptions.textboxAmplitudeCathodic.Text = GetAmplitudeString(Sequence.Stimuli[index].CathodicAmplitudeSteps);
-            StimulusSequenceOptions.textboxAmplitudeCathodic.Tag = Sequence.Stimuli[index].CathodicAmplitudeSteps;
+            StimulusSequenceOptions.textboxAmplitudeCathodic.Text = GetAmplitudeString(sequence.Stimuli[index].CathodicAmplitudeSteps);
+            StimulusSequenceOptions.textboxAmplitudeCathodic.Tag = sequence.Stimuli[index].CathodicAmplitudeSteps;
 
             if (RequestedCathodicAmplitudeuA[index] != 0.0)
             {
@@ -654,16 +661,16 @@ namespace OpenEphys.Onix1.Design
                 StimulusSequenceOptions.textboxAmplitudeCathodicRequested.Tag = null;
             }
 
-            StimulusSequenceOptions.textboxPulseWidthCathodic.Text = GetTimeString(Sequence.Stimuli[index].CathodicWidthSamples);
-            StimulusSequenceOptions.textboxPulseWidthCathodic.Tag = Sequence.Stimuli[index].CathodicWidthSamples;
+            StimulusSequenceOptions.textboxPulseWidthCathodic.Text = GetTimeString(sequence.Stimuli[index].CathodicWidthSamples);
+            StimulusSequenceOptions.textboxPulseWidthCathodic.Tag = sequence.Stimuli[index].CathodicWidthSamples;
 
-            StimulusSequenceOptions.textboxInterPulseInterval.Text = GetTimeString(Sequence.Stimuli[index].DwellSamples);
-            StimulusSequenceOptions.textboxInterPulseInterval.Tag = Sequence.Stimuli[index].DwellSamples;
+            StimulusSequenceOptions.textboxInterPulseInterval.Text = GetTimeString(sequence.Stimuli[index].DwellSamples);
+            StimulusSequenceOptions.textboxInterPulseInterval.Tag = sequence.Stimuli[index].DwellSamples;
 
-            StimulusSequenceOptions.textboxInterStimulusInterval.Text = GetTimeString(Sequence.Stimuli[index].InterStimulusIntervalSamples);
-            StimulusSequenceOptions.textboxInterStimulusInterval.Tag = Sequence.Stimuli[index].InterStimulusIntervalSamples;
+            StimulusSequenceOptions.textboxInterStimulusInterval.Text = GetTimeString(sequence.Stimuli[index].InterStimulusIntervalSamples);
+            StimulusSequenceOptions.textboxInterStimulusInterval.Tag = sequence.Stimuli[index].InterStimulusIntervalSamples;
 
-            StimulusSequenceOptions.numericUpDownNumberOfPulses.Value = Sequence.Stimuli[index].NumberOfStimuli;
+            StimulusSequenceOptions.numericUpDownNumberOfPulses.Value = sequence.Stimuli[index].NumberOfStimuli;
         }
 
         void ParameterKeyDown_Time(object sender, KeyEventArgs e)
@@ -896,7 +903,7 @@ namespace OpenEphys.Onix1.Design
                 return false;
             }
 
-            StepSize = Rhs2116StimulusSequence.GetStepSizeWithMinError(validStepSizes, Sequence.Stimuli, amplitude, Sequence.CurrentStepSize);
+            StepSize = Rhs2116StimulusSequence.GetStepSizeWithMinError(validStepSizes, Trigger.StimulusSequence.Stimuli, amplitude, Trigger.StimulusSequence.CurrentStepSize);
             StimulusSequenceOptions.textBoxStepSize.Text = GetStepSizeStringuA(StepSize);
 
             return true;
@@ -914,21 +921,21 @@ namespace OpenEphys.Onix1.Design
 
         internal override void SerializeStimulusSequence(string fileName)
         {
-            DesignHelper.SerializeObject(Sequence, fileName);
+            DesignHelper.SerializeObject(Trigger.StimulusSequence, fileName);
         }
 
         internal override bool IsSequenceValid()
         {
-            return Sequence.Valid;
+            return Trigger.StimulusSequence.Valid && Trigger.StimulusSequence.FitsInHardware;
         }
 
         internal override void DeserializeStimulusSequence(string fileName)
         {
-            var sequence = DesignHelper.DeserializeString<Rhs2116StimulusSequencePair>(File.ReadAllText(fileName));
+            var newSequence = DesignHelper.DeserializeString<Rhs2116StimulusSequencePair>(File.ReadAllText(fileName));
 
-            if (sequence != null && sequence.Stimuli.Length == 32)
+            if (newSequence != null && newSequence.Stimuli.Length == 32)
             {
-                if (sequence == new Rhs2116StimulusSequencePair())
+                if (newSequence == new Rhs2116StimulusSequencePair())
                 {
                     var result = MessageBox.Show("The stimulus sequence loaded does not have any configuration settings applied. " +
                         "This could be because the file did not have the correct format. If this sequence is loaded, it will clear out " +
@@ -940,15 +947,15 @@ namespace OpenEphys.Onix1.Design
                     }
                 }
 
-                Sequence = sequence;
+                Trigger.StimulusSequence = newSequence;
 
-                for (int i = 0; i < Sequence.Stimuli.Length; i++)
+                for (int i = 0; i < newSequence.Stimuli.Length; i++)
                 {
-                    RequestedAnodicAmplitudeuA[i] = Sequence.Stimuli[i].AnodicAmplitudeSteps * Sequence.CurrentStepSizeuA;
-                    RequestedCathodicAmplitudeuA[i] = Sequence.Stimuli[i].CathodicAmplitudeSteps * Sequence.CurrentStepSizeuA;
+                    RequestedAnodicAmplitudeuA[i] = newSequence.Stimuli[i].AnodicAmplitudeSteps * newSequence.CurrentStepSizeuA;
+                    RequestedCathodicAmplitudeuA[i] = newSequence.Stimuli[i].CathodicAmplitudeSteps * newSequence.CurrentStepSizeuA;
                 }
 
-                if (!Sequence.Valid)
+                if (!newSequence.Valid)
                 {
                     MessageBox.Show("Warning: Invalid stimuli found in the recently opened file. Check all values to ensure they are what is expected.",
                         "Invalid Stimuli", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -962,10 +969,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override void SetTableDataSource()
         {
-            if (Sequence == null)
-                return;
-
-            dataGridViewStimulusTable.DataSource = Sequence.Stimuli;
+            dataGridViewStimulusTable.DataSource = Trigger?.StimulusSequence.Stimuli;
         }
 
         private void DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)

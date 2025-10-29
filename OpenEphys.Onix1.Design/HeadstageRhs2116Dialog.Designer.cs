@@ -44,14 +44,14 @@
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // tabControl
+            // tabControlProperties
             // 
             this.tabControl.Controls.Add(this.tabPageStimulusSequence);
             this.tabControl.Controls.Add(this.tabPageRhs2116);
             this.tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl.Location = new System.Drawing.Point(3, 2);
             this.tabControl.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabControl.Name = "tabControl";
+            this.tabControl.Name = "tabControlProperties";
             this.tabControl.SelectedIndex = 0;
             this.tabControl.Size = new System.Drawing.Size(1328, 741);
             this.tabControl.TabIndex = 0;
