@@ -208,6 +208,7 @@ namespace OpenEphys.Onix1
             }
         }
 
+        [EquivalentDataSource(typeof(PortController))]
         internal static class Headstage64PortController
         {
             public const int ID = PortController.ID;
