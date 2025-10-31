@@ -10,6 +10,7 @@ namespace OpenEphys.Onix1.Design
         internal readonly GenericDeviceDialog Rhd2164Dialog;
         internal readonly GenericDeviceDialog Bno055Dialog;
         internal readonly GenericDeviceDialog TS4231V1Dialog;
+        internal readonly GenericDeviceDialog HeartbeatDialog;
         internal readonly Headstage64ElectricalStimulatorSequenceDialog ElectricalStimulatorSequenceDialog;
         internal readonly Headstage64OpticalStimulatorSequenceDialog OpticalStimulatorSequenceDialog;
 
@@ -29,6 +30,9 @@ namespace OpenEphys.Onix1.Design
 
             TS4231V1Dialog = new(new ConfigureTS4231V1(configureNode.TS4231));
             TS4231V1Dialog.SetChildFormProperties(this).AddDialogToTab(tabPageTS4231);
+
+            HeartbeatDialog = new(new ConfigurePersistentHeartbeat(configureNode.Heartbeat));
+            HeartbeatDialog.SetChildFormProperties(this).AddDialogToTab(tabPageHeartbeat);
 
             ElectricalStimulatorSequenceDialog = new(configureNode.ElectricalStimulator);
             ElectricalStimulatorSequenceDialog.SetChildFormProperties(this).AddDialogToTab(tabPageElectricalStimulator);
