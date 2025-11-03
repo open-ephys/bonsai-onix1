@@ -86,7 +86,7 @@ namespace OpenEphys.Onix1
                     var message = portVoltage.Requested.HasValue ?
                         $"Unable to acquire communication lock on {portString}. Confirm the headstage port is turned on." :
                         $"Unable to acquire communication lock on {portString}. Confirm the headstage port is turned on."
-                        + $"\n\nYou may need to manually specify a PortVoltage greater than {PortVoltage.Applied} volts, the maximum automatic value for this device.";
+                        + $"\n\nIf the problem persists, you may need to manually specify a PortVoltage greater than {PortVoltage.Applied} volts, the maximum automatic value for this device.";
 
                     dispose();
                     throw new InvalidOperationException(message);
