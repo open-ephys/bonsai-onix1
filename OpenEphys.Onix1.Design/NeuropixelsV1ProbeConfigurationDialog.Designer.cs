@@ -49,8 +49,6 @@
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.panelTrackBar = new System.Windows.Forms.Panel();
-            this.trackBarProbePosition = new System.Windows.Forms.TrackBar();
             this.panelProbe = new System.Windows.Forms.Panel();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.buttonCancel = new System.Windows.Forms.Button();
@@ -71,6 +69,8 @@
             this.comboBoxReference = new System.Windows.Forms.ComboBox();
             this.comboBoxLfpGain = new System.Windows.Forms.ComboBox();
             this.comboBoxApGain = new System.Windows.Forms.ComboBox();
+            this.panelTrackBar = new System.Windows.Forms.Panel();
+            this.trackBarProbePosition = new System.Windows.Forms.TrackBar();
             label4 = new System.Windows.Forms.Label();
             label2 = new System.Windows.Forms.Label();
             labelPresets = new System.Windows.Forms.Label();
@@ -84,10 +84,10 @@
             this.statusStrip1.SuspendLayout();
             this.menuStrip.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
-            this.panelTrackBar.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.trackBarProbePosition)).BeginInit();
             this.flowLayoutPanel1.SuspendLayout();
             this.panelOptions.SuspendLayout();
+            this.panelTrackBar.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.trackBarProbePosition)).BeginInit();
             this.SuspendLayout();
             // 
             // label4
@@ -266,33 +266,6 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 42F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(1234, 712);
             this.tableLayoutPanel1.TabIndex = 0;
-            // 
-            // panelTrackBar
-            // 
-            this.panelTrackBar.Controls.Add(this.trackBarProbePosition);
-            this.panelTrackBar.Location = new System.Drawing.Point(868, 4);
-            this.panelTrackBar.Margin = new System.Windows.Forms.Padding(4);
-            this.panelTrackBar.Name = "panelTrackBar";
-            this.panelTrackBar.Size = new System.Drawing.Size(47, 662);
-            this.panelTrackBar.TabIndex = 33;
-            // 
-            // trackBarProbePosition
-            // 
-            this.trackBarProbePosition.AutoSize = false;
-            this.trackBarProbePosition.BackColor = System.Drawing.SystemColors.Control;
-            this.trackBarProbePosition.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.trackBarProbePosition.Location = new System.Drawing.Point(0, 0);
-            this.trackBarProbePosition.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.trackBarProbePosition.Maximum = 100;
-            this.trackBarProbePosition.Name = "trackBarProbePosition";
-            this.trackBarProbePosition.Orientation = System.Windows.Forms.Orientation.Vertical;
-            this.trackBarProbePosition.Size = new System.Drawing.Size(47, 662);
-            this.trackBarProbePosition.TabIndex = 30;
-            this.trackBarProbePosition.TabStop = false;
-            this.trackBarProbePosition.TickFrequency = 2;
-            this.trackBarProbePosition.TickStyle = System.Windows.Forms.TickStyle.TopLeft;
-            this.trackBarProbePosition.Value = 50;
-            this.trackBarProbePosition.Scroll += new System.EventHandler(this.TrackBarScroll);
             // 
             // panelProbe
             // 
@@ -503,12 +476,12 @@
             this.textBoxAdcCalibrationFile.Location = new System.Drawing.Point(13, 30);
             this.textBoxAdcCalibrationFile.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textBoxAdcCalibrationFile.Name = "textBoxAdcCalibrationFile";
-            this.textBoxAdcCalibrationFile.ReadOnly = true;
             this.textBoxAdcCalibrationFile.Size = new System.Drawing.Size(241, 22);
             this.textBoxAdcCalibrationFile.TabIndex = 1;
             this.textBoxAdcCalibrationFile.TabStop = false;
             this.textBoxAdcCalibrationFile.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.textBoxAdcCalibrationFile.TextChanged += new System.EventHandler(this.AdcCalibrationFileTextChanged);
+            this.textBoxAdcCalibrationFile.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.TextBoxKeyPress);
             // 
             // textBoxGainCalibrationFile
             // 
@@ -517,12 +490,12 @@
             this.textBoxGainCalibrationFile.Location = new System.Drawing.Point(13, 133);
             this.textBoxGainCalibrationFile.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textBoxGainCalibrationFile.Name = "textBoxGainCalibrationFile";
-            this.textBoxGainCalibrationFile.ReadOnly = true;
             this.textBoxGainCalibrationFile.Size = new System.Drawing.Size(241, 22);
             this.textBoxGainCalibrationFile.TabIndex = 5;
             this.textBoxGainCalibrationFile.TabStop = false;
             this.textBoxGainCalibrationFile.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.textBoxGainCalibrationFile.TextChanged += new System.EventHandler(this.GainCalibrationFileTextChanged);
+            this.textBoxGainCalibrationFile.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.TextBoxKeyPress);
             // 
             // comboBoxReference
             // 
@@ -560,6 +533,33 @@
             this.comboBoxApGain.Size = new System.Drawing.Size(196, 24);
             this.comboBoxApGain.TabIndex = 8;
             // 
+            // panelTrackBar
+            // 
+            this.panelTrackBar.Controls.Add(this.trackBarProbePosition);
+            this.panelTrackBar.Location = new System.Drawing.Point(868, 4);
+            this.panelTrackBar.Margin = new System.Windows.Forms.Padding(4);
+            this.panelTrackBar.Name = "panelTrackBar";
+            this.panelTrackBar.Size = new System.Drawing.Size(47, 662);
+            this.panelTrackBar.TabIndex = 33;
+            // 
+            // trackBarProbePosition
+            // 
+            this.trackBarProbePosition.AutoSize = false;
+            this.trackBarProbePosition.BackColor = System.Drawing.SystemColors.Control;
+            this.trackBarProbePosition.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.trackBarProbePosition.Location = new System.Drawing.Point(0, 0);
+            this.trackBarProbePosition.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.trackBarProbePosition.Maximum = 100;
+            this.trackBarProbePosition.Name = "trackBarProbePosition";
+            this.trackBarProbePosition.Orientation = System.Windows.Forms.Orientation.Vertical;
+            this.trackBarProbePosition.Size = new System.Drawing.Size(47, 662);
+            this.trackBarProbePosition.TabIndex = 30;
+            this.trackBarProbePosition.TabStop = false;
+            this.trackBarProbePosition.TickFrequency = 2;
+            this.trackBarProbePosition.TickStyle = System.Windows.Forms.TickStyle.TopLeft;
+            this.trackBarProbePosition.Value = 50;
+            this.trackBarProbePosition.Scroll += new System.EventHandler(this.TrackBarScroll);
+            // 
             // NeuropixelsV1ProbeConfigurationDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -578,11 +578,11 @@
             this.menuStrip.ResumeLayout(false);
             this.menuStrip.PerformLayout();
             this.tableLayoutPanel1.ResumeLayout(false);
-            this.panelTrackBar.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.trackBarProbePosition)).EndInit();
             this.flowLayoutPanel1.ResumeLayout(false);
             this.panelOptions.ResumeLayout(false);
             this.panelOptions.PerformLayout();
+            this.panelTrackBar.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.trackBarProbePosition)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

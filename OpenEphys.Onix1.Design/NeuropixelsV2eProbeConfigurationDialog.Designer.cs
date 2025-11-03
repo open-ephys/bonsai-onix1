@@ -279,11 +279,11 @@
             this.textBoxProbeCalibrationFile.Location = new System.Drawing.Point(15, 30);
             this.textBoxProbeCalibrationFile.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textBoxProbeCalibrationFile.Name = "textBoxProbeCalibrationFile";
-            this.textBoxProbeCalibrationFile.ReadOnly = true;
             this.textBoxProbeCalibrationFile.Size = new System.Drawing.Size(235, 22);
             this.textBoxProbeCalibrationFile.TabIndex = 1;
             this.textBoxProbeCalibrationFile.TabStop = false;
             this.textBoxProbeCalibrationFile.TextChanged += new System.EventHandler(this.FileTextChanged);
+            this.textBoxProbeCalibrationFile.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.TextBoxKeyPress);
             // 
             // comboBoxReference
             // 
