@@ -72,8 +72,8 @@ namespace OpenEphys.Onix1
 
                 double gainCorrection = ProbeIndex switch
                 {
-                    NeuropixelsV2Probe.ProbeA => info.GainCorrectionA ?? throw new NullReferenceException($"No gain correction value found for {ProbeIndex}. Ensure that the probe is connected and the gain correction file is selected."),
-                    NeuropixelsV2Probe.ProbeB => info.GainCorrectionB ?? throw new NullReferenceException($"No gain correction value found for {ProbeIndex}. Ensure that the probe is connected and the gain correction file is selected."),
+                    NeuropixelsV2Probe.ProbeA => info.GainCorrectionA ?? throw new NullReferenceException($"Gain correction value is null for {ProbeIndex}."),
+                    NeuropixelsV2Probe.ProbeB => info.GainCorrectionB ?? throw new NullReferenceException($"Gain correction value is null for {ProbeIndex}."),
                     _ => throw new InvalidEnumArgumentException($"Unexpected {nameof(ProbeIndex)} value: {ProbeIndex}")
                 };
 
