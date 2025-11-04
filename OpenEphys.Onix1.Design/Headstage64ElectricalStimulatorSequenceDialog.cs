@@ -252,41 +252,6 @@ namespace OpenEphys.Onix1.Design
             return true;
         }
 
-        internal override bool CanCloseForm(out DialogResult result)
-        {
-            if (ElectricalStimulator != null)
-            {
-                if (!IsSequenceValid(ElectricalStimulator, out string reason))
-                {
-                    DialogResult resultContinue = MessageBox.Show($"Warning: Stimulus sequence is not valid ({reason}). " +
-                        "If you continue, the current settings will be discarded. " +
-                        "Press OK to discard changes, or press Cancel to continue editing the sequence.", "Invalid Sequence",
-                        MessageBoxButtons.OKCancel);
-
-                    if (resultContinue == DialogResult.OK)
-                    {
-                        result = DialogResult.Cancel;
-                        return true;
-                    }
-                    else
-                    {
-                        result = DialogResult.OK;
-                        return false;
-                    }
-                }
-                else
-                {
-                    result = DialogResult.OK;
-                    return true;
-                }
-            }
-            else
-            {
-                result = DialogResult.Cancel;
-                return true;
-            }
-        }
-
         internal override double GetPeakToPeakAmplitudeInMicroAmps()
         {
             var peakToPeak = Math.Max(Math.Max(ElectricalStimulator.PhaseOneCurrent, ElectricalStimulator.PhaseTwoCurrent), ElectricalStimulator.InterPhaseCurrent)

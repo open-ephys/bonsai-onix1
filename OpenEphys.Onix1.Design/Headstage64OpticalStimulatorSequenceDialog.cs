@@ -305,40 +305,5 @@ namespace OpenEphys.Onix1.Design
                 toolStripStatusIsValid.Text = "Warning: " + reason;
             }
         }
-
-        internal override bool CanCloseForm(out DialogResult result)
-        {
-            if (OpticalStimulator != null)
-            {
-                if (!IsSequenceValid(OpticalStimulator, out string reason))
-                {
-                    DialogResult resultContinue = MessageBox.Show($"Warning: Stimulus sequence is not valid ({reason}). " +
-                        "If you continue, the current settings will be discarded. " +
-                        "Press OK to discard changes, or press Cancel to continue editing the sequence.", "Invalid Sequence",
-                        MessageBoxButtons.OKCancel);
-
-                    if (resultContinue == DialogResult.OK)
-                    {
-                        result = DialogResult.Cancel;
-                        return true;
-                    }
-                    else
-                    {
-                        result = DialogResult.OK;
-                        return false;
-                    }
-                }
-                else
-                {
-                    result = DialogResult.OK;
-                    return true;
-                }
-            }
-            else
-            {
-                result = DialogResult.Cancel;
-                return true;
-            }
-        }
     }
 }

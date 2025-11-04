@@ -84,10 +84,35 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        internal virtual bool CanCloseForm(out DialogResult result)
+        internal bool CanCloseForm(out DialogResult result, string stimulusName = "Stimulus")
         {
-            result = DialogResult.OK;
-            return true;
+            bool canClose = true;
+
+            if (!IsSequenceValid())
+            {
+                DialogResult resultContinue = MessageBox.Show($"Warning: {stimulusName} sequence is not valid. " +
+                    $"If you continue, the current settings for {stimulusName} will be discarded. " +
+                    "Press OK to discard all changes for this device, or press Cancel to continue editing the sequence.",
+                    $"Invalid {stimulusName} Sequence",
+                    MessageBoxButtons.OKCancel);
+
+                if (resultContinue == DialogResult.OK)
+                {
+                    result = DialogResult.Cancel;
+                }
+                else
+                {
+                    result = DialogResult.OK;
+                    canClose = false;
+                }
+            }
+            else
+            {
+                result = DialogResult.OK;
+            }
+
+            DialogResult = result;
+            return canClose;
         }
 
         internal void OnSelect(object sender, EventArgs e)
@@ -381,7 +406,7 @@ namespace OpenEphys.Onix1.Design
 
         internal virtual bool IsSequenceValid()
         {
-            return true;
+            throw new NotImplementedException();
         }
 
         internal virtual void SetStatusValidity()

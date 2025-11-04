@@ -115,41 +115,6 @@ namespace OpenEphys.Onix1.Design
             DrawStimulusWaveform();
         }
 
-        internal override bool CanCloseForm(out DialogResult result)
-        {
-            if (Sequence != null)
-            {
-                if (!Sequence.Valid)
-                {
-                    DialogResult resultContinue = MessageBox.Show("Warning: Stimulus sequence is not valid. " +
-                        "If you continue, the current settings will be discarded. " +
-                        "Press OK to discard changes, or press Cancel to continue editing the sequence.", "Invalid Sequence",
-                        MessageBoxButtons.OKCancel);
-
-                    if (resultContinue == DialogResult.OK)
-                    {
-                        result = DialogResult.Cancel;
-                        return true;
-                    }
-                    else
-                    {
-                        result = DialogResult.OK;
-                        return false;
-                    }
-                }
-                else
-                {
-                    result = DialogResult.OK;
-                    return true;
-                }
-            }
-            else
-            {
-                result = DialogResult.Cancel;
-                return true;
-            }
-        }
-
         internal void OnZoom(object sender, EventArgs e)
         {
             ChannelDialog.UpdateFontSize();
