@@ -44,8 +44,8 @@
             this.trackBarChannelTwoPercent = new System.Windows.Forms.TrackBar();
             this.textBoxChannelTwoPercent = new System.Windows.Forms.TextBox();
             this.labelChannelTwoPercent = new System.Windows.Forms.Label();
-            this.textBoxPulsePeriod = new System.Windows.Forms.TextBox();
-            this.labelPulsePeriod = new System.Windows.Forms.Label();
+            this.textBoxPulseFrequencyHz = new System.Windows.Forms.TextBox();
+            this.labelPulseFrequencyHz = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarChannelOnePercent)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarChannelTwoPercent)).BeginInit();
             this.SuspendLayout();
@@ -53,7 +53,7 @@
             // textBoxBurstsPerTrain
             // 
             this.textBoxBurstsPerTrain.Location = new System.Drawing.Point(100, 198);
-            this.textBoxBurstsPerTrain.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.textBoxBurstsPerTrain.Margin = new System.Windows.Forms.Padding(2);
             this.textBoxBurstsPerTrain.Name = "textBoxBurstsPerTrain";
             this.textBoxBurstsPerTrain.Size = new System.Drawing.Size(57, 20);
             this.textBoxBurstsPerTrain.TabIndex = 17;
@@ -72,7 +72,7 @@
             // textBoxInterBurstInterval
             // 
             this.textBoxInterBurstInterval.Location = new System.Drawing.Point(267, 158);
-            this.textBoxInterBurstInterval.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.textBoxInterBurstInterval.Margin = new System.Windows.Forms.Padding(2);
             this.textBoxInterBurstInterval.Name = "textBoxInterBurstInterval";
             this.textBoxInterBurstInterval.Size = new System.Drawing.Size(57, 20);
             this.textBoxInterBurstInterval.TabIndex = 15;
@@ -89,7 +89,7 @@
             // textBoxPulsesPerBurst
             // 
             this.textBoxPulsesPerBurst.Location = new System.Drawing.Point(100, 158);
-            this.textBoxPulsesPerBurst.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.textBoxPulsesPerBurst.Margin = new System.Windows.Forms.Padding(2);
             this.textBoxPulsesPerBurst.Name = "textBoxPulsesPerBurst";
             this.textBoxPulsesPerBurst.Size = new System.Drawing.Size(57, 20);
             this.textBoxPulsesPerBurst.TabIndex = 13;
@@ -118,7 +118,7 @@
             // textBoxMaxCurrent
             // 
             this.textBoxMaxCurrent.Location = new System.Drawing.Point(100, 14);
-            this.textBoxMaxCurrent.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.textBoxMaxCurrent.Margin = new System.Windows.Forms.Padding(2);
             this.textBoxMaxCurrent.Name = "textBoxMaxCurrent";
             this.textBoxMaxCurrent.Size = new System.Drawing.Size(57, 20);
             this.textBoxMaxCurrent.TabIndex = 1;
@@ -126,7 +126,7 @@
             // textBoxChannelOnePercent
             // 
             this.textBoxChannelOnePercent.Location = new System.Drawing.Point(100, 47);
-            this.textBoxChannelOnePercent.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.textBoxChannelOnePercent.Margin = new System.Windows.Forms.Padding(2);
             this.textBoxChannelOnePercent.Name = "textBoxChannelOnePercent";
             this.textBoxChannelOnePercent.Size = new System.Drawing.Size(57, 20);
             this.textBoxChannelOnePercent.TabIndex = 3;
@@ -158,7 +158,7 @@
             // textBoxPulseDuration
             // 
             this.textBoxPulseDuration.Location = new System.Drawing.Point(100, 119);
-            this.textBoxPulseDuration.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.textBoxPulseDuration.Margin = new System.Windows.Forms.Padding(2);
             this.textBoxPulseDuration.Name = "textBoxPulseDuration";
             this.textBoxPulseDuration.Size = new System.Drawing.Size(57, 20);
             this.textBoxPulseDuration.TabIndex = 9;
@@ -189,7 +189,7 @@
             // textBoxChannelTwoPercent
             // 
             this.textBoxChannelTwoPercent.Location = new System.Drawing.Point(267, 47);
-            this.textBoxChannelTwoPercent.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.textBoxChannelTwoPercent.Margin = new System.Windows.Forms.Padding(2);
             this.textBoxChannelTwoPercent.Name = "textBoxChannelTwoPercent";
             this.textBoxChannelTwoPercent.Size = new System.Drawing.Size(57, 20);
             this.textBoxChannelTwoPercent.TabIndex = 5;
@@ -204,31 +204,31 @@
             this.labelChannelTwoPercent.TabIndex = 4;
             this.labelChannelTwoPercent.Text = "Channel Two [%]";
             // 
-            // textBoxPulsePeriod
+            // textBoxPulseFrequencyHz
             // 
-            this.textBoxPulsePeriod.Location = new System.Drawing.Point(267, 119);
-            this.textBoxPulsePeriod.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.textBoxPulsePeriod.Name = "textBoxPulsePeriod";
-            this.textBoxPulsePeriod.Size = new System.Drawing.Size(57, 20);
-            this.textBoxPulsePeriod.TabIndex = 11;
+            this.textBoxPulseFrequencyHz.Location = new System.Drawing.Point(267, 119);
+            this.textBoxPulseFrequencyHz.Margin = new System.Windows.Forms.Padding(2);
+            this.textBoxPulseFrequencyHz.Name = "textBoxPulseFrequencyHz";
+            this.textBoxPulseFrequencyHz.Size = new System.Drawing.Size(57, 20);
+            this.textBoxPulseFrequencyHz.TabIndex = 11;
             // 
-            // labelPulsePeriod
+            // labelPulseFrequencyHz
             // 
-            this.labelPulsePeriod.AutoSize = true;
-            this.labelPulsePeriod.Location = new System.Drawing.Point(162, 121);
-            this.labelPulsePeriod.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.labelPulsePeriod.Name = "labelPulsePeriod";
-            this.labelPulsePeriod.Size = new System.Drawing.Size(88, 13);
-            this.labelPulsePeriod.TabIndex = 10;
-            this.labelPulsePeriod.Text = "Pulse Period [ms]";
+            this.labelPulseFrequencyHz.AutoSize = true;
+            this.labelPulseFrequencyHz.Location = new System.Drawing.Point(162, 121);
+            this.labelPulseFrequencyHz.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.labelPulseFrequencyHz.Name = "labelPulseFrequencyHz";
+            this.labelPulseFrequencyHz.Size = new System.Drawing.Size(82, 13);
+            this.labelPulseFrequencyHz.TabIndex = 10;
+            this.labelPulseFrequencyHz.Text = "Pulse Freq. [Hz]";
             // 
             // Headstage64OpticalStimulatorOptions
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(328, 235);
-            this.Controls.Add(this.textBoxPulsePeriod);
-            this.Controls.Add(this.labelPulsePeriod);
+            this.Controls.Add(this.textBoxPulseFrequencyHz);
+            this.Controls.Add(this.labelPulseFrequencyHz);
             this.Controls.Add(this.trackBarChannelTwoPercent);
             this.Controls.Add(this.textBoxChannelTwoPercent);
             this.Controls.Add(this.labelChannelTwoPercent);
@@ -245,7 +245,7 @@
             this.Controls.Add(this.labelInterBurstInterval);
             this.Controls.Add(this.textBoxPulsesPerBurst);
             this.Controls.Add(this.labelPulsesPerBurst);
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Headstage64OpticalStimulatorOptions";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Headstage64OpticalStimulatorOptions";
@@ -273,7 +273,7 @@
         private System.Windows.Forms.Label labelChannelTwoPercent;
         internal System.Windows.Forms.TrackBar trackBarChannelOnePercent;
         internal System.Windows.Forms.TrackBar trackBarChannelTwoPercent;
-        internal System.Windows.Forms.TextBox textBoxPulsePeriod;
-        private System.Windows.Forms.Label labelPulsePeriod;
+        internal System.Windows.Forms.TextBox textBoxPulseFrequencyHz;
+        private System.Windows.Forms.Label labelPulseFrequencyHz;
     }
 }

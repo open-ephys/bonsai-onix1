@@ -164,27 +164,27 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Description("The duration of each pulse (msec).")]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
-        [Range(Headstage64OpticalStimulator.MinPulseDuration, Headstage64OpticalStimulator.MaxPulseDuration)]
+        [Range(Headstage64OpticalStimulator.MinPulseDurationMilliseconds, Headstage64OpticalStimulator.MaxPulseDurationMilliseconds)]
         [Precision(3, 1)]
         [Category(AcquisitionCategory)]
         public double PulseDuration
         {
             get => pulseDuration.Value;
-            set => pulseDuration.OnNext(Clamp(value, Headstage64OpticalStimulator.MinPulseDuration, Headstage64OpticalStimulator.MaxPulseDuration));
+            set => pulseDuration.OnNext(Clamp(value, Headstage64OpticalStimulator.MinPulseDurationMilliseconds, Headstage64OpticalStimulator.MaxPulseDurationMilliseconds));
         }
 
         /// <summary>
-        /// Gets or sets the pulse period within a burst in msec.
+        /// Gets or sets the pulse frequency within a burst in Hz.
         /// </summary>
-        [Description("The pulse period within a burst (msec).")]
+        [Description("The pulse frequency within a burst (Hz).")]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
-        [Range(Headstage64OpticalStimulator.MinPulsePeriod, Headstage64OpticalStimulator.MaxPulsePeriod)]
+        [Range(Headstage64OpticalStimulator.MinPulseFrequencyHz, Headstage64OpticalStimulator.MaxPulseFrequencyHz)]
         [Precision(3, 1)]
         [Category(AcquisitionCategory)]
         public double PulsesPerSecond
         {
             get => pulsesPerSecond.Value;
-            set => pulsesPerSecond.OnNext(Clamp(value, Headstage64OpticalStimulator.MinPulsePeriod, Headstage64OpticalStimulator.MaxPulsePeriod));
+            set => pulsesPerSecond.OnNext(Clamp(value, Headstage64OpticalStimulator.MinPulseFrequencyHz, Headstage64OpticalStimulator.MaxPulseFrequencyHz));
         }
 
         /// <summary>
@@ -206,13 +206,13 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Description("The duration of the inter-burst interval within a stimulus train (msec).")]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
-        [Range(Headstage64OpticalStimulator.MinInterBurstInterval, Headstage64OpticalStimulator.MaxInterBurstInterval)]
+        [Range(Headstage64OpticalStimulator.MinInterBurstIntervalMilliseconds, Headstage64OpticalStimulator.MaxInterBurstIntervalMilliseconds)]
         [Precision(3, 1)]
         [Category(AcquisitionCategory)]
         public double InterBurstInterval
         {
             get => interBurstInterval.Value;
-            set => interBurstInterval.OnNext(Clamp(value, Headstage64OpticalStimulator.MinInterBurstInterval, Headstage64OpticalStimulator.MaxInterBurstInterval));
+            set => interBurstInterval.OnNext(Clamp(value, Headstage64OpticalStimulator.MinInterBurstIntervalMilliseconds, Headstage64OpticalStimulator.MaxInterBurstIntervalMilliseconds));
         }
 
         /// <summary>
@@ -356,14 +356,14 @@ namespace OpenEphys.Onix1
         public const double MaxChannelPercentage = 100.0;
         public const double ChannelPercentageStep = 12.5;
 
-        public const double MinPulseDuration = 0.001;
-        public const double MaxPulseDuration = 1000.0;
+        public const double MinPulseDurationMilliseconds = 0.001;
+        public const double MaxPulseDurationMilliseconds = 500.0;
 
-        public const double MinPulsePeriod = 0.01;
-        public const double MaxPulsePeriod = 10000.0;
+        public const double MinPulseFrequencyHz = 0.1;
+        public const double MaxPulseFrequencyHz = 10000.0;
 
-        public const double MinInterBurstInterval = 0.0;
-        public const double MaxInterBurstInterval = 10000.0;
+        public const double MinInterBurstIntervalMilliseconds = 0.0;
+        public const double MaxInterBurstIntervalMilliseconds = 10000.0;
 
         // managed registers
         public const uint ENABLE = 0; // Enable stimulus report stream

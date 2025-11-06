@@ -32,8 +32,8 @@ namespace OpenEphys.Onix1.Design
         {
             textBoxMaxCurrent.Text = opticalStimulator.MaxCurrent.ToString();
             textBoxPulseDuration.Text = opticalStimulator.PulseDuration.ToString();
-            textBoxPulsePeriod.Text = opticalStimulator.PulsesPerSecond.ToString();
-            textBoxPulsePeriod.Enabled = opticalStimulator.PulsesPerBurst > 1;
+            textBoxPulseFrequencyHz.Text = opticalStimulator.PulsesPerSecond.ToString();
+            textBoxPulseFrequencyHz.Enabled = opticalStimulator.PulsesPerBurst > 1;
 
             textBoxChannelOnePercent.Text = opticalStimulator.ChannelOneCurrent.ToString();
             trackBarChannelOnePercent.Value = (int)(opticalStimulator.ChannelOneCurrent * channelOneScalingFactor);
@@ -53,7 +53,7 @@ namespace OpenEphys.Onix1.Design
         {
             if (int.TryParse(textBoxPulsesPerBurst.Text, out int result))
             {
-                textBoxPulsePeriod.Enabled = result > 1;
+                textBoxPulseFrequencyHz.Enabled = result > 1;
             }
         }
 
