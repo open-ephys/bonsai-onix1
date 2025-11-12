@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using ZedGraph;
@@ -78,19 +77,14 @@ namespace OpenEphys.Onix1.Design
                         StimulusSequenceOptions.textBoxInterBurstInterval,
                         value => { OpticalStimulator.InterBurstInterval = value; return OpticalStimulator.InterBurstInterval; },
                         double.Parse) },
-                { StimulusSequenceOptions.textBoxDelay,
-                    new TextBoxBinding<double>(
-                        StimulusSequenceOptions.textBoxDelay,
-                        value => { OpticalStimulator.Delay = value; return OpticalStimulator.Delay; },
-                        double.Parse) },
                 { StimulusSequenceOptions.textBoxPulseDuration,
                     new TextBoxBinding<double>(
                         StimulusSequenceOptions.textBoxPulseDuration,
                         value => { OpticalStimulator.PulseDuration = value; return OpticalStimulator.PulseDuration; },
                         double.Parse) },
-                { StimulusSequenceOptions.textBoxPulsePeriod,
+                { StimulusSequenceOptions.textBoxPulseFrequencyHz,
                     new TextBoxBinding<double>(
-                        StimulusSequenceOptions.textBoxPulsePeriod,
+                        StimulusSequenceOptions.textBoxPulseFrequencyHz,
                         value => { OpticalStimulator.PulsesPerSecond = value; return OpticalStimulator.PulsesPerSecond; },
                         double.Parse) },
             };
@@ -131,8 +125,9 @@ namespace OpenEphys.Onix1.Design
 
             toolStripStatusIsValid.BorderSides = ToolStripStatusLabelBorderSides.None;
 
-            SetXAxisTitle("Time [µs]");
-            yAxisScale = "mA";
+            xAxisScaleUnits = "ms";
+            SetXAxisTitle($"Time [{xAxisScaleUnits}]");
+            yAxisScaleUnits = "mA";
 
             DisableVerticalZoom();
 
@@ -227,7 +222,7 @@ namespace OpenEphys.Onix1.Design
 
                 waveforms[channel] = new PointPairList
                 {
-                    new PointPairList { new PointPair(0, offset), new PointPair(OpticalStimulator.Delay, offset) }
+                    new PointPairList { new PointPair(0, offset), new PointPair(0, offset) }
                 };
 
                 var stimulusCurrent = offset + GetChannelCurrentScaled(OpticalStimulator.MaxCurrent,
@@ -244,7 +239,7 @@ namespace OpenEphys.Onix1.Design
 
                         if (j != OpticalStimulator.PulsesPerBurst - 1)
                         {
-                            waveforms[channel].Add(new PointPair(waveforms[channel].Last().X + OpticalStimulator.PulsesPerSecond - OpticalStimulator.PulseDuration, offset));
+                            waveforms[channel].Add(new PointPair(waveforms[channel].Last().X + 1000.0 / OpticalStimulator.PulsesPerSecond - OpticalStimulator.PulseDuration, offset));
                         }
                     }
 
@@ -283,9 +278,9 @@ namespace OpenEphys.Onix1.Design
                 reason = "Maximum current is invalid.";
                 return false;
             }
-            else if (sequence.PulsesPerBurst > 1 && sequence.PulsesPerSecond <= sequence.PulseDuration)
+            else if (sequence.PulsesPerBurst > 1 && 1000.0 / sequence.PulsesPerSecond <= sequence.PulseDuration)
             {
-                reason = "Pulse period is too short compared to the pulse duration.";
+                reason = "Pulse frequency is too high compared to the pulse duration.";
                 return false;
             }
 
