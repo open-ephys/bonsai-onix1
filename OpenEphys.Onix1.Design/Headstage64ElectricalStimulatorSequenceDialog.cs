@@ -127,7 +127,8 @@ namespace OpenEphys.Onix1.Design
 
             toolStripStatusIsValid.BorderSides = ToolStripStatusLabelBorderSides.None;
 
-            SetXAxisTitle("Time [µs]");
+            xAxisScaleUnits = "µs";
+            SetXAxisTitle($"Time [{xAxisScaleUnits}]");
             SetYAxisTitle("");
             RemoveYAxisLabels();
 

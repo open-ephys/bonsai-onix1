@@ -131,8 +131,9 @@ namespace OpenEphys.Onix1.Design
 
             toolStripStatusIsValid.BorderSides = ToolStripStatusLabelBorderSides.None;
 
-            SetXAxisTitle("Time [µs]");
-            yAxisScale = "mA";
+            xAxisScaleUnits = "ms";
+            SetXAxisTitle($"Time [{xAxisScaleUnits}]");
+            yAxisScaleUnits = "mA";
 
             DisableVerticalZoom();
 
@@ -285,7 +286,7 @@ namespace OpenEphys.Onix1.Design
             }
             else if (sequence.PulsesPerBurst > 1 && sequence.PulsesPerSecond <= sequence.PulseDuration)
             {
-                reason = "Pulse period is too short compared to the pulse duration.";
+                reason = "Pulse frequency is too high compared to the pulse duration.";
                 return false;
             }
 
