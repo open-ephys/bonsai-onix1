@@ -15,6 +15,8 @@ namespace OpenEphys.Onix1
                 throw new ArgumentNullException(nameof(probeInterfaceFileName), "ProbeInterface file path cannot be null or empty.");
             }
 
+            if (!type.IsAssignableFrom(typeof(ProbeGroup))) throw new InvalidDataException($"Invalid type given: {type.Name} is not a valid {nameof(ProbeGroup)} type.");
+
             if (!File.Exists(probeInterfaceFileName))
             {
                 throw new FileNotFoundException($"The ProbeInterface file '{probeInterfaceFileName}' does not exist.");
@@ -23,8 +25,8 @@ namespace OpenEphys.Onix1
             try
             {
                 string jsonContent = File.ReadAllText(probeInterfaceFileName);
-                var result = JsonHelper.DeserializeString(jsonContent, type) ?? throw new InvalidDataException($"Failed to parse ProbeInterface file: {probeInterfaceFileName}");
-                return (ProbeGroup)result;
+                var result = JsonHelper.DeserializeString(jsonContent, type) as ProbeGroup ?? throw new InvalidDataException($"Failed to parse ProbeInterface file: {probeInterfaceFileName}");
+                return result;
             }
             catch (UnauthorizedAccessException e)
             {

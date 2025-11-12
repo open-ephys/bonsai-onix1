@@ -329,9 +329,19 @@ namespace OpenEphys.Onix1.Design
 
             if (ofd.ShowDialog() == DialogResult.OK && File.Exists(ofd.FileName))
             {
-                var newConfiguration = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(ofd.FileName, type);
+                // NB: This method is called from an open dialog; throwing an exception without handling it would close the dialog.
+                //     Show the resulting exception as a MessageBox to warn the user of the exception with closing the whole dialog.
+                try
+                {
+                    var newConfiguration = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(ofd.FileName, type);
 
-                return ValidateProbeGroup(newConfiguration) ? (ProbeGroup)newConfiguration : null;
+                    return ValidateProbeGroup(newConfiguration) ? newConfiguration : null;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Error Importing ProbeInterface File");
+                    return null;
+                }
             }
 
             return null;
