@@ -18,4 +18,8 @@
     <PackageReference Include="OpenEphys.ProbeInterface.NET" Version="0.3.0" />
     <PackageReference Include="System.Memory" Version="4.6.3" />
   </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="OpenEphys.Onix1.Design"/>
+  </ItemGroup>
 </Project>

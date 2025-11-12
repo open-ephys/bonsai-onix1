@@ -50,6 +50,8 @@
             this.zedGraphWaveform = new ZedGraph.ZedGraphControl();
             this.tabPageTable = new System.Windows.Forms.TabPage();
             this.dataGridViewStimulusTable = new System.Windows.Forms.DataGridView();
+            this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
+            this.button1 = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.statusStrip.SuspendLayout();
             this.menuStrip.SuspendLayout();
@@ -60,6 +62,7 @@
             this.tabPageWaveform.SuspendLayout();
             this.tabPageTable.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewStimulusTable)).BeginInit();
+            this.flowLayoutPanel2.SuspendLayout();
             this.SuspendLayout();
             // 
             // buttonCancel
@@ -124,7 +127,7 @@
             this.panelProbe.Location = new System.Drawing.Point(698, 2);
             this.panelProbe.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panelProbe.Name = "panelProbe";
-            this.panelProbe.Size = new System.Drawing.Size(445, 209);
+            this.panelProbe.Size = new System.Drawing.Size(445, 167);
             this.panelProbe.TabIndex = 0;
             // 
             // menuStrip
@@ -153,20 +156,20 @@
             this.openFileToolStripMenuItem,
             this.saveFileToolStripMenuItem});
             this.stimulusWaveformToolStripMenuItem.Name = "stimulusWaveformToolStripMenuItem";
-            this.stimulusWaveformToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.stimulusWaveformToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
             this.stimulusWaveformToolStripMenuItem.Text = "Stimulus Waveform";
             // 
             // openFileToolStripMenuItem
             // 
             this.openFileToolStripMenuItem.Name = "openFileToolStripMenuItem";
-            this.openFileToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.openFileToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
             this.openFileToolStripMenuItem.Text = "Open File";
             this.openFileToolStripMenuItem.Click += new System.EventHandler(this.MenuItemLoadFile_Click);
             // 
             // saveFileToolStripMenuItem
             // 
             this.saveFileToolStripMenuItem.Name = "saveFileToolStripMenuItem";
-            this.saveFileToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.saveFileToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
             this.saveFileToolStripMenuItem.Text = "Save File";
             this.saveFileToolStripMenuItem.Click += new System.EventHandler(this.MenuItemSaveFile_Click);
             // 
@@ -177,28 +180,30 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 451F));
             this.tableLayoutPanel1.Controls.Add(this.groupBoxDefineStimuli, 1, 1);
             this.tableLayoutPanel1.Controls.Add(this.panelProbe, 1, 0);
-            this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 0, 3);
             this.tableLayoutPanel1.Controls.Add(this.panelWaveform, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel2, 0, 2);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 24);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 3;
+            this.tableLayoutPanel1.RowCount = 4;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 308F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 42F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 42F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(1146, 563);
             this.tableLayoutPanel1.TabIndex = 8;
             // 
             // groupBoxDefineStimuli
             // 
             this.groupBoxDefineStimuli.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.groupBoxDefineStimuli.Location = new System.Drawing.Point(698, 215);
+            this.groupBoxDefineStimuli.Location = new System.Drawing.Point(698, 173);
             this.groupBoxDefineStimuli.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.groupBoxDefineStimuli.Name = "groupBoxDefineStimuli";
             this.groupBoxDefineStimuli.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.groupBoxDefineStimuli.Size = new System.Drawing.Size(445, 304);
+            this.tableLayoutPanel1.SetRowSpan(this.groupBoxDefineStimuli, 2);
+            this.groupBoxDefineStimuli.Size = new System.Drawing.Size(445, 346);
             this.groupBoxDefineStimuli.TabIndex = 0;
             this.groupBoxDefineStimuli.TabStop = false;
             this.groupBoxDefineStimuli.Text = "Define Stimuli";
@@ -223,7 +228,7 @@
             this.panelWaveform.Location = new System.Drawing.Point(3, 3);
             this.panelWaveform.Name = "panelWaveform";
             this.tableLayoutPanel1.SetRowSpan(this.panelWaveform, 2);
-            this.panelWaveform.Size = new System.Drawing.Size(689, 515);
+            this.panelWaveform.Size = new System.Drawing.Size(689, 473);
             this.panelWaveform.TabIndex = 8;
             // 
             // tabControlVisualization
@@ -234,7 +239,7 @@
             this.tabControlVisualization.Location = new System.Drawing.Point(0, 0);
             this.tabControlVisualization.Name = "tabControlVisualization";
             this.tabControlVisualization.SelectedIndex = 0;
-            this.tabControlVisualization.Size = new System.Drawing.Size(689, 515);
+            this.tabControlVisualization.Size = new System.Drawing.Size(689, 473);
             this.tabControlVisualization.TabIndex = 6;
             // 
             // tabPageWaveform
@@ -244,7 +249,7 @@
             this.tabPageWaveform.Name = "tabPageWaveform";
             this.tabPageWaveform.Padding = new System.Windows.Forms.Padding(3);
             this.tabPageWaveform.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
-            this.tabPageWaveform.Size = new System.Drawing.Size(681, 486);
+            this.tabPageWaveform.Size = new System.Drawing.Size(681, 444);
             this.tabPageWaveform.TabIndex = 0;
             this.tabPageWaveform.Text = "Stimulus Waveform";
             this.tabPageWaveform.UseVisualStyleBackColor = true;
@@ -262,7 +267,7 @@
             this.zedGraphWaveform.ScrollMinX = 0D;
             this.zedGraphWaveform.ScrollMinY = 0D;
             this.zedGraphWaveform.ScrollMinY2 = 0D;
-            this.zedGraphWaveform.Size = new System.Drawing.Size(675, 480);
+            this.zedGraphWaveform.Size = new System.Drawing.Size(675, 438);
             this.zedGraphWaveform.TabIndex = 5;
             this.zedGraphWaveform.UseExtendedPrintDialog = true;
             // 
@@ -272,7 +277,7 @@
             this.tabPageTable.Location = new System.Drawing.Point(4, 25);
             this.tabPageTable.Name = "tabPageTable";
             this.tabPageTable.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageTable.Size = new System.Drawing.Size(681, 486);
+            this.tabPageTable.Size = new System.Drawing.Size(681, 444);
             this.tabPageTable.TabIndex = 1;
             this.tabPageTable.Text = "Table";
             this.tabPageTable.UseVisualStyleBackColor = true;
@@ -289,9 +294,30 @@
             this.dataGridViewStimulusTable.ReadOnly = true;
             this.dataGridViewStimulusTable.RowHeadersWidth = 62;
             this.dataGridViewStimulusTable.RowTemplate.Height = 24;
-            this.dataGridViewStimulusTable.Size = new System.Drawing.Size(675, 480);
+            this.dataGridViewStimulusTable.Size = new System.Drawing.Size(675, 438);
             this.dataGridViewStimulusTable.TabIndex = 0;
             this.dataGridViewStimulusTable.TabStop = false;
+            // 
+            // flowLayoutPanel2
+            // 
+            this.flowLayoutPanel2.Controls.Add(this.button1);
+            this.flowLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.flowLayoutPanel2.Location = new System.Drawing.Point(3, 482);
+            this.flowLayoutPanel2.Name = "flowLayoutPanel2";
+            this.flowLayoutPanel2.Size = new System.Drawing.Size(689, 36);
+            this.flowLayoutPanel2.TabIndex = 9;
+            // 
+            // button1
+            // 
+            this.button1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button1.Location = new System.Drawing.Point(3, 2);
+            this.button1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(144, 32);
+            this.button1.TabIndex = 5;
+            this.button1.Text = "Reset Zoom";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.ResetZoom_Click);
             // 
             // GenericStimulusSequenceDialog
             // 
@@ -321,6 +347,7 @@
             this.tabPageWaveform.ResumeLayout(false);
             this.tabPageTable.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewStimulusTable)).EndInit();
+            this.flowLayoutPanel2.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -348,5 +375,7 @@
         private System.Windows.Forms.TabPage tabPageTable;
         internal System.Windows.Forms.DataGridView dataGridViewStimulusTable;
         internal System.Windows.Forms.ToolStripMenuItem stimulusWaveformToolStripMenuItem;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel2;
+        private System.Windows.Forms.Button button1;
     }
 }

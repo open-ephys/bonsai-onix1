@@ -26,45 +26,36 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// Public <see cref="IConfigureNeuropixelsV2"/> interface that is manipulated by
-        /// <see cref="NeuropixelsV2eDialog"/>.
+        /// Gets or sets the probe configuration.
         /// </summary>
-        /// <remarks>
-        /// When a <see cref="IConfigureNeuropixelsV2"/> is passed to 
-        /// <see cref="NeuropixelsV1Dialog"/>, it is copied and stored in this
-        /// variable so that any modifications made to configuration settings can be easily reversed
-        /// by not copying the new settings back to the original instance.
-        /// </remarks>
-        public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; set; }
+        public NeuropixelsV1ProbeConfiguration ProbeConfiguration
+        {
+            get => ChannelConfiguration.ProbeConfiguration;
+            set => ChannelConfiguration.ProbeConfiguration = value;
+        }
 
-        /// <inheritdoc cref="ConfigureNeuropixelsV1e.InvertPolarity"/>
-        public bool InvertPolarity { get; set; }
+        /// <inheritdoc cref="NeuropixelsV1ProbeConfiguration.InvertPolarity"/>
+        [Obsolete]
+        public bool InvertPolarity
+        {
+            get => ProbeConfiguration.InvertPolarity;
+            set => ProbeConfiguration.InvertPolarity = value;
+        }
 
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV1Dialog"/>.
         /// </summary>
         /// <param name="probeConfiguration">A <see cref="NeuropixelsV1ProbeConfiguration"/> object holding the current configuration settings.</param>
-        /// <param name="adcCalibrationFile">String defining the path to the ADC calibration file.</param>
-        /// <param name="gainCalibrationFile">String defining the path to the gain calibration file.</param>
-        /// <param name="invertPolarity">Boolean denoting whether or not to invert the polarity of neural data.</param>
-        public NeuropixelsV1ProbeConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration, string adcCalibrationFile, string gainCalibrationFile, bool invertPolarity)
+        public NeuropixelsV1ProbeConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration)
         {
             InitializeComponent();
             Shown += FormShown;
 
-            ProbeConfiguration = new(probeConfiguration);
+            ChannelConfiguration = new(probeConfiguration);
+            ChannelConfiguration
+                .SetChildFormProperties(this)
+                .AddDialogToPanel(panelProbe);
 
-            ChannelConfiguration = new(ProbeConfiguration)
-            {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this,
-            };
-
-            InvertPolarity = invertPolarity;
-
-            panelProbe.Controls.Add(ChannelConfiguration);
             this.AddMenuItemsFromDialogToFileOption(ChannelConfiguration);
 
             ChannelConfiguration.OnZoom += UpdateTrackBarLocation;
@@ -85,12 +76,14 @@ namespace OpenEphys.Onix1.Design
             checkBoxSpikeFilter.Checked = ProbeConfiguration.SpikeFilter;
             checkBoxSpikeFilter.CheckedChanged += SpikeFilterIndexChanged;
 
-            checkBoxInvertPolarity.Checked = InvertPolarity;
+            checkBoxInvertPolarity.Checked = ProbeConfiguration.InvertPolarity;
             checkBoxInvertPolarity.CheckedChanged += InvertPolarityIndexChanged;
 
-            textBoxAdcCalibrationFile.Text = adcCalibrationFile;
+            textBoxAdcCalibrationFile.Text = ProbeConfiguration.AdcCalibrationFileName;
+            textBoxAdcCalibrationFile.TextChanged += (sender, e) => ProbeConfiguration.AdcCalibrationFileName = ((TextBox)sender).Text;
 
-            textBoxGainCalibrationFile.Text = gainCalibrationFile;
+            textBoxGainCalibrationFile.Text = ProbeConfiguration.GainCalibrationFileName;
+            textBoxGainCalibrationFile.TextChanged += (sender, e) => ProbeConfiguration.GainCalibrationFileName = ((TextBox)sender).Text;
 
             comboBoxChannelPresets.DataSource = Enum.GetValues(typeof(ChannelPreset));
             CheckForExistingChannelPreset();
@@ -101,7 +94,7 @@ namespace OpenEphys.Onix1.Design
 
         private void InvertPolarityIndexChanged(object sender, EventArgs e)
         {
-            InvertPolarity = ((CheckBox)sender).Checked;
+            ProbeConfiguration.InvertPolarity = ((CheckBox)sender).Checked;
         }
 
         private void FormShown(object sender, EventArgs e)
@@ -116,13 +109,6 @@ namespace OpenEphys.Onix1.Design
 
             ChannelConfiguration.Show();
             ChannelConfiguration.ConnectResizeEventHandler();
-            ChannelConfiguration.OnResizeZedGraph += ResizeTrackBar;
-        }
-
-        private void ResizeTrackBar(object sender, EventArgs e)
-        {
-            panelTrackBar.Height = ((ChannelConfigurationDialog)sender).zedGraphChannels.Size.Height;
-            panelTrackBar.Location = new Point(panelProbe.Size.Width - panelTrackBar.Width, ChannelConfiguration.zedGraphChannels.Location.Y);
         }
 
         private void GainCalibrationFileTextChanged(object sender, EventArgs e)
@@ -317,22 +303,22 @@ namespace OpenEphys.Onix1.Design
 
             panelProbe.Visible = adcCalibration.HasValue && gainCorrection.HasValue;
 
-            if (toolStripAdcCalSN.Text == NoFileSelected) 
+            if (toolStripAdcCalSN.Text == NoFileSelected)
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusWarningImage;
-            else if (toolStripAdcCalSN.Text == InvalidFile) 
+            else if (toolStripAdcCalSN.Text == InvalidFile)
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusCriticalImage;
             else if (toolStripGainCalSN.Text != NoFileSelected && toolStripGainCalSN.Text != InvalidFile && toolStripAdcCalSN.Text != toolStripGainCalSN.Text)
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusBlockedImage;
-            else 
+            else
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusReadyImage;
 
-            if (toolStripGainCalSN.Text == NoFileSelected) 
+            if (toolStripGainCalSN.Text == NoFileSelected)
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusWarningImage;
-            else if (toolStripGainCalSN.Text == InvalidFile) 
+            else if (toolStripGainCalSN.Text == InvalidFile)
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusCriticalImage;
             else if (toolStripAdcCalSN.Text != NoFileSelected && toolStripAdcCalSN.Text != InvalidFile && toolStripAdcCalSN.Text != toolStripGainCalSN.Text)
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusBlockedImage;
-            else 
+            else
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusReadyImage;
         }
 
@@ -375,11 +361,6 @@ namespace OpenEphys.Onix1.Design
             }
 
             CheckStatus();
-        }
-
-        private void ResetZoom_Click(object sender, EventArgs e)
-        {
-            ResetZoom();
         }
 
         private void ClearSelection_Click(object sender, EventArgs e)
@@ -451,13 +432,6 @@ namespace OpenEphys.Onix1.Design
             ChannelConfiguration.RefreshZedGraph();
         }
 
-        private void ResetZoom()
-        {
-            ChannelConfiguration.ResetZoom();
-            ChannelConfiguration.RefreshZedGraph();
-            ChannelConfiguration.DrawScale();
-        }
-
         private void MoveToVerticalPosition(float relativePosition)
         {
             ChannelConfiguration.MoveToVerticalPosition(relativePosition);
@@ -472,6 +446,11 @@ namespace OpenEphys.Onix1.Design
         private void UpdateTrackBarLocation(object sender, EventArgs e)
         {
             trackBarProbePosition.Value = (int)(ChannelConfiguration.GetRelativeVerticalPosition() * 100);
+        }
+
+        void TextBoxKeyPress(object sender, KeyPressEventArgs e)
+        {
+            CheckStatus();
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using OpenEphys.ProbeInterface.NET;
@@ -38,10 +37,7 @@ namespace OpenEphys.Onix1.Design
 
             ReferenceContacts.AddRange(ReferenceContactsList);
 
-            ProbeConfiguration = probeConfiguration;
-
-            ZoomInBoundaryX = 400;
-            ZoomInBoundaryY = 400;
+            ProbeConfiguration = new(probeConfiguration);
 
             HighlightEnabledContacts();
             UpdateContactLabels();
@@ -56,7 +52,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override void LoadDefaultChannelLayout()
         {
-            ProbeConfiguration = new(ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain, ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter);
+            ProbeConfiguration.ProbeGroup = new();
             ProbeGroup = ProbeConfiguration.ProbeGroup;
 
             OnFileOpenHandler();
@@ -66,8 +62,7 @@ namespace OpenEphys.Onix1.Design
         {
             if (base.OpenFile<NeuropixelsV1eProbeGroup>())
             {
-                ProbeConfiguration = new((NeuropixelsV1eProbeGroup)ProbeGroup, ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain, ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter);
-                ProbeGroup = ProbeConfiguration.ProbeGroup;
+                ProbeConfiguration.ProbeGroup = (NeuropixelsV1eProbeGroup)ProbeGroup;
 
                 OnFileOpenHandler();
 
@@ -87,7 +82,6 @@ namespace OpenEphys.Onix1.Design
             base.ZoomEvent(sender, oldState, newState);
 
             UpdateFontSize();
-            DrawScale();
             RefreshZedGraph();
 
             OnZoomHandler();
@@ -98,95 +92,26 @@ namespace OpenEphys.Onix1.Design
             OnZoom?.Invoke(this, EventArgs.Empty);
         }
 
+        internal override bool IsDrawScale() => true;
+
         internal override void DrawScale()
         {
-            if (ProbeConfiguration == null)
+            if (ProbeConfiguration == null || zedGraphChannels.MasterPane.PaneList.Count < 2)
                 return;
 
-            const string ScalePointsTag = "scale_points";
-            const string ScaleTextTag = "scale_text";
+            var pane = zedGraphChannels.MasterPane.PaneList[1];
 
-            zedGraphChannels.GraphPane.GraphObjList.RemoveAll(obj => obj is TextObj && obj.Tag is string tag && tag == ScaleTextTag);
-            zedGraphChannels.GraphPane.CurveList.RemoveAll(curve => curve.Tag is string tag && tag == ScalePointsTag);
+            pane.YAxis.Scale.Min = GetProbeBottom(zedGraphChannels.GraphPane.GraphObjList);
+            pane.YAxis.Scale.Max = GetProbeTop(zedGraphChannels.GraphPane.GraphObjList);
 
-            const int MajorTickIncrement = 100;
-            const int MajorTickLength = 10;
-            const int MinorTickIncrement = 10;
-            const int MinorTickLength = 5;
-
-            if (ProbeConfiguration.ProbeGroup.Probes.ElementAt(0).SiUnits != ProbeSiUnits.um)
-            {
-                MessageBox.Show("Warning: Expected ProbeGroup units to be in microns, but it is in millimeters. Scale might not be accurate.");
-            }
-
-            var fontSize = CalculateFontSize();
-
-            var zoomedOut = fontSize <= 2;
-
-            fontSize = zoomedOut ? 6 : fontSize * 3;
-            var majorTickOffset = MajorTickLength + CalculateScaleRange(zedGraphChannels.GraphPane.XAxis.Scale) * 0.015;
-            majorTickOffset = majorTickOffset > 50 ? 50 : majorTickOffset;
-
-            var x = GetProbeRight(zedGraphChannels.GraphPane.GraphObjList) + 40;
-            var minY = GetProbeBottom(zedGraphChannels.GraphPane.GraphObjList);
-            var maxY = GetProbeTop(zedGraphChannels.GraphPane.GraphObjList);
-
-            int textPosition = 0;
-
-            PointPairList pointList = new();
-
-            var countMajorTicks = 0;
-
-            for (int i = (int)minY; i < maxY; i += MajorTickIncrement)
-            {
-                PointPair majorTickLocation = new(x + MajorTickLength, minY + MajorTickIncrement * countMajorTicks);
-
-                pointList.Add(new PointPair(x, minY + MajorTickIncrement * countMajorTicks));
-                pointList.Add(majorTickLocation);
-                pointList.Add(new PointPair(x, minY + MajorTickIncrement * countMajorTicks));
-
-                if (!zoomedOut || countMajorTicks % 5 == 0)
-                {
-                    TextObj textObj = new($"{textPosition} µm", majorTickLocation.X + 10, majorTickLocation.Y, CoordType.AxisXYScale, AlignH.Left, AlignV.Center)
-                    {
-                        Tag = ScaleTextTag
-                    };
-                    textObj.FontSpec.Border.IsVisible = false;
-                    textObj.FontSpec.Size = fontSize;
-                    zedGraphChannels.GraphPane.GraphObjList.Add(textObj);
-
-                    textPosition += zoomedOut ? 5 * MajorTickIncrement : MajorTickIncrement;
-                }
-
-                if (!zoomedOut)
-                {
-                    var countMinorTicks = 1;
-
-                    for (int j = i + MinorTickIncrement; j < i + MajorTickIncrement && i + MinorTickIncrement * countMinorTicks < maxY; j += MinorTickIncrement)
-                    {
-                        pointList.Add(new PointPair(x, minY + MajorTickIncrement * countMajorTicks + MinorTickIncrement * countMinorTicks));
-                        pointList.Add(new PointPair(x + MinorTickLength, minY + MajorTickIncrement * countMajorTicks + MinorTickIncrement * countMinorTicks));
-                        pointList.Add(new PointPair(x, minY + MajorTickIncrement * countMajorTicks + MinorTickIncrement * countMinorTicks));
-
-                        countMinorTicks++;
-                    }
-                }
-
-                countMajorTicks++;
-            }
-
-            var curve = zedGraphChannels.GraphPane.AddCurve(ScalePointsTag, pointList, Color.Black, SymbolType.None);
-
-            const float scaleBarWidth = 1;
-
-            curve.Line.Width = scaleBarWidth;
-            curve.Label.IsVisible = false;
-            curve.Symbol.IsVisible = false;
+            pane.YAxis.Scale.Format = "#####0' " + ProbeGroup.Probes.First().SiUnits.ToString() + "'";
+            pane.YAxis.Scale.Mag = 0;
+            pane.YAxis.Scale.MagAuto = false;
         }
 
         internal override void HighlightEnabledContacts()
         {
-            if (ProbeConfiguration == null || ProbeConfiguration.ChannelMap == null)
+            if (ProbeConfiguration == null)
                 return;
 
             var contactObjects = zedGraphChannels.GraphPane.GraphObjList.OfType<BoxObj>()
@@ -199,11 +124,13 @@ namespace OpenEphys.Onix1.Design
                 contact.Fill.Color = DisabledContactFill;
             }
 
+            var channelMap = ProbeConfiguration.ChannelMap;
+
             var contactsToEnable = contactObjects.Where(c =>
             {
                 var tag = c.Tag as ContactTag;
                 var channel = NeuropixelsV1Electrode.GetChannelNumber(tag.ContactIndex);
-                return ProbeConfiguration.ChannelMap[channel].Index == tag.ContactIndex;
+                return channelMap[channel].Index == tag.ContactIndex;
             });
 
             foreach (var contact in contactsToEnable)
@@ -229,11 +156,13 @@ namespace OpenEphys.Onix1.Design
                 textObj.FontSpec.FontColor = DisabledContactTextColor;
             }
 
+            var channelMap = ProbeConfiguration.ChannelMap;
+
             textObjsToUpdate = textObjs.Where(c =>
             {
                 var tag = c.Tag as ContactTag;
                 var channel = NeuropixelsV1Electrode.GetChannelNumber(tag.ContactIndex);
-                return ProbeConfiguration.ChannelMap[channel].Index == tag.ContactIndex;
+                return channelMap[channel].Index == tag.ContactIndex;
             });
 
             foreach (var textObj in textObjsToUpdate)

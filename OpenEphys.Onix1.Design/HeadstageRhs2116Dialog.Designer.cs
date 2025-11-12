@@ -44,16 +44,16 @@
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // tabControl
+            // tabControlProperties
             // 
             this.tabControl.Controls.Add(this.tabPageStimulusSequence);
             this.tabControl.Controls.Add(this.tabPageRhs2116);
             this.tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl.Location = new System.Drawing.Point(3, 2);
             this.tabControl.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabControl.Name = "tabControl";
+            this.tabControl.Name = "tabControlProperties";
             this.tabControl.SelectedIndex = 0;
-            this.tabControl.Size = new System.Drawing.Size(1138, 622);
+            this.tabControl.Size = new System.Drawing.Size(1328, 741);
             this.tabControl.TabIndex = 0;
             // 
             // tabPageStimulusSequence
@@ -62,7 +62,7 @@
             this.tabPageStimulusSequence.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tabPageStimulusSequence.Name = "tabPageStimulusSequence";
             this.tabPageStimulusSequence.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPageStimulusSequence.Size = new System.Drawing.Size(1130, 593);
+            this.tabPageStimulusSequence.Size = new System.Drawing.Size(1320, 712);
             this.tabPageStimulusSequence.TabIndex = 1;
             this.tabPageStimulusSequence.Text = "Stimulus Sequence";
             this.tabPageStimulusSequence.UseVisualStyleBackColor = true;
@@ -72,7 +72,7 @@
             this.tabPageRhs2116.Location = new System.Drawing.Point(4, 25);
             this.tabPageRhs2116.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tabPageRhs2116.Name = "tabPageRhs2116";
-            this.tabPageRhs2116.Size = new System.Drawing.Size(1133, 429);
+            this.tabPageRhs2116.Size = new System.Drawing.Size(1130, 593);
             this.tabPageRhs2116.TabIndex = 2;
             this.tabPageRhs2116.Text = "Rhs2116";
             this.tabPageRhs2116.UseVisualStyleBackColor = true;
@@ -81,7 +81,7 @@
             // 
             this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.buttonCancel.Location = new System.Drawing.Point(991, 2);
+            this.buttonCancel.Location = new System.Drawing.Point(1181, 2);
             this.buttonCancel.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(144, 32);
@@ -92,7 +92,7 @@
             // buttonOK
             // 
             this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOK.Location = new System.Drawing.Point(841, 2);
+            this.buttonOK.Location = new System.Drawing.Point(1031, 2);
             this.buttonOK.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(144, 32);
@@ -109,7 +109,7 @@
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
             this.menuStrip.Padding = new System.Windows.Forms.Padding(5, 2, 0, 2);
-            this.menuStrip.Size = new System.Drawing.Size(1144, 24);
+            this.menuStrip.Size = new System.Drawing.Size(1334, 24);
             this.menuStrip.TabIndex = 3;
             this.menuStrip.Text = "menuStrip1";
             // 
@@ -131,7 +131,7 @@
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 42F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(1144, 668);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(1334, 787);
             this.tableLayoutPanel1.TabIndex = 4;
             // 
             // flowLayoutPanel1
@@ -140,16 +140,16 @@
             this.flowLayoutPanel1.Controls.Add(this.buttonOK);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 629);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 748);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(1138, 36);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(1328, 36);
             this.flowLayoutPanel1.TabIndex = 1;
             // 
             // HeadstageRhs2116Dialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1144, 692);
+            this.ClientSize = new System.Drawing.Size(1334, 811);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.menuStrip);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));

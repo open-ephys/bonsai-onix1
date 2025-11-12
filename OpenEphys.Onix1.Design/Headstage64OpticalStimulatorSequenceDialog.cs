@@ -131,9 +131,6 @@ namespace OpenEphys.Onix1.Design
 
             DisableVerticalZoom();
 
-            YAxisMax = NumberOfChannels + 1;
-            YAxisMin = 0;
-
             DrawStimulusWaveform();
 
             stimulusWaveformToolStripMenuItem.Text = "Optical Stimulus Sequence";
@@ -208,11 +205,16 @@ namespace OpenEphys.Onix1.Design
             return (GetChannelCurrent(maxCurrent, channelPercent) / 100.0) / scale;
         }
 
+        internal override double GetPeakToPeakAmplitudeInMicroAmps()
+        {
+            return OpticalStimulator.MaxCurrent == 0 ? ZeroPeakToPeak : OpticalStimulator.MaxCurrent;
+        }
+
         internal override PointPairList[] CreateStimulusWaveforms()
         {
             PointPairList[] waveforms = new PointPairList[NumberOfChannels];
 
-            PeakToPeak = OpticalStimulator.MaxCurrent == 0 ? ZeroPeakToPeak : OpticalStimulator.MaxCurrent * ChannelScale;
+            var peakToPeak = GetPeakToPeakAmplitudeInMicroAmps() * ChannelScale;
 
             for (int channel = 0; channel < NumberOfChannels; channel++)
             {
@@ -225,7 +227,7 @@ namespace OpenEphys.Onix1.Design
 
                 var stimulusCurrent = offset + GetChannelCurrentScaled(OpticalStimulator.MaxCurrent,
                                                                        channel == 0 ? OpticalStimulator.ChannelOneCurrent : OpticalStimulator.ChannelTwoCurrent,
-                                                                       PeakToPeak);
+                                                                       peakToPeak);
 
                 for (int i = 0; i < OpticalStimulator.BurstsPerTrain; i++)
                 {
@@ -296,41 +298,6 @@ namespace OpenEphys.Onix1.Design
             {
                 toolStripStatusIsValid.Image = Properties.Resources.StatusBlockedImage;
                 toolStripStatusIsValid.Text = "Warning: " + reason;
-            }
-        }
-
-        internal override bool CanCloseForm(out DialogResult result)
-        {
-            if (OpticalStimulator != null)
-            {
-                if (!IsSequenceValid(OpticalStimulator, out string reason))
-                {
-                    DialogResult resultContinue = MessageBox.Show($"Warning: Stimulus sequence is not valid ({reason}). " +
-                        "If you continue, the current settings will be discarded. " +
-                        "Press OK to discard changes, or press Cancel to continue editing the sequence.", "Invalid Sequence",
-                        MessageBoxButtons.OKCancel);
-
-                    if (resultContinue == DialogResult.OK)
-                    {
-                        result = DialogResult.Cancel;
-                        return true;
-                    }
-                    else
-                    {
-                        result = DialogResult.OK;
-                        return false;
-                    }
-                }
-                else
-                {
-                    result = DialogResult.OK;
-                    return true;
-                }
-            }
-            else
-            {
-                result = DialogResult.Cancel;
-                return true;
             }
         }
     }

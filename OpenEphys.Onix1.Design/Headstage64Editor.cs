@@ -26,8 +26,12 @@ namespace OpenEphys.Onix1.Design
                         DesignHelper.CopyProperties((ConfigureBno055)editorDialog.Bno055Dialog.Device, configureNode.Bno055, DesignHelper.PropertiesToIgnore);
                         DesignHelper.CopyProperties((ConfigureTS4231V1)editorDialog.TS4231V1Dialog.Device, configureNode.TS4231, DesignHelper.PropertiesToIgnore);
                         DesignHelper.CopyProperties((ConfigurePersistentHeartbeat)editorDialog.HeartbeatDialog.Device, configureNode.Heartbeat, DesignHelper.PropertiesToIgnore);
-                        configureNode.ElectricalStimulator = editorDialog.ElectricalStimulatorSequenceDialog.ElectricalStimulator;
-                        configureNode.OpticalStimulator = editorDialog.OpticalStimulatorSequenceDialog.OpticalStimulator;
+
+                        if (editorDialog.ElectricalStimulatorSequenceDialog.DialogResult == DialogResult.OK)
+                            configureNode.ElectricalStimulator = editorDialog.ElectricalStimulatorSequenceDialog.ElectricalStimulator;
+
+                        if (editorDialog.OpticalStimulatorSequenceDialog.DialogResult == DialogResult.OK)
+                            configureNode.OpticalStimulator = editorDialog.OpticalStimulatorSequenceDialog.OpticalStimulator;
 
                         return true;
                     }

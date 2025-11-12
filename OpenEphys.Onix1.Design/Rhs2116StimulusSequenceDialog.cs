@@ -1,9 +1,9 @@
-﻿using System.Windows.Forms;
-using System;
+﻿using System;
 using System.Drawing;
-using System.Linq;
-using ZedGraph;
 using System.IO;
+using System.Linq;
+using System.Windows.Forms;
+using ZedGraph;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -15,7 +15,9 @@ namespace OpenEphys.Onix1.Design
         const double SamplePeriodMilliSeconds = 1e3 / Rhs2116.SampleFrequencyHz;
         const int NumberOfChannels = 32;
 
-        internal Rhs2116StimulusSequencePair Sequence { get; set; }
+        internal Rhs2116StimulusSequencePair Sequence { get => Trigger.StimulusSequence; }
+
+        internal ConfigureRhs2116Trigger Trigger { get; set; }
 
         readonly Rhs2116StimulusSequencePair SequenceCopy = new();
 
@@ -35,19 +37,18 @@ namespace OpenEphys.Onix1.Design
         /// Opens a dialog allowing for easy changing of stimulus sequence parameters, with 
         /// visual feedback on what the resulting stimulus sequence looks like.
         /// </summary>
-        /// <param name="sequence">Stimulus sequence containing 32 channels of stimuli.</param>
-        /// <param name="probeGroup">Probe group containing ProbeInterface specifications for 32 contacts.</param>
-        public Rhs2116StimulusSequenceDialog(Rhs2116StimulusSequencePair sequence, Rhs2116ProbeGroup probeGroup)
+        /// <param name="rhs2116Trigger">Existing <see cref="ConfigureRhs2116Trigger"/> object.</param>
+        public Rhs2116StimulusSequenceDialog(ConfigureRhs2116Trigger rhs2116Trigger)
             : base(NumberOfChannels, true, true)
         {
-            if (probeGroup.NumberOfContacts != NumberOfChannels)
+            if (rhs2116Trigger.ProbeGroup.NumberOfContacts != NumberOfChannels)
             {
-                throw new ArgumentException($"Probe group is not valid: {NumberOfChannels} channels were expected, there are {probeGroup.NumberOfContacts} instead.");
+                throw new ArgumentException($"Probe group is not valid: {NumberOfChannels} channels were expected, there are {rhs2116Trigger.ProbeGroup.NumberOfContacts} instead.");
             }
 
             InitializeComponent();
 
-            Sequence = new Rhs2116StimulusSequencePair(sequence);
+            Trigger = new(rhs2116Trigger);
 
             dataGridViewStimulusTable.DataBindingComplete += DataBindingComplete;
             SetTableDataSource();
@@ -63,7 +64,7 @@ namespace OpenEphys.Onix1.Design
 
             StepSize = Sequence.CurrentStepSize;
 
-            ChannelDialog = new(probeGroup);
+            ChannelDialog = new(rhs2116Trigger.ProbeGroup);
 
             ChannelDialog.SetChildFormProperties(this).AddDialogToPanel(panelProbe);
             this.AddMenuItemsFromDialogToFileOption(ChannelDialog, "Channel Configuration");
@@ -83,67 +84,35 @@ namespace OpenEphys.Onix1.Design
             StimulusSequenceOptions.checkBoxAnodicFirst.CheckedChanged += Checkbox_CheckedChanged;
             StimulusSequenceOptions.checkboxBiphasicSymmetrical.CheckedChanged += Checkbox_CheckedChanged;
 
-            StimulusSequenceOptions.textboxPulseWidthCathodic.KeyPress += ParameterKeyPress_Time;
+            StimulusSequenceOptions.textboxPulseWidthCathodic.KeyDown += ParameterKeyDown_Time;
             StimulusSequenceOptions.textboxPulseWidthCathodic.Leave += Samples_TextChanged;
 
-            StimulusSequenceOptions.textboxPulseWidthAnodic.KeyPress += ParameterKeyPress_Time;
+            StimulusSequenceOptions.textboxPulseWidthAnodic.KeyDown += ParameterKeyDown_Time;
             StimulusSequenceOptions.textboxPulseWidthAnodic.Leave += Samples_TextChanged;
 
-            StimulusSequenceOptions.textboxInterPulseInterval.KeyPress += ParameterKeyPress_Time;
+            StimulusSequenceOptions.textboxInterPulseInterval.KeyDown += ParameterKeyDown_Time;
             StimulusSequenceOptions.textboxInterPulseInterval.Leave += Samples_TextChanged;
 
-            StimulusSequenceOptions.textboxDelay.KeyPress += ParameterKeyPress_Time;
+            StimulusSequenceOptions.textboxDelay.KeyDown += ParameterKeyDown_Time;
             StimulusSequenceOptions.textboxDelay.Leave += Samples_TextChanged;
 
-            StimulusSequenceOptions.textboxInterStimulusInterval.KeyPress += ParameterKeyPress_Time;
+            StimulusSequenceOptions.textboxInterStimulusInterval.KeyDown += ParameterKeyDown_Time;
             StimulusSequenceOptions.textboxInterStimulusInterval.Leave += Samples_TextChanged;
 
             StimulusSequenceOptions.textboxAmplitudeAnodicRequested.Leave += Amplitude_TextChanged;
-            StimulusSequenceOptions.textboxAmplitudeAnodicRequested.KeyPress += ParameterKeyPress_Amplitude;
+            StimulusSequenceOptions.textboxAmplitudeAnodicRequested.KeyDown += ParameterKeyDown_Amplitude;
 
             StimulusSequenceOptions.textboxAmplitudeCathodicRequested.Leave += Amplitude_TextChanged;
-            StimulusSequenceOptions.textboxAmplitudeCathodicRequested.KeyPress += ParameterKeyPress_Amplitude;
+            StimulusSequenceOptions.textboxAmplitudeCathodicRequested.KeyDown += ParameterKeyDown_Amplitude;
+
+            StimulusSequenceOptions.numericUpDownNumberOfPulses.KeyDown += NumericUpDownNumberOfPulses_KeyDown;
+            StimulusSequenceOptions.numericUpDownNumberOfPulses.Leave += NumericUpDownNumberOfPulses_Leave;
 
             StimulusSequenceOptions.Show();
 
             StimulusSequenceOptions.textBoxStepSize.Text = GetStepSizeStringuA(StepSize);
 
             DrawStimulusWaveform();
-        }
-
-        internal override bool CanCloseForm(out DialogResult result)
-        {
-            if (Sequence != null)
-            {
-                if (!Sequence.Valid)
-                {
-                    DialogResult resultContinue = MessageBox.Show("Warning: Stimulus sequence is not valid. " +
-                        "If you continue, the current settings will be discarded. " +
-                        "Press OK to discard changes, or press Cancel to continue editing the sequence.", "Invalid Sequence",
-                        MessageBoxButtons.OKCancel);
-
-                    if (resultContinue == DialogResult.OK)
-                    {
-                        result = DialogResult.Cancel;
-                        return true;
-                    }
-                    else
-                    {
-                        result = DialogResult.OK;
-                        return false;
-                    }
-                }
-                else
-                {
-                    result = DialogResult.OK;
-                    return true;
-                }
-            }
-            else
-            {
-                result = DialogResult.Cancel;
-                return true;
-            }
         }
 
         internal void OnZoom(object sender, EventArgs e)
@@ -200,11 +169,11 @@ namespace OpenEphys.Onix1.Design
             ChannelDialog.RefreshZedGraph();
         }
 
-        double GetPeakToPeakAmplitudeInMicroAmps()
+        internal override double GetPeakToPeakAmplitudeInMicroAmps()
         {
             return Sequence.MaximumPeakToPeakAmplitudeSteps > 0
                 ? Sequence.GetMaxPeakToPeakAmplitudeuA()
-                : Sequence.CurrentStepSizeuA * 1; // NB: Used to give a buffer when plotting the stimulus waveform
+                : Sequence.CurrentStepSizeuA;
         }
 
         PointPairList CreateStimulusWaveform(Rhs2116Stimulus stimulus, double yOffset, double peakToPeak)
@@ -254,15 +223,15 @@ namespace OpenEphys.Onix1.Design
 
             bool plotAllContacts = ChannelDialog.SelectedContacts.All(x => x == false);
 
-            PeakToPeak = GetPeakToPeakAmplitudeInMicroAmps() * ChannelScale;
+            var peakToPeak = GetPeakToPeakAmplitudeInMicroAmps() * ChannelScale;
 
             for (int i = 0; i < Sequence.Stimuli.Length; i++)
             {
-                var channelOffset = -PeakToPeak * i;
+                var channelOffset = -peakToPeak * i;
 
                 if (ChannelDialog.SelectedContacts[i] || plotAllContacts)
                 {
-                    waveforms[i] = CreateStimulusWaveform(Sequence.Stimuli[i], channelOffset, PeakToPeak);
+                    waveforms[i] = CreateStimulusWaveform(Sequence.Stimuli[i], channelOffset, peakToPeak);
                 }
                 else
                 {
@@ -270,19 +239,11 @@ namespace OpenEphys.Onix1.Design
                 }
             }
 
-            YAxisMin = -2;
-            YAxisMax = NumberOfChannels;
-
             return waveforms;
         }
 
         internal override void SetStatusValidity()
         {
-            if (Sequence == null)
-            {
-                return;
-            }
-
             if (Sequence.Valid && Sequence.FitsInHardware)
             {
                 toolStripStatusIsValid.Image = Properties.Resources.StatusReadyImage;
@@ -376,12 +337,6 @@ namespace OpenEphys.Onix1.Design
 
         void ButtonAddPulses_Click(object sender, EventArgs e)
         {
-            if (ChannelDialog.SelectedContacts.All(x => x == false))
-            {
-                MessageBox.Show("No contacts selected. Please select contact(s) before trying to add pulses.");
-                return;
-            }
-
             var stimuli = Sequence.Stimuli
                             .Select((s, ind) => { return (Index: ind, Stimulus: s); })
                             .Where(s => s.Stimulus.Valid
@@ -515,11 +470,7 @@ namespace OpenEphys.Onix1.Design
                         Sequence.Stimuli[i].InterStimulusIntervalSamples = (uint)StimulusSequenceOptions.textboxInterStimulusInterval.Tag;
                     }
 
-                    if (uint.TryParse(StimulusSequenceOptions.textboxNumberOfStimuli.Text, out uint numberOfStimuliValue))
-                    {
-                        Sequence.Stimuli[i].NumberOfStimuli = numberOfStimuliValue;
-                    }
-
+                    Sequence.Stimuli[i].NumberOfStimuli = (uint)StimulusSequenceOptions.numericUpDownNumberOfPulses.Value;
                     Sequence.Stimuli[i].AnodicFirst = StimulusSequenceOptions.checkBoxAnodicFirst.Checked;
                 }
             }
@@ -527,6 +478,7 @@ namespace OpenEphys.Onix1.Design
             Sequence.CurrentStepSize = StepSize;
 
             ChannelDialog.HighlightEnabledContacts();
+
             DrawStimulusWaveform();
         }
 
@@ -672,23 +624,46 @@ namespace OpenEphys.Onix1.Design
             StimulusSequenceOptions.textboxInterStimulusInterval.Text = GetTimeString(Sequence.Stimuli[index].InterStimulusIntervalSamples);
             StimulusSequenceOptions.textboxInterStimulusInterval.Tag = Sequence.Stimuli[index].InterStimulusIntervalSamples;
 
-            StimulusSequenceOptions.textboxNumberOfStimuli.Text = Sequence.Stimuli[index].NumberOfStimuli.ToString();
+            StimulusSequenceOptions.numericUpDownNumberOfPulses.Value = Sequence.Stimuli[index].NumberOfStimuli;
         }
 
-        void ParameterKeyPress_Time(object sender, KeyPressEventArgs e)
+        void ParameterKeyDown_Time(object sender, KeyEventArgs e)
         {
-            if (e.KeyChar == '\r')
+            if (e.KeyCode == Keys.Enter)
             {
                 Samples_TextChanged(sender, e);
+                ButtonAddPulses_Click(sender, e);
+
+                e.Handled = true;
+                e.SuppressKeyPress = true;
             }
         }
 
-        void ParameterKeyPress_Amplitude(object sender, KeyPressEventArgs e)
+        void ParameterKeyDown_Amplitude(object sender, KeyEventArgs e)
         {
-            if (e.KeyChar == '\r')
+            if (e.KeyCode == Keys.Enter)
             {
                 Amplitude_TextChanged(sender, e);
+                ButtonAddPulses_Click(sender, e);
+
+                e.Handled = true;
+                e.SuppressKeyPress = true;
             }
+        }
+
+        void NumericUpDownNumberOfPulses_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                ButtonAddPulses_Click(sender, e);
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        void NumericUpDownNumberOfPulses_Leave(object sender, EventArgs e)
+        {
+            ButtonAddPulses_Click(sender, e);
         }
 
         void Samples_TextChanged(object sender, EventArgs e)
@@ -758,6 +733,8 @@ namespace OpenEphys.Onix1.Design
                 StimulusSequenceOptions.textboxPulseWidthAnodic.Text = textBox.Text;
                 StimulusSequenceOptions.textboxPulseWidthAnodic.Tag = textBox.Tag;
             }
+
+            ButtonAddPulses_Click(sender, e);
         }
 
         bool GetSampleFromTime(double value, out uint samples)
@@ -898,21 +875,21 @@ namespace OpenEphys.Onix1.Design
 
         internal override void SerializeStimulusSequence(string fileName)
         {
-            DesignHelper.SerializeObject(Sequence, fileName);
+            JsonHelper.SerializeObject(Sequence, fileName);
         }
 
         internal override bool IsSequenceValid()
         {
-            return Sequence.Valid;
+            return Sequence.Valid && Sequence.FitsInHardware;
         }
 
         internal override void DeserializeStimulusSequence(string fileName)
         {
-            var sequence = DesignHelper.DeserializeString<Rhs2116StimulusSequencePair>(File.ReadAllText(fileName));
+            var newSequence = JsonHelper.DeserializeString<Rhs2116StimulusSequencePair>(File.ReadAllText(fileName));
 
-            if (sequence != null && sequence.Stimuli.Length == 32)
+            if (newSequence != null && newSequence.Stimuli.Length == 32)
             {
-                if (sequence == new Rhs2116StimulusSequencePair())
+                if (newSequence == new Rhs2116StimulusSequencePair())
                 {
                     var result = MessageBox.Show("The stimulus sequence loaded does not have any configuration settings applied. " +
                         "This could be because the file did not have the correct format. If this sequence is loaded, it will clear out " +
@@ -924,15 +901,15 @@ namespace OpenEphys.Onix1.Design
                     }
                 }
 
-                Sequence = sequence;
+                Trigger.StimulusSequence = newSequence;
 
-                for (int i = 0; i < Sequence.Stimuli.Length; i++)
+                for (int i = 0; i < newSequence.Stimuli.Length; i++)
                 {
-                    RequestedAnodicAmplitudeuA[i] = Sequence.Stimuli[i].AnodicAmplitudeSteps * Sequence.CurrentStepSizeuA;
-                    RequestedCathodicAmplitudeuA[i] = Sequence.Stimuli[i].CathodicAmplitudeSteps * Sequence.CurrentStepSizeuA;
+                    RequestedAnodicAmplitudeuA[i] = newSequence.Stimuli[i].AnodicAmplitudeSteps * newSequence.CurrentStepSizeuA;
+                    RequestedCathodicAmplitudeuA[i] = newSequence.Stimuli[i].CathodicAmplitudeSteps * newSequence.CurrentStepSizeuA;
                 }
 
-                if (!Sequence.Valid)
+                if (!newSequence.Valid)
                 {
                     MessageBox.Show("Warning: Invalid stimuli found in the recently opened file. Check all values to ensure they are what is expected.",
                         "Invalid Stimuli", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -946,10 +923,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override void SetTableDataSource()
         {
-            if (Sequence == null)
-                return;
-
-            dataGridViewStimulusTable.DataSource = Sequence.Stimuli;
+            dataGridViewStimulusTable.DataSource = Trigger?.StimulusSequence.Stimuli;
         }
 
         private void DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)

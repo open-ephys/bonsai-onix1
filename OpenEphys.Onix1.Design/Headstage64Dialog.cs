@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Windows.Forms;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -40,8 +41,21 @@ namespace OpenEphys.Onix1.Design
             OpticalStimulatorSequenceDialog = new(configureNode.OpticalStimulator);
             OpticalStimulatorSequenceDialog.SetChildFormProperties(this).AddDialogToTab(tabPageOpticalStimulator);
 
-            this.AddMenuItemsFromDialogToFileOption(ElectricalStimulatorSequenceDialog)
-                .AddMenuItemsFromDialogToFileOption(OpticalStimulatorSequenceDialog);
+            menuStrip1.Visible = false;
+        }
+
+        void OnClickOk(object sender, EventArgs e)
+        {
+            if (ElectricalStimulatorSequenceDialog.CanCloseForm(out DialogResult electricalResult, "Electrical Stimulator")
+                && OpticalStimulatorSequenceDialog.CanCloseForm(out DialogResult opticalResult, "Optical Stimulator"))
+            {
+                if (electricalResult == DialogResult.OK || opticalResult == DialogResult.OK)
+                    DialogResult = DialogResult.OK;
+                else
+                    DialogResult = DialogResult.Cancel;
+
+                Close();
+            }
         }
     }
 }

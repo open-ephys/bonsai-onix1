@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Windows.Forms;
-using Newtonsoft.Json;
 using OpenEphys.ProbeInterface.NET;
 using ZedGraph;
 
@@ -30,9 +29,10 @@ namespace OpenEphys.Onix1.Design
 
             zedGraphChannels.ZoomStepFraction = 0.5;
 
-            ZoomInBoundaryX = 5;
-            ZoomInBoundaryY = 5;
+            ZoomInBoundaryX = 2;
+            ZoomInBoundaryY = 2;
 
+            DrawProbeGroup();
             RefreshZedGraph();
         }
 
@@ -104,36 +104,6 @@ namespace OpenEphys.Onix1.Design
             }
 
             return s;
-        }
-
-        // NB: Currently there is only a text label drawn as the scale for this dialog, used to denote the
-        // absolute orientation of the default probe group
-        internal override void DrawScale()
-        {
-            const string scaleTag = "scale";
-
-            zedGraphChannels.GraphPane.GraphObjList.RemoveAll(obj => obj.Tag is string tag && tag == scaleTag);
-
-            bool isDefault = JsonConvert.SerializeObject(ProbeGroup) == JsonConvert.SerializeObject(new Rhs2116ProbeGroup());
-
-            if (isDefault)
-            {
-                var middle = GetProbeContourLeft(zedGraphChannels.GraphPane.GraphObjList)
-                    + (GetProbeContourRight(zedGraphChannels.GraphPane.GraphObjList) - GetProbeContourLeft(zedGraphChannels.GraphPane.GraphObjList)) / 2;
-                var top = GetProbeContourTop(zedGraphChannels.GraphPane.GraphObjList);
-
-                TextObj textObj = new("Tether Side", middle, top + 0.5, CoordType.AxisXYScale, AlignH.Center, AlignV.Center)
-                {
-                    ZOrder = ZOrder.A_InFront,
-                    Tag = scaleTag
-                };
-
-                SetTextObj(textObj);
-
-                textObj.FontSpec.Size = CalculateFontSize(4.0);
-
-                zedGraphChannels.GraphPane.GraphObjList.Add(textObj);
-            }
         }
     }
 }
