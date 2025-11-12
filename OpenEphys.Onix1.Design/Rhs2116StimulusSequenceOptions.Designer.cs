@@ -57,15 +57,19 @@
             this.checkboxBiphasicSymmetrical = new System.Windows.Forms.CheckBox();
             this.textboxInterStimulusInterval = new System.Windows.Forms.TextBox();
             this.labelInterStimulusInterval = new System.Windows.Forms.Label();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.panelProbe = new System.Windows.Forms.Panel();
             this.panelParameters.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownNumberOfPulses)).BeginInit();
             this.groupBoxCathode.SuspendLayout();
             this.groupBoxAnode.SuspendLayout();
+            this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // panelParameters
             // 
             this.panelParameters.AutoScroll = true;
+            this.panelParameters.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panelParameters.Controls.Add(this.numericUpDownNumberOfPulses);
             this.panelParameters.Controls.Add(this.textBoxStepSize);
             this.panelParameters.Controls.Add(this.groupBoxCathode);
@@ -84,10 +88,10 @@
             this.panelParameters.Controls.Add(this.textboxInterStimulusInterval);
             this.panelParameters.Controls.Add(this.labelInterStimulusInterval);
             this.panelParameters.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelParameters.Location = new System.Drawing.Point(0, 0);
+            this.panelParameters.Location = new System.Drawing.Point(3, 225);
             this.panelParameters.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panelParameters.Name = "panelParameters";
-            this.panelParameters.Size = new System.Drawing.Size(438, 289);
+            this.panelParameters.Size = new System.Drawing.Size(432, 286);
             this.panelParameters.TabIndex = 1;
             // 
             // numericUpDownNumberOfPulses
@@ -369,12 +373,35 @@
             this.labelInterStimulusInterval.TabIndex = 10;
             this.labelInterStimulusInterval.Text = "Inter-Stimulus [ms]";
             // 
+            // tableLayoutPanel1
+            // 
+            this.tableLayoutPanel1.ColumnCount = 1;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.Controls.Add(this.panelParameters, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.panelProbe, 0, 0);
+            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 2;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 290F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(438, 513);
+            this.tableLayoutPanel1.TabIndex = 2;
+            // 
+            // panelProbe
+            // 
+            this.panelProbe.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelProbe.Location = new System.Drawing.Point(3, 3);
+            this.panelProbe.Name = "panelProbe";
+            this.panelProbe.Size = new System.Drawing.Size(432, 217);
+            this.panelProbe.TabIndex = 2;
+            // 
             // Rhs2116StimulusSequenceOptions
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(438, 289);
-            this.Controls.Add(this.panelParameters);
+            this.ClientSize = new System.Drawing.Size(438, 513);
+            this.Controls.Add(this.tableLayoutPanel1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Rhs2116StimulusSequenceOptions";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
@@ -386,6 +413,7 @@
             this.groupBoxCathode.PerformLayout();
             this.groupBoxAnode.ResumeLayout(false);
             this.groupBoxAnode.PerformLayout();
+            this.tableLayoutPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -420,5 +448,7 @@
         internal System.Windows.Forms.TextBox textboxInterStimulusInterval;
         private System.Windows.Forms.Label labelInterStimulusInterval;
         internal System.Windows.Forms.NumericUpDown numericUpDownNumberOfPulses;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        internal System.Windows.Forms.Panel panelProbe;
     }
 }

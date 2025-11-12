@@ -30,7 +30,7 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <param name="opticalStimulator">Existing stimulus sequence.</param>
         public Headstage64OpticalStimulatorSequenceDialog(ConfigureHeadstage64OpticalStimulator opticalStimulator)
-            : base(new ConfigureHeadstage64OpticalStimulator(opticalStimulator), NumberOfChannels, false)
+            : base(new ConfigureHeadstage64OpticalStimulator(opticalStimulator), NumberOfChannels)
         {
             InitializeComponent();
             HideMenuStrip();

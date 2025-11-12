@@ -19,8 +19,6 @@ namespace OpenEphys.Onix1.Design
         }
 
         readonly int NumberOfChannels;
-        readonly bool UseProbeGroup;
-        readonly bool UseTable;
 
         internal const double ZeroPeakToPeak = 1e-12;
         internal readonly double ChannelScale = 1.1;
@@ -31,14 +29,13 @@ namespace OpenEphys.Onix1.Design
             InitializeComponent();
 
             NumberOfChannels = 0;
-            UseProbeGroup = true;
         }
 
         /// <summary>
         /// Opens a dialog allowing for easy changing of stimulus sequence parameters,
         /// with visual feedback on what the resulting stimulus sequence looks like.
         /// </summary>
-        public GenericStimulusSequenceDialog(object device, int numberOfChannels, bool useProbeGroup, bool useTable = false)
+        public GenericStimulusSequenceDialog(object device, int numberOfChannels)
         {
             InitializeComponent();
             Shown += FormShown;
@@ -46,25 +43,8 @@ namespace OpenEphys.Onix1.Design
             Device = device;
 
             NumberOfChannels = numberOfChannels;
-            UseProbeGroup = useProbeGroup;
-            UseTable = useTable;
-
-            if (!UseProbeGroup)
-            {
-                tableLayoutPanel1.Controls.Remove(panelProbe);
-                var control = tableLayoutPanel1.Controls[nameof(tabControlProperties)] as TabControl;
-                tableLayoutPanel1.SetRow(control, 0);
-                tableLayoutPanel1.SetRowSpan(control, 3);
-            }
-
-            if (!UseTable)
-            {
-                panelWaveform.Controls.Remove(tabControlVisualization);
-                panelWaveform.Controls.Add(zedGraphWaveform);
-            }
 
             InitializeZedGraphWaveform();
-            SetTableDataSource();
 
             zedGraphWaveform.ZoomEvent += OnZoom_Waveform;
             zedGraphWaveform.MouseMoveEvent += MouseMoveEvent;
@@ -218,8 +198,6 @@ namespace OpenEphys.Onix1.Design
             {
                 return Math.Abs(val).ToString("0");
             };
-
-            dataGridViewStimulusTable.Refresh();
 
             if (setZoomState && XMin != 0 && XMax != 0)
             {
@@ -512,12 +490,6 @@ namespace OpenEphys.Onix1.Design
         {
             menuStrip.Visible = false;
             menuStrip.Enabled = false;
-        }
-
-        internal virtual void SetTableDataSource()
-        {
-            if (UseTable)
-                throw new NotImplementedException();
         }
 
         void ResetZoom_Click(object sender, EventArgs e)
