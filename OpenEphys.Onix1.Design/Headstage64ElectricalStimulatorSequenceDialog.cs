@@ -125,7 +125,8 @@ namespace OpenEphys.Onix1.Design
             YAxisMax = 1;
             YAxisMin = -2;
 
-            SetXAxisTitle("Time [µs]");
+            xAxisScaleUnits = "µs";
+            SetXAxisTitle($"Time [{xAxisScaleUnits}]");
             SetYAxisTitle("");
             RemoveYAxisLabels();
 

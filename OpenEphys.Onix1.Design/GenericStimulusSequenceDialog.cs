@@ -248,7 +248,8 @@ namespace OpenEphys.Onix1.Design
             zedGraphWaveform.Refresh();
         }
 
-        internal string yAxisScale = "µA";
+        internal string yAxisScaleUnits = "µA";
+        internal string xAxisScaleUnits = "ms";
 
         void DrawScale()
         {
@@ -279,13 +280,13 @@ namespace OpenEphys.Onix1.Design
             line.Label.IsVisible = false;
             zedGraphWaveform.GraphPane.CurveList.Move(zedGraphWaveform.GraphPane.CurveList.Count - 1, -99);
 
-            TextObj timeScale = new(GetTimeScaleString(x) + " ms", zeroOffsetX + x * 1.02, zeroOffsetY, CoordType.AxisXYScale, AlignH.Left, AlignV.Center);
+            TextObj timeScale = new(GetTimeScaleString(x) + " " + xAxisScaleUnits, zeroOffsetX + x * 1.02, zeroOffsetY, CoordType.AxisXYScale, AlignH.Left, AlignV.Center);
             timeScale.FontSpec.Border.IsVisible = false;
             timeScale.FontSpec.Fill.IsVisible = false;
             timeScale.ZOrder = ZOrder.A_InFront;
             zedGraphWaveform.GraphPane.GraphObjList.Add(timeScale);
 
-            TextObj amplitudeScale = new(((PeakToPeak == ZeroPeakToPeak ? 0 : PeakToPeak) / (ChannelScale * 2)).ToString("0.##") + " " + yAxisScale, zeroOffsetX, zeroOffsetY + y * 1.02, CoordType.AxisXYScale, AlignH.Left, AlignV.Bottom);
+            TextObj amplitudeScale = new(((PeakToPeak == ZeroPeakToPeak ? 0 : PeakToPeak) / (ChannelScale * 2)).ToString("0.##") + " " + yAxisScaleUnits, zeroOffsetX, zeroOffsetY + y * 1.02, CoordType.AxisXYScale, AlignH.Left, AlignV.Bottom);
             amplitudeScale.FontSpec.Border.IsVisible = false;
             amplitudeScale.FontSpec.Fill.IsVisible = false;
             amplitudeScale.ZOrder = ZOrder.A_InFront;
@@ -344,7 +345,6 @@ namespace OpenEphys.Onix1.Design
             zedGraphWaveform.GraphPane.YAxis.Scale.IsSkipLastLabel = true;
             zedGraphWaveform.GraphPane.YAxis.Scale.IsSkipFirstLabel = true;
 
-            zedGraphWaveform.GraphPane.XAxis.Title.Text = "Time [ms]";
             zedGraphWaveform.GraphPane.YAxis.Title.Text = "Channel Number";
 
             zedGraphWaveform.IsAutoScrollRange = true;
