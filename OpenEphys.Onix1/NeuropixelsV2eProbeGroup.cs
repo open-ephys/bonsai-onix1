@@ -31,10 +31,7 @@ namespace OpenEphys.Onix1
         {
         }
 
-        internal NeuropixelsV2eProbeGroup Clone<T>() where T : NeuropixelsV2eProbeGroup
-        {
-            return Activator.CreateInstance(typeof(T), Specification, Version, Probes.Select(probe => new Probe(probe)).ToArray()) as T ?? throw new NullReferenceException($"Issue creating new probe group of type {nameof(NeuropixelsV2eProbeGroup)}.");
-        }
+        internal abstract NeuropixelsV2eProbeGroup Clone();
 
         internal void UpdateDeviceChannelIndices(NeuropixelsV2Electrode[] channelMap)
         {

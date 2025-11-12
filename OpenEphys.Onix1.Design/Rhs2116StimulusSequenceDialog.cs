@@ -71,8 +71,7 @@ namespace OpenEphys.Onix1.Design
 
             ChannelDialog.OnSelect += OnSelect;
             ChannelDialog.OnZoom += OnZoom;
-
-            ChannelDialog.Show();
+            ChannelDialog.OnFileLoad += OnFileLoad;
 
             StimulusSequenceOptions = new();
             groupBoxDefineStimuli.Controls.Add(StimulusSequenceOptions.SetChildFormProperties(this));
@@ -113,6 +112,11 @@ namespace OpenEphys.Onix1.Design
             StimulusSequenceOptions.textBoxStepSize.Text = GetStepSizeStringuA(StepSize);
 
             DrawStimulusWaveform();
+        }
+
+        void OnFileLoad(object sender, EventArgs e)
+        {
+            Trigger.ProbeGroup = (Rhs2116ProbeGroup)ChannelDialog.ProbeGroup;
         }
 
         internal void OnZoom(object sender, EventArgs e)
@@ -885,9 +889,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override void DeserializeStimulusSequence(string fileName)
         {
-            var newSequence = JsonHelper.DeserializeString<Rhs2116StimulusSequencePair>(File.ReadAllText(fileName));
-
-            if (newSequence != null && newSequence.Stimuli.Length == 32)
+            if (JsonHelper.DeserializeString(File.ReadAllText(fileName), typeof(Rhs2116StimulusSequencePair)) is Rhs2116StimulusSequencePair newSequence && newSequence.Stimuli.Length == 32)
             {
                 if (newSequence == new Rhs2116StimulusSequencePair())
                 {

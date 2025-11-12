@@ -278,15 +278,16 @@ namespace OpenEphys.Onix1.Design
             if (!TopLevel)
             {
                 menuStrip.Visible = false;
-                ResizeZedGraph();
             }
+
+            ResizeZedGraph();
         }
 
-        internal virtual bool OpenFile<T>() where T : ProbeGroup
+        internal virtual bool OpenFile(Type type)
         {
-            var newConfiguration = OpenAndParseConfigurationFile<T>();
+            var newConfiguration = OpenAndParseConfigurationFile(type);
 
-            if (ValidateProbeGroup(newConfiguration))
+            if (newConfiguration != null)
             {
                 ProbeGroup = newConfiguration;
                 return true;
@@ -317,7 +318,7 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        internal T OpenAndParseConfigurationFile<T>() where T : ProbeGroup
+        internal ProbeGroup OpenAndParseConfigurationFile(Type type)
         {
             using OpenFileDialog ofd = new();
 
@@ -328,9 +329,9 @@ namespace OpenEphys.Onix1.Design
 
             if (ofd.ShowDialog() == DialogResult.OK && File.Exists(ofd.FileName))
             {
-                var newConfiguration = JsonHelper.DeserializeString<T>(File.ReadAllText(ofd.FileName));
+                var newConfiguration = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(ofd.FileName, type);
 
-                return newConfiguration;
+                return ValidateProbeGroup(newConfiguration) ? (ProbeGroup)newConfiguration : null;
             }
 
             return null;
@@ -1025,7 +1026,7 @@ namespace OpenEphys.Onix1.Design
 
         private void MenuItemOpenFile(object sender, EventArgs e)
         {
-            if (OpenFile<ProbeGroup>())
+            if (OpenFile(ProbeGroup.GetType()))
             {
                 DrawProbeGroup();
                 ResetZoom();

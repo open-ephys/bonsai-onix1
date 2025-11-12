@@ -74,6 +74,11 @@ namespace OpenEphys.Onix1
         {
         }
 
+        internal override NeuropixelsV2eProbeGroup Clone()
+        {
+            return new NeuropixelsV2eQuadShankProbeGroup(Specification, Version, Probes.Select(probe => new Probe(probe)).ToArray());
+        }
+
         /// <summary>
         /// Generates a 2D array of default contact positions based on the given number of channels.
         /// </summary>

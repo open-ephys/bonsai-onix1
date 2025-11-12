@@ -24,7 +24,7 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <param name="probeConfiguration">A <see cref="NeuropixelsV2ProbeConfiguration"/> object holding the current configuration settings.</param>
         public NeuropixelsV2eChannelConfigurationDialog(NeuropixelsV2ProbeConfiguration probeConfiguration)
-            : base(probeConfiguration.ProbeGroup)
+            : base(probeConfiguration.ProbeGroup.Clone())
         {
             zedGraphChannels.ZoomButtons = MouseButtons.None;
             zedGraphChannels.ZoomButtons2 = MouseButtons.None;
@@ -54,23 +54,13 @@ namespace OpenEphys.Onix1.Design
             OnFileOpenHandler();
         }
 
-        internal override bool OpenFile<T>()
+        internal override bool OpenFile(Type type)
         {
-            MethodInfo method = GetType().GetMethod(
-                nameof(OpenAndParseConfigurationFile),
-                BindingFlags.Instance | BindingFlags.NonPublic,
-                null,
-                Type.EmptyTypes,
-                null) ?? throw new InvalidOperationException($"Could not find the {nameof(OpenAndParseConfigurationFile)} method.");
-
-            MethodInfo genericMethod = method.MakeGenericMethod(ProbeGroup.GetType()) ?? throw new InvalidOperationException($"Could not create the generic {nameof(OpenAndParseConfigurationFile)} method.");
-
-            var newConfiguration = genericMethod.Invoke(this, null) as NeuropixelsV2eProbeGroup;
-
-            if (ValidateProbeGroup(newConfiguration))
+            if (base.OpenFile(type))
             {
-                ProbeGroup = newConfiguration;
+                ProbeConfiguration.ProbeGroup = (NeuropixelsV2eProbeGroup)ProbeGroup;
                 OnFileOpenHandler();
+
                 return true;
             }
 
@@ -80,7 +70,6 @@ namespace OpenEphys.Onix1.Design
         private void OnFileOpenHandler()
         {
             OnFileLoad?.Invoke(this, EventArgs.Empty);
-            ProbeConfiguration.ProbeGroup = (NeuropixelsV2eProbeGroup)ProbeGroup;
         }
 
         internal override void ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState)

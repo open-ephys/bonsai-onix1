@@ -8,7 +8,7 @@ namespace OpenEphys.Onix1
     {
         public const string ProbeInterfaceFileNameFilter = "ProbeInterface Files|*.json|All Files|*.*";
 
-        public static T LoadExternalProbeInterfaceFile<T>(string probeInterfaceFileName) where T : ProbeGroup
+        public static ProbeGroup LoadExternalProbeInterfaceFile(string probeInterfaceFileName, Type type)
         {
             if (string.IsNullOrEmpty(probeInterfaceFileName))
             {
@@ -23,8 +23,8 @@ namespace OpenEphys.Onix1
             try
             {
                 string jsonContent = File.ReadAllText(probeInterfaceFileName);
-                var result = JsonHelper.DeserializeString<T>(jsonContent) ?? throw new InvalidDataException($"Failed to parse ProbeInterface file: {probeInterfaceFileName}");
-                return result;
+                var result = JsonHelper.DeserializeString(jsonContent, type) ?? throw new InvalidDataException($"Failed to parse ProbeInterface file: {probeInterfaceFileName}");
+                return (ProbeGroup)result;
             }
             catch (UnauthorizedAccessException e)
             {

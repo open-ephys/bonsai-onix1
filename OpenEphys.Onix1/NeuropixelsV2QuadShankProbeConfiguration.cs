@@ -72,7 +72,7 @@ namespace OpenEphys.Onix1
         public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2QuadShankProbeConfiguration probeConfiguration)
         {
             Reference = probeConfiguration.Reference;
-            ProbeGroup = probeConfiguration.ProbeGroup.Clone<NeuropixelsV2eQuadShankProbeGroup>();
+            ProbeGroup = probeConfiguration.ProbeGroup.Clone();
             Probe = probeConfiguration.Probe;
         }
 
@@ -86,7 +86,7 @@ namespace OpenEphys.Onix1
         [JsonConstructor]
         public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2eQuadShankProbeGroup probeGroup, NeuropixelsV2Probe probe, NeuropixelsV2QuadShankReference reference)
         {
-            ProbeGroup = probeGroup.Clone<NeuropixelsV2eQuadShankProbeGroup>();
+            ProbeGroup = probeGroup.Clone();
             Reference = reference;
             Probe = probe;
         }
