@@ -37,7 +37,7 @@ namespace OpenEphys.Onix1.Design
 
             ReferenceContacts.AddRange(ReferenceContactsList);
 
-            ProbeConfiguration = probeConfiguration;
+            ProbeConfiguration = new(probeConfiguration);
 
             HighlightEnabledContacts();
             UpdateContactLabels();
@@ -52,7 +52,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override void LoadDefaultChannelLayout()
         {
-            ProbeConfiguration = new(ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain, ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter);
+            ProbeConfiguration.ProbeGroup = new();
             ProbeGroup = ProbeConfiguration.ProbeGroup;
 
             OnFileOpenHandler();
@@ -62,8 +62,7 @@ namespace OpenEphys.Onix1.Design
         {
             if (base.OpenFile<NeuropixelsV1eProbeGroup>())
             {
-                ProbeConfiguration = new((NeuropixelsV1eProbeGroup)ProbeGroup, ProbeConfiguration.SpikeAmplifierGain, ProbeConfiguration.LfpAmplifierGain, ProbeConfiguration.Reference, ProbeConfiguration.SpikeFilter);
-                ProbeGroup = ProbeConfiguration.ProbeGroup;
+                ProbeConfiguration.ProbeGroup = (NeuropixelsV1eProbeGroup)ProbeGroup;
 
                 OnFileOpenHandler();
 
@@ -112,7 +111,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override void HighlightEnabledContacts()
         {
-            if (ProbeConfiguration == null || ProbeConfiguration.ChannelMap == null)
+            if (ProbeConfiguration == null)
                 return;
 
             var contactObjects = zedGraphChannels.GraphPane.GraphObjList.OfType<BoxObj>()
@@ -125,11 +124,13 @@ namespace OpenEphys.Onix1.Design
                 contact.Fill.Color = DisabledContactFill;
             }
 
+            var channelMap = ProbeConfiguration.ChannelMap;
+
             var contactsToEnable = contactObjects.Where(c =>
             {
                 var tag = c.Tag as ContactTag;
                 var channel = NeuropixelsV1Electrode.GetChannelNumber(tag.ContactIndex);
-                return ProbeConfiguration.ChannelMap[channel].Index == tag.ContactIndex;
+                return channelMap[channel].Index == tag.ContactIndex;
             });
 
             foreach (var contact in contactsToEnable)
@@ -155,11 +156,13 @@ namespace OpenEphys.Onix1.Design
                 textObj.FontSpec.FontColor = DisabledContactTextColor;
             }
 
+            var channelMap = ProbeConfiguration.ChannelMap;
+
             textObjsToUpdate = textObjs.Where(c =>
             {
                 var tag = c.Tag as ContactTag;
                 var channel = NeuropixelsV1Electrode.GetChannelNumber(tag.ContactIndex);
-                return ProbeConfiguration.ChannelMap[channel].Index == tag.ContactIndex;
+                return channelMap[channel].Index == tag.ContactIndex;
             });
 
             foreach (var textObj in textObjsToUpdate)

@@ -43,12 +43,9 @@ namespace OpenEphys.Onix1
         {
             ProbeName = configureNeuropixelsV1f.ProbeName;
             Enable = configureNeuropixelsV1f.Enable;
-            GainCalibrationFile = configureNeuropixelsV1f.GainCalibrationFile;
-            AdcCalibrationFile = configureNeuropixelsV1f.AdcCalibrationFile;
             ProbeConfiguration = new(configureNeuropixelsV1f.ProbeConfiguration);
             DeviceName = configureNeuropixelsV1f.DeviceName;
             DeviceAddress = configureNeuropixelsV1f.DeviceAddress;
-            InvertPolarity = configureNeuropixelsV1f.InvertPolarity;
         }
 
         /// <inheritdoc/>
@@ -60,29 +57,84 @@ namespace OpenEphys.Onix1
         [Description("Specifies whether the NeuropixelsV1 device is enabled.")]
         public bool Enable { get; set; } = true;
 
-        /// <inheritdoc/>
-        [Category(ConfigurationCategory)]
-        [Description("Invert the polarity of the electrode voltages acquired by the probe.")]
-        public bool InvertPolarity { get; set; } = true;
+        /// <summary>
+        /// Gets or sets a value determining if the polarity of the electrode voltages acquired by the probe
+        /// should be inverted.
+        /// </summary>
+        /// <remarks>
+        /// [Obsolete]. Cannot tag this property with the Obsolete attribute due to https://github.com/dotnet/runtime/issues/100453
+        /// </remarks>
+        [Browsable(false)]
+        [Externalizable(false)]
+        public bool InvertPolarity
+        {
+            get => ProbeConfiguration.InvertPolarity;
+            set => ProbeConfiguration.InvertPolarity = value;
+        }
+
+        /// <summary>
+        /// Prevent the InvertPolarity property from being serialized.
+        /// </summary>
+        /// <returns>False</returns>
+        [Obsolete]
+        public bool ShouldSerializeInvertPolarity()
+        {
+            return false;
+        }
 
         /// <inheritdoc/>
         [Category(ConfigurationCategory)]
         [Description("NeuropixelsV1 probe configuration.")]
+        [TypeConverter(typeof(GenericPropertyConverter))]
         public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; set; } = new();
 
-        /// <inheritdoc/>
-        [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
-        [Description("Path to the Neuropixels 1.0 gain calibration file.")]
-        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
-        [Category(ConfigurationCategory)]
-        public string GainCalibrationFile { get; set; }
+        /// <summary>
+        /// Gets or sets the path to the gain calibration file for this probe.
+        /// </summary>
+        /// <remarks>
+        /// [Obsolete]. Cannot tag this property with the Obsolete attribute due to https://github.com/dotnet/runtime/issues/100453
+        /// </remarks>
+        [Browsable(false)]
+        [Externalizable(false)]
+        public string GainCalibrationFile
+        {
+            get => ProbeConfiguration.GainCalibrationFileName;
+            set => ProbeConfiguration.GainCalibrationFileName = value;
+        }
 
-        /// <inheritdoc/>
-        [FileNameFilter("ADC calibration files (*_ADCCalibration.csv)|*_ADCCalibration.csv")]
-        [Description("Path to the Neuropixels 1.0 ADC calibration file.")]
-        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
-        [Category(ConfigurationCategory)]
-        public string AdcCalibrationFile { get; set; }
+        /// <summary>
+        /// Prevent the GainCalibrationFile property from being serialized.
+        /// </summary>
+        /// <returns>False</returns>
+        [Obsolete]
+        public bool ShouldSerializeGainCalibrationFile()
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// Gets or sets the path to the ADC calibration file.
+        /// </summary>
+        /// <remarks>
+        /// [Obsolete]. Cannot tag this property with the Obsolete attribute due to https://github.com/dotnet/runtime/issues/100453
+        /// </remarks>
+        [Browsable(false)]
+        [Externalizable(false)]
+        public string AdcCalibrationFile
+        {
+            get => ProbeConfiguration.AdcCalibrationFileName;
+            set => ProbeConfiguration.AdcCalibrationFileName = value;
+        }
+
+        /// <summary>
+        /// Prevent the AdcCalibrationFile property from being serialized.
+        /// </summary>
+        /// <returns>False</returns>
+        [Obsolete]
+        public bool ShouldSerializeAdcCalibrationFile()
+        {
+            return false;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="NeuropixelsV1Probe"/> for this probe.
@@ -105,7 +157,7 @@ namespace OpenEphys.Onix1
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;
-            var invertPolarity = InvertPolarity;
+            var invertPolarity = ProbeConfiguration.InvertPolarity;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
             return source.ConfigureDevice(context =>
@@ -115,7 +167,7 @@ namespace OpenEphys.Onix1
 
                 if (enable)
                 {
-                    var probeControl = new NeuropixelsV1fRegisterContext(device, ProbeConfiguration, GainCalibrationFile, AdcCalibrationFile, invertPolarity);
+                    var probeControl = new NeuropixelsV1fRegisterContext(device, ProbeConfiguration);
                     probeControl.InitializeProbe();
                     probeControl.WriteShiftRegisters();
                 }

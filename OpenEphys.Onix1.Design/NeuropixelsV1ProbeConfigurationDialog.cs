@@ -26,45 +26,36 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// Public <see cref="IConfigureNeuropixelsV2"/> interface that is manipulated by
-        /// <see cref="NeuropixelsV2eDialog"/>.
+        /// Gets or sets the probe configuration.
         /// </summary>
-        /// <remarks>
-        /// When a <see cref="IConfigureNeuropixelsV2"/> is passed to 
-        /// <see cref="NeuropixelsV1Dialog"/>, it is copied and stored in this
-        /// variable so that any modifications made to configuration settings can be easily reversed
-        /// by not copying the new settings back to the original instance.
-        /// </remarks>
-        public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; set; }
+        public NeuropixelsV1ProbeConfiguration ProbeConfiguration
+        {
+            get => ChannelConfiguration.ProbeConfiguration;
+            set => ChannelConfiguration.ProbeConfiguration = value;
+        }
 
-        /// <inheritdoc cref="ConfigureNeuropixelsV1e.InvertPolarity"/>
-        public bool InvertPolarity { get; set; }
+        /// <inheritdoc cref="NeuropixelsV1ProbeConfiguration.InvertPolarity"/>
+        [Obsolete]
+        public bool InvertPolarity
+        {
+            get => ProbeConfiguration.InvertPolarity;
+            set => ProbeConfiguration.InvertPolarity = value;
+        }
 
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV1Dialog"/>.
         /// </summary>
         /// <param name="probeConfiguration">A <see cref="NeuropixelsV1ProbeConfiguration"/> object holding the current configuration settings.</param>
-        /// <param name="adcCalibrationFile">String defining the path to the ADC calibration file.</param>
-        /// <param name="gainCalibrationFile">String defining the path to the gain calibration file.</param>
-        /// <param name="invertPolarity">Boolean denoting whether or not to invert the polarity of neural data.</param>
-        public NeuropixelsV1ProbeConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration, string adcCalibrationFile, string gainCalibrationFile, bool invertPolarity)
+        public NeuropixelsV1ProbeConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration)
         {
             InitializeComponent();
             Shown += FormShown;
 
-            ProbeConfiguration = new(probeConfiguration);
+            ChannelConfiguration = new(probeConfiguration);
+            ChannelConfiguration
+                .SetChildFormProperties(this)
+                .AddDialogToPanel(panelProbe);
 
-            ChannelConfiguration = new(ProbeConfiguration)
-            {
-                TopLevel = false,
-                FormBorderStyle = FormBorderStyle.None,
-                Dock = DockStyle.Fill,
-                Parent = this,
-            };
-
-            InvertPolarity = invertPolarity;
-
-            panelProbe.Controls.Add(ChannelConfiguration);
             this.AddMenuItemsFromDialogToFileOption(ChannelConfiguration);
 
             ChannelConfiguration.OnZoom += UpdateTrackBarLocation;
@@ -85,12 +76,14 @@ namespace OpenEphys.Onix1.Design
             checkBoxSpikeFilter.Checked = ProbeConfiguration.SpikeFilter;
             checkBoxSpikeFilter.CheckedChanged += SpikeFilterIndexChanged;
 
-            checkBoxInvertPolarity.Checked = InvertPolarity;
+            checkBoxInvertPolarity.Checked = ProbeConfiguration.InvertPolarity;
             checkBoxInvertPolarity.CheckedChanged += InvertPolarityIndexChanged;
 
-            textBoxAdcCalibrationFile.Text = adcCalibrationFile;
+            textBoxAdcCalibrationFile.Text = ProbeConfiguration.AdcCalibrationFileName;
+            textBoxAdcCalibrationFile.TextChanged += (sender, e) => ProbeConfiguration.AdcCalibrationFileName = ((TextBox)sender).Text;
 
-            textBoxGainCalibrationFile.Text = gainCalibrationFile;
+            textBoxGainCalibrationFile.Text = ProbeConfiguration.GainCalibrationFileName;
+            textBoxGainCalibrationFile.TextChanged += (sender, e) => ProbeConfiguration.GainCalibrationFileName = ((TextBox)sender).Text;
 
             comboBoxChannelPresets.DataSource = Enum.GetValues(typeof(ChannelPreset));
             CheckForExistingChannelPreset();
@@ -101,7 +94,7 @@ namespace OpenEphys.Onix1.Design
 
         private void InvertPolarityIndexChanged(object sender, EventArgs e)
         {
-            InvertPolarity = ((CheckBox)sender).Checked;
+            ProbeConfiguration.InvertPolarity = ((CheckBox)sender).Checked;
         }
 
         private void FormShown(object sender, EventArgs e)

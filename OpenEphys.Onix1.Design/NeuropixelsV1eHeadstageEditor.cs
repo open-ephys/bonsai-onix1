@@ -23,13 +23,9 @@ namespace OpenEphys.Onix1.Design
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
-                        configureHeadstage.Bno055.Enable = ((ConfigurePolledBno055)editorDialog.DialogBno055.Device).Enable;
+                        DesignHelper.CopyProperties((ConfigurePolledBno055)editorDialog.DialogBno055.Device, configureHeadstage.Bno055, DesignHelper.PropertiesToIgnore);
 
-                        configureHeadstage.NeuropixelsV1e.AdcCalibrationFile = editorDialog.DialogNeuropixelsV1e.ConfigureNode.AdcCalibrationFile;
-                        configureHeadstage.NeuropixelsV1e.GainCalibrationFile = editorDialog.DialogNeuropixelsV1e.ConfigureNode.GainCalibrationFile;
-                        configureHeadstage.NeuropixelsV1e.Enable = editorDialog.DialogNeuropixelsV1e.ConfigureNode.Enable;
-                        configureHeadstage.NeuropixelsV1e.ProbeConfiguration = editorDialog.DialogNeuropixelsV1e.ConfigureNode.ProbeConfiguration;
-                        configureHeadstage.NeuropixelsV1e.InvertPolarity = editorDialog.DialogNeuropixelsV1e.ConfigureNode.InvertPolarity;
+                        configureHeadstage.NeuropixelsV1e.ProbeConfiguration = editorDialog.DialogNeuropixelsV1e.ProbeConfigurationDialog.ProbeConfiguration;
 
                         return true;
                     }
