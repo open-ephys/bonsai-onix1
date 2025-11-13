@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Drawing.Design;
 using System.Reactive.Disposables;
+using System.Xml.Serialization;
 using Bonsai;
 
 namespace OpenEphys.Onix1
@@ -71,6 +72,7 @@ namespace OpenEphys.Onix1
         [Category(ConfigurationCategory)]
         [Description("Probe A configuration.")]
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
+        [XmlElement(nameof(ProbeConfigurationA), typeof(NeuropixelsV2QuadShankProbeConfiguration))]
         public NeuropixelsV2ProbeConfiguration ProbeConfigurationA { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe.ProbeA, NeuropixelsV2QuadShankReference.External);
 
         /// <inheritdoc/>
@@ -84,6 +86,7 @@ namespace OpenEphys.Onix1
         [Category(ConfigurationCategory)]
         [Description("Probe B configuration.")]
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
+        [XmlElement(nameof(ProbeConfigurationB), typeof(NeuropixelsV2QuadShankProbeConfiguration))]
         public NeuropixelsV2ProbeConfiguration ProbeConfigurationB { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe.ProbeB, NeuropixelsV2QuadShankReference.External);
 
         /// <inheritdoc/>
