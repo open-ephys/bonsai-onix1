@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using OpenEphys.ProbeInterface.NET;
 
@@ -80,6 +80,11 @@ namespace OpenEphys.Onix1
         public Rhs2116ProbeGroup(Rhs2116ProbeGroup probeGroup)
             : base(probeGroup)
         {
+        }
+
+        internal Rhs2116ProbeGroup Clone()
+        {
+            return new Rhs2116ProbeGroup(Specification, Version, Probes.Select(probe => new Probe(probe)).ToArray());
         }
 
         internal static ContactAnnotations DefaultContactAnnotations(int numberOfChannels, int probeIndex)
