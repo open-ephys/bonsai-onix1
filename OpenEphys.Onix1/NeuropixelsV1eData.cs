@@ -50,7 +50,7 @@ namespace OpenEphys.Onix1
         /// <remarks>
         /// If <see cref="OrderByDepth"/> is false, then channels are ordered from 0 to 383. 
         /// If <see cref="OrderByDepth"/> is true, then channels are ordered based on the depth
-        /// of the electrodes
+        /// of the electrodes.
         /// </remarks>
         [Description("Determines if the channels are returned ordered by depth.")]
         [Category(DeviceFactory.ConfigurationCategory)]
