@@ -55,16 +55,20 @@ namespace OpenEphys.Onix1
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
                 var info = (NeuropixelsV2eDeviceInfo)deviceInfo;
-                var metadata = ProbeIndex switch
+                var (metadata, gainCorrection) = ProbeIndex switch
                 {
-                    NeuropixelsV2Probe.ProbeA => info.ProbeMetadataA,
-                    NeuropixelsV2Probe.ProbeB => info.ProbeMetadataB,
+                    NeuropixelsV2Probe.ProbeA => (info.ProbeMetadataA, info.GainCorrectionA),
+                    NeuropixelsV2Probe.ProbeB => (info.ProbeMetadataB, info.GainCorrectionB),
                     _ => throw new InvalidEnumArgumentException($"Unexpected {nameof(ProbeIndex)} value: {ProbeIndex}")
                 };
 
                 if (metadata.ProbeSerialNumber == null)
                 {
                     throw new InvalidOperationException($"{ProbeIndex} is not detected. Ensure that the flex connection is properly seated.");
+                }
+                else if (gainCorrection == null)
+                {
+                    throw new NullReferenceException($"Gain correction value is null for {ProbeIndex}.");
                 }
 
                 var device = info.GetDeviceContext(typeof(NeuropixelsV2e));
@@ -73,13 +77,6 @@ namespace OpenEphys.Onix1
                     .GetDeviceFrames(passthrough.Address)
                     .Where(frame => NeuropixelsV2eDataFrame.GetProbeIndex(frame) == (int)ProbeIndex);
                 var invertPolarity = info.InvertPolarity;
-
-                var gainCorrection = ProbeIndex switch
-                {
-                    NeuropixelsV2Probe.ProbeA => (double)info.GainCorrectionA,
-                    NeuropixelsV2Probe.ProbeB => (double)info.GainCorrectionB,
-                    _ => throw new InvalidEnumArgumentException($"Unexpected {nameof(ProbeIndex)} value: {ProbeIndex}")
-                };
 
                 return Observable.Create<NeuropixelsV2eDataFrame>(observer =>
                 {
@@ -92,7 +89,7 @@ namespace OpenEphys.Onix1
                         frame =>
                         {
                             var payload = (NeuropixelsV2Payload*)frame.Data.ToPointer();
-                            NeuropixelsV2eDataFrame.CopyAmplifierBuffer(payload->AmplifierData, amplifierBuffer, sampleIndex, gainCorrection, invertPolarity);
+                            NeuropixelsV2eDataFrame.CopyAmplifierBuffer(payload->AmplifierData, amplifierBuffer, sampleIndex, gainCorrection.Value, invertPolarity);
                             hubClockBuffer[sampleIndex] = payload->HubClock;
                             clockBuffer[sampleIndex] = frame.Clock;
                             if (++sampleIndex >= bufferSize)
