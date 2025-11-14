@@ -14,6 +14,7 @@ namespace OpenEphys.Onix1.Design
         readonly NeuropixelsV2eChannelConfigurationDialog ChannelConfiguration;
 
         internal event EventHandler InvertPolarityChanged;
+        internal event EventHandler ValueChanged;
 
         /// <summary>
         /// Public <see cref="NeuropixelsV2ProbeConfiguration"/> object that is manipulated by
@@ -85,6 +86,8 @@ namespace OpenEphys.Onix1.Design
         {
             InvertPolarity = ((CheckBox)sender).Checked;
             OnInvertPolarityChangedHandler();
+
+            ValueChanged?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -119,6 +122,8 @@ namespace OpenEphys.Onix1.Design
         private void SelectedReferenceChanged(object sender, EventArgs e)
         {
             ProbeConfiguration.Reference = (Enum)((ComboBox)sender).SelectedItem;
+
+            ValueChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void SelectedChannelPresetChanged(object sender, EventArgs e)
@@ -145,6 +150,8 @@ namespace OpenEphys.Onix1.Design
         private void FileTextChanged(object sender, EventArgs e)
         {
             CheckStatus();
+
+            ValueChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void CheckStatus()
@@ -205,6 +212,8 @@ namespace OpenEphys.Onix1.Design
             }
 
             CheckStatus();
+
+            ValueChanged?.Invoke(this, EventArgs.Empty);
         }
 
         internal void ClearSelection_Click(object sender, EventArgs e)
@@ -259,6 +268,13 @@ namespace OpenEphys.Onix1.Design
         void TextBoxKeyPress(object sender, KeyPressEventArgs e)
         {
             CheckStatus();
+        }
+        
+        internal void UpdateControls(NeuropixelsV2ProbeConfiguration configuration, string calibrationFile, bool invertPolarity)
+        {
+            comboBoxReference.SelectedItem = configuration.Reference;
+            checkBoxInvertPolarity.Checked = invertPolarity;
+            textBoxProbeCalibrationFile.Text = calibrationFile;
         }
     }
 }
