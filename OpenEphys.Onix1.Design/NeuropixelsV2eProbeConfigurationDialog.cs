@@ -25,7 +25,12 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <inheritdoc cref="ConfigureNeuropixelsV2e.InvertPolarity"/>
-        public bool InvertPolarity { get; set; }
+        [Obsolete]
+        public bool InvertPolarity
+        {
+            get => ProbeConfiguration.InvertPolarity;
+            set => ProbeConfiguration.InvertPolarity = value;
+        }
 
         INeuropixelsV2ProbeInfo ProbeData { get; set; }
 
@@ -33,16 +38,13 @@ namespace OpenEphys.Onix1.Design
         /// Initializes a new instance of <see cref="NeuropixelsV2ProbeConfiguration"/>.
         /// </summary>
         /// <param name="configuration">A <see cref="NeuropixelsV2ProbeConfiguration"/> object holding the current configuration settings.</param>
-        /// <param name="calibrationFile">String containing the path to the calibration file for this probe.</param>
-        /// <param name="invertPolarity">Boolean denoting whether or not to invert the polarity of neural data.</param>
-        public NeuropixelsV2eProbeConfigurationDialog(NeuropixelsV2ProbeConfiguration configuration, string calibrationFile, bool invertPolarity)
+        public NeuropixelsV2eProbeConfigurationDialog(NeuropixelsV2ProbeConfiguration configuration)
         {
             InitializeComponent();
             Shown += FormShown;
 
-            textBoxProbeCalibrationFile.Text = calibrationFile;
-
-            InvertPolarity = invertPolarity;
+            textBoxProbeCalibrationFile.Text = configuration.GainCalibrationFileName;
+            textBoxProbeCalibrationFile.TextChanged += (sender, e) => ProbeConfiguration.GainCalibrationFileName = ((TextBox)sender).Text;
 
             ChannelConfiguration = new(configuration);
             ChannelConfiguration.SetChildFormProperties(this).AddDialogToPanel(panelProbe);
@@ -61,7 +63,7 @@ namespace OpenEphys.Onix1.Design
             comboBoxChannelPresets.DataSource = ProbeData.GetComboBoxChannelPresets();
             comboBoxChannelPresets.SelectedIndexChanged += SelectedChannelPresetChanged;
 
-            checkBoxInvertPolarity.Checked = InvertPolarity;
+            checkBoxInvertPolarity.Checked = ProbeConfiguration.InvertPolarity;
             checkBoxInvertPolarity.CheckedChanged += InvertPolarityIndexChanged;
 
             CheckForExistingChannelPreset();
@@ -83,7 +85,7 @@ namespace OpenEphys.Onix1.Design
 
         private void InvertPolarityIndexChanged(object sender, EventArgs e)
         {
-            InvertPolarity = ((CheckBox)sender).Checked;
+            ProbeConfiguration.InvertPolarity = ((CheckBox)sender).Checked;
             OnInvertPolarityChangedHandler();
         }
 

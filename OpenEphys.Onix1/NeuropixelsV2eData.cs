@@ -55,10 +55,10 @@ namespace OpenEphys.Onix1
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
                 var info = (NeuropixelsV2eDeviceInfo)deviceInfo;
-                var (metadata, gainCorrection) = ProbeIndex switch
+                var (gainCorrection, probeConfiguration, metadata) = ProbeIndex switch
                 {
-                    NeuropixelsV2Probe.ProbeA => (info.ProbeMetadataA, info.GainCorrectionA),
-                    NeuropixelsV2Probe.ProbeB => (info.ProbeMetadataB, info.GainCorrectionB),
+                    NeuropixelsV2Probe.ProbeA => (info.GainCorrectionA, info.ProbeConfigurationA, info.ProbeMetadataA),
+                    NeuropixelsV2Probe.ProbeB => (info.GainCorrectionB, info.ProbeConfigurationB, info.ProbeMetadataB),
                     _ => throw new InvalidEnumArgumentException($"Unexpected {nameof(ProbeIndex)} value: {ProbeIndex}")
                 };
 
@@ -76,7 +76,7 @@ namespace OpenEphys.Onix1
                 var probeData = device.Context
                     .GetDeviceFrames(passthrough.Address)
                     .Where(frame => NeuropixelsV2eDataFrame.GetProbeIndex(frame) == (int)ProbeIndex);
-                var invertPolarity = info.InvertPolarity;
+                var invertPolarity = probeConfiguration.InvertPolarity;
 
                 return Observable.Create<NeuropixelsV2eDataFrame>(observer =>
                 {
