@@ -35,13 +35,10 @@ namespace OpenEphys.Onix1
         {
             Enable = configureNode.Enable;
             EnableLed = configureNode.EnableLed;
-            ProbeConfigurationA = configureNode.ProbeConfigurationA;
-            ProbeConfigurationB = configureNode.ProbeConfigurationB;
-            GainCalibrationFileA = configureNode.GainCalibrationFileA;
-            GainCalibrationFileB = configureNode.GainCalibrationFileB;
+            ProbeConfigurationA = configureNode.ProbeConfigurationA.Clone();
+            ProbeConfigurationB = configureNode.ProbeConfigurationB.Clone();
             DeviceName = configureNode.DeviceName;
             DeviceAddress = configureNode.DeviceAddress;
-            InvertPolarity = configureNode.InvertPolarity;
         }
 
         /// <inheritdoc/>
@@ -63,38 +60,98 @@ namespace OpenEphys.Onix1
         [Description("Specifies whether the headstage LED will turn on during acquisition.")]
         public bool EnableLed { get; set; } = true;
 
-        /// <inheritdoc/>
-        [Category(ConfigurationCategory)]
-        [Description("Invert the polarity of the electrode voltages acquired by the probe.")]
-        public bool InvertPolarity { get; set; } = true;
+        /// <summary>
+        /// Gets or sets a value determining if the polarity of the electrode voltages acquired by the probe
+        /// should be inverted.
+        /// </summary>
+        /// /// <remarks>
+        /// [Obsolete]. Cannot tag this property with the Obsolete attribute due to https://github.com/dotnet/runtime/issues/100453
+        /// </remarks>
+        [Browsable(false)]
+        [Externalizable(false)]
+        public bool InvertPolarity
+        {
+            get => ProbeConfigurationA.InvertPolarity;
+            set
+            {
+                ProbeConfigurationA.InvertPolarity = value;
+                ProbeConfigurationB.InvertPolarity = value;
+            }
+        }
+
+        /// <summary>
+        /// Prevent the InvertPolarity property from being serialized.
+        /// </summary>
+        /// <returns>False</returns>
+        [Obsolete]
+        public bool ShouldSerializeInvertPolarity()
+        {
+            return false;
+        }
 
         /// <inheritdoc/>
         [Category(ConfigurationCategory)]
         [Description("Probe A configuration.")]
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         [XmlElement(nameof(ProbeConfigurationA), typeof(NeuropixelsV2QuadShankProbeConfiguration))]
+        [TypeConverter(typeof(GenericPropertyConverter))]
         public NeuropixelsV2ProbeConfiguration ProbeConfigurationA { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe.ProbeA, NeuropixelsV2QuadShankReference.External);
 
-        /// <inheritdoc/>
-        [Category(ConfigurationCategory)]
-        [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
-        [Description("Path to the gain calibration file for probe A.")]
-        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
-        public string GainCalibrationFileA { get; set; }
+        /// <summary>
+        /// Gets or sets the path to the gain calibration file for this probe.
+        /// </summary>
+        /// <remarks>
+        /// [Obsolete]. Cannot tag this property with the Obsolete attribute due to https://github.com/dotnet/runtime/issues/100453
+        /// </remarks>
+        [Browsable(false)]
+        [Externalizable(false)]
+        public string GainCalibrationFileA
+        {
+            get => ProbeConfigurationA.GainCalibrationFileName;
+            set => ProbeConfigurationA.GainCalibrationFileName = value;
+        }
+
+        /// <summary>
+        /// Prevent the GainCalibrationFile property from being serialized.
+        /// </summary>
+        /// <returns>False</returns>
+        [Obsolete]
+        public bool ShouldSerializeGainCalibrationFileA()
+        {
+            return false;
+        }
 
         /// <inheritdoc/>
         [Category(ConfigurationCategory)]
         [Description("Probe B configuration.")]
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         [XmlElement(nameof(ProbeConfigurationB), typeof(NeuropixelsV2QuadShankProbeConfiguration))]
+        [TypeConverter(typeof(GenericPropertyConverter))]
         public NeuropixelsV2ProbeConfiguration ProbeConfigurationB { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe.ProbeB, NeuropixelsV2QuadShankReference.External);
 
-        /// <inheritdoc/>
-        [Category(ConfigurationCategory)]
-        [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
-        [Description("Path to the gain calibration file for probe B.")]
-        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
-        public string GainCalibrationFileB { get; set; }
+        /// <summary>
+        /// Gets or sets the path to the gain calibration file for this probe.
+        /// </summary>
+        /// <remarks>
+        /// [Obsolete]. Cannot tag this property with the Obsolete attribute due to https://github.com/dotnet/runtime/issues/100453
+        /// </remarks>
+        [Browsable(false)]
+        [Externalizable(false)]
+        public string GainCalibrationFileB
+        {
+            get => ProbeConfigurationB.GainCalibrationFileName;
+            set => ProbeConfigurationB.GainCalibrationFileName = value;
+        }
+
+        /// <summary>
+        /// Prevent the GainCalibrationFile property from being serialized.
+        /// </summary>
+        /// <returns>False</returns>
+        [Obsolete]
+        public bool ShouldSerializeGainCalibrationFileB()
+        {
+            return false;
+        }
 
         /// <summary>
         /// Configures a NeuropixelsV2eBeta device.
@@ -108,7 +165,8 @@ namespace OpenEphys.Onix1
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;
-            var invertPolarity = InvertPolarity;
+            var probeConfigurationA = ProbeConfigurationA;
+            var probeConfigurationB = ProbeConfigurationB;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
             return source.ConfigureDevice(context =>
@@ -155,11 +213,11 @@ namespace OpenEphys.Onix1
                             $" for {NeuropixelsV2Probe.ProbeA}.");
                     }
 
-                    var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(GainCalibrationFileA);
+                    var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(probeConfigurationA.GainCalibrationFileName);
 
                     if (!gainCorrection.HasValue)
                     {
-                        throw new ArgumentException($"{NeuropixelsV2Probe.ProbeA}'s calibration file \"{GainCalibrationFileA}\" is invalid.");
+                        throw new ArgumentException($"{NeuropixelsV2Probe.ProbeA}'s calibration file \"{probeConfigurationA.GainCalibrationFileName}\" is invalid.");
                     }
 
                     if (gainCorrection.Value.SerialNumber != probeAMetadata.ProbeSerialNumber)
@@ -171,7 +229,7 @@ namespace OpenEphys.Onix1
                     gainCorrectionA = gainCorrection.Value.GainCorrectionFactor;
 
                     SelectProbe(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeA);
-                    probeControl.WriteConfiguration(ProbeConfigurationA);
+                    probeControl.WriteConfiguration(probeConfigurationA);
                     ConfigureProbeStreaming(probeControl);
                 }
 
@@ -184,11 +242,11 @@ namespace OpenEphys.Onix1
                             $" for {NeuropixelsV2Probe.ProbeB}.");
                     }
 
-                    var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(GainCalibrationFileB);
+                    var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(probeConfigurationB.GainCalibrationFileName);
 
                     if (!gainCorrection.HasValue)
                     {
-                        throw new ArgumentException($"{NeuropixelsV2Probe.ProbeB}'s calibration file \"{GainCalibrationFileB}\" is invalid.");
+                        throw new ArgumentException($"{NeuropixelsV2Probe.ProbeB}'s calibration file \"{probeConfigurationB.GainCalibrationFileName}\" is invalid.");
                     }
 
                     if (gainCorrection.Value.SerialNumber != probeBMetadata.ProbeSerialNumber)
@@ -200,7 +258,7 @@ namespace OpenEphys.Onix1
                     gainCorrectionB = gainCorrection.Value.GainCorrectionFactor;
 
                     SelectProbe(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeB);
-                    probeControl.WriteConfiguration(ProbeConfigurationB);
+                    probeControl.WriteConfiguration(probeConfigurationB);
                     ConfigureProbeStreaming(probeControl);
                 }
 
@@ -214,7 +272,7 @@ namespace OpenEphys.Onix1
                 // Still its good to get them roughly (i.e. within 10 PCLKs) started at the same time.
                 SyncProbes(serializer, gpo10Config);
 
-                var deviceInfo = new NeuropixelsV2eDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB, invertPolarity, probeAMetadata, probeBMetadata, ProbeConfigurationA, ProbeConfigurationB);
+                var deviceInfo = new NeuropixelsV2eDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB, probeAMetadata, probeBMetadata, probeConfigurationA, probeConfigurationB);
                 var shutdown = Disposable.Create(() =>
                 {
                     serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, NeuropixelsV2eBeta.DefaultGPO10Config);

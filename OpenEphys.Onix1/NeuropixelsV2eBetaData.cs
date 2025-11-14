@@ -84,8 +84,8 @@ namespace OpenEphys.Onix1
                 var probeData = device.Context
                     .GetDeviceFrames(passthrough.Address)
                     .Where(frame => NeuropixelsV2eBetaDataFrame.GetProbeIndex(frame) == (int)ProbeIndex);
-                var invertPolarity = info.InvertPolarity;
                 var orderByDepth = OrderByDepth;
+                var invertPolarity = probeConfiguration.InvertPolarity;
 
                 return Observable.Create<NeuropixelsV2eBetaDataFrame>(observer =>
                 {
