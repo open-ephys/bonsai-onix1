@@ -266,7 +266,7 @@ namespace OpenEphys.Onix1
                     if (string.IsNullOrEmpty(probeInterfaceFileName))
                         return new NeuropixelsV1eProbeGroup();
 
-                    return ProbeInterfaceHelper.LoadExternalProbeInterfaceFile<NeuropixelsV1eProbeGroup>(probeInterfaceFileName);
+                    return ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeInterfaceFileName, typeof(NeuropixelsV1eProbeGroup)) as NeuropixelsV1eProbeGroup;
                 });
             }
         }

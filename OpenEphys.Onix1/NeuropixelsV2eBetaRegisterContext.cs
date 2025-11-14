@@ -15,7 +15,7 @@ namespace OpenEphys.Onix1
         {
         }
 
-        public void WriteConfiguration(NeuropixelsV2QuadShankProbeConfiguration probe)
+        public void WriteConfiguration(NeuropixelsV2ProbeConfiguration probe)
         {
             var baseBits = NeuropixelsV2.GenerateBaseBits(probe);
             WriteShiftRegister(NeuropixelsV2eBeta.SR_CHAIN5, baseBits[0]);
@@ -49,7 +49,7 @@ namespace OpenEphys.Onix1
                 }
             }
 
-            if (ReadByte(NeuropixelsV2e.STATUS) != (uint) NeuropixelsV2Status.SR_OK)
+            if (ReadByte(NeuropixelsV2e.STATUS) != (uint)NeuropixelsV2Status.SR_OK)
             {
                 Console.Error.WriteLine($"Warning: shift register {srAddress:X} status check failed. " +
                     $"{ShankName(srAddress)} may be damaged.");

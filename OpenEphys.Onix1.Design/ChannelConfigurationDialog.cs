@@ -19,11 +19,21 @@ namespace OpenEphys.Onix1.Design
         internal event EventHandler OnResizeZedGraph;
         internal event EventHandler OnDrawProbeGroup;
 
-        internal ProbeGroup ProbeGroup;
+        ProbeGroup probeGroup;
+
+        internal ProbeGroup ProbeGroup
+        {
+            get => probeGroup;
+            set
+            {
+                probeGroup = value;
+                SelectedContacts = new bool[probeGroup.NumberOfContacts];
+            }
+        }
 
         internal readonly List<int> ReferenceContacts = new();
 
-        internal readonly bool[] SelectedContacts = null;
+        internal bool[] SelectedContacts { get; private set; } = null;
 
         [Obsolete("Designer only.", true)]
         ChannelConfigurationDialog()
@@ -48,8 +58,6 @@ namespace OpenEphys.Onix1.Design
             {
                 ProbeGroup = probeGroup;
             }
-
-            SelectedContacts = new bool[ProbeGroup.NumberOfContacts];
 
             ReferenceContacts = new List<int>();
 
@@ -270,14 +278,26 @@ namespace OpenEphys.Onix1.Design
             if (!TopLevel)
             {
                 menuStrip.Visible = false;
-                ResizeZedGraph();
             }
+
+            ResizeZedGraph();
         }
 
-        internal virtual bool OpenFile<T>() where T : ProbeGroup
+        internal virtual bool OpenFile(Type type)
         {
-            var newConfiguration = OpenAndParseConfigurationFile<T>();
+            var newConfiguration = OpenAndParseConfigurationFile(type);
 
+            if (newConfiguration != null)
+            {
+                ProbeGroup = newConfiguration;
+                return true;
+            }
+
+            return false;
+        }
+
+        internal bool ValidateProbeGroup(ProbeGroup newConfiguration)
+        {
             if (newConfiguration == null)
             {
                 return false;
@@ -286,10 +306,6 @@ namespace OpenEphys.Onix1.Design
             if (ProbeGroup.NumberOfContacts == newConfiguration.NumberOfContacts)
             {
                 newConfiguration.Validate();
-
-                ProbeGroup = newConfiguration;
-                DrawProbeGroup();
-                RefreshZedGraph();
 
                 return true;
             }
@@ -302,7 +318,7 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        internal T OpenAndParseConfigurationFile<T>() where T : ProbeGroup
+        internal ProbeGroup OpenAndParseConfigurationFile(Type type)
         {
             using OpenFileDialog ofd = new();
 
@@ -313,9 +329,19 @@ namespace OpenEphys.Onix1.Design
 
             if (ofd.ShowDialog() == DialogResult.OK && File.Exists(ofd.FileName))
             {
-                var newConfiguration = JsonHelper.DeserializeString<T>(File.ReadAllText(ofd.FileName));
+                // NB: This method is called from an open dialog; throwing an exception without handling it would close the dialog.
+                //     Show the resulting exception as a MessageBox to warn the user of the exception with closing the whole dialog.
+                try
+                {
+                    var newConfiguration = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(ofd.FileName, type);
 
-                return newConfiguration;
+                    return ValidateProbeGroup(newConfiguration) ? newConfiguration : null;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Error Importing ProbeInterface File");
+                    return null;
+                }
             }
 
             return null;
@@ -1010,9 +1036,11 @@ namespace OpenEphys.Onix1.Design
 
         private void MenuItemOpenFile(object sender, EventArgs e)
         {
-            if (OpenFile<ProbeGroup>())
+            if (OpenFile(ProbeGroup.GetType()))
             {
                 DrawProbeGroup();
+                ResetZoom();
+                UpdateFontSize();
                 RefreshZedGraph();
             }
         }
@@ -1021,6 +1049,7 @@ namespace OpenEphys.Onix1.Design
         {
             LoadDefaultChannelLayout();
             DrawProbeGroup();
+            ResetZoom();
             UpdateFontSize();
             RefreshZedGraph();
         }

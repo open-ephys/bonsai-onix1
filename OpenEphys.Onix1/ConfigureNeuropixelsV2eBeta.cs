@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Drawing.Design;
 using System.Reactive.Disposables;
+using System.Xml.Serialization;
 using Bonsai;
 
 namespace OpenEphys.Onix1
@@ -71,7 +72,8 @@ namespace OpenEphys.Onix1
         [Category(ConfigurationCategory)]
         [Description("Probe A configuration.")]
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
-        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationA { get; set; } = new(NeuropixelsV2Probe.ProbeA);
+        [XmlElement(nameof(ProbeConfigurationA), typeof(NeuropixelsV2QuadShankProbeConfiguration))]
+        public NeuropixelsV2ProbeConfiguration ProbeConfigurationA { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe.ProbeA, NeuropixelsV2QuadShankReference.External);
 
         /// <inheritdoc/>
         [Category(ConfigurationCategory)]
@@ -84,7 +86,8 @@ namespace OpenEphys.Onix1
         [Category(ConfigurationCategory)]
         [Description("Probe B configuration.")]
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
-        public NeuropixelsV2QuadShankProbeConfiguration ProbeConfigurationB { get; set; } = new(NeuropixelsV2Probe.ProbeB);
+        [XmlElement(nameof(ProbeConfigurationB), typeof(NeuropixelsV2QuadShankProbeConfiguration))]
+        public NeuropixelsV2ProbeConfiguration ProbeConfigurationB { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe.ProbeB, NeuropixelsV2QuadShankReference.External);
 
         /// <inheritdoc/>
         [Category(ConfigurationCategory)]
@@ -146,7 +149,7 @@ namespace OpenEphys.Onix1
                 // configure probe A streaming
                 if (probeAMetadata.ProbeSerialNumber != null)
                 {
-                    if (ProbeConfigurationA.Reference == NeuropixelsV2QuadShankReference.Ground)
+                    if (ProbeConfigurationA.IsGroundReference())
                     {
                         throw new InvalidOperationException($"Neuropixels 2.0-Beta probes do not provide a Ground reference selection. Please select a different reference" +
                             $" for {NeuropixelsV2Probe.ProbeA}.");
@@ -175,7 +178,7 @@ namespace OpenEphys.Onix1
                 // configure probe B streaming
                 if (probeBMetadata.ProbeSerialNumber != null)
                 {
-                    if (ProbeConfigurationB.Reference == NeuropixelsV2QuadShankReference.Ground)
+                    if (ProbeConfigurationB.IsGroundReference())
                     {
                         throw new InvalidOperationException($"Neuropixels 2.0-Beta probes do not provide a Ground reference selection. Please select a different reference" +
                             $" for {NeuropixelsV2Probe.ProbeB}.");
