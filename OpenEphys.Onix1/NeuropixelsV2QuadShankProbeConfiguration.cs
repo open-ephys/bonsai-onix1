@@ -2,6 +2,7 @@
 using System.Collections;
 using System.ComponentModel;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Bonsai;
 using Newtonsoft.Json;
@@ -58,6 +59,8 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class.
         /// </summary>
+        /// <param name="probe">The <see cref="NeuropixelsV2Probe"/> for this probe.</param>
+        /// <param name="reference">The <see cref="NeuropixelsV2QuadShankReference"/> reference value.</param>
         public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe probe, NeuropixelsV2QuadShankReference reference)
         {
             Probe = probe;
@@ -74,6 +77,9 @@ namespace OpenEphys.Onix1
             Reference = probeConfiguration.Reference;
             ProbeGroup = probeConfiguration.ProbeGroup.Clone();
             Probe = probeConfiguration.Probe;
+            InvertPolarity = probeConfiguration.InvertPolarity;
+            GainCalibrationFileName = probeConfiguration.GainCalibrationFileName;
+            probeInterfaceFileName = probeConfiguration.probeInterfaceFileName;
         }
 
         /// <summary>
@@ -81,14 +87,31 @@ namespace OpenEphys.Onix1
         /// <see cref="NeuropixelsV2eQuadShankProbeGroup"/> channel configuration. 
         /// </summary>
         /// <param name="probeGroup">The existing <see cref="NeuropixelsV2eQuadShankProbeGroup"/> instance to use.</param>
-        /// <param name="reference">The <see cref="NeuropixelsV2QuadShankReference"/> reference value.</param>
         /// <param name="probe">The <see cref="NeuropixelsV2Probe"/> for this probe.</param>
+        /// <param name="reference">The <see cref="NeuropixelsV2QuadShankReference"/> reference value.</param>
+        /// <param name="invertPolarity">Boolean defining if the signal polarity should be inverted.</param>
+        /// <param name="gainCalibrationFileName">String defining the path to the gain calibration file.</param>
+        /// <param name="probeInterfaceFileName">String defining the path to the ProbeInterface file.</param>
         [JsonConstructor]
-        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2eQuadShankProbeGroup probeGroup, NeuropixelsV2Probe probe, NeuropixelsV2QuadShankReference reference)
+        public NeuropixelsV2QuadShankProbeConfiguration(
+            NeuropixelsV2eQuadShankProbeGroup probeGroup,
+            NeuropixelsV2Probe probe,
+            NeuropixelsV2QuadShankReference reference,
+            bool invertPolarity,
+            string gainCalibrationFileName,
+            string probeInterfaceFileName)
         {
             ProbeGroup = probeGroup.Clone();
             Reference = reference;
             Probe = probe;
+            InvertPolarity = invertPolarity;
+            GainCalibrationFileName = gainCalibrationFileName;
+            ProbeInterfaceFileName = probeInterfaceFileName;
+        }
+
+        internal override NeuropixelsV2ProbeConfiguration Clone()
+        {
+            return new NeuropixelsV2QuadShankProbeConfiguration(this);
         }
 
         /// <summary>
@@ -101,6 +124,90 @@ namespace OpenEphys.Onix1
         public override NeuropixelsV2Electrode[] ChannelMap
         {
             get => NeuropixelsV2eQuadShankProbeGroup.ToChannelMap((NeuropixelsV2eQuadShankProbeGroup)ProbeGroup);
+        }
+
+        NeuropixelsV2QuadShankReference reference;
+
+        /// <inheritdoc/>
+        /// <remarks>
+        /// The available references for a quad-shank probe are <see cref="NeuropixelsV2QuadShankReference"/>.
+        /// </remarks>
+        [XmlIgnore]
+        [Description("Defines the reference for the probe.")]
+        [TypeConverter(typeof(NeuropixelsV2QuadShankReferenceConverter))]
+        public override Enum Reference
+        {
+            get => reference;
+            set => reference = (NeuropixelsV2QuadShankReference)value;
+        }
+
+        /// <inheritdoc/>
+        [XmlElement(nameof(Reference))]
+        [Browsable(false)]
+        [Externalizable(false)]
+        public override string ReferenceSerialized
+        {
+            get => Reference.ToString();
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    Reference = NeuropixelsV2QuadShankReference.External;
+                    return;
+                }
+
+                Reference = Enum.TryParse<NeuropixelsV2QuadShankReference>(value, out var result)
+                            ? result
+                            : NeuropixelsV2QuadShankReference.External;
+            }
+        }
+
+        /// <inheritdoc/>
+        [XmlIgnore]
+        [Browsable(false)]
+        [Externalizable(false)]
+        public override string ProbeInterfaceLoadFileName
+        {
+            get => probeInterfaceFileName;
+            set
+            {
+                probeInterfaceFileName = value;
+                probeGroupTask = Task.Run(() =>
+                {
+                    if (string.IsNullOrEmpty(probeInterfaceFileName))
+                        return new NeuropixelsV2eQuadShankProbeGroup();
+
+                    return ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeInterfaceFileName, typeof(NeuropixelsV2eQuadShankProbeGroup)) as NeuropixelsV2eProbeGroup;
+                });
+            }
+        }
+
+        /// <inheritdoc/>
+        [XmlIgnore]
+        [Category(DeviceFactory.ConfigurationCategory)]
+        [Description("Defines the shape of the probe, and which contacts are currently selected for streaming.")]
+        [Browsable(false)]
+        [Externalizable(false)]
+        public override NeuropixelsV2eProbeGroup ProbeGroup
+        {
+            get
+            {
+                if (probeGroup == null)
+                {
+                    try
+                    {
+                        probeGroup = probeGroupTask?.Result ?? new NeuropixelsV2eQuadShankProbeGroup();
+                    }
+                    catch (AggregateException ae)
+                    {
+                        probeGroup = new NeuropixelsV2eQuadShankProbeGroup();
+                        throw new InvalidOperationException($"There was an error loading the ProbeInterface file, loading the default configuration instead.\n\nError: {ae.InnerException.Message}", ae.InnerException);
+                    }
+                }
+
+                return probeGroup;
+            }
+            set => probeGroup = value;
         }
 
         /// <inheritdoc/>
@@ -219,26 +326,17 @@ namespace OpenEphys.Onix1
         }
 
         internal override bool IsGroundReference() => (NeuropixelsV2QuadShankReference)Reference == NeuropixelsV2QuadShankReference.Ground;
+    }
 
-        /// <inheritdoc/>
-        [XmlElement(nameof(Reference))]
-        [Browsable(false)]
-        [Externalizable(false)]
-        public override string ReferenceSerialized
-        {
-            get => Reference.ToString();
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                {
-                    Reference = NeuropixelsV2QuadShankReference.External;
-                    return;
-                }
-
-                Reference = Enum.TryParse<NeuropixelsV2QuadShankReference>(value, out var result)
-                            ? result
-                            : NeuropixelsV2QuadShankReference.External;
-            }
-        }
+    /// <summary>
+    /// Provides a type converter for <see cref="NeuropixelsV2QuadShankReference"/> values.
+    /// </summary>
+    public class NeuropixelsV2QuadShankReferenceConverter : EnumConverter
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankReferenceConverter"/> class with
+        /// the <see cref="NeuropixelsV2QuadShankReference"/> type.
+        /// </summary>
+        public NeuropixelsV2QuadShankReferenceConverter() : base(typeof(NeuropixelsV2QuadShankReference)) { }
     }
 }
