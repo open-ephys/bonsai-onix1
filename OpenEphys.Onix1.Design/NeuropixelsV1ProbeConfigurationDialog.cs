@@ -88,13 +88,13 @@ namespace OpenEphys.Onix1.Design
             checkBoxSpikeFilter.Checked = configureNode.ProbeConfiguration.SpikeFilter;
             checkBoxSpikeFilter.CheckedChanged += SpikeFilterIndexChanged;
 
-            checkBoxInvertPolarity.Checked = ProbeConfiguration.InvertPolarity;
+            checkBoxInvertPolarity.Checked = configureNode.ProbeConfiguration.InvertPolarity;
             checkBoxInvertPolarity.CheckedChanged += InvertPolarityIndexChanged;
 
-            textBoxAdcCalibrationFile.Text = ProbeConfiguration.AdcCalibrationFileName;
+            textBoxAdcCalibrationFile.Text = configureNode.ProbeConfiguration.AdcCalibrationFileName;
             textBoxAdcCalibrationFile.TextChanged += (sender, e) => ProbeConfiguration.AdcCalibrationFileName = ((TextBox)sender).Text;
 
-            textBoxGainCalibrationFile.Text = ProbeConfiguration.GainCalibrationFileName;
+            textBoxGainCalibrationFile.Text = configureNode.ProbeConfiguration.GainCalibrationFileName;
             textBoxGainCalibrationFile.TextChanged += (sender, e) => ProbeConfiguration.GainCalibrationFileName = ((TextBox)sender).Text;
 
             comboBoxChannelPresets.DataSource = Enum.GetValues(typeof(ChannelPreset));

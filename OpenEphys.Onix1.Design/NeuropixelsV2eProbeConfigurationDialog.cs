@@ -270,7 +270,7 @@ namespace OpenEphys.Onix1.Design
             CheckStatus();
         }
         
-        internal void UpdateControls(NeuropixelsV2QuadShankProbeConfiguration configuration, string calibrationFile, bool invertPolarity)
+        internal void UpdateControls(NeuropixelsV2ProbeConfiguration configuration, string calibrationFile, bool invertPolarity)
         {
             comboBoxReference.SelectedItem = configuration.Reference;
             checkBoxInvertPolarity.Checked = invertPolarity;
