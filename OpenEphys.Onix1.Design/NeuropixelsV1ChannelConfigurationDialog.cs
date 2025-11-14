@@ -58,12 +58,11 @@ namespace OpenEphys.Onix1.Design
             OnFileOpenHandler();
         }
 
-        internal override bool OpenFile<T>()
+        internal override bool OpenFile(Type type)
         {
-            if (base.OpenFile<NeuropixelsV1eProbeGroup>())
+            if (base.OpenFile(type))
             {
                 ProbeConfiguration.ProbeGroup = (NeuropixelsV1eProbeGroup)ProbeGroup;
-
                 OnFileOpenHandler();
 
                 return true;

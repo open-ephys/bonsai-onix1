@@ -7,7 +7,7 @@ namespace OpenEphys.Onix1
 {
     internal static class JsonHelper
     {
-        public static T DeserializeString<T>(string jsonString) where T : class
+        public static object DeserializeString(string jsonString, Type type)
         {
             var errors = new List<string>();
 
@@ -22,7 +22,7 @@ namespace OpenEphys.Onix1
 
             try
             {
-                var obj = JsonConvert.DeserializeObject<T>(jsonString, serializerSettings);
+                var obj = JsonConvert.DeserializeObject(jsonString, type, serializerSettings);
 
                 if (errors.Count > 0)
                 {

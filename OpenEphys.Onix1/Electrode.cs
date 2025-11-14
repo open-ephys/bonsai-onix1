@@ -13,30 +13,30 @@ namespace OpenEphys.Onix1
         /// the context of the entire probe.
         /// </summary>
         [XmlIgnore]
-        public int Index { get; internal set; }
+        public int Index { get; init; }
 
         /// <summary>
         /// Gets the shank this electrode belongs to.
         /// </summary>
         [XmlIgnore]
-        public int Shank { get; internal set; }
+        public int Shank { get; init; }
 
         /// <summary>
         /// Gets the index of the electrode within the context of <see cref="Shank"/>.
         /// </summary>
         [XmlIgnore]
-        public int IntraShankElectrodeIndex { get; internal set; }
+        public int IntraShankElectrodeIndex { get; init; }
 
         /// <summary>
         /// Gets the electrical channel that this electrode is mapped to.
         /// </summary>
         [XmlIgnore]
-        public int Channel { get; internal set; }
+        public int Channel { get; init; }
 
         /// <summary>
         /// Gets the location of the electrode in two-dimensional space in arbitrary units.
         /// </summary>
         [XmlIgnore]
-        public PointF Position { get; internal set; }
+        public PointF Position { get; init; }
     }
 }

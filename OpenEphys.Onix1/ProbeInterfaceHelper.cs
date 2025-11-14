@@ -8,12 +8,14 @@ namespace OpenEphys.Onix1
     {
         public const string ProbeInterfaceFileNameFilter = "ProbeInterface Files|*.json|All Files|*.*";
 
-        public static T LoadExternalProbeInterfaceFile<T>(string probeInterfaceFileName) where T : ProbeGroup
+        public static ProbeGroup LoadExternalProbeInterfaceFile(string probeInterfaceFileName, Type type)
         {
             if (string.IsNullOrEmpty(probeInterfaceFileName))
             {
                 throw new ArgumentNullException(nameof(probeInterfaceFileName), "ProbeInterface file path cannot be null or empty.");
             }
+
+            if (!type.IsAssignableFrom(typeof(ProbeGroup))) throw new InvalidDataException($"Invalid type given: {type.Name} is not a valid {nameof(ProbeGroup)} type.");
 
             if (!File.Exists(probeInterfaceFileName))
             {
@@ -23,7 +25,7 @@ namespace OpenEphys.Onix1
             try
             {
                 string jsonContent = File.ReadAllText(probeInterfaceFileName);
-                var result = JsonHelper.DeserializeString<T>(jsonContent) ?? throw new InvalidDataException($"Failed to parse ProbeInterface file: {probeInterfaceFileName}");
+                var result = JsonHelper.DeserializeString(jsonContent, type) as ProbeGroup ?? throw new InvalidDataException($"Failed to parse ProbeInterface file: {probeInterfaceFileName}");
                 return result;
             }
             catch (UnauthorizedAccessException e)
