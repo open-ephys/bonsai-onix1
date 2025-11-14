@@ -174,7 +174,7 @@ namespace OpenEphys.Onix1
                 // disconnect i2c bus from both probes to prevent digital interference during acquisition
                 SelectProbe(serializer, NeuropixelsV2e.NoProbeSelected);
 
-                var deviceInfo = new NeuropixelsV2eDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB, invertPolarity, probeAMetadata, probeBMetadata);
+                var deviceInfo = new NeuropixelsV2eDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB, invertPolarity, probeAMetadata, probeBMetadata, ProbeConfigurationA, ProbeConfigurationB);
                 var shutdown = Disposable.Create(() =>
                 {
                     serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, NeuropixelsV2e.DefaultGPO10Config);

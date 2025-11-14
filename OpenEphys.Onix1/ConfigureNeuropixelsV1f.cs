@@ -172,7 +172,9 @@ namespace OpenEphys.Onix1
                     probeControl.WriteShiftRegisters();
                 }
 
-                return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
+                var deviceInfo = new NeuropixelsV1fDeviceInfo(context, DeviceType, deviceAddress, ProbeConfiguration);
+
+                return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
         }
     }
