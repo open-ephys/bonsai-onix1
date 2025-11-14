@@ -15,7 +15,7 @@ namespace OpenEphys.Onix1
                 throw new ArgumentNullException(nameof(probeInterfaceFileName), "ProbeInterface file path cannot be null or empty.");
             }
 
-            if (!type.IsAssignableFrom(typeof(ProbeGroup))) throw new InvalidDataException($"Invalid type given: {type.Name} is not a valid {nameof(ProbeGroup)} type.");
+            if (!typeof(ProbeGroup).IsAssignableFrom(type)) throw new InvalidDataException($"Invalid type given: {type.Name} is not a valid {nameof(ProbeGroup)} type.");
 
             if (!File.Exists(probeInterfaceFileName))
             {
