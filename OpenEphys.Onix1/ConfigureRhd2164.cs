@@ -52,7 +52,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Category(ConfigurationCategory)]
         [Description("Specifies the cutoff frequency for the digital (post-ADC) high-pass filter used for amplifier offset removal.")]
-        public Rhd2164DspCutoff DspCutoff { get; set; } = Rhd2164DspCutoff.Dsp146mHz;
+        public Rhd2164DspCutoff DspCutoff { get; set; } = Rhd2164DspCutoff.Off;
 
         /// <summary>
         /// Gets or sets the low cutoff frequency of the analog (pre-ADC) bandpass filter.
