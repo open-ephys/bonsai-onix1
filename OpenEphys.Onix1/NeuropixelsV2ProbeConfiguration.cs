@@ -43,6 +43,7 @@ namespace OpenEphys.Onix1
     /// Defines a configuration for Neuropixels 2.0 and 2.0-beta probes.
     /// </summary>
     [XmlInclude(typeof(NeuropixelsV2QuadShankProbeConfiguration))]
+    [XmlInclude(typeof(NeuropixelsV2SingleShankProbeConfiguration))]
     [XmlType(Namespace = Constants.XmlNamespace)]
     public abstract class NeuropixelsV2ProbeConfiguration
     {
@@ -120,7 +121,27 @@ namespace OpenEphys.Onix1
         /// Update the <see cref="ChannelMap"/> with the selected electrodes.
         /// </summary>
         /// <param name="electrodes">List of selected electrodes that are being added to the <see cref="ChannelMap"/></param>
-        public abstract void SelectElectrodes(NeuropixelsV2Electrode[] electrodes);
+        public void SelectElectrodes(NeuropixelsV2Electrode[] electrodes)
+        {
+            if (electrodes.Length == 0) return;
+
+            var channelMap = ChannelMap;
+
+            foreach (var e in electrodes)
+            {
+                try
+                {
+                    channelMap[e.Channel] = e;
+                }
+                catch (IndexOutOfRangeException ex)
+                {
+                    throw new IndexOutOfRangeException($"Electrode {e.Index} specifies channel {e.Channel} but only channels " +
+                        $"0 to {channelMap.Length - 1} are supported.", ex);
+                }
+            }
+
+            ProbeGroup.UpdateDeviceChannelIndices(channelMap);
+        }
 
         /// <summary>
         /// Protected task that loads the ProbeInterface file asynchronously.
@@ -217,6 +238,32 @@ namespace OpenEphys.Onix1
             }
             set => ProbeInterfaceLoadFileName = value;
         }
+        
+        const int ReferencePixelCount = 4;
+        const int DummyRegisterCount = 4;
+
+        /// <summary>
+        /// Number of registers per shank.
+        /// </summary>
+        protected const int RegistersPerShank = NeuropixelsV2.ElectrodePerShank + ReferencePixelCount + DummyRegisterCount;
+
+        /// <summary>
+        /// Index of the shift register bit for external electrode 0.
+        /// </summary>
+        protected const int ShiftRegisterBitExternalElectrode0 = 1285;
+        /// <summary>
+        /// Index of the shift register bit for external electrode 1.
+        /// </summary>
+        protected const int ShiftRegisterBitExternalElectrode1 = 2;
+
+        /// <summary>
+        /// Index of the shift register bit for tip electrode 0.
+        /// </summary>
+        protected const int ShiftRegisterBitTipElectrode0 = 644;
+        /// <summary>
+        /// Index of the shift register bit for tip electrode 1.
+        /// </summary>
+        protected const int ShiftRegisterBitTipElectrode1 = 643;
 
         internal abstract BitArray[] CreateShankBits(Enum reference);
 
@@ -225,5 +272,7 @@ namespace OpenEphys.Onix1
         internal abstract bool IsGroundReference();
 
         internal abstract NeuropixelsV2ProbeConfiguration Clone();
+
+        internal abstract Func<int, int> GetChannelNumberFunc();
     }
 }

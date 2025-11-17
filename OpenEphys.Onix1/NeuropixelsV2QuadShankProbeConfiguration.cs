@@ -47,7 +47,7 @@ namespace OpenEphys.Onix1
     [XmlType(TypeName = XmlTypeName, Namespace = Constants.XmlNamespace)]
     public class NeuropixelsV2QuadShankProbeConfiguration : NeuropixelsV2ProbeConfiguration
     {
-        const string XmlTypeName = "QuadShank";
+        internal const string XmlTypeName = "QuadShank";
 
         /// <summary>
         /// Initializes a default instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class.
@@ -228,42 +228,8 @@ namespace OpenEphys.Onix1
             }
         }
 
-        /// <summary>
-        /// Update the <see cref="ChannelMap"/> with the selected electrodes.
-        /// </summary>
-        /// <param name="electrodes">List of selected electrodes that are being added to the <see cref="ChannelMap"/></param>
-        public override void SelectElectrodes(NeuropixelsV2Electrode[] electrodes)
-        {
-            var channelMap = ChannelMap;
-
-            foreach (var e in electrodes)
-            {
-                try
-                {
-                    channelMap[e.Channel] = e;
-                }
-                catch (IndexOutOfRangeException ex)
-                {
-                    throw new IndexOutOfRangeException($"Electrode {e.Index} specifies channel {e.Channel} but only channels " +
-                        $"0 to {channelMap.Length - 1} are supported.", ex);
-                }
-            }
-
-            ProbeGroup.UpdateDeviceChannelIndices(channelMap);
-        }
-
         internal override BitArray[] CreateShankBits(Enum reference)
         {
-            const int ReferencePixelCount = 4;
-            const int DummyRegisterCount = 4;
-            const int RegistersPerShank = NeuropixelsV2.ElectrodePerShank + ReferencePixelCount + DummyRegisterCount;
-
-            const int ShiftRegisterBitExternalElectrode0 = 1285;
-            const int ShiftRegisterBitExternalElectrode1 = 2;
-
-            const int ShiftRegisterBitTipElectrode0 = 644;
-            const int ShiftRegisterBitTipElectrode1 = 643;
-
             var shankBits = new BitArray[]
                 {
                     new(RegistersPerShank, false),
@@ -282,7 +248,7 @@ namespace OpenEphys.Onix1
                     NeuropixelsV2QuadShankReference.Tip2 => 1,
                     NeuropixelsV2QuadShankReference.Tip3 => 2,
                     NeuropixelsV2QuadShankReference.Tip4 => 3,
-                    _ => throw new InvalidOperationException($"Invalid reference chosen for quad-shank probe.")
+                    _ => throw new InvalidEnumArgumentException("Invalid reference chosen for quad-shank probe.")
                 };
 
                 // If tip reference is used, activate the tip electrode
@@ -326,6 +292,11 @@ namespace OpenEphys.Onix1
         }
 
         internal override bool IsGroundReference() => (NeuropixelsV2QuadShankReference)Reference == NeuropixelsV2QuadShankReference.Ground;
+
+        internal override Func<int, int> GetChannelNumberFunc()
+        {
+            return NeuropixelsV2QuadShankElectrode.GetChannelNumber;
+        }
     }
 
     /// <summary>

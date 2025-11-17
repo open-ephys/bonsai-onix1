@@ -311,10 +311,8 @@ namespace OpenEphys.Onix1.Design
             }
             else
             {
-                MessageBox.Show($"Error: Number of contacts does not match; expected {ProbeGroup.NumberOfContacts} contacts" +
-                    $", but found {newConfiguration.NumberOfContacts} contacts", "Contact Number Mismatch");
-
-                return false;
+                throw new InvalidOperationException($"Number of contacts does not match; expected {ProbeGroup.NumberOfContacts} contacts" +
+                    $", but found {newConfiguration.NumberOfContacts} contacts. Ensure the file contains the correct probe group type.");
             }
         }
 
