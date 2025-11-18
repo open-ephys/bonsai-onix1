@@ -58,6 +58,7 @@ namespace OpenEphys.Onix1
         [Description("Probe A configuration.")]
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         [XmlElement(nameof(ProbeConfigurationA), typeof(NeuropixelsV2QuadShankProbeConfiguration))]
+        [XmlElement(NeuropixelsV2SingleShankProbeConfiguration.XmlTypeName + nameof(ProbeConfigurationA), typeof(NeuropixelsV2SingleShankProbeConfiguration))]
         public NeuropixelsV2ProbeConfiguration ProbeConfigurationA { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe.ProbeA, NeuropixelsV2QuadShankReference.External);
 
         /// <inheritdoc/>
@@ -72,6 +73,7 @@ namespace OpenEphys.Onix1
         [Description("Probe B configuration.")]
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         [XmlElement(nameof(ProbeConfigurationB), typeof(NeuropixelsV2QuadShankProbeConfiguration))]
+        [XmlElement(NeuropixelsV2SingleShankProbeConfiguration.XmlTypeName + nameof(ProbeConfigurationB), typeof(NeuropixelsV2SingleShankProbeConfiguration))]
         public NeuropixelsV2ProbeConfiguration ProbeConfigurationB { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe.ProbeB, NeuropixelsV2QuadShankReference.External);
 
         /// <inheritdoc/>

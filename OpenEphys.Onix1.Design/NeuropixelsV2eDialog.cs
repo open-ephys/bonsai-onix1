@@ -26,10 +26,13 @@ namespace OpenEphys.Onix1.Design
             InitializeComponent();
             Shown += FormShown;
 
+            bool isBeta = false;
+
             if (configureNode is ConfigureNeuropixelsV2eBeta configureV2eBeta)
             {
                 ConfigureNode = new ConfigureNeuropixelsV2eBeta(configureV2eBeta);
                 Text = Text.Replace("NeuropixelsV2e ", "NeuropixelsV2eBeta ");
+                isBeta = true;
             }
             else if (configureNode is ConfigureNeuropixelsV2e configureV2e)
             {
@@ -38,7 +41,7 @@ namespace OpenEphys.Onix1.Design
 
             ProbeConfigurations = new List<NeuropixelsV2eProbeConfigurationDialog>
             {
-                new(ConfigureNode.ProbeConfigurationA, ConfigureNode.GainCalibrationFileA, ConfigureNode.InvertPolarity)
+                new(ConfigureNode.ProbeConfigurationA, ConfigureNode.GainCalibrationFileA, ConfigureNode.InvertPolarity, isBeta)
                 {
                     TopLevel = false,
                     FormBorderStyle = FormBorderStyle.None,
@@ -46,7 +49,7 @@ namespace OpenEphys.Onix1.Design
                     Parent = this,
                     Tag = NeuropixelsV2Probe.ProbeA
                 },
-                new(ConfigureNode.ProbeConfigurationB, ConfigureNode.GainCalibrationFileB, ConfigureNode.InvertPolarity)
+                new(ConfigureNode.ProbeConfigurationB, ConfigureNode.GainCalibrationFileB, ConfigureNode.InvertPolarity, isBeta)
                 {
                     TopLevel = false,
                     FormBorderStyle = FormBorderStyle.None,
