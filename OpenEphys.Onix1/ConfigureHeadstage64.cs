@@ -45,6 +45,22 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
+        /// Initializes a copied instance of the <see cref="ConfigureHeadstage64"/> class.
+        /// </summary>
+        /// <param name="configureNode">Existing <see cref="ConfigureHeadstage64"/> instance.</param>
+        public ConfigureHeadstage64(ConfigureHeadstage64 configureNode)
+        {
+            Name = configureNode.Name;
+            Port = configureNode.Port;
+            PortControl = configureNode.PortControl;
+            Rhd2164 = new(configureNode.Rhd2164);
+            Bno055 = new(configureNode.Bno055);
+            TS4231 = new(configureNode.TS4231);
+            ElectricalStimulator = new(configureNode.ElectricalStimulator);
+            OpticalStimulator = new(configureNode.OpticalStimulator);
+        }
+
+        /// <summary>
         /// Gets or sets the Rhd2164 configuration.
         /// </summary>
         [Category(DevicesCategory)]

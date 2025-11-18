@@ -39,6 +39,19 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
+        /// Initializes a copied instance of the <see cref="ConfigureHeadstageRhs2116"/> class.
+        /// </summary>
+        /// <param name="configureNode">Existing <see cref="ConfigureHeadstageRhs2116"/> instance.</param>
+        public ConfigureHeadstageRhs2116(ConfigureHeadstageRhs2116 configureNode)
+        {
+            Name = configureNode.Name;
+            Port = configureNode.Port;
+            LinkController = configureNode.LinkController;
+            Rhs2116Pair = new(configureNode.Rhs2116Pair);
+            StimulusTrigger = new(configureNode.StimulusTrigger);
+        }
+
+        /// <summary>
         /// Gets or sets the Rhs2116Pair configuration.
         /// </summary>
         [Category(ConfigurationCategory)]

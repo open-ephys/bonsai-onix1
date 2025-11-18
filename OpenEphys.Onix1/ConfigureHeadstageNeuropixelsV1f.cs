@@ -41,6 +41,21 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
+        /// Initializes a copied instance of the <see cref="ConfigureHeadstageNeuropixelsV1f"/> class.
+        /// </summary>
+        /// <param name="configureNode">Existing <see cref="ConfigureHeadstageNeuropixelsV1f"/> instance.</param>
+        public ConfigureHeadstageNeuropixelsV1f(ConfigureHeadstageNeuropixelsV1f configureNode)
+        {
+            Name = configureNode.Name;
+            Port = configureNode.Port;
+            PortControl = configureNode.PortControl;
+            NeuropixelsV1A = configureNode.NeuropixelsV1A.Clone() as ConfigureNeuropixelsV1f ?? throw new InvalidOperationException($"Unable to copy {nameof(NeuropixelsV1A)} property. Could not cast to the correct type.");
+            NeuropixelsV1B = configureNode.NeuropixelsV1B.Clone() as ConfigureNeuropixelsV1f ?? throw new InvalidOperationException($"Unable to copy {nameof(NeuropixelsV1B)} property. Could not cast to the correct type.");
+            Bno055 = new(configureNode.Bno055);
+            TS4231 = new(configureNode.TS4231);
+        }
+
+        /// <summary>
         /// Gets or sets the NeuropixelsV1 probe A configuration.
         /// </summary>
         [Category(DevicesCategory)]

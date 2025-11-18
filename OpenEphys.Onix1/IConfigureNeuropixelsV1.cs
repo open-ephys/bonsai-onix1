@@ -6,6 +6,11 @@
     public interface IConfigureNeuropixelsV1
     {
         /// <summary>
+        /// Returns a deep copy of the current <see cref="IConfigureNeuropixelsV1"/> instance.
+        /// </summary>
+        public IConfigureNeuropixelsV1 Clone();
+
+        /// <summary>
         /// Gets or sets the device enable state.
         /// </summary>
         public bool Enable { get; set; }

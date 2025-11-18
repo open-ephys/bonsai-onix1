@@ -22,7 +22,7 @@ namespace OpenEphys.Onix1.Design
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
-                        configureNeuropixelsV1.ProbeConfiguration = editorDialog.ProbeConfigurationDialog.ProbeConfiguration;
+                        DesignHelper.CopyProperties(editorDialog.ConfigureNode, configureNeuropixelsV1, DesignHelper.PropertiesToIgnore);
 
                         return true;
                     }
