@@ -31,7 +31,7 @@ namespace OpenEphys.Onix1.Design
 
             zedGraphChannels.ZoomStepFraction = 0.5;
 
-            ProbeConfiguration = Activator.CreateInstance(probeConfiguration.GetType(), probeConfiguration) as NeuropixelsV2ProbeConfiguration;
+            ProbeConfiguration = probeConfiguration.Clone();
             ProbeConfiguration.ProbeGroup = (NeuropixelsV2eProbeGroup)ProbeGroup;
 
             GetChannelNumberFunc = ProbeConfiguration.ChannelMap[0].GetChannelNumberFunc();
@@ -49,7 +49,16 @@ namespace OpenEphys.Onix1.Design
 
         internal override void LoadDefaultChannelLayout()
         {
-            base.LoadDefaultChannelLayout();
+            try
+            {
+                ProbeConfiguration.ProbeGroup = DefaultChannelLayout() as NeuropixelsV2eProbeGroup;
+                ProbeGroup = ProbeConfiguration.ProbeGroup;
+            }
+            catch (InvalidOperationException ex)
+            {
+                MessageBox.Show("Unable to Load Default", ex.Message);
+                return;
+            }
 
             OnFileOpenHandler();
         }
