@@ -147,7 +147,7 @@ namespace OpenEphys.Onix1
                     if (string.IsNullOrEmpty(probeInterfaceFileName))
                         return new Rhs2116ProbeGroup();
 
-                    return ProbeInterfaceHelper.LoadExternalProbeInterfaceFile<Rhs2116ProbeGroup>(probeInterfaceFileName);
+                    return ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeInterfaceFileName, typeof(Rhs2116ProbeGroup)) as Rhs2116ProbeGroup;
                 });
             }
         }
