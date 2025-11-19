@@ -13,8 +13,6 @@ namespace OpenEphys.Onix1.Design
     {
         readonly NeuropixelsV2eChannelConfigurationDialog ChannelConfiguration;
 
-        internal event EventHandler InvertPolarityChanged;
-
         /// <summary>
         /// Public <see cref="NeuropixelsV2ProbeConfiguration"/> object that is manipulated by
         /// <see cref="NeuropixelsV2eChannelConfigurationDialog"/>.
@@ -43,9 +41,6 @@ namespace OpenEphys.Onix1.Design
             InitializeComponent();
             Shown += FormShown;
 
-            textBoxProbeCalibrationFile.Text = configuration.GainCalibrationFileName;
-            textBoxProbeCalibrationFile.TextChanged += (sender, e) => ProbeConfiguration.GainCalibrationFileName = ((TextBox)sender).Text;
-
             ChannelConfiguration = new(configuration);
             ChannelConfiguration.SetChildFormProperties(this).AddDialogToPanel(panelProbe);
 
@@ -54,23 +49,78 @@ namespace OpenEphys.Onix1.Design
             ChannelConfiguration.OnZoom += UpdateTrackBarLocation;
             ChannelConfiguration.OnFileLoad += OnFileLoadEvent;
 
+            propertyGrid.SelectedObject = configuration;
+            bindingSource.DataSource = configuration;
+
             ProbeData = ProbeDataFactory(configuration);
 
+            textBoxProbeCalibrationFile.DataBindings.Add("Text",
+                bindingSource,
+                $"{nameof(configuration.GainCalibrationFileName)}",
+                false,
+                DataSourceUpdateMode.OnPropertyChanged);
+            textBoxProbeCalibrationFile.TextChanged += (sender, e) => CheckStatus();
+
             comboBoxReference.DataSource = ProbeData.GetReferenceEnumValues();
-            comboBoxReference.SelectedItem = ProbeConfiguration.Reference;
-            comboBoxReference.SelectedIndexChanged += SelectedReferenceChanged;
+            comboBoxReference.DataBindings.Add("SelectedItem",
+                bindingSource,
+                nameof(configuration.Reference),
+                false,
+                DataSourceUpdateMode.OnPropertyChanged);
+            comboBoxReference.SelectedIndexChanged += (sender, e) =>
+            {
+                // NB: Needed to capture mouse scroll wheel updates
+                var control = sender as Control;
+
+                foreach (Binding binding in control.DataBindings)
+                {
+                    binding.WriteValue();
+                }
+
+                bindingSource.ResetCurrentItem();
+            };
 
             comboBoxChannelPresets.DataSource = ProbeData.GetComboBoxChannelPresets();
-            comboBoxChannelPresets.SelectedIndexChanged += SelectedChannelPresetChanged;
-
-            checkBoxInvertPolarity.Checked = ProbeConfiguration.InvertPolarity;
-            checkBoxInvertPolarity.CheckedChanged += InvertPolarityIndexChanged;
-
             CheckForExistingChannelPreset();
+            comboBoxChannelPresets.SelectedIndexChanged += (sender, e) =>
+            {
+                try
+                {
+                    Enum channelPreset = ((ComboBox)sender).SelectedItem as Enum ?? throw new InvalidEnumArgumentException("Invalid argument given for the channel preset.");
+                    ProbeConfiguration.SelectElectrodes(ProbeData.GetChannelPreset(channelPreset));
+                }
+                catch (InvalidEnumArgumentException ex)
+                {
+                    MessageBox.Show(ex.Message, "Invalid Preset Chosen");
+                    return;
+                }
+
+                ChannelConfiguration.HighlightEnabledContacts();
+                ChannelConfiguration.HighlightSelectedContacts();
+                ChannelConfiguration.UpdateContactLabels();
+                ChannelConfiguration.RefreshZedGraph();
+            };
+
+            checkBoxInvertPolarity.DataBindings.Add("Checked",
+                bindingSource,
+                $"{nameof(configuration.InvertPolarity)}",
+                false,
+                DataSourceUpdateMode.OnPropertyChanged);
 
             CheckStatus();
 
             Text += ": " + ProbeConfiguration.Probe.ToString();
+
+            bindingSource.ListChanged += (sender, eventArgs) => propertyGrid.Refresh();
+
+            tabControlProbe.SelectedIndexChanged += (sender, eventArgs) =>
+            {
+                if (tabControlProbe.SelectedTab == tabPageProperties)
+                    propertyGrid.Refresh();
+
+                else if (tabControlProbe.SelectedTab == tabPageConfiguration)
+                    bindingSource.ResetCurrentItem();
+            };
         }
 
         static INeuropixelsV2ProbeInfo ProbeDataFactory(NeuropixelsV2ProbeConfiguration configuration)
@@ -81,26 +131,6 @@ namespace OpenEphys.Onix1.Design
             }
 
             throw new NotImplementedException("Unknown configuration found.");
-        }
-
-        private void InvertPolarityIndexChanged(object sender, EventArgs e)
-        {
-            ProbeConfiguration.InvertPolarity = ((CheckBox)sender).Checked;
-            OnInvertPolarityChangedHandler();
-        }
-
-        /// <summary>
-        /// Set the <see cref="checkBoxInvertPolarity"/> value to the given boolean.
-        /// </summary>
-        /// <param name="invertPolarity">Boolean denoting whether or not to invert the neural data polarity.</param>
-        public void SetInvertPolarity(bool invertPolarity)
-        {
-            checkBoxInvertPolarity.Checked = invertPolarity;
-        }
-
-        private void OnInvertPolarityChangedHandler()
-        {
-            InvertPolarityChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void FormShown(object sender, EventArgs e)
@@ -118,22 +148,6 @@ namespace OpenEphys.Onix1.Design
             ChannelConfiguration.ResizeZedGraph();
         }
 
-        private void SelectedReferenceChanged(object sender, EventArgs e)
-        {
-            ProbeConfiguration.Reference = (Enum)((ComboBox)sender).SelectedItem;
-        }
-
-        private void SelectedChannelPresetChanged(object sender, EventArgs e)
-        {
-            Enum channelPreset = ((ComboBox)sender).SelectedItem as Enum ?? throw new InvalidEnumArgumentException("Invalid argument given for the channel preset.");
-            ProbeConfiguration.SelectElectrodes(ProbeData.GetChannelPreset(channelPreset));
-
-            ChannelConfiguration.HighlightEnabledContacts();
-            ChannelConfiguration.HighlightSelectedContacts();
-            ChannelConfiguration.UpdateContactLabels();
-            ChannelConfiguration.RefreshZedGraph();
-        }
-
         void CheckForExistingChannelPreset()
         {
             comboBoxChannelPresets.SelectedItem = ProbeData.CheckForExistingChannelPreset(ProbeConfiguration.ChannelMap);
@@ -142,11 +156,6 @@ namespace OpenEphys.Onix1.Design
         private void OnFileLoadEvent(object sender, EventArgs e)
         {
             CheckForExistingChannelPreset();
-        }
-
-        private void FileTextChanged(object sender, EventArgs e)
-        {
-            CheckStatus();
         }
 
         private void CheckStatus()
@@ -256,11 +265,6 @@ namespace OpenEphys.Onix1.Design
         private void UpdateTrackBarLocation(object sender, EventArgs e)
         {
             trackBarProbePosition.Value = (int)(ChannelConfiguration.GetRelativeVerticalPosition() * trackBarProbePosition.Maximum);
-        }
-
-        void TextBoxKeyPress(object sender, KeyPressEventArgs e)
-        {
-            CheckStatus();
         }
     }
 }

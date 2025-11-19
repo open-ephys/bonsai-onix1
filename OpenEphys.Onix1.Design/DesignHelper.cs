@@ -51,7 +51,7 @@ namespace OpenEphys.Onix1.Design
 
             if (childForm != null)
             {
-                var childMenuStrip = childForm.GetAllControls()
+                var childMenuStrip = childForm.GetTopLevelControls()
                                               .OfType<MenuStrip>()
                                               .FirstOrDefault() ?? throw new InvalidOperationException($"There are no menu strips in any child controls of the {childForm.Text} dialog.");
 
@@ -97,7 +97,7 @@ namespace OpenEphys.Onix1.Design
 
             if (childForm != null)
             {
-                var childMenuStrip = childForm.GetAllControls()
+                var childMenuStrip = childForm.GetTopLevelControls()
                                               .OfType<MenuStrip>()
                                               .First() ?? throw new InvalidOperationException($"There are no menu strips in any child controls of the {childForm.Text} dialog.");
 

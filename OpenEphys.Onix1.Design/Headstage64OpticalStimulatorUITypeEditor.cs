@@ -28,7 +28,9 @@ namespace OpenEphys.Onix1.Design
 
                 if (editorService != null && editorState != null && !editorState.WorkflowRunning && value is ConfigureHeadstage64OpticalStimulator configureNode)
                 {
-                    using var editorDialog = new Headstage64OpticalStimulatorSequenceDialog(configureNode);
+                    var configuration = new ConfigureHeadstage64OpticalStimulator(configureNode);
+
+                    using var editorDialog = new Headstage64OpticalStimulatorSequenceDialog(configuration);
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {

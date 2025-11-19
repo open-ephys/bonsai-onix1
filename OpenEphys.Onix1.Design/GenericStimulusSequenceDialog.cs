@@ -12,9 +12,13 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     public partial class GenericStimulusSequenceDialog : Form
     {
+        internal object Device
+        {
+            get => propertyGrid.SelectedObject;
+            set => propertyGrid.SelectedObject = value;
+        }
+
         readonly int NumberOfChannels;
-        readonly bool UseProbeGroup;
-        readonly bool UseTable;
 
         internal const double ZeroPeakToPeak = 1e-12;
         internal readonly double ChannelScale = 1.1;
@@ -25,37 +29,23 @@ namespace OpenEphys.Onix1.Design
             InitializeComponent();
 
             NumberOfChannels = 0;
-            UseProbeGroup = true;
         }
 
         /// <summary>
-        /// Opens a dialog allowing for easy changing of stimulus sequence parameters, with visual feedback on what the resulting stimulus sequence looks like.
+        /// Opens a dialog allowing for easy changing of stimulus sequence parameters,
+        /// with visual feedback on what the resulting stimulus sequence looks like.
         /// </summary>
-        public GenericStimulusSequenceDialog(int numberOfChannels, bool useProbeGroup, bool useTable = false)
+        public GenericStimulusSequenceDialog(object device, int numberOfChannels)
         {
             InitializeComponent();
             Shown += FormShown;
 
+            Device = device;
+            bindingSource.DataSource = Device;
+
             NumberOfChannels = numberOfChannels;
-            UseProbeGroup = useProbeGroup;
-            UseTable = useTable;
-
-            if (!UseProbeGroup)
-            {
-                tableLayoutPanel1.Controls.Remove(panelProbe);
-                GroupBox gb = tableLayoutPanel1.Controls[nameof(groupBoxDefineStimuli)] as GroupBox;
-                tableLayoutPanel1.SetRow(gb, 0);
-                tableLayoutPanel1.SetRowSpan(gb, 2);
-            }
-
-            if (!UseTable)
-            {
-                panelWaveform.Controls.Remove(tabControlVisualization);
-                panelWaveform.Controls.Add(zedGraphWaveform);
-            }
 
             InitializeZedGraphWaveform();
-            SetTableDataSource();
 
             zedGraphWaveform.ZoomEvent += OnZoom_Waveform;
             zedGraphWaveform.MouseMoveEvent += MouseMoveEvent;
@@ -209,8 +199,6 @@ namespace OpenEphys.Onix1.Design
             {
                 return Math.Abs(val).ToString("0");
             };
-
-            dataGridViewStimulusTable.Refresh();
 
             if (setZoomState && XMin != 0 && XMax != 0)
             {
@@ -505,12 +493,6 @@ namespace OpenEphys.Onix1.Design
             menuStrip.Enabled = false;
         }
 
-        internal virtual void SetTableDataSource()
-        {
-            if (UseTable)
-                throw new NotImplementedException();
-        }
-
         void ResetZoom_Click(object sender, EventArgs e)
         {
             ResetZoom();
@@ -524,5 +506,9 @@ namespace OpenEphys.Onix1.Design
             zedGraphWaveform.Refresh();
         }
 
+        void PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
+        {
+            DrawStimulusWaveform();
+        }
     }
 }

@@ -29,7 +29,7 @@ namespace OpenEphys.Onix1.Design
             StimulusSequenceDialog.SetChildFormProperties(this).AddDialogToTab(tabPageStimulusSequence);
             this.AddMenuItemsFromDialogToFileOption(StimulusSequenceDialog);
 
-            Rhs2116Dialog = new(new ConfigureRhs2116Pair(rhs2116));
+            Rhs2116Dialog = new(rhs2116);
 
             Rhs2116Dialog.SetChildFormProperties(this).AddDialogToTab(tabPageRhs2116);
         }

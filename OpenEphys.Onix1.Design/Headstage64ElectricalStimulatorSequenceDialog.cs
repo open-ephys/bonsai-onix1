@@ -12,14 +12,13 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     public partial class Headstage64ElectricalStimulatorSequenceDialog : GenericStimulusSequenceDialog
     {
-        internal readonly ConfigureHeadstage64ElectricalStimulator ElectricalStimulator;
+        internal ConfigureHeadstage64ElectricalStimulator ElectricalStimulator
+        {
+            get => (ConfigureHeadstage64ElectricalStimulator)Device;
+        }
         readonly Headstage64ElectricalStimulatorOptions StimulusSequenceOptions;
 
         readonly static int NumberOfChannels = 1;
-
-        readonly Dictionary<TextBox, TextBoxBinding<double>> currentBindings;
-        readonly Dictionary<TextBox, TextBoxBinding<uint>> timeBindings;
-        readonly Dictionary<TextBox, TextBoxBinding<uint>> countBindings;
 
         /// <summary>
         /// Opens a dialog allowing for easy changing of stimulus sequence parameters, with 
@@ -27,100 +26,113 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <param name="electricalStimulator">Existing stimulus sequence.</param>
         public Headstage64ElectricalStimulatorSequenceDialog(ConfigureHeadstage64ElectricalStimulator electricalStimulator)
-            : base(NumberOfChannels, false)
+            : base(electricalStimulator, NumberOfChannels)
         {
             InitializeComponent();
             HideMenuStrip();
 
-            ElectricalStimulator = new(electricalStimulator);
-
             StimulusSequenceOptions = new(ElectricalStimulator);
             StimulusSequenceOptions.SetChildFormProperties(this);
-            groupBoxDefineStimuli.Controls.Add(StimulusSequenceOptions);
+            tabPageDefineStimuli.Controls.Add(StimulusSequenceOptions);
 
-            currentBindings = new()
-            {
-                { StimulusSequenceOptions.textBoxPhaseOneCurrent,
-                    new TextBoxBinding<double>(
-                        StimulusSequenceOptions.textBoxPhaseOneCurrent,
-                        value => { ElectricalStimulator.PhaseOneCurrent = value; return ElectricalStimulator.PhaseOneCurrent; },
-                        double.Parse) },
-                { StimulusSequenceOptions.textBoxInterPhaseCurrent,
-                    new TextBoxBinding<double>(
-                        StimulusSequenceOptions.textBoxInterPhaseCurrent,
-                        value => { ElectricalStimulator.InterPhaseCurrent = value; return ElectricalStimulator.InterPhaseCurrent; },
-                        double.Parse) },
-                { StimulusSequenceOptions.textBoxPhaseTwoCurrent,
-                    new TextBoxBinding<double>(
-                        StimulusSequenceOptions.textBoxPhaseTwoCurrent,
-                        value => { ElectricalStimulator.PhaseTwoCurrent = value; return ElectricalStimulator.PhaseTwoCurrent; },
-                        double.Parse) }
-            };
+            StimulusSequenceOptions.textBoxPhaseOneCurrent.DataBindings.Add(
+                "Text",
+                bindingSource,
+                nameof(ElectricalStimulator.PhaseOneCurrent),
+                false,
+                DataSourceUpdateMode.OnValidation);
 
-            timeBindings = new Dictionary<TextBox, TextBoxBinding<uint>>
-            {
-                { StimulusSequenceOptions.textBoxPhaseOneDuration,
-                    new TextBoxBinding<uint>(
-                        StimulusSequenceOptions.textBoxPhaseOneDuration,
-                        value => { ElectricalStimulator.PhaseOneDuration = value; return ElectricalStimulator.PhaseOneDuration; },
-                        uint.Parse) },
-                { StimulusSequenceOptions.textBoxPhaseTwoDuration,
-                    new TextBoxBinding<uint>(
-                        StimulusSequenceOptions.textBoxPhaseTwoDuration,
-                        value => { ElectricalStimulator.PhaseTwoDuration = value; return ElectricalStimulator.PhaseTwoDuration; },
-                        uint.Parse) },
-                { StimulusSequenceOptions.textBoxInterPhaseDuration,
-                    new TextBoxBinding<uint>(
-                        StimulusSequenceOptions.textBoxInterPhaseDuration,
-                        value => { ElectricalStimulator.InterPhaseInterval = value; return ElectricalStimulator.InterPhaseInterval; },
-                        uint.Parse) },
-                { StimulusSequenceOptions.textBoxInterBurstInterval,
-                    new TextBoxBinding<uint>(
-                        StimulusSequenceOptions.textBoxInterBurstInterval,
-                        value => { ElectricalStimulator.InterBurstInterval = value; return ElectricalStimulator.InterBurstInterval; },
-                        uint.Parse) },
-                { StimulusSequenceOptions.textBoxPulsePeriod,
-                    new TextBoxBinding<uint>(
-                        StimulusSequenceOptions.textBoxPulsePeriod,
-                        value => { ElectricalStimulator.InterPulseInterval = value; return ElectricalStimulator.InterPulseInterval; },
-                        uint.Parse) },
-                { StimulusSequenceOptions.textBoxTrainDelay,
-                    new TextBoxBinding<uint>(
-                        StimulusSequenceOptions.textBoxTrainDelay,
-                        value => { ElectricalStimulator.TriggerDelay = value; return ElectricalStimulator.TriggerDelay; },
-                        uint.Parse) }
-            };
+            StimulusSequenceOptions.textBoxInterPhaseCurrent.DataBindings.Add(
+                "Text",
+                bindingSource,
+                nameof(ElectricalStimulator.InterPhaseCurrent),
+                false,
+                DataSourceUpdateMode.OnValidation);
 
-            countBindings = new Dictionary<TextBox, TextBoxBinding<uint>>
-            {
-                { StimulusSequenceOptions.textBoxBurstPulseCount,
-                    new TextBoxBinding<uint>(
-                        StimulusSequenceOptions.textBoxBurstPulseCount,
-                        value => { ElectricalStimulator.BurstPulseCount = value; return ElectricalStimulator.BurstPulseCount; },
-                        uint.Parse) },
-                { StimulusSequenceOptions.textBoxTrainBurstCount,
-                    new TextBoxBinding<uint>(
-                        StimulusSequenceOptions.textBoxTrainBurstCount,
-                        value => { ElectricalStimulator.TrainBurstCount = value; return ElectricalStimulator.TrainBurstCount; },
-                        uint.Parse) }
-            };
+            StimulusSequenceOptions.textBoxPhaseTwoCurrent.DataBindings.Add(
+                "Text",
+                bindingSource,
+                nameof(ElectricalStimulator.PhaseTwoCurrent),
+                false,
+                DataSourceUpdateMode.OnValidation);
 
-            foreach (var binding in currentBindings)
-            {
-                binding.Key.Leave += TextBoxChanged;
-                binding.Key.KeyPress += KeyPressed;
-            }
+            StimulusSequenceOptions.textBoxPhaseOneDuration.DataBindings.Add(
+                "Text",
+                bindingSource,
+                nameof(ElectricalStimulator.PhaseOneDuration),
+                false,
+                DataSourceUpdateMode.OnValidation);
 
-            foreach (var binding in timeBindings)
-            {
-                binding.Key.Leave += TextBoxChanged;
-                binding.Key.KeyPress += KeyPressed;
-            }
+            StimulusSequenceOptions.textBoxPhaseTwoDuration.DataBindings.Add(
+                "Text",
+                bindingSource,
+                nameof(ElectricalStimulator.PhaseTwoDuration),
+                false,
+                DataSourceUpdateMode.OnValidation);
 
-            foreach (var binding in countBindings)
+            StimulusSequenceOptions.textBoxInterPhaseDuration.DataBindings.Add(
+                "Text",
+                bindingSource,
+                nameof(ElectricalStimulator.InterPhaseInterval),
+                false,
+                DataSourceUpdateMode.OnValidation);
+
+            StimulusSequenceOptions.textBoxInterBurstInterval.DataBindings.Add(
+                "Text",
+                bindingSource,
+                nameof(ElectricalStimulator.InterBurstInterval),
+                false,
+                DataSourceUpdateMode.OnValidation);
+
+            StimulusSequenceOptions.textBoxPulsePeriod.DataBindings.Add(
+                "Text",
+                bindingSource,
+                nameof(ElectricalStimulator.InterPulseInterval),
+                false,
+                DataSourceUpdateMode.OnValidation);
+
+            StimulusSequenceOptions.textBoxTrainDelay.DataBindings.Add(
+                "Text",
+                bindingSource,
+                nameof(ElectricalStimulator.TriggerDelay),
+                false,
+                DataSourceUpdateMode.OnValidation);
+
+            StimulusSequenceOptions.textBoxBurstPulseCount.DataBindings.Add(
+                "Text",
+                bindingSource,
+                nameof(ElectricalStimulator.BurstPulseCount),
+                false,
+                DataSourceUpdateMode.OnValidation);
+
+            StimulusSequenceOptions.textBoxTrainBurstCount.DataBindings.Add(
+                "Text",
+                bindingSource,
+                nameof(ElectricalStimulator.TrainBurstCount),
+                false,
+                DataSourceUpdateMode.OnValidation);
+
+            foreach (Control control in StimulusSequenceOptions.GetAllControls().OfType<TextBox>())
             {
-                binding.Key.Leave += TextBoxChanged;
-                binding.Key.KeyPress += KeyPressed;
+                control.Validated += (sender, e) =>
+                {
+                    DrawStimulusWaveform();
+                };
+
+                control.KeyPress += (sender, e) =>
+                {
+                    if (e.KeyChar == '\r' && sender is TextBox tb)
+                    {
+                        foreach (Binding binding in tb.DataBindings)
+                        {
+                            binding.WriteValue();
+                        }
+
+                        bindingSource.ResetCurrentItem();
+
+                        DrawStimulusWaveform();
+                    }
+                };
             }
 
             StimulusSequenceOptions.Show();
@@ -134,57 +146,26 @@ namespace OpenEphys.Onix1.Design
             DisableVerticalZoom();
 
             DrawStimulusWaveform();
-        }
 
-        void TextBoxChanged(object sender, EventArgs e)
-        {
-            if (sender is TextBox textBox)
+            bindingSource.ListChanged += (sender, eventArgs) => propertyGrid.Refresh();
+
+            tabControlProperties.SelectedIndexChanged += (sender, eventArgs) =>
             {
-                if (currentBindings.ContainsKey(textBox))
-                {
-                    currentBindings[textBox].UpdateFromTextBox();
-                }
-                else if (timeBindings.ContainsKey(textBox))
-                {
-                    timeBindings[textBox].UpdateFromTextBox();
-                }
-                else if (countBindings.ContainsKey(textBox))
-                {
-                    countBindings[textBox].UpdateFromTextBox();
-                }
-                else
-                {
-                    throw new Exception($"No valid text box found when updating parameters in {nameof(Headstage64ElectricalStimulatorSequenceDialog)}");
-                }
+                if (tabControlProperties.SelectedTab == tabPageProperties)
+                    propertyGrid.Refresh();
 
-                SetStatusValidity();
-                DrawStimulusWaveform();
-            }
+                else if (tabControlProperties.SelectedTab == tabPageDefineStimuli)
+                    bindingSource.ResetCurrentItem();
+            };
         }
 
         internal void SetTextBoxBackgroundDefault()
         {
-            foreach (var binding in currentBindings)
-            {
-                SetTextBoxBackgroundDefault(binding.Key);
-            }
+            var textBoxes = StimulusSequenceOptions.GetAllControls().OfType<TextBox>();
 
-            foreach (var binding in timeBindings)
+            foreach (var textBox in textBoxes)
             {
-                SetTextBoxBackgroundDefault(binding.Key);
-            }
-
-            foreach (var binding in countBindings)
-            {
-                SetTextBoxBackgroundDefault(binding.Key);
-            }
-        }
-
-        void KeyPressed(object sender, KeyPressEventArgs e)
-        {
-            if (e.KeyChar == '\r' && sender is TextBox)
-            {
-                TextBoxChanged(sender, e);
+                SetTextBoxBackgroundDefault(textBox);
             }
         }
 
