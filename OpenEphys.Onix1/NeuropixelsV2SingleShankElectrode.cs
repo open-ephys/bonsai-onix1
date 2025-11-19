@@ -88,12 +88,16 @@ namespace OpenEphys.Onix1
 
             const int HalfBlock = 16;
 
-            return bank switch
+            return (bank, columnIndex) switch
             {
-                NeuropixelsV2Bank.A => row * ElectrodesPerRow + block * ElectrodesPerBlock + columnIndex,
-                NeuropixelsV2Bank.B => (row * 7 % HalfBlock) * ElectrodesPerRow + block * ElectrodesPerBlock + columnIndex,
-                NeuropixelsV2Bank.C => (row * 5 % HalfBlock) * ElectrodesPerRow + block * ElectrodesPerBlock + columnIndex,
-                NeuropixelsV2Bank.D => (row * 3 % HalfBlock) * ElectrodesPerRow + block * ElectrodesPerBlock + columnIndex,
+                (NeuropixelsV2Bank.A, 0) => row * ElectrodesPerRow + block * ElectrodesPerBlock,
+                (NeuropixelsV2Bank.A, 1) => row * ElectrodesPerRow + block * ElectrodesPerBlock + 1,
+                (NeuropixelsV2Bank.B, 0) => (row * 7 % HalfBlock) * ElectrodesPerRow + block * ElectrodesPerBlock,
+                (NeuropixelsV2Bank.B, 1) => ((row * 7 + 4) % HalfBlock) * ElectrodesPerRow + block * ElectrodesPerBlock + 1,
+                (NeuropixelsV2Bank.C, 0) => (row * 5 % HalfBlock) * ElectrodesPerRow + block * ElectrodesPerBlock,
+                (NeuropixelsV2Bank.C, 1) => ((row * 5 + 8) % HalfBlock) * ElectrodesPerRow + block * ElectrodesPerBlock + 1,
+                (NeuropixelsV2Bank.D, 0) => (row * 3 % HalfBlock) * ElectrodesPerRow + block * ElectrodesPerBlock,
+                (NeuropixelsV2Bank.D, 1) => ((row * 3 + 12) % HalfBlock) * ElectrodesPerRow + block * ElectrodesPerBlock + 1,
                 _ => throw new NotImplementedException($"Invalid {nameof(NeuropixelsV2Bank)} value given.")
             };
         }
