@@ -86,7 +86,7 @@ namespace OpenEphys.Onix1
         /// </remarks>
         [Category(DeviceFactory.ConfigurationCategory)]
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
-        [Description("Path to the gain calibration file for probe A.")]
+        [Description("Path to the gain calibration file for this probe.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string GainCalibrationFileName { get; set; }
 

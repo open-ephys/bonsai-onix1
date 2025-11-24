@@ -60,10 +60,18 @@ namespace OpenEphys.Onix1.Design
             {
                 [ProbeType.SingleShank] = configuration is NeuropixelsV2SingleShankProbeConfiguration
                     ? configuration.Clone()
-                    : new NeuropixelsV2SingleShankProbeConfiguration(configuration.Probe, NeuropixelsV2SingleShankReference.External),
+                    : new NeuropixelsV2SingleShankProbeConfiguration(configuration.Probe,
+                        NeuropixelsV2SingleShankReference.External,
+                        configuration.InvertPolarity,
+                        configuration.GainCalibrationFileName,
+                        configuration.ProbeInterfaceFileName),
                 [ProbeType.QuadShank] = configuration is NeuropixelsV2QuadShankProbeConfiguration
                     ? configuration.Clone()
-                    : new NeuropixelsV2QuadShankProbeConfiguration(configuration.Probe, NeuropixelsV2QuadShankReference.External)
+                    : new NeuropixelsV2QuadShankProbeConfiguration(configuration.Probe,
+                        NeuropixelsV2QuadShankReference.External,
+                        configuration.InvertPolarity,
+                        configuration.GainCalibrationFileName,
+                        configuration.ProbeInterfaceFileName)
             };
 
             var currentProbeType = GetCurrentProbeType(configuration);

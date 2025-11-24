@@ -47,7 +47,7 @@ namespace OpenEphys.Onix1
     [XmlType(TypeName = XmlTypeName, Namespace = Constants.XmlNamespace)]
     public class NeuropixelsV2QuadShankProbeConfiguration : NeuropixelsV2ProbeConfiguration
     {
-        internal const string XmlTypeName = "QuadShank";
+        internal const string XmlTypeName = nameof(NeuropixelsV2QuadShankProbeConfiguration);
 
         /// <summary>
         /// Initializes a default instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class.
@@ -80,6 +80,29 @@ namespace OpenEphys.Onix1
             InvertPolarity = probeConfiguration.InvertPolarity;
             GainCalibrationFileName = probeConfiguration.GainCalibrationFileName;
             probeInterfaceFileName = probeConfiguration.probeInterfaceFileName;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class with the given
+        /// values.
+        /// </summary>
+        /// <param name="probe">The <see cref="NeuropixelsV2Probe"/> for this probe.</param>
+        /// <param name="reference">The <see cref="NeuropixelsV2QuadShankReference"/> reference value.</param>
+        /// <param name="invertPolarity">Boolean defining if the signal polarity should be inverted.</param>
+        /// <param name="gainCalibrationFileName">String defining the path to the gain calibration file.</param>
+        /// <param name="probeInterfaceFileName">String defining the path to the ProbeInterface file.</param>
+        public NeuropixelsV2QuadShankProbeConfiguration(
+            NeuropixelsV2Probe probe,
+            NeuropixelsV2QuadShankReference reference,
+            bool invertPolarity,
+            string gainCalibrationFileName,
+            string probeInterfaceFileName)
+        {
+            Probe = probe;
+            Reference = reference;
+            InvertPolarity = invertPolarity;
+            GainCalibrationFileName = gainCalibrationFileName;
+            ProbeInterfaceFileName = probeInterfaceFileName;
         }
 
         /// <summary>
