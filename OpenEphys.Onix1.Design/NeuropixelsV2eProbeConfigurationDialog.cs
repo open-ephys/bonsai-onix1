@@ -165,18 +165,9 @@ namespace OpenEphys.Onix1.Design
             comboBoxReference.SelectedItem = ProbeConfiguration.Reference;
             comboBoxReference.SelectedIndexChanged += SelectedReferenceChanged;
 
-            // TODO: Update InvertPolarity here once it is attached to the ProbeConfiguration class.
+            checkBoxInvertPolarity.Checked = ProbeConfiguration.InvertPolarity;
 
             CheckForExistingChannelPreset();
-        }
-
-        /// <summary>
-        /// Set the <see cref="checkBoxInvertPolarity"/> value to the given boolean.
-        /// </summary>
-        /// <param name="invertPolarity">Boolean denoting whether or not to invert the neural data polarity.</param>
-        public void SetInvertPolarity(bool invertPolarity)
-        {
-            checkBoxInvertPolarity.Checked = invertPolarity;
         }
 
         private void OnInvertPolarityChangedHandler()
