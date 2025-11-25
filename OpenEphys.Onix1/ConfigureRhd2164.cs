@@ -51,7 +51,7 @@ namespace OpenEphys.Onix1
         /// Gets or sets the cutoff frequency for the digital (post-ADC) high-pass filter used for amplifier offset removal.
         /// </summary>
         /// <remarks>
-        /// The amplifiers on the Intan chip, past the analog filter, introduce a DC offset that varies with each channel.
+        /// The amplifiers on the RHD2164 chip, past the analog filter, introduce a DC offset that varies with each channel.
         /// The <see cref="Rhd2164DspCutoff"/> exists to remove this DC offset and ensure that all signals are centered at zero.
         /// With it disabled, all the signals will appear centered at different values.
         /// </remarks>
