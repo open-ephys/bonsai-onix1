@@ -29,12 +29,25 @@ namespace OpenEphys.Onix1
         readonly ConfigureNeuropixelsV2ePortController PortControl = new();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigureNeuropixelsV2e"/> class.
+        /// Initializes a new instance of the <see cref="ConfigureHeadstageNeuropixelsV2e"/> class.
         /// </summary>
         public ConfigureHeadstageNeuropixelsV2e()
         {
             Port = PortName.PortA;
             PortControl.HubConfiguration = HubConfiguration.Passthrough;
+        }
+
+        /// <summary>
+        /// Initializes a copied instance of the <see cref="ConfigureHeadstageNeuropixelsV2e"/> class.
+        /// </summary>
+        /// <param name="configureNode">Existing <see cref="ConfigureHeadstageNeuropixelsV2e"/> instance.</param>
+        public ConfigureHeadstageNeuropixelsV2e(ConfigureHeadstageNeuropixelsV2e configureNode)
+        {
+            Name = configureNode.Name;
+            Port = configureNode.Port;
+            PortControl = configureNode.PortControl;
+            NeuropixelsV2e = configureNode.NeuropixelsV2e.Clone() as ConfigureNeuropixelsV2e ?? throw new InvalidOperationException($"Unable to copy {nameof(NeuropixelsV2e)} property. Could not cast to the correct type.");
+            Bno055 = new(configureNode.Bno055);
         }
 
         /// <summary>

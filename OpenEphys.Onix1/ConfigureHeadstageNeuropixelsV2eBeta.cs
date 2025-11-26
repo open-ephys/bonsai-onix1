@@ -38,6 +38,19 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
+        /// Initializes a copied instance of the <see cref="ConfigureHeadstageNeuropixelsV2e"/> class.
+        /// </summary>
+        /// <param name="configureNode">Existing <see cref="ConfigureHeadstageNeuropixelsV2eBeta"/> instance.</param>
+        public ConfigureHeadstageNeuropixelsV2eBeta(ConfigureHeadstageNeuropixelsV2eBeta configureNode)
+        {
+            Name = configureNode.Name;
+            Port = configureNode.Port;
+            PortControl = configureNode.PortControl;
+            NeuropixelsV2eBeta = configureNode.NeuropixelsV2eBeta.Clone() as ConfigureNeuropixelsV2eBeta ?? throw new InvalidOperationException($"Unable to copy {nameof(NeuropixelsV2eBeta)} property. Could not cast to the correct type.");
+            Bno055 = new(configureNode.Bno055);
+        }
+
+        /// <summary>
         /// Gets or sets the NeuropixelsV2eBeta configuration.
         /// </summary>
         [Category(DevicesCategory)]

@@ -48,6 +48,15 @@ namespace OpenEphys.Onix1
             DeviceAddress = configureNeuropixelsV1f.DeviceAddress;
         }
 
+        /// <summary>
+        /// Returns a deep copy of the current <see cref="ConfigureNeuropixelsV1f"/> instance.
+        /// </summary>
+        /// <returns><see cref="ConfigureNeuropixelsV1f"/> instance.</returns>
+        public IConfigureNeuropixelsV1 Clone()
+        {
+            return new ConfigureNeuropixelsV1f(this);
+        }
+
         /// <inheritdoc/>
         /// <remarks>
         /// If set to true, <see cref="NeuropixelsV1fData"/> will produce data. If set to false, 

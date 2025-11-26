@@ -18,12 +18,13 @@ namespace OpenEphys.Onix1.Design
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
                 if (editorState != null && !editorState.WorkflowRunning && component is IConfigureNeuropixelsV2 configureNeuropixelsV2e)
                 {
-                    using var editorDialog = new NeuropixelsV2eDialog(configureNeuropixelsV2e);
+                    var configureNode = configureNeuropixelsV2e.Clone();
+
+                    using var editorDialog = new NeuropixelsV2eDialog(configureNode);
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
-                        DesignHelper.CopyProperties(editorDialog.ProbeConfigurationA, configureNeuropixelsV2e.ProbeConfigurationA, DesignHelper.PropertiesToIgnore);
-                        DesignHelper.CopyProperties(editorDialog.ProbeConfigurationB, configureNeuropixelsV2e.ProbeConfigurationB, DesignHelper.PropertiesToIgnore);
+                        DesignHelper.CopyProperties(editorDialog.ConfigureNode, configureNeuropixelsV2e, DesignHelper.PropertiesToIgnore);
 
                         return true;
                     }

@@ -35,8 +35,11 @@ namespace OpenEphys.Onix1.Design
         /// Public <see cref="IConfigureNeuropixelsV2"/> interface that is manipulated by
         /// <see cref="NeuropixelsV2eDialog"/>.
         /// </summary>
-        [Obsolete]
-        public IConfigureNeuropixelsV2 ConfigureNode { get; set; }
+        public IConfigureNeuropixelsV2 ConfigureNode
+        {
+            get => (IConfigureNeuropixelsV2)propertyGrid.SelectedObject;
+            set => propertyGrid.SelectedObject = value;
+        }
 
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV2eDialog"/>.
@@ -46,6 +49,8 @@ namespace OpenEphys.Onix1.Design
         {
             InitializeComponent();
             Shown += FormShown;
+
+            propertyGrid.SelectedObject = configureNode;
 
             if (configureNode is ConfigureNeuropixelsV2eBeta)
             {
@@ -60,11 +65,8 @@ namespace OpenEphys.Onix1.Design
 
             foreach (var channelConfiguration in ProbeConfigurations)
             {
-                string probeName = channelConfiguration.Key.ToString();
-
-                tabControlProbe.TabPages.Add(probeName, probeName);
-                channelConfiguration.Value.SetChildFormProperties(this).AddDialogToTab(tabControlProbe.TabPages[probeName]);
-                this.AddMenuItemsFromDialogToFileOption(channelConfiguration.Value, probeName);
+                channelConfiguration.Value.SetChildFormProperties(this);
+                this.AddMenuItemsFromDialogToFileOption(channelConfiguration.Value, channelConfiguration.Key.ToString());
             }
         }
 
@@ -78,10 +80,19 @@ namespace OpenEphys.Onix1.Design
                 menuStrip.Visible = false;
             }
 
+            int index = 0;
+
             foreach (var channelConfiguration in ProbeConfigurations)
             {
+                string probeName = channelConfiguration.Key.ToString();
+
+                tabControlProbe.TabPages.Insert(index++, probeName, probeName);
+                tabControlProbe.TabPages[probeName].Controls.Add(channelConfiguration.Value);
+
                 channelConfiguration.Value.Show();
             }
+
+            tabControlProbe.SelectedIndex = 0;
         }
 
         internal void Okay_Click(object sender, EventArgs e)

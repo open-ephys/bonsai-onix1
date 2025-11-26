@@ -36,7 +36,7 @@ namespace OpenEphys.Onix1.Design
 
             this.AddMenuItemsFromDialogToFileOption(DialogNeuropixelsV1e, "NeuropixelsV1e");
 
-            DialogBno055 = new(new ConfigurePolledBno055(configureBno055));
+            DialogBno055 = new(configureBno055);
 
             DialogBno055.SetChildFormProperties(this).AddDialogToPanel(panelBno055);
         }

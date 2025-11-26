@@ -24,15 +24,14 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <param name="probeConfiguration">A <see cref="NeuropixelsV2ProbeConfiguration"/> object holding the current configuration settings.</param>
         public NeuropixelsV2eChannelConfigurationDialog(NeuropixelsV2ProbeConfiguration probeConfiguration)
-            : base(probeConfiguration.ProbeGroup.Clone())
+            : base(probeConfiguration.ProbeGroup)
         {
             zedGraphChannels.ZoomButtons = MouseButtons.None;
             zedGraphChannels.ZoomButtons2 = MouseButtons.None;
 
             zedGraphChannels.ZoomStepFraction = 0.5;
 
-            ProbeConfiguration = probeConfiguration.Clone();
-            ProbeConfiguration.ProbeGroup = (NeuropixelsV2eProbeGroup)ProbeGroup;
+            ProbeConfiguration = probeConfiguration;
 
             GetChannelNumberFunc = ProbeConfiguration.ChannelMap[0].GetChannelNumberFunc();
 
