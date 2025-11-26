@@ -47,15 +47,18 @@ namespace OpenEphys.Onix1.Design
             InitializeComponent();
             Shown += FormShown;
 
-            if (configureNode is ConfigureNeuropixelsV2eBeta)
+            bool isBeta = false;
+
+            if (configureNode is ConfigureNeuropixelsV2eBeta configureV2eBeta)
             {
                 Text = Text.Replace("NeuropixelsV2e ", "NeuropixelsV2eBeta ");
+                isBeta = true;
             }
 
             ProbeConfigurations = new()
             {
-                { NeuropixelsV2Probe.ProbeA, new(configureNode.ProbeConfigurationA) },
-                { NeuropixelsV2Probe.ProbeB, new(configureNode.ProbeConfigurationB) }
+                { NeuropixelsV2Probe.ProbeA, new(configureNode.ProbeConfigurationA, isBeta) },
+                { NeuropixelsV2Probe.ProbeB, new(configureNode.ProbeConfigurationB, isBeta) }
             };
 
             foreach (var channelConfiguration in ProbeConfigurations)

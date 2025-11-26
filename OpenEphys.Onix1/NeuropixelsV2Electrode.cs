@@ -6,6 +6,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Class defining a <see cref="NeuropixelsV2Electrode"/>.
     /// </summary>
+    [XmlInclude(typeof(NeuropixelsV2SingleShankElectrode))]
     [XmlInclude(typeof(NeuropixelsV2QuadShankElectrode))]
     [XmlType(Namespace = Constants.XmlNamespace)]
     public abstract class NeuropixelsV2Electrode : Electrode
@@ -27,7 +28,5 @@ namespace OpenEphys.Onix1
         /// </summary>
         [XmlIgnore]
         public int BlockIndex { get; init; }
-
-        internal abstract Func<int, int> GetChannelNumberFunc();
     }
 }

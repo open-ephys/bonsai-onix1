@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 using OpenEphys.ProbeInterface.NET;
 using ZedGraph;
@@ -15,9 +14,21 @@ namespace OpenEphys.Onix1.Design
         internal event EventHandler OnZoom;
         internal event EventHandler OnFileLoad;
 
-        internal NeuropixelsV2ProbeConfiguration ProbeConfiguration;
+        NeuropixelsV2ProbeConfiguration probeConfiguration;
 
-        readonly Func<int, int> GetChannelNumberFunc;
+        internal NeuropixelsV2ProbeConfiguration ProbeConfiguration
+        {
+            get => probeConfiguration;
+            set
+            {
+                probeConfiguration = value;
+                ProbeGroup = value.ProbeGroup;
+
+                GetChannelNumberFunc = ProbeConfiguration.GetChannelNumberFunc();
+            }
+        }
+
+        Func<int, int> GetChannelNumberFunc { get; set; }
 
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV2eChannelConfigurationDialog"/>.
@@ -31,10 +42,7 @@ namespace OpenEphys.Onix1.Design
 
             zedGraphChannels.ZoomStepFraction = 0.5;
 
-            ProbeConfiguration = probeConfiguration.Clone();
-            ProbeConfiguration.ProbeGroup = (NeuropixelsV2eProbeGroup)ProbeGroup;
-
-            GetChannelNumberFunc = ProbeConfiguration.ChannelMap[0].GetChannelNumberFunc();
+            ProbeConfiguration = Activator.CreateInstance(probeConfiguration.GetType(), probeConfiguration) as NeuropixelsV2ProbeConfiguration;
 
             HighlightEnabledContacts();
             UpdateContactLabels();
