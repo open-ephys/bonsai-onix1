@@ -21,5 +21,6 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="OpenEphys.Onix1.Design"/>
+    <InternalsVisibleTo Include="TestColumnDataFormat"/>
   </ItemGroup>
 </Project>
