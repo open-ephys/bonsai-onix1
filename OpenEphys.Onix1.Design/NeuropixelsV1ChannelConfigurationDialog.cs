@@ -23,12 +23,18 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; set; }
 
+        internal override ProbeGroup ProbeGroup
+        {
+            get => ProbeConfiguration.ProbeGroup;
+            set => ProbeConfiguration.ProbeGroup = value as NeuropixelsV1eProbeGroup ?? throw new ArgumentNullException($"Invalid probe group given; expected type {ProbeConfiguration.ProbeGroup.GetType()}, but found type {value.GetType()}");
+        }
+
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV1ChannelConfigurationDialog"/>.
         /// </summary>
         /// <param name="probeConfiguration">A <see cref="NeuropixelsV1ProbeConfiguration"/> object holding the current configuration settings.</param>
         public NeuropixelsV1ChannelConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration)
-            : base(probeConfiguration.ProbeGroup)
+            : base()
         {
             zedGraphChannels.ZoomButtons = MouseButtons.None;
             zedGraphChannels.ZoomButtons2 = MouseButtons.None;
@@ -38,10 +44,9 @@ namespace OpenEphys.Onix1.Design
             ReferenceContacts.AddRange(ReferenceContactsList);
 
             ProbeConfiguration = new(probeConfiguration);
+            ResizeSelectedContacts();
 
-            HighlightEnabledContacts();
-            UpdateContactLabels();
-            DrawScale();
+            DrawProbeGroup();
             RefreshZedGraph();
         }
 
@@ -53,7 +58,6 @@ namespace OpenEphys.Onix1.Design
         internal override void LoadDefaultChannelLayout()
         {
             ProbeConfiguration.ProbeGroup = new();
-            ProbeGroup = ProbeConfiguration.ProbeGroup;
 
             OnFileOpenHandler();
         }
@@ -62,7 +66,6 @@ namespace OpenEphys.Onix1.Design
         {
             if (base.OpenFile(type))
             {
-                ProbeConfiguration.ProbeGroup = (NeuropixelsV1eProbeGroup)ProbeGroup;
                 OnFileOpenHandler();
 
                 return true;
@@ -73,6 +76,8 @@ namespace OpenEphys.Onix1.Design
 
         private void OnFileOpenHandler()
         {
+            ResizeSelectedContacts();
+
             OnFileLoad?.Invoke(this, EventArgs.Empty);
         }
 
@@ -142,9 +147,6 @@ namespace OpenEphys.Onix1.Design
 
         internal override void UpdateContactLabels()
         {
-            if (ProbeConfiguration.ProbeGroup == null)
-                return;
-
             var textObjs = zedGraphChannels.GraphPane.GraphObjList.OfType<TextObj>()
                                                                   .Where(t => t.Tag is ContactTag);
 

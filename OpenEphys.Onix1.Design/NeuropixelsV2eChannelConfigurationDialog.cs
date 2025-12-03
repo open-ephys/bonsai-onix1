@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 using OpenEphys.ProbeInterface.NET;
 using ZedGraph;
@@ -15,16 +14,20 @@ namespace OpenEphys.Onix1.Design
         internal event EventHandler OnZoom;
         internal event EventHandler OnFileLoad;
 
-        internal NeuropixelsV2ProbeConfiguration ProbeConfiguration;
+        internal NeuropixelsV2ProbeConfiguration ProbeConfiguration { get; set; }
 
-        readonly Func<int, int> GetChannelNumberFunc;
+        internal override ProbeGroup ProbeGroup
+        {
+            get => ProbeConfiguration.ProbeGroup;
+            set => ProbeConfiguration.ProbeGroup = value as NeuropixelsV2eProbeGroup ?? throw new ArgumentNullException($"Invalid probe group given; expected type {ProbeConfiguration.ProbeGroup.GetType()}, but found type {value.GetType()}");
+        }
 
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV2eChannelConfigurationDialog"/>.
         /// </summary>
         /// <param name="probeConfiguration">A <see cref="NeuropixelsV2ProbeConfiguration"/> object holding the current configuration settings.</param>
         public NeuropixelsV2eChannelConfigurationDialog(NeuropixelsV2ProbeConfiguration probeConfiguration)
-            : base(probeConfiguration.ProbeGroup.Clone())
+            : base()
         {
             zedGraphChannels.ZoomButtons = MouseButtons.None;
             zedGraphChannels.ZoomButtons2 = MouseButtons.None;
@@ -32,19 +35,15 @@ namespace OpenEphys.Onix1.Design
             zedGraphChannels.ZoomStepFraction = 0.5;
 
             ProbeConfiguration = probeConfiguration.Clone();
-            ProbeConfiguration.ProbeGroup = (NeuropixelsV2eProbeGroup)ProbeGroup;
+            ResizeSelectedContacts();
 
-            GetChannelNumberFunc = ProbeConfiguration.ChannelMap[0].GetChannelNumberFunc();
-
-            HighlightEnabledContacts();
-            UpdateContactLabels();
-            DrawScale();
+            DrawProbeGroup();
             RefreshZedGraph();
         }
 
         internal override ProbeGroup DefaultChannelLayout()
         {
-            return Activator.CreateInstance(ProbeConfiguration.ProbeGroup.GetType()) as NeuropixelsV2eProbeGroup ?? throw new InvalidOperationException("Could not create new probe group of type " + ProbeConfiguration.ProbeGroup.GetType().Name);
+            return Activator.CreateInstance(ProbeConfiguration.ProbeGroup.GetType()) as NeuropixelsV2eProbeGroup ?? throw new NullReferenceException("Could not create new probe group of type " + ProbeConfiguration.ProbeGroup.GetType().Name);
         }
 
         internal override void LoadDefaultChannelLayout()
@@ -52,7 +51,6 @@ namespace OpenEphys.Onix1.Design
             try
             {
                 ProbeConfiguration.ProbeGroup = DefaultChannelLayout() as NeuropixelsV2eProbeGroup;
-                ProbeGroup = ProbeConfiguration.ProbeGroup;
             }
             catch (InvalidOperationException ex)
             {
@@ -67,7 +65,6 @@ namespace OpenEphys.Onix1.Design
         {
             if (base.OpenFile(type))
             {
-                ProbeConfiguration.ProbeGroup = (NeuropixelsV2eProbeGroup)ProbeGroup;
                 OnFileOpenHandler();
 
                 return true;
@@ -78,6 +75,8 @@ namespace OpenEphys.Onix1.Design
 
         private void OnFileOpenHandler()
         {
+            ResizeSelectedContacts();
+
             OnFileLoad?.Invoke(this, EventArgs.Empty);
         }
 
@@ -133,7 +132,7 @@ namespace OpenEphys.Onix1.Design
             var contactsToEnable = contactObjects.Where(c =>
             {
                 var tag = c.Tag as ContactTag;
-                var channel = GetChannelNumberFunc(tag.ContactIndex);
+                var channel = ProbeConfiguration.GetChannelNumber(tag.ContactIndex);
                 return channelMap[channel].Index == tag.ContactIndex;
             });
 
@@ -165,7 +164,7 @@ namespace OpenEphys.Onix1.Design
             textObjsToUpdate = textObjs.Where(c =>
             {
                 var tag = c.Tag as ContactTag;
-                var channel = GetChannelNumberFunc(tag.ContactIndex);
+                var channel = ProbeConfiguration.GetChannelNumber(tag.ContactIndex);
                 return channelMap[channel].Index == tag.ContactIndex;
             });
 
