@@ -8,8 +8,8 @@ namespace OpenEphys.Onix1
 {
     internal abstract class ConfigurePortController : SingleDeviceFactory
     {
-        public ConfigurePortController()
-            : base(typeof(PortController))
+        public ConfigurePortController(Type deviceType)
+            : base(deviceType)
         {
         }
 
@@ -108,7 +108,7 @@ namespace OpenEphys.Onix1
         public const uint MinimumVersion = 2;
 
         public const uint ENABLE = 0; // The LSB is used to enable or disable the device data stream
-        public const uint GPOSTATE = 1; // GPO output state (bits 31 downto 3: ignore. bits 2 downto 0: ‘1’ = high, ‘0’ = low)
+        public const uint GPOSTATE = 1; // Controls the GPO output state 32 bits: [X, X, ..., X, GPO 3, GPO 2, GPO 1]
         public const uint DESPWR = 2; // Set link deserializer PDB state, 0 = deserializer power off else on. Does not affect port voltage.
         public const uint PORTVOLTAGE = 3; // 10 * link voltage
         public const uint SAVEVOLTAGE = 4; // Save link voltage to non-volatile EEPROM if greater than 0. This voltage will be applied after POR.
@@ -194,4 +194,28 @@ namespace OpenEphys.Onix1
         [Description("Port B")]
         PortB = 2
     }
+
+    /// <summary>
+    /// Specifies the state of a port controller's GPIO pins.
+    /// </summary>
+    /// <remarks>
+    /// Pin 0 is inaccessible because it is used for issuing hardware resets.
+    /// </remarks>
+    [Flags]
+    public enum PortControllerGpioState : byte
+    {
+        /// <summary>
+        /// Specifies that pin 1 is high.
+        /// </summary>
+        Pin1 = 0x1,
+        /// <summary>
+        /// Specifies that pin 2 is high.
+        /// </summary>
+        Pin2 = 0x2,
+        /// <summary>
+        /// Specifies that pin 3 is high.
+        /// </summary>
+        Pin3 = 0x4,
+    }
+
 }

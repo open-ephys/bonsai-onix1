@@ -83,11 +83,6 @@ namespace OpenEphys.Onix1.Design
                     new TextBoxBinding<uint>(
                         StimulusSequenceOptions.textBoxPulsePeriod,
                         value => { ElectricalStimulator.InterPulseInterval = value; return ElectricalStimulator.InterPulseInterval; },
-                        uint.Parse) },
-                { StimulusSequenceOptions.textBoxTrainDelay,
-                    new TextBoxBinding<uint>(
-                        StimulusSequenceOptions.textBoxTrainDelay,
-                        value => { ElectricalStimulator.TriggerDelay = value; return ElectricalStimulator.TriggerDelay; },
                         uint.Parse) }
             };
 
@@ -127,7 +122,8 @@ namespace OpenEphys.Onix1.Design
 
             toolStripStatusIsValid.BorderSides = ToolStripStatusLabelBorderSides.None;
 
-            SetXAxisTitle("Time [µs]");
+            xAxisScaleUnits = "µs";
+            SetXAxisTitle($"Time [{xAxisScaleUnits}]");
             SetYAxisTitle("");
             RemoveYAxisLabels();
 
@@ -270,7 +266,7 @@ namespace OpenEphys.Onix1.Design
             {
                 for (int channel = 0; channel < NumberOfChannels; channel++)
                 {
-                    waveforms[channel] = new PointPairList { new PointPair(0, 0), new PointPair(ElectricalStimulator.TriggerDelay, 0) };
+                    waveforms[channel] = new PointPairList { new PointPair(0, 0), new PointPair(0, 0) };
 
                     for (int i = 0; i < ElectricalStimulator.TrainBurstCount; i++)
                     {
