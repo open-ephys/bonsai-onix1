@@ -168,7 +168,7 @@ namespace OpenEphys.Onix1
 
             if (enabledContacts.Count() != NeuropixelsV2.ChannelCount)
             {
-                throw new InvalidOperationException($"Channel configuration must have {NeuropixelsV2.ChannelCount} contacts enabled." +
+                throw new ArgumentOutOfRangeException($"Channel configuration must have {NeuropixelsV2.ChannelCount} contacts enabled." +
                     $"Instead there are {enabledContacts.Count()} contacts enabled. Enabled contacts are designated by a device channel" +
                     $"index >= 0.");
             }

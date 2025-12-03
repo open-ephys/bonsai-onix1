@@ -5,7 +5,7 @@ namespace OpenEphys.Onix1.Design
 {
     interface INeuropixelsV2ProbeInfo
     {
-        public IEnumerable<NeuropixelsV2Electrode> Electrodes { get; init; }
+        public IEnumerable<NeuropixelsV2Electrode> Electrodes { get; }
 
         Array GetReferenceEnumValues();
 

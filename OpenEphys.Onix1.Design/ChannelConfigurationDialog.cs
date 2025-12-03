@@ -287,22 +287,20 @@ namespace OpenEphys.Onix1.Design
             return false;
         }
 
-        internal bool ValidateProbeGroup(ProbeGroup newConfiguration)
+        internal void ValidateProbeGroup(ProbeGroup newConfiguration)
         {
             if (newConfiguration == null)
             {
-                return false;
+                throw new ArgumentNullException($"{nameof(newConfiguration)} is null, {nameof(ProbeGroup)} is invalid.");
             }
 
             if (ProbeGroup.NumberOfContacts == newConfiguration.NumberOfContacts)
             {
                 newConfiguration.Validate();
-
-                return true;
             }
             else
             {
-                throw new InvalidOperationException($"Number of contacts does not match; expected {ProbeGroup.NumberOfContacts} contacts" +
+                throw new ArgumentException($"Number of contacts does not match; expected {ProbeGroup.NumberOfContacts} contacts" +
                     $", but found {newConfiguration.NumberOfContacts} contacts. Double check that the correct file is chosen.");
             }
         }
@@ -323,8 +321,9 @@ namespace OpenEphys.Onix1.Design
                 try
                 {
                     var newConfiguration = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(ofd.FileName, type);
+                    ValidateProbeGroup(newConfiguration);
 
-                    return ValidateProbeGroup(newConfiguration) ? newConfiguration : null;
+                    return newConfiguration;
                 }
                 catch (Exception ex)
                 {

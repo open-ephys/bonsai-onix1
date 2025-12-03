@@ -150,7 +150,7 @@ namespace OpenEphys.Onix1
                     1 => "1",
                     2 => "2",
                     3 => "3",
-                    _ => throw new InvalidOperationException($"Too many shanks; expected four shanks, but received {shank} as an index.")
+                    _ => throw new ArgumentOutOfRangeException($"Too many shanks; expected four shanks, but received {shank} as an index.")
                 };
             }
 
@@ -185,7 +185,7 @@ namespace OpenEphys.Onix1
 
             if (enabledContacts.Count() != NeuropixelsV2.ChannelCount)
             {
-                throw new InvalidOperationException($"Channel configuration must have {NeuropixelsV2.ChannelCount} contacts enabled." +
+                throw new ArgumentOutOfRangeException($"Channel configuration must have {NeuropixelsV2.ChannelCount} contacts enabled." +
                     $"Instead there are {enabledContacts.Count()} contacts enabled. Enabled contacts are designated by a device channel" +
                     $"index >= 0.");
             }

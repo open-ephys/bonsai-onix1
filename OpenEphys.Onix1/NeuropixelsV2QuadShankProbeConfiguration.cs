@@ -310,7 +310,7 @@ namespace OpenEphys.Onix1
                 NeuropixelsV2QuadShankReference.Tip3 => 2,
                 NeuropixelsV2QuadShankReference.Tip4 => 2,
                 NeuropixelsV2QuadShankReference.Ground => 3,
-                _ => throw new InvalidOperationException("Invalid reference selection."),
+                _ => throw new InvalidEnumArgumentException($"Invalid {nameof(NeuropixelsV2QuadShankReference)} selection."),
             };
         }
 

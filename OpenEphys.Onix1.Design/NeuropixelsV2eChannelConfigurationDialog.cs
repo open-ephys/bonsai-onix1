@@ -43,7 +43,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override ProbeGroup DefaultChannelLayout()
         {
-            return Activator.CreateInstance(ProbeConfiguration.ProbeGroup.GetType()) as NeuropixelsV2eProbeGroup ?? throw new InvalidOperationException("Could not create new probe group of type " + ProbeConfiguration.ProbeGroup.GetType().Name);
+            return Activator.CreateInstance(ProbeConfiguration.ProbeGroup.GetType()) as NeuropixelsV2eProbeGroup ?? throw new NullReferenceException("Could not create new probe group of type " + ProbeConfiguration.ProbeGroup.GetType().Name);
         }
 
         internal override void LoadDefaultChannelLayout()
