@@ -242,28 +242,13 @@ namespace OpenEphys.Onix1
         const int ReferencePixelCount = 4;
         const int DummyRegisterCount = 4;
 
-        /// <summary>
-        /// Number of registers per shank.
-        /// </summary>
-        protected const int RegistersPerShank = NeuropixelsV2.ElectrodePerShank + ReferencePixelCount + DummyRegisterCount;
+        internal const int RegistersPerShank = NeuropixelsV2.ElectrodePerShank + ReferencePixelCount + DummyRegisterCount;
 
-        /// <summary>
-        /// Index of the shift register bit for external electrode 0.
-        /// </summary>
-        protected const int ShiftRegisterBitExternalElectrode0 = 1285;
-        /// <summary>
-        /// Index of the shift register bit for external electrode 1.
-        /// </summary>
-        protected const int ShiftRegisterBitExternalElectrode1 = 2;
+        internal const int ShiftRegisterBitExternalElectrode0 = 1285;
+        internal const int ShiftRegisterBitExternalElectrode1 = 2;
 
-        /// <summary>
-        /// Index of the shift register bit for tip electrode 0.
-        /// </summary>
-        protected const int ShiftRegisterBitTipElectrode0 = 644;
-        /// <summary>
-        /// Index of the shift register bit for tip electrode 1.
-        /// </summary>
-        protected const int ShiftRegisterBitTipElectrode1 = 643;
+        internal const int ShiftRegisterBitTipElectrode0 = 644;
+        internal const int ShiftRegisterBitTipElectrode1 = 643;
 
         internal abstract BitArray[] CreateShankBits(Enum reference);
 
@@ -271,8 +256,8 @@ namespace OpenEphys.Onix1
 
         internal abstract bool IsGroundReference();
 
-        internal abstract NeuropixelsV2ProbeConfiguration Clone();
+        internal abstract int GetChannelNumber(int index);
 
-        internal abstract Func<int, int> GetChannelNumberFunc();
+        internal abstract NeuropixelsV2ProbeConfiguration Clone();
     }
 }

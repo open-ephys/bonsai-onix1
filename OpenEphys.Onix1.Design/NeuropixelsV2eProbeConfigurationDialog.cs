@@ -58,16 +58,12 @@ namespace OpenEphys.Onix1.Design
 
             probeConfigurations = new()
             {
-                [ProbeType.SingleShank] = configuration is NeuropixelsV2SingleShankProbeConfiguration
-                    ? configuration.Clone()
-                    : new NeuropixelsV2SingleShankProbeConfiguration(configuration.Probe,
+                [ProbeType.SingleShank] = new NeuropixelsV2SingleShankProbeConfiguration(configuration.Probe,
                         NeuropixelsV2SingleShankReference.External,
                         configuration.InvertPolarity,
                         configuration.GainCalibrationFileName,
                         configuration.ProbeInterfaceFileName),
-                [ProbeType.QuadShank] = configuration is NeuropixelsV2QuadShankProbeConfiguration
-                    ? configuration.Clone()
-                    : new NeuropixelsV2QuadShankProbeConfiguration(configuration.Probe,
+                [ProbeType.QuadShank] = new NeuropixelsV2QuadShankProbeConfiguration(configuration.Probe,
                         NeuropixelsV2QuadShankReference.External,
                         configuration.InvertPolarity,
                         configuration.GainCalibrationFileName,
@@ -75,6 +71,7 @@ namespace OpenEphys.Onix1.Design
             };
 
             var currentProbeType = GetCurrentProbeType(configuration);
+            DesignHelper.CopyProperties(configuration, probeConfigurations[currentProbeType]);
 
             ChannelConfiguration = new(probeConfigurations[currentProbeType]);
             ChannelConfiguration.SetChildFormProperties(this).AddDialogToPanel(panelProbe);
@@ -148,6 +145,7 @@ namespace OpenEphys.Onix1.Design
             var probeType = (ProbeType)comboBoxProbeType.SelectedItem;
 
             ChannelConfiguration.ProbeConfiguration = probeConfigurations[probeType];
+            ChannelConfiguration.ResizeSelectedContacts();
 
             ProbeInfo = ProbeDataFactory(ProbeConfiguration);
 

@@ -94,15 +94,15 @@ namespace OpenEphys.Onix1
 
             for (int i = 0; i < numberOfShanks; i++)
             {
-                probePlanarContour[2 + i * 5] = new float[2] { shankOffsetX + (shankWidthX + shankPitchX) * i, shankLengthY };
-                probePlanarContour[3 + i * 5] = new float[2] { shankOffsetX + (shankWidthX + shankPitchX) * i, shankBaseY };
-                probePlanarContour[4 + i * 5] = new float[2] { shankOffsetX + (shankWidthX + shankPitchX) * i + shankWidthX / 2, shankTipY };
-                probePlanarContour[5 + i * 5] = new float[2] { shankOffsetX + (shankWidthX + shankPitchX) * i + shankWidthX, shankBaseY };
-                probePlanarContour[6 + i * 5] = new float[2] { shankOffsetX + (shankWidthX + shankPitchX) * i + shankWidthX, shankLengthY };
+                probePlanarContour[2 + i * 5] = new float[2] { ShankOffsetX + (ShankWidthX + ShankPitchX) * i, shankLengthY };
+                probePlanarContour[3 + i * 5] = new float[2] { ShankOffsetX + (ShankWidthX + ShankPitchX) * i, shankBaseY };
+                probePlanarContour[4 + i * 5] = new float[2] { ShankOffsetX + (ShankWidthX + ShankPitchX) * i + ShankWidthX / 2, shankTipY };
+                probePlanarContour[5 + i * 5] = new float[2] { ShankOffsetX + (ShankWidthX + ShankPitchX) * i + ShankWidthX, shankBaseY };
+                probePlanarContour[6 + i * 5] = new float[2] { ShankOffsetX + (ShankWidthX + ShankPitchX) * i + ShankWidthX, shankLengthY };
             }
 
-            probePlanarContour[22] = new float[2] { shankOffsetX * 2 + (shankWidthX + shankPitchX) * (numberOfShanks - 1) + shankWidthX, shankLengthY };
-            probePlanarContour[23] = new float[2] { shankOffsetX * 2 + (shankWidthX + shankPitchX) * (numberOfShanks - 1) + shankWidthX, probeLengthY };
+            probePlanarContour[22] = new float[2] { ShankOffsetX * 2 + (ShankWidthX + ShankPitchX) * (numberOfShanks - 1) + ShankWidthX, shankLengthY };
+            probePlanarContour[23] = new float[2] { ShankOffsetX * 2 + (ShankWidthX + ShankPitchX) * (numberOfShanks - 1) + ShankWidthX, probeLengthY };
             probePlanarContour[24] = new float[2] { 0f, probeLengthY };
 
             return probePlanarContour;
@@ -130,6 +130,31 @@ namespace OpenEphys.Onix1
             }
 
             return deviceChannelIndices;
+        }
+
+        /// <summary>
+        /// Generates an array of strings with the shank value as the default shank ID.
+        /// </summary>
+        /// <param name="numberOfContacts">Number of contacts in a single probe.</param>
+        /// <returns></returns>
+        public static string[] DefaultShankIds(int numberOfContacts)
+        {
+            string[] contactIds = new string[numberOfContacts];
+
+            for (int i = 0; i < numberOfContacts; i++)
+            {
+                var shank = i / NeuropixelsV2.ElectrodePerShank;
+                contactIds[i] = shank switch
+                {
+                    0 => "0",
+                    1 => "1",
+                    2 => "2",
+                    3 => "3",
+                    _ => throw new InvalidOperationException($"Too many shanks; expected four shanks, but received {shank} as an index.")
+                };
+            }
+
+            return contactIds;
         }
 
         /// <summary>

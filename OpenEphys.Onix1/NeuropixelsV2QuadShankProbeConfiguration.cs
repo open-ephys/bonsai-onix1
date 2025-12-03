@@ -316,9 +316,9 @@ namespace OpenEphys.Onix1
 
         internal override bool IsGroundReference() => (NeuropixelsV2QuadShankReference)Reference == NeuropixelsV2QuadShankReference.Ground;
 
-        internal override Func<int, int> GetChannelNumberFunc()
+        internal override int GetChannelNumber(int index)
         {
-            return NeuropixelsV2QuadShankElectrode.GetChannelNumber;
+            return NeuropixelsV2QuadShankElectrode.GetChannelNumber(index);
         }
     }
 

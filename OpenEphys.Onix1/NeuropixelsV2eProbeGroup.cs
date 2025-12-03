@@ -13,20 +13,9 @@ namespace OpenEphys.Onix1
     [XmlType(Namespace = Constants.XmlNamespace)]
     public abstract class NeuropixelsV2eProbeGroup : ProbeGroup
     {
-        /// <summary>
-        /// Shank X-axis offset.
-        /// </summary>
-        protected const float shankOffsetX = 200f;
-
-        /// <summary>
-        /// Shank X-axis width.
-        /// </summary>
-        protected const float shankWidthX = 70f;
-
-        /// <summary>
-        /// Shank X-axis pitch.
-        /// </summary>
-        protected const float shankPitchX = 250f;
+        internal const float ShankOffsetX = 200f;
+        internal const float ShankWidthX = 70f;
+        internal const float ShankPitchX = 250f;
 
         /// <summary>
         /// Initializes a new instance of a <see cref="NeuropixelsV2eProbeGroup"/>.
@@ -98,7 +87,7 @@ namespace OpenEphys.Onix1
         private static float ContactPositionX(int index)
         {
             var shank = index / NeuropixelsV2.ElectrodePerShank;
-            var offset = shankOffsetX + (shankWidthX + shankPitchX) * shank + 11;
+            var offset = ShankOffsetX + (ShankWidthX + ShankPitchX) * shank + 11;
 
             return (index % 2) switch
             {
@@ -106,31 +95,6 @@ namespace OpenEphys.Onix1
                 1 => offset + 40.0f,
                 _ => throw new ArgumentException("Invalid index given.")
             };
-        }
-
-        /// <summary>
-        /// Generates an array of strings with the shank value as the default shank ID.
-        /// </summary>
-        /// <param name="numberOfContacts">Number of contacts in a single probe.</param>
-        /// <returns></returns>
-        public static string[] DefaultShankIds(int numberOfContacts)
-        {
-            string[] contactIds = new string[numberOfContacts];
-
-            for (int i = 0; i < numberOfContacts; i++)
-            {
-                var shank = i / NeuropixelsV2.ElectrodePerShank;
-                contactIds[i] = shank switch
-                {
-                    0 => "0",
-                    1 => "1",
-                    2 => "2",
-                    3 => "3",
-                    _ => throw new InvalidOperationException($"Too many shanks; expected four shanks, but received {shank} as an index.")
-                };
-            }
-
-            return contactIds;
         }
 
         /// <summary>

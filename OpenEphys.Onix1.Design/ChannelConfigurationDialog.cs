@@ -14,50 +14,24 @@ namespace OpenEphys.Onix1.Design
     /// Within, there are a number of useful methods for initializing, resizing, and drawing channels.
     /// Each device must implement their own ChannelConfigurationDialog.
     /// </summary>
-    public partial class ChannelConfigurationDialog : Form
+    public abstract partial class ChannelConfigurationDialog : Form
     {
         internal event EventHandler OnResizeZedGraph;
         internal event EventHandler OnDrawProbeGroup;
 
-        ProbeGroup probeGroup;
-
-        internal ProbeGroup ProbeGroup
-        {
-            get => probeGroup;
-            set
-            {
-                probeGroup = value;
-                SelectedContacts = new bool[probeGroup.NumberOfContacts];
-            }
-        }
+        internal virtual ProbeGroup ProbeGroup { get; set; }
 
         internal readonly List<int> ReferenceContacts = new();
 
         internal bool[] SelectedContacts { get; private set; } = null;
 
-        [Obsolete("Designer only.", true)]
-        ChannelConfigurationDialog()
-        {
-            InitializeComponent();
-        }
-
         /// <summary>
-        /// Constructs the dialog window using the given probe group, and plots all contacts after loading.
+        /// Constructs the dialog window.
         /// </summary>
-        /// <param name="probeGroup">Channel configuration given as a <see cref="ProbeInterface.NET.ProbeGroup"/></param>
-        public ChannelConfigurationDialog(ProbeGroup probeGroup)
+        public ChannelConfigurationDialog()
         {
             InitializeComponent();
             Shown += FormShown;
-
-            if (probeGroup == null)
-            {
-                LoadDefaultChannelLayout();
-            }
-            else
-            {
-                ProbeGroup = probeGroup;
-            }
 
             ReferenceContacts = new List<int>();
 
@@ -81,6 +55,17 @@ namespace OpenEphys.Onix1.Design
             {
                 pane.Chart.Fill = new Fill(Color.WhiteSmoke);
             }
+        }
+
+        /// <summary>
+        /// Constructs the dialog window using the given probe group, and plots all contacts after loading.
+        /// </summary>
+        /// <param name="probeGroup">Channel configuration given as a <see cref="ProbeInterface.NET.ProbeGroup"/></param>
+        public ChannelConfigurationDialog(ProbeGroup probeGroup)
+            : this()
+        {
+            ProbeGroup = probeGroup;
+            ResizeSelectedContacts();
 
             DrawProbeGroup();
             RefreshZedGraph();
@@ -107,6 +92,12 @@ namespace OpenEphys.Onix1.Design
         internal virtual void LoadDefaultChannelLayout()
         {
             ProbeGroup = DefaultChannelLayout();
+            ResizeSelectedContacts();
+        }
+
+        internal void ResizeSelectedContacts()
+        {
+            SelectedContacts = new bool[ProbeGroup.NumberOfContacts];
         }
 
         /// <summary>
@@ -312,7 +303,7 @@ namespace OpenEphys.Onix1.Design
             else
             {
                 throw new InvalidOperationException($"Number of contacts does not match; expected {ProbeGroup.NumberOfContacts} contacts" +
-                    $", but found {newConfiguration.NumberOfContacts} contacts. Ensure the file contains the correct probe group type.");
+                    $", but found {newConfiguration.NumberOfContacts} contacts. Double check that the correct file is chosen.");
             }
         }
 

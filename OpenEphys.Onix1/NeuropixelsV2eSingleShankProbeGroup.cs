@@ -89,12 +89,12 @@ namespace OpenEphys.Onix1
 
             float[][] probePlanarContour = new float[6][];
 
-            probePlanarContour[0] = new float[2] { shankOffsetX + 0f, shankBaseY };
-            probePlanarContour[1] = new float[2] { shankOffsetX + shankMidX, shankTipY };
-            probePlanarContour[2] = new float[2] { shankOffsetX + shankWidthX, shankBaseY };
-            probePlanarContour[3] = new float[2] { shankOffsetX + shankWidthX, shankLengthY };
-            probePlanarContour[4] = new float[2] { shankOffsetX + 0f, shankLengthY };
-            probePlanarContour[5] = new float[2] { shankOffsetX + 0f, shankBaseY };
+            probePlanarContour[0] = new float[2] { ShankOffsetX + 0f, shankBaseY };
+            probePlanarContour[1] = new float[2] { ShankOffsetX + shankMidX, shankTipY };
+            probePlanarContour[2] = new float[2] { ShankOffsetX + shankWidthX, shankBaseY };
+            probePlanarContour[3] = new float[2] { ShankOffsetX + shankWidthX, shankLengthY };
+            probePlanarContour[4] = new float[2] { ShankOffsetX + 0f, shankLengthY };
+            probePlanarContour[5] = new float[2] { ShankOffsetX + 0f, shankBaseY };
 
             return probePlanarContour;
         }
@@ -121,6 +121,23 @@ namespace OpenEphys.Onix1
             }
 
             return deviceChannelIndices;
+        }
+
+        /// <summary>
+        /// Generates an array of strings with the shank value as the default shank ID.
+        /// </summary>
+        /// <param name="numberOfContacts">Number of contacts in a single probe.</param>
+        /// <returns></returns>
+        public static string[] DefaultShankIds(int numberOfContacts)
+        {
+            string[] contactIds = new string[numberOfContacts];
+
+            for (int i = 0; i < numberOfContacts; i++)
+            {
+                contactIds[i] = "0";
+            }
+
+            return contactIds;
         }
 
         /// <summary>

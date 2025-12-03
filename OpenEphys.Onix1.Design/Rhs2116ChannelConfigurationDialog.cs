@@ -23,7 +23,6 @@ namespace OpenEphys.Onix1.Design
             : base(probeGroup)
         {
             InitializeComponent();
-            ProbeGroup = probeGroup;
 
             zedGraphChannels.ZoomButtons = MouseButtons.None;
             zedGraphChannels.ZoomButtons2 = MouseButtons.None;
@@ -39,7 +38,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override void LoadDefaultChannelLayout()
         {
-            ProbeGroup = DefaultChannelLayout();
+            base.LoadDefaultChannelLayout();
 
             OnFileOpenHandler();
         }
