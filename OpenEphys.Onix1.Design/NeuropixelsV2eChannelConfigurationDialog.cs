@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 using OpenEphys.ProbeInterface.NET;
 using ZedGraph;
@@ -10,7 +9,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Partial class to create a channel configuration GUI for <see cref="ConfigureNeuropixelsV2e"/>.
     /// </summary>
-    public partial class NeuropixelsV2eChannelConfigurationDialog : ChannelConfigurationDialog
+    public partial class NeuropixelsV2eChannelConfigurationDialog : ScaledChannelConfigurationDialog
     {
         internal event EventHandler OnZoom;
         internal event EventHandler OnFileLoad;
@@ -94,8 +93,6 @@ namespace OpenEphys.Onix1.Design
         {
             OnZoom?.Invoke(this, EventArgs.Empty);
         }
-
-        internal override bool IsDrawScale() => true;
 
         internal override void DrawScale()
         {
