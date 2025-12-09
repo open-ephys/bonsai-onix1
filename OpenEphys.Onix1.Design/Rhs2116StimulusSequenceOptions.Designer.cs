@@ -96,6 +96,7 @@
             // 
             // numericUpDownNumberOfPulses
             // 
+            this.numericUpDownNumberOfPulses.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.numericUpDownNumberOfPulses.Location = new System.Drawing.Point(355, 203);
             this.numericUpDownNumberOfPulses.Maximum = new decimal(new int[] {
             10000,
@@ -113,6 +114,7 @@
             // 
             // textBoxStepSize
             // 
+            this.textBoxStepSize.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.textBoxStepSize.Enabled = false;
             this.textBoxStepSize.Location = new System.Drawing.Point(248, 32);
             this.textBoxStepSize.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
@@ -124,6 +126,7 @@
             // 
             // groupBoxCathode
             // 
+            this.groupBoxCathode.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBoxCathode.Controls.Add(this.textboxAmplitudeCathodic);
             this.groupBoxCathode.Controls.Add(this.labelAmplitudeCathodic);
             this.groupBoxCathode.Controls.Add(this.labelPulseWidthCathodic);
@@ -185,6 +188,7 @@
             // 
             // groupBoxAnode
             // 
+            this.groupBoxAnode.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBoxAnode.Controls.Add(this.textboxAmplitudeAnodic);
             this.groupBoxAnode.Controls.Add(this.labelAmplitudeAnodic);
             this.groupBoxAnode.Controls.Add(this.labelPulseWidthAnodic);
@@ -245,6 +249,7 @@
             // 
             // buttonClearPulses
             // 
+            this.buttonClearPulses.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonClearPulses.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
             this.buttonClearPulses.Location = new System.Drawing.Point(7, 238);
             this.buttonClearPulses.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
@@ -256,6 +261,7 @@
             // 
             // buttonReadPulses
             // 
+            this.buttonReadPulses.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonReadPulses.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
             this.buttonReadPulses.Location = new System.Drawing.Point(112, 238);
             this.buttonReadPulses.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
@@ -267,6 +273,7 @@
             // 
             // textboxInterPulseInterval
             // 
+            this.textboxInterPulseInterval.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.textboxInterPulseInterval.Location = new System.Drawing.Point(355, 66);
             this.textboxInterPulseInterval.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textboxInterPulseInterval.Name = "textboxInterPulseInterval";
@@ -275,6 +282,7 @@
             // 
             // labelInterPulseInterval
             // 
+            this.labelInterPulseInterval.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.labelInterPulseInterval.AutoSize = true;
             this.labelInterPulseInterval.Location = new System.Drawing.Point(243, 70);
             this.labelInterPulseInterval.Name = "labelInterPulseInterval";
@@ -284,6 +292,7 @@
             // 
             // labelStepSizeAmplitude
             // 
+            this.labelStepSizeAmplitude.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.labelStepSizeAmplitude.AutoSize = true;
             this.labelStepSizeAmplitude.Location = new System.Drawing.Point(243, 14);
             this.labelStepSizeAmplitude.Name = "labelStepSizeAmplitude";
@@ -293,6 +302,7 @@
             // 
             // checkBoxAnodicFirst
             // 
+            this.checkBoxAnodicFirst.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBoxAnodicFirst.AutoSize = true;
             this.checkBoxAnodicFirst.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.checkBoxAnodicFirst.Checked = true;
@@ -307,6 +317,7 @@
             // 
             // buttonAddPulses
             // 
+            this.buttonAddPulses.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonAddPulses.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
             this.buttonAddPulses.Location = new System.Drawing.Point(310, 238);
             this.buttonAddPulses.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
@@ -318,6 +329,7 @@
             // 
             // textboxDelay
             // 
+            this.textboxDelay.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.textboxDelay.Location = new System.Drawing.Point(135, 66);
             this.textboxDelay.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textboxDelay.Name = "textboxDelay";
@@ -326,6 +338,7 @@
             // 
             // labelNumberOfPulses
             // 
+            this.labelNumberOfPulses.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.labelNumberOfPulses.AutoSize = true;
             this.labelNumberOfPulses.Location = new System.Drawing.Point(229, 206);
             this.labelNumberOfPulses.Name = "labelNumberOfPulses";
@@ -335,6 +348,7 @@
             // 
             // labelDelay
             // 
+            this.labelDelay.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.labelDelay.AutoSize = true;
             this.labelDelay.Location = new System.Drawing.Point(53, 70);
             this.labelDelay.Name = "labelDelay";
@@ -344,6 +358,7 @@
             // 
             // checkboxBiphasicSymmetrical
             // 
+            this.checkboxBiphasicSymmetrical.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.checkboxBiphasicSymmetrical.AutoSize = true;
             this.checkboxBiphasicSymmetrical.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.checkboxBiphasicSymmetrical.Checked = true;
@@ -358,6 +373,7 @@
             // 
             // textboxInterStimulusInterval
             // 
+            this.textboxInterStimulusInterval.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.textboxInterStimulusInterval.Location = new System.Drawing.Point(135, 201);
             this.textboxInterStimulusInterval.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textboxInterStimulusInterval.Name = "textboxInterStimulusInterval";
@@ -366,6 +382,7 @@
             // 
             // labelInterStimulusInterval
             // 
+            this.labelInterStimulusInterval.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.labelInterStimulusInterval.AutoSize = true;
             this.labelInterStimulusInterval.Location = new System.Drawing.Point(7, 204);
             this.labelInterStimulusInterval.Name = "labelInterStimulusInterval";

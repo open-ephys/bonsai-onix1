@@ -90,7 +90,7 @@ namespace OpenEphys.Onix1.Design
             dataGridViewStimulusTable.RowTemplate.Height = 24;
             dataGridViewStimulusTable.TabStop = false;
 
-            tableLayoutPanel1.Controls.Add(tabControlVisualization);
+            tableLayoutPanel2.Controls.Add(tabControlVisualization);
 
             tabControlVisualization.ResumeLayout(false);
             tabPageWaveform.ResumeLayout(false);

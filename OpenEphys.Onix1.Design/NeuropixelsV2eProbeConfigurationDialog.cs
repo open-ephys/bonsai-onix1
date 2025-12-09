@@ -20,6 +20,7 @@ namespace OpenEphys.Onix1.Design
         public NeuropixelsV2ProbeConfiguration ProbeConfiguration
         {
             get => ChannelConfiguration.ProbeConfiguration;
+            internal set => ChannelConfiguration.ProbeConfiguration = value;
         }
 
         /// <inheritdoc cref="ConfigureNeuropixelsV2e.InvertPolarity"/>
@@ -95,10 +96,7 @@ namespace OpenEphys.Onix1.Design
                     return;
                 }
 
-                ChannelConfiguration.HighlightEnabledContacts();
-                ChannelConfiguration.HighlightSelectedContacts();
-                ChannelConfiguration.UpdateContactLabels();
-                ChannelConfiguration.RefreshZedGraph();
+                UpdateProbeGroup();
             };
 
             checkBoxInvertPolarity.DataBindings.Add("Checked",
@@ -142,6 +140,8 @@ namespace OpenEphys.Onix1.Design
 
                 menuStrip.Visible = false;
             }
+
+            splitContainer1.SplitterDistance = splitContainer1.Size.Width - splitContainer1.Panel2MinSize;
 
             ChannelConfiguration.Show();
             ChannelConfiguration.ConnectResizeEventHandler();
@@ -265,6 +265,11 @@ namespace OpenEphys.Onix1.Design
         private void UpdateTrackBarLocation(object sender, EventArgs e)
         {
             trackBarProbePosition.Value = (int)(ChannelConfiguration.GetRelativeVerticalPosition() * trackBarProbePosition.Maximum);
+        }
+
+        internal void UpdateProbeGroup()
+        {
+            ChannelConfiguration.UpdateProbeGroup();
         }
     }
 }

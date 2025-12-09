@@ -232,6 +232,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Category(AcquisitionCategory)]
         [Description("Stimulus sequence.")]
+        [TypeConverter(typeof(GenericPropertyConverter))]
         public Rhs2116StimulusSequencePair StimulusSequence
         {
             get => stimulusSequence.Value;

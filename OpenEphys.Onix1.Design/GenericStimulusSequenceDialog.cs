@@ -56,10 +56,12 @@ namespace OpenEphys.Onix1.Design
             if (!TopLevel)
             {
                 tableLayoutPanel1.Controls.Remove(flowLayoutPanel1);
-                tableLayoutPanel1.RowCount = 2;
+                tableLayoutPanel1.RowCount -= 1;
 
                 menuStrip.Visible = false;
             }
+
+            splitContainer1.SplitterDistance = splitContainer1.Size.Width - splitContainer1.Panel2MinSize;
         }
 
         void ButtonOk_Click(object sender, EventArgs e)

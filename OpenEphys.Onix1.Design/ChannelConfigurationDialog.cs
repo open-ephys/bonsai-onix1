@@ -367,6 +367,14 @@ namespace OpenEphys.Onix1.Design
             OnDrawProbeGroupHandler();
         }
 
+        internal void UpdateProbeGroup()
+        {
+            HighlightEnabledContacts();
+            HighlightSelectedContacts();
+            UpdateContactLabels();
+            RefreshZedGraph();
+        }
+
         void OnDrawProbeGroupHandler()
         {
             OnDrawProbeGroup?.Invoke(this, EventArgs.Empty);

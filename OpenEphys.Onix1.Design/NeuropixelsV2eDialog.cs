@@ -9,13 +9,13 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     public partial class NeuropixelsV2eDialog : Form
     {
-        internal readonly Dictionary<NeuropixelsV2Probe, NeuropixelsV2eProbeConfigurationDialog> ProbeConfigurations;
+        internal readonly Dictionary<NeuropixelsV2Probe, NeuropixelsV2eProbeConfigurationDialog> ProbeConfigurationDialogs;
 
         internal NeuropixelsV2ProbeConfiguration ProbeConfigurationA
         {
             get
             {
-                return ProbeConfigurations.TryGetValue(NeuropixelsV2Probe.ProbeA, out var probeConfigurationDialog)
+                return ProbeConfigurationDialogs.TryGetValue(NeuropixelsV2Probe.ProbeA, out var probeConfigurationDialog)
                     ? probeConfigurationDialog.ProbeConfiguration
                     : throw new NullReferenceException("Unable to find the probe configuration dialog for Probe A.");
             }
@@ -25,7 +25,7 @@ namespace OpenEphys.Onix1.Design
         {
             get
             {
-                return ProbeConfigurations.TryGetValue(NeuropixelsV2Probe.ProbeB, out var probeConfigurationDialog)
+                return ProbeConfigurationDialogs.TryGetValue(NeuropixelsV2Probe.ProbeB, out var probeConfigurationDialog)
                     ? probeConfigurationDialog.ProbeConfiguration
                     : throw new NullReferenceException("Unable to find the probe configuration dialog for Probe B.");
             }
@@ -57,13 +57,13 @@ namespace OpenEphys.Onix1.Design
                 Text = Text.Replace("NeuropixelsV2e ", "NeuropixelsV2eBeta ");
             }
 
-            ProbeConfigurations = new()
+            ProbeConfigurationDialogs = new()
             {
                 { NeuropixelsV2Probe.ProbeA, new(configureNode.ProbeConfigurationA) },
                 { NeuropixelsV2Probe.ProbeB, new(configureNode.ProbeConfigurationB) }
             };
 
-            foreach (var channelConfiguration in ProbeConfigurations)
+            foreach (var channelConfiguration in ProbeConfigurationDialogs)
             {
                 channelConfiguration.Value.SetChildFormProperties(this);
                 this.AddMenuItemsFromDialogToFileOption(channelConfiguration.Value, channelConfiguration.Key.ToString());
@@ -80,24 +80,39 @@ namespace OpenEphys.Onix1.Design
                 menuStrip.Visible = false;
             }
 
-            int index = 0;
-
-            foreach (var channelConfiguration in ProbeConfigurations)
+            propertyGrid.Focus();
+            var rootItem = propertyGrid.SelectedGridItem;
+            if (rootItem != null)
             {
-                string probeName = channelConfiguration.Key.ToString();
-
-                tabControlProbe.TabPages.Insert(index++, probeName, probeName);
-                tabControlProbe.TabPages[probeName].Controls.Add(channelConfiguration.Value);
-
-                channelConfiguration.Value.Show();
+                foreach (GridItem item in rootItem.Parent.GridItems)
+                {
+                    if (item != null && item.Value is NeuropixelsV2ProbeConfiguration probeConfiguration && probeConfiguration.Probe == NeuropixelsV2Probe.ProbeA)
+                    {
+                        propertyGrid.SelectedGridItem = item;
+                        item.Select();
+                    }
+                }
             }
 
-            tabControlProbe.SelectedIndex = 0;
+            const int PropertyGridStartingWidth = 200;
+
+            splitContainer.SplitterDistance = PropertyGridStartingWidth;
         }
 
         internal void Okay_Click(object sender, EventArgs e)
         {
             DialogResult = DialogResult.OK;
+        }
+
+        void PropertyGridChanged(object sender, SelectedGridItemChangedEventArgs e)
+        {
+            if (e.NewSelection != null && e.NewSelection.Value is NeuropixelsV2ProbeConfiguration probeConfiguration)
+            {
+                panelConfigurationDialogs.Controls.Clear();
+                var dialog = ProbeConfigurationDialogs[probeConfiguration.Probe];
+                panelConfigurationDialogs.Controls.Add(dialog);
+                dialog.Show();
+            }
         }
     }
 }

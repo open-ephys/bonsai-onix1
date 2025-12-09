@@ -238,6 +238,7 @@ namespace OpenEphys.Onix1
         /// <remarks>
         /// This value should be kept below 50 mA to prevent excess head accumulation on the headstage.
         /// </remarks>
+        [Category(AcquisitionCategory)]
         [Description("The total direct current required during the application of a burst (mA). Should be less than 50 mA.")]
         public double BurstCurrent
         {

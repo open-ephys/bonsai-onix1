@@ -93,6 +93,7 @@ namespace OpenEphys.Onix1
         /// Gets or sets the reference for all electrodes.
         /// </summary>
         [XmlIgnore]
+        [Category(DeviceFactory.ConfigurationCategory)]
         [Description("Defines the reference for the probe.")]
         public abstract Enum Reference { get; set; }
 
@@ -114,6 +115,8 @@ namespace OpenEphys.Onix1
         /// The channel map will always be 384 channels, and will return the 384 enabled electrodes.
         /// </remarks>
         [XmlIgnore]
+        [Browsable(false)]
+        [Externalizable(false)]
         public abstract NeuropixelsV2Electrode[] ChannelMap { get; }
 
         /// <summary>

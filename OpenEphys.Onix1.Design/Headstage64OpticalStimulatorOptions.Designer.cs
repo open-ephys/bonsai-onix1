@@ -54,15 +54,15 @@
             // 
             // textBoxDelay
             // 
-            this.textBoxDelay.Location = new System.Drawing.Point(356, 244);
+            this.textBoxDelay.Location = new System.Drawing.Point(346, 244);
             this.textBoxDelay.Name = "textBoxDelay";
-            this.textBoxDelay.Size = new System.Drawing.Size(75, 22);
+            this.textBoxDelay.Size = new System.Drawing.Size(70, 22);
             this.textBoxDelay.TabIndex = 19;
             // 
             // labelDelay
             // 
             this.labelDelay.AutoSize = true;
-            this.labelDelay.Location = new System.Drawing.Point(218, 247);
+            this.labelDelay.Location = new System.Drawing.Point(208, 247);
             this.labelDelay.Name = "labelDelay";
             this.labelDelay.Size = new System.Drawing.Size(72, 16);
             this.labelDelay.TabIndex = 18;
@@ -70,16 +70,16 @@
             // 
             // textBoxBurstsPerTrain
             // 
-            this.textBoxBurstsPerTrain.Location = new System.Drawing.Point(133, 244);
+            this.textBoxBurstsPerTrain.Location = new System.Drawing.Point(130, 244);
             this.textBoxBurstsPerTrain.Name = "textBoxBurstsPerTrain";
-            this.textBoxBurstsPerTrain.Size = new System.Drawing.Size(75, 22);
+            this.textBoxBurstsPerTrain.Size = new System.Drawing.Size(70, 22);
             this.textBoxBurstsPerTrain.TabIndex = 17;
             this.textBoxBurstsPerTrain.TextChanged += new System.EventHandler(this.BurstsPerTrainChanged);
             // 
             // labelBurstsPerTrain
             // 
             this.labelBurstsPerTrain.AutoSize = true;
-            this.labelBurstsPerTrain.Location = new System.Drawing.Point(6, 247);
+            this.labelBurstsPerTrain.Location = new System.Drawing.Point(3, 247);
             this.labelBurstsPerTrain.Name = "labelBurstsPerTrain";
             this.labelBurstsPerTrain.Size = new System.Drawing.Size(102, 16);
             this.labelBurstsPerTrain.TabIndex = 16;
@@ -87,14 +87,14 @@
             // 
             // textBoxInterBurstInterval
             // 
-            this.textBoxInterBurstInterval.Location = new System.Drawing.Point(356, 195);
+            this.textBoxInterBurstInterval.Location = new System.Drawing.Point(346, 195);
             this.textBoxInterBurstInterval.Name = "textBoxInterBurstInterval";
-            this.textBoxInterBurstInterval.Size = new System.Drawing.Size(75, 22);
+            this.textBoxInterBurstInterval.Size = new System.Drawing.Size(70, 22);
             this.textBoxInterBurstInterval.TabIndex = 15;
             // 
             // labelInterBurstInterval
             // 
-            this.labelInterBurstInterval.Location = new System.Drawing.Point(216, 198);
+            this.labelInterBurstInterval.Location = new System.Drawing.Point(206, 198);
             this.labelInterBurstInterval.Name = "labelInterBurstInterval";
             this.labelInterBurstInterval.Size = new System.Drawing.Size(146, 19);
             this.labelInterBurstInterval.TabIndex = 14;
@@ -102,16 +102,16 @@
             // 
             // textBoxPulsesPerBurst
             // 
-            this.textBoxPulsesPerBurst.Location = new System.Drawing.Point(133, 195);
+            this.textBoxPulsesPerBurst.Location = new System.Drawing.Point(130, 195);
             this.textBoxPulsesPerBurst.Name = "textBoxPulsesPerBurst";
-            this.textBoxPulsesPerBurst.Size = new System.Drawing.Size(75, 22);
+            this.textBoxPulsesPerBurst.Size = new System.Drawing.Size(70, 22);
             this.textBoxPulsesPerBurst.TabIndex = 13;
             this.textBoxPulsesPerBurst.TextChanged += new System.EventHandler(this.PulsesPerBurstChanged);
             // 
             // labelPulsesPerBurst
             // 
             this.labelPulsesPerBurst.AutoSize = true;
-            this.labelPulsesPerBurst.Location = new System.Drawing.Point(6, 198);
+            this.labelPulsesPerBurst.Location = new System.Drawing.Point(3, 198);
             this.labelPulsesPerBurst.Name = "labelPulsesPerBurst";
             this.labelPulsesPerBurst.Size = new System.Drawing.Size(105, 16);
             this.labelPulsesPerBurst.TabIndex = 12;
@@ -120,7 +120,7 @@
             // labelMaxCurrent
             // 
             this.labelMaxCurrent.AutoSize = true;
-            this.labelMaxCurrent.Location = new System.Drawing.Point(6, 20);
+            this.labelMaxCurrent.Location = new System.Drawing.Point(3, 20);
             this.labelMaxCurrent.Name = "labelMaxCurrent";
             this.labelMaxCurrent.Size = new System.Drawing.Size(108, 16);
             this.labelMaxCurrent.TabIndex = 0;
@@ -128,22 +128,22 @@
             // 
             // textBoxMaxCurrent
             // 
-            this.textBoxMaxCurrent.Location = new System.Drawing.Point(133, 17);
+            this.textBoxMaxCurrent.Location = new System.Drawing.Point(130, 17);
             this.textBoxMaxCurrent.Name = "textBoxMaxCurrent";
-            this.textBoxMaxCurrent.Size = new System.Drawing.Size(75, 22);
+            this.textBoxMaxCurrent.Size = new System.Drawing.Size(70, 22);
             this.textBoxMaxCurrent.TabIndex = 1;
             // 
             // textBoxChannelOnePercent
             // 
-            this.textBoxChannelOnePercent.Location = new System.Drawing.Point(133, 58);
+            this.textBoxChannelOnePercent.Location = new System.Drawing.Point(130, 58);
             this.textBoxChannelOnePercent.Name = "textBoxChannelOnePercent";
-            this.textBoxChannelOnePercent.Size = new System.Drawing.Size(75, 22);
+            this.textBoxChannelOnePercent.Size = new System.Drawing.Size(70, 22);
             this.textBoxChannelOnePercent.TabIndex = 3;
             // 
             // labelChannelOnePercent
             // 
             this.labelChannelOnePercent.AutoSize = true;
-            this.labelChannelOnePercent.Location = new System.Drawing.Point(6, 61);
+            this.labelChannelOnePercent.Location = new System.Drawing.Point(3, 61);
             this.labelChannelOnePercent.Name = "labelChannelOnePercent";
             this.labelChannelOnePercent.Size = new System.Drawing.Size(107, 16);
             this.labelChannelOnePercent.TabIndex = 2;
@@ -152,7 +152,7 @@
             // trackBarChannelOnePercent
             // 
             this.trackBarChannelOnePercent.LargeChange = 125;
-            this.trackBarChannelOnePercent.Location = new System.Drawing.Point(11, 83);
+            this.trackBarChannelOnePercent.Location = new System.Drawing.Point(8, 83);
             this.trackBarChannelOnePercent.Margin = new System.Windows.Forms.Padding(0);
             this.trackBarChannelOnePercent.Maximum = 1000;
             this.trackBarChannelOnePercent.Name = "trackBarChannelOnePercent";
@@ -165,15 +165,15 @@
             // 
             // textBoxPulseDuration
             // 
-            this.textBoxPulseDuration.Location = new System.Drawing.Point(133, 146);
+            this.textBoxPulseDuration.Location = new System.Drawing.Point(130, 146);
             this.textBoxPulseDuration.Name = "textBoxPulseDuration";
-            this.textBoxPulseDuration.Size = new System.Drawing.Size(75, 22);
+            this.textBoxPulseDuration.Size = new System.Drawing.Size(70, 22);
             this.textBoxPulseDuration.TabIndex = 9;
             // 
             // labelPulseDuration
             // 
             this.labelPulseDuration.AutoSize = true;
-            this.labelPulseDuration.Location = new System.Drawing.Point(6, 149);
+            this.labelPulseDuration.Location = new System.Drawing.Point(3, 149);
             this.labelPulseDuration.Name = "labelPulseDuration";
             this.labelPulseDuration.Size = new System.Drawing.Size(123, 16);
             this.labelPulseDuration.TabIndex = 8;
@@ -182,7 +182,7 @@
             // trackBarChannelTwoPercent
             // 
             this.trackBarChannelTwoPercent.LargeChange = 125;
-            this.trackBarChannelTwoPercent.Location = new System.Drawing.Point(219, 83);
+            this.trackBarChannelTwoPercent.Location = new System.Drawing.Point(209, 83);
             this.trackBarChannelTwoPercent.Margin = new System.Windows.Forms.Padding(0);
             this.trackBarChannelTwoPercent.Maximum = 1000;
             this.trackBarChannelTwoPercent.Name = "trackBarChannelTwoPercent";
@@ -194,15 +194,15 @@
             // 
             // textBoxChannelTwoPercent
             // 
-            this.textBoxChannelTwoPercent.Location = new System.Drawing.Point(356, 58);
+            this.textBoxChannelTwoPercent.Location = new System.Drawing.Point(346, 58);
             this.textBoxChannelTwoPercent.Name = "textBoxChannelTwoPercent";
-            this.textBoxChannelTwoPercent.Size = new System.Drawing.Size(75, 22);
+            this.textBoxChannelTwoPercent.Size = new System.Drawing.Size(70, 22);
             this.textBoxChannelTwoPercent.TabIndex = 5;
             // 
             // labelChannelTwoPercent
             // 
             this.labelChannelTwoPercent.AutoSize = true;
-            this.labelChannelTwoPercent.Location = new System.Drawing.Point(216, 61);
+            this.labelChannelTwoPercent.Location = new System.Drawing.Point(206, 61);
             this.labelChannelTwoPercent.Name = "labelChannelTwoPercent";
             this.labelChannelTwoPercent.Size = new System.Drawing.Size(108, 16);
             this.labelChannelTwoPercent.TabIndex = 4;
@@ -210,15 +210,15 @@
             // 
             // textBoxPulsePeriod
             // 
-            this.textBoxPulsePeriod.Location = new System.Drawing.Point(356, 146);
+            this.textBoxPulsePeriod.Location = new System.Drawing.Point(346, 146);
             this.textBoxPulsePeriod.Name = "textBoxPulsePeriod";
-            this.textBoxPulsePeriod.Size = new System.Drawing.Size(75, 22);
+            this.textBoxPulsePeriod.Size = new System.Drawing.Size(70, 22);
             this.textBoxPulsePeriod.TabIndex = 11;
             // 
             // labelPulsePeriod
             // 
             this.labelPulsePeriod.AutoSize = true;
-            this.labelPulsePeriod.Location = new System.Drawing.Point(216, 149);
+            this.labelPulsePeriod.Location = new System.Drawing.Point(206, 149);
             this.labelPulsePeriod.Name = "labelPulsePeriod";
             this.labelPulsePeriod.Size = new System.Drawing.Size(113, 16);
             this.labelPulsePeriod.TabIndex = 10;
@@ -228,7 +228,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(438, 289);
+            this.ClientSize = new System.Drawing.Size(421, 289);
             this.Controls.Add(this.textBoxPulsePeriod);
             this.Controls.Add(this.labelPulsePeriod);
             this.Controls.Add(this.trackBarChannelTwoPercent);
