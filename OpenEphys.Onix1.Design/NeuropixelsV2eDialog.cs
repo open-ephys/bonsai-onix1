@@ -107,17 +107,6 @@ namespace OpenEphys.Onix1.Design
 
         void PropertyGridChanged(object sender, SelectedGridItemChangedEventArgs e)
         {
-            void RemoveProbeConfigurationDialogs()
-            {
-                foreach (var item in panelConfigurationDialogs.Controls.OfType<NeuropixelsV2eProbeConfigurationDialog>().ToList())
-                {
-                    if (item != null && e.NewSelection.Parent.Value is not NeuropixelsV2ProbeConfiguration)
-                    {
-                        panelConfigurationDialogs.Controls.Remove(item);
-                    }
-                }
-            }
-
             void ShowProbeConfigurationDialog(NeuropixelsV2Probe probe)
             {
                 var dialog = ProbeConfigurationDialogs[probe];
@@ -131,6 +120,8 @@ namespace OpenEphys.Onix1.Design
                 dialog.BringToFront();
             }
 
+            // NB: If the property (or the parent's property) is a probe configuration, show the corresponding dialog.
+            //     Otherwise, remove the probe configuration dialogs to show the default text box.
             if (e.NewSelection != null)
             {
                 if (e.NewSelection.Value is NeuropixelsV2ProbeConfiguration probeConfiguration)
@@ -143,7 +134,13 @@ namespace OpenEphys.Onix1.Design
                 }
                 else
                 {
-                    RemoveProbeConfigurationDialogs();
+                    foreach (var item in panelConfigurationDialogs.Controls.OfType<NeuropixelsV2eProbeConfigurationDialog>().ToList())
+                    {
+                        if (item != null && e.NewSelection.Parent.Value is not NeuropixelsV2ProbeConfiguration)
+                        {
+                            panelConfigurationDialogs.Controls.Remove(item);
+                        }
+                    }
                 }
             }
         }
