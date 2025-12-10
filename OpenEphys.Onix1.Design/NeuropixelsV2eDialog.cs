@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace OpenEphys.Onix1.Design
@@ -106,12 +107,44 @@ namespace OpenEphys.Onix1.Design
 
         void PropertyGridChanged(object sender, SelectedGridItemChangedEventArgs e)
         {
-            if (e.NewSelection != null && e.NewSelection.Value is NeuropixelsV2ProbeConfiguration probeConfiguration)
+            void RemoveProbeConfigurationDialogs()
             {
-                panelConfigurationDialogs.Controls.Clear();
-                var dialog = ProbeConfigurationDialogs[probeConfiguration.Probe];
-                panelConfigurationDialogs.Controls.Add(dialog);
-                dialog.Show();
+                foreach (var item in panelConfigurationDialogs.Controls.OfType<NeuropixelsV2eProbeConfigurationDialog>().ToList())
+                {
+                    if (item != null && e.NewSelection.Parent.Value is not NeuropixelsV2ProbeConfiguration)
+                    {
+                        panelConfigurationDialogs.Controls.Remove(item);
+                    }
+                }
+            }
+
+            void ShowProbeConfigurationDialog(NeuropixelsV2Probe probe)
+            {
+                var dialog = ProbeConfigurationDialogs[probe];
+
+                if (!panelConfigurationDialogs.Controls.Contains(dialog))
+                {
+                    panelConfigurationDialogs.Controls.Add(dialog);
+                    dialog.Show();
+                }
+
+                dialog.BringToFront();
+            }
+
+            if (e.NewSelection != null)
+            {
+                if (e.NewSelection.Value is NeuropixelsV2ProbeConfiguration probeConfiguration)
+                {
+                    ShowProbeConfigurationDialog(probeConfiguration.Probe);
+                }
+                else if (e.NewSelection.Parent.Value is NeuropixelsV2ProbeConfiguration parentProbeConfiguration)
+                {
+                    ShowProbeConfigurationDialog(parentProbeConfiguration.Probe);
+                }
+                else
+                {
+                    RemoveProbeConfigurationDialogs();
+                }
             }
         }
     }
