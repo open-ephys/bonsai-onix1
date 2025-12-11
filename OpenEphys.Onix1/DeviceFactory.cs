@@ -54,6 +54,7 @@ namespace OpenEphys.Onix1
         /// </remarks>
         [Description(DeviceNameDescription)]
         [Category(ConfigurationCategory)]
+        [ShowInCustomDialog(false)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -68,6 +69,7 @@ namespace OpenEphys.Onix1
         /// </remarks>
         [Description(DeviceAddressDescription)]
         [Category(ConfigurationCategory)]
+        [ShowInCustomDialog(false)]
         public uint DeviceAddress { get; set; }
 
         /// <summary>

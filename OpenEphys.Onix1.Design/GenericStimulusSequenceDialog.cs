@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -35,10 +36,26 @@ namespace OpenEphys.Onix1.Design
         /// Opens a dialog allowing for easy changing of stimulus sequence parameters,
         /// with visual feedback on what the resulting stimulus sequence looks like.
         /// </summary>
-        public GenericStimulusSequenceDialog(object device, int numberOfChannels)
+        /// <param name="device">Device that will be displayed in the property grid.</param>
+        /// <param name="numberOfChannels">Number of channels to draw for the stimulus waveform.</param>
+        /// <param name="filterProperties">
+        /// <see langword="true"/> if the properties should be filtered by <see cref="ShowInCustomDialogAttribute"/>,
+        /// otherwise <see langword="false"/>. Default is <see langword="false"/>.
+        /// </param>
+        public GenericStimulusSequenceDialog(object device, int numberOfChannels, bool filterProperties = false)
         {
             InitializeComponent();
             Shown += FormShown;
+
+            if (filterProperties)
+            {
+                propertyGrid.BrowsableAttributes = new AttributeCollection(
+                    new Attribute[]
+                    {
+                        new BrowsableAttribute(true),
+                        new ShowInCustomDialogAttribute(true)
+                    });
+            }
 
             Device = device;
             bindingSource.DataSource = Device;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -46,10 +47,24 @@ namespace OpenEphys.Onix1.Design
         /// Initializes a new instance of <see cref="NeuropixelsV2eDialog"/>.
         /// </summary>
         /// <param name="configureNode">A <see cref="ConfigureNeuropixelsV2e"/> object holding the current configuration settings.</param>
-        public NeuropixelsV2eDialog(IConfigureNeuropixelsV2 configureNode)
+        /// <param name="filterProperties">
+        /// <see langword="true"/> if the properties should be filtered by <see cref="ShowInCustomDialogAttribute"/>,
+        /// otherwise <see langword="false"/>. Default is <see langword="false"/>.
+        /// </param>
+        public NeuropixelsV2eDialog(IConfigureNeuropixelsV2 configureNode, bool filterProperties = false)
         {
             InitializeComponent();
             Shown += FormShown;
+
+            if (filterProperties)
+            {
+                propertyGrid.BrowsableAttributes = new AttributeCollection(
+                    new Attribute[]
+                    {
+                        new BrowsableAttribute(true),
+                        new ShowInCustomDialogAttribute(true)
+                    });
+            }
 
             propertyGrid.SelectedObject = configureNode;
 

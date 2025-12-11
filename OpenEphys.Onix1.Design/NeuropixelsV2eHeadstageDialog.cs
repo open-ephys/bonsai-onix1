@@ -26,7 +26,7 @@ namespace OpenEphys.Onix1.Design
         {
             InitializeComponent();
 
-            DialogNeuropixelsV2e = new(configureNeuropixelsV2e);
+            DialogNeuropixelsV2e = new(configureNeuropixelsV2e, true);
 
             DialogNeuropixelsV2e.SetChildFormProperties(this).AddDialogToPanel(panelNeuropixelsV2e);
 
@@ -41,7 +41,7 @@ namespace OpenEphys.Onix1.Design
                 tabPageNeuropixelsV2e.Text = "NeuropixelsV2eBeta";
             }
 
-            DialogBno055 = new(configureBno055);
+            DialogBno055 = new(configureBno055, true);
 
             DialogBno055.SetChildFormProperties(this).AddDialogToPanel(panelBno055);
         }

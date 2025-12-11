@@ -25,8 +25,12 @@ namespace OpenEphys.Onix1.Design
         /// visual feedback on what the resulting stimulus sequence looks like.
         /// </summary>
         /// <param name="opticalStimulator">Existing stimulus sequence.</param>
-        public Headstage64OpticalStimulatorSequenceDialog(ConfigureHeadstage64OpticalStimulator opticalStimulator)
-            : base(opticalStimulator, NumberOfChannels)
+        /// <param name="filterProperties">
+        /// <see langword="true"/> if the properties should be filtered by <see cref="ShowInCustomDialogAttribute"/>,
+        /// otherwise <see langword="false"/>. Default is <see langword="false"/>.
+        /// </param>
+        public Headstage64OpticalStimulatorSequenceDialog(ConfigureHeadstage64OpticalStimulator opticalStimulator, bool filterProperties = false)
+            : base(opticalStimulator, NumberOfChannels, filterProperties)
         {
             InitializeComponent();
             HideMenuStrip();
