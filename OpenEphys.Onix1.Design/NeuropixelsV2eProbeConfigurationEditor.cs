@@ -26,7 +26,7 @@ namespace OpenEphys.Onix1.Design
                 var editorService = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
 
-                if (editorService != null && editorState != null && editorState.WorkflowRunning && value is NeuropixelsV2ProbeConfiguration configuration)
+                if (editorService != null && editorState != null && !editorState.WorkflowRunning && value is NeuropixelsV2ProbeConfiguration configuration)
                 {
                     bool isBeta = (IConfigureNeuropixelsV2)context.Instance is ConfigureNeuropixelsV2eBeta;
 
