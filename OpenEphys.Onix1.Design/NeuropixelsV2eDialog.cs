@@ -79,10 +79,12 @@ namespace OpenEphys.Onix1.Design
                 { NeuropixelsV2Probe.ProbeB, new(configureNode.ProbeConfigurationB) }
             };
 
-            foreach (var channelConfiguration in ProbeConfigurationDialogs)
+            foreach (var probeConfiguration in ProbeConfigurationDialogs)
             {
-                channelConfiguration.Value.SetChildFormProperties(this);
-                this.AddMenuItemsFromDialogToFileOption(channelConfiguration.Value, channelConfiguration.Key.ToString());
+                probeConfiguration.Value.SetChildFormProperties(this);
+                this.AddMenuItemsFromDialogToFileOption(probeConfiguration.Value, probeConfiguration.Key.ToString());
+
+                probeConfiguration.Value.HidePropertiesTab();
             }
         }
 

@@ -271,5 +271,10 @@ namespace OpenEphys.Onix1.Design
         {
             ChannelConfiguration.UpdateProbeGroup();
         }
+
+        internal void HidePropertiesTab()
+        {
+            tabControlProbe.TabPages.Remove(tabPageProperties);
+        }
     }
 }
