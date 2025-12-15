@@ -48,7 +48,7 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <param name="rhs2116Trigger">Existing <see cref="ConfigureRhs2116Trigger"/> object.</param>
         /// <param name="filterProperties">
-        /// <see langword="true"/> if the properties should be filtered by <see cref="ShowInCustomDialogAttribute"/>,
+        /// <see langword="true"/> if the properties should be filtered by <see cref="DeviceTablePropertyAttribute"/>,
         /// otherwise <see langword="false"/>. Default is <see langword="false"/>.
         /// </param>
         public Rhs2116StimulusSequenceDialog(ConfigureRhs2116Trigger rhs2116Trigger, bool filterProperties = false)

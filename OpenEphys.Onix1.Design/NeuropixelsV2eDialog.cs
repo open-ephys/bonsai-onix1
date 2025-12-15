@@ -48,7 +48,7 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <param name="configureNode">A <see cref="ConfigureNeuropixelsV2e"/> object holding the current configuration settings.</param>
         /// <param name="filterProperties">
-        /// <see langword="true"/> if the properties should be filtered by <see cref="ShowInCustomDialogAttribute"/>,
+        /// <see langword="true"/> if the properties should be filtered by <see cref="DeviceTablePropertyAttribute"/>,
         /// otherwise <see langword="false"/>. Default is <see langword="false"/>.
         /// </param>
         public NeuropixelsV2eDialog(IConfigureNeuropixelsV2 configureNode, bool filterProperties = false)
@@ -62,7 +62,7 @@ namespace OpenEphys.Onix1.Design
                     new Attribute[]
                     {
                         new BrowsableAttribute(true),
-                        new ShowInCustomDialogAttribute(true)
+                        new DeviceTablePropertyAttribute (false)
                     });
             }
 

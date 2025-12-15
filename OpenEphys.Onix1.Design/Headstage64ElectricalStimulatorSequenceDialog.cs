@@ -26,7 +26,7 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <param name="electricalStimulator">Existing stimulus sequence.</param>
         /// <param name="filterProperties">
-        /// <see langword="true"/> if the properties should be filtered by <see cref="ShowInCustomDialogAttribute"/>,
+        /// <see langword="true"/> if the properties should be filtered by <see cref="DeviceTablePropertyAttribute"/>,
         /// otherwise <see langword="false"/>. Default is <see langword="false"/>.
         /// </param>
         public Headstage64ElectricalStimulatorSequenceDialog(ConfigureHeadstage64ElectricalStimulator electricalStimulator, bool filterProperties = false)

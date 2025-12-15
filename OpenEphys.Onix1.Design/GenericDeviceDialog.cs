@@ -21,7 +21,7 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <param name="device">Device that will be displayed in the property grid.</param>
         /// <param name="filterProperties">
-        /// <see langword="true"/> if the properties should be filtered by <see cref="ShowInCustomDialogAttribute"/>,
+        /// <see langword="true"/> if the properties should be filtered by <see cref="DeviceTablePropertyAttribute"/>,
         /// otherwise <see langword="false"/>. Default is <see langword="false"/>.
         /// </param>
         public GenericDeviceDialog(object device, bool filterProperties = false)
@@ -36,7 +36,7 @@ namespace OpenEphys.Onix1.Design
                     new Attribute[]
                     {
                         new BrowsableAttribute(true),
-                        new ShowInCustomDialogAttribute(true)
+                        new DeviceTablePropertyAttribute(false)
                     });
             }
 
