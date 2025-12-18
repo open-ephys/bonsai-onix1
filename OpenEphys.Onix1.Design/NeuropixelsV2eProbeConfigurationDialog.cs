@@ -23,6 +23,7 @@ namespace OpenEphys.Onix1.Design
         public NeuropixelsV2ProbeConfiguration ProbeConfiguration
         {
             get => ChannelConfiguration.ProbeConfiguration;
+            set => ChannelConfiguration.ProbeConfiguration = value;
         }
 
         /// <inheritdoc cref="ConfigureNeuropixelsV2e.InvertPolarity"/>
@@ -144,8 +145,10 @@ namespace OpenEphys.Onix1.Design
         {
             var probeType = (ProbeType)comboBoxProbeType.SelectedItem;
 
-            ChannelConfiguration.ProbeConfiguration = probeConfigurations[probeType];
+            ProbeConfiguration = probeConfigurations[probeType];
             ChannelConfiguration.ResizeSelectedContacts();
+
+            textBoxProbeCalibrationFile.Text = ProbeConfiguration.GainCalibrationFileName;
 
             ProbeInfo = ProbeDataFactory(ProbeConfiguration);
 
