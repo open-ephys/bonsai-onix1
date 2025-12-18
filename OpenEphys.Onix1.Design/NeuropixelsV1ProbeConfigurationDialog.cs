@@ -75,6 +75,7 @@ namespace OpenEphys.Onix1.Design
 
             ChannelConfiguration.OnZoom += UpdateTrackBarLocation;
             ChannelConfiguration.OnFileLoad += OnFileLoadEvent;
+            ChannelConfiguration.BringToFront();
 
             propertyGrid.SelectedObject = configureNode;
             bindingSource.DataSource = configureNode;
@@ -188,7 +189,8 @@ namespace OpenEphys.Onix1.Design
                 menuStrip.Visible = false;
             }
 
-            ChannelConfiguration.Show();
+            if (ChannelConfiguration.Visible)
+                ChannelConfiguration.Show();
             ChannelConfiguration.ConnectResizeEventHandler();
         }
 
@@ -339,7 +341,7 @@ namespace OpenEphys.Onix1.Design
                                         ? gainCorrection.Value.LfpGainCorrectionFactor.ToString()
                                         : "";
 
-            panelProbe.Visible = adcCalibration.HasValue && gainCorrection.HasValue;
+            ChannelConfiguration.Visible = adcCalibration.HasValue && gainCorrection.HasValue;
 
             if (toolStripAdcCalSN.Text == NoFileSelected)
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusWarningImage;

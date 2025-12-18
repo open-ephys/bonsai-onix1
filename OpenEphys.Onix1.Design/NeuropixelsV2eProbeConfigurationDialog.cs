@@ -44,6 +44,7 @@ namespace OpenEphys.Onix1.Design
 
             ChannelConfiguration = new(configuration);
             ChannelConfiguration.SetChildFormProperties(this).AddDialogToPanel(panelProbe);
+            ChannelConfiguration.BringToFront();
 
             this.AddMenuItemsFromDialogToFileOption(ChannelConfiguration);
 
@@ -143,7 +144,8 @@ namespace OpenEphys.Onix1.Design
 
             splitContainer1.SplitterDistance = splitContainer1.Size.Width - splitContainer1.Panel2MinSize;
 
-            ChannelConfiguration.Show();
+            if (ChannelConfiguration.Visible)
+                ChannelConfiguration.Show();
             ChannelConfiguration.ConnectResizeEventHandler();
             ChannelConfiguration.ResizeZedGraph();
         }
@@ -180,7 +182,7 @@ namespace OpenEphys.Onix1.Design
                 return;
             }
 
-            panelProbe.Visible = gainCorrection.HasValue;
+            ChannelConfiguration.Visible = gainCorrection.HasValue;
 
             textBoxGainCorrection.Text = gainCorrection.HasValue
                                          ? gainCorrection.Value.GainCorrectionFactor.ToString()

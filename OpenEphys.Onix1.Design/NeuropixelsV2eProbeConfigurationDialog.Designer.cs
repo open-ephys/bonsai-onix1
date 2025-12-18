@@ -63,6 +63,7 @@
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripGainCalSN = new System.Windows.Forms.ToolStripStatusLabel();
             this.bindingSource = new System.Windows.Forms.BindingSource(this.components);
+            this.label2 = new System.Windows.Forms.Label();
             invertPolarity = new System.Windows.Forms.Label();
             label1 = new System.Windows.Forms.Label();
             probeCalibrationFile = new System.Windows.Forms.Label();
@@ -77,6 +78,7 @@
             this.splitContainer1.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarProbePosition)).BeginInit();
+            this.panelProbe.SuspendLayout();
             this.tabControlProbe.SuspendLayout();
             this.tabPageConfiguration.SuspendLayout();
             this.panelChannelOptions.SuspendLayout();
@@ -291,6 +293,7 @@
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             this.tableLayoutPanel2.RowCount = 1;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel2.Size = new System.Drawing.Size(827, 660);
             this.tableLayoutPanel2.TabIndex = 3;
             // 
@@ -313,6 +316,7 @@
             // 
             // panelProbe
             // 
+            this.panelProbe.Controls.Add(this.label2);
             this.panelProbe.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelProbe.Location = new System.Drawing.Point(3, 2);
             this.panelProbe.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
@@ -465,6 +469,16 @@
             this.toolStripGainCalSN.Text = "No file selected.";
             this.toolStripGainCalSN.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
+            // label2
+            // 
+            this.label2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label2.Location = new System.Drawing.Point(0, 0);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(774, 656);
+            this.label2.TabIndex = 0;
+            this.label2.Text = "Please provide a calibration file to configure your probe.";
+            this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
             // NeuropixelsV2eProbeConfigurationDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -490,6 +504,7 @@
             this.splitContainer1.ResumeLayout(false);
             this.tableLayoutPanel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.trackBarProbePosition)).EndInit();
+            this.panelProbe.ResumeLayout(false);
             this.tabControlProbe.ResumeLayout(false);
             this.tabPageConfiguration.ResumeLayout(false);
             this.tabPageConfiguration.PerformLayout();
@@ -534,5 +549,6 @@
         private System.Windows.Forms.TabPage tabPageProperties;
         private Bonsai.Design.PropertyGrid propertyGrid;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
+        private System.Windows.Forms.Label label2;
     }
 }

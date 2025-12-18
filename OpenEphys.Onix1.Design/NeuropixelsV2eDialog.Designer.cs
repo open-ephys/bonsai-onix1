@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.Windows.Forms.Label label1;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(NeuropixelsV2eDialog));
             this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -38,7 +39,7 @@
             this.propertyGrid = new Bonsai.Design.PropertyGrid();
             this.panelConfigurationDialogs = new System.Windows.Forms.Panel();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
-            this.textBoxDefaultText = new System.Windows.Forms.TextBox();
+            label1 = new System.Windows.Forms.Label();
             this.menuStrip.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
@@ -120,7 +121,7 @@
             // 
             this.splitContainer.Panel2.Controls.Add(this.panelConfigurationDialogs);
             this.splitContainer.Size = new System.Drawing.Size(1133, 632);
-            this.splitContainer.SplitterDistance = 220;
+            this.splitContainer.SplitterDistance = 219;
             this.splitContainer.TabIndex = 3;
             // 
             // propertyGrid
@@ -128,18 +129,18 @@
             this.propertyGrid.Dock = System.Windows.Forms.DockStyle.Fill;
             this.propertyGrid.Location = new System.Drawing.Point(0, 0);
             this.propertyGrid.Name = "propertyGrid";
-            this.propertyGrid.Size = new System.Drawing.Size(220, 632);
+            this.propertyGrid.Size = new System.Drawing.Size(219, 632);
             this.propertyGrid.TabIndex = 0;
             this.propertyGrid.SelectedGridItemChanged += new System.Windows.Forms.SelectedGridItemChangedEventHandler(this.PropertyGridChanged);
             // 
             // panelConfigurationDialogs
             // 
-            this.panelConfigurationDialogs.Controls.Add(this.textBoxDefaultText);
+            this.panelConfigurationDialogs.Controls.Add(label1);
             this.panelConfigurationDialogs.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelConfigurationDialogs.Location = new System.Drawing.Point(0, 0);
             this.panelConfigurationDialogs.Margin = new System.Windows.Forms.Padding(0);
             this.panelConfigurationDialogs.Name = "panelConfigurationDialogs";
-            this.panelConfigurationDialogs.Size = new System.Drawing.Size(909, 632);
+            this.panelConfigurationDialogs.Size = new System.Drawing.Size(910, 632);
             this.panelConfigurationDialogs.TabIndex = 0;
             // 
             // flowLayoutPanel1
@@ -154,21 +155,15 @@
             this.flowLayoutPanel1.Size = new System.Drawing.Size(1131, 41);
             this.flowLayoutPanel1.TabIndex = 2;
             // 
-            // textBoxDefaultText
+            // label1
             // 
-            this.textBoxDefaultText.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxDefaultText.BackColor = System.Drawing.SystemColors.Control;
-            this.textBoxDefaultText.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.textBoxDefaultText.Enabled = false;
-            this.textBoxDefaultText.Location = new System.Drawing.Point(333, 297);
-            this.textBoxDefaultText.Multiline = true;
-            this.textBoxDefaultText.Name = "textBoxDefaultText";
-            this.textBoxDefaultText.ReadOnly = true;
-            this.textBoxDefaultText.Size = new System.Drawing.Size(242, 39);
-            this.textBoxDefaultText.TabIndex = 0;
-            this.textBoxDefaultText.Text = "Select a probe configuration property to view the currently enabled electrodes.";
+            label1.Dock = System.Windows.Forms.DockStyle.Fill;
+            label1.Location = new System.Drawing.Point(0, 0);
+            label1.Name = "label1";
+            label1.Size = new System.Drawing.Size(910, 632);
+            label1.TabIndex = 0;
+            label1.Text = "Select a probe configuration property to view the currently enabled electrodes.";
+            label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // NeuropixelsV2eDialog
             // 
@@ -192,7 +187,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).EndInit();
             this.splitContainer.ResumeLayout(false);
             this.panelConfigurationDialogs.ResumeLayout(false);
-            this.panelConfigurationDialogs.PerformLayout();
             this.flowLayoutPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -210,6 +204,5 @@
         private System.Windows.Forms.SplitContainer splitContainer;
         private Bonsai.Design.PropertyGrid propertyGrid;
         private System.Windows.Forms.Panel panelConfigurationDialogs;
-        private System.Windows.Forms.TextBox textBoxDefaultText;
     }
 }
