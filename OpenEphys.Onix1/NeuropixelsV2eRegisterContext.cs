@@ -22,10 +22,22 @@ namespace OpenEphys.Onix1
             WriteShiftRegister(NeuropixelsV2e.SR_CHAIN6, baseBits[1]);
 
             var shankBits = NeuropixelsV2.GenerateShankBits(probe);
-            WriteShiftRegister(NeuropixelsV2e.SR_CHAIN1, shankBits[0]);
-            WriteShiftRegister(NeuropixelsV2e.SR_CHAIN2, shankBits[1]);
-            WriteShiftRegister(NeuropixelsV2e.SR_CHAIN3, shankBits[2]);
-            WriteShiftRegister(NeuropixelsV2e.SR_CHAIN4, shankBits[3]);
+
+            if (shankBits.Length == 1)
+            {
+                WriteShiftRegister(NeuropixelsV2e.SR_CHAIN1, shankBits[0]);
+            }
+            else if (shankBits.Length == 4)
+            {
+                WriteShiftRegister(NeuropixelsV2e.SR_CHAIN1, shankBits[0]);
+                WriteShiftRegister(NeuropixelsV2e.SR_CHAIN2, shankBits[1]);
+                WriteShiftRegister(NeuropixelsV2e.SR_CHAIN3, shankBits[2]);
+                WriteShiftRegister(NeuropixelsV2e.SR_CHAIN4, shankBits[3]);
+            }
+            else
+            {
+                throw new InvalidOperationException("Unknown number of shanks are ready to be written.");
+            }
         }
 
         void WriteShiftRegister(uint srAddress, BitArray data)
