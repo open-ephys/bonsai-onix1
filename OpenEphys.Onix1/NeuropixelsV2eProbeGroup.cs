@@ -13,9 +13,9 @@ namespace OpenEphys.Onix1
     [XmlType(Namespace = Constants.XmlNamespace)]
     public abstract class NeuropixelsV2eProbeGroup : ProbeGroup
     {
-        internal const float ShankOffsetX = 200f;
-        internal const float ShankWidthX = 70f;
-        internal const float ShankPitchX = 250f;
+        private protected const float ShankOffsetX = 200f;
+        private protected const float ShankWidthX = 70f;
+        private protected const float ShankPitchX = 250f;
 
         /// <summary>
         /// Initializes a new instance of a <see cref="NeuropixelsV2eProbeGroup"/>.

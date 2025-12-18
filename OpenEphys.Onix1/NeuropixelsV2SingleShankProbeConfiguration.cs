@@ -35,7 +35,7 @@ namespace OpenEphys.Onix1
     [XmlType(TypeName = XmlTypeName, Namespace = Constants.XmlNamespace)]
     public class NeuropixelsV2SingleShankProbeConfiguration : NeuropixelsV2ProbeConfiguration
     {
-        internal const string XmlTypeName = nameof(NeuropixelsV2SingleShankProbeConfiguration);
+        const string XmlTypeName = nameof(NeuropixelsV2SingleShankProbeConfiguration);
 
         /// <summary>
         /// Initializes a default instance of the <see cref="NeuropixelsV2SingleShankProbeConfiguration"/> class.

@@ -242,13 +242,13 @@ namespace OpenEphys.Onix1
         const int ReferencePixelCount = 4;
         const int DummyRegisterCount = 4;
 
-        internal const int RegistersPerShank = NeuropixelsV2.ElectrodePerShank + ReferencePixelCount + DummyRegisterCount;
+        private protected const int RegistersPerShank = NeuropixelsV2.ElectrodePerShank + ReferencePixelCount + DummyRegisterCount;
 
-        internal const int ShiftRegisterBitExternalElectrode0 = 1285;
-        internal const int ShiftRegisterBitExternalElectrode1 = 2;
+        private protected const int ShiftRegisterBitExternalElectrode0 = 1285;
+        private protected const int ShiftRegisterBitExternalElectrode1 = 2;
 
-        internal const int ShiftRegisterBitTipElectrode0 = 644;
-        internal const int ShiftRegisterBitTipElectrode1 = 643;
+        private protected const int ShiftRegisterBitTipElectrode0 = 644;
+        private protected const int ShiftRegisterBitTipElectrode1 = 643;
 
         internal abstract BitArray[] CreateShankBits(Enum reference);
 
