@@ -46,7 +46,7 @@ namespace OpenEphys.Onix1
             Name = configureNode.Name;
             Port = configureNode.Port;
             PortControl = configureNode.PortControl;
-            NeuropixelsV2eBeta = configureNode.NeuropixelsV2eBeta.Clone() as ConfigureNeuropixelsV2eBeta ?? throw new InvalidOperationException($"Unable to copy {nameof(NeuropixelsV2eBeta)} property. Could not cast to the correct type.");
+            NeuropixelsV2eBeta = new(configureNode.NeuropixelsV2eBeta);
             Bno055 = new(configureNode.Bno055);
         }
 
