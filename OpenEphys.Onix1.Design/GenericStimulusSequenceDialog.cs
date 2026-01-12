@@ -122,9 +122,9 @@ namespace OpenEphys.Onix1.Design
 
         void OnZoom_Waveform(ZedGraphControl sender, ZoomState oldState, ZoomState newState)
         {
-            if (newState.Type == ZoomState.StateType.WheelZoom && sender.IsEnableHZoom && sender.IsEnableVZoom)
+            if (newState.Type == ZoomState.StateType.WheelZoom)
             {
-                CenterAxesOnCursor(sender);
+                CenterAxesOnCursor(sender, sender.IsEnableHZoom, sender.IsEnableVZoom);
             }
 
             DrawScale();
@@ -382,25 +382,29 @@ namespace OpenEphys.Onix1.Design
             return new PointD(x, y);
         }
 
-        void CenterAxesOnCursor(ZedGraphControl zedGraphControl)
+        void CenterAxesOnCursor(ZedGraphControl zedGraphControl, bool hZoomEnabled, bool vZoomEnabled)
         {
             var mouseClientPosition = PointToClient(Cursor.Position);
-            mouseClientPosition.X -= (zedGraphControl.Parent.Width - zedGraphControl.Width) / 2;
-            mouseClientPosition.Y += (zedGraphControl.Parent.Height - zedGraphControl.Height) / 2;
 
             var currentMousePosition = TransformPixelsToCoordinates(mouseClientPosition, zedGraphControl.GraphPane);
 
-            var centerX = CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale) / 2 + zedGraphControl.GraphPane.XAxis.Scale.Min;
-            var centerY = CalculateScaleRange(zedGraphControl.GraphPane.YAxis.Scale) / 2 + zedGraphControl.GraphPane.YAxis.Scale.Min;
+            if (hZoomEnabled)
+            {
+                mouseClientPosition.X -= (zedGraphControl.Parent.Width - zedGraphControl.Width) / 2;
+                var centerX = CalculateScaleRange(zedGraphControl.GraphPane.XAxis.Scale) / 2 + zedGraphControl.GraphPane.XAxis.Scale.Min;
+                var diffX = centerX - currentMousePosition.X;
+                zedGraphControl.GraphPane.XAxis.Scale.Min += diffX;
+                zedGraphControl.GraphPane.XAxis.Scale.Max += diffX;
+            }
 
-            var diffX = centerX - currentMousePosition.X;
-            var diffY = centerY - currentMousePosition.Y;
-
-            zedGraphControl.GraphPane.XAxis.Scale.Min += diffX;
-            zedGraphControl.GraphPane.XAxis.Scale.Max += diffX;
-
-            zedGraphControl.GraphPane.YAxis.Scale.Min += diffY;
-            zedGraphControl.GraphPane.YAxis.Scale.Max += diffY;
+            if (vZoomEnabled)
+            {
+                mouseClientPosition.Y += (zedGraphControl.Parent.Height - zedGraphControl.Height) / 2;
+                var centerY = CalculateScaleRange(zedGraphControl.GraphPane.YAxis.Scale) / 2 + zedGraphControl.GraphPane.YAxis.Scale.Min;
+                var diffY = centerY - currentMousePosition.Y;
+                zedGraphControl.GraphPane.YAxis.Scale.Min += diffY;
+                zedGraphControl.GraphPane.YAxis.Scale.Max += diffY;
+            }
         }
 
         internal virtual bool IsSequenceValid()
