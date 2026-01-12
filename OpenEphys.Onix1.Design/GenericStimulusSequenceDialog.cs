@@ -207,7 +207,7 @@ namespace OpenEphys.Onix1.Design
 
             zedGraphWaveform.GraphPane.YAxis.ScaleFormatEvent += (gp, axis, val, index) =>
             {
-                return Math.Abs(val).ToString("0");
+                return val <= 0 ? Math.Abs(val).ToString("0") : "";
             };
 
             dataGridViewStimulusTable.Refresh();
@@ -306,8 +306,7 @@ namespace OpenEphys.Onix1.Design
                 < 10 => Math.Round(time, 1),
                 < 100 => Math.Round(time / 10, 1) * 10,
                 < 1000 => Math.Round(time / 100, 1) * 100,
-                < 10000 => Math.Round(time / 1000, 1) * 1000,
-                _ => time
+                _ => Math.Round(time / 1000, 1) * 1000
             };
         }
 
