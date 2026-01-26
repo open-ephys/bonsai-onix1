@@ -19,7 +19,7 @@ namespace OpenEphys.Onix1
     [Editor("OpenEphys.Onix1.Design.Headstage64ElectricalStimulatorComponentEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureHeadstage64ElectricalStimulator : SingleDeviceFactory
     {
-        readonly BehaviorSubject<bool> enable = new(false);
+        readonly BehaviorSubject<bool> stimulatorEnable = new(false);
         readonly BehaviorSubject<double> phaseOneCurrent = new(0);
         readonly BehaviorSubject<double> interPhaseCurrent = new(0);
         readonly BehaviorSubject<double> phaseTwoCurrent = new(0);
@@ -31,7 +31,6 @@ namespace OpenEphys.Onix1
         readonly BehaviorSubject<uint> interBurstInterval = new(0);
         readonly BehaviorSubject<uint> trainBurstCount = new(0);
         readonly BehaviorSubject<uint> triggerDelay = new(0);
-        readonly BehaviorSubject<bool> powerEnable = new(false);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureHeadstage64ElectricalStimulator"/> class.
@@ -49,8 +48,7 @@ namespace OpenEphys.Onix1
         {
             DeviceName = electricalStimulator.DeviceName;
             DeviceAddress = electricalStimulator.DeviceAddress;
-            Enable = electricalStimulator.Enable;
-            PowerEnable = electricalStimulator.PowerEnable;
+            StimulatorEnable = electricalStimulator.StimulatorEnable;
             TriggerDelay = electricalStimulator.TriggerDelay;
             PhaseOneCurrent = electricalStimulator.PhaseOneCurrent;
             InterPhaseCurrent = electricalStimulator.InterPhaseCurrent;
@@ -68,32 +66,14 @@ namespace OpenEphys.Onix1
         /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>
-        /// If set to true, then the electrical stimulator circuit will respect triggers. If set to false, triggers will be ignored.
+        /// If set to true, then the electrical stimulator's ±15V power supplies will be turned on and the
+        /// electrical stimulator circuit will respect triggers. If set to false, the power supplies will be
+        /// shut down and triggers will be ignored. It takes ~10 milliseconds for the power supplies to to
+        /// stabilize.
         /// </remarks>
         [Description("Specifies whether the electrical stimulator will respect triggers.")]
         [Category(AcquisitionCategory)]
-        public bool Enable
-        {
-            get => enable.Value;
-            set => enable.OnNext(value);
-        }
-
-        /// <summary>
-        /// Gets or sets the electrical stimulator's power state.
-        /// </summary>
-        /// <remarks>
-        /// If set to true, then the electrical stimulator's ±15V power supplies will be turned on. If set to false,
-        /// they will be turned off. It may be desirable to power down the electrical stimulator's power supplies outside
-        /// of stimulation windows to reduce power consumption and electrical noise. This property must be set to true
-        /// in order for electrical stimuli to be delivered properly. It takes ~10 milliseconds for these supplies to stabilize.
-        /// </remarks>
-        [Description("Stimulator power on/off.")]
-        [Category(AcquisitionCategory)]
-        public bool PowerEnable
-        {
-            get => powerEnable.Value;
-            set => powerEnable.OnNext(value);
-        }
+        public bool StimulatorEnable { get; set; } = true;
 
         /// <summary>
         /// Gets or sets a delay from receiving a trigger to the start of stimulus sequence application in μsec.
@@ -264,8 +244,11 @@ namespace OpenEphys.Onix1
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
 
                 return new CompositeDisposable(
-                    enable.SubscribeSafe(observer, value =>
-                        device.WriteRegister(Headstage64ElectricalStimulator.ENABLE, value ? 1u : 0u)),
+                    stimulatorEnable.SubscribeSafe(observer, value =>
+                    {
+                        device.WriteRegister(Headstage64ElectricalStimulator.ENABLE, value ? 1u : 0u);
+                        device.WriteRegister(Headstage64ElectricalStimulator.POWERON, value ? 1u : 0u);
+                    }),
                     phaseOneCurrent.SubscribeSafe(observer, value =>
                         device.WriteRegister(Headstage64ElectricalStimulator.CURRENT1, Headstage64ElectricalStimulator.MicroampsToCode(value))),
                     interPhaseCurrent.SubscribeSafe(observer, value =>
@@ -280,7 +263,6 @@ namespace OpenEphys.Onix1
                     interBurstInterval.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.INTERBURSTINTERVAL, value)),
                     burstPulseCount.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.BURSTCOUNT, value)),
                     trainBurstCount.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.TRAINCOUNT, value)),
-                    powerEnable.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.POWERON, value ? 1u : 0u)),
                     DeviceManager.RegisterDevice(deviceName, device, DeviceType));
             });
         }
