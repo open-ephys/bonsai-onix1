@@ -193,9 +193,6 @@ namespace OpenEphys.Onix1.Design
                 maxLength = waveforms[i].Last().X > maxLength ? waveforms[i].Last().X : maxLength;
             }
 
-            zedGraphWaveform.GraphPane.YAxis.Scale.MajorStep = 1;
-            zedGraphWaveform.GraphPane.YAxis.Scale.BaseTic = -waveforms.Length + 1;
-
             HighlightInvalidChannels();
 
             SetStatusValidity();
@@ -207,7 +204,7 @@ namespace OpenEphys.Onix1.Design
 
             zedGraphWaveform.GraphPane.YAxis.ScaleFormatEvent += (gp, axis, val, index) =>
             {
-                return val <= 0 ? Math.Abs(val).ToString("0") : "";
+                return val <= 0 && val > -NumberOfChannels ? Math.Abs(val).ToString("0") : "";
             };
 
             dataGridViewStimulusTable.Refresh();
