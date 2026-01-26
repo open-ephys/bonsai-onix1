@@ -19,7 +19,7 @@ namespace OpenEphys.Onix1
     [Editor("OpenEphys.Onix1.Design.Headstage64ElectricalStimulatorComponentEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureHeadstage64ElectricalStimulator : SingleDeviceFactory
     {
-        readonly BehaviorSubject<bool> stimulatorEnable = new(false);
+        readonly BehaviorSubject<bool> arm = new(false);
         readonly BehaviorSubject<double> phaseOneCurrent = new(0);
         readonly BehaviorSubject<double> interPhaseCurrent = new(0);
         readonly BehaviorSubject<double> phaseTwoCurrent = new(0);
@@ -48,7 +48,7 @@ namespace OpenEphys.Onix1
         {
             DeviceName = electricalStimulator.DeviceName;
             DeviceAddress = electricalStimulator.DeviceAddress;
-            StimulatorEnable = electricalStimulator.StimulatorEnable;
+            Arm = electricalStimulator.Arm;
             TriggerDelay = electricalStimulator.TriggerDelay;
             PhaseOneCurrent = electricalStimulator.PhaseOneCurrent;
             InterPhaseCurrent = electricalStimulator.InterPhaseCurrent;
@@ -73,7 +73,7 @@ namespace OpenEphys.Onix1
         /// </remarks>
         [Description("Specifies whether the electrical stimulator will respect triggers.")]
         [Category(AcquisitionCategory)]
-        public bool StimulatorEnable { get; set; } = true;
+        public bool Arm { get; set; } = true;
 
         /// <summary>
         /// Gets or sets a delay from receiving a trigger to the start of stimulus sequence application in μsec.
@@ -244,7 +244,7 @@ namespace OpenEphys.Onix1
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
 
                 return new CompositeDisposable(
-                    stimulatorEnable.SubscribeSafe(observer, value =>
+                    arm.SubscribeSafe(observer, value =>
                     {
                         device.WriteRegister(Headstage64ElectricalStimulator.ENABLE, value ? 1u : 0u);
                         device.WriteRegister(Headstage64ElectricalStimulator.POWERON, value ? 1u : 0u);
