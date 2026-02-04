@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reactive.Linq;
 using System.Reflection;
 using Apache.Arrow;
 using Apache.Arrow.Types;
@@ -19,16 +20,6 @@ namespace OpenEphys.Onix1
     [WorkflowElementCategory(ElementCategory.Sink)]
     public class FrameWriter : StreamSink<RecordBatch, ArrowWriter>
     {
-        static readonly ConstructorInfo arrowBufferConstructor = typeof(ArrowBuffer).GetConstructor(new Type[] { typeof(ReadOnlyMemory<byte>) });
-        static readonly ConstructorInfo arrayDataConstructor = typeof(ArrayData).GetConstructor(new[] {
-                                                                    typeof(IArrowType),
-                                                                    typeof(int),
-                                                                    typeof(int),
-                                                                    typeof(int),
-                                                                    typeof(ArrowBuffer[]),
-                                                                    typeof(ArrayData[]),
-                                                                    typeof(ArrayData)
-                                                                });
         /// <summary>
         /// Creates the <see cref="ArrowWriter"/> object used to write data to the specified stream.
         /// </summary>
@@ -55,24 +46,24 @@ namespace OpenEphys.Onix1
         /// <param name="source">The sequence of <see cref="BufferedDataFrame">BufferedDataFrame's</see> to write.</param>
         /// <returns>
         /// An observable sequence that is identical to the source sequence but where
-        /// there is an additional side effect of writing the arrays to an Apache Arrow file.
+        /// there is an additional side effect of writing the frames to an Apache Arrow file.
         /// </returns>
         public IObservable<BufferedDataFrame> Process(IObservable<BufferedDataFrame> source)
         {
             Schema schema = null;
             Func<BufferedDataFrame, Schema, RecordBatch> createRecordBatch = null;
 
-            return Process(source, input =>
-            {
-                if (schema == null)
-                {
-                    var members = GetDataMembers(input.GetType());
-                    schema = GenerateSchema(members, input);
-                    createRecordBatch = CreateRecordBatchBuilder(input.GetType(), members).Compile();
-                }
-
-                return createRecordBatch(input, schema);
-            });
+            return source.Publish(frame => Observable.Concat(
+                frame.Take(1)
+                    .Do(input =>
+                    {
+                        var members = GetDataMembers(input.GetType());
+                        schema = GenerateSchema(members, input);
+                        createRecordBatch = CreateRecordBatchBuilder(input.GetType(), members).Compile();
+                    })
+                    .IgnoreElements(),
+                Process(source, input => createRecordBatch(input, schema)))
+            );
         }
 
         static IEnumerable<MemberInfo> GetDataMembers(Type type)
@@ -186,6 +177,42 @@ namespace OpenEphys.Onix1
             };
         }
 
+        static IArrowArray ConvertArrayToArrowArray<T>(T[] array, IArrowType arrowType, int length) where T : unmanaged
+        {
+            var arrowBuffer = new ArrowBuffer(CommunityToolkit.HighPerformance.MemoryExtensions.AsBytes(array.AsMemory()));
+            
+            var arrayData = new ArrayData(
+                arrowType,
+                length,
+                0,
+                0,
+                new[] { ArrowBuffer.Empty, arrowBuffer },
+                null,
+                null
+            );
+
+            return ArrowArrayFactory.BuildArray(arrayData);
+        }
+
+        static IArrowArray ConvertMatRowToArrowArray(Mat mat, int rowIndex, IArrowType elementType)
+        {
+            var rowManager = new MatRowMemoryManager(mat, rowIndex);
+            var arrowBuffer = new ArrowBuffer(rowManager.Memory);
+
+            var arrayData = new ArrayData(
+                elementType,
+                mat.Cols,
+                0,
+                0,
+                new[] { ArrowBuffer.Empty, arrowBuffer },
+                null,
+                null
+            );
+
+            return ArrowArrayFactory.BuildArray(arrayData);
+        }
+
+
         static Expression<Func<BufferedDataFrame, Schema, RecordBatch>> CreateRecordBatchBuilder(Type frameType, IEnumerable<MemberInfo> members)
         {
             // Grab the RecordBatch constructor method info
@@ -242,67 +269,21 @@ namespace OpenEphys.Onix1
 
                 if (memberType.IsArray)
                 {
-                    var asMemoryMethod = typeof(System.MemoryExtensions)
-                        .GetMethods(BindingFlags.Static | BindingFlags.Public)
-                        .First(m =>
-                            m.Name == nameof(System.MemoryExtensions.AsMemory) &&
-                            m.IsGenericMethodDefinition &&
-                            m.GetParameters().Length == 1 &&
-                            m.GetParameters()[0].ParameterType.IsArray)
-                        .MakeGenericMethod(memberType.GetElementType());
-
-                    var asBytesMethod = typeof(CommunityToolkit.HighPerformance.MemoryExtensions)
-                        .GetMethods(BindingFlags.Static | BindingFlags.Public)
-                        .First(m =>
-                            m.Name == nameof(CommunityToolkit.HighPerformance.MemoryExtensions.AsBytes) &&
-                            m.IsGenericMethodDefinition
-                        )
+                    var convertMethod = typeof(FrameWriter)
+                        .GetMethod(nameof(ConvertArrayToArrowArray), BindingFlags.Static | BindingFlags.NonPublic)
                         .MakeGenericMethod(memberType.GetElementType());
 
                     var arrayProperty = Expression.Property(frame, member.Name);
-                    var arrayAsMemory = Expression.Variable(typeof(Memory<byte>), "arrayAsMemory");
-                    var arrowBuffer = Expression.Variable(typeof(ArrowBuffer), "arrowBuffer");
                     var arrayArrowType = Expression.Constant(GetArrowType(memberType.GetElementType()));
 
                     var block = Expression.Block(
-                        new[] { arrayAsMemory, arrowBuffer },
-                        Expression.Assign(
-                            arrayAsMemory,
-                            Expression.Call(
-                                asBytesMethod,
-                                Expression.Call(
-                                    asMemoryMethod,
-                                    arrayProperty
-                                )
-                            )
-                        ),
-                        Expression.Assign(
-                            arrowBuffer,
-                            Expression.New(
-                                arrowBufferConstructor,
-                                Expression.Convert(arrayAsMemory, typeof(ReadOnlyMemory<byte>))
-                            )
-                        ),
                         Expression.Assign(
                             Expression.ArrayAccess(arrowArrays, arrowArrayIndex),
                             Expression.Call(
-                                typeof(ArrowArrayFactory),
-                                nameof(ArrowArrayFactory.BuildArray),
-                                null,
-                                Expression.New(
-                                    arrayDataConstructor,
-                                    arrayArrowType,
-                                    length,
-                                    Expression.Constant(0),
-                                    Expression.Constant(0),
-                                    Expression.NewArrayInit(
-                                        typeof(ArrowBuffer),
-                                        Expression.Property(null, typeof(ArrowBuffer), "Empty"),
-                                        arrowBuffer
-                                    ),
-                                    Expression.Constant(null, typeof(ArrayData[])),
-                                    Expression.Constant(null, typeof(ArrayData))
-                                )
+                                convertMethod,
+                                arrayProperty,
+                                arrayArrowType,
+                                length
                             )
                         ),
                         Expression.PostIncrementAssign(arrowArrayIndex)
@@ -312,54 +293,23 @@ namespace OpenEphys.Onix1
                 }
                 else if (memberType == typeof(Mat))
                 {
-                    var matRowMemoryManagerConstructor = typeof(MatRowMemoryManager).GetConstructor(new Type[] { typeof(Mat), typeof(int) });
+                    var convertMatRowMethod = typeof(FrameWriter)
+                        .GetMethod(nameof(ConvertMatRowToArrowArray), BindingFlags.Static | BindingFlags.NonPublic);
 
                     // Extract all channels (rows) from the Mat and create an Arrow array for each row
                     var matProperty = Expression.Property(Expression.Convert(frame, frameType), member.Name);
-                    var rowManager = Expression.Variable(typeof(MatRowMemoryManager), "rowManager");
-                    var arrowBuffer = Expression.Variable(typeof(ArrowBuffer), "arrowBuffer");
                     var matElementType = Expression.Variable(typeof(IArrowType), "matElementType");
                     var rowIndex = Expression.Variable(typeof(int), "rowIndex");
-
                     var breakLabel = Expression.Label("break");
 
                     var loopBody = Expression.Block(
-                        new[] { rowManager, arrowBuffer },
-                        Expression.Assign(
-                            rowManager,
-                            Expression.New(
-                                matRowMemoryManagerConstructor,
-                                matProperty,
-                                rowIndex
-                            )
-                        ),
-                        Expression.Assign(
-                            arrowBuffer,
-                            Expression.New(
-                                arrowBufferConstructor,
-                                Expression.Convert(Expression.Property(rowManager, nameof(MatRowMemoryManager.Memory)), typeof(ReadOnlyMemory<byte>))
-                            )
-                        ),
                         Expression.Assign(
                             Expression.ArrayAccess(arrowArrays, arrowArrayIndex),
                             Expression.Call(
-                                typeof(ArrowArrayFactory),
-                                nameof(ArrowArrayFactory.BuildArray),
-                                null,
-                                Expression.New(
-                                    arrayDataConstructor,
-                                    matElementType, // TODO: Potential inefficiency here, try to cache the element type in some way so it is not recomputed every frame.
-                                    Expression.Property(matProperty, nameof(Mat.Cols)),
-                                    Expression.Constant(0),
-                                    Expression.Constant(0),
-                                    Expression.NewArrayInit(
-                                        typeof(ArrowBuffer),
-                                        Expression.Property(null, typeof(ArrowBuffer), "Empty"),
-                                        arrowBuffer
-                                    ),
-                                    Expression.Constant(null, typeof(ArrayData[])),
-                                    Expression.Constant(null, typeof(ArrayData))
-                                )
+                                convertMatRowMethod,
+                                matProperty,
+                                rowIndex,
+                                matElementType
                             )
                         ),
                         Expression.PostIncrementAssign(arrowArrayIndex)
