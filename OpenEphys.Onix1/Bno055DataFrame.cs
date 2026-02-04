@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using OpenEphys.Onix1.FrameWriter;
 
 namespace OpenEphys.Onix1
 {
@@ -76,6 +77,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets the 3D orientation represented as a Quaternion.
         /// </summary>
+        [FrameWriterIgnoreMembers(MemberType.Properties)]
         public Quaternion Quaternion { get; }
 
         /// <summary>
