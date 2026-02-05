@@ -31,9 +31,7 @@ namespace OpenEphys.Onix1
         /// <inheritdoc/>
         public unsafe override Span<byte> GetSpan()
         {
-            int numElements = mat.Rows * mat.Step;
-            Span<byte> span = new(mat.Data.ToPointer(), numElements);
-            return span.Slice(row * mat.Step, mat.Step);
+            return new((byte*)mat.Data.ToPointer() + row * mat.Step, mat.Step);
         }
 
         /// <inheritdoc/>
