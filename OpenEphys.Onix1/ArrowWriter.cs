@@ -11,17 +11,20 @@ namespace OpenEphys.Onix1
     public class ArrowWriter : IDisposable
     {
         readonly Stream stream = null;
-        ArrowFileWriter writer = null;
+        readonly ArrowFileWriter writer = null;
 
         bool disposed = false;
 
         /// <summary>
         /// Initializes a new instance of the ArrowWriter class using the specified stream.
         /// </summary>
-        /// <param name="stream">The stream to write Arrow data to.</param>
-        public ArrowWriter(Stream stream)
+        /// <param name="filename">The name of the file on which the elements should be written.</param>
+        /// <param name="batch">A <see cref="RecordBatch"/> that contains a schema.</param>
+        public ArrowWriter(string filename, RecordBatch batch)
         {
-            this.stream = stream;
+            stream = new FileStream(filename, FileMode.Create);
+            writer = new(stream, batch.Schema);
+            writer.WriteStart();
         }
 
         /// <summary>
@@ -30,12 +33,6 @@ namespace OpenEphys.Onix1
         /// <param name="batch">The record batch to write.</param>
         public void Write(RecordBatch batch)
         {
-            if (writer == null)
-            {
-                writer = new(stream, batch.Schema);
-                writer.WriteStart();
-            }
-
             writer.WriteRecordBatch(batch);
             batch.Dispose();
         }

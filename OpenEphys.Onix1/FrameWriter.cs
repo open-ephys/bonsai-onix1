@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reactive.Linq;
@@ -18,16 +17,17 @@ namespace OpenEphys.Onix1
     /// to an Apache Arrow file using <see cref="ArrowWriter"/>.
     /// </summary>
     [WorkflowElementCategory(ElementCategory.Sink)]
-    public class FrameWriter : StreamSink<RecordBatch, ArrowWriter>
+    public class FrameWriter : FileSink<RecordBatch, ArrowWriter>
     {
         /// <summary>
         /// Creates the <see cref="ArrowWriter"/> object used to write data to the specified stream.
         /// </summary>
-        /// <param name="stream">The stream on which the elements should be written.</param>
+        /// <param name="filename">The name of the file on which the elements should be written.</param>
+        /// <param name="batch">The first input element that needs to be pushed into the file.</param>
         /// <returns>An <see cref="ArrowWriter"/> object.</returns>
-        protected override ArrowWriter CreateWriter(Stream stream)
+        protected override ArrowWriter CreateWriter(string filename, RecordBatch batch)
         {
-            return new ArrowWriter(stream);
+            return new ArrowWriter(filename, batch);
         }
 
         /// <summary>
