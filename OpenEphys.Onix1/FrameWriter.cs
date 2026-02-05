@@ -13,12 +13,19 @@ using OpenCV.Net;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Represents an operator that writes each data frame in the sequence
+    /// Represents an operator that writes each data frames in the sequence
     /// to an Apache Arrow file using <see cref="ArrowWriter"/>.
     /// </summary>
     [WorkflowElementCategory(ElementCategory.Sink)]
     public class FrameWriter : FileSink<RecordBatch, ArrowWriter>
     {
+        static readonly ConstructorInfo recordBatchConstructor = typeof(RecordBatch)
+            .GetConstructor(
+                BindingFlags.Instance | BindingFlags.Public,
+                null,
+                new Type[] { typeof(Schema), typeof(IArrowArray[]), typeof(int) },
+                null);
+
         /// <summary>
         /// Creates the <see cref="ArrowWriter"/> object used to write data to the specified stream.
         /// </summary>
@@ -57,13 +64,45 @@ namespace OpenEphys.Onix1
                 frame.Take(1)
                     .Do(input =>
                     {
-                        var members = GetDataMembers(input.GetType());
+                        var frameType = input.GetType();
+                        var members = GetDataMembers(frameType);
                         schema = GenerateSchema(members, input);
-                        createRecordBatch = CreateRecordBatchBuilder(input.GetType(), members).Compile();
+                        createRecordBatch = CreateBufferedFrameRecordBatchBuilder(frameType, members).Compile();
                     })
                     .IgnoreElements(),
                 Process(source, input => createRecordBatch(input, schema)))
             );
+        }
+
+        /// <summary>
+        /// Writes all of the data frames in the sequence to an Apache Arrow file.
+        /// </summary>
+        /// <param name="source">The sequence of <see cref="DataFrame">DataFrame's</see> to write.</param>
+        /// <returns>
+        /// An observable sequence that is identical to the source sequence but where
+        /// there is an additional side effect of writing the frames to an Apache Arrow file.
+        /// </returns>
+        public IObservable<DataFrame> Process(IObservable<DataFrame> source)
+        {
+            const int BufferSize = 50;
+            Schema schema = null;
+            Func<IList<DataFrame>, Schema, RecordBatch> createRecordBatch = null;
+
+            return source.Publish(frame => Observable.Concat(
+                frame.Take(1)
+                    .Do(input =>
+                    {
+                        var frameType = input.GetType();
+                        var members = GetDataMembers(frameType);
+                        schema = GenerateSchema(members, input);
+                        createRecordBatch = CreateDataFrameRecordBatchBuilder(frameType, members).Compile();
+                    })
+                    .IgnoreElements(),
+                Process(
+                    frame.Buffer(BufferSize).Where(buffer => buffer.Count > 0),
+                    buffer => createRecordBatch(buffer, schema)
+                ).SelectMany(batch => batch)
+            ));
         }
 
         static IEnumerable<MemberInfo> GetDataMembers(Type type)
@@ -99,13 +138,13 @@ namespace OpenEphys.Onix1
 
                     for (int i = 0; i < mat.Rows; i++)
                     {
-                        // Note: Could add an attribute to data frame properties to specify custom field naming
+                        // Note: Could add an attribute to data frames properties to specify custom field naming
                         fields.Add(new Field($"{member.Name}Ch{i}", GetArrowType(mat.Depth), false));
                     }
                 }
                 else
                 {
-                    throw new NotSupportedException($"The member type '{memberType.FullName}' is not supported for generating schemas.");
+                    throw new NotSupportedException($"The member type '{memberType}' is not supported for generating schemas.");
                 }
             }
 
@@ -180,7 +219,7 @@ namespace OpenEphys.Onix1
         static IArrowArray ConvertArrayToArrowArray<T>(T[] array, IArrowType arrowType, int length) where T : unmanaged
         {
             var arrowBuffer = new ArrowBuffer(CommunityToolkit.HighPerformance.MemoryExtensions.AsBytes(array.AsMemory()));
-            
+
             var arrayData = new ArrayData(
                 arrowType,
                 length,
@@ -212,16 +251,122 @@ namespace OpenEphys.Onix1
             return ArrowArrayFactory.BuildArray(arrayData);
         }
 
-
-        static Expression<Func<BufferedDataFrame, Schema, RecordBatch>> CreateRecordBatchBuilder(Type frameType, IEnumerable<MemberInfo> members)
+        static Expression InitializeArrowArrayFromSchema(ParameterExpression schema, Expression arrowArrays)
         {
-            // Grab the RecordBatch constructor method info
-            ConstructorInfo recordBatchConstructor = typeof(RecordBatch).GetConstructor(
-                BindingFlags.Instance | BindingFlags.Public,
-                null,
-                new Type[] { typeof(Schema), typeof(IArrowArray[]), typeof(int) },
-                null);
+            var fieldsList = Expression.Property(schema, nameof(Schema.FieldsList));
+            var fieldsListAsCollection = Expression.Convert(
+                fieldsList,
+                typeof(IReadOnlyCollection<Field>)
+            );
 
+            return Expression.Assign(
+                    arrowArrays,
+                    Expression.NewArrayBounds(
+                        typeof(IArrowArray),
+                        Expression.Property(fieldsListAsCollection, nameof(Schema.FieldsList.Count))
+                    )
+                );
+        }
+
+        static IArrowArray ConvertFrameMemberToArrowArray<TMember>(IList<DataFrame> frames, Func<DataFrame, TMember> getter, IArrowType arrowType, int length) where TMember : unmanaged
+        {
+            var array = new TMember[length];
+
+            for (int i = 0; i < length; i++)
+            {
+                array[i] = getter(frames[i]);
+            }
+
+            return ConvertArrayToArrowArray(array, arrowType, length);
+        }
+
+        static Expression<Func<IList<DataFrame>, Schema, RecordBatch>> CreateDataFrameRecordBatchBuilder(Type frameType, IEnumerable<MemberInfo> members)
+        {
+            var expressions = new List<Expression>();
+            var parameters = new List<ParameterExpression>();
+
+            // Initialize parameters and variables
+            var frames = Expression.Parameter(typeof(IList<DataFrame>), "frames");
+            var schema = Expression.Parameter(typeof(Schema), "schema");
+            var arrowArrays = Expression.Variable(typeof(IArrowArray[]), "arrowArrays");
+            var recordBatch = Expression.Variable(typeof(RecordBatch), "recordBatch");
+            var count = Expression.Property(
+                Expression.Convert(
+                    frames,
+                    typeof(ICollection<DataFrame>)
+                ),
+                nameof(ICollection<DataFrame>.Count)
+            );
+
+            // Initialize the IArrowArray[] by getting the schema fields count
+            parameters.Add(arrowArrays);
+            expressions.Add(InitializeArrowArrayFromSchema(schema, arrowArrays));
+
+            // Initialize the arrowArrayIndex variable for tracking where we are in the IArrowArray[]
+            var arrowArrayIndex = Expression.Variable(typeof(int), "arrowArrayIndex");
+            parameters.Add(arrowArrayIndex);
+            expressions.Add(Expression.Assign(arrowArrayIndex, Expression.Constant(0)));
+
+            // Populate the IArrowArray[] with the appropriate arrays
+            foreach (var member in members)
+            {
+                var memberType = GetMemberType(member);
+
+                if (memberType.IsPrimitive)
+                {
+                    var convertFrameMemberMethod = typeof(FrameWriter)
+                        .GetMethod(nameof(ConvertFrameMemberToArrowArray), BindingFlags.Static | BindingFlags.NonPublic)
+                        .MakeGenericMethod(memberType);
+
+                    var frameParameter = Expression.Parameter(typeof(DataFrame), "df");
+                    var arrayArrowType = Expression.Constant(GetArrowType(memberType));
+                    var getter = Expression.Lambda(
+                                    typeof(Func<,>).MakeGenericType(typeof(DataFrame), memberType),
+                                    Expression.Property(
+                                        Expression.Convert(frameParameter, frameType),
+                                        member.Name
+                                    ),
+                                    frameParameter
+                                ).Compile();
+
+                    var block = Expression.Block(
+                        Expression.Assign(
+                            Expression.ArrayAccess(arrowArrays, arrowArrayIndex),
+                            Expression.Call(
+                                convertFrameMemberMethod,
+                                frames,
+                                Expression.Constant(getter, getter.GetType()),
+                                arrayArrowType,
+                                count
+                            )
+                        ),
+                        Expression.PostIncrementAssign(arrowArrayIndex)
+                    );
+
+                    expressions.Add(block);
+                }
+                else
+                {
+                    throw new NotSupportedException($"The member type '{memberType}' is not supported for generating RecordBatch builders.");
+                }
+            }
+
+            // Create the new RecordBatch from the schema, arrays, and length
+            parameters.Add(recordBatch);
+            expressions.Add(Expression.Assign(
+                recordBatch,
+                Expression.New(recordBatchConstructor, schema, arrowArrays, count)));
+
+            // Build the expression tree body
+            var createRecordBatch = Expression.Block(
+                parameters,
+                expressions);
+
+            return Expression.Lambda<Func<IList<DataFrame>, Schema, RecordBatch>>(createRecordBatch, frames, schema);
+        }
+
+        static Expression<Func<BufferedDataFrame, Schema, RecordBatch>> CreateBufferedFrameRecordBatchBuilder(Type frameType, IEnumerable<MemberInfo> members)
+        {
             var expressions = new List<Expression>();
             var parameters = new List<ParameterExpression>();
 
@@ -240,22 +385,8 @@ namespace OpenEphys.Onix1
                     Expression.Property(frame, nameof(BufferedDataFrame.Clock)))));
 
             // Initialize the IArrowArray[] by getting the schema fields count
-            var fieldsList = Expression.Property(schema, nameof(Schema.FieldsList));
-            var fieldsListAsCollection = Expression.Convert(
-                fieldsList,
-                typeof(IReadOnlyCollection<Field>)
-            );
-
             parameters.Add(arrowArrays);
-            expressions.Add(
-                Expression.Assign(
-                    arrowArrays,
-                    Expression.NewArrayBounds(
-                        typeof(IArrowArray),
-                        Expression.Property(fieldsListAsCollection, nameof(Schema.FieldsList.Count))
-                    )
-                )
-            );
+            expressions.Add(InitializeArrowArrayFromSchema(schema, arrowArrays));
 
             // Initialize the arrowArrayIndex variable for tracking where we are in the IArrowArray[]
             var arrowArrayIndex = Expression.Variable(typeof(int), "arrowArrayIndex");
@@ -273,7 +404,7 @@ namespace OpenEphys.Onix1
                         .GetMethod(nameof(ConvertArrayToArrowArray), BindingFlags.Static | BindingFlags.NonPublic)
                         .MakeGenericMethod(memberType.GetElementType());
 
-                    var arrayProperty = Expression.Property(frame, member.Name);
+                    var arrayProperty = Expression.Property(frame, member.Name); // TODO: Test this where the member is not a part of BufferedDataFrame
                     var arrayArrowType = Expression.Constant(GetArrowType(memberType.GetElementType()));
 
                     var block = Expression.Block(
@@ -340,6 +471,10 @@ namespace OpenEphys.Onix1
                     );
 
                     expressions.Add(forLoop);
+                }
+                else
+                {
+                    throw new NotSupportedException($"The member type '{memberType}' is not supported for generating RecordBatch builders.");
                 }
             }
 
