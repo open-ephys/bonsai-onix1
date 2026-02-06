@@ -111,6 +111,7 @@ namespace OpenEphys.Onix1
                 type.GetFields(BindingFlags.Instance | BindingFlags.Public),
                 type.GetProperties(BindingFlags.Instance | BindingFlags.Public));
 
+            // TODO: Figure out a way to filter Quaternion.IsIdentity out of the schema, and subsequently the data
             // TODO: Add in the FrameWriterIgnoreAttribute Aaron originally implemented
 
             return members.OrderBy(member => member.MetadataToken);
@@ -131,6 +132,31 @@ namespace OpenEphys.Onix1
                 else if (memberType.IsArray)
                 {
                     fields.Add(new Field(member.Name, GetArrowType(memberType.GetElementType()), false));
+                }
+                else if (memberType.IsEnum)
+                {
+                    fields.Add(new Field(member.Name, GetArrowType(Enum.GetUnderlyingType(memberType)), false));
+                }
+                else if (memberType.IsValueType)
+                {
+                    var structMembers = GetDataMembers(memberType);
+
+                    // TODO: See if this should be converted to a recursive call?
+                    //  Or, see CsvWriter for inspiration, use a Stack and add the member types to the stack,
+                    //  keeping track of the parents so that we can build the full name for the field
+                    foreach (var structMember in structMembers)
+                    {
+                        var structMemberType = GetMemberType(structMember);
+
+                        if (structMemberType.IsPrimitive)
+                        {
+                            fields.Add(new Field($"{member.Name}_{structMember.Name}", GetArrowType(structMemberType), false));
+                        }
+                        else
+                        {
+                            throw new NotSupportedException($"The struct member type '{member.Name}_{structMember.Name}' is not supported for generating schemas.");
+                        }
+                    }
                 }
                 else if (memberType == typeof(Mat))
                 {
@@ -280,6 +306,50 @@ namespace OpenEphys.Onix1
             return ConvertArrayToArrowArray(array, arrowType, length);
         }
 
+        static Expression ConvertFrameMemberExpressionBuilder(
+            Type memberType,
+            ParameterExpression frameParameter,
+            ParameterExpression arrowArrays,
+            ParameterExpression arrowArrayIndex,
+            ParameterExpression frames,
+            MemberExpression count,
+            Expression memberAccessor)
+        {
+            var convertFrameMemberMethod = typeof(FrameWriter)
+                        .GetMethod(nameof(ConvertFrameMemberToArrowArray), BindingFlags.Static | BindingFlags.NonPublic)
+                        .MakeGenericMethod(memberType);
+
+            var arrayArrowType = Expression.Constant(GetArrowType(memberType));
+            var getter = Expression.Lambda(
+                            typeof(Func<,>).MakeGenericType(typeof(DataFrame), memberType),
+                            memberAccessor,
+                            frameParameter
+                        ).Compile();
+
+            var block = Expression.Block(
+                Expression.Assign(
+                    Expression.ArrayAccess(arrowArrays, arrowArrayIndex),
+                    Expression.Call(
+                        convertFrameMemberMethod,
+                        frames,
+                        Expression.Constant(getter, getter.GetType()),
+                        arrayArrowType,
+                        count
+                    )
+                ),
+                Expression.PostIncrementAssign(arrowArrayIndex)
+            );
+
+            return block;
+        }
+
+        static MemberExpression CreateMemberAccess(Expression instance, MemberInfo member)
+        {
+            return member is PropertyInfo property
+                ? Expression.Property(instance, property)
+                : Expression.Field(instance, (FieldInfo)member);
+        }
+
         static Expression<Func<IList<DataFrame>, Schema, RecordBatch>> CreateDataFrameRecordBatchBuilder(Type frameType, IEnumerable<MemberInfo> members)
         {
             var expressions = new List<Expression>();
@@ -307,6 +377,8 @@ namespace OpenEphys.Onix1
             parameters.Add(arrowArrayIndex);
             expressions.Add(Expression.Assign(arrowArrayIndex, Expression.Constant(0)));
 
+            var frameParameter = Expression.Parameter(typeof(DataFrame), "df");
+
             // Populate the IArrowArray[] with the appropriate arrays
             foreach (var member in members)
             {
@@ -314,36 +386,49 @@ namespace OpenEphys.Onix1
 
                 if (memberType.IsPrimitive)
                 {
-                    var convertFrameMemberMethod = typeof(FrameWriter)
-                        .GetMethod(nameof(ConvertFrameMemberToArrowArray), BindingFlags.Static | BindingFlags.NonPublic)
-                        .MakeGenericMethod(memberType);
+                    var memberAccessor = CreateMemberAccess(Expression.Convert(frameParameter, frameType), member);
 
-                    var frameParameter = Expression.Parameter(typeof(DataFrame), "df");
-                    var arrayArrowType = Expression.Constant(GetArrowType(memberType));
-                    var getter = Expression.Lambda(
-                                    typeof(Func<,>).MakeGenericType(typeof(DataFrame), memberType),
-                                    Expression.Property(
-                                        Expression.Convert(frameParameter, frameType),
-                                        member.Name
-                                    ),
-                                    frameParameter
-                                ).Compile();
+                    expressions.Add(ConvertFrameMemberExpressionBuilder(memberType, frameParameter, arrowArrays, arrowArrayIndex, frames, count, memberAccessor));
+                }
+                else if (memberType.IsEnum)
+                {
+                    var memberAccessor = Expression.Convert(
+                                            CreateMemberAccess(
+                                                Expression.Convert(frameParameter, frameType),
+                                                member
+                                            ),
+                                            Enum.GetUnderlyingType(memberType)
+                                         );
 
-                    var block = Expression.Block(
-                        Expression.Assign(
-                            Expression.ArrayAccess(arrowArrays, arrowArrayIndex),
-                            Expression.Call(
-                                convertFrameMemberMethod,
-                                frames,
-                                Expression.Constant(getter, getter.GetType()),
-                                arrayArrowType,
-                                count
-                            )
-                        ),
-                        Expression.PostIncrementAssign(arrowArrayIndex)
-                    );
+                    expressions.Add(ConvertFrameMemberExpressionBuilder(Enum.GetUnderlyingType(memberType), frameParameter, arrowArrays, arrowArrayIndex, frames, count, memberAccessor));
+                }
+                else if (memberType.IsValueType)
+                {
+                    var structMembers = GetDataMembers(memberType);
 
-                    expressions.Add(block);
+                    // TODO: See if this should be converted to a recursive call?
+                    //  Or, see CsvWriter for inspiration, use a Stack and add the member types to the stack
+                    foreach (var structMember in structMembers)
+                    {
+                        var structMemberType = GetMemberType(structMember);
+
+                        if (structMemberType.IsPrimitive)
+                        {
+                            var memberAccessor = CreateMemberAccess(
+                                                    CreateMemberAccess(
+                                                        Expression.Convert(frameParameter, frameType),
+                                                        member
+                                                    ),
+                                                    structMember
+                                                 );
+
+                            expressions.Add(ConvertFrameMemberExpressionBuilder(structMemberType, frameParameter, arrowArrays, arrowArrayIndex, frames, count, memberAccessor));
+                        }
+                        else
+                        {
+                            throw new NotSupportedException($"The struct member type '{member.Name}_{structMember.Name}' is not supported for generating schemas.");
+                        }
+                    }
                 }
                 else
                 {
