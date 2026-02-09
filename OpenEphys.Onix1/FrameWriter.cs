@@ -60,17 +60,17 @@ namespace OpenEphys.Onix1
             Schema schema = null;
             Func<BufferedDataFrame, Schema, RecordBatch> createRecordBatch = null;
 
-            return source.Publish(frame => Observable.Concat(
-                frame.Take(1)
-                    .Do(input =>
+            return source.Publish(frames => Observable.Concat(
+                frames.Take(1)
+                    .Do(frame =>
                     {
-                        var frameType = input.GetType();
+                        var frameType = frame.GetType();
                         var members = GetDataMembers(frameType);
-                        schema = GenerateSchema(members, input);
+                        schema = GenerateSchema(members, frame);
                         createRecordBatch = CreateBufferedFrameRecordBatchBuilder(frameType, members).Compile();
                     })
                     .IgnoreElements(),
-                Process(source, input => createRecordBatch(input, schema)))
+                Process(source, frame => createRecordBatch(frame, schema)))
             );
         }
 
@@ -88,20 +88,20 @@ namespace OpenEphys.Onix1
             Schema schema = null;
             Func<IList<DataFrame>, Schema, RecordBatch> createRecordBatch = null;
 
-            return source.Publish(frame => Observable.Concat(
-                frame.Take(1)
-                    .Do(input =>
+            return source.Publish(frames => Observable.Concat(
+                frames.Take(1)
+                    .Do(frame =>
                     {
-                        var frameType = input.GetType();
+                        var frameType = frame.GetType();
                         var members = GetDataMembers(frameType);
-                        schema = GenerateSchema(members, input);
+                        schema = GenerateSchema(members, frame);
                         createRecordBatch = CreateDataFrameRecordBatchBuilder(frameType, members).Compile();
                     })
                     .IgnoreElements(),
                 Process(
-                    frame.Buffer(BufferSize).Where(buffer => buffer.Count > 0),
+                    frames.Buffer(BufferSize),
                     buffer => createRecordBatch(buffer, schema)
-                ).SelectMany(batch => batch)
+                ).SelectMany(batch => batch) // TODO: Figure out how to pass each frame as it comes in, not after the buffer fills
             ));
         }
 
@@ -112,6 +112,8 @@ namespace OpenEphys.Onix1
                 type.GetProperties(BindingFlags.Instance | BindingFlags.Public));
 
             // TODO: Figure out a way to filter Quaternion.IsIdentity out of the schema, and subsequently the data
+            //          - One idea: For value types, values are fields not properties. Not always true necessarily, need to check, but
+            //          could filter Quaternion this way?
             // TODO: Add in the FrameWriterIgnoreAttribute Aaron originally implemented
 
             return members.OrderBy(member => member.MetadataToken);
@@ -244,6 +246,7 @@ namespace OpenEphys.Onix1
 
         static IArrowArray ConvertArrayToArrowArray<T>(T[] array, IArrowType arrowType, int length) where T : unmanaged
         {
+            // TODO: make intermediate variables for ease of reading
             var arrowBuffer = new ArrowBuffer(CommunityToolkit.HighPerformance.MemoryExtensions.AsBytes(array.AsMemory()));
 
             var arrayData = new ArrayData(
@@ -481,6 +484,7 @@ namespace OpenEphys.Onix1
             // Populate the IArrowArray[] with the appropriate arrays
             foreach (var member in members)
             {
+                // TODO: Make recursive
                 var memberType = GetMemberType(member);
 
                 if (memberType.IsArray)
@@ -531,7 +535,7 @@ namespace OpenEphys.Onix1
                         Expression.PostIncrementAssign(arrowArrayIndex)
                     );
 
-                    // Set the outer loop here
+                    // Set the for loop here
                     var forLoop = Expression.Block(
                         new[] { matElementType, rowIndex },
                         Expression.Assign(rowIndex, Expression.Constant(0)),
