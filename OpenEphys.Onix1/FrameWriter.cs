@@ -246,8 +246,9 @@ namespace OpenEphys.Onix1
 
         static IArrowArray ConvertArrayToArrowArray<T>(T[] array, IArrowType arrowType, int length) where T : unmanaged
         {
-            // TODO: make intermediate variables for ease of reading
-            var arrowBuffer = new ArrowBuffer(CommunityToolkit.HighPerformance.MemoryExtensions.AsBytes(array.AsMemory()));
+            var memory = array.AsMemory();
+            var memoryAsBytes = CommunityToolkit.HighPerformance.MemoryExtensions.AsBytes(memory);
+            var arrowBuffer = new ArrowBuffer(memoryAsBytes);
 
             var arrayData = new ArrayData(
                 arrowType,
