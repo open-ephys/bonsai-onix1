@@ -120,6 +120,22 @@ namespace OpenEphys.Onix1
                 .OrderBy(member => member.MetadataToken);
         }
 
+        static bool IsMemberIgnored(MemberInfo rootMember, MemberInfo member)
+        {
+            var attr = rootMember.GetCustomAttribute<FrameWriterIgnoreMembersAttribute>();
+
+            if (attr == null)
+                return false;
+
+            if (attr.MemberType.HasFlag(MemberType.Properties) && member is PropertyInfo)
+                return true;
+
+            else if (attr.MemberType.HasFlag(MemberType.Fields) && member is FieldInfo)
+                return true;
+
+            return false;
+        }
+
         static Schema GenerateSchema(IEnumerable<MemberInfo> members, object instance)
         {
             var fields = new List<Field>();
@@ -149,6 +165,9 @@ namespace OpenEphys.Onix1
                     //  keeping track of the parents so that we can build the full name for the field
                     foreach (var structMember in structMembers)
                     {
+                        if (IsMemberIgnored(member, structMember))
+                            continue;
+
                         var structMemberType = GetMemberType(structMember);
 
                         if (structMemberType.IsPrimitive)
@@ -415,6 +434,9 @@ namespace OpenEphys.Onix1
                     //  Or, see CsvWriter for inspiration, use a Stack and add the member types to the stack
                     foreach (var structMember in structMembers)
                     {
+                        if (IsMemberIgnored(member, structMember))
+                            continue;
+
                         var structMemberType = GetMemberType(structMember);
 
                         if (structMemberType.IsPrimitive)

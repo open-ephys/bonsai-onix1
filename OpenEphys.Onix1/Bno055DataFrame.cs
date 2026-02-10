@@ -76,6 +76,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets the 3D orientation represented as a Quaternion.
         /// </summary>
+        [FrameWriterIgnoreMembers(MemberType.Properties)]
         public Quaternion Quaternion { get; }
 
         /// <summary>
