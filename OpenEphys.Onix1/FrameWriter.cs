@@ -111,10 +111,6 @@ namespace OpenEphys.Onix1
                 type.GetFields(BindingFlags.Instance | BindingFlags.Public),
                 type.GetProperties(BindingFlags.Instance | BindingFlags.Public));
 
-            // TODO: Figure out a way to filter Quaternion.IsIdentity out of the schema, and subsequently the data
-            //          - One idea: For value types, values are fields not properties. Not always true necessarily, need to check, but
-            //          could filter Quaternion this way?
-
             return members
                 .Where(prop => prop.GetCustomAttribute(typeof(FrameWriterIgnoreAttribute)) == null)
                 .OrderBy(member => member.MetadataToken);
