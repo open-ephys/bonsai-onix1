@@ -132,58 +132,73 @@ namespace OpenEphys.Onix1
             return false;
         }
 
+        class MemberNode
+        {
+            public MemberInfo Member { get; set; }
+            public MemberNode Parent { get; set; }
+
+            public IEnumerable<MemberInfo> GetPath()
+            {
+                var current = this;
+                while (current != null)
+                {
+                    yield return current.Member;
+                    current = current.Parent;
+                }
+            }
+
+            public string GetFullName()
+            {
+                return string.Join("_", GetPath().Select(m => m.Name).Reverse());
+            }
+        }
+
         static Schema GenerateSchema(IEnumerable<MemberInfo> members, object instance)
         {
             var fields = new List<Field>();
+            var stack = new Stack<MemberNode>(members.Select(m => new MemberNode { Member = m }));
 
-            foreach (var member in members)
+            while (stack.Count > 0)
             {
-                var memberType = GetMemberType(member);
+                var current = stack.Pop();
+                var memberType = GetMemberType(current.Member);
 
                 if (memberType.IsPrimitive)
                 {
-                    fields.Add(new Field(member.Name, GetArrowType(memberType), false));
+                    fields.Add(new Field(current.GetFullName(), GetArrowType(memberType), false));
                 }
                 else if (memberType.IsArray)
                 {
-                    fields.Add(new Field(member.Name, GetArrowType(memberType.GetElementType()), false));
+                    fields.Add(new Field(current.GetFullName(), GetArrowType(memberType.GetElementType()), false));
                 }
                 else if (memberType.IsEnum)
                 {
-                    fields.Add(new Field(member.Name, GetArrowType(Enum.GetUnderlyingType(memberType)), false));
+                    fields.Add(new Field(current.GetFullName(), GetArrowType(Enum.GetUnderlyingType(memberType)), false));
                 }
                 else if (memberType.IsValueType)
                 {
                     var structMembers = GetDataMembers(memberType);
 
-                    // TODO: See if this should be converted to a recursive call?
-                    //  Or, see CsvWriter for inspiration, use a Stack and add the member types to the stack,
-                    //  keeping track of the parents so that we can build the full name for the field
-                    foreach (var structMember in structMembers)
+                    foreach (var structMember in structMembers.Reverse())
                     {
-                        if (IsMemberIgnored(member, structMember))
+                        if (IsMemberIgnored(current.Member, structMember))
                             continue;
 
-                        var structMemberType = GetMemberType(structMember);
-
-                        if (structMemberType.IsPrimitive)
+                        stack.Push(new MemberNode
                         {
-                            fields.Add(new Field($"{member.Name}_{structMember.Name}", GetArrowType(structMemberType), false));
-                        }
-                        else
-                        {
-                            throw new NotSupportedException($"The struct member type '{member.Name}_{structMember.Name}' is not supported for generating schemas.");
-                        }
+                            Member = structMember,
+                            Parent = current
+                        });
                     }
                 }
                 else if (memberType == typeof(Mat))
                 {
-                    var mat = GetMemberValue(member, instance) as Mat ?? throw new NullReferenceException($"No valid Mat property on the {instance.GetType()} object.");
+                    var mat = GetMemberValue(current.Member, instance) as Mat ?? throw new NullReferenceException($"No valid Mat property on the {instance.GetType()} object.");
 
                     for (int i = 0; i < mat.Rows; i++)
                     {
                         // Note: Could add an attribute to data frames properties to specify custom field naming
-                        fields.Add(new Field($"{member.Name}Ch{i}", GetArrowType(mat.Depth), false));
+                        fields.Add(new Field($"{current.GetFullName()}Ch{i}", GetArrowType(mat.Depth), false));
                     }
                 }
                 else
