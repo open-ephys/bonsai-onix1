@@ -114,9 +114,10 @@ namespace OpenEphys.Onix1
             // TODO: Figure out a way to filter Quaternion.IsIdentity out of the schema, and subsequently the data
             //          - One idea: For value types, values are fields not properties. Not always true necessarily, need to check, but
             //          could filter Quaternion this way?
-            // TODO: Add in the FrameWriterIgnoreAttribute Aaron originally implemented
 
-            return members.OrderBy(member => member.MetadataToken);
+            return members
+                .Where(prop => prop.GetCustomAttribute(typeof(FrameWriterIgnoreAttribute)) == null)
+                .OrderBy(member => member.MetadataToken);
         }
 
         static Schema GenerateSchema(IEnumerable<MemberInfo> members, object instance)
