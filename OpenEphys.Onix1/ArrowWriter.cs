@@ -34,7 +34,6 @@ namespace OpenEphys.Onix1
         public void Write(RecordBatch batch)
         {
             writer.WriteRecordBatch(batch);
-            batch.Dispose();
         }
 
         /// <summary>
