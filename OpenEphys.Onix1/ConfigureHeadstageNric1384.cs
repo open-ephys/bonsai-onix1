@@ -111,6 +111,12 @@ namespace OpenEphys.Onix1
 
         class ConfigureHeadstageNric1384PortController : ConfigurePortController
         {
+
+            public ConfigureHeadstageNric1384PortController()
+                : base(typeof(PortController))
+            {
+            }
+
             protected override bool ConfigurePortVoltage(DeviceContext device, out double voltage)
             {
                 const double MinVoltage = 3.8;

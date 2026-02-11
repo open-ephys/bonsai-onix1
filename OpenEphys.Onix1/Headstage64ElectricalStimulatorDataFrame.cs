@@ -23,8 +23,8 @@ namespace OpenEphys.Onix1
             HubClock = payload->HubClock;
             Origin = (Headstage64StimulatorTriggerOrigin)(payload->DelayAndOrigin & 0x000F);
             Delay = (payload->DelayAndOrigin & 0xFFF0) >> 8;
-            RestCurrent = Headstage64ElectricalStimulator.CodeToMicroamps(payload->RestCurrent);
             PhaseOneCurrent = Headstage64ElectricalStimulator.CodeToMicroamps(payload->PhaseOneCurrent);
+            InterPhaseCurrent = Headstage64ElectricalStimulator.CodeToMicroamps(payload->RestCurrent);
             PhaseTwoCurrent = Headstage64ElectricalStimulator.CodeToMicroamps(payload->PhaseTwoCurrent);
             PhaseOneDuration = payload->PhaseOneDuration;
             InterPhaseInterval = payload->InterPhaseInterval;
@@ -47,14 +47,14 @@ namespace OpenEphys.Onix1
         public uint Delay { get; }
 
         /// <summary>
-        /// Gets the rest current in microamps.
-        /// </summary>
-        public double RestCurrent { get; }
-
-        /// <summary>
         /// Gets the phase one current in microamps.
         /// </summary>
         public double PhaseOneCurrent { get; }
+
+        /// <summary>
+        /// Gets the inter-phase current in microamps.
+        /// </summary>
+        public double InterPhaseCurrent { get; }
 
         /// <summary>
         /// Gets the phase two current in microamps.
@@ -95,7 +95,6 @@ namespace OpenEphys.Onix1
         /// Gets the number of bursts per train.
         /// </summary>
         public uint BurstsPerTrain { get; }
-
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -103,8 +102,8 @@ namespace OpenEphys.Onix1
     {
         public ulong HubClock;
         public uint DelayAndOrigin;
-        public uint RestCurrent;
         public uint PhaseOneCurrent;
+        public uint RestCurrent;
         public uint PhaseTwoCurrent;
         public uint PhaseOneDuration;
         public uint InterPhaseInterval;
@@ -124,7 +123,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Specifies the source of the trigger is unknown.
         /// </summary>
-        Unknown = 0,
+        Unknown = 0x0,
 
         /// <summary>
         /// Specifies the source of the trigger is a local Gpio pin.

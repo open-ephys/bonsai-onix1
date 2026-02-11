@@ -41,6 +41,7 @@
             this.tabPageTS4231 = new System.Windows.Forms.TabPage();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.tabPageHeartbeat = new System.Windows.Forms.TabPage();
             this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.tabControl.SuspendLayout();
@@ -104,6 +105,7 @@
             this.tabControl.Controls.Add(this.tabPageRhd2164);
             this.tabControl.Controls.Add(this.tabPageBno055);
             this.tabControl.Controls.Add(this.tabPageTS4231);
+            this.tabControl.Controls.Add(this.tabPageHeartbeat);
             this.tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl.Location = new System.Drawing.Point(3, 2);
             this.tabControl.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
@@ -178,6 +180,16 @@
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
             // 
+            // tabPageHeartbeat
+            // 
+            this.tabPageHeartbeat.Location = new System.Drawing.Point(4, 25);
+            this.tabPageHeartbeat.Name = "tabPageHeartbeat";
+            this.tabPageHeartbeat.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageHeartbeat.Size = new System.Drawing.Size(1170, 512);
+            this.tabPageHeartbeat.TabIndex = 6;
+            this.tabPageHeartbeat.Text = "Heartbeat";
+            this.tabPageHeartbeat.UseVisualStyleBackColor = true;
+            // 
             // Headstage64Dialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -214,5 +226,6 @@
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.TabPage tabPageElectricalStimulator;
         private System.Windows.Forms.TabPage tabPageOpticalStimulator;
+        private System.Windows.Forms.TabPage tabPageHeartbeat;
     }
 }

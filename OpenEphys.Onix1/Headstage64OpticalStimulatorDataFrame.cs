@@ -22,8 +22,6 @@ namespace OpenEphys.Onix1
             HubClock = payload->HubClock;
             Origin = (Headstage64StimulatorTriggerOrigin)(payload->DelayAndOrigin & 0x000F);
             Delay = (payload->DelayAndOrigin & 0xFFF0) >> 8;
-            ChannelOneRestCurrent = CodeToMilliamps(payload->MaxCurrent, (byte)(payload->RestMask & 0x00FF));
-            ChannelTwoRestCurrent = CodeToMilliamps(payload->MaxCurrent, (byte)((payload->RestMask & 0xFF00) >> 8));
             ChannelOneCurrent = CodeToMilliamps(payload->MaxCurrent, (byte)(payload->PulseMask & 0x00FF));
             ChannelTwoCurrent = CodeToMilliamps(payload->MaxCurrent, (byte)((payload->PulseMask & 0xFF00) >> 8));
             PulseDuration = payload->PulseDuration / 1e3;
@@ -43,16 +41,6 @@ namespace OpenEphys.Onix1
         /// cref="DataFrame.HubClock"/> value) to the physical application of the stimulus sequence.
         /// </summary>
         public uint Delay { get; }
-
-        /// <summary>
-        /// Gets the channel one rest current in milliamps.
-        /// </summary>
-        public double ChannelOneRestCurrent { get; }
-
-        /// <summary>
-        /// Gets the channel two rest current in milliamps.
-        /// </summary>
-        public double ChannelTwoRestCurrent { get; }
 
         /// <summary>
         /// Gets the channel one pulse current in milliamps.
@@ -114,7 +102,6 @@ namespace OpenEphys.Onix1
     {
         public ulong HubClock;
         public uint DelayAndOrigin;
-        public uint RestMask;
         public uint MaxCurrent;
         public uint PulseMask;
         public uint PulseDuration;
