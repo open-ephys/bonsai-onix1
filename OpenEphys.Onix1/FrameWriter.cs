@@ -17,7 +17,7 @@ namespace OpenEphys.Onix1
     /// to an Apache Arrow file using <see cref="ArrowWriter"/>.
     /// </summary>
     [WorkflowElementCategory(ElementCategory.Sink)]
-    public class FrameWriter : FileSink<RecordBatch, ArrowWriter>
+    public class FrameWriter : FileSink
     {
         static readonly ConstructorInfo recordBatchConstructor = typeof(RecordBatch)
             .GetConstructor(
@@ -26,25 +26,33 @@ namespace OpenEphys.Onix1
                 new Type[] { typeof(Schema), typeof(IArrowArray[]), typeof(int) },
                 null);
 
-        /// <summary>
-        /// Creates the <see cref="ArrowWriter"/> object used to write data to the specified stream.
-        /// </summary>
-        /// <param name="filename">The name of the file on which the elements should be written.</param>
-        /// <param name="batch">The first input element that needs to be pushed into the file.</param>
-        /// <returns>An <see cref="ArrowWriter"/> object.</returns>
-        protected override ArrowWriter CreateWriter(string filename, RecordBatch batch)
+        class BufferedDataFrameSink : FileSink<RecordBatch, ArrowWriter>
         {
-            return new ArrowWriter(filename, batch.Schema);
+            protected override ArrowWriter CreateWriter(string filename, RecordBatch batch)
+            {
+                return new ArrowWriter(filename, batch.Schema);
+            }
+
+            protected override void Write(ArrowWriter writer, RecordBatch input)
+            {
+                writer.Write(input);
+            }
+
+            public IObservable<BufferedDataFrame> Process(IObservable<BufferedDataFrame> source, Func<BufferedDataFrame, RecordBatch> selector)
+            {
+                return base.Process(source, selector);
+            }
         }
 
-        /// <summary>
-        /// Writes a new <see cref="RecordBatch"/> element using the specified <see cref="ArrowWriter"/>.
-        /// </summary>
-        /// <param name="writer">The <see cref="ArrowWriter"/> used to push elements into the stream.</param>
-        /// <param name="input">The input <see cref="RecordBatch"/> that should be pushed into the stream.</param>
-        protected override void Write(ArrowWriter writer, RecordBatch input)
+        BufferedDataFrameSink CreateBufferedDataFrameSink()
         {
-            writer.Write(input);
+            return new BufferedDataFrameSink
+            {
+                FileName = this.FileName,
+                Suffix = this.Suffix,
+                Buffered = this.Buffered,
+                Overwrite = this.Overwrite
+            };
         }
 
         /// <summary>
@@ -70,8 +78,52 @@ namespace OpenEphys.Onix1
                         createRecordBatch = CreateBufferedFrameRecordBatchBuilder(frameType, members).Compile();
                     })
                     .IgnoreElements(),
-                Process(source, frame => createRecordBatch(frame, schema)))
-            );
+                Observable.Defer(() => CreateBufferedDataFrameSink().Process(
+                    frames,
+                    frame => createRecordBatch(frame, schema)
+                ))
+            ));
+        }
+
+        class DataFrameSink : FileSink<DataFrame, ArrowBatchWriter<DataFrame>>
+        {
+            readonly Schema schema;
+            readonly Func<IList<DataFrame>, Schema, RecordBatch> createRecordBatch;
+            readonly int bufferSize;
+
+            public DataFrameSink(
+                Schema schema,
+                Func<IList<DataFrame>, Schema, RecordBatch> createRecordBatch,
+                int bufferSize)
+            {
+                this.schema = schema;
+                this.createRecordBatch = createRecordBatch;
+                this.bufferSize = bufferSize;
+            }
+
+            protected override ArrowBatchWriter<DataFrame> CreateWriter(string filename, DataFrame frame)
+            {
+                return new ArrowBatchWriter<DataFrame>(filename, schema, bufferSize, createRecordBatch);
+            }
+
+            protected override void Write(ArrowBatchWriter<DataFrame> writer, DataFrame input)
+            {
+                writer.Write(input);
+            }
+        }
+
+        DataFrameSink CreateDataFrameSink(
+            Schema schema,
+            Func<IList<DataFrame>, Schema, RecordBatch> createRecordBatch,
+            int bufferSize)
+        {
+            return new DataFrameSink(schema, createRecordBatch, bufferSize)
+            {
+                FileName = this.FileName,
+                Suffix = this.Suffix,
+                Buffered = this.Buffered,
+                Overwrite = this.Overwrite
+            };
         }
 
         /// <summary>
@@ -98,10 +150,7 @@ namespace OpenEphys.Onix1
                         createRecordBatch = CreateDataFrameRecordBatchBuilder(frameType, members).Compile();
                     })
                     .IgnoreElements(),
-                Process(
-                    frames.Buffer(BufferSize),
-                    buffer => createRecordBatch(buffer, schema)
-                ).SelectMany(batch => batch) // TODO: Figure out how to pass each frame as it comes in, not after the buffer fills
+                Observable.Defer(() => CreateDataFrameSink(schema, createRecordBatch, BufferSize).Process(frames))
             ));
         }
 

@@ -13,7 +13,7 @@ namespace OpenEphys.Onix1
         readonly Stream stream = null;
         readonly ArrowFileWriter writer = null;
 
-        bool disposed = false;
+        private protected bool disposed = false;
 
         /// <summary>
         /// Initializes a new instance of the ArrowWriter class using the specified stream.
@@ -39,7 +39,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Releases the resources used by the instance.
         /// </summary>
-        public void Dispose()
+        public virtual void Dispose()
         {
             if (!disposed)
             {
