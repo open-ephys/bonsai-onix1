@@ -34,7 +34,7 @@ namespace OpenEphys.Onix1
         /// <returns>An <see cref="ArrowWriter"/> object.</returns>
         protected override ArrowWriter CreateWriter(string filename, RecordBatch batch)
         {
-            return new ArrowWriter(filename, batch);
+            return new ArrowWriter(filename, batch.Schema);
         }
 
         /// <summary>

@@ -19,11 +19,11 @@ namespace OpenEphys.Onix1
         /// Initializes a new instance of the ArrowWriter class using the specified stream.
         /// </summary>
         /// <param name="filename">The name of the file on which the elements should be written.</param>
-        /// <param name="batch">A <see cref="RecordBatch"/> that contains a schema.</param>
-        public ArrowWriter(string filename, RecordBatch batch)
+        /// <param name="schema">A <see cref="Schema"/> that defines the current file.</param>
+        public ArrowWriter(string filename, Schema schema)
         {
             stream = new FileStream(filename, FileMode.Create);
-            writer = new(stream, batch.Schema);
+            writer = new(stream, schema);
             writer.WriteStart();
         }
 
