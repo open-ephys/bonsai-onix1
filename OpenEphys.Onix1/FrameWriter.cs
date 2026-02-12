@@ -68,7 +68,7 @@ namespace OpenEphys.Onix1
             Schema schema = null;
             Func<BufferedDataFrame, Schema, RecordBatch> createRecordBatch = null;
 
-            return source.Publish(frames => Observable.Concat(
+            return source.Replay(frames => Observable.Concat(
                 frames.Take(1)
                     .Do(frame =>
                     {
@@ -82,7 +82,7 @@ namespace OpenEphys.Onix1
                     frames,
                     frame => createRecordBatch(frame, schema)
                 ))
-            ));
+            ), 1);
         }
 
         class DataFrameSink : FileSink<DataFrame, ArrowBatchWriter<DataFrame>>
@@ -140,7 +140,7 @@ namespace OpenEphys.Onix1
             Schema schema = null;
             Func<IList<DataFrame>, Schema, RecordBatch> createRecordBatch = null;
 
-            return source.Publish(frames => Observable.Concat(
+            return source.Replay(frames => Observable.Concat(
                 frames.Take(1)
                     .Do(frame =>
                     {
@@ -151,7 +151,7 @@ namespace OpenEphys.Onix1
                     })
                     .IgnoreElements(),
                 Observable.Defer(() => CreateDataFrameSink(schema, createRecordBatch, BufferSize).Process(frames))
-            ));
+            ), 1);
         }
 
         static IEnumerable<MemberInfo> GetDataMembers(Type type)
