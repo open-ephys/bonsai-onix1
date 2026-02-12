@@ -222,6 +222,7 @@ namespace OpenEphys.Onix1
                 }
                 else if (memberType.IsEnum)
                 {
+                    // TODO: See if the Dictionary type in Arrow would be better for enums
                     fields.Add(new Field(current.GetFullName(), GetArrowType(Enum.GetUnderlyingType(memberType)), false));
                 }
                 else if (memberType.IsValueType)
@@ -434,6 +435,14 @@ namespace OpenEphys.Onix1
                 : Expression.Field(instance, (FieldInfo)member);
         }
 
+        static MemberExpression CreateMemberAccess(Expression instance, MemberNode member)
+        {
+            if (member.Parent == null)
+                return CreateMemberAccess(instance, member.Member);
+
+            return CreateMemberAccess(CreateMemberAccess(instance, member.Parent), member.Member);
+        }
+
         /// <summary>
         /// Provides the type-specific logic for building RecordBatch expressions.
         /// </summary>
@@ -491,16 +500,18 @@ namespace OpenEphys.Onix1
                 var frameParameter = Expression.Parameter(typeof(DataFrame), "df");
                 List<Expression> expressions = new();
 
-                // TODO: Convert to a stack here
-                foreach (var member in members)
+                var stack = new Stack<MemberNode>(members.Select(m => new MemberNode { Member = m }));
+
+                while (stack.Count > 0)
                 {
-                    var memberType = GetMemberType(member);
+                    var current = stack.Pop();
+                    var memberType = GetMemberType(current.Member);
 
                     if (memberType.IsPrimitive)
                     {
                         var memberAccessor = CreateMemberAccess(
                             Expression.Convert(frameParameter, frameType),
-                            member);
+                            current);
 
                         expressions.Add(ConvertFrameMemberExpressionBuilder(
                             memberType, frameParameter, arrowArrays, arrowArrayIndex,
@@ -511,7 +522,7 @@ namespace OpenEphys.Onix1
                         var memberAccessor = Expression.Convert(
                             CreateMemberAccess(
                                 Expression.Convert(frameParameter, frameType),
-                                member),
+                                current),
                             Enum.GetUnderlyingType(memberType));
 
                         expressions.Add(ConvertFrameMemberExpressionBuilder(
@@ -523,32 +534,16 @@ namespace OpenEphys.Onix1
                     {
                         var structMembers = GetDataMembers(memberType);
 
-                        foreach (var structMember in structMembers)
+                        foreach (var structMember in structMembers.Reverse())
                         {
-                            if (IsMemberIgnored(member, structMember))
+                            if (IsMemberIgnored(current.Member, structMember))
                                 continue;
 
-                            var structMemberType = GetMemberType(structMember);
-
-                            if (structMemberType.IsPrimitive)
+                            stack.Push(new MemberNode
                             {
-                                // TODO: HERE, need to add a helper method to chain member access calls for struct members (e.g. df.Member1.StructMemberA)
-                                var memberAccessor = CreateMemberAccess(
-                                    CreateMemberAccess(
-                                        Expression.Convert(frameParameter, frameType),
-                                        member),
-                                    structMember);
-
-                                expressions.Add(ConvertFrameMemberExpressionBuilder(
-                                    structMemberType, frameParameter, arrowArrays,
-                                    arrowArrayIndex, inputParameter,
-                                    (MemberExpression)length, memberAccessor));
-                            }
-                            else
-                            {
-                                throw new NotSupportedException(
-                                    $"The struct member type '{member.Name}_{structMember.Name}' is not supported for generating schemas.");
-                            }
+                                Member = structMember,
+                                Parent = current
+                            });
                         }
                     }
                     else
@@ -593,10 +588,12 @@ namespace OpenEphys.Onix1
             {
                 List<Expression> expressions = new();
 
-                // TODO: Convert to a stack
-                foreach (var member in members)
+                var stack = new Stack<MemberNode>(members.Select(m => new MemberNode { Member = m }));
+
+                while (stack.Count > 0)
                 {
-                    var memberType = GetMemberType(member);
+                    var current = stack.Pop();
+                    var memberType = GetMemberType(current.Member);
 
                     if (memberType.IsArray)
                     {
@@ -604,7 +601,7 @@ namespace OpenEphys.Onix1
                             .GetMethod(nameof(ConvertArrayToArrowArray), BindingFlags.Static | BindingFlags.NonPublic)
                             .MakeGenericMethod(memberType.GetElementType());
 
-                        var arrayProperty = Expression.Property(inputParameter, member.Name);
+                        var arrayProperty = Expression.Property(inputParameter, current.GetFullName());
                         var arrayArrowType = Expression.Constant(GetArrowType(memberType.GetElementType()));
 
                         var block = Expression.Block(
@@ -625,7 +622,7 @@ namespace OpenEphys.Onix1
                             .GetMethod(nameof(ConvertMatRowToArrowArray), BindingFlags.Static | BindingFlags.NonPublic);
 
                         var matProperty = Expression.Property(
-                            Expression.Convert(inputParameter, frameType), member.Name);
+                            Expression.Convert(inputParameter, frameType), current.GetFullName());
                         var matElementType = Expression.Variable(typeof(IArrowType), "matElementType");
                         var rowIndex = Expression.Variable(typeof(int), "rowIndex");
                         var breakLabel = Expression.Label("break");
