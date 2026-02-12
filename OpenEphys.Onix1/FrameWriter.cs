@@ -434,235 +434,315 @@ namespace OpenEphys.Onix1
                 : Expression.Field(instance, (FieldInfo)member);
         }
 
-        static Expression<Func<IList<DataFrame>, Schema, RecordBatch>> CreateDataFrameRecordBatchBuilder(Type frameType, IEnumerable<MemberInfo> members)
+        /// <summary>
+        /// Provides the type-specific logic for building RecordBatch expressions.
+        /// </summary>
+        interface IRecordBatchExpressionProvider
         {
-            var expressions = new List<Expression>();
-            var parameters = new List<ParameterExpression>();
+            /// <summary>
+            /// Gets the input parameter for the expression.
+            /// </summary>
+            ParameterExpression InputParameter { get; }
 
-            // Initialize parameters and variables
-            var frames = Expression.Parameter(typeof(IList<DataFrame>), "frames");
-            var schema = Expression.Parameter(typeof(Schema), "schema");
-            var arrowArrays = Expression.Variable(typeof(IArrowArray[]), "arrowArrays");
-            var recordBatch = Expression.Variable(typeof(RecordBatch), "recordBatch");
-            var count = Expression.Property(
-                Expression.Convert(
-                    frames,
-                    typeof(ICollection<DataFrame>)
-                ),
-                nameof(ICollection<DataFrame>.Count)
-            );
+            /// <summary>
+            /// Creates the expression that gets the number of records.
+            /// </summary>
+            Expression GetLengthExpression();
 
-            // Initialize the IArrowArray[] by getting the schema fields count
-            parameters.Add(arrowArrays);
-            expressions.Add(InitializeArrowArrayFromSchema(schema, arrowArrays));
-
-            // Initialize the arrowArrayIndex variable for tracking where we are in the IArrowArray[]
-            var arrowArrayIndex = Expression.Variable(typeof(int), "arrowArrayIndex");
-            parameters.Add(arrowArrayIndex);
-            expressions.Add(Expression.Assign(arrowArrayIndex, Expression.Constant(0)));
-
-            var frameParameter = Expression.Parameter(typeof(DataFrame), "df");
-
-            // Populate the IArrowArray[] with the appropriate arrays
-            foreach (var member in members)
-            {
-                var memberType = GetMemberType(member);
-
-                if (memberType.IsPrimitive)
-                {
-                    var memberAccessor = CreateMemberAccess(Expression.Convert(frameParameter, frameType), member);
-
-                    expressions.Add(ConvertFrameMemberExpressionBuilder(memberType, frameParameter, arrowArrays, arrowArrayIndex, frames, count, memberAccessor));
-                }
-                else if (memberType.IsEnum)
-                {
-                    var memberAccessor = Expression.Convert(
-                                            CreateMemberAccess(
-                                                Expression.Convert(frameParameter, frameType),
-                                                member
-                                            ),
-                                            Enum.GetUnderlyingType(memberType)
-                                         );
-
-                    expressions.Add(ConvertFrameMemberExpressionBuilder(Enum.GetUnderlyingType(memberType), frameParameter, arrowArrays, arrowArrayIndex, frames, count, memberAccessor));
-                }
-                else if (memberType.IsValueType)
-                {
-                    var structMembers = GetDataMembers(memberType);
-
-                    // TODO: See if this should be converted to a recursive call?
-                    //  Or, see CsvWriter for inspiration, use a Stack and add the member types to the stack
-                    foreach (var structMember in structMembers)
-                    {
-                        if (IsMemberIgnored(member, structMember))
-                            continue;
-
-                        var structMemberType = GetMemberType(structMember);
-
-                        if (structMemberType.IsPrimitive)
-                        {
-                            var memberAccessor = CreateMemberAccess(
-                                                    CreateMemberAccess(
-                                                        Expression.Convert(frameParameter, frameType),
-                                                        member
-                                                    ),
-                                                    structMember
-                                                 );
-
-                            expressions.Add(ConvertFrameMemberExpressionBuilder(structMemberType, frameParameter, arrowArrays, arrowArrayIndex, frames, count, memberAccessor));
-                        }
-                        else
-                        {
-                            throw new NotSupportedException($"The struct member type '{member.Name}_{structMember.Name}' is not supported for generating schemas.");
-                        }
-                    }
-                }
-                else
-                {
-                    throw new NotSupportedException($"The member type '{memberType}' is not supported for generating RecordBatch builders.");
-                }
-            }
-
-            // Create the new RecordBatch from the schema, arrays, and length
-            parameters.Add(recordBatch);
-            expressions.Add(Expression.Assign(
-                recordBatch,
-                Expression.New(recordBatchConstructor, schema, arrowArrays, count)));
-
-            // Build the expression tree body
-            var createRecordBatch = Expression.Block(
-                parameters,
-                expressions);
-
-            return Expression.Lambda<Func<IList<DataFrame>, Schema, RecordBatch>>(createRecordBatch, frames, schema);
+            /// <summary>
+            /// Builds the expressions that populate the arrow arrays from frame members.
+            /// </summary>
+            List<Expression> GetArrayPopulationExpressions(
+                ParameterExpression arrowArrays,
+                ParameterExpression arrowArrayIndex,
+                Expression length,
+                Type frameType,
+                IEnumerable<MemberInfo> members);
         }
 
-        static Expression<Func<BufferedDataFrame, Schema, RecordBatch>> CreateBufferedFrameRecordBatchBuilder(Type frameType, IEnumerable<MemberInfo> members)
+        /// <summary>
+        /// Provider for building <see cref="RecordBatch"/> expressions from <see cref="IList{DataFrame}"/>.
+        /// </summary>
+        class DataFrameExpressionProvider : IRecordBatchExpressionProvider
         {
-            var expressions = new List<Expression>();
-            var parameters = new List<ParameterExpression>();
+            readonly ParameterExpression inputParameter;
 
-            // Initialize parameters and variables
-            var frame = Expression.Parameter(typeof(BufferedDataFrame), "frame");
-            var schema = Expression.Parameter(typeof(Schema), "schema");
-            var arrowArrays = Expression.Variable(typeof(IArrowArray[]), "arrowArrays");
-            var length = Expression.Variable(typeof(int), "length");
-            var recordBatch = Expression.Variable(typeof(RecordBatch), "recordBatch");
-
-            // Get the number of samples from the Clock array length
-            parameters.Add(length);
-            expressions.Add(Expression.Assign(
-                length,
-                Expression.ArrayLength(
-                    Expression.Property(frame, nameof(BufferedDataFrame.Clock)))));
-
-            // Initialize the IArrowArray[] by getting the schema fields count
-            parameters.Add(arrowArrays);
-            expressions.Add(InitializeArrowArrayFromSchema(schema, arrowArrays));
-
-            // Initialize the arrowArrayIndex variable for tracking where we are in the IArrowArray[]
-            var arrowArrayIndex = Expression.Variable(typeof(int), "arrowArrayIndex");
-            parameters.Add(arrowArrayIndex);
-            expressions.Add(Expression.Assign(arrowArrayIndex, Expression.Constant(0)));
-
-            // Populate the IArrowArray[] with the appropriate arrays
-            foreach (var member in members)
+            public DataFrameExpressionProvider()
             {
-                // TODO: Make recursive
-                var memberType = GetMemberType(member);
-
-                if (memberType.IsArray)
-                {
-                    var convertMethod = typeof(FrameWriter)
-                        .GetMethod(nameof(ConvertArrayToArrowArray), BindingFlags.Static | BindingFlags.NonPublic)
-                        .MakeGenericMethod(memberType.GetElementType());
-
-                    var arrayProperty = Expression.Property(frame, member.Name); // TODO: Test this where the member is not a part of BufferedDataFrame
-                    var arrayArrowType = Expression.Constant(GetArrowType(memberType.GetElementType()));
-
-                    var block = Expression.Block(
-                        Expression.Assign(
-                            Expression.ArrayAccess(arrowArrays, arrowArrayIndex),
-                            Expression.Call(
-                                convertMethod,
-                                arrayProperty,
-                                arrayArrowType,
-                                length
-                            )
-                        ),
-                        Expression.PostIncrementAssign(arrowArrayIndex)
-                    );
-
-                    expressions.Add(block);
-                }
-                else if (memberType == typeof(Mat))
-                {
-                    var convertMatRowMethod = typeof(FrameWriter)
-                        .GetMethod(nameof(ConvertMatRowToArrowArray), BindingFlags.Static | BindingFlags.NonPublic);
-
-                    // Extract all channels (rows) from the Mat and create an Arrow array for each row
-                    var matProperty = Expression.Property(Expression.Convert(frame, frameType), member.Name);
-                    var matElementType = Expression.Variable(typeof(IArrowType), "matElementType");
-                    var rowIndex = Expression.Variable(typeof(int), "rowIndex");
-                    var breakLabel = Expression.Label("break");
-
-                    var loopBody = Expression.Block(
-                        Expression.Assign(
-                            Expression.ArrayAccess(arrowArrays, arrowArrayIndex),
-                            Expression.Call(
-                                convertMatRowMethod,
-                                matProperty,
-                                rowIndex,
-                                matElementType
-                            )
-                        ),
-                        Expression.PostIncrementAssign(arrowArrayIndex)
-                    );
-
-                    // Set the for loop here
-                    var forLoop = Expression.Block(
-                        new[] { matElementType, rowIndex },
-                        Expression.Assign(rowIndex, Expression.Constant(0)),
-                        Expression.Assign(
-                            matElementType,
-                            Expression.Call(
-                                typeof(FrameWriter).GetMethod(nameof(GetArrowType), BindingFlags.Static | BindingFlags.NonPublic, null, new[] { typeof(Depth) }, null),
-                                Expression.Property(matProperty, nameof(Mat.Depth))
-                            )
-                        ),
-                        Expression.Loop(
-                            Expression.IfThenElse(
-                                Expression.LessThan(rowIndex, Expression.Property(matProperty, nameof(Mat.Rows))),
-                                Expression.Block(
-                                    loopBody,
-                                    Expression.PostIncrementAssign(rowIndex)
-                                ),
-                                Expression.Break(breakLabel)
-                            ),
-                            breakLabel
-                        )
-                    );
-
-                    expressions.Add(forLoop);
-                }
-                else
-                {
-                    throw new NotSupportedException($"The member type '{memberType}' is not supported for generating RecordBatch builders.");
-                }
+                inputParameter = Expression.Parameter(typeof(IList<DataFrame>), "frames");
             }
 
-            // Create the new RecordBatch from the schema, arrays, and length
-            parameters.Add(recordBatch);
-            expressions.Add(Expression.Assign(
-                recordBatch,
-                Expression.New(recordBatchConstructor, schema, arrowArrays, length)));
+            public ParameterExpression InputParameter => inputParameter;
 
-            // Build the expression tree body
-            var createRecordBatch = Expression.Block(
-                parameters,
-                expressions);
+            public Expression GetLengthExpression()
+            {
+                return Expression.Property(
+                        Expression.Convert(inputParameter, typeof(ICollection<DataFrame>)),
+                        nameof(ICollection<DataFrame>.Count));
+            }
 
-            return Expression.Lambda<Func<BufferedDataFrame, Schema, RecordBatch>>(createRecordBatch, frame, schema);
+            public List<Expression> GetArrayPopulationExpressions(
+                ParameterExpression arrowArrays,
+                ParameterExpression arrowArrayIndex,
+                Expression length,
+                Type frameType,
+                IEnumerable<MemberInfo> members)
+            {
+                var frameParameter = Expression.Parameter(typeof(DataFrame), "df");
+                List<Expression> expressions = new();
+
+                // TODO: Convert to a stack here
+                foreach (var member in members)
+                {
+                    var memberType = GetMemberType(member);
+
+                    if (memberType.IsPrimitive)
+                    {
+                        var memberAccessor = CreateMemberAccess(
+                            Expression.Convert(frameParameter, frameType),
+                            member);
+
+                        expressions.Add(ConvertFrameMemberExpressionBuilder(
+                            memberType, frameParameter, arrowArrays, arrowArrayIndex,
+                            inputParameter, (MemberExpression)length, memberAccessor));
+                    }
+                    else if (memberType.IsEnum)
+                    {
+                        var memberAccessor = Expression.Convert(
+                            CreateMemberAccess(
+                                Expression.Convert(frameParameter, frameType),
+                                member),
+                            Enum.GetUnderlyingType(memberType));
+
+                        expressions.Add(ConvertFrameMemberExpressionBuilder(
+                            Enum.GetUnderlyingType(memberType), frameParameter,
+                            arrowArrays, arrowArrayIndex, inputParameter,
+                            (MemberExpression)length, memberAccessor));
+                    }
+                    else if (memberType.IsValueType)
+                    {
+                        var structMembers = GetDataMembers(memberType);
+
+                        foreach (var structMember in structMembers)
+                        {
+                            if (IsMemberIgnored(member, structMember))
+                                continue;
+
+                            var structMemberType = GetMemberType(structMember);
+
+                            if (structMemberType.IsPrimitive)
+                            {
+                                // TODO: HERE, need to add a helper method to chain member access calls for struct members (e.g. df.Member1.StructMemberA)
+                                var memberAccessor = CreateMemberAccess(
+                                    CreateMemberAccess(
+                                        Expression.Convert(frameParameter, frameType),
+                                        member),
+                                    structMember);
+
+                                expressions.Add(ConvertFrameMemberExpressionBuilder(
+                                    structMemberType, frameParameter, arrowArrays,
+                                    arrowArrayIndex, inputParameter,
+                                    (MemberExpression)length, memberAccessor));
+                            }
+                            else
+                            {
+                                throw new NotSupportedException(
+                                    $"The struct member type '{member.Name}_{structMember.Name}' is not supported for generating schemas.");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        throw new NotSupportedException(
+                            $"The member type '{memberType}' is not supported for generating RecordBatch builders.");
+                    }
+                }
+
+                return expressions;
+            }
+        }
+
+        /// <summary>
+        /// Provider for building <see cref="RecordBatch"/> expressions from <see cref="BufferedDataFrame"/>.
+        /// </summary>
+        class BufferedDataFrameExpressionProvider : IRecordBatchExpressionProvider
+        {
+            readonly ParameterExpression inputParameter;
+
+            public BufferedDataFrameExpressionProvider()
+            {
+                inputParameter = Expression.Parameter(typeof(BufferedDataFrame), "frame");
+            }
+
+            public ParameterExpression InputParameter => inputParameter;
+
+            public Expression GetLengthExpression()
+            {
+                return Expression.ArrayLength(
+                        Expression.Property(
+                            inputParameter,
+                            nameof(BufferedDataFrame.Clock)));
+            }
+
+            public List<Expression> GetArrayPopulationExpressions(
+                ParameterExpression arrowArrays,
+                ParameterExpression arrowArrayIndex,
+                Expression length,
+                Type frameType,
+                IEnumerable<MemberInfo> members)
+            {
+                List<Expression> expressions = new();
+
+                // TODO: Convert to a stack
+                foreach (var member in members)
+                {
+                    var memberType = GetMemberType(member);
+
+                    if (memberType.IsArray)
+                    {
+                        var convertMethod = typeof(FrameWriter)
+                            .GetMethod(nameof(ConvertArrayToArrowArray), BindingFlags.Static | BindingFlags.NonPublic)
+                            .MakeGenericMethod(memberType.GetElementType());
+
+                        var arrayProperty = Expression.Property(inputParameter, member.Name);
+                        var arrayArrowType = Expression.Constant(GetArrowType(memberType.GetElementType()));
+
+                        var block = Expression.Block(
+                            Expression.Assign(
+                                Expression.ArrayAccess(arrowArrays, arrowArrayIndex),
+                                Expression.Call(
+                                    convertMethod,
+                                    arrayProperty,
+                                    arrayArrowType,
+                                    length)),
+                            Expression.PostIncrementAssign(arrowArrayIndex));
+
+                        expressions.Add(block);
+                    }
+                    else if (memberType == typeof(Mat))
+                    {
+                        var convertMatRowMethod = typeof(FrameWriter)
+                            .GetMethod(nameof(ConvertMatRowToArrowArray), BindingFlags.Static | BindingFlags.NonPublic);
+
+                        var matProperty = Expression.Property(
+                            Expression.Convert(inputParameter, frameType), member.Name);
+                        var matElementType = Expression.Variable(typeof(IArrowType), "matElementType");
+                        var rowIndex = Expression.Variable(typeof(int), "rowIndex");
+                        var breakLabel = Expression.Label("break");
+
+                        var loopBody = Expression.Block(
+                            Expression.Assign(
+                                Expression.ArrayAccess(arrowArrays, arrowArrayIndex),
+                                Expression.Call(
+                                    convertMatRowMethod,
+                                    matProperty,
+                                    rowIndex,
+                                    matElementType)),
+                            Expression.PostIncrementAssign(arrowArrayIndex));
+
+                        var forLoop = Expression.Block(
+                            new[] { matElementType, rowIndex },
+                            Expression.Assign(rowIndex, Expression.Constant(0)),
+                            Expression.Assign(
+                                matElementType,
+                                Expression.Call(
+                                    typeof(FrameWriter).GetMethod(
+                                        nameof(GetArrowType),
+                                        BindingFlags.Static | BindingFlags.NonPublic,
+                                        null,
+                                        new[] { typeof(Depth) },
+                                        null),
+                                    Expression.Property(matProperty, nameof(Mat.Depth)))),
+                            Expression.Loop(
+                                Expression.IfThenElse(
+                                    Expression.LessThan(
+                                        rowIndex,
+                                        Expression.Property(matProperty, nameof(Mat.Rows))),
+                                    Expression.Block(
+                                        loopBody,
+                                        Expression.PostIncrementAssign(rowIndex)),
+                                    Expression.Break(breakLabel)),
+                                breakLabel));
+
+                        expressions.Add(forLoop);
+                    }
+                    else
+                    {
+                        throw new NotSupportedException(
+                            $"The member type '{memberType}' is not supported for generating RecordBatch builders.");
+                    }
+                }
+
+                return expressions;
+            }
+        }
+
+        /// <summary>
+        /// Factory for creating <see cref="RecordBatch"/> builder expressions using a provider.
+        /// </summary>
+        static class RecordBatchExpressionFactory
+        {
+            public static Expression<TDelegate> CreateBuilder<TDelegate>(
+                IRecordBatchExpressionProvider provider,
+                Type frameType,
+                IEnumerable<MemberInfo> members)
+            {
+                var expressions = new List<Expression>();
+                var parameters = new List<ParameterExpression>();
+
+                var arrowArrays = Expression.Variable(typeof(IArrowArray[]), "arrowArrays");
+                var arrowArrayIndex = Expression.Variable(typeof(int), "arrowArrayIndex");
+                var schemaParameter = Expression.Parameter(typeof(Schema), "schema");
+                var lengthParameter = Expression.Parameter(typeof(int), "length");
+                var length = provider.GetLengthExpression();
+
+                parameters.Add(lengthParameter);
+                expressions.Add(length);
+
+                parameters.Add(arrowArrays);
+                expressions.Add(InitializeArrowArrayFromSchema(schemaParameter, arrowArrays));
+
+                parameters.Add(arrowArrayIndex);
+                expressions.Add(Expression.Assign(arrowArrayIndex, Expression.Constant(0)));
+
+                expressions.AddRange(
+                    provider.GetArrayPopulationExpressions(
+                        arrowArrays, arrowArrayIndex, length, frameType, members));
+
+                var recordBatch = Expression.Variable(typeof(RecordBatch), "recordBatch");
+                parameters.Add(recordBatch);
+                expressions.Add(Expression.Assign(
+                    recordBatch,
+                    Expression.New(recordBatchConstructor, schemaParameter, arrowArrays, length)));
+
+                var createRecordBatch = Expression.Block(parameters, expressions);
+
+                return Expression.Lambda<TDelegate>(
+                    createRecordBatch,
+                    provider.InputParameter,
+                    schemaParameter
+                );
+            }
+        }
+
+        static Expression<Func<IList<DataFrame>, Schema, RecordBatch>> CreateDataFrameRecordBatchBuilder(
+            Type frameType,
+            IEnumerable<MemberInfo> members)
+        {
+            return RecordBatchExpressionFactory.CreateBuilder<Func<IList<DataFrame>, Schema, RecordBatch>>(
+                new DataFrameExpressionProvider(),
+                frameType,
+                members);
+        }
+
+        static Expression<Func<BufferedDataFrame, Schema, RecordBatch>> CreateBufferedFrameRecordBatchBuilder(
+            Type frameType,
+            IEnumerable<MemberInfo> members)
+        {
+            return RecordBatchExpressionFactory.CreateBuilder<Func<BufferedDataFrame, Schema, RecordBatch>>(
+                new BufferedDataFrameExpressionProvider(),
+                frameType,
+                members);
         }
     }
 }
