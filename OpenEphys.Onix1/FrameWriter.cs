@@ -13,8 +13,8 @@ using OpenCV.Net;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Represents an operator that writes each data frames in the sequence
-    /// to an Apache Arrow file using <see cref="ArrowWriter"/>.
+    /// Represents an operator that writes each data frame in the sequence
+    /// to an Apache Arrow file using an <see cref="ArrowWriter"/>.
     /// </summary>
     [WorkflowElementCategory(ElementCategory.Sink)]
     public class FrameWriter : FileSink

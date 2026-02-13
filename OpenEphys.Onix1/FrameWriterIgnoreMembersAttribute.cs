@@ -8,7 +8,10 @@ namespace OpenEphys.Onix1
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
     public sealed class FrameWriterIgnoreMembersAttribute : Attribute
     {
-        internal MemberType MemberType { get; }
+        /// <summary>
+        /// Gets the <see cref="Onix1.MemberType"/> to ignore.
+        /// </summary>
+        public MemberType MemberType { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FrameWriterIgnoreMembersAttribute"/> with
