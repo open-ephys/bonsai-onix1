@@ -601,7 +601,9 @@ namespace OpenEphys.Onix1
                             .GetMethod(nameof(ConvertArrayToArrowArray), BindingFlags.Static | BindingFlags.NonPublic)
                             .MakeGenericMethod(memberType.GetElementType());
 
-                        var arrayProperty = Expression.Property(inputParameter, current.GetFullName());
+                        var arrayProperty = Expression.Property(
+                            Expression.Convert(inputParameter, frameType),
+                            current.GetFullName());
                         var arrayArrowType = Expression.Constant(GetArrowType(memberType.GetElementType()));
 
                         var block = Expression.Block(
