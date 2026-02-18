@@ -175,8 +175,6 @@ namespace OpenEphys.Onix1
 
                 // NB: Wait for 1 second to discharge the headstage in the case that they have e.g. just
                 // restarted the workflow automatically with nearly no delay from the last run.
-                //device.WriteRegister(PortController.PORTVOLTAGE, (uint)(MinVoltage * 10));
-                //Thread.Sleep(500);
                 device.WriteRegister(PortController.PORTVOLTAGE, 0);
                 Thread.Sleep(1000);
 
