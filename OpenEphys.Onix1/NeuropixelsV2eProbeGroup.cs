@@ -87,7 +87,7 @@ namespace OpenEphys.Onix1
         private static float ContactPositionX(int index)
         {
             var shank = index / NeuropixelsV2.ElectrodePerShank;
-            var offset = ShankOffsetX + (ShankWidthX + ShankPitchX) * shank + 11;
+            var offset = ShankOffsetX + ShankPitchX * shank + 11;
 
             return (index % 2) switch
             {

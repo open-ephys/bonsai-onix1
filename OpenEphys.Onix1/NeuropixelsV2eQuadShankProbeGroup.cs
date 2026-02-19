@@ -94,15 +94,15 @@ namespace OpenEphys.Onix1
 
             for (int i = 0; i < numberOfShanks; i++)
             {
-                probePlanarContour[2 + i * 5] = new float[2] { ShankOffsetX + (ShankWidthX + ShankPitchX) * i, shankLengthY };
-                probePlanarContour[3 + i * 5] = new float[2] { ShankOffsetX + (ShankWidthX + ShankPitchX) * i, shankBaseY };
-                probePlanarContour[4 + i * 5] = new float[2] { ShankOffsetX + (ShankWidthX + ShankPitchX) * i + ShankWidthX / 2, shankTipY };
-                probePlanarContour[5 + i * 5] = new float[2] { ShankOffsetX + (ShankWidthX + ShankPitchX) * i + ShankWidthX, shankBaseY };
-                probePlanarContour[6 + i * 5] = new float[2] { ShankOffsetX + (ShankWidthX + ShankPitchX) * i + ShankWidthX, shankLengthY };
+                probePlanarContour[2 + i * 5] = new float[2] { ShankOffsetX + ShankPitchX * i, shankLengthY };
+                probePlanarContour[3 + i * 5] = new float[2] { ShankOffsetX + ShankPitchX * i, shankBaseY };
+                probePlanarContour[4 + i * 5] = new float[2] { ShankOffsetX + ShankPitchX * i + ShankWidthX / 2, shankTipY };
+                probePlanarContour[5 + i * 5] = new float[2] { ShankOffsetX + ShankPitchX * i + ShankWidthX, shankBaseY };
+                probePlanarContour[6 + i * 5] = new float[2] { ShankOffsetX + ShankPitchX * i + ShankWidthX, shankLengthY };
             }
 
-            probePlanarContour[22] = new float[2] { ShankOffsetX * 2 + (ShankWidthX + ShankPitchX) * (numberOfShanks - 1) + ShankWidthX, shankLengthY };
-            probePlanarContour[23] = new float[2] { ShankOffsetX * 2 + (ShankWidthX + ShankPitchX) * (numberOfShanks - 1) + ShankWidthX, probeLengthY };
+            probePlanarContour[22] = new float[2] { ShankOffsetX * 2 + ShankPitchX * (numberOfShanks - 1) + ShankWidthX, shankLengthY };
+            probePlanarContour[23] = new float[2] { ShankOffsetX * 2 + ShankPitchX * (numberOfShanks - 1) + ShankWidthX, probeLengthY };
             probePlanarContour[24] = new float[2] { 0f, probeLengthY };
 
             return probePlanarContour;
