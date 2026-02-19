@@ -168,16 +168,21 @@ namespace OpenEphys.Onix1
                 // at the moment is drive port voltage to minimum which is an active process and then settle
                 // from there to zero volts. This requires a hardware revision that discharges the headstage
                 // between cycles to fix.
+                const double ChargeVoltage = 10.0;
                 const double MinVoltage = 3.3;
-                const double MaxVoltage = 6.0;
-                const double VoltageOffset = 4.0;
+                const double MaxVoltage = 6.5;
                 const double VoltageIncrement = 0.2;
 
                 // NB: Wait for 1 second to discharge the headstage in the case that they have e.g. just
-                // restarted the workflow automatically with nearly no delay from the last run. 
+                // restarted the workflow automatically with nearly no delay from the last run.
+                device.WriteRegister(PortController.PORTVOLTAGE, 0);
                 Thread.Sleep(1000);
 
-                // Start with highest voltage and ramp it down to find lowest lock voltage
+                // Start with brief high voltage to charge caps
+                device.WriteRegister(PortController.PORTVOLTAGE, (uint)(ChargeVoltage * 10));
+                Thread.Sleep(10);
+
+                // Ramp voltage down to find lowest lock voltage
                 voltage = MaxVoltage;
                 for (; voltage >= MinVoltage; voltage -= VoltageIncrement)
                 {
@@ -194,9 +199,10 @@ namespace OpenEphys.Onix1
                 }
 
                 device.WriteRegister(PortController.PORTVOLTAGE, (uint)(10 * MinVoltage));
+                Thread.Sleep(100);
                 device.WriteRegister(PortController.PORTVOLTAGE, 0);
                 Thread.Sleep(1000);
-                voltage += VoltageOffset;
+                voltage += 0.4 * voltage + 2.0; // NB: Empirical from tethers of different lengths in order to get 5.0V to 5.3V at headstage
                 device.WriteRegister(PortController.PORTVOLTAGE, (uint)(10 * voltage));
                 Thread.Sleep(200);
                 return CheckLinkState(device);
