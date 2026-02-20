@@ -19,7 +19,7 @@ namespace OpenEphys.Onix1
     [Editor("OpenEphys.Onix1.Design.Headstage64OpticalStimulatorComponentEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureHeadstage64OpticalStimulator : SingleDeviceFactory
     {
-        readonly BehaviorSubject<bool> enable = new(true);
+        readonly BehaviorSubject<bool> arm = new(true);
         readonly BehaviorSubject<double> maxCurrent = new(100);
         readonly BehaviorSubject<double> channelOneCurrent = new(100);
         readonly BehaviorSubject<double> channelTwoCurrent = new(0);
@@ -46,8 +46,8 @@ namespace OpenEphys.Onix1
         {
             DeviceName = opticalStimulator.DeviceName;
             DeviceAddress = opticalStimulator.DeviceAddress;
-            Enable = opticalStimulator.Enable;
             Delay = opticalStimulator.Delay;
+            Arm = opticalStimulator.Arm;
             MaxCurrent = opticalStimulator.MaxCurrent;
             ChannelOneCurrent = opticalStimulator.ChannelOneCurrent;
             ChannelTwoCurrent = opticalStimulator.ChannelTwoCurrent;
@@ -59,17 +59,17 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets or sets the device enable state.
+        /// Gets or sets the device arm state.
         /// </summary>
         /// <remarks>
         /// If set to true, then the optical stimulator circuit will respect triggers. If set to false, triggers will be ignored.
         /// </remarks>
         [Description("Specifies whether the optical stimulator will respect triggers.")]
         [Category(AcquisitionCategory)]
-        public bool Enable
+        public bool Arm
         {
-            get => enable.Value;
-            set => enable.OnNext(value);
+            get => arm.Value;
+            set => arm.OnNext(value);
         }
 
         /// <summary>
@@ -282,7 +282,7 @@ namespace OpenEphys.Onix1
                 }
 
                 return new CompositeDisposable(
-                    enable.SubscribeSafe(observer, value =>
+                    arm.SubscribeSafe(observer, value =>
                         device.WriteRegister(Headstage64OpticalStimulator.ENABLE, value ? 1u : 0u)),
                     maxCurrent.SubscribeSafe(observer, value =>
                         device.WriteRegister(Headstage64OpticalStimulator.MAXCURRENT, Headstage64OpticalStimulator.MilliampsToPotSetting(value))),
@@ -325,8 +325,8 @@ namespace OpenEphys.Onix1
         public const double MinDelay = 0.0;
         public const double MaxDelay = 1000.0;
 
-        public const double MinCurrent = 0.0;
-        public const double MaxCurrent = 300.0;
+        public const double MinCurrent = 5.822; // NB: This is the lowest allowable maximum current
+        public const double MaxCurrent = 150.0; // NB: this is not the physical limit, but its a reasonable practical upper boundary
 
         public const double MinChannelPercentage = 0.0;
         public const double MaxChannelPercentage = 100.0;
@@ -367,6 +367,12 @@ namespace OpenEphys.Onix1
             double R = Math.Pow(currentMa / 3.833e+05, 1 / -0.9632);
             uint s = (uint)Math.Round(256 * (R - MinRheostatResistanceOhms) / PotResistanceOhms);
             return s > 255 ? 255 : s < 0 ? 0 :s;
+        }
+
+        internal static double PotSettingToMilliamps(uint potSetting)
+        {
+            var R = MinRheostatResistanceOhms + PotResistanceOhms * potSetting / 255; 
+            return 3.833e+05 * Math.Pow(R, -0.9632);
         }
 
         internal class NameConverter : DeviceNameConverter
