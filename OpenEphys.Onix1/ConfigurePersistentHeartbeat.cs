@@ -28,7 +28,6 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets the rate at which beats are produced in Hz.
         /// </summary>
-        [Range(100, 10e6)]
         [Category(AcquisitionCategory)]
         [Description("Rate at which beats are produced (Hz).")]
         public uint BeatsPerSecond

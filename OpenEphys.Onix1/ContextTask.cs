@@ -573,14 +573,17 @@ namespace OpenEphys.Onix1
         /// </summary>
         public void Dispose()
         {
+            Task disposeContextContinuation;
             lock (disposeLock)
                 lock (regLock)
                 {
                     disposed = true;
-                    acquisition.ContinueWith(_ => DisposeContext());
+                    disposeContextContinuation = acquisition.ContinueWith(_ => DisposeContext());
                     collectFramesCancellation?.Cancel();
+
                 }
 
+            disposeContextContinuation.GetAwaiter().GetResult();
             GC.SuppressFinalize(this);
         }
     }
