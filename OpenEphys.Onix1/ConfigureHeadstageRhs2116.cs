@@ -116,6 +116,12 @@ namespace OpenEphys.Onix1
 
         class ConfigureHeadstageRhs2116LinkController : ConfigurePortController
         {
+
+            public ConfigureHeadstageRhs2116LinkController()
+                : base(typeof(PortController))
+            {
+            }
+
             protected override bool ConfigurePortVoltage(DeviceContext device, out double voltage)
             {
                 const double MinVoltage = 3.3;

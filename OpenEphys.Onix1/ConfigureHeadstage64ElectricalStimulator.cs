@@ -19,7 +19,7 @@ namespace OpenEphys.Onix1
     [Editor("OpenEphys.Onix1.Design.Headstage64ElectricalStimulatorComponentEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureHeadstage64ElectricalStimulator : SingleDeviceFactory
     {
-        readonly BehaviorSubject<bool> stimEnable = new(false);
+        readonly BehaviorSubject<bool> arm = new(false);
         readonly BehaviorSubject<double> phaseOneCurrent = new(0);
         readonly BehaviorSubject<double> interPhaseCurrent = new(0);
         readonly BehaviorSubject<double> phaseTwoCurrent = new(0);
@@ -31,7 +31,6 @@ namespace OpenEphys.Onix1
         readonly BehaviorSubject<uint> interBurstInterval = new(0);
         readonly BehaviorSubject<uint> trainBurstCount = new(0);
         readonly BehaviorSubject<uint> triggerDelay = new(0);
-        readonly BehaviorSubject<bool> powerEnable = new(false);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureHeadstage64ElectricalStimulator"/> class.
@@ -49,10 +48,8 @@ namespace OpenEphys.Onix1
         {
             DeviceName = electricalStimulator.DeviceName;
             DeviceAddress = electricalStimulator.DeviceAddress;
-            Enable = electricalStimulator.Enable;
-            StimEnable = electricalStimulator.StimEnable;
-            PowerEnable = electricalStimulator.PowerEnable;
             TriggerDelay = electricalStimulator.TriggerDelay;
+            Arm = electricalStimulator.Arm;
             PhaseOneCurrent = electricalStimulator.PhaseOneCurrent;
             InterPhaseCurrent = electricalStimulator.InterPhaseCurrent;
             PhaseTwoCurrent = electricalStimulator.PhaseTwoCurrent;
@@ -66,41 +63,20 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets or sets the data enable state.
+        /// Gets or sets the device arm state.
         /// </summary>
         /// <remarks>
-        /// If set to true, <see cref="Headstage64ElectricalStimulatorData"/> will produce data. If set to
-        /// false, <see cref="Headstage64ElectricalStimulatorData"/> will not produce data.
-        /// </remarks>
-        [Category(ConfigurationCategory)]
-        [Description("Specifies whether the headstage-64 electrical stimulator will produce stimulus reports.")]
-        public bool Enable { get; set; }
-
-        /// <summary>
-        /// Gets or sets the device enable state.
-        /// </summary>
-        /// <remarks>
-        /// If set to true, then the electrical stimulator circuit will respect triggers. If set to false, triggers will be ignored.
+        /// If set to true, then the electrical stimulator's ±15V power supplies will be turned on and the
+        /// electrical stimulator circuit will respect triggers. If set to false, the power supplies will be
+        /// shut down and triggers will be ignored. It takes ~10 milliseconds for the power supplies to to
+        /// stabilize.
         /// </remarks>
         [Description("Specifies whether the electrical stimulator will respect triggers.")]
         [Category(AcquisitionCategory)]
-        public bool StimEnable { get; set; } = true;
-
-        /// <summary>
-        /// Gets or sets the electrical stimulator's power state.
-        /// </summary>
-        /// <remarks>
-        /// If set to true, then the electrical stimulator's ±15V power supplies will be turned on. If set to false,
-        /// they will be turned off. It may be desirable to power down the electrical stimulator's power supplies outside
-        /// of stimulation windows to reduce power consumption and electrical noise. This property must be set to true
-        /// in order for electrical stimuli to be delivered properly. It takes ~10 milliseconds for these supplies to stabilize.
-        /// </remarks>
-        [Description("Stimulator power on/off.")]
-        [Category(AcquisitionCategory)]
-        public bool PowerEnable
+        public bool Arm
         {
-            get => powerEnable.Value;
-            set => powerEnable.OnNext(value);
+            get => arm.Value;
+            set => arm.OnNext(value);
         }
 
         /// <summary>
@@ -264,18 +240,19 @@ namespace OpenEphys.Onix1
         /// configure a headstage-64 onboard electrical stimulator.</returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
-            var enable = Enable;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
 
             return source.ConfigureDevice((context, observer) =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
-                device.WriteRegister(Headstage64ElectricalStimulator.ENABLE, enable ? 1u : 0u);
 
                 return new CompositeDisposable(
-                    stimEnable.SubscribeSafe(observer, value =>
-                        device.WriteRegister(Headstage64ElectricalStimulator.STIMENABLE, value ? 1u : 0u)),
+                    arm.SubscribeSafe(observer, value =>
+                    {
+                        device.WriteRegister(Headstage64ElectricalStimulator.ENABLE, value ? 1u : 0u);
+                        device.WriteRegister(Headstage64ElectricalStimulator.POWERON, value ? 1u : 0u);
+                    }),
                     phaseOneCurrent.SubscribeSafe(observer, value =>
                         device.WriteRegister(Headstage64ElectricalStimulator.CURRENT1, Headstage64ElectricalStimulator.MicroampsToCode(value))),
                     interPhaseCurrent.SubscribeSafe(observer, value =>
@@ -290,7 +267,6 @@ namespace OpenEphys.Onix1
                     interBurstInterval.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.INTERBURSTINTERVAL, value)),
                     burstPulseCount.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.BURSTCOUNT, value)),
                     trainBurstCount.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.TRAINCOUNT, value)),
-                    powerEnable.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.POWERON, value ? 1u : 0u)),
                     DeviceManager.RegisterDevice(deviceName, device, DeviceType));
             });
         }
@@ -299,14 +275,14 @@ namespace OpenEphys.Onix1
     static class Headstage64ElectricalStimulator
     {
         public const int ID = 4;
-        public const uint MinimumVersion = 3;
+        public const uint MinimumVersion = 2;
 
         // NB: could be read from REZ but these are constant
         public const double DacBitDepth = 16;
         public const double AbsMaxMicroAmps = 2500;
 
         // managed registers
-        public const uint ENABLE = 0; // Enable stimulus report stream
+        public const uint NULLPARM = 0; // No command
         public const uint BIPHASIC = 1; // Biphasic pulse (0 = monophasic, 1 = biphasic; NB: currently ignored)
         public const uint CURRENT1 = 2; // Phase 1 current
         public const uint CURRENT2 = 3; // Phase 2 current
@@ -320,7 +296,7 @@ namespace OpenEphys.Onix1
         public const uint TRAINDELAY = 11; // Pulse train delay, microseconds
         public const uint TRIGGER = 12; // Trigger stimulation (1 = deliver)
         public const uint POWERON = 13; // Control estim sub-circuit power (0 = off, 1 = on)
-        public const uint STIMENABLE = 14; // If 0 then stimulation triggers will be ignored, otherwise they will be applied 
+        public const uint ENABLE = 14; // If 0 then stimulation triggers will be ignored, otherwise they will be applied 
         public const uint RESTCURR = 15; // Resting current between pulse phases
         public const uint RESET = 16; // Reset all parameters to default
         public const uint REZ = 17; // Internal DAC resolution in bits
@@ -329,12 +305,6 @@ namespace OpenEphys.Onix1
         {
             var k = 1 / (2 * AbsMaxMicroAmps / (Math.Pow(2, DacBitDepth) - 1)); // NB: constexpr, if we get support for it.
             return (uint)(k * (currentuA + AbsMaxMicroAmps));
-        }
-
-        internal static double CodeToMicroamps(uint code)
-        {
-            var k = 2 * AbsMaxMicroAmps / (Math.Pow(2, DacBitDepth) - 1); // NB: constexpr, if we get support for it.
-            return k * code - AbsMaxMicroAmps;
         }
 
         internal class NameConverter : DeviceNameConverter
