@@ -29,6 +29,18 @@ namespace OpenEphys.Onix1
                 .SubscribeSafe(observer));
         }
 
+        public static IObservable<ContextTask> ConfigureDeviceWithoutReset(this IObservable<ContextTask> source, Func<ContextTask, IDisposable> configure)
+        {
+            return source.ConfigureContext((context, action) => context.ConfigureDeviceWithoutReset(action), configure);
+        }
+
+        public static IObservable<ContextTask> ConfigureDeviceWithoutReset(this IObservable<ContextTask> source, Func<ContextTask, IObserver<ContextTask>, IDisposable> configure)
+        {
+            return Observable.Create<ContextTask>(observer => source
+                .ConfigureDeviceWithoutReset(context => configure(context, observer))
+                .SubscribeSafe(observer));
+        }
+
         static IObservable<ContextTask> ConfigureContext(
             this IObservable<ContextTask> source,
             Action<ContextTask, Func<ContextTask, IDisposable>> configureContext,

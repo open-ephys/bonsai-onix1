@@ -62,6 +62,7 @@ namespace OpenEphys.Onix1
         event Func<ContextTask, IDisposable> ConfigureHostEvent;
         event Func<ContextTask, IDisposable> ConfigureLinkEvent;
         event Func<ContextTask, IDisposable> ConfigureDeviceEvent;
+        event Func<ContextTask, IDisposable> ConfigureDeviceWithoutResetEvent;
 
         // FrameReceived observable sequence
         readonly Subject<oni.Frame> frameReceived = new();
@@ -244,19 +245,33 @@ namespace OpenEphys.Onix1
             }
         }
 
+        // NB: Actions queued using this method should assume that the device table
+        // is finalized and cannot be changed and that there will not be a reset issued
+        // after the actions complete
+        internal void ConfigureDeviceWithoutReset(Func<ContextTask, IDisposable> configure)
+        {
+            lock (regLock)
+            {
+                AssertConfigurationContext();
+                ConfigureDeviceWithoutResetEvent += configure;
+            }
+        }
+
         private IDisposable ConfigureContext()
         {
             var hostAction = Interlocked.Exchange(ref ConfigureHostEvent, null);
             var linkAction = Interlocked.Exchange(ref ConfigureLinkEvent, null);
             var deviceAction = Interlocked.Exchange(ref ConfigureDeviceEvent, null);
+            var deviceNoResetAction = Interlocked.Exchange(ref ConfigureDeviceWithoutResetEvent, null);
             var disposable = new StackDisposable();
             ConfigureResources(disposable, hostAction);
             ConfigureResources(disposable, linkAction);
             ConfigureResources(disposable, deviceAction);
+            ConfigureResources(disposable, deviceNoResetAction, false);
             return disposable;
         }
 
-        void ConfigureResources(StackDisposable disposable, Func<ContextTask, IDisposable> action)
+        void ConfigureResources(StackDisposable disposable, Func<ContextTask, IDisposable> action, bool issueReset=true)
         {
             if (action != null)
             {
@@ -273,7 +288,11 @@ namespace OpenEphys.Onix1
                     disposable.Dispose();
                     throw;
                 }
-                finally { Reset(); }
+                finally 
+                { 
+                    if (issueReset)
+                        Reset(); 
+                }
             }
         }
 
