@@ -150,7 +150,7 @@ namespace OpenEphys.Onix1
             var frameRate = FrameRate;
             var interleaveLed = InterleaveLed;
 
-            return source.ConfigureDevice(context =>
+            return source.ConfigureAndLatchDevice(context =>
             {
                 try
                 {

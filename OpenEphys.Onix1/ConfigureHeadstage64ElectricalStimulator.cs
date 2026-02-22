@@ -243,7 +243,7 @@ namespace OpenEphys.Onix1
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
 
-            return source.ConfigureDevice((context, observer) =>
+            return source.ConfigureAndLatchDevice((context, observer) =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
 
@@ -263,7 +263,7 @@ namespace OpenEphys.Onix1
                     burstPulseCount.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.BURSTCOUNT, value)),
                     trainBurstCount.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.TRAINCOUNT, value)),
                     DeviceManager.RegisterDevice(deviceName, device, DeviceType));
-            }).ConfigureDeviceWithoutReset((context, observer) =>
+            }).ConfigureDirectDevice((context, observer) =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
 

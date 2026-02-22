@@ -74,7 +74,7 @@ namespace OpenEphys.Onix1
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
             var samplesPerSecond = SamplesPerSecond;
-            return source.ConfigureDevice(context =>
+            return source.ConfigureAndLatchDevice(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
                 device.WriteRegister(MemoryMonitor.ENABLE, enable ? 1u : 0u);

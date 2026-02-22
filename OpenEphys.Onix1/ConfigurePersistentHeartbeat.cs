@@ -52,7 +52,7 @@ namespace OpenEphys.Onix1
             //var enable = Enable;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
-            return source.ConfigureDevice((context, observer) =>
+            return source.ConfigureAndLatchDevice((context, observer) =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
                 var subscription = beatsPerSecond.SubscribeSafe(observer, newValue =>

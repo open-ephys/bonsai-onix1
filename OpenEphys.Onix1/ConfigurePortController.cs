@@ -45,10 +45,9 @@ namespace OpenEphys.Onix1
             var deviceAddress = DeviceAddress;
             var hubConfiguration = HubConfiguration;
             var portVoltage = PortVoltage;
-            return source.ConfigureHost(context =>
+            return source.ConfigureAndLatchController(context =>
             {
-                // configure passthrough mode on the port controller
-                // assuming the device address is the port number
+                // configure passthrough mode on the port controller assuming the device address is the port number
                 var portShift = ((int)deviceAddress - 1) * 2;
                 var passthroughState = (hubConfiguration == HubConfiguration.Passthrough ? 1 : 0) << portShift;
                 context.HubState = (PassthroughState)(((int)context.HubState & ~(1 << portShift)) | passthroughState);
@@ -56,7 +55,7 @@ namespace OpenEphys.Onix1
                 // leave in standard mode when finished
                 return Disposable.Create(() => context.HubState = (PassthroughState)((int)context.HubState & ~(1 << portShift)));
             })
-            .ConfigureLink(context =>
+            .ConfigureAndLatchLink(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
                 void dispose() { device.WriteRegister(PortController.PORTVOLTAGE, 0); }
@@ -94,7 +93,7 @@ namespace OpenEphys.Onix1
 
                 return Disposable.Create(dispose);
             })
-            .ConfigureDevice(context =>
+            .ConfigureAndLatchDevice(context =>
             {
                 var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
