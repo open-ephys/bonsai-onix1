@@ -39,11 +39,19 @@ namespace OpenEphys.Onix1.Design
             DialogBno055 = new(new ConfigurePolledBno055(configureBno055));
 
             DialogBno055.SetChildFormProperties(this).AddDialogToPanel(panelBno055);
+
+            FormClosing += DialogClosing;
         }
 
         private void Okay_Click(object sender, System.EventArgs e)
         {
             DialogResult = DialogResult.OK;
+            Close();
+        }
+
+        void DialogClosing(object sender, FormClosingEventArgs e)
+        {
+            DialogNeuropixelsV1e.Close();
         }
     }
 }

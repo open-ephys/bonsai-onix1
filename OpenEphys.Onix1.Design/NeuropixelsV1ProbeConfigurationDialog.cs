@@ -3,6 +3,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using OpenEphys.ProbeInterface.NET;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -13,9 +14,9 @@ namespace OpenEphys.Onix1.Design
     {
         readonly NeuropixelsV1ChannelConfigurationDialog ChannelConfiguration;
 
-        private NeuropixelsV1Adc[] Adcs = null;
+        NeuropixelsV1Adc[] Adcs = null;
 
-        private enum ChannelPreset
+        enum ChannelPreset
         {
             BankA,
             BankB,
@@ -25,14 +26,12 @@ namespace OpenEphys.Onix1.Design
             None
         }
 
+        NeuropixelsV1eProbeGroup ProbeGroup => ChannelConfiguration.ProbeGroup as NeuropixelsV1eProbeGroup ?? throw new InvalidCastException($"Expected the ProbeGroup to be of type '{nameof(NeuropixelsV1eProbeGroup)}', but it is '{ChannelConfiguration.ProbeGroup.GetType().Name}'.");
+
         /// <summary>
         /// Gets or sets the probe configuration.
         /// </summary>
-        public NeuropixelsV1ProbeConfiguration ProbeConfiguration
-        {
-            get => ChannelConfiguration.ProbeConfiguration;
-            set => ChannelConfiguration.ProbeConfiguration = value;
-        }
+        public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; set; }
 
         /// <inheritdoc cref="NeuropixelsV1ProbeConfiguration.InvertPolarity"/>
         [Obsolete]
@@ -50,6 +49,9 @@ namespace OpenEphys.Onix1.Design
         {
             InitializeComponent();
             Shown += FormShown;
+            FormClosing += DialogClosing;
+
+            ProbeConfiguration = probeConfiguration;
 
             ChannelConfiguration = new(probeConfiguration);
             ChannelConfiguration
@@ -60,6 +62,7 @@ namespace OpenEphys.Onix1.Design
 
             ChannelConfiguration.OnZoom += UpdateTrackBarLocation;
             ChannelConfiguration.OnFileLoad += OnFileLoadEvent;
+            ChannelConfiguration.BringToFront();
 
             comboBoxApGain.DataSource = Enum.GetValues(typeof(NeuropixelsV1Gain));
             comboBoxApGain.SelectedItem = ProbeConfiguration.SpikeAmplifierGain;
@@ -80,10 +83,25 @@ namespace OpenEphys.Onix1.Design
             checkBoxInvertPolarity.CheckedChanged += InvertPolarityIndexChanged;
 
             textBoxAdcCalibrationFile.Text = ProbeConfiguration.AdcCalibrationFileName;
-            textBoxAdcCalibrationFile.TextChanged += (sender, e) => ProbeConfiguration.AdcCalibrationFileName = ((TextBox)sender).Text;
+            textBoxAdcCalibrationFile.TextChanged += (sender, e) =>
+            {
+                ProbeConfiguration.AdcCalibrationFileName = ((TextBox)sender).Text;
+                CheckStatus();
+            };
 
             textBoxGainCalibrationFile.Text = ProbeConfiguration.GainCalibrationFileName;
-            textBoxGainCalibrationFile.TextChanged += (sender, e) => ProbeConfiguration.GainCalibrationFileName = ((TextBox)sender).Text;
+            textBoxGainCalibrationFile.TextChanged += (sender, e) =>
+            {
+                ProbeConfiguration.GainCalibrationFileName = ((TextBox)sender).Text;
+                CheckStatus();
+            };
+
+            textBoxProbeInterfaceFileName.Text = ProbeConfiguration.ProbeInterfaceFileName;
+            textBoxProbeInterfaceFileName.TextChanged += (sender, e) =>
+            {
+                ProbeConfiguration.ProbeInterfaceFileName = ((TextBox)sender).Text;
+                CheckStatus();
+            };
 
             comboBoxChannelPresets.DataSource = Enum.GetValues(typeof(ChannelPreset));
             CheckForExistingChannelPreset();
@@ -107,18 +125,9 @@ namespace OpenEphys.Onix1.Design
                 menuStrip.Visible = false;
             }
 
-            ChannelConfiguration.Show();
+            if (ChannelConfiguration.Visible)
+                ChannelConfiguration.Show();
             ChannelConfiguration.ConnectResizeEventHandler();
-        }
-
-        private void GainCalibrationFileTextChanged(object sender, EventArgs e)
-        {
-            CheckStatus();
-        }
-
-        private void AdcCalibrationFileTextChanged(object sender, EventArgs e)
-        {
-            CheckStatus();
         }
 
         private void SpikeAmplifierGainIndexChanged(object sender, EventArgs e)
@@ -155,31 +164,31 @@ namespace OpenEphys.Onix1.Design
 
         private void SetChannelPreset(ChannelPreset preset)
         {
-            var probeConfiguration = ChannelConfiguration.ProbeConfiguration;
-            var electrodes = NeuropixelsV1eProbeGroup.ToElectrodes(ChannelConfiguration.ProbeConfiguration.ProbeGroup);
+            var probeGroup = ProbeGroup;
+            var electrodes = NeuropixelsV1eProbeGroup.ToElectrodes(probeGroup);
 
             switch (preset)
             {
                 case ChannelPreset.BankA:
-                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.A).ToArray());
+                    probeGroup.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.A).ToArray());
                     break;
 
                 case ChannelPreset.BankB:
-                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.B).ToArray());
+                    probeGroup.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.B).ToArray());
                     break;
 
                 case ChannelPreset.BankC:
-                    probeConfiguration.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.C ||
+                    probeGroup.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.C ||
                                                                              (e.Bank == NeuropixelsV1Bank.B && e.Index >= 576)).ToArray());
                     break;
 
                 case ChannelPreset.SingleColumn:
-                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Index % 2 == 0 && e.Bank == NeuropixelsV1Bank.A) ||
+                    probeGroup.SelectElectrodes(electrodes.Where(e => (e.Index % 2 == 0 && e.Bank == NeuropixelsV1Bank.A) ||
                                                                               (e.Index % 2 == 1 && e.Bank == NeuropixelsV1Bank.B)).ToArray());
                     break;
 
                 case ChannelPreset.Tetrodes:
-                    probeConfiguration.SelectElectrodes(electrodes.Where(e => (e.Index % 8 < 4 && e.Bank == NeuropixelsV1Bank.A) ||
+                    probeGroup.SelectElectrodes(electrodes.Where(e => (e.Index % 8 < 4 && e.Bank == NeuropixelsV1Bank.A) ||
                                                                               (e.Index % 8 > 3 && e.Bank == NeuropixelsV1Bank.B)).ToArray());
                     break;
             }
@@ -192,7 +201,7 @@ namespace OpenEphys.Onix1.Design
 
         private void CheckForExistingChannelPreset()
         {
-            var channelMap = ChannelConfiguration.ProbeConfiguration.ChannelMap;
+            var channelMap = ProbeGroup.ChannelMap;
 
             if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.A))
             {
@@ -225,19 +234,32 @@ namespace OpenEphys.Onix1.Design
 
         private void OnFileLoadEvent(object sender, EventArgs e)
         {
-            // NB: Ensure that the newly loaded ProbeConfiguration in the ChannelConfigurationDialog is reflected here.
-            ProbeConfiguration = ChannelConfiguration.ProbeConfiguration;
             CheckForExistingChannelPreset();
         }
 
-        private void CheckStatus()
+        void CheckStatus()
         {
             const string NoFileSelected = "No file selected.";
             const string InvalidFile = "Invalid file.";
+            const string SelectProbeInterfaceFile = "Please select a probe interface file to view electrode configuration.";
+            const string SelectAdcCalibrationFile = "Please select an ADC calibration file to view electrode configuration.";
+            const string SelectGainCalibrationFile = "Please select a gain calibration file to view electrode configuration.";
+
+            labelDefaultText.Text = string.Empty;
+
+            if (string.IsNullOrEmpty(textBoxProbeInterfaceFileName.Text))
+            {
+                labelDefaultText.Text += SelectProbeInterfaceFile + Environment.NewLine;
+            }
 
             NeuropixelsV1AdcCalibration? adcCalibration;
 
             string adcCalibrationFile = textBoxAdcCalibrationFile.Text;
+
+            if (string.IsNullOrEmpty(adcCalibrationFile))
+            {
+                labelDefaultText.Text += SelectAdcCalibrationFile + Environment.NewLine;
+            }
 
             try
             {
@@ -268,6 +290,11 @@ namespace OpenEphys.Onix1.Design
             NeuropixelsV1eGainCorrection? gainCorrection;
 
             string gainCalibrationFile = textBoxGainCalibrationFile.Text;
+
+            if (string.IsNullOrEmpty(gainCalibrationFile))
+            {
+                labelDefaultText.Text += SelectGainCalibrationFile + Environment.NewLine;
+            }
 
             try
             {
@@ -301,7 +328,7 @@ namespace OpenEphys.Onix1.Design
                                         ? gainCorrection.Value.LfpGainCorrectionFactor.ToString()
                                         : "";
 
-            panelProbe.Visible = adcCalibration.HasValue && gainCorrection.HasValue;
+            ChannelConfiguration.Visible = adcCalibration.HasValue && gainCorrection.HasValue && !string.IsNullOrEmpty(textBoxProbeInterfaceFileName.Text);
 
             if (toolStripAdcCalSN.Text == NoFileSelected)
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusWarningImage;
@@ -413,12 +440,12 @@ namespace OpenEphys.Onix1.Design
 
         private void EnableSelectedContacts()
         {
-            var electrodes = NeuropixelsV1eProbeGroup.ToElectrodes(ChannelConfiguration.ProbeConfiguration.ProbeGroup);
+            var electrodes = NeuropixelsV1eProbeGroup.ToElectrodes(ProbeGroup);
 
             var selectedElectrodes = electrodes.Where((e, ind) => ChannelConfiguration.SelectedContacts[ind])
                                                .ToArray();
 
-            ChannelConfiguration.EnableElectrodes(selectedElectrodes);
+            ProbeGroup.SelectElectrodes(selectedElectrodes);
 
             CheckForExistingChannelPreset();
         }
@@ -448,9 +475,65 @@ namespace OpenEphys.Onix1.Design
             trackBarProbePosition.Value = (int)(ChannelConfiguration.GetRelativeVerticalPosition() * 100);
         }
 
-        void TextBoxKeyPress(object sender, KeyPressEventArgs e)
+        void ProbeInterfaceFileNameChanged(object sender, EventArgs e)
         {
             CheckStatus();
+        }
+
+        void ChooseProbeInterfaceFileName(object sender, EventArgs e)
+        {
+            var ofd = new OpenFileDialog()
+            {
+                CheckFileExists = false,
+                Filter = ProbeInterfaceHelper.ProbeInterfaceFileNameFilter,
+                FilterIndex = 0,
+                InitialDirectory = File.Exists(textBoxProbeInterfaceFileName.Text) ?
+                                   Path.GetDirectoryName(textBoxProbeInterfaceFileName.Text) :
+                                   ""
+            };
+
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                ConfirmFileSaving(ProbeGroup, ProbeConfiguration.ProbeInterfaceFileName);
+
+                textBoxProbeInterfaceFileName.Text = ofd.FileName;
+                if (File.Exists(ofd.FileName) && !ChannelConfiguration.TryUpdateProbeGroupFromFile(ofd.FileName))
+                {
+                    MessageBox.Show($"Unable to load file '{ofd.FileName}'.");
+                }
+            }
+
+            CheckForExistingChannelPreset();
+            CheckStatus();
+        }
+
+        static void ConfirmFileSaving(ProbeGroup probeGroup, string fileName)
+        {
+            if (!string.IsNullOrEmpty(fileName))
+            {
+                var result = MessageBox.Show(
+                    $"Would you like to save the current channel configuration to \"{fileName}\"?",
+                    "Save File?",
+                    MessageBoxButtons.YesNo);
+
+                if (result == DialogResult.Yes)
+                {
+                    // NB: Catch all exceptions and show them as a MessageBox; uncaught exceptions will close the GUI without warning
+                    try
+                    {
+                        ProbeInterfaceHelper.SaveExternalProbeInterfaceFile(probeGroup, fileName);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message, "Error Saving Probe Interface File");
+                    }
+                }
+            }
+        }
+
+        void DialogClosing(object sender, FormClosingEventArgs e)
+        {
+            ConfirmFileSaving(ProbeGroup, ProbeConfiguration.ProbeInterfaceFileName);
         }
     }
 }

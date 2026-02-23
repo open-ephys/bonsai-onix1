@@ -25,6 +25,7 @@ namespace OpenEphys.Onix1.Design
         {
             InitializeComponent();
             Shown += FormShown;
+            FormClosing += DialogClosing;
 
             ProbeConfigurationDialog = new(configureNode.ProbeConfiguration);
             ProbeConfigurationDialog
@@ -50,6 +51,11 @@ namespace OpenEphys.Onix1.Design
         internal void Okay_Click(object sender, EventArgs e)
         {
             DialogResult = DialogResult.OK;
+        }
+
+        void DialogClosing(object sender, FormClosingEventArgs eventArgs)
+        {
+            ProbeConfigurationDialog.Close();
         }
     }
 }

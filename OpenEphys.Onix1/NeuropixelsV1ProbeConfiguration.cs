@@ -1,10 +1,5 @@
-﻿using System;
-using System.ComponentModel;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
+﻿using System.ComponentModel;
 using Bonsai;
-using Newtonsoft.Json;
 
 namespace OpenEphys.Onix1
 {
@@ -47,8 +42,7 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Initializes a new instance of <see cref="NeuropixelsV1ProbeConfiguration"/> using default <see cref="NeuropixelsV1eProbeGroup"/>
-        /// values and the given gain / reference / filter settings.
+        /// Initializes a new instance of <see cref="NeuropixelsV1ProbeConfiguration"/> using the given gain / reference / filter settings.
         /// </summary>
         /// <param name="spikeAmplifierGain">Desired or current <see cref="NeuropixelsV1Gain"/> for the spike-band.</param>
         /// <param name="lfpAmplifierGain">Desired or current <see cref="NeuropixelsV1Gain"/> for the LFP-band.</param>
@@ -73,42 +67,6 @@ namespace OpenEphys.Onix1
             LfpAmplifierGain = lfpAmplifierGain;
             Reference = reference;
             SpikeFilter = spikeFilter;
-            AdcCalibrationFileName = adcCalibrationFileName;
-            GainCalibrationFileName = gainCalibrationFileName;
-            InvertPolarity = invertPolarity;
-            ProbeInterfaceFileName = probeInterfaceFileName;
-        }
-
-        /// <summary>
-        /// Copy constructor initializes a new instance of <see cref="NeuropixelsV1ProbeConfiguration"/> using the given <see cref="NeuropixelsV1eProbeGroup"/>
-        /// values and the given gain / reference / filter settings.
-        /// </summary>
-        /// <param name="probeGroup">Desired or current <see cref="NeuropixelsV1eProbeGroup"/> variable.</param>
-        /// <param name="spikeAmplifierGain">Desired or current <see cref="NeuropixelsV1Gain"/> for the spike-band.</param>
-        /// <param name="lfpAmplifierGain">Desired or current <see cref="NeuropixelsV1Gain"/> for the LFP-band.</param>
-        /// <param name="reference">Desired or current <see cref="NeuropixelsV1ReferenceSource"/>.</param>
-        /// <param name="spikeFilter">Desired or current option to filter the spike-band.</param>
-        /// <param name="adcCalibrationFileName">Desired or current filepath to the ADC calibration file.</param>
-        /// <param name="gainCalibrationFileName">Desired or current filepath to the gain calibration file.</param>
-        /// <param name="invertPolarity">Desired or current option to invert the polarity of the signal.</param>
-        /// <param name="probeInterfaceFileName">Desired or current filepath to the ProbeInterface file.</param>
-        public NeuropixelsV1ProbeConfiguration(
-            NeuropixelsV1eProbeGroup probeGroup,
-            NeuropixelsV1Gain spikeAmplifierGain,
-            NeuropixelsV1Gain lfpAmplifierGain,
-            NeuropixelsV1ReferenceSource reference,
-            bool spikeFilter,
-            string adcCalibrationFileName,
-            string gainCalibrationFileName,
-            bool invertPolarity,
-            string probeInterfaceFileName
-        )
-        {
-            SpikeAmplifierGain = spikeAmplifierGain;
-            LfpAmplifierGain = lfpAmplifierGain;
-            Reference = reference;
-            SpikeFilter = spikeFilter;
-            ProbeGroup = probeGroup.Clone();
             AdcCalibrationFileName = adcCalibrationFileName;
             GainCalibrationFileName = gainCalibrationFileName;
             InvertPolarity = invertPolarity;
@@ -126,7 +84,6 @@ namespace OpenEphys.Onix1
             LfpAmplifierGain = probeConfiguration.LfpAmplifierGain;
             Reference = probeConfiguration.Reference;
             SpikeFilter = probeConfiguration.SpikeFilter;
-            ProbeGroup = probeConfiguration.ProbeGroup.Clone();
             AdcCalibrationFileName = probeConfiguration.AdcCalibrationFileName;
             GainCalibrationFileName = probeConfiguration.GainCalibrationFileName;
             InvertPolarity = probeConfiguration.InvertPolarity;
@@ -179,15 +136,6 @@ namespace OpenEphys.Onix1
         public bool SpikeFilter { get; set; } = true;
 
         /// <summary>
-        /// Gets the existing channel map listing all currently enabled electrodes.
-        /// </summary>
-        /// <remarks>
-        /// The channel map will always be 384 channels, and will return the 384 enabled electrodes.
-        /// </remarks>
-        [XmlIgnore]
-        public NeuropixelsV1Electrode[] ChannelMap { get => NeuropixelsV1eProbeGroup.ToChannelMap(ProbeGroup); }
-
-        /// <summary>
         /// Gets or sets the path to the gain calibration file.
         /// </summary>
         /// <remarks>
@@ -230,69 +178,17 @@ namespace OpenEphys.Onix1
         [Category(DeviceFactory.ConfigurationCategory)]
         public string AdcCalibrationFileName { get; set; }
 
-        string probeInterfaceFileName;
-
         /// <summary>
         /// Gets or sets the file path where the ProbeInterface configuration will be saved.
         /// </summary>
         /// <remarks>
         /// If left empty, the ProbeInterface configuration will not be saved.
         /// </remarks>
-        [XmlIgnore]
         [Category(DeviceFactory.ConfigurationCategory)]
         [Description("File path to where the ProbeInterface file will be saved for this probe. If the file exists, it will be overwritten.")]
         [FileNameFilter(ProbeInterfaceHelper.ProbeInterfaceFileNameFilter)]
         [Editor("Bonsai.Design.SaveFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
-        public string ProbeInterfaceFileName
-        {
-            get => probeInterfaceFileName;
-            set => probeInterfaceFileName = value;
-        }
-
-        /// <summary>
-        /// Gets or sets the ProbeInterface file name, loading the given file asynchronously when set.
-        /// </summary>
-        [XmlIgnore]
-        [Browsable(false)]
-        [Externalizable(false)]
-        public string ProbeInterfaceLoadFileName
-        {
-            get => probeInterfaceFileName;
-            set
-            {
-                probeInterfaceFileName = value;
-                probeGroupTask = Task.Run(() =>
-                {
-                    if (string.IsNullOrEmpty(probeInterfaceFileName))
-                        return new NeuropixelsV1eProbeGroup();
-
-                    return ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeInterfaceFileName, typeof(NeuropixelsV1eProbeGroup)) as NeuropixelsV1eProbeGroup;
-                });
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a string defining the path to an external ProbeInterface JSON file.
-        /// This variable is needed to properly save a workflow in Bonsai, but it is not
-        /// directly accessible in the Bonsai editor.
-        /// </summary>
-        [Browsable(false)]
-        [Externalizable(false)]
-        [XmlElement(nameof(ProbeInterfaceFileName))]
-        public string ProbeInterfaceFileNameSerialize
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(ProbeInterfaceFileName))
-                    return "";
-
-                if (probeGroup != null)
-                    ProbeInterfaceHelper.SaveExternalProbeInterfaceFile(ProbeGroup, ProbeInterfaceFileName);
-
-                return ProbeInterfaceFileName;
-            }
-            set => ProbeInterfaceLoadFileName = value;
-        }
+        public string ProbeInterfaceFileName { get; set; }
 
         /// <summary>
         /// Gets or sets a value determining if the polarity of the electrode voltages acquired by the probe
@@ -309,99 +205,5 @@ namespace OpenEphys.Onix1
         [Category(DeviceFactory.ConfigurationCategory)]
         [Description("Invert the polarity of the electrode voltages acquired by the probe.")]
         public bool InvertPolarity { get; set; }
-
-        /// <summary>
-        /// Enable the selected electrodes.
-        /// </summary>
-        /// <param name="electrodes">List of selected electrodes that are being enabled.</param>
-        public void SelectElectrodes(NeuropixelsV1Electrode[] electrodes)
-        {
-            var channelMap = ChannelMap;
-
-            foreach (var e in electrodes)
-            {
-                try
-                {
-                    channelMap[e.Channel] = e;
-                }
-                catch (IndexOutOfRangeException ex)
-                {
-                    throw new IndexOutOfRangeException($"Electrode {e.Index} specifies channel {e.Channel} but only channels " +
-                        $"0 to {channelMap.Length - 1} are supported.", ex);
-                }
-            }
-
-            ProbeGroup.UpdateDeviceChannelIndices(channelMap);
-        }
-
-        Task<NeuropixelsV1eProbeGroup> probeGroupTask = null;
-
-        NeuropixelsV1eProbeGroup probeGroup = null;
-
-        /// <summary>
-        /// Gets or sets the <see cref="NeuropixelsV1eProbeGroup"/> channel configuration for this probe.
-        /// </summary>
-        [XmlIgnore]
-        [Category(DeviceFactory.ConfigurationCategory)]
-        [Description("Defines all aspects of the probe group, including probe contours, electrode size and location, enabled channels, etc.")]
-        [Browsable(false)]
-        [Externalizable(false)]
-        public NeuropixelsV1eProbeGroup ProbeGroup
-        {
-            get
-            {
-                if (probeGroup == null)
-                {
-                    try
-                    {
-                        probeGroup = probeGroupTask?.Result ?? new NeuropixelsV1eProbeGroup();
-                    }
-                    catch (AggregateException ae)
-                    {
-                        probeGroup = new();
-                        throw new InvalidOperationException($"There was an error loading the ProbeInterface file, loading the default configuration instead.\n\nError: {ae.InnerException.Message}", ae.InnerException);
-                    }
-                }
-
-                return probeGroup;
-            }
-            set => probeGroup = value;
-        }
-
-        /// <summary>
-        /// Gets or sets a string defining the <see cref="ProbeGroup"/> in Base64.
-        /// This variable is needed to properly save a workflow in Bonsai, but it is not
-        /// directly accessible in the Bonsai editor.
-        /// </summary>
-        /// <remarks>
-        /// [Obsolete]. Cannot tag this property with the Obsolete attribute due to https://github.com/dotnet/runtime/issues/100453
-        /// </remarks>
-        [Browsable(false)]
-        [Externalizable(false)]
-        [XmlElement(nameof(ProbeGroup))]
-        public string ProbeGroupString
-        {
-            get
-            {
-                var jsonString = JsonConvert.SerializeObject(ProbeGroup);
-                return Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonString));
-            }
-            set
-            {
-                var jsonString = Encoding.UTF8.GetString(Convert.FromBase64String(value));
-                ProbeGroup = JsonConvert.DeserializeObject<NeuropixelsV1eProbeGroup>(jsonString);
-                SelectElectrodes(NeuropixelsV1eProbeGroup.ToChannelMap(ProbeGroup));
-            }
-        }
-
-        /// <summary>
-        /// Prevent the ProbeGroup property from being serialized.
-        /// </summary>
-        /// <returns>False</returns>
-        [Obsolete]
-        public bool ShouldSerializeProbeGroupString()
-        {
-            return false;
-        }
     }
 }

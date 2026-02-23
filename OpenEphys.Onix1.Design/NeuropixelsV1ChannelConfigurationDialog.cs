@@ -18,17 +18,11 @@ namespace OpenEphys.Onix1.Design
         readonly IReadOnlyList<int> ReferenceContactsList = new List<int> { 191, 575, 959 };
 
         /// <summary>
-        /// Public <see cref="NeuropixelsV1ProbeConfiguration"/> object that is modified by
-        /// <see cref="NeuropixelsV1ChannelConfigurationDialog"/>.
-        /// </summary>
-        public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; set; }
-
-        /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV1ChannelConfigurationDialog"/>.
         /// </summary>
         /// <param name="probeConfiguration">A <see cref="NeuropixelsV1ProbeConfiguration"/> object holding the current configuration settings.</param>
         public NeuropixelsV1ChannelConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration)
-            : base(probeConfiguration.ProbeGroup)
+            : base(probeConfiguration, typeof(NeuropixelsV1eProbeGroup))
         {
             zedGraphChannels.ZoomButtons = MouseButtons.None;
             zedGraphChannels.ZoomButtons2 = MouseButtons.None;
@@ -37,11 +31,7 @@ namespace OpenEphys.Onix1.Design
 
             ReferenceContacts.AddRange(ReferenceContactsList);
 
-            ProbeConfiguration = new(probeConfiguration);
-
-            HighlightEnabledContacts();
-            UpdateContactLabels();
-            DrawScale();
+            DrawProbeGroup();
             RefreshZedGraph();
         }
 
@@ -52,17 +42,14 @@ namespace OpenEphys.Onix1.Design
 
         internal override void LoadDefaultChannelLayout()
         {
-            ProbeConfiguration.ProbeGroup = new();
-            ProbeGroup = ProbeConfiguration.ProbeGroup;
-
+            base.LoadDefaultChannelLayout();
             OnFileOpenHandler();
         }
 
-        internal override bool OpenFile(Type type)
+        internal override bool OpenFile()
         {
-            if (base.OpenFile(type))
+            if (base.OpenFile())
             {
-                ProbeConfiguration.ProbeGroup = (NeuropixelsV1eProbeGroup)ProbeGroup;
                 OnFileOpenHandler();
 
                 return true;
@@ -95,7 +82,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override void DrawScale()
         {
-            if (ProbeConfiguration == null || zedGraphChannels.MasterPane.PaneList.Count < 2)
+            if (zedGraphChannels.MasterPane.PaneList.Count < 2)
                 return;
 
             var pane = zedGraphChannels.MasterPane.PaneList[1];
@@ -110,7 +97,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override void HighlightEnabledContacts()
         {
-            if (ProbeConfiguration == null)
+            if (ProbeGroup == null)
                 return;
 
             var contactObjects = zedGraphChannels.GraphPane.GraphObjList.OfType<BoxObj>()
@@ -123,7 +110,7 @@ namespace OpenEphys.Onix1.Design
                 contact.Fill.Color = DisabledContactFill;
             }
 
-            var channelMap = ProbeConfiguration.ChannelMap;
+            var channelMap = NeuropixelsV1eProbeGroup.ToChannelMap(ProbeGroup as NeuropixelsV1eProbeGroup);
 
             var contactsToEnable = contactObjects.Where(c =>
             {
@@ -142,7 +129,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override void UpdateContactLabels()
         {
-            if (ProbeConfiguration.ProbeGroup == null)
+            if (ProbeGroup == null)
                 return;
 
             var textObjs = zedGraphChannels.GraphPane.GraphObjList.OfType<TextObj>()
@@ -155,7 +142,7 @@ namespace OpenEphys.Onix1.Design
                 textObj.FontSpec.FontColor = DisabledContactTextColor;
             }
 
-            var channelMap = ProbeConfiguration.ChannelMap;
+            var channelMap = NeuropixelsV1eProbeGroup.ToChannelMap(ProbeGroup as NeuropixelsV1eProbeGroup);
 
             textObjsToUpdate = textObjs.Where(c =>
             {
@@ -173,11 +160,6 @@ namespace OpenEphys.Onix1.Design
         internal override string ContactString(int deviceChannelIndex, int index)
         {
             return index.ToString();
-        }
-
-        internal void EnableElectrodes(NeuropixelsV1Electrode[] electrodes)
-        {
-            ProbeConfiguration.SelectElectrodes(electrodes);
         }
     }
 }

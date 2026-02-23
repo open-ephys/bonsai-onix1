@@ -72,7 +72,7 @@ namespace OpenEphys.Onix1
                 var device = info.GetDeviceContext(typeof(NeuropixelsV1e));
                 var passthrough = device.GetPassthroughDeviceContext(typeof(DS90UB9x));
                 var probeData = device.Context.GetDeviceFrames(passthrough.Address);
-                int[,] channelOrder = orderByDepth ? Neuropixels.OrderChannelsByDepth(info.ProbeConfiguration.ChannelMap, RawToChannel) : RawToChannel;
+                int[,] channelOrder = orderByDepth ? Neuropixels.OrderChannelsByDepth(info.ProbeGroup.ChannelMap, RawToChannel) : RawToChannel;
 
                 return Observable.Create<NeuropixelsV1DataFrame>(observer =>
                 {

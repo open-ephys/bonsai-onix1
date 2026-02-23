@@ -19,6 +19,8 @@ namespace OpenEphys.Onix1.Design
         /// Initializes a new instance of <see cref="Rhs2116ChannelConfigurationDialog"/>.
         /// </summary>
         /// <param name="probeGroup">Channel configuration settings for a <see cref="Rhs2116ProbeGroup"/>.</param>
+        // TODO: Call the new ChannelConfigurationDialog constructor with the ProbeInterface file
+        // name instead of the probe group
         public Rhs2116ChannelConfigurationDialog(Rhs2116ProbeGroup probeGroup)
             : base(probeGroup)
         {
@@ -49,9 +51,9 @@ namespace OpenEphys.Onix1.Design
             return new Rhs2116ProbeGroup();
         }
 
-        internal override bool OpenFile(Type type)
+        internal override bool OpenFile()
         {
-            if (base.OpenFile(type))
+            if (base.OpenFile())
             {
                 OnFileOpenHandler();
 

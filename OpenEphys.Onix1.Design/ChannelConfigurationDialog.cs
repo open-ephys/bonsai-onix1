@@ -14,8 +14,10 @@ namespace OpenEphys.Onix1.Design
     /// Within, there are a number of useful methods for initializing, resizing, and drawing channels.
     /// Each device must implement their own ChannelConfigurationDialog.
     /// </summary>
-    public partial class ChannelConfigurationDialog : Form
+    public abstract partial class ChannelConfigurationDialog : Form
     {
+        Type probeGroupType;
+
         internal event EventHandler OnResizeZedGraph;
         internal event EventHandler OnDrawProbeGroup;
 
@@ -45,10 +47,10 @@ namespace OpenEphys.Onix1.Design
         /// Constructs the dialog window using the given probe group, and plots all contacts after loading.
         /// </summary>
         /// <param name="probeGroup">Channel configuration given as a <see cref="ProbeInterface.NET.ProbeGroup"/></param>
+        [Obsolete("This constructor is obsolete and will be removed in future version.")]
         public ChannelConfigurationDialog(ProbeGroup probeGroup)
         {
             InitializeComponent();
-            Shown += FormShown;
 
             if (probeGroup == null)
             {
@@ -59,7 +61,39 @@ namespace OpenEphys.Onix1.Design
                 ProbeGroup = probeGroup;
             }
 
-            ReferenceContacts = new List<int>();
+            probeGroupType = ProbeGroup.GetType();
+
+            InitializeDialog();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the ChannelConfigurationDialog using the specified probe configuration and
+        /// probe group type.
+        /// </summary>
+        /// <param name="probeConfiguration">The probe interface configuration to use for loading or initializing the channel layout.</param>
+        /// <param name="probeGroupType">The type representing the probe group.</param>
+        public ChannelConfigurationDialog(IProbeInterfaceConfiguration probeConfiguration, Type probeGroupType)
+        {
+            InitializeComponent();
+
+            this.probeGroupType = probeGroupType;
+
+            if (string.IsNullOrEmpty(probeConfiguration.ProbeInterfaceFileName) ||
+                !File.Exists(probeConfiguration.ProbeInterfaceFileName))
+            {
+                LoadDefaultChannelLayout();
+            }
+            else
+            {
+                ProbeGroup = LoadConfigurationFile(probeConfiguration.ProbeInterfaceFileName) ?? DefaultChannelLayout();
+            }
+
+            InitializeDialog();
+        }
+
+        void InitializeDialog()
+        {
+            Shown += FormShown;
 
             zedGraphChannels.MouseDownEvent += MouseDownEvent;
             zedGraphChannels.MouseMoveEvent += MouseMoveEvent;
@@ -81,9 +115,6 @@ namespace OpenEphys.Onix1.Design
             {
                 pane.Chart.Fill = new Fill(Color.WhiteSmoke);
             }
-
-            DrawProbeGroup();
-            RefreshZedGraph();
         }
 
         /// <summary>
@@ -99,10 +130,7 @@ namespace OpenEphys.Onix1.Design
         /// </code>
         /// </example>
         /// <returns>Returns an object that inherits from <see cref="ProbeInterface.NET.ProbeGroup"/></returns>
-        internal virtual ProbeGroup DefaultChannelLayout()
-        {
-            throw new NotImplementedException();
-        }
+        internal abstract ProbeGroup DefaultChannelLayout();
 
         internal virtual void LoadDefaultChannelLayout()
         {
@@ -283,14 +311,32 @@ namespace OpenEphys.Onix1.Design
             ResizeZedGraph();
         }
 
-        internal virtual bool OpenFile(Type type)
+        internal bool TryUpdateProbeGroupFromFile(string fileName)
         {
-            var newConfiguration = OpenAndParseConfigurationFile(type);
+            var newConfiguration = LoadConfigurationFile(fileName);
 
-            if (newConfiguration != null)
+            if (newConfiguration != null && ValidateProbeGroup(newConfiguration))
             {
                 ProbeGroup = newConfiguration;
+                RedrawProbeGroup();
                 return true;
+            }
+
+            return false;
+        }
+
+        internal virtual bool OpenFile()
+        {
+            using OpenFileDialog ofd = new();
+
+            ofd.Filter = "Probe Interface Files (*.json)|*.json";
+            ofd.FilterIndex = 1;
+            ofd.Multiselect = false;
+            ofd.Title = "Choose probe interface file";
+
+            if (ofd.ShowDialog() == DialogResult.OK && File.Exists(ofd.FileName))
+            {
+                return TryUpdateProbeGroupFromFile(ofd.FileName);
             }
 
             return false;
@@ -318,33 +364,19 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        internal ProbeGroup OpenAndParseConfigurationFile(Type type)
+        internal ProbeGroup LoadConfigurationFile(string fileName)
         {
-            using OpenFileDialog ofd = new();
-
-            ofd.Filter = "Probe Interface Files (*.json)|*.json";
-            ofd.FilterIndex = 1;
-            ofd.Multiselect = false;
-            ofd.Title = "Choose probe interface file";
-
-            if (ofd.ShowDialog() == DialogResult.OK && File.Exists(ofd.FileName))
+            // NB: This method is called from an open dialog; throwing an exception without handling it would close the dialog.
+            //     Show the resulting exception as a MessageBox to warn the user of the exception without closing the whole dialog.
+            try
             {
-                // NB: This method is called from an open dialog; throwing an exception without handling it would close the dialog.
-                //     Show the resulting exception as a MessageBox to warn the user of the exception with closing the whole dialog.
-                try
-                {
-                    var newConfiguration = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(ofd.FileName, type);
-
-                    return ValidateProbeGroup(newConfiguration) ? newConfiguration : null;
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message, "Error Importing ProbeInterface File");
-                    return null;
-                }
+                return ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(fileName, probeGroupType);
             }
-
-            return null;
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error Loading ProbeInterface File");
+                return null;
+            }
         }
 
         internal void DrawProbeGroup()
@@ -1036,18 +1068,19 @@ namespace OpenEphys.Onix1.Design
 
         private void MenuItemOpenFile(object sender, EventArgs e)
         {
-            if (OpenFile(ProbeGroup.GetType()))
+            if (OpenFile())
             {
-                DrawProbeGroup();
-                ResetZoom();
-                UpdateFontSize();
-                RefreshZedGraph();
+                RedrawProbeGroup();
             }
         }
 
         private void MenuItemLoadDefaultConfig(object sender, EventArgs e)
         {
             LoadDefaultChannelLayout();
+        }
+
+        internal void RedrawProbeGroup()
+        {
             DrawProbeGroup();
             ResetZoom();
             UpdateFontSize();

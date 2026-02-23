@@ -156,23 +156,30 @@ namespace OpenEphys.Onix1
         /// </returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
+            if (string.IsNullOrEmpty(ProbeConfiguration.ProbeInterfaceFileName))
+                throw new ArgumentException("ProbeInterface file name must be specified in the configuration.");
+
             var enable = Enable;
             var invertPolarity = ProbeConfiguration.InvertPolarity;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
+            var probeInterfaceFileName = ProbeConfiguration.ProbeInterfaceFileName;
+
             return source.ConfigureDevice(context =>
             {
+                var probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeInterfaceFileName, typeof(NeuropixelsV1eProbeGroup)) as NeuropixelsV1eProbeGroup;
+
                 var device = context.GetDeviceContext(deviceAddress, typeof(NeuropixelsV1f));
                 device.WriteRegister(NeuropixelsV1f.ENABLE, enable ? 1u : 0);
 
                 if (enable)
                 {
-                    var probeControl = new NeuropixelsV1fRegisterContext(device, ProbeConfiguration);
+                    var probeControl = new NeuropixelsV1fRegisterContext(device, ProbeConfiguration, probeGroup);
                     probeControl.InitializeProbe();
                     probeControl.WriteShiftRegisters();
                 }
 
-                var deviceInfo = new NeuropixelsV1fDeviceInfo(context, DeviceType, deviceAddress, ProbeConfiguration);
+                var deviceInfo = new NeuropixelsV1fDeviceInfo(context, DeviceType, deviceAddress, probeGroup);
 
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });

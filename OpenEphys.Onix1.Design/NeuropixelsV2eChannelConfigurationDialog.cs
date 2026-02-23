@@ -23,6 +23,8 @@ namespace OpenEphys.Onix1.Design
         /// Initializes a new instance of <see cref="NeuropixelsV2eChannelConfigurationDialog"/>.
         /// </summary>
         /// <param name="probeConfiguration">A <see cref="NeuropixelsV2ProbeConfiguration"/> object holding the current configuration settings.</param>
+        // TODO: Call the new ChannelConfigurationDialog constructor with the ProbeInterface file
+        // name instead of the probe group
         public NeuropixelsV2eChannelConfigurationDialog(NeuropixelsV2ProbeConfiguration probeConfiguration)
             : base(probeConfiguration.ProbeGroup.Clone())
         {
@@ -63,9 +65,9 @@ namespace OpenEphys.Onix1.Design
             OnFileOpenHandler();
         }
 
-        internal override bool OpenFile(Type type)
+        internal override bool OpenFile()
         {
-            if (base.OpenFile(type))
+            if (base.OpenFile())
             {
                 ProbeConfiguration.ProbeGroup = (NeuropixelsV2eProbeGroup)ProbeGroup;
                 OnFileOpenHandler();

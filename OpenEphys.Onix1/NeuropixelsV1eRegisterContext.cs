@@ -19,7 +19,7 @@ namespace OpenEphys.Onix1
         readonly BitArray[] BaseConfigs;
 
         public NeuropixelsV1eRegisterContext(DeviceContext deviceContext, uint i2cAddress, ulong probeSerialNumber,
-            NeuropixelsV1ProbeConfiguration probeConfiguration)
+            NeuropixelsV1ProbeConfiguration probeConfiguration, NeuropixelsV1eProbeGroup probeGroup)
             : base(deviceContext, i2cAddress)
         {
             if (!File.Exists(probeConfiguration.GainCalibrationFileName))
@@ -69,7 +69,7 @@ namespace OpenEphys.Onix1
             AdcOffsets = Adcs.ToList().Select(a => (ushort)a.Offset).ToArray();
 
             // Create Configuration bit arrays
-            ShankConfig = NeuropixelsV1.MakeShankBits(probeConfiguration);
+            ShankConfig = NeuropixelsV1.MakeShankBits(probeConfiguration, probeGroup);
             BaseConfigs = NeuropixelsV1.MakeConfigBits(probeConfiguration, Adcs);
            
         }

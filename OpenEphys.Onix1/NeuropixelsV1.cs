@@ -31,7 +31,7 @@ namespace OpenEphys.Onix1
         public const int ElectrodeCount = 960;
         public const int FrameWords = 40;
 
-        internal static BitArray MakeShankBits(NeuropixelsV1ProbeConfiguration configuration)
+        internal static BitArray MakeShankBits(NeuropixelsV1ProbeConfiguration configuration, NeuropixelsV1eProbeGroup probeGroup)
         {
             const int ShankConfigurationBitCount = 968;
             const int ShankBitExt1 = 965;
@@ -42,7 +42,7 @@ namespace OpenEphys.Onix1
 
             var shankBits = new BitArray(ShankConfigurationBitCount);
 
-            foreach (var e in configuration.ChannelMap)
+            foreach (var e in probeGroup.ChannelMap)
             {
                 if (e.Index == InternalReferenceChannel) continue;
 
