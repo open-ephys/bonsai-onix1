@@ -37,7 +37,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Defines a configuration for NeuropixelsV1e.
     /// </summary>
-    public class NeuropixelsV1ProbeConfiguration
+    public class NeuropixelsV1ProbeConfiguration : IProbeInterfaceConfiguration
     {
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV1ProbeConfiguration"/> using default values.

@@ -44,7 +44,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     [XmlInclude(typeof(NeuropixelsV2QuadShankProbeConfiguration))]
     [XmlType(Namespace = Constants.XmlNamespace)]
-    public abstract class NeuropixelsV2ProbeConfiguration
+    public abstract class NeuropixelsV2ProbeConfiguration : IProbeInterfaceConfiguration
     {
         /// <summary>
         /// Gets or sets the <see cref="NeuropixelsV2Probe"/> for this probe.
