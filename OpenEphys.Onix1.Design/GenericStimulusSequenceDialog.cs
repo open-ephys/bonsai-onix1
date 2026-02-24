@@ -10,7 +10,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Partial class to create a channel configuration GUI for a <see cref="GenericStimulusSequenceDialog"/>.
     /// </summary>
-    public partial class GenericStimulusSequenceDialog : Form
+    public abstract partial class GenericStimulusSequenceDialog : Form
     {
         readonly int NumberOfChannels;
         readonly bool UseProbeGroup;
@@ -225,8 +225,8 @@ namespace OpenEphys.Onix1.Design
 
         internal virtual double GetPeakToPeakAmplitudeInMicroAmps() => throw new NotImplementedException();
 
-        internal string yAxisScaleUnits = "µA";
-        internal string xAxisScaleUnits = "ms";
+        private protected abstract string YAxisScaleUnits { get; }
+        private protected abstract string XAxisScaleUnits { get; }
 
         void DrawScale()
         {
@@ -280,13 +280,13 @@ namespace OpenEphys.Onix1.Design
 
             const double TextObjScaleFactor = 1.02;
 
-            TextObj timeScale = new(GetTimeScaleString(x) + " " + xAxisScaleUnits, zeroOffsetX + x * TextObjScaleFactor, zeroOffsetY, CoordType.AxisXYScale, AlignH.Left, AlignV.Center);
+            TextObj timeScale = new(GetTimeScaleString(x) + " " + XAxisScaleUnits, zeroOffsetX + x * TextObjScaleFactor, zeroOffsetY, CoordType.AxisXYScale, AlignH.Left, AlignV.Center);
             timeScale.FontSpec.Border.IsVisible = false;
             timeScale.FontSpec.Fill.IsVisible = false;
             timeScale.ZOrder = ZOrder.A_InFront;
             zedGraphWaveform.GraphPane.GraphObjList.Add(timeScale);
 
-            TextObj amplitudeScale = new(yScaleValue.ToString("0.##") + " " + yAxisScaleUnits, zeroOffsetX, zeroOffsetY + y * TextObjScaleFactor, CoordType.AxisXYScale, AlignH.Left, AlignV.Bottom);
+            TextObj amplitudeScale = new(yScaleValue.ToString("0.##") + " " + YAxisScaleUnits, zeroOffsetX, zeroOffsetY + y * TextObjScaleFactor, CoordType.AxisXYScale, AlignH.Left, AlignV.Bottom);
             amplitudeScale.FontSpec.Border.IsVisible = false;
             amplitudeScale.FontSpec.Fill.IsVisible = false;
             amplitudeScale.ZOrder = ZOrder.A_InFront;
