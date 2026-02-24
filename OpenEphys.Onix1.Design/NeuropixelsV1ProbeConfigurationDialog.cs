@@ -3,7 +3,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using OpenEphys.ProbeInterface.NET;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -28,10 +27,10 @@ namespace OpenEphys.Onix1.Design
 
         NeuropixelsV1eProbeGroup ProbeGroup => ChannelConfiguration.ProbeGroup as NeuropixelsV1eProbeGroup ?? throw new InvalidCastException($"Expected the ProbeGroup to be of type '{nameof(NeuropixelsV1eProbeGroup)}', but it is '{ChannelConfiguration.ProbeGroup.GetType().Name}'.");
 
-        /// <summary>
-        /// Gets or sets the probe configuration.
-        /// </summary>
-        public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; set; }
+        internal NeuropixelsV1ProbeConfiguration ProbeConfiguration
+        {
+            get => ChannelConfiguration.ProbeConfiguration as NeuropixelsV1ProbeConfiguration;
+        }
 
         /// <inheritdoc cref="NeuropixelsV1ProbeConfiguration.InvertPolarity"/>
         [Obsolete]
@@ -51,14 +50,13 @@ namespace OpenEphys.Onix1.Design
             Shown += FormShown;
             FormClosing += DialogClosing;
 
-            ProbeConfiguration = probeConfiguration;
-
             ChannelConfiguration = new(probeConfiguration);
             ChannelConfiguration
                 .SetChildFormProperties(this)
                 .AddDialogToPanel(panelProbe);
 
             this.AddMenuItemsFromDialogToFileOption(ChannelConfiguration);
+            ChannelConfiguration.HideFileMenu();
 
             ChannelConfiguration.OnZoom += UpdateTrackBarLocation;
             ChannelConfiguration.OnFileLoad += OnFileLoadEvent;
@@ -96,12 +94,8 @@ namespace OpenEphys.Onix1.Design
                 CheckStatus();
             };
 
-            textBoxProbeInterfaceFileName.Text = ProbeConfiguration.ProbeInterfaceFileName;
-            textBoxProbeInterfaceFileName.TextChanged += (sender, e) =>
-            {
-                ProbeConfiguration.ProbeInterfaceFileName = ((TextBox)sender).Text;
-                CheckStatus();
-            };
+            toolStripFileName.Text = ProbeConfiguration.ProbeInterfaceFileName;
+            ChannelConfiguration.OnProbeConfigurationChanged += (sender, e) => CheckStatus();
 
             comboBoxChannelPresets.DataSource = Enum.GetValues(typeof(ChannelPreset));
             CheckForExistingChannelPreset();
@@ -121,8 +115,6 @@ namespace OpenEphys.Onix1.Design
             {
                 tableLayoutPanel1.Controls.Remove(flowLayoutPanel1);
                 tableLayoutPanel1.RowCount = 1;
-
-                menuStrip.Visible = false;
             }
 
             if (ChannelConfiguration.Visible)
@@ -235,22 +227,17 @@ namespace OpenEphys.Onix1.Design
         private void OnFileLoadEvent(object sender, EventArgs e)
         {
             CheckForExistingChannelPreset();
+            CheckStatus();
         }
 
         void CheckStatus()
         {
             const string NoFileSelected = "No file selected.";
             const string InvalidFile = "Invalid file.";
-            const string SelectProbeInterfaceFile = "Please select a probe interface file to view electrode configuration.";
-            const string SelectAdcCalibrationFile = "Please select an ADC calibration file to view electrode configuration.";
-            const string SelectGainCalibrationFile = "Please select a gain calibration file to view electrode configuration.";
+            const string SelectAdcCalibrationFile = "Please select an ADC calibration file to modify electrode configurations.";
+            const string SelectGainCalibrationFile = "Please select a gain calibration file to modify electrode configurations.";
 
             labelDefaultText.Text = string.Empty;
-
-            if (string.IsNullOrEmpty(textBoxProbeInterfaceFileName.Text))
-            {
-                labelDefaultText.Text += SelectProbeInterfaceFile + Environment.NewLine;
-            }
 
             NeuropixelsV1AdcCalibration? adcCalibration;
 
@@ -328,7 +315,7 @@ namespace OpenEphys.Onix1.Design
                                         ? gainCorrection.Value.LfpGainCorrectionFactor.ToString()
                                         : "";
 
-            ChannelConfiguration.Visible = adcCalibration.HasValue && gainCorrection.HasValue && !string.IsNullOrEmpty(textBoxProbeInterfaceFileName.Text);
+            ChannelConfiguration.Visible = adcCalibration.HasValue && gainCorrection.HasValue;
 
             if (toolStripAdcCalSN.Text == NoFileSelected)
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusWarningImage;
@@ -347,6 +334,12 @@ namespace OpenEphys.Onix1.Design
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusBlockedImage;
             else
                 toolStripLabelGainCalibrationSn.Image = Properties.Resources.StatusReadyImage;
+
+            toolStripFileName.Text = string.IsNullOrEmpty(ProbeConfiguration.ProbeInterfaceFileName)
+                                         ? "?"
+                                         : Path.GetFileName(ProbeConfiguration.ProbeInterfaceFileName);
+
+            toolStripFileName.ToolTipText = ProbeConfiguration.ProbeInterfaceFileName;
         }
 
         private void ChooseGainCalibrationFile_Click(object sender, EventArgs e)
@@ -475,65 +468,17 @@ namespace OpenEphys.Onix1.Design
             trackBarProbePosition.Value = (int)(ChannelConfiguration.GetRelativeVerticalPosition() * 100);
         }
 
-        void ProbeInterfaceFileNameChanged(object sender, EventArgs e)
-        {
-            CheckStatus();
-        }
-
-        void ChooseProbeInterfaceFileName(object sender, EventArgs e)
-        {
-            var ofd = new OpenFileDialog()
-            {
-                CheckFileExists = false,
-                Filter = ProbeInterfaceHelper.ProbeInterfaceFileNameFilter,
-                FilterIndex = 0,
-                InitialDirectory = File.Exists(textBoxProbeInterfaceFileName.Text) ?
-                                   Path.GetDirectoryName(textBoxProbeInterfaceFileName.Text) :
-                                   ""
-            };
-
-            if (ofd.ShowDialog() == DialogResult.OK)
-            {
-                ConfirmFileSaving(ProbeGroup, ProbeConfiguration.ProbeInterfaceFileName);
-
-                textBoxProbeInterfaceFileName.Text = ofd.FileName;
-                if (File.Exists(ofd.FileName) && !ChannelConfiguration.TryUpdateProbeGroupFromFile(ofd.FileName))
-                {
-                    MessageBox.Show($"Unable to load file '{ofd.FileName}'.");
-                }
-            }
-
-            CheckForExistingChannelPreset();
-            CheckStatus();
-        }
-
-        static void ConfirmFileSaving(ProbeGroup probeGroup, string fileName)
-        {
-            if (!string.IsNullOrEmpty(fileName))
-            {
-                var result = MessageBox.Show(
-                    $"Would you like to save the current channel configuration to \"{fileName}\"?",
-                    "Save File?",
-                    MessageBoxButtons.YesNo);
-
-                if (result == DialogResult.Yes)
-                {
-                    // NB: Catch all exceptions and show them as a MessageBox; uncaught exceptions will close the GUI without warning
-                    try
-                    {
-                        ProbeInterfaceHelper.SaveExternalProbeInterfaceFile(probeGroup, fileName);
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show(ex.Message, "Error Saving Probe Interface File");
-                    }
-                }
-            }
-        }
-
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
-            ConfirmFileSaving(ProbeGroup, ProbeConfiguration.ProbeInterfaceFileName);
+            if (DialogResult == DialogResult.Cancel)
+                return;
+
+            ChannelConfiguration.Close();
+
+            if (!ChannelConfiguration.IsDisposed)
+            {
+                e.Cancel = true;
+            }
         }
     }
 }

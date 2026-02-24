@@ -34,8 +34,6 @@ namespace OpenEphys.Onix1.Design
 
             DialogNeuropixelsV1e.SetChildFormProperties(this).AddDialogToPanel(panelNeuropixelsV1e);
 
-            this.AddMenuItemsFromDialogToFileOption(DialogNeuropixelsV1e, "NeuropixelsV1e");
-
             DialogBno055 = new(new ConfigurePolledBno055(configureBno055));
 
             DialogBno055.SetChildFormProperties(this).AddDialogToPanel(panelBno055);
@@ -51,7 +49,15 @@ namespace OpenEphys.Onix1.Design
 
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
+            if (DialogResult == DialogResult.Cancel)
+                return;
+
             DialogNeuropixelsV1e.Close();
+
+            if (!DialogNeuropixelsV1e.IsDisposed)
+            {
+                e.Cancel = true;
+            }
         }
     }
 }

@@ -6,7 +6,8 @@ namespace OpenEphys.Onix1
 {
     internal static class ProbeInterfaceHelper
     {
-        public const string ProbeInterfaceFileNameFilter = "ProbeInterface Files|*.json|All Files|*.*";
+        public const string ProbeInterfaceFileExtension = ".json";
+        public const string ProbeInterfaceFileNameFilter = "ProbeInterface Files|*" + ProbeInterfaceFileExtension + "|All Files|*.*";
 
         public static ProbeGroup LoadExternalProbeInterfaceFile(string probeInterfaceFileName, Type type)
         {

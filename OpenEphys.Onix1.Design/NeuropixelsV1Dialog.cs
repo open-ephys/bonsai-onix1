@@ -31,8 +31,6 @@ namespace OpenEphys.Onix1.Design
             ProbeConfigurationDialog
                 .SetChildFormProperties(this)
                 .AddDialogToPanel(panelProbe);
-
-            this.AddMenuItemsFromDialogToFileOption(ProbeConfigurationDialog);
         }
 
         private void FormShown(object sender, EventArgs e)
@@ -41,8 +39,6 @@ namespace OpenEphys.Onix1.Design
             {
                 tableLayoutPanel1.Controls.Remove(flowLayoutPanel1);
                 tableLayoutPanel1.RowCount = 1;
-
-                menuStrip.Visible = false;
             }
 
             ProbeConfigurationDialog.Show();
@@ -53,9 +49,17 @@ namespace OpenEphys.Onix1.Design
             DialogResult = DialogResult.OK;
         }
 
-        void DialogClosing(object sender, FormClosingEventArgs eventArgs)
+        void DialogClosing(object sender, FormClosingEventArgs e)
         {
+            if (DialogResult == DialogResult.Cancel)
+                return;
+
             ProbeConfigurationDialog.Close();
+
+            if (!ProbeConfigurationDialog.IsDisposed)
+            {
+                e.Cancel = true;
+            }
         }
     }
 }

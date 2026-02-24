@@ -22,7 +22,7 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <param name="probeConfiguration">A <see cref="NeuropixelsV1ProbeConfiguration"/> object holding the current configuration settings.</param>
         public NeuropixelsV1ChannelConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration)
-            : base(probeConfiguration, typeof(NeuropixelsV1eProbeGroup))
+            : base(new NeuropixelsV1ProbeConfiguration(probeConfiguration), typeof(NeuropixelsV1eProbeGroup))
         {
             zedGraphChannels.ZoomButtons = MouseButtons.None;
             zedGraphChannels.ZoomButtons2 = MouseButtons.None;
@@ -46,9 +46,9 @@ namespace OpenEphys.Onix1.Design
             OnFileOpenHandler();
         }
 
-        internal override bool OpenFile()
+        internal override bool OpenNewFile(bool updateFileName = false)
         {
-            if (base.OpenFile())
+            if (base.OpenNewFile(updateFileName))
             {
                 OnFileOpenHandler();
 

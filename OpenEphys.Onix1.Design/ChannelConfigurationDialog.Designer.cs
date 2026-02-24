@@ -35,7 +35,11 @@
             this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.fileMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dropDownOpenFile = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.dropDownSaveFile = new System.Windows.Forms.ToolStripMenuItem();
+            this.dropDownSaveFileAs = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.dropDownImportFile = new System.Windows.Forms.ToolStripMenuItem();
             this.dropDownLoadDefault = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
@@ -79,6 +83,7 @@
             // 
             // menuStrip
             // 
+            this.menuStrip.BackColor = System.Drawing.Color.LightGray;
             this.menuStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.menuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileMenuItem});
@@ -87,13 +92,16 @@
             this.menuStrip.Padding = new System.Windows.Forms.Padding(5, 1, 0, 1);
             this.menuStrip.Size = new System.Drawing.Size(609, 24);
             this.menuStrip.TabIndex = 5;
-            this.menuStrip.Text = "menuStripChannelConfiguration";
             // 
             // fileMenuItem
             // 
             this.fileMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.dropDownOpenFile,
+            this.toolStripSeparator1,
             this.dropDownSaveFile,
+            this.dropDownSaveFileAs,
+            this.toolStripSeparator2,
+            this.dropDownImportFile,
             this.dropDownLoadDefault});
             this.fileMenuItem.Name = "fileMenuItem";
             this.fileMenuItem.Size = new System.Drawing.Size(37, 22);
@@ -102,22 +110,55 @@
             // dropDownOpenFile
             // 
             this.dropDownOpenFile.Name = "dropDownOpenFile";
+            this.dropDownOpenFile.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
             this.dropDownOpenFile.Size = new System.Drawing.Size(218, 22);
-            this.dropDownOpenFile.Text = "Import ProbeInterface File";
+            this.dropDownOpenFile.Text = "Open";
+            this.dropDownOpenFile.ToolTipText = "Open a new file and update the ProbeInterface file name to the new file path.";
             this.dropDownOpenFile.Click += new System.EventHandler(this.MenuItemOpenFile);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(215, 6);
             // 
             // dropDownSaveFile
             // 
             this.dropDownSaveFile.Name = "dropDownSaveFile";
+            this.dropDownSaveFile.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
             this.dropDownSaveFile.Size = new System.Drawing.Size(218, 22);
-            this.dropDownSaveFile.Text = "Export ProbeInterface File";
+            this.dropDownSaveFile.Text = "Save";
+            this.dropDownSaveFile.ToolTipText = "Save the current electrode configuration to the current file path.";
             this.dropDownSaveFile.Click += new System.EventHandler(this.MenuItemSaveFile);
+            // 
+            // dropDownSaveFileAs
+            // 
+            this.dropDownSaveFileAs.Name = "dropDownSaveFileAs";
+            this.dropDownSaveFileAs.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift) 
+            | System.Windows.Forms.Keys.S)));
+            this.dropDownSaveFileAs.Size = new System.Drawing.Size(218, 22);
+            this.dropDownSaveFileAs.Text = "Save As...";
+            this.dropDownSaveFileAs.ToolTipText = "Save the electrode configuration to a new file path.";
+            this.dropDownSaveFileAs.Click += new System.EventHandler(this.MenuItemSaveFileAs);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(215, 6);
+            // 
+            // dropDownImportFile
+            // 
+            this.dropDownImportFile.Name = "dropDownImportFile";
+            this.dropDownImportFile.Size = new System.Drawing.Size(218, 22);
+            this.dropDownImportFile.Text = "Import Configuration";
+            this.dropDownImportFile.ToolTipText = "Import the contents of another file without overwriting the file path.";
+            this.dropDownImportFile.Click += new System.EventHandler(this.MenuItemImportFile);
             // 
             // dropDownLoadDefault
             // 
             this.dropDownLoadDefault.Name = "dropDownLoadDefault";
             this.dropDownLoadDefault.Size = new System.Drawing.Size(218, 22);
             this.dropDownLoadDefault.Text = "Load Default Configuration";
+            this.dropDownLoadDefault.ToolTipText = "Load the default configuration without changing the file path.";
             this.dropDownLoadDefault.Click += new System.EventHandler(this.MenuItemLoadDefaultConfig);
             // 
             // tableLayoutPanel1
@@ -172,11 +213,15 @@
         internal ZedGraph.ZedGraphControl zedGraphChannels;
         private System.Windows.Forms.MenuStrip menuStrip;
         private System.Windows.Forms.ToolStripMenuItem fileMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem dropDownOpenFile;
-        private System.Windows.Forms.ToolStripMenuItem dropDownSaveFile;
+        private System.Windows.Forms.ToolStripMenuItem dropDownImportFile;
+        private System.Windows.Forms.ToolStripMenuItem dropDownSaveFileAs;
         private System.Windows.Forms.ToolStripMenuItem dropDownLoadDefault;
         private System.Windows.Forms.Button buttonResetZoom;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel2;
+        private System.Windows.Forms.ToolStripMenuItem dropDownOpenFile;
+        private System.Windows.Forms.ToolStripMenuItem dropDownSaveFile;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
     }
 }

@@ -51,9 +51,9 @@ namespace OpenEphys.Onix1.Design
             return new Rhs2116ProbeGroup();
         }
 
-        internal override bool OpenFile()
+        internal override bool OpenNewFile(bool updateFileName = false)
         {
-            if (base.OpenFile())
+            if (base.OpenNewFile(updateFileName))
             {
                 OnFileOpenHandler();
 
