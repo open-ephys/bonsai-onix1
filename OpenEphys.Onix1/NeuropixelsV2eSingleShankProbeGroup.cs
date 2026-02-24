@@ -7,18 +7,18 @@ using OpenEphys.ProbeInterface.NET;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// A <see cref="NeuropixelsV2eQuadShankProbeGroup"/> class for NeuropixelsV2e.
+    /// A <see cref="NeuropixelsV2eSingleShankProbeGroup"/> class for NeuropixelsV2e.
     /// </summary>
-    public class NeuropixelsV2eQuadShankProbeGroup : NeuropixelsV2eProbeGroup
+    public class NeuropixelsV2eSingleShankProbeGroup : NeuropixelsV2eProbeGroup
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="NeuropixelsV2eQuadShankProbeGroup"/> class.
+        /// Initializes a new instance of the <see cref="NeuropixelsV2eSingleShankProbeGroup"/> class.
         /// </summary>
         /// <remarks>
-        /// The default constructor will initialize the new <see cref="NeuropixelsV2eQuadShankProbeGroup"/> with
+        /// The default constructor will initialize the new <see cref="NeuropixelsV2eSingleShankProbeGroup"/> with
         /// the default settings for all contacts, including their positions, shapes, and IDs.
         /// </remarks>
-        public NeuropixelsV2eQuadShankProbeGroup()
+        public NeuropixelsV2eSingleShankProbeGroup()
             : base("probeinterface", "0.2.21", DefaultProbes())
         {
         }
@@ -27,11 +27,11 @@ namespace OpenEphys.Onix1
         {
             var probe = new Probe[1];
 
-            const int numberOfShanks = 4;
+            const int numberOfShanks = 1;
 
             probe[0] = new(ProbeNdim.Two,
                            ProbeSiUnits.um,
-                           new ProbeAnnotations("Neuropixels 2.0 - multishank", "IMEC"),
+                           new ProbeAnnotations("Neuropixels 2.0 - single shank", "IMEC"),
                            null,
                            DefaultContactPositions(NeuropixelsV2.ElectrodePerShank * numberOfShanks),
                            Probe.DefaultContactPlaneAxes(NeuropixelsV2.ElectrodePerShank * numberOfShanks),
@@ -46,7 +46,7 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="NeuropixelsV2eQuadShankProbeGroup"/> class.
+        /// Initializes a new instance of the <see cref="NeuropixelsV2eSingleShankProbeGroup"/> class.
         /// </summary>
         /// <remarks>
         /// This constructor is marked with the <see cref="JsonConstructorAttribute"/>, and is the
@@ -56,54 +56,45 @@ namespace OpenEphys.Onix1
         /// <param name="version">String defining the <see cref="ProbeGroup.Version"/>.</param>
         /// <param name="probes">Array of <see cref="Probe">Probes</see>.</param>
         [JsonConstructor]
-        public NeuropixelsV2eQuadShankProbeGroup(string specification, string version, Probe[] probes)
+        public NeuropixelsV2eSingleShankProbeGroup(string specification, string version, Probe[] probes)
             : base(specification, version, probes)
         {
         }
 
         /// <summary>
-        /// Copy constructor that initializes a copied instance of the <see cref="NeuropixelsV2eQuadShankProbeGroup"/> class.
+        /// Copy constructor that initializes a copied instance of the <see cref="NeuropixelsV2eSingleShankProbeGroup"/> class.
         /// </summary>
-        /// <param name="probeGroup">An existing <see cref="NeuropixelsV2eQuadShankProbeGroup"/> object.</param>
-        public NeuropixelsV2eQuadShankProbeGroup(NeuropixelsV2eQuadShankProbeGroup probeGroup)
+        /// <param name="probeGroup">An existing <see cref="NeuropixelsV2eSingleShankProbeGroup"/> object.</param>
+        public NeuropixelsV2eSingleShankProbeGroup(NeuropixelsV2eSingleShankProbeGroup probeGroup)
             : base(probeGroup)
         {
         }
 
         internal override NeuropixelsV2eProbeGroup Clone()
         {
-            return new NeuropixelsV2eQuadShankProbeGroup(Specification, Version, Probes.Select(probe => new Probe(probe)).ToArray());
+            return new NeuropixelsV2eSingleShankProbeGroup(Specification, Version, Probes.Select(probe => new Probe(probe)).ToArray());
         }
 
         /// <summary>
-        /// Generates a default planar contour for the type of probe that is given.
+        /// Generates a default planar contour for the probe, based on the given probe index
         /// </summary>
         /// <returns></returns>
         public static float[][] DefaultProbePlanarContour()
         {
-            const int numberOfShanks = 4;
             const float shankTipY = 0f;
             const float shankBaseY = 155f;
-            const float shankLengthY = 10000f;
-            const float probeLengthY = 10155f;
+            const float shankLengthY = 9770f;
+            const float shankWidthX = 70f;
+            const float shankMidX = 35f;
 
-            float[][] probePlanarContour = new float[25][];
+            float[][] probePlanarContour = new float[6][];
 
-            probePlanarContour[0] = new float[2] { 0f, probeLengthY };
-            probePlanarContour[1] = new float[2] { 0f, shankLengthY };
-
-            for (int i = 0; i < numberOfShanks; i++)
-            {
-                probePlanarContour[2 + i * 5] = new float[2] { ShankOffsetX + ShankPitchX * i, shankLengthY };
-                probePlanarContour[3 + i * 5] = new float[2] { ShankOffsetX + ShankPitchX * i, shankBaseY };
-                probePlanarContour[4 + i * 5] = new float[2] { ShankOffsetX + ShankPitchX * i + ShankWidthX / 2, shankTipY };
-                probePlanarContour[5 + i * 5] = new float[2] { ShankOffsetX + ShankPitchX * i + ShankWidthX, shankBaseY };
-                probePlanarContour[6 + i * 5] = new float[2] { ShankOffsetX + ShankPitchX * i + ShankWidthX, shankLengthY };
-            }
-
-            probePlanarContour[22] = new float[2] { ShankOffsetX * 2 + ShankPitchX * (numberOfShanks - 1) + ShankWidthX, shankLengthY };
-            probePlanarContour[23] = new float[2] { ShankOffsetX * 2 + ShankPitchX * (numberOfShanks - 1) + ShankWidthX, probeLengthY };
-            probePlanarContour[24] = new float[2] { 0f, probeLengthY };
+            probePlanarContour[0] = new float[2] { ShankOffsetX + 0f, shankBaseY };
+            probePlanarContour[1] = new float[2] { ShankOffsetX + shankMidX, shankTipY };
+            probePlanarContour[2] = new float[2] { ShankOffsetX + shankWidthX, shankBaseY };
+            probePlanarContour[3] = new float[2] { ShankOffsetX + shankWidthX, shankLengthY };
+            probePlanarContour[4] = new float[2] { ShankOffsetX + 0f, shankLengthY };
+            probePlanarContour[5] = new float[2] { ShankOffsetX + 0f, shankBaseY };
 
             return probePlanarContour;
         }
@@ -121,7 +112,7 @@ namespace OpenEphys.Onix1
 
             for (int i = 0; i < channelCount; i++)
             {
-                deviceChannelIndices[i] = NeuropixelsV2QuadShankElectrode.GetChannelNumber(i);
+                deviceChannelIndices[i] = NeuropixelsV2SingleShankElectrode.GetChannelNumber(i);
             }
 
             for (int i = channelCount; i < electrodeCount; i++)
@@ -143,15 +134,7 @@ namespace OpenEphys.Onix1
 
             for (int i = 0; i < numberOfContacts; i++)
             {
-                var shank = i / NeuropixelsV2.ElectrodePerShank;
-                contactIds[i] = shank switch
-                {
-                    0 => "0",
-                    1 => "1",
-                    2 => "2",
-                    3 => "3",
-                    _ => throw new ArgumentOutOfRangeException($"Too many shanks; expected four shanks, but received {shank} as an index.")
-                };
+                contactIds[i] = "0";
             }
 
             return contactIds;
@@ -160,26 +143,26 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Convert a ProbeInterface object to a list of electrodes, which includes all possible electrodes.
         /// </summary>
-        /// <returns>List of <see cref="NeuropixelsV2QuadShankElectrode"/> electrodes.</returns>
+        /// <returns>List of <see cref="NeuropixelsV2SingleShankElectrode"/> electrodes.</returns>
         public override List<NeuropixelsV2Electrode> ToElectrodes()
         {
             List<NeuropixelsV2Electrode> electrodes = new();
 
             foreach (var c in GetContacts())
             {
-                electrodes.Add(new NeuropixelsV2QuadShankElectrode(c.Index));
+                electrodes.Add(new NeuropixelsV2SingleShankElectrode(c.Index));
             }
 
             return electrodes;
         }
 
         /// <summary>
-        /// Convert a <see cref="NeuropixelsV2eQuadShankProbeGroup"/> object to a list of electrodes,
+        /// Convert a <see cref="NeuropixelsV2eSingleShankProbeGroup"/> object to a list of electrodes,
         /// which only includes currently enabled electrodes.
         /// </summary>
-        /// <param name="probeGroup">A <see cref="NeuropixelsV2eQuadShankProbeGroup"/> object.</param>
-        /// <returns>List of <see cref="NeuropixelsV2QuadShankElectrode"/> electrodes that are enabled.</returns>
-        public static NeuropixelsV2QuadShankElectrode[] ToChannelMap(NeuropixelsV2eQuadShankProbeGroup probeGroup)
+        /// <param name="probeGroup">A <see cref="NeuropixelsV2eSingleShankProbeGroup"/> object.</param>
+        /// <returns>List of <see cref="NeuropixelsV2SingleShankElectrode"/> electrodes that are enabled.</returns>
+        public static NeuropixelsV2SingleShankElectrode[] ToChannelMap(NeuropixelsV2eSingleShankProbeGroup probeGroup)
         {
             var enabledContacts = probeGroup.GetContacts().Where(c => c.DeviceId != -1);
 
@@ -190,7 +173,7 @@ namespace OpenEphys.Onix1
                     $"index >= 0.");
             }
 
-            return enabledContacts.Select(c => new NeuropixelsV2QuadShankElectrode(c.Index))
+            return enabledContacts.Select(c => new NeuropixelsV2SingleShankElectrode(c.Index))
                                   .OrderBy(e => e.Channel)
                                   .ToArray();
         }

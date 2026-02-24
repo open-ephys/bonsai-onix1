@@ -93,9 +93,16 @@ namespace OpenEphys.Onix1
         [Category(ConfigurationCategory)]
         [Description("Probe A configuration.")]
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
-        [XmlElement(nameof(ProbeConfigurationA), typeof(NeuropixelsV2QuadShankProbeConfiguration))]
+        [XmlElement(nameof(ProbeConfigurationA), typeof(NeuropixelsV2QuadShankProbeConfiguration))] // NB: Needed for backward compatibility
         [TypeConverter(typeof(GenericPropertyConverter))]
         public NeuropixelsV2ProbeConfiguration ProbeConfigurationA { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe.ProbeA, NeuropixelsV2QuadShankReference.External);
+
+        /// <summary>
+        /// Prevent the <see cref="ProbeConfigurationA"/> property from being serialized.
+        /// </summary>
+        /// <returns>False</returns>
+        [Obsolete]
+        public bool ShouldSerializeProbeConfigurationA() => false;
 
         /// <summary>
         /// Gets or sets the path to the gain calibration file for this probe.
@@ -121,13 +128,34 @@ namespace OpenEphys.Onix1
             return false;
         }
 
+        /// <summary>
+        /// Gets or sets the <see cref="ProbeConfigurationA"/> property.
+        /// </summary>
+        /// <remarks>
+        /// [Obsolete]. Cannot tag this property with the Obsolete attribute due to https://github.com/dotnet/runtime/issues/100453
+        /// </remarks>
+        [Browsable(false)]
+        [Externalizable(false)]
+        public NeuropixelsV2ProbeConfiguration ConfigurationA
+        {
+            get => ProbeConfigurationA;
+            set => ProbeConfigurationA = value;
+        }
+
         /// <inheritdoc/>
         [Category(ConfigurationCategory)]
         [Description("Probe B configuration.")]
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
-        [XmlElement(nameof(ProbeConfigurationB), typeof(NeuropixelsV2QuadShankProbeConfiguration))]
+        [XmlElement(nameof(ProbeConfigurationB), typeof(NeuropixelsV2QuadShankProbeConfiguration))] // NB: Needed for backward compatibility
         [TypeConverter(typeof(GenericPropertyConverter))]
         public NeuropixelsV2ProbeConfiguration ProbeConfigurationB { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe.ProbeB, NeuropixelsV2QuadShankReference.External);
+
+        /// <summary>
+        /// Prevent the <see cref="ProbeConfigurationB"/> property from being serialized.
+        /// </summary>
+        /// <returns>False</returns>
+        [Obsolete]
+        public bool ShouldSerializeProbeConfigurationB() => false;
 
         /// <summary>
         /// Gets or sets the path to the gain calibration file for this probe.
@@ -151,6 +179,20 @@ namespace OpenEphys.Onix1
         public bool ShouldSerializeGainCalibrationFileB()
         {
             return false;
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="ProbeConfigurationB"/> property.
+        /// </summary>
+        /// <remarks>
+        /// [Obsolete]. Cannot tag this property with the Obsolete attribute due to https://github.com/dotnet/runtime/issues/100453
+        /// </remarks>
+        [Browsable(false)]
+        [Externalizable(false)]
+        public NeuropixelsV2ProbeConfiguration ConfigurationB
+        {
+            get => ProbeConfigurationB;
+            set => ProbeConfigurationB = value;
         }
 
         /// <summary>

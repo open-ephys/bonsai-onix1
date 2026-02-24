@@ -34,6 +34,7 @@
             System.Windows.Forms.Label labelPresets;
             System.Windows.Forms.Label label1;
             System.Windows.Forms.Label invertPolarity;
+            System.Windows.Forms.Label labelProbeType;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(NeuropixelsV2eProbeConfigurationDialog));
             this.toolStripLabelGainCalibrationSN = new System.Windows.Forms.ToolStripStatusLabel();
             this.menuStrip = new System.Windows.Forms.MenuStrip();
@@ -57,11 +58,13 @@
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripGainCalSN = new System.Windows.Forms.ToolStripStatusLabel();
+            this.comboBoxProbeType = new System.Windows.Forms.ComboBox();
             probeCalibrationFile = new System.Windows.Forms.Label();
             Reference = new System.Windows.Forms.Label();
             labelPresets = new System.Windows.Forms.Label();
             label1 = new System.Windows.Forms.Label();
             invertPolarity = new System.Windows.Forms.Label();
+            labelProbeType = new System.Windows.Forms.Label();
             this.menuStrip.SuspendLayout();
             this.panelTrackBar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarProbePosition)).BeginInit();
@@ -148,11 +151,11 @@
             // 
             this.buttonEnableContacts.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonEnableContacts.Location = new System.Drawing.Point(15, 232);
+            this.buttonEnableContacts.Location = new System.Drawing.Point(15, 264);
             this.buttonEnableContacts.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonEnableContacts.Name = "buttonEnableContacts";
             this.buttonEnableContacts.Size = new System.Drawing.Size(280, 44);
-            this.buttonEnableContacts.TabIndex = 11;
+            this.buttonEnableContacts.TabIndex = 13;
             this.buttonEnableContacts.Text = "Enable Selected Electrodes";
             this.toolTip.SetToolTip(this.buttonEnableContacts, "Click and drag to select electrodes in the probe view. \r\nPress this button to ena" +
         "ble the selected electrodes. \r\nNot all electrode combinations are possible.");
@@ -163,11 +166,11 @@
             // 
             this.buttonClearSelections.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonClearSelections.Location = new System.Drawing.Point(15, 282);
+            this.buttonClearSelections.Location = new System.Drawing.Point(15, 314);
             this.buttonClearSelections.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonClearSelections.Name = "buttonClearSelections";
             this.buttonClearSelections.Size = new System.Drawing.Size(280, 44);
-            this.buttonClearSelections.TabIndex = 12;
+            this.buttonClearSelections.TabIndex = 14;
             this.buttonClearSelections.Text = "Clear Electrode Selection";
             this.toolTip.SetToolTip(this.buttonClearSelections, "Deselect all electrodes in the probe view. \r\nNote that this does not disable elec" +
         "trodes, but simply deselects them.");
@@ -229,6 +232,8 @@
             this.panelChannelOptions.AutoSize = true;
             this.panelChannelOptions.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.panelChannelOptions.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.panelChannelOptions.Controls.Add(this.comboBoxProbeType);
+            this.panelChannelOptions.Controls.Add(labelProbeType);
             this.panelChannelOptions.Controls.Add(this.checkBoxInvertPolarity);
             this.panelChannelOptions.Controls.Add(invertPolarity);
             this.panelChannelOptions.Controls.Add(this.textBoxGainCorrection);
@@ -390,6 +395,27 @@
             this.toolStripGainCalSN.Text = "No file selected.";
             this.toolStripGainCalSN.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
+            // comboBoxProbeType
+            // 
+            this.comboBoxProbeType.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.comboBoxProbeType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxProbeType.FormattingEnabled = true;
+            this.comboBoxProbeType.Location = new System.Drawing.Point(107, 227);
+            this.comboBoxProbeType.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.comboBoxProbeType.Name = "comboBoxProbeType";
+            this.comboBoxProbeType.Size = new System.Drawing.Size(188, 24);
+            this.comboBoxProbeType.TabIndex = 12;
+            // 
+            // labelProbeType
+            // 
+            labelProbeType.AutoSize = true;
+            labelProbeType.Location = new System.Drawing.Point(15, 231);
+            labelProbeType.Name = "labelProbeType";
+            labelProbeType.Size = new System.Drawing.Size(82, 16);
+            labelProbeType.TabIndex = 11;
+            labelProbeType.Text = "Probe Type:";
+            // 
             // NeuropixelsV2eProbeConfigurationDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -445,5 +471,6 @@
         private System.Windows.Forms.ToolStripStatusLabel toolStripGainCalSN;
         private System.Windows.Forms.ToolStripStatusLabel toolStripLabelGainCalibrationSN;
         private System.Windows.Forms.CheckBox checkBoxInvertPolarity;
+        private System.Windows.Forms.ComboBox comboBoxProbeType;
     }
 }

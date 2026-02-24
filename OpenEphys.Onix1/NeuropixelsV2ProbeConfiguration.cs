@@ -43,6 +43,7 @@ namespace OpenEphys.Onix1
     /// Defines a configuration for Neuropixels 2.0 and 2.0-beta probes.
     /// </summary>
     [XmlInclude(typeof(NeuropixelsV2QuadShankProbeConfiguration))]
+    [XmlInclude(typeof(NeuropixelsV2SingleShankProbeConfiguration))]
     [XmlType(Namespace = Constants.XmlNamespace)]
     public abstract class NeuropixelsV2ProbeConfiguration
     {
@@ -85,7 +86,7 @@ namespace OpenEphys.Onix1
         /// </remarks>
         [Category(DeviceFactory.ConfigurationCategory)]
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
-        [Description("Path to the gain calibration file for probe A.")]
+        [Description("Path to the gain calibration file for this probe.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string GainCalibrationFileName { get; set; }
 
@@ -120,7 +121,27 @@ namespace OpenEphys.Onix1
         /// Update the <see cref="ChannelMap"/> with the selected electrodes.
         /// </summary>
         /// <param name="electrodes">List of selected electrodes that are being added to the <see cref="ChannelMap"/></param>
-        public abstract void SelectElectrodes(NeuropixelsV2Electrode[] electrodes);
+        public void SelectElectrodes(NeuropixelsV2Electrode[] electrodes)
+        {
+            if (electrodes.Length == 0) return;
+
+            var channelMap = ChannelMap;
+
+            foreach (var e in electrodes)
+            {
+                try
+                {
+                    channelMap[e.Channel] = e;
+                }
+                catch (IndexOutOfRangeException ex)
+                {
+                    throw new IndexOutOfRangeException($"Electrode {e.Index} specifies channel {e.Channel} but only channels " +
+                        $"0 to {channelMap.Length - 1} are supported.", ex);
+                }
+            }
+
+            ProbeGroup.UpdateDeviceChannelIndices(channelMap);
+        }
 
         /// <summary>
         /// Protected task that loads the ProbeInterface file asynchronously.
@@ -217,12 +238,25 @@ namespace OpenEphys.Onix1
             }
             set => ProbeInterfaceLoadFileName = value;
         }
+        
+        const int ReferencePixelCount = 4;
+        const int DummyRegisterCount = 4;
+
+        private protected const int RegistersPerShank = NeuropixelsV2.ElectrodePerShank + ReferencePixelCount + DummyRegisterCount;
+
+        private protected const int ShiftRegisterBitExternalElectrode0 = 1285;
+        private protected const int ShiftRegisterBitExternalElectrode1 = 2;
+
+        private protected const int ShiftRegisterBitTipElectrode0 = 644;
+        private protected const int ShiftRegisterBitTipElectrode1 = 643;
 
         internal abstract BitArray[] CreateShankBits(Enum reference);
 
         internal abstract int GetReferenceBit(Enum reference);
 
         internal abstract bool IsGroundReference();
+
+        internal abstract int GetChannelNumber(int index);
 
         internal abstract NeuropixelsV2ProbeConfiguration Clone();
     }
