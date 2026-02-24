@@ -22,6 +22,9 @@ namespace OpenEphys.Onix1.Design
         readonly Dictionary<TextBox, TextBoxBinding<double>> timeBindings;
         readonly Dictionary<TextBox, TextBoxBinding<uint>> countBindings;
 
+        private protected override string XAxisScaleUnits => "ms";
+        private protected override string YAxisScaleUnits => "mA";
+
         /// <summary>
         /// Opens a dialog allowing for easy changing of stimulus sequence parameters, with 
         /// visual feedback on what the resulting stimulus sequence looks like.
@@ -131,8 +134,7 @@ namespace OpenEphys.Onix1.Design
 
             toolStripStatusIsValid.BorderSides = ToolStripStatusLabelBorderSides.None;
 
-            SetXAxisTitle("Time [µs]");
-            yAxisScale = "mA";
+            SetXAxisTitle($"Time [{XAxisScaleUnits}]");
 
             DisableVerticalZoom();
 
