@@ -47,7 +47,7 @@ namespace OpenEphys.Onix1
     [XmlType(TypeName = XmlTypeName, Namespace = Constants.XmlNamespace)]
     public class NeuropixelsV2QuadShankProbeConfiguration : NeuropixelsV2ProbeConfiguration
     {
-        const string XmlTypeName = "QuadShank";
+        const string XmlTypeName = nameof(NeuropixelsV2QuadShankProbeConfiguration);
 
         /// <summary>
         /// Initializes a default instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class.
@@ -80,6 +80,29 @@ namespace OpenEphys.Onix1
             InvertPolarity = probeConfiguration.InvertPolarity;
             GainCalibrationFileName = probeConfiguration.GainCalibrationFileName;
             probeInterfaceFileName = probeConfiguration.probeInterfaceFileName;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class with the given
+        /// values.
+        /// </summary>
+        /// <param name="probe">The <see cref="NeuropixelsV2Probe"/> for this probe.</param>
+        /// <param name="reference">The <see cref="NeuropixelsV2QuadShankReference"/> reference value.</param>
+        /// <param name="invertPolarity">Boolean defining if the signal polarity should be inverted.</param>
+        /// <param name="gainCalibrationFileName">String defining the path to the gain calibration file.</param>
+        /// <param name="probeInterfaceFileName">String defining the path to the ProbeInterface file.</param>
+        public NeuropixelsV2QuadShankProbeConfiguration(
+            NeuropixelsV2Probe probe,
+            NeuropixelsV2QuadShankReference reference,
+            bool invertPolarity,
+            string gainCalibrationFileName,
+            string probeInterfaceFileName)
+        {
+            Probe = probe;
+            Reference = reference;
+            InvertPolarity = invertPolarity;
+            GainCalibrationFileName = gainCalibrationFileName;
+            ProbeInterfaceFileName = probeInterfaceFileName;
         }
 
         /// <summary>
@@ -228,42 +251,8 @@ namespace OpenEphys.Onix1
             }
         }
 
-        /// <summary>
-        /// Update the <see cref="ChannelMap"/> with the selected electrodes.
-        /// </summary>
-        /// <param name="electrodes">List of selected electrodes that are being added to the <see cref="ChannelMap"/></param>
-        public override void SelectElectrodes(NeuropixelsV2Electrode[] electrodes)
-        {
-            var channelMap = ChannelMap;
-
-            foreach (var e in electrodes)
-            {
-                try
-                {
-                    channelMap[e.Channel] = e;
-                }
-                catch (IndexOutOfRangeException ex)
-                {
-                    throw new IndexOutOfRangeException($"Electrode {e.Index} specifies channel {e.Channel} but only channels " +
-                        $"0 to {channelMap.Length - 1} are supported.", ex);
-                }
-            }
-
-            ProbeGroup.UpdateDeviceChannelIndices(channelMap);
-        }
-
         internal override BitArray[] CreateShankBits(Enum reference)
         {
-            const int ReferencePixelCount = 4;
-            const int DummyRegisterCount = 4;
-            const int RegistersPerShank = NeuropixelsV2.ElectrodePerShank + ReferencePixelCount + DummyRegisterCount;
-
-            const int ShiftRegisterBitExternalElectrode0 = 1285;
-            const int ShiftRegisterBitExternalElectrode1 = 2;
-
-            const int ShiftRegisterBitTipElectrode0 = 644;
-            const int ShiftRegisterBitTipElectrode1 = 643;
-
             var shankBits = new BitArray[]
                 {
                     new(RegistersPerShank, false),
@@ -282,7 +271,7 @@ namespace OpenEphys.Onix1
                     NeuropixelsV2QuadShankReference.Tip2 => 1,
                     NeuropixelsV2QuadShankReference.Tip3 => 2,
                     NeuropixelsV2QuadShankReference.Tip4 => 3,
-                    _ => throw new InvalidOperationException($"Invalid reference chosen for quad-shank probe.")
+                    _ => throw new InvalidEnumArgumentException("Invalid reference chosen for quad-shank probe.")
                 };
 
                 // If tip reference is used, activate the tip electrode
@@ -321,11 +310,16 @@ namespace OpenEphys.Onix1
                 NeuropixelsV2QuadShankReference.Tip3 => 2,
                 NeuropixelsV2QuadShankReference.Tip4 => 2,
                 NeuropixelsV2QuadShankReference.Ground => 3,
-                _ => throw new InvalidOperationException("Invalid reference selection."),
+                _ => throw new InvalidEnumArgumentException($"Invalid {nameof(NeuropixelsV2QuadShankReference)} selection."),
             };
         }
 
         internal override bool IsGroundReference() => (NeuropixelsV2QuadShankReference)Reference == NeuropixelsV2QuadShankReference.Ground;
+
+        internal override int GetChannelNumber(int index)
+        {
+            return NeuropixelsV2QuadShankElectrode.GetChannelNumber(index);
+        }
     }
 
     /// <summary>

@@ -150,6 +150,12 @@ namespace OpenEphys.Onix1
 
         class ConfigureNeuropixels1fHeadstageLinkController : ConfigurePortController
         {
+
+            public ConfigureNeuropixels1fHeadstageLinkController()
+                : base(typeof(PortController))
+            {
+            }
+
             protected override bool ConfigurePortVoltage(DeviceContext device, out double voltage)
             {
                 const double MinVoltage = 5.0;

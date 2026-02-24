@@ -32,7 +32,7 @@ namespace OpenEphys.Onix1.Design
 
                     var configurationCopy = configuration.Clone();
 
-                    using var editorDialog = new NeuropixelsV2eProbeConfigurationDialog(configurationCopy);
+                    using var editorDialog = new NeuropixelsV2eProbeConfigurationDialog(configurationCopy, isBeta);
 
                     if (isBeta)
                     {

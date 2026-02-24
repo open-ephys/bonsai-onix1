@@ -9,7 +9,7 @@ namespace OpenEphys.Onix1
     /// A sequence of 12 <see cref="oni.Frame"/> objects produced by a single TS4231 sensor are required to
     /// geometrically calculate the position of the sensor's photodiode in 3D space.
     /// </remarks>
-    public class TS4231V1PositionDataFrame
+    public class TS4231V1PositionDataFrame : DataFrame
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="TS4231V1PositionDataFrame"/> class.
@@ -20,18 +20,11 @@ namespace OpenEphys.Onix1
         /// <param name="position">The 3 dimensional position of the photodiode connected to the TS4231 sensor with units determined by
         /// <see cref="TS4231V1PositionData.P"/> and <see cref="TS4231V1PositionData.Q"/>.</param>
         public TS4231V1PositionDataFrame(ulong clock, ulong hubClock, int sensorIndex, Vector3 position)
+            : base(clock, hubClock)
         {
-            Clock = clock;
-            HubClock = hubClock;
             SensorIndex = sensorIndex;
             Position = position;
         }
-
-        /// <inheritdoc cref = "DataFrame.Clock"/>
-        public ulong Clock { get; }
-
-        /// <inheritdoc cref = "DataFrame.Clock"/>
-        public ulong HubClock { get; }
 
         /// <summary>
         /// Gets the index of the TS4231 sensor that produced this data.

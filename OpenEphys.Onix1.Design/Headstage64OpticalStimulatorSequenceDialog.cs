@@ -20,6 +20,9 @@ namespace OpenEphys.Onix1.Design
         }
         readonly Headstage64OpticalStimulatorOptions StimulusSequenceOptions;
 
+        private protected override string XAxisScaleUnits => "ms";
+        private protected override string YAxisScaleUnits => "mA";
+
         /// <summary>
         /// Opens a dialog allowing for easy changing of stimulus sequence parameters, with 
         /// visual feedback on what the resulting stimulus sequence looks like.
@@ -84,7 +87,7 @@ namespace OpenEphys.Onix1.Design
                 false,
                 DataSourceUpdateMode.OnValidation);
 
-            StimulusSequenceOptions.textBoxPulsePeriod.DataBindings.Add(
+            StimulusSequenceOptions.textBoxPulseFrequencyHz.DataBindings.Add(
                 "Text",
                 bindingSource,
                 nameof(OpticalStimulator.PulsesPerSecond),
@@ -132,8 +135,7 @@ namespace OpenEphys.Onix1.Design
 
             toolStripStatusIsValid.BorderSides = ToolStripStatusLabelBorderSides.None;
 
-            SetXAxisTitle("Time [µs]");
-            yAxisScale = "mA";
+            SetXAxisTitle($"Time [{XAxisScaleUnits}]");
 
             DisableVerticalZoom();
 
@@ -222,7 +224,7 @@ namespace OpenEphys.Onix1.Design
 
                         if (j != OpticalStimulator.PulsesPerBurst - 1)
                         {
-                            waveforms[channel].Add(new PointPair(waveforms[channel].Last().X + OpticalStimulator.PulsesPerSecond - OpticalStimulator.PulseDuration, offset));
+                            waveforms[channel].Add(new PointPair(waveforms[channel].Last().X + 1000.0 / OpticalStimulator.PulsesPerSecond - OpticalStimulator.PulseDuration, offset));
                         }
                     }
 
@@ -261,9 +263,9 @@ namespace OpenEphys.Onix1.Design
                 reason = "Maximum current is invalid.";
                 return false;
             }
-            else if (sequence.PulsesPerBurst > 1 && sequence.PulsesPerSecond <= sequence.PulseDuration)
+            else if (sequence.PulsesPerBurst > 1 && 1000.0 / sequence.PulsesPerSecond <= sequence.PulseDuration)
             {
-                reason = "Pulse period is too short compared to the pulse duration.";
+                reason = "Pulse frequency is too low compared to the pulse duration.";
                 return false;
             }
 

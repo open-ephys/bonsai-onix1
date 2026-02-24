@@ -38,10 +38,9 @@ namespace OpenEphys.Onix1.Design
             ReferenceContacts.AddRange(ReferenceContactsList);
 
             ProbeConfiguration = probeConfiguration;
+            ResizeSelectedContacts();
 
-            HighlightEnabledContacts();
-            UpdateContactLabels();
-            DrawScale();
+            DrawProbeGroup();
             RefreshZedGraph();
         }
 
@@ -53,7 +52,6 @@ namespace OpenEphys.Onix1.Design
         internal override void LoadDefaultChannelLayout()
         {
             ProbeConfiguration.ProbeGroup = new();
-            ProbeGroup = ProbeConfiguration.ProbeGroup;
 
             OnFileOpenHandler();
         }
@@ -62,7 +60,6 @@ namespace OpenEphys.Onix1.Design
         {
             if (base.OpenFile(type))
             {
-                ProbeConfiguration.ProbeGroup = (NeuropixelsV1eProbeGroup)ProbeGroup;
                 OnFileOpenHandler();
 
                 return true;
@@ -73,6 +70,8 @@ namespace OpenEphys.Onix1.Design
 
         private void OnFileOpenHandler()
         {
+            ResizeSelectedContacts();
+
             OnFileLoad?.Invoke(this, EventArgs.Empty);
         }
 
@@ -140,9 +139,6 @@ namespace OpenEphys.Onix1.Design
 
         internal override void UpdateContactLabels()
         {
-            if (ProbeConfiguration.ProbeGroup == null)
-                return;
-
             var textObjs = zedGraphChannels.GraphPane.GraphObjList.OfType<TextObj>()
                                                                   .Where(t => t.Tag is ContactTag);
 

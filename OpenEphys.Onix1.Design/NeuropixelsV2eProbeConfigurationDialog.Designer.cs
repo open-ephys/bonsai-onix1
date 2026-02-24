@@ -34,6 +34,7 @@
             System.Windows.Forms.Label probeCalibrationFile;
             System.Windows.Forms.Label Reference;
             System.Windows.Forms.Label labelPresets;
+            System.Windows.Forms.Label labelProbeType;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(NeuropixelsV2eProbeConfigurationDialog));
             this.toolStripLabelGainCalibrationSN = new System.Windows.Forms.ToolStripStatusLabel();
             this.menuStrip = new System.Windows.Forms.MenuStrip();
@@ -50,9 +51,11 @@
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.trackBarProbePosition = new System.Windows.Forms.TrackBar();
             this.panelProbe = new System.Windows.Forms.Panel();
+            this.label2 = new System.Windows.Forms.Label();
             this.tabControlProbe = new System.Windows.Forms.TabControl();
             this.tabPageConfiguration = new System.Windows.Forms.TabPage();
             this.panelChannelOptions = new System.Windows.Forms.Panel();
+            this.comboBoxProbeType = new System.Windows.Forms.ComboBox();
             this.checkBoxInvertPolarity = new System.Windows.Forms.CheckBox();
             this.textBoxGainCorrection = new System.Windows.Forms.TextBox();
             this.textBoxProbeCalibrationFile = new System.Windows.Forms.TextBox();
@@ -63,12 +66,12 @@
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripGainCalSN = new System.Windows.Forms.ToolStripStatusLabel();
             this.bindingSource = new System.Windows.Forms.BindingSource(this.components);
-            this.label2 = new System.Windows.Forms.Label();
             invertPolarity = new System.Windows.Forms.Label();
             label1 = new System.Windows.Forms.Label();
             probeCalibrationFile = new System.Windows.Forms.Label();
             Reference = new System.Windows.Forms.Label();
             labelPresets = new System.Windows.Forms.Label();
+            labelProbeType = new System.Windows.Forms.Label();
             this.menuStrip.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
@@ -133,6 +136,15 @@
             labelPresets.TabIndex = 7;
             labelPresets.Text = "Channel \nPresets:";
             // 
+            // labelProbeType
+            // 
+            labelProbeType.AutoSize = true;
+            labelProbeType.Location = new System.Drawing.Point(15, 231);
+            labelProbeType.Name = "labelProbeType";
+            labelProbeType.Size = new System.Drawing.Size(82, 16);
+            labelProbeType.TabIndex = 11;
+            labelProbeType.Text = "Probe Type:";
+            // 
             // toolStripLabelGainCalibrationSN
             // 
             this.toolStripLabelGainCalibrationSN.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
@@ -177,7 +189,7 @@
             // 
             this.buttonEnableContacts.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonEnableContacts.Location = new System.Drawing.Point(15, 232);
+            this.buttonEnableContacts.Location = new System.Drawing.Point(15, 264);
             this.buttonEnableContacts.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonEnableContacts.Name = "buttonEnableContacts";
             this.buttonEnableContacts.Size = new System.Drawing.Size(354, 44);
@@ -192,7 +204,7 @@
             // 
             this.buttonClearSelections.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonClearSelections.Location = new System.Drawing.Point(15, 282);
+            this.buttonClearSelections.Location = new System.Drawing.Point(15, 314);
             this.buttonClearSelections.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonClearSelections.Name = "buttonClearSelections";
             this.buttonClearSelections.Size = new System.Drawing.Size(354, 44);
@@ -293,7 +305,7 @@
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             this.tableLayoutPanel2.RowCount = 1;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 660F));
             this.tableLayoutPanel2.Size = new System.Drawing.Size(827, 660);
             this.tableLayoutPanel2.TabIndex = 3;
             // 
@@ -324,6 +336,16 @@
             this.panelProbe.Size = new System.Drawing.Size(774, 656);
             this.panelProbe.TabIndex = 2;
             // 
+            // label2
+            // 
+            this.label2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label2.Location = new System.Drawing.Point(0, 0);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(774, 656);
+            this.label2.TabIndex = 0;
+            this.label2.Text = "Please provide a calibration file to configure your probe.";
+            this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
             // tabControlProbe
             // 
             this.tabControlProbe.Controls.Add(this.tabPageConfiguration);
@@ -353,6 +375,8 @@
             this.panelChannelOptions.AutoSize = true;
             this.panelChannelOptions.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.panelChannelOptions.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.panelChannelOptions.Controls.Add(this.comboBoxProbeType);
+            this.panelChannelOptions.Controls.Add(labelProbeType);
             this.panelChannelOptions.Controls.Add(this.checkBoxInvertPolarity);
             this.panelChannelOptions.Controls.Add(invertPolarity);
             this.panelChannelOptions.Controls.Add(this.textBoxGainCorrection);
@@ -372,6 +396,18 @@
             this.panelChannelOptions.Name = "panelChannelOptions";
             this.panelChannelOptions.Size = new System.Drawing.Size(383, 625);
             this.panelChannelOptions.TabIndex = 1;
+            // 
+            // comboBoxProbeType
+            // 
+            this.comboBoxProbeType.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.comboBoxProbeType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxProbeType.FormattingEnabled = true;
+            this.comboBoxProbeType.Location = new System.Drawing.Point(107, 227);
+            this.comboBoxProbeType.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.comboBoxProbeType.Name = "comboBoxProbeType";
+            this.comboBoxProbeType.Size = new System.Drawing.Size(262, 24);
+            this.comboBoxProbeType.TabIndex = 12;
             // 
             // checkBoxInvertPolarity
             // 
@@ -469,16 +505,6 @@
             this.toolStripGainCalSN.Text = "No file selected.";
             this.toolStripGainCalSN.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // label2
-            // 
-            this.label2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label2.Location = new System.Drawing.Point(0, 0);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(774, 656);
-            this.label2.TabIndex = 0;
-            this.label2.Text = "Please provide a calibration file to configure your probe.";
-            this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
             // NeuropixelsV2eProbeConfigurationDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -550,5 +576,6 @@
         private Bonsai.Design.PropertyGrid propertyGrid;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.ComboBox comboBoxProbeType;
     }
 }

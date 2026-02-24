@@ -117,6 +117,11 @@ namespace OpenEphys.Onix1
         {
             internal ConfigureUclaMiniscopeV4Camera Camera;
 
+            public ConfigureUclaMiniscopeV4PortController()
+                : base(typeof(PortController))
+            {
+            }
+
             protected override bool ConfigurePortVoltage(DeviceContext device, out double voltage)
             {
                 const double MinVoltage = 5.2;

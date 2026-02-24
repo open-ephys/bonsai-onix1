@@ -20,6 +20,9 @@ namespace OpenEphys.Onix1.Design
 
         readonly static int NumberOfChannels = 1;
 
+        private protected override string XAxisScaleUnits => "µs";
+        private protected override string YAxisScaleUnits => "µA";
+
         /// <summary>
         /// Opens a dialog allowing for easy changing of stimulus sequence parameters, with 
         /// visual feedback on what the resulting stimulus sequence looks like.
@@ -143,7 +146,7 @@ namespace OpenEphys.Onix1.Design
 
             toolStripStatusIsValid.BorderSides = ToolStripStatusLabelBorderSides.None;
 
-            SetXAxisTitle("Time [µs]");
+            SetXAxisTitle($"Time [{XAxisScaleUnits}]");
             SetYAxisTitle("");
             RemoveYAxisLabels();
 

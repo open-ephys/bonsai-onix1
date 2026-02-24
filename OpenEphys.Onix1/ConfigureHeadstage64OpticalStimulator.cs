@@ -8,7 +8,7 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Configures a headstage-64 optical stimulator.
+    /// Configures a headstage-64 dual-channel optical stimulator.
     /// </summary>
     /// <remarks>
     /// This configuration operator can be linked to a data IO operator, such as <see
@@ -19,7 +19,7 @@ namespace OpenEphys.Onix1
     [Editor("OpenEphys.Onix1.Design.Headstage64OpticalStimulatorComponentEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureHeadstage64OpticalStimulator : SingleDeviceFactory
     {
-        readonly BehaviorSubject<bool> stimEnable = new(true);
+        readonly BehaviorSubject<bool> arm = new(true);
         readonly BehaviorSubject<double> maxCurrent = new(100);
         readonly BehaviorSubject<double> channelOneCurrent = new(100);
         readonly BehaviorSubject<double> channelTwoCurrent = new(0);
@@ -46,9 +46,8 @@ namespace OpenEphys.Onix1
         {
             DeviceName = opticalStimulator.DeviceName;
             DeviceAddress = opticalStimulator.DeviceAddress;
-            Enable = opticalStimulator.Enable;
-            StimEnable = opticalStimulator.StimEnable;
             Delay = opticalStimulator.Delay;
+            Arm = opticalStimulator.Arm;
             MaxCurrent = opticalStimulator.MaxCurrent;
             ChannelOneCurrent = opticalStimulator.ChannelOneCurrent;
             ChannelTwoCurrent = opticalStimulator.ChannelTwoCurrent;
@@ -60,28 +59,17 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets or sets the data enable state.
-        /// </summary>
-        /// <remarks>
-        /// If set to true, <see cref="Headstage64OpticalStimulatorData"/> will produce data. If set to
-        /// false, <see cref="Headstage64OpticalStimulatorData"/> will not produce data.
-        /// </remarks>
-        [Category(ConfigurationCategory)]
-        [Description("Specifies whether the headstage-64 optical stimulator will produce stimulus reports.")]
-        public bool Enable { get; set; }
-
-        /// <summary>
-        /// Gets or sets the device enable state.
+        /// Gets or sets the device arm state.
         /// </summary>
         /// <remarks>
         /// If set to true, then the optical stimulator circuit will respect triggers. If set to false, triggers will be ignored.
         /// </remarks>
         [Description("Specifies whether the optical stimulator will respect triggers.")]
         [Category(AcquisitionCategory)]
-        public bool StimEnable
+        public bool Arm
         {
-            get => stimEnable.Value;
-            set => stimEnable.OnNext(value);
+            get => arm.Value;
+            set => arm.OnNext(value);
         }
 
         /// <summary>
@@ -165,27 +153,27 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Description("The duration of each pulse (msec).")]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
-        [Range(Headstage64OpticalStimulator.MinPulseDuration, Headstage64OpticalStimulator.MaxPulseDuration)]
+        [Range(Headstage64OpticalStimulator.MinPulseDurationMilliseconds, Headstage64OpticalStimulator.MaxPulseDurationMilliseconds)]
         [Precision(3, 1)]
         [Category(AcquisitionCategory)]
         public double PulseDuration
         {
             get => pulseDuration.Value;
-            set => pulseDuration.OnNext(Clamp(value, Headstage64OpticalStimulator.MinPulseDuration, Headstage64OpticalStimulator.MaxPulseDuration));
+            set => pulseDuration.OnNext(Clamp(value, Headstage64OpticalStimulator.MinPulseDurationMilliseconds, Headstage64OpticalStimulator.MaxPulseDurationMilliseconds));
         }
 
         /// <summary>
-        /// Gets or sets the pulse period within a burst in msec.
+        /// Gets or sets the pulse frequency within a burst in Hz.
         /// </summary>
-        [Description("The pulse period within a burst (msec).")]
+        [Description("The pulse frequency within a burst (Hz).")]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
-        [Range(Headstage64OpticalStimulator.MinPulsePeriod, Headstage64OpticalStimulator.MaxPulsePeriod)]
+        [Range(Headstage64OpticalStimulator.MinPulseFrequencyHz, Headstage64OpticalStimulator.MaxPulseFrequencyHz)]
         [Precision(3, 1)]
         [Category(AcquisitionCategory)]
         public double PulsesPerSecond
         {
             get => pulsesPerSecond.Value;
-            set => pulsesPerSecond.OnNext(Clamp(value, Headstage64OpticalStimulator.MinPulsePeriod, Headstage64OpticalStimulator.MaxPulsePeriod));
+            set => pulsesPerSecond.OnNext(Clamp(value, Headstage64OpticalStimulator.MinPulseFrequencyHz, Headstage64OpticalStimulator.MaxPulseFrequencyHz));
         }
 
         /// <summary>
@@ -207,13 +195,13 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Description("The duration of the inter-burst interval within a stimulus train (msec).")]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
-        [Range(Headstage64OpticalStimulator.MinInterBurstInterval, Headstage64OpticalStimulator.MaxInterBurstInterval)]
+        [Range(Headstage64OpticalStimulator.MinInterBurstIntervalMilliseconds, Headstage64OpticalStimulator.MaxInterBurstIntervalMilliseconds)]
         [Precision(3, 1)]
         [Category(AcquisitionCategory)]
         public double InterBurstInterval
         {
             get => interBurstInterval.Value;
-            set => interBurstInterval.OnNext(Clamp(value, Headstage64OpticalStimulator.MinInterBurstInterval, Headstage64OpticalStimulator.MaxInterBurstInterval));
+            set => interBurstInterval.OnNext(Clamp(value, Headstage64OpticalStimulator.MinInterBurstIntervalMilliseconds, Headstage64OpticalStimulator.MaxInterBurstIntervalMilliseconds));
         }
 
         /// <summary>
@@ -269,12 +257,10 @@ namespace OpenEphys.Onix1
         {
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
-            var enable = Enable;
+
             return source.ConfigureDevice((context, observer) =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
-
-                device.WriteRegister(Headstage64OpticalStimulator.ENABLE, enable ? 1u : 0u);
 
                 uint currentSourceMask = 0;
                 static uint percentToPulseMask(int channel, double percent, uint oldMask)
@@ -297,8 +283,8 @@ namespace OpenEphys.Onix1
                 }
 
                 return new CompositeDisposable(
-                    stimEnable.SubscribeSafe(observer, value =>
-                        device.WriteRegister(Headstage64OpticalStimulator.STIMENABLE, value ? 1u : 0u)),
+                    arm.SubscribeSafe(observer, value =>
+                        device.WriteRegister(Headstage64OpticalStimulator.ENABLE, value ? 1u : 0u)),
                     maxCurrent.SubscribeSafe(observer, value =>
                         device.WriteRegister(Headstage64OpticalStimulator.MAXCURRENT, Headstage64OpticalStimulator.MilliampsToPotSetting(value))),
                     channelOneCurrent.SubscribeSafe(observer, value =>
@@ -331,7 +317,7 @@ namespace OpenEphys.Onix1
     static class Headstage64OpticalStimulator
     {
         public const int ID = 5;
-        public const uint MinimumVersion = 3;
+        public const uint MinimumVersion = 2;
 
         // NB: can be read with MINRHEOR and POTRES, but will not change
         public const uint MinRheostatResistanceOhms = 590;
@@ -340,24 +326,24 @@ namespace OpenEphys.Onix1
         public const double MinDelay = 0.0;
         public const double MaxDelay = 1000.0;
 
-        public const double MinCurrent = 0.0;
-        public const double MaxCurrent = 300.0;
+        public const double MinCurrent = 5.822; // NB: This is the lowest allowable maximum current
+        public const double MaxCurrent = 150.0; // NB: this is not the physical limit, but its a reasonable practical upper boundary
 
         public const double MinChannelPercentage = 0.0;
         public const double MaxChannelPercentage = 100.0;
         public const double ChannelPercentageStep = 12.5;
 
-        public const double MinPulseDuration = 0.001;
-        public const double MaxPulseDuration = 1000.0;
+        public const double MinPulseDurationMilliseconds = 0.001;
+        public const double MaxPulseDurationMilliseconds = 500.0;
 
-        public const double MinPulsePeriod = 0.01;
-        public const double MaxPulsePeriod = 10000.0;
+        public const double MinPulseFrequencyHz = 0.1;
+        public const double MaxPulseFrequencyHz = 10000.0;
 
-        public const double MinInterBurstInterval = 0.0;
-        public const double MaxInterBurstInterval = 10000.0;
+        public const double MinInterBurstIntervalMilliseconds = 0.0;
+        public const double MaxInterBurstIntervalMilliseconds = 10000.0;
 
         // managed registers
-        public const uint ENABLE = 0; // Enable stimulus report stream
+        public const uint NULLPARM = 0; // No command
         public const uint MAXCURRENT = 1; // Max LED/LD current, (0 to 255 = 800mA to 0 mA.See fig XX of CAT4016 datasheet)
         public const uint PULSEMASK = 2; // Bitmask determining which of the(up to 32) channels is affected by trigger
         public const uint PULSEDUR = 3; // Pulse duration, microseconds
@@ -367,7 +353,7 @@ namespace OpenEphys.Onix1
         public const uint TRAINCOUNT = 7; // Number of bursts in train
         public const uint TRAINDELAY = 8; // Stimulus start delay, microseconds
         public const uint TRIGGER = 9; // Trigger stimulation (0 = off, 1 = deliver)
-        public const uint STIMENABLE = 10; // 1: enables the stimulator, 0: stimulator ignores triggers (so that a common trigger can be used)
+        public const uint ENABLE = 10; // 1: enables the stimulator, 0: stimulator ignores triggers (so that a common trigger can be used)
         public const uint RESTMASK = 11; // Bitmask determining the off state of the up to 32 current channels
         public const uint RESET = 12; // None If 1, Reset all parameters to default (not implemented)
         public const uint MINRHEOR = 13; // The series resistor between the potentiometer (rheostat) and RSET bin on the CAT4016
@@ -386,7 +372,7 @@ namespace OpenEphys.Onix1
 
         internal static double PotSettingToMilliamps(uint potSetting)
         {
-            var R = MinRheostatResistanceOhms + PotResistanceOhms * potSetting / 256; 
+            var R = MinRheostatResistanceOhms + PotResistanceOhms * potSetting / 255; 
             return 3.833e+05 * Math.Pow(R, -0.9632);
         }
 

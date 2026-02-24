@@ -42,11 +42,6 @@ namespace OpenEphys.Onix1
             return new PointF(x: position[0], y: position[1]);
         }
 
-        internal override Func<int, int> GetChannelNumberFunc()
-        {
-            return GetChannelNumber;
-        }
-
         /// <summary>
         /// Gets the channel number of a given electrode.
         /// </summary>

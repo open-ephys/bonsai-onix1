@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Xml.Serialization;
 using OpenEphys.ProbeInterface.NET;
 
@@ -10,9 +9,14 @@ namespace OpenEphys.Onix1
     /// Abstract class that defines a Neuropixels 2.0 Probe Group
     /// </summary>
     [XmlInclude(typeof(NeuropixelsV2eQuadShankProbeGroup))]
+    [XmlInclude(typeof(NeuropixelsV2eSingleShankProbeGroup))]
     [XmlType(Namespace = Constants.XmlNamespace)]
     public abstract class NeuropixelsV2eProbeGroup : ProbeGroup
     {
+        private protected const float ShankOffsetX = 200f;
+        private protected const float ShankWidthX = 70f;
+        private protected const float ShankPitchX = 250f;
+
         /// <summary>
         /// Initializes a new instance of a <see cref="NeuropixelsV2eProbeGroup"/>.
         /// </summary>
@@ -48,6 +52,49 @@ namespace OpenEphys.Onix1
             }
 
             UpdateDeviceChannelIndices(0, newDeviceChannelIndices);
+        }
+
+        /// <summary>
+        /// Generates a 2D array of default contact positions based on the given number of channels.
+        /// </summary>
+        /// <param name="numberOfContacts">Value defining the number of contacts to create positions for.</param>
+        /// <returns>
+        /// 2D array of floats [N x 2], where the first dimension is the contact index [N] and the second dimension [2]
+        /// contains the X and Y values, respectively.
+        /// </returns>
+        public static float[][] DefaultContactPositions(int numberOfContacts)
+        {
+            float[][] contactPositions = new float[numberOfContacts][];
+
+            for (int i = 0; i < numberOfContacts; i++)
+            {
+                contactPositions[i] = DefaultContactPosition(i);
+            }
+
+            return contactPositions;
+        }
+
+        /// <summary>
+        /// Generates a float array containing the X and Y position of a single contact.
+        /// </summary>
+        /// <param name="contactIndex">Index of the contact.</param>
+        /// <returns>A float array of size [2 x 1] with the X and Y coordinates, respectively.</returns>
+        public static float[] DefaultContactPosition(int contactIndex)
+        {
+            return new float[2] { ContactPositionX(contactIndex), contactIndex % NeuropixelsV2.ElectrodePerShank / 2 * 15 + 170 };
+        }
+
+        private static float ContactPositionX(int index)
+        {
+            var shank = index / NeuropixelsV2.ElectrodePerShank;
+            var offset = ShankOffsetX + ShankPitchX * shank + 11;
+
+            return (index % 2) switch
+            {
+                0 => offset + 8.0f,
+                1 => offset + 40.0f,
+                _ => throw new ArgumentException("Invalid index given.")
+            };
         }
 
         /// <summary>
