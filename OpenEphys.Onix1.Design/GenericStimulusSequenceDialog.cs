@@ -241,7 +241,7 @@ namespace OpenEphys.Onix1.Design
             var xScaleRange = CalculateScaleRange(zedGraphWaveform.GraphPane.XAxis.Scale);
             var yScaleRange = CalculateScaleRange(zedGraphWaveform.GraphPane.YAxis.Scale);
 
-            const double ScaleFactor = 0.025;
+            const double ScaleFactor = 0.05;
 
             var zeroOffsetX = zedGraphWaveform.GraphPane.XAxis.Scale.Min + xScaleRange * ScaleFactor;
             var zeroOffsetY = zedGraphWaveform.GraphPane.YAxis.Scale.Min + yScaleRange * ScaleFactor;
@@ -285,7 +285,7 @@ namespace OpenEphys.Onix1.Design
             timeScale.ZOrder = ZOrder.A_InFront;
             zedGraphWaveform.GraphPane.GraphObjList.Add(timeScale);
 
-            TextObj amplitudeScale = new(yScaleValue.ToString("0.##") + " µA", zeroOffsetX, zeroOffsetY + y * TextObjScaleFactor, CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom);
+            TextObj amplitudeScale = new(yScaleValue.ToString("0.##") + " µA", zeroOffsetX, zeroOffsetY + y * TextObjScaleFactor, CoordType.AxisXYScale, AlignH.Left, AlignV.Bottom);
             amplitudeScale.FontSpec.Border.IsVisible = false;
             amplitudeScale.FontSpec.Fill.IsVisible = false;
             amplitudeScale.ZOrder = ZOrder.A_InFront;
