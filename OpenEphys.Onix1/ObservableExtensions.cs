@@ -7,25 +7,37 @@ namespace OpenEphys.Onix1
 {
     internal static class ObservableExtensions
     {
-        public static IObservable<ContextTask> ConfigureHost(this IObservable<ContextTask> source, Func<ContextTask, IDisposable> configure)
+        public static IObservable<ContextTask> ConfigureAndLatchController(this IObservable<ContextTask> source, Func<ContextTask, IDisposable> configure)
         {
-            return source.ConfigureContext((context, action) => context.ConfigureHost(action), configure);
+            return source.ConfigureContext((context, action) => context.ConfigureAndLatchController(action), configure);
         }
 
-        public static IObservable<ContextTask> ConfigureLink(this IObservable<ContextTask> source, Func<ContextTask, IDisposable> configure)
+        public static IObservable<ContextTask> ConfigureAndLatchLink(this IObservable<ContextTask> source, Func<ContextTask, IDisposable> configure)
         {
-            return source.ConfigureContext((context, action) => context.ConfigureLink(action), configure);
+            return source.ConfigureContext((context, action) => context.ConfigureAndLatchLink(action), configure);
         }
 
-        public static IObservable<ContextTask> ConfigureDevice(this IObservable<ContextTask> source, Func<ContextTask, IDisposable> configure)
+        public static IObservable<ContextTask> ConfigureAndLatchDevice(this IObservable<ContextTask> source, Func<ContextTask, IDisposable> configure)
         {
-            return source.ConfigureContext((context, action) => context.ConfigureDevice(action), configure);
+            return source.ConfigureContext((context, action) => context.ConfigureAndLatchDevice(action), configure);
         }
 
-        public static IObservable<ContextTask> ConfigureDevice(this IObservable<ContextTask> source, Func<ContextTask, IObserver<ContextTask>, IDisposable> configure)
+        public static IObservable<ContextTask> ConfigureAndLatchDevice(this IObservable<ContextTask> source, Func<ContextTask, IObserver<ContextTask>, IDisposable> configure)
         {
             return Observable.Create<ContextTask>(observer => source
-                .ConfigureDevice(context => configure(context, observer))
+                .ConfigureAndLatchDevice(context => configure(context, observer))
+                .SubscribeSafe(observer));
+        }
+
+        public static IObservable<ContextTask> ConfigureDirectDevice(this IObservable<ContextTask> source, Func<ContextTask, IDisposable> configure)
+        {
+            return source.ConfigureContext((context, action) => context.ConfigureDirectDevice(action), configure);
+        }
+
+        public static IObservable<ContextTask> ConfigureDirectDevice(this IObservable<ContextTask> source, Func<ContextTask, IObserver<ContextTask>, IDisposable> configure)
+        {
+            return Observable.Create<ContextTask>(observer => source
+                .ConfigureDirectDevice(context => configure(context, observer))
                 .SubscribeSafe(observer));
         }
 

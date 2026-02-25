@@ -21,12 +21,10 @@ namespace OpenEphys.Onix1
     /// this role for this library. Additionally, once data acquisition is started by the <see
     /// cref="StartAcquisition"/> operator, <see cref="ContextTask"/> performs the following:
     /// <list type="bullet">
-    /// <item><description>It automatically reads and distributes data from hardware using a dedicated acquisition
+    /// <item><description>Configures hardware settings and performs device configuration.</description></item>
+    /// <item><description>Reads and distributes data from devices that produce them using a dedicated acquisition
     /// thread.</description></item>
-    /// <item><description>It allows data to be written to devices that accept them.</description></item>
-    /// <item><description>It allows reading from and writing to device registers to control their operation (e.g. <see
-    /// cref="ConfigureBno055.Enable"/> or <see
-    /// cref="ConfigureRhd2164.AnalogHighCutoff"/>).</description></item>
+    /// <item><description>Allows data to be written to devices that accept them.</description></item>
     /// </list>
     /// Additionally, this operator exposes important information about the underlying ONI hardware such as
     /// the device table, clock rates, and block read and write sizes. <strong>In summary, <see
@@ -59,9 +57,10 @@ namespace OpenEphys.Onix1
         Task distributeFrames;
         Task acquisition = Task.CompletedTask;
         CancellationTokenSource collectFramesCancellation;
-        event Func<ContextTask, IDisposable> ConfigureHostEvent;
-        event Func<ContextTask, IDisposable> ConfigureLinkEvent;
-        event Func<ContextTask, IDisposable> ConfigureDeviceEvent;
+        event Func<ContextTask, IDisposable> ConfigureAndLatchControllerEvent;
+        event Func<ContextTask, IDisposable> ConfigureAndLatchLinkEvent;
+        event Func<ContextTask, IDisposable> ConfigureAndLatchDeviceEvent;
+        event Func<ContextTask, IDisposable> ConfigureDirectDeviceEvent;
 
         // FrameReceived observable sequence
         readonly Subject<oni.Frame> frameReceived = new();
@@ -211,69 +210,107 @@ namespace OpenEphys.Onix1
             }
         }
 
-        // NB: This is where actions that reconfigure the hub state, or otherwise
-        // change the device table should be executed
-        internal void ConfigureHost(Func<ContextTask, IDisposable> configure)
+        // NB: This is where actions that reconfigure the hub state, or otherwise change the device table
+        // should be queued.
+        internal void ConfigureAndLatchController(Func<ContextTask, IDisposable> configure)
         {
             lock (regLock)
             {
                 AssertConfigurationContext();
-                ConfigureHostEvent += configure;
+                ConfigureAndLatchControllerEvent += configure;
             }
         }
 
-        // NB: This is where actions that calibrate port voltage or otherwise
-        // check link lock state should be executed
-        internal void ConfigureLink(Func<ContextTask, IDisposable> configure)
+        // NB: This is where actions that calibrate port voltage or otherwise check link lock state should be
+        // queued. A hardware reset will be issued after these actions run, so they should not assume that
+        // the device table is finalized or that register state will be preserved.
+        internal void ConfigureAndLatchLink(Func<ContextTask, IDisposable> configure)
         {
             lock (regLock)
             {
                 AssertConfigurationContext();
-                ConfigureLinkEvent += configure;
+                ConfigureAndLatchLinkEvent += configure;
             }
         }
 
-        // NB: Actions queued using this method should assume that the device table
-        // is finalized and cannot be changed
-        internal void ConfigureDevice(Func<ContextTask, IDisposable> configure)
+        // NB: This is where actions that configure device registers that either require a reset to take
+        // effect or can survive a reset should be queued. Actions queued using this method should assume that
+        // the device table is finalized and cannot be changed. A hardware reset will be issued after these
+        // actions run, so registers that revert to a default value on reset will be not be preserved.
+        internal void ConfigureAndLatchDevice(Func<ContextTask, IDisposable> configure)
         {
             lock (regLock)
             {
                 AssertConfigurationContext();
-                ConfigureDeviceEvent += configure;
+                ConfigureAndLatchDeviceEvent += configure;
+            }
+        }
+
+        // NB: This is where actions that configure device registers that would be defaulted by a reset should
+        // be queued. Actions queued using this method should assume that the device table is finalized and
+        // cannot be changed. A hardware reset will be _not_ be issued after these actions run.
+        internal void ConfigureDirectDevice(Func<ContextTask, IDisposable> configure)
+        {
+            lock (regLock)
+            {
+                AssertConfigurationContext();
+                ConfigureDirectDeviceEvent += configure;
             }
         }
 
         private IDisposable ConfigureContext()
         {
-            var hostAction = Interlocked.Exchange(ref ConfigureHostEvent, null);
-            var linkAction = Interlocked.Exchange(ref ConfigureLinkEvent, null);
-            var deviceAction = Interlocked.Exchange(ref ConfigureDeviceEvent, null);
+            var controllerConfigureAndLatchAction = Interlocked.Exchange(ref ConfigureAndLatchControllerEvent, null);
+            var linkConfigureAndLatchAction = Interlocked.Exchange(ref ConfigureAndLatchLinkEvent, null);
+            var deviceConfigureAndLatchAction = Interlocked.Exchange(ref ConfigureAndLatchDeviceEvent, null);
+            var deviceConfigureDirectAction = Interlocked.Exchange(ref ConfigureDirectDeviceEvent, null);
             var disposable = new StackDisposable();
-            ConfigureResources(disposable, hostAction);
-            ConfigureResources(disposable, linkAction);
-            ConfigureResources(disposable, deviceAction);
+            ConfigureAndLatch(disposable, controllerConfigureAndLatchAction);
+            ConfigureAndLatch(disposable, linkConfigureAndLatchAction);
+            ConfigureAndLatch(disposable, deviceConfigureAndLatchAction);
+            ConfigureDirect(disposable, deviceConfigureDirectAction); // NB: This should be called after all latching actions
             return disposable;
         }
 
-        void ConfigureResources(StackDisposable disposable, Func<ContextTask, IDisposable> action)
+        void ConfigureAndLatch(StackDisposable disposable, Func<ContextTask, IDisposable> action)
         {
-            if (action != null)
+            if (action is null) return;
+
+            try
             {
-                var invocationList = action.GetInvocationList();
-                try
+                foreach (var selector in action.GetInvocationList().Cast<Func<ContextTask, IDisposable>>())
                 {
-                    foreach (var selector in invocationList.Cast<Func<ContextTask, IDisposable>>())
-                    {
-                        disposable.Push(selector(this));
-                    }
+                    // NB: perform configuration action and push resulting IDisposable onto stack
+                    disposable.Push(selector(this));
                 }
-                catch
+            }
+            catch
+            {
+                disposable.Dispose();
+                throw;
+            }
+            finally
+            {
+                 Reset();
+            }
+        }
+
+        void ConfigureDirect(StackDisposable disposable, Func<ContextTask, IDisposable> action)
+        {
+            if (action is null) return;
+
+            try
+            {
+                foreach (var selector in action.GetInvocationList().Cast<Func<ContextTask, IDisposable>>())
                 {
-                    disposable.Dispose();
-                    throw;
+                    // NB: perform configuration action and push resulting IDisposable onto stack
+                    disposable.Push(selector(this));
                 }
-                finally { Reset(); }
+            }
+            catch
+            {
+                disposable.Dispose();
+                throw;
             }
         }
 

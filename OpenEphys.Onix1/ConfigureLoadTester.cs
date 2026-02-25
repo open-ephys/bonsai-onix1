@@ -85,7 +85,7 @@ namespace OpenEphys.Onix1
             var transmittedWords = TransmittedWords;
             var framesPerSecond = FramesPerSecond;
 
-            return source.ConfigureDevice((context, observer) =>
+            return source.ConfigureAndLatchDevice((context, observer) =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
                 device.WriteRegister(LoadTester.ENABLE, enable ? 1u : 0u);

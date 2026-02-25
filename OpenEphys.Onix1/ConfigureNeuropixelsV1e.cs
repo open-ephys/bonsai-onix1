@@ -157,7 +157,7 @@ namespace OpenEphys.Onix1
             var deviceAddress = DeviceAddress;
             var ledEnabled = EnableLed;
             var invertPolarity = ProbeConfiguration.InvertPolarity;
-            return source.ConfigureDevice(context =>
+            return source.ConfigureAndLatchDevice(context =>
             {
                 // configure device via the DS90UB9x deserializer device
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));

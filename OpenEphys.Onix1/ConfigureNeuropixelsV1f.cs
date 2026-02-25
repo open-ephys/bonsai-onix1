@@ -160,7 +160,7 @@ namespace OpenEphys.Onix1
             var invertPolarity = ProbeConfiguration.InvertPolarity;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
-            return source.ConfigureDevice(context =>
+            return source.ConfigureAndLatchDevice(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, typeof(NeuropixelsV1f));
                 device.WriteRegister(NeuropixelsV1f.ENABLE, enable ? 1u : 0);

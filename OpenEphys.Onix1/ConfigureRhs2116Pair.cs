@@ -125,7 +125,7 @@ namespace OpenEphys.Onix1
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
 
-            return source.ConfigureDevice((context, observer) =>
+            return source.ConfigureAndLatchDevice((context, observer) =>
             {
                 var rhs2116A = context.GetDeviceContext(deviceAddress + Rhs2116Pair.Rhs2116AAddressOffset, typeof(Rhs2116));
                 var rhs2116B = context.GetDeviceContext(deviceAddress + Rhs2116Pair.Rhs2116BAddressOffset, typeof(Rhs2116));

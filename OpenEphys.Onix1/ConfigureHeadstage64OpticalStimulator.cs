@@ -257,7 +257,7 @@ namespace OpenEphys.Onix1
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
 
-            return source.ConfigureDevice((context, observer) =>
+            return source.ConfigureAndLatchDevice((context, observer) =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
 
@@ -282,8 +282,6 @@ namespace OpenEphys.Onix1
                 }
 
                 return new CompositeDisposable(
-                    arm.SubscribeSafe(observer, value =>
-                        device.WriteRegister(Headstage64OpticalStimulator.ENABLE, value ? 1u : 0u)),
                     maxCurrent.SubscribeSafe(observer, value =>
                         device.WriteRegister(Headstage64OpticalStimulator.MAXCURRENT, Headstage64OpticalStimulator.MilliampsToPotSetting(value))),
                     channelOneCurrent.SubscribeSafe(observer, value =>
@@ -309,6 +307,13 @@ namespace OpenEphys.Onix1
                     delay.SubscribeSafe(observer, value =>
                         device.WriteRegister(Headstage64OpticalStimulator.TRAINDELAY, (uint)(1000 * value))),
                     DeviceManager.RegisterDevice(deviceName, device, DeviceType));
+            })
+            .ConfigureDirectDevice((context, observer) =>
+            {
+                var device = context.GetDeviceContext(deviceAddress, DeviceType);
+
+                return arm.SubscribeSafe(observer, value =>
+                        device.WriteRegister(Headstage64OpticalStimulator.ENABLE, value ? 1u : 0u));
             });
         }
     }

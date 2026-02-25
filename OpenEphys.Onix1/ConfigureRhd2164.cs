@@ -87,7 +87,7 @@ namespace OpenEphys.Onix1
             var enable = Enable;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
-            return source.ConfigureDevice(context =>
+            return source.ConfigureAndLatchDevice(context =>
             {
                 // config register format following Rhd2164 datasheet
                 // https://intantech.com/files/Intan_RHD2000_series_datasheet.pdf

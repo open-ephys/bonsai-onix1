@@ -106,7 +106,7 @@ namespace OpenEphys.Onix1
             var deviceAddress = DeviceAddress;
             var dt = deadTime;
             var sr = SampleRate;
-            return source.ConfigureDevice(context =>
+            return source.ConfigureAndLatchDevice(context =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
                 device.WriteRegister(DigitalIO.ENABLE, Enable ? 1u : 0);

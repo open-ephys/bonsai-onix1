@@ -243,16 +243,11 @@ namespace OpenEphys.Onix1
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
 
-            return source.ConfigureDevice((context, observer) =>
+            return source.ConfigureAndLatchDevice((context, observer) =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
 
                 return new CompositeDisposable(
-                    arm.SubscribeSafe(observer, value =>
-                    {
-                        device.WriteRegister(Headstage64ElectricalStimulator.ENABLE, value ? 1u : 0u);
-                        device.WriteRegister(Headstage64ElectricalStimulator.POWERON, value ? 1u : 0u);
-                    }),
                     phaseOneCurrent.SubscribeSafe(observer, value =>
                         device.WriteRegister(Headstage64ElectricalStimulator.CURRENT1, Headstage64ElectricalStimulator.MicroampsToCode(value))),
                     interPhaseCurrent.SubscribeSafe(observer, value =>
@@ -268,6 +263,15 @@ namespace OpenEphys.Onix1
                     burstPulseCount.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.BURSTCOUNT, value)),
                     trainBurstCount.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.TRAINCOUNT, value)),
                     DeviceManager.RegisterDevice(deviceName, device, DeviceType));
+            }).ConfigureDirectDevice((context, observer) =>
+            {
+                var device = context.GetDeviceContext(deviceAddress, DeviceType);
+
+                return arm.SubscribeSafe(observer, value =>
+                {
+                    device.WriteRegister(Headstage64ElectricalStimulator.ENABLE, value ? 1u : 0u);
+                    device.WriteRegister(Headstage64ElectricalStimulator.POWERON, value ? 1u : 0u);
+                });
             });
         }
     }
