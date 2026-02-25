@@ -15,6 +15,8 @@ namespace OpenEphys.Onix1.Design
         internal event EventHandler OnZoom;
         internal event EventHandler OnFileLoad;
 
+        internal override ProbeGroup ProbeGroup { get; set; }
+
         /// <summary>
         /// Initializes a new instance of <see cref="Rhs2116ChannelConfigurationDialog"/>.
         /// </summary>

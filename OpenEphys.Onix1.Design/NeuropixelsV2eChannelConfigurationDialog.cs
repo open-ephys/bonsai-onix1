@@ -9,7 +9,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Partial class to create a channel configuration GUI for <see cref="ConfigureNeuropixelsV2e"/>.
     /// </summary>
-    public partial class NeuropixelsV2eChannelConfigurationDialog : ChannelConfigurationDialog
+    public partial class NeuropixelsV2eChannelConfigurationDialog : ScaledChannelConfigurationDialog
     {
         internal event EventHandler OnZoom;
         internal event EventHandler OnFileLoad;
@@ -19,7 +19,7 @@ namespace OpenEphys.Onix1.Design
         internal override ProbeGroup ProbeGroup
         {
             get => ProbeConfiguration.ProbeGroup;
-            set => ProbeConfiguration.ProbeGroup = value as NeuropixelsV2eProbeGroup ?? throw new ArgumentNullException($"Invalid probe group given; expected type {ProbeConfiguration.ProbeGroup.GetType()}, but found type {value.GetType()}");
+            set => ProbeConfiguration.ProbeGroup = value as NeuropixelsV2eProbeGroup;
         }
 
         /// <summary>
@@ -34,7 +34,7 @@ namespace OpenEphys.Onix1.Design
 
             zedGraphChannels.ZoomStepFraction = 0.5;
 
-            ProbeConfiguration = probeConfiguration.Clone();
+            ProbeConfiguration = probeConfiguration;
             ResizeSelectedContacts();
 
             DrawProbeGroup();
@@ -94,8 +94,6 @@ namespace OpenEphys.Onix1.Design
         {
             OnZoom?.Invoke(this, EventArgs.Empty);
         }
-
-        internal override bool IsDrawScale() => true;
 
         internal override void DrawScale()
         {

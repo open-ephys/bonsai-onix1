@@ -35,22 +35,6 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Copy constructor for the <see cref="ConfigureRhs2116Trigger"/> class.
-        /// </summary>
-        /// <param name="rhs2116Trigger">Existing <see cref="ConfigureRhs2116Trigger"/> object.</param>
-        public ConfigureRhs2116Trigger(ConfigureRhs2116Trigger rhs2116Trigger)
-            : this()
-        {
-            Enable = rhs2116Trigger.Enable;
-            DeviceAddress = rhs2116Trigger.DeviceAddress;
-            DeviceName = rhs2116Trigger.DeviceName;
-            TriggerSource = rhs2116Trigger.TriggerSource;
-            ProbeGroup = rhs2116Trigger.ProbeGroup.Clone();
-            Armed = rhs2116Trigger.Armed;
-            StimulusSequence = new(rhs2116Trigger.StimulusSequence);
-        }
-
-        /// <summary>
         /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>
@@ -232,6 +216,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Category(AcquisitionCategory)]
         [Description("Stimulus sequence.")]
+        [TypeConverter(typeof(GenericPropertyConverter))]
         public Rhs2116StimulusSequencePair StimulusSequence
         {
             get => stimulusSequence.Value;

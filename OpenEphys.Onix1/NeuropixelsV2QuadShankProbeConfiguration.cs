@@ -144,6 +144,7 @@ namespace OpenEphys.Onix1
         /// The channel map will always be 384 channels, and will return the 384 enabled electrodes.
         /// </remarks>
         [XmlIgnore]
+        [JsonIgnore]
         public override NeuropixelsV2Electrode[] ChannelMap
         {
             get => NeuropixelsV2eQuadShankProbeGroup.ToChannelMap((NeuropixelsV2eQuadShankProbeGroup)ProbeGroup);
@@ -156,6 +157,7 @@ namespace OpenEphys.Onix1
         /// The available references for a quad-shank probe are <see cref="NeuropixelsV2QuadShankReference"/>.
         /// </remarks>
         [XmlIgnore]
+        [JsonIgnore]
         [Description("Defines the reference for the probe.")]
         [TypeConverter(typeof(NeuropixelsV2QuadShankReferenceConverter))]
         public override Enum Reference

@@ -14,8 +14,6 @@ namespace OpenEphys.Onix1.Design
     {
         readonly NeuropixelsV2eChannelConfigurationDialog ChannelConfiguration;
 
-        internal event EventHandler InvertPolarityChanged;
-
         /// <summary>
         /// Public <see cref="NeuropixelsV2ProbeConfiguration"/> object that is manipulated by
         /// <see cref="NeuropixelsV2eChannelConfigurationDialog"/>.
@@ -23,7 +21,7 @@ namespace OpenEphys.Onix1.Design
         public NeuropixelsV2ProbeConfiguration ProbeConfiguration
         {
             get => ChannelConfiguration.ProbeConfiguration;
-            set => ChannelConfiguration.ProbeConfiguration = value;
+            internal set => ChannelConfiguration.ProbeConfiguration = value;
         }
 
         /// <inheritdoc cref="ConfigureNeuropixelsV2e.InvertPolarity"/>
@@ -59,16 +57,8 @@ namespace OpenEphys.Onix1.Design
 
             probeConfigurations = new()
             {
-                [ProbeType.SingleShank] = new NeuropixelsV2SingleShankProbeConfiguration(configuration.Probe,
-                        NeuropixelsV2SingleShankReference.External,
-                        configuration.InvertPolarity,
-                        configuration.GainCalibrationFileName,
-                        configuration.ProbeInterfaceFileName),
-                [ProbeType.QuadShank] = new NeuropixelsV2QuadShankProbeConfiguration(configuration.Probe,
-                        NeuropixelsV2QuadShankReference.External,
-                        configuration.InvertPolarity,
-                        configuration.GainCalibrationFileName,
-                        configuration.ProbeInterfaceFileName)
+                [ProbeType.SingleShank] = new NeuropixelsV2SingleShankProbeConfiguration(),
+                [ProbeType.QuadShank] = new NeuropixelsV2QuadShankProbeConfiguration()
             };
 
             var currentProbeType = GetCurrentProbeType(configuration);
@@ -76,11 +66,15 @@ namespace OpenEphys.Onix1.Design
 
             ChannelConfiguration = new(probeConfigurations[currentProbeType]);
             ChannelConfiguration.SetChildFormProperties(this).AddDialogToPanel(panelProbe);
+            ChannelConfiguration.BringToFront();
 
             this.AddMenuItemsFromDialogToFileOption(ChannelConfiguration);
 
             ChannelConfiguration.OnZoom += UpdateTrackBarLocation;
             ChannelConfiguration.OnFileLoad += OnFileLoadEvent;
+
+            propertyGrid.SelectedObject = configuration;
+            bindingSource.DataSource = configuration;
 
             comboBoxProbeType.DataSource = Enum.GetValues(typeof(ProbeType));
             comboBoxProbeType.SelectedItem = currentProbeType;
@@ -89,21 +83,70 @@ namespace OpenEphys.Onix1.Design
 
             ProbeInfo = ProbeDataFactory(ProbeConfiguration);
 
+            textBoxProbeCalibrationFile.DataBindings.Add("Text",
+                bindingSource,
+                $"{nameof(configuration.GainCalibrationFileName)}",
+                false,
+                DataSourceUpdateMode.OnPropertyChanged);
+            textBoxProbeCalibrationFile.TextChanged += (sender, e) => CheckStatus();
+
             comboBoxReference.DataSource = ProbeInfo.GetReferenceEnumValues();
-            comboBoxReference.SelectedItem = ProbeConfiguration.Reference;
-            comboBoxReference.SelectedIndexChanged += SelectedReferenceChanged;
+            comboBoxReference.DataBindings.Add("SelectedItem",
+                bindingSource,
+                nameof(configuration.Reference),
+                false,
+                DataSourceUpdateMode.OnPropertyChanged);
+            comboBoxReference.SelectedIndexChanged += (sender, e) =>
+            {
+                // NB: Needed to capture mouse scroll wheel updates
+                var control = sender as Control;
+
+                foreach (Binding binding in control.DataBindings)
+                {
+                    binding.WriteValue();
+                }
+
+                bindingSource.ResetCurrentItem();
+            };
 
             comboBoxChannelPresets.DataSource = ProbeInfo.GetComboBoxChannelPresets();
-            comboBoxChannelPresets.SelectedIndexChanged += SelectedChannelPresetChanged;
-
-            checkBoxInvertPolarity.Checked = ProbeConfiguration.InvertPolarity;
-            checkBoxInvertPolarity.CheckedChanged += InvertPolarityIndexChanged;
-
             CheckForExistingChannelPreset();
+            comboBoxChannelPresets.SelectedIndexChanged += (sender, e) =>
+            {
+                try
+                {
+                    Enum channelPreset = ((ComboBox)sender).SelectedItem as Enum ?? throw new InvalidEnumArgumentException("Invalid argument given for the channel preset.");
+                    ProbeConfiguration.SelectElectrodes(ProbeInfo.GetChannelPreset(channelPreset));
+                }
+                catch (InvalidEnumArgumentException ex)
+                {
+                    MessageBox.Show(ex.Message, "Invalid Preset Chosen");
+                    return;
+                }
+
+                UpdateProbeGroup();
+            };
+
+            checkBoxInvertPolarity.DataBindings.Add("Checked",
+                bindingSource,
+                $"{nameof(configuration.InvertPolarity)}",
+                false,
+                DataSourceUpdateMode.OnPropertyChanged);
 
             CheckStatus();
 
             Text += ": " + ProbeConfiguration.Probe.ToString();
+
+            bindingSource.ListChanged += (sender, eventArgs) => propertyGrid.Refresh();
+
+            tabControlProbe.SelectedIndexChanged += (sender, eventArgs) =>
+            {
+                if (tabControlProbe.SelectedTab == tabPageProperties)
+                    propertyGrid.Refresh();
+
+                else if (tabControlProbe.SelectedTab == tabPageConfiguration)
+                    bindingSource.ResetCurrentItem();
+            };
         }
 
         ProbeType GetCurrentProbeType(NeuropixelsV2ProbeConfiguration configuration)
@@ -133,12 +176,6 @@ namespace OpenEphys.Onix1.Design
             }
 
             throw new NotImplementedException("Unknown configuration found.");
-        }
-
-        private void InvertPolarityIndexChanged(object sender, EventArgs e)
-        {
-            ProbeConfiguration.InvertPolarity = ((CheckBox)sender).Checked;
-            OnInvertPolarityChangedHandler();
         }
 
         void UpdateProbeConfiguration()
@@ -171,11 +208,6 @@ namespace OpenEphys.Onix1.Design
             CheckForExistingChannelPreset();
         }
 
-        private void OnInvertPolarityChangedHandler()
-        {
-            InvertPolarityChanged?.Invoke(this, EventArgs.Empty);
-        }
-
         private void FormShown(object sender, EventArgs e)
         {
             if (!TopLevel)
@@ -186,7 +218,10 @@ namespace OpenEphys.Onix1.Design
                 menuStrip.Visible = false;
             }
 
-            ChannelConfiguration.Show();
+            splitContainer1.SplitterDistance = splitContainer1.Size.Width - splitContainer1.Panel2MinSize;
+
+            if (ChannelConfiguration.Visible)
+                ChannelConfiguration.Show();
             ChannelConfiguration.ConnectResizeEventHandler();
             ChannelConfiguration.ResizeZedGraph();
         }
@@ -221,11 +256,6 @@ namespace OpenEphys.Onix1.Design
             UpdateProbeConfiguration();
         }
 
-        private void FileTextChanged(object sender, EventArgs e)
-        {
-            CheckStatus();
-        }
-
         private void CheckStatus()
         {
             const string NoFileSelected = "No file selected.";
@@ -248,7 +278,7 @@ namespace OpenEphys.Onix1.Design
                 return;
             }
 
-            panelProbe.Visible = gainCorrection.HasValue;
+            ChannelConfiguration.Visible = gainCorrection.HasValue;
 
             textBoxGainCorrection.Text = gainCorrection.HasValue
                                          ? gainCorrection.Value.GainCorrectionFactor.ToString()
@@ -335,9 +365,14 @@ namespace OpenEphys.Onix1.Design
             trackBarProbePosition.Value = (int)(ChannelConfiguration.GetRelativeVerticalPosition() * trackBarProbePosition.Maximum);
         }
 
-        void TextBoxKeyPress(object sender, KeyPressEventArgs e)
+        internal void UpdateProbeGroup()
         {
-            CheckStatus();
+            ChannelConfiguration.UpdateProbeGroup();
+        }
+
+        internal void HidePropertiesTab()
+        {
+            tabControlProbe.TabPages.Remove(tabPageProperties);
         }
     }
 }

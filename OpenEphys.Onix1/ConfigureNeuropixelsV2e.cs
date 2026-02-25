@@ -22,20 +22,6 @@ namespace OpenEphys.Onix1
         {
         }
 
-        /// <summary>
-        /// Copy constructor for the <see cref="ConfigureNeuropixelsV2e"/> class.
-        /// </summary>
-        /// <param name="configureNode">A pre-existing <see cref="ConfigureNeuropixelsV2e"/> object.</param>
-        public ConfigureNeuropixelsV2e(ConfigureNeuropixelsV2e configureNode)
-            : base(typeof(NeuropixelsV2e))
-        {
-            Enable = configureNode.Enable;
-            ProbeConfigurationA = configureNode.ProbeConfigurationA.Clone();
-            ProbeConfigurationB = configureNode.ProbeConfigurationB.Clone();
-            DeviceName = configureNode.DeviceName;
-            DeviceAddress = configureNode.DeviceAddress;
-        }
-
         /// <inheritdoc/>
         /// <remarks>
         /// If set to true, <see cref="NeuropixelsV2eData"/> will produce data. If set to false, 

@@ -12,12 +12,21 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     public partial class Rhs2116StimulusSequenceDialog : GenericStimulusSequenceDialog
     {
+        readonly TabControl tabControlVisualization = new();
+        readonly TabPage tabPageWaveform = new();
+        readonly TabPage tabPageTable = new();
+        readonly DataGridView dataGridViewStimulusTable = new();
+
         const double SamplePeriodMilliSeconds = 1e3 / Rhs2116.SampleFrequencyHz;
         const int NumberOfChannels = 32;
 
         internal Rhs2116StimulusSequencePair Sequence { get => Trigger.StimulusSequence; }
 
-        internal ConfigureRhs2116Trigger Trigger { get; set; }
+        internal ConfigureRhs2116Trigger Trigger
+        {
+            get => (ConfigureRhs2116Trigger)Device;
+            private set => Device = value;
+        }
 
         readonly Rhs2116StimulusSequencePair SequenceCopy = new();
 
@@ -41,8 +50,12 @@ namespace OpenEphys.Onix1.Design
         /// visual feedback on what the resulting stimulus sequence looks like.
         /// </summary>
         /// <param name="rhs2116Trigger">Existing <see cref="ConfigureRhs2116Trigger"/> object.</param>
-        public Rhs2116StimulusSequenceDialog(ConfigureRhs2116Trigger rhs2116Trigger)
-            : base(NumberOfChannels, true, true)
+        /// <param name="filterProperties">
+        /// <see langword="true"/> if the properties should be filtered by <see cref="DeviceTablePropertyAttribute"/>,
+        /// otherwise <see langword="false"/>. Default is <see langword="false"/>.
+        /// </param>
+        public Rhs2116StimulusSequenceDialog(ConfigureRhs2116Trigger rhs2116Trigger, bool filterProperties = false)
+            : base(rhs2116Trigger, NumberOfChannels, filterProperties)
         {
             if (rhs2116Trigger.ProbeGroup.NumberOfContacts != NumberOfChannels)
             {
@@ -51,7 +64,46 @@ namespace OpenEphys.Onix1.Design
 
             InitializeComponent();
 
-            Trigger = new(rhs2116Trigger);
+            // NB: Add a tabbed control to show the table of stimuli values
+            tableLayoutPanel1.Controls.Remove(panelWaveform);
+
+            tabControlVisualization.SuspendLayout();
+            tabPageWaveform.SuspendLayout();
+            tabPageTable.SuspendLayout();
+
+            tabControlVisualization.Controls.Add(tabPageWaveform);
+            tabControlVisualization.Controls.Add(tabPageTable);
+            tabControlVisualization.Dock = DockStyle.Fill;
+            tabControlVisualization.Name = nameof(tabControlVisualization);
+
+            tabPageWaveform.Controls.Add(panelWaveform);
+            tabPageWaveform.Name = nameof(tabPageWaveform);
+            tabPageWaveform.Text = "Stimulus Waveform";
+            tabPageWaveform.UseVisualStyleBackColor = true;
+
+            tabPageTable.Controls.Add(dataGridViewStimulusTable);
+            tabPageTable.Name = nameof(tabPageTable);
+            tabPageTable.Text = "Table";
+            tabPageTable.UseVisualStyleBackColor = true;
+
+            dataGridViewStimulusTable.AllowUserToAddRows = false;
+            dataGridViewStimulusTable.AllowUserToDeleteRows = false;
+            dataGridViewStimulusTable.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dataGridViewStimulusTable.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewStimulusTable.Dock = DockStyle.Fill;
+            dataGridViewStimulusTable.Name = nameof(dataGridViewStimulusTable);
+            dataGridViewStimulusTable.ReadOnly = true;
+            dataGridViewStimulusTable.RowHeadersWidth = 62;
+            dataGridViewStimulusTable.RowTemplate.Height = 24;
+            dataGridViewStimulusTable.TabStop = false;
+
+            tableLayoutPanel2.Controls.Add(tabControlVisualization);
+
+            tabControlVisualization.ResumeLayout(false);
+            tabPageWaveform.ResumeLayout(false);
+            tabPageTable.ResumeLayout(false);
+
+            Trigger = rhs2116Trigger;
 
             dataGridViewStimulusTable.DataBindingComplete += DataBindingComplete;
             SetTableDataSource();
@@ -67,17 +119,8 @@ namespace OpenEphys.Onix1.Design
 
             StepSize = Sequence.CurrentStepSize;
 
-            ChannelDialog = new(rhs2116Trigger.ProbeGroup);
-
-            ChannelDialog.SetChildFormProperties(this).AddDialogToPanel(panelProbe);
-            this.AddMenuItemsFromDialogToFileOption(ChannelDialog, "Channel Configuration");
-
-            ChannelDialog.OnSelect += OnSelect;
-            ChannelDialog.OnZoom += OnZoom;
-            ChannelDialog.OnFileLoad += OnFileLoad;
-
             StimulusSequenceOptions = new();
-            groupBoxDefineStimuli.Controls.Add(StimulusSequenceOptions.SetChildFormProperties(this));
+            tabPageDefineStimuli.Controls.Add(StimulusSequenceOptions.SetChildFormProperties(this));
 
             StimulusSequenceOptions.buttonAddPulses.Click += ButtonAddPulses_Click;
             StimulusSequenceOptions.buttonReadPulses.Click += ButtonReadPulses_Click;
@@ -109,6 +152,15 @@ namespace OpenEphys.Onix1.Design
 
             StimulusSequenceOptions.numericUpDownNumberOfPulses.KeyDown += NumericUpDownNumberOfPulses_KeyDown;
             StimulusSequenceOptions.numericUpDownNumberOfPulses.Leave += NumericUpDownNumberOfPulses_Leave;
+
+            ChannelDialog = new(rhs2116Trigger.ProbeGroup);
+
+            ChannelDialog.SetChildFormProperties(this).AddDialogToPanel(StimulusSequenceOptions.panelProbe);
+            this.AddMenuItemsFromDialogToFileOption(ChannelDialog, "Channel Configuration");
+
+            ChannelDialog.OnSelect += OnSelect;
+            ChannelDialog.OnZoom += OnZoom;
+            ChannelDialog.OnFileLoad += OnFileLoad;
 
             StimulusSequenceOptions.Show();
 
@@ -926,7 +978,7 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        internal override void SetTableDataSource()
+        internal void SetTableDataSource()
         {
             dataGridViewStimulusTable.DataSource = Trigger?.StimulusSequence.Stimuli;
         }

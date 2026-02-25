@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -12,9 +13,13 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     public abstract partial class GenericStimulusSequenceDialog : Form
     {
+        internal object Device
+        {
+            get => propertyGrid.SelectedObject;
+            set => propertyGrid.SelectedObject = value;
+        }
+
         readonly int NumberOfChannels;
-        readonly bool UseProbeGroup;
-        readonly bool UseTable;
 
         internal const double ZeroPeakToPeak = 1e-12;
         internal readonly double ChannelScale = 1.1;
@@ -25,37 +30,39 @@ namespace OpenEphys.Onix1.Design
             InitializeComponent();
 
             NumberOfChannels = 0;
-            UseProbeGroup = true;
         }
 
         /// <summary>
-        /// Opens a dialog allowing for easy changing of stimulus sequence parameters, with visual feedback on what the resulting stimulus sequence looks like.
+        /// Opens a dialog allowing for easy changing of stimulus sequence parameters,
+        /// with visual feedback on what the resulting stimulus sequence looks like.
         /// </summary>
-        public GenericStimulusSequenceDialog(int numberOfChannels, bool useProbeGroup, bool useTable = false)
+        /// <param name="device">Device that will be displayed in the property grid.</param>
+        /// <param name="numberOfChannels">Number of channels to draw for the stimulus waveform.</param>
+        /// <param name="filterProperties">
+        /// <see langword="true"/> if the properties should be filtered by <see cref="DeviceTablePropertyAttribute"/>,
+        /// otherwise <see langword="false"/>. Default is <see langword="false"/>.
+        /// </param>
+        public GenericStimulusSequenceDialog(object device, int numberOfChannels, bool filterProperties = false)
         {
             InitializeComponent();
             Shown += FormShown;
 
+            if (filterProperties)
+            {
+                propertyGrid.BrowsableAttributes = new AttributeCollection(
+                    new Attribute[]
+                    {
+                        new BrowsableAttribute(true),
+                        new DeviceTablePropertyAttribute(false)
+                    });
+            }
+
+            Device = device;
+            bindingSource.DataSource = Device;
+
             NumberOfChannels = numberOfChannels;
-            UseProbeGroup = useProbeGroup;
-            UseTable = useTable;
-
-            if (!UseProbeGroup)
-            {
-                tableLayoutPanel1.Controls.Remove(panelProbe);
-                GroupBox gb = tableLayoutPanel1.Controls[nameof(groupBoxDefineStimuli)] as GroupBox;
-                tableLayoutPanel1.SetRow(gb, 0);
-                tableLayoutPanel1.SetRowSpan(gb, 2);
-            }
-
-            if (!UseTable)
-            {
-                panelWaveform.Controls.Remove(tabControlVisualization);
-                panelWaveform.Controls.Add(zedGraphWaveform);
-            }
 
             InitializeZedGraphWaveform();
-            SetTableDataSource();
 
             zedGraphWaveform.ZoomEvent += OnZoom_Waveform;
             zedGraphWaveform.MouseMoveEvent += MouseMoveEvent;
@@ -66,10 +73,12 @@ namespace OpenEphys.Onix1.Design
             if (!TopLevel)
             {
                 tableLayoutPanel1.Controls.Remove(flowLayoutPanel1);
-                tableLayoutPanel1.RowCount = 2;
+                tableLayoutPanel1.RowCount -= 1;
 
                 menuStrip.Visible = false;
             }
+
+            splitContainer1.SplitterDistance = splitContainer1.Size.Width - splitContainer1.Panel2MinSize;
         }
 
         void ButtonOk_Click(object sender, EventArgs e)
@@ -206,8 +215,6 @@ namespace OpenEphys.Onix1.Design
             {
                 return val <= 0 && val > -NumberOfChannels ? Math.Abs(val).ToString("0") : "";
             };
-
-            dataGridViewStimulusTable.Refresh();
 
             if (setZoomState && XMin != 0 && XMax != 0)
             {
@@ -505,12 +512,6 @@ namespace OpenEphys.Onix1.Design
             menuStrip.Enabled = false;
         }
 
-        internal virtual void SetTableDataSource()
-        {
-            if (UseTable)
-                throw new NotImplementedException();
-        }
-
         void ResetZoom_Click(object sender, EventArgs e)
         {
             ResetZoom();
@@ -524,5 +525,9 @@ namespace OpenEphys.Onix1.Design
             zedGraphWaveform.Refresh();
         }
 
+        void PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
+        {
+            DrawStimulusWaveform();
+        }
     }
 }

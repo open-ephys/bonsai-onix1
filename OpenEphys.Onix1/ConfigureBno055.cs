@@ -22,18 +22,6 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Copy constructor for the <see cref="ConfigureBno055"/> class.
-        /// </summary>
-        /// <param name="configureBno055">Existing <see cref="ConfigureBno055"/> object to be copied.</param>
-        public ConfigureBno055(ConfigureBno055 configureBno055)
-            : base(typeof(Bno055))
-        {
-            Enable = configureBno055.Enable;
-            DeviceName = configureBno055.DeviceName;
-            DeviceAddress = configureBno055.DeviceAddress;
-        }
-
-        /// <summary>
         /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>

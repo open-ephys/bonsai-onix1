@@ -18,8 +18,9 @@ namespace OpenEphys.Onix1.Design
     {
         internal event EventHandler OnResizeZedGraph;
         internal event EventHandler OnDrawProbeGroup;
+        internal event EventHandler OnMoveProbeGroup;
 
-        internal virtual ProbeGroup ProbeGroup { get; set; }
+        internal abstract ProbeGroup ProbeGroup { get; set; }
 
         internal readonly List<int> ReferenceContacts = new();
 
@@ -38,15 +39,6 @@ namespace OpenEphys.Onix1.Design
             zedGraphChannels.MouseDownEvent += MouseDownEvent;
             zedGraphChannels.MouseMoveEvent += MouseMoveEvent;
             zedGraphChannels.MouseUpEvent += MouseUpEvent;
-
-            if (IsDrawScale())
-            {
-                var pane = new GraphPane();
-
-                InitializeScalePane(pane);
-
-                zedGraphChannels.MasterPane.Add(pane);
-            }
 
             InitializeZedGraphControl(zedGraphChannels);
             InitializeProbePane(zedGraphChannels.GraphPane);
@@ -122,15 +114,6 @@ namespace OpenEphys.Onix1.Design
                     sender.ZoomOut(sender.GraphPane);
                 }
             }
-
-            if (IsDrawScale())
-                SyncYAxes(zedGraphChannels.MasterPane.PaneList[0], zedGraphChannels.MasterPane.PaneList[1]);
-        }
-
-        static void SyncYAxes(GraphPane source, GraphPane target)
-        {
-            target.YAxis.Scale.Min = source.YAxis.Scale.Min;
-            target.YAxis.Scale.Max = source.YAxis.Scale.Max;
         }
 
         private void SetEqualAxisLimits(ZedGraphControl zedGraphControl)
@@ -347,12 +330,15 @@ namespace OpenEphys.Onix1.Design
             HighlightSelectedContacts();
             DrawContactLabels();
 
-            if (IsDrawScale())
-            {
-                DrawScale();
-            }
-
             OnDrawProbeGroupHandler();
+        }
+
+        internal void UpdateProbeGroup()
+        {
+            HighlightEnabledContacts();
+            HighlightSelectedContacts();
+            UpdateContactLabels();
+            RefreshZedGraph();
         }
 
         void OnDrawProbeGroupHandler()
@@ -658,10 +644,6 @@ namespace OpenEphys.Onix1.Design
             return deviceChannelIndex == -1 ? DisabledContactString : index.ToString();
         }
 
-        internal virtual bool IsDrawScale() => false;
-
-        internal virtual void DrawScale() { }
-
         internal void UpdateFontSize()
         {
             var fontSize = CalculateFontSize();
@@ -837,76 +819,16 @@ namespace OpenEphys.Onix1.Design
             EnableZoom(zedGraph);
         }
 
-        static void EnablePan(ZedGraphControl zedGraph)
+        internal static void EnablePan(ZedGraphControl zedGraph)
         {
             zedGraph.IsEnableHPan = true;
             zedGraph.IsEnableVPan = true;
         }
 
-        static void DisablePan(ZedGraphControl zedGraph)
-        {
-            zedGraph.IsEnableHPan = false;
-            zedGraph.IsEnableVPan = false;
-        }
-
-        static void EnableZoom(ZedGraphControl zedGraph)
+        internal static void EnableZoom(ZedGraphControl zedGraph)
         {
             zedGraph.IsEnableZoom = true;
             zedGraph.IsEnableWheelZoom = true;
-        }
-
-        static void DisableZoom(ZedGraphControl zedGraph)
-        {
-            zedGraph.IsEnableZoom = false;
-            zedGraph.IsEnableWheelZoom = false;
-        }
-
-        static void InitializeScalePane(GraphPane pane)
-        {
-            pane.Title.IsVisible = false;
-            pane.TitleGap = 0;
-            pane.Border.IsVisible = false;
-            pane.Border.Width = 0;
-            pane.Chart.Border.IsVisible = false;
-            pane.Margin.All = 0;
-
-            pane.Y2Axis.IsVisible = false;
-
-            pane.XAxis.IsVisible = false;
-            pane.XAxis.IsAxisSegmentVisible = false;
-            pane.XAxis.Scale.MaxAuto = true;
-            pane.XAxis.Scale.MinAuto = true;
-            pane.XAxis.MajorGrid.IsZeroLine = false;
-            pane.XAxis.CrossAuto = false;
-            pane.XAxis.Cross = double.MinValue;
-
-            pane.YAxis.IsVisible = true;
-            pane.YAxis.IsAxisSegmentVisible = true;
-            pane.YAxis.Scale.MaxAuto = true;
-            pane.YAxis.Scale.MinAuto = true;
-            pane.YAxis.CrossAuto = false;
-            pane.YAxis.Cross = double.MinValue;
-
-            pane.YAxis.MajorGrid.IsZeroLine = false;
-            pane.YAxis.MajorGrid.IsVisible = false;
-            pane.YAxis.MinorGrid.IsVisible = false;
-
-            pane.YAxis.Scale.IsPreventLabelOverlap = true;
-            pane.YAxis.Scale.MajorStep = 100;
-            pane.YAxis.Scale.IsLabelsInside = true;
-            pane.YAxis.Scale.FontSpec.Size = 65f;
-            pane.YAxis.Scale.FontSpec.IsBold = false;
-            pane.YAxis.Scale.LabelGap = 0.6f;
-
-            pane.YAxis.MinorTic.IsInside = false;
-            pane.YAxis.MinorTic.IsOutside = false;
-            pane.YAxis.MinorTic.IsOpposite = false;
-
-            pane.YAxis.MajorTic.IsInside = true;
-            pane.YAxis.MajorTic.IsOutside = false;
-            pane.YAxis.MajorTic.IsOpposite = false;
-            pane.YAxis.MajorTic.Size = 40f;
-            pane.YAxis.MajorTic.PenWidth = 1.5f;
         }
 
         static void InitializeProbePane(GraphPane graphPane)
@@ -964,21 +886,11 @@ namespace OpenEphys.Onix1.Design
         internal void ResizeZedGraph()
         {
             ResizeAxes();
-
-            if (IsDrawScale())
-            {
-                var rect = zedGraphChannels.MasterPane.Rect;
-
-                float squareSize = rect.Height;
-
-                zedGraphChannels.MasterPane.PaneList[0].Rect = new RectangleF(rect.Left, rect.Top, squareSize, squareSize);
-                zedGraphChannels.MasterPane.PaneList[1].Rect = new RectangleF(rect.Left + squareSize, rect.Top, rect.Width - squareSize, squareSize);
-            }
+            OnResizeHandler();
 
             UpdateFontSize();
             RefreshZedGraph();
             Update();
-            OnResizeHandler();
         }
 
         private void OnResizeHandler()
@@ -986,23 +898,20 @@ namespace OpenEphys.Onix1.Design
             OnResizeZedGraph?.Invoke(this, EventArgs.Empty);
         }
 
-        void ResizeAxes()
+        internal virtual void ResizeAxes()
         {
-            float scalingFactor = IsDrawScale() ? 1.15f : 1.0f;
-            RectangleF rect = IsDrawScale() ? zedGraphChannels.MasterPane.Rect : zedGraphChannels.GraphPane.Rect;
+            RectangleF rect = zedGraphChannels.GraphPane.Rect;
 
             float width = rect.Width;
             float height = rect.Height;
 
-            float desiredWidth = height * scalingFactor;
-
-            if (width < desiredWidth)
+            if (width < height)
             {
-                height = width / scalingFactor;
+                height = width;
             }
             else
             {
-                width = desiredWidth;
+                width = height;
             }
 
             float x = MathF.Round(rect.Left + (rect.Width - width) / 2f);
@@ -1010,16 +919,11 @@ namespace OpenEphys.Onix1.Design
 
             var newRect = new RectangleF(x, y, width, height);
 
-            if (IsDrawScale())
-                zedGraphChannels.MasterPane.Rect = newRect;
-            else
-            {
-                zedGraphChannels.GraphPane.Rect = newRect;
-                DisconnectResizeEventHandler();
-                zedGraphChannels.Size = new Size((int)newRect.Width, (int)newRect.Height);
-                zedGraphChannels.Location = new Point((int)newRect.X, (int)newRect.Y);
-                ConnectResizeEventHandler();
-            }
+            zedGraphChannels.GraphPane.Rect = newRect;
+            DisconnectResizeEventHandler();
+            zedGraphChannels.Size = new Size((int)newRect.Width, (int)newRect.Height);
+            zedGraphChannels.Location = new Point((int)newRect.X, (int)newRect.Y);
+            ConnectResizeEventHandler();
         }
 
         private void MenuItemOpenFile(object sender, EventArgs e)
@@ -1058,6 +962,11 @@ namespace OpenEphys.Onix1.Design
             UpdateFontSize();
         }
 
+        void OnMoveProbeGroupHandler()
+        {
+            OnMoveProbeGroup?.Invoke(this, EventArgs.Empty);
+        }
+
         /// <summary>
         /// Shifts the whole ZedGraph to the given relative position, where 0.0 is the very bottom of the horizontal 
         /// space, and 1.0 is the very top. Note that this accounts for a buffer on the top and bottom, so giving a 
@@ -1084,8 +993,7 @@ namespace OpenEphys.Onix1.Design
             zedGraphChannels.GraphPane.YAxis.Scale.Min = newMinY;
             zedGraphChannels.GraphPane.YAxis.Scale.Max = newMinY + currentRange;
 
-            if (IsDrawScale())
-                SyncYAxes(zedGraphChannels.MasterPane.PaneList[0], zedGraphChannels.MasterPane.PaneList[1]);
+            OnMoveProbeGroupHandler();
         }
 
         internal float GetRelativeVerticalPosition()
@@ -1159,27 +1067,13 @@ namespace OpenEphys.Onix1.Design
             }
             else if (e.Button == MouseButtons.Middle)
             {
-                if (IsDrawScale())
-                    SyncYAxes(zedGraphChannels.MasterPane.PaneList[0], zedGraphChannels.MasterPane.PaneList[1]);
+                OnMoveProbeGroupHandler();
 
                 return false;
             }
             else if (e.Button == MouseButtons.None)
             {
                 sender.Cursor = Cursors.Arrow;
-
-                var currentPane = sender.MasterPane.FindPane(new PointF(e.X, e.Y));
-
-                if (currentPane == sender.MasterPane.PaneList[0])
-                {
-                    EnablePan(sender);
-                    EnableZoom(sender);
-                }
-                else if (IsDrawScale() && currentPane == sender.MasterPane.PaneList[1])
-                {
-                    DisablePan(sender);
-                    DisableZoom(sender);
-                }
 
                 return true;
             }
@@ -1335,8 +1229,7 @@ namespace OpenEphys.Onix1.Design
         {
             ResetZoom();
 
-            if (IsDrawScale())
-                SyncYAxes(zedGraphChannels.MasterPane.PaneList[0], zedGraphChannels.MasterPane.PaneList[1]);
+            OnMoveProbeGroupHandler();
 
             RefreshZedGraph();
         }

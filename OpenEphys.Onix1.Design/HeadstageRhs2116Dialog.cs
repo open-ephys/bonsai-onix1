@@ -24,12 +24,12 @@ namespace OpenEphys.Onix1.Design
         {
             InitializeComponent();
 
-            StimulusSequenceDialog = new Rhs2116StimulusSequenceDialog(rhs2116Trigger);
+            StimulusSequenceDialog = new Rhs2116StimulusSequenceDialog(rhs2116Trigger, true);
 
             StimulusSequenceDialog.SetChildFormProperties(this).AddDialogToTab(tabPageStimulusSequence);
             this.AddMenuItemsFromDialogToFileOption(StimulusSequenceDialog);
 
-            Rhs2116Dialog = new(new ConfigureRhs2116Pair(rhs2116));
+            Rhs2116Dialog = new(rhs2116, true);
 
             Rhs2116Dialog.SetChildFormProperties(this).AddDialogToTab(tabPageRhs2116);
         }
