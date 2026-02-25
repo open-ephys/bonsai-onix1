@@ -22,21 +22,6 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Initializes a copy instance of the <see cref="ConfigureRhd2164"/> class with the given values.
-        /// </summary>
-        /// <param name="configureRhd2164">Existing configuration settings.</param>
-        public ConfigureRhd2164(ConfigureRhd2164 configureRhd2164)
-            : this()
-        {
-            Enable = configureRhd2164.Enable;
-            DspCutoff = configureRhd2164.DspCutoff;
-            AnalogHighCutoff = configureRhd2164.AnalogHighCutoff;
-            AnalogLowCutoff = configureRhd2164.AnalogLowCutoff;
-            DeviceAddress = configureRhd2164.DeviceAddress;
-            DeviceName = configureRhd2164.DeviceName;
-        }
-
-        /// <summary>
         /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>

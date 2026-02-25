@@ -124,7 +124,7 @@
             this.tabPageOpticalStimulator.Location = new System.Drawing.Point(4, 25);
             this.tabPageOpticalStimulator.Name = "tabPageOpticalStimulator";
             this.tabPageOpticalStimulator.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPageOpticalStimulator.Size = new System.Drawing.Size(1170, 512);
+            this.tabPageOpticalStimulator.Size = new System.Drawing.Size(1170, 536);
             this.tabPageOpticalStimulator.TabIndex = 5;
             this.tabPageOpticalStimulator.Text = "Optical Stimulator";
             this.tabPageOpticalStimulator.UseVisualStyleBackColor = true;
@@ -134,7 +134,7 @@
             this.tabPageRhd2164.Location = new System.Drawing.Point(4, 25);
             this.tabPageRhd2164.Name = "tabPageRhd2164";
             this.tabPageRhd2164.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPageRhd2164.Size = new System.Drawing.Size(1170, 512);
+            this.tabPageRhd2164.Size = new System.Drawing.Size(1170, 536);
             this.tabPageRhd2164.TabIndex = 1;
             this.tabPageRhd2164.Text = "Rhd2164";
             this.tabPageRhd2164.UseVisualStyleBackColor = true;
@@ -144,7 +144,7 @@
             this.tabPageBno055.Location = new System.Drawing.Point(4, 25);
             this.tabPageBno055.Name = "tabPageBno055";
             this.tabPageBno055.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPageBno055.Size = new System.Drawing.Size(1170, 512);
+            this.tabPageBno055.Size = new System.Drawing.Size(1170, 536);
             this.tabPageBno055.TabIndex = 2;
             this.tabPageBno055.Text = "Bno055";
             this.tabPageBno055.UseVisualStyleBackColor = true;
@@ -154,7 +154,7 @@
             this.tabPageTS4231.Location = new System.Drawing.Point(4, 25);
             this.tabPageTS4231.Name = "tabPageTS4231";
             this.tabPageTS4231.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPageTS4231.Size = new System.Drawing.Size(1170, 512);
+            this.tabPageTS4231.Size = new System.Drawing.Size(1170, 536);
             this.tabPageTS4231.TabIndex = 3;
             this.tabPageTS4231.Text = "TS4231";
             this.tabPageTS4231.UseVisualStyleBackColor = true;

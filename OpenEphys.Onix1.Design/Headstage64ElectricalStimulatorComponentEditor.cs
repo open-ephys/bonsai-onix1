@@ -15,7 +15,10 @@ namespace OpenEphys.Onix1.Design
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
                 if (editorState != null && !editorState.WorkflowRunning && component is ConfigureHeadstage64ElectricalStimulator configureNode)
                 {
-                    using var editorDialog = new Headstage64ElectricalStimulatorSequenceDialog(configureNode);
+                    var configuration = new ConfigureHeadstage64ElectricalStimulator();
+                    DesignHelper.DeepCopyProperties(configureNode, configuration);
+
+                    using var editorDialog = new Headstage64ElectricalStimulatorSequenceDialog(configuration);
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {

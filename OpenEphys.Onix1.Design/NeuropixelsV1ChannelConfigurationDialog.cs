@@ -10,7 +10,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Partial class to create a channel configuration GUI for a Neuropixels V1 device.
     /// </summary>
-    public partial class NeuropixelsV1ChannelConfigurationDialog : ChannelConfigurationDialog
+    public partial class NeuropixelsV1ChannelConfigurationDialog : ScaledChannelConfigurationDialog
     {
         internal event EventHandler OnZoom;
         internal event EventHandler OnFileLoad;
@@ -78,8 +78,6 @@ namespace OpenEphys.Onix1.Design
         {
             OnZoom?.Invoke(this, EventArgs.Empty);
         }
-
-        internal override bool IsDrawScale() => true;
 
         internal override void DrawScale()
         {

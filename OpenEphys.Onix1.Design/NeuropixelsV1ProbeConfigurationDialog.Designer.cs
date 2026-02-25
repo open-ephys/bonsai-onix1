@@ -49,11 +49,16 @@
             this.toolStripGainCalSN = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.panelProbe = new System.Windows.Forms.Panel();
-            this.labelDefaultText = new System.Windows.Forms.Label();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonOkay = new System.Windows.Forms.Button();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
+            this.panelProbe = new System.Windows.Forms.Panel();
+            this.labelDefaultText = new System.Windows.Forms.Label();
+            this.trackBarProbePosition = new System.Windows.Forms.TrackBar();
+            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabPageConfiguration = new System.Windows.Forms.TabPage();
             this.panelOptions = new System.Windows.Forms.Panel();
             this.checkBoxInvertPolarity = new System.Windows.Forms.CheckBox();
             this.textBoxLfpCorrection = new System.Windows.Forms.TextBox();
@@ -70,8 +75,9 @@
             this.comboBoxReference = new System.Windows.Forms.ComboBox();
             this.comboBoxLfpGain = new System.Windows.Forms.ComboBox();
             this.comboBoxApGain = new System.Windows.Forms.ComboBox();
-            this.panelTrackBar = new System.Windows.Forms.Panel();
-            this.trackBarProbePosition = new System.Windows.Forms.TrackBar();
+            this.tabPageProperties = new System.Windows.Forms.TabPage();
+            this.propertyGrid = new System.Windows.Forms.PropertyGrid();
+            this.bindingSource = new System.Windows.Forms.BindingSource(this.components);
             label4 = new System.Windows.Forms.Label();
             label2 = new System.Windows.Forms.Label();
             labelPresets = new System.Windows.Forms.Label();
@@ -84,11 +90,19 @@
             invertPolarity = new System.Windows.Forms.Label();
             this.statusStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
-            this.panelProbe.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
-            this.panelOptions.SuspendLayout();
-            this.panelTrackBar.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
+            this.tableLayoutPanel2.SuspendLayout();
+            this.panelProbe.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarProbePosition)).BeginInit();
+            this.tabControl1.SuspendLayout();
+            this.tabPageConfiguration.SuspendLayout();
+            this.panelOptions.SuspendLayout();
+            this.tabPageProperties.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSource)).BeginInit();
             this.SuspendLayout();
             // 
             // label4
@@ -263,14 +277,10 @@
             // 
             // tableLayoutPanel1
             // 
-            this.tableLayoutPanel1.ColumnCount = 3;
+            this.tableLayoutPanel1.ColumnCount = 1;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 55F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 315F));
-            this.tableLayoutPanel1.Controls.Add(this.panelProbe, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.panelOptions, 2, 0);
-            this.tableLayoutPanel1.Controls.Add(this.panelTrackBar, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.splitContainer1, 0, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4);
@@ -278,33 +288,12 @@
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 42F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(1234, 732);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
-            // panelProbe
-            // 
-            this.panelProbe.BackColor = System.Drawing.SystemColors.Control;
-            this.panelProbe.Controls.Add(this.labelDefaultText);
-            this.panelProbe.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelProbe.Location = new System.Drawing.Point(4, 4);
-            this.panelProbe.Margin = new System.Windows.Forms.Padding(4);
-            this.panelProbe.Name = "panelProbe";
-            this.panelProbe.Size = new System.Drawing.Size(856, 682);
-            this.panelProbe.TabIndex = 0;
-            // 
-            // labelDefaultText
-            // 
-            this.labelDefaultText.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.labelDefaultText.Location = new System.Drawing.Point(0, 0);
-            this.labelDefaultText.Name = "labelDefaultText";
-            this.labelDefaultText.Size = new System.Drawing.Size(856, 682);
-            this.labelDefaultText.TabIndex = 1;
-            this.labelDefaultText.Text = "Please provide calibration files to configure your probe.";
-            this.labelDefaultText.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
             // flowLayoutPanel1
             // 
-            this.tableLayoutPanel1.SetColumnSpan(this.flowLayoutPanel1, 3);
             this.flowLayoutPanel1.Controls.Add(this.buttonCancel);
             this.flowLayoutPanel1.Controls.Add(this.buttonOkay);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -337,6 +326,101 @@
             this.buttonOkay.Text = "OK";
             this.buttonOkay.UseVisualStyleBackColor = true;
             // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.Location = new System.Drawing.Point(3, 3);
+            this.splitContainer1.Name = "splitContainer1";
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.tableLayoutPanel2);
+            this.splitContainer1.Panel1MinSize = 150;
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.tabControl1);
+            this.splitContainer1.Panel2MinSize = 250;
+            this.splitContainer1.Size = new System.Drawing.Size(1228, 684);
+            this.splitContainer1.SplitterDistance = 871;
+            this.splitContainer1.TabIndex = 1;
+            // 
+            // tableLayoutPanel2
+            // 
+            this.tableLayoutPanel2.ColumnCount = 2;
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 47F));
+            this.tableLayoutPanel2.Controls.Add(this.panelProbe, 0, 0);
+            this.tableLayoutPanel2.Controls.Add(this.trackBarProbePosition, 1, 0);
+            this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel2.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanel2.Name = "tableLayoutPanel2";
+            this.tableLayoutPanel2.RowCount = 1;
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(871, 684);
+            this.tableLayoutPanel2.TabIndex = 31;
+            // 
+            // panelProbe
+            // 
+            this.panelProbe.BackColor = System.Drawing.SystemColors.Control;
+            this.panelProbe.Controls.Add(this.labelDefaultText);
+            this.panelProbe.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelProbe.Location = new System.Drawing.Point(4, 4);
+            this.panelProbe.Margin = new System.Windows.Forms.Padding(4);
+            this.panelProbe.Name = "panelProbe";
+            this.panelProbe.Size = new System.Drawing.Size(816, 676);
+            this.panelProbe.TabIndex = 0;
+            // 
+            // labelDefaultText
+            // 
+            this.labelDefaultText.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.labelDefaultText.Location = new System.Drawing.Point(0, 0);
+            this.labelDefaultText.Name = "labelDefaultText";
+            this.labelDefaultText.Size = new System.Drawing.Size(816, 676);
+            this.labelDefaultText.TabIndex = 1;
+            this.labelDefaultText.Text = "Please provide calibration files to configure your probe.";
+            this.labelDefaultText.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // trackBarProbePosition
+            // 
+            this.trackBarProbePosition.AutoSize = false;
+            this.trackBarProbePosition.BackColor = System.Drawing.SystemColors.Control;
+            this.trackBarProbePosition.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.trackBarProbePosition.Location = new System.Drawing.Point(827, 2);
+            this.trackBarProbePosition.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.trackBarProbePosition.Maximum = 100;
+            this.trackBarProbePosition.Name = "trackBarProbePosition";
+            this.trackBarProbePosition.Orientation = System.Windows.Forms.Orientation.Vertical;
+            this.trackBarProbePosition.Size = new System.Drawing.Size(41, 680);
+            this.trackBarProbePosition.TabIndex = 30;
+            this.trackBarProbePosition.TabStop = false;
+            this.trackBarProbePosition.TickFrequency = 2;
+            this.trackBarProbePosition.TickStyle = System.Windows.Forms.TickStyle.TopLeft;
+            this.trackBarProbePosition.Value = 50;
+            this.trackBarProbePosition.Scroll += new System.EventHandler(this.TrackBarScroll);
+            // 
+            // tabControl1
+            // 
+            this.tabControl1.Controls.Add(this.tabPageConfiguration);
+            this.tabControl1.Controls.Add(this.tabPageProperties);
+            this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tabControl1.Location = new System.Drawing.Point(0, 0);
+            this.tabControl1.Name = "tabControl1";
+            this.tabControl1.SelectedIndex = 0;
+            this.tabControl1.Size = new System.Drawing.Size(353, 684);
+            this.tabControl1.TabIndex = 34;
+            // 
+            // tabPageConfiguration
+            // 
+            this.tabPageConfiguration.Controls.Add(this.panelOptions);
+            this.tabPageConfiguration.Location = new System.Drawing.Point(4, 25);
+            this.tabPageConfiguration.Name = "tabPageConfiguration";
+            this.tabPageConfiguration.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageConfiguration.Size = new System.Drawing.Size(345, 635);
+            this.tabPageConfiguration.TabIndex = 0;
+            this.tabPageConfiguration.Text = "Configuration";
+            this.tabPageConfiguration.UseVisualStyleBackColor = true;
+            // 
             // panelOptions
             // 
             this.panelOptions.BackColor = System.Drawing.SystemColors.ControlLightLight;
@@ -366,10 +450,10 @@
             this.panelOptions.Controls.Add(this.comboBoxApGain);
             this.panelOptions.Controls.Add(apGain);
             this.panelOptions.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelOptions.Location = new System.Drawing.Point(922, 2);
+            this.panelOptions.Location = new System.Drawing.Point(3, 3);
             this.panelOptions.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panelOptions.Name = "panelOptions";
-            this.panelOptions.Size = new System.Drawing.Size(309, 686);
+            this.panelOptions.Size = new System.Drawing.Size(339, 629);
             this.panelOptions.TabIndex = 2;
             // 
             // checkBoxInvertPolarity
@@ -391,7 +475,7 @@
             this.textBoxLfpCorrection.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textBoxLfpCorrection.Name = "textBoxLfpCorrection";
             this.textBoxLfpCorrection.ReadOnly = true;
-            this.textBoxLfpCorrection.Size = new System.Drawing.Size(195, 22);
+            this.textBoxLfpCorrection.Size = new System.Drawing.Size(225, 22);
             this.textBoxLfpCorrection.TabIndex = 14;
             this.textBoxLfpCorrection.TabStop = false;
             // 
@@ -403,7 +487,7 @@
             this.textBoxApCorrection.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textBoxApCorrection.Name = "textBoxApCorrection";
             this.textBoxApCorrection.ReadOnly = true;
-            this.textBoxApCorrection.Size = new System.Drawing.Size(195, 22);
+            this.textBoxApCorrection.Size = new System.Drawing.Size(225, 22);
             this.textBoxApCorrection.TabIndex = 10;
             this.textBoxApCorrection.TabStop = false;
             // 
@@ -412,10 +496,10 @@
             this.buttonViewAdcs.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonViewAdcs.Enabled = false;
-            this.buttonViewAdcs.Location = new System.Drawing.Point(13, 63);
+            this.buttonViewAdcs.Location = new System.Drawing.Point(12, 66);
             this.buttonViewAdcs.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonViewAdcs.Name = "buttonViewAdcs";
-            this.buttonViewAdcs.Size = new System.Drawing.Size(284, 38);
+            this.buttonViewAdcs.Size = new System.Drawing.Size(314, 38);
             this.buttonViewAdcs.TabIndex = 3;
             this.buttonViewAdcs.Text = "View ADC Correction Values";
             this.buttonViewAdcs.UseVisualStyleBackColor = true;
@@ -424,7 +508,7 @@
             // buttonChooseAdcCalibrationFile
             // 
             this.buttonChooseAdcCalibrationFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonChooseAdcCalibrationFile.Location = new System.Drawing.Point(260, 30);
+            this.buttonChooseAdcCalibrationFile.Location = new System.Drawing.Point(289, 30);
             this.buttonChooseAdcCalibrationFile.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonChooseAdcCalibrationFile.Name = "buttonChooseAdcCalibrationFile";
             this.buttonChooseAdcCalibrationFile.Size = new System.Drawing.Size(37, 25);
@@ -436,7 +520,7 @@
             // buttonChooseGainCalibrationFile
             // 
             this.buttonChooseGainCalibrationFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonChooseGainCalibrationFile.Location = new System.Drawing.Point(260, 130);
+            this.buttonChooseGainCalibrationFile.Location = new System.Drawing.Point(289, 133);
             this.buttonChooseGainCalibrationFile.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonChooseGainCalibrationFile.Name = "buttonChooseGainCalibrationFile";
             this.buttonChooseGainCalibrationFile.Size = new System.Drawing.Size(37, 25);
@@ -452,7 +536,7 @@
             this.buttonEnableContacts.Location = new System.Drawing.Point(13, 461);
             this.buttonEnableContacts.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonEnableContacts.Name = "buttonEnableContacts";
-            this.buttonEnableContacts.Size = new System.Drawing.Size(283, 44);
+            this.buttonEnableContacts.Size = new System.Drawing.Size(313, 44);
             this.buttonEnableContacts.TabIndex = 23;
             this.buttonEnableContacts.Text = "Enable Selected Electrodes";
             this.buttonEnableContacts.UseVisualStyleBackColor = true;
@@ -465,7 +549,7 @@
             this.buttonClearSelections.Location = new System.Drawing.Point(13, 509);
             this.buttonClearSelections.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.buttonClearSelections.Name = "buttonClearSelections";
-            this.buttonClearSelections.Size = new System.Drawing.Size(283, 44);
+            this.buttonClearSelections.Size = new System.Drawing.Size(313, 44);
             this.buttonClearSelections.TabIndex = 24;
             this.buttonClearSelections.Text = "Clear Electrode Selection";
             this.buttonClearSelections.UseVisualStyleBackColor = true;
@@ -480,7 +564,7 @@
             this.comboBoxChannelPresets.Location = new System.Drawing.Point(101, 408);
             this.comboBoxChannelPresets.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.comboBoxChannelPresets.Name = "comboBoxChannelPresets";
-            this.comboBoxChannelPresets.Size = new System.Drawing.Size(195, 24);
+            this.comboBoxChannelPresets.Size = new System.Drawing.Size(225, 24);
             this.comboBoxChannelPresets.TabIndex = 22;
             // 
             // checkBoxSpikeFilter
@@ -501,7 +585,7 @@
             this.textBoxAdcCalibrationFile.Location = new System.Drawing.Point(13, 30);
             this.textBoxAdcCalibrationFile.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textBoxAdcCalibrationFile.Name = "textBoxAdcCalibrationFile";
-            this.textBoxAdcCalibrationFile.Size = new System.Drawing.Size(241, 22);
+            this.textBoxAdcCalibrationFile.Size = new System.Drawing.Size(270, 22);
             this.textBoxAdcCalibrationFile.TabIndex = 1;
             this.textBoxAdcCalibrationFile.TabStop = false;
             this.textBoxAdcCalibrationFile.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
@@ -513,7 +597,7 @@
             this.textBoxGainCalibrationFile.Location = new System.Drawing.Point(13, 130);
             this.textBoxGainCalibrationFile.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.textBoxGainCalibrationFile.Name = "textBoxGainCalibrationFile";
-            this.textBoxGainCalibrationFile.Size = new System.Drawing.Size(241, 22);
+            this.textBoxGainCalibrationFile.Size = new System.Drawing.Size(270, 22);
             this.textBoxGainCalibrationFile.TabIndex = 5;
             this.textBoxGainCalibrationFile.TabStop = false;
             this.textBoxGainCalibrationFile.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
@@ -527,7 +611,7 @@
             this.comboBoxReference.Location = new System.Drawing.Point(101, 370);
             this.comboBoxReference.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.comboBoxReference.Name = "comboBoxReference";
-            this.comboBoxReference.Size = new System.Drawing.Size(195, 24);
+            this.comboBoxReference.Size = new System.Drawing.Size(225, 24);
             this.comboBoxReference.TabIndex = 20;
             // 
             // comboBoxLfpGain
@@ -539,7 +623,7 @@
             this.comboBoxLfpGain.Location = new System.Drawing.Point(101, 237);
             this.comboBoxLfpGain.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.comboBoxLfpGain.Name = "comboBoxLfpGain";
-            this.comboBoxLfpGain.Size = new System.Drawing.Size(195, 24);
+            this.comboBoxLfpGain.Size = new System.Drawing.Size(225, 24);
             this.comboBoxLfpGain.TabIndex = 12;
             // 
             // comboBoxApGain
@@ -548,38 +632,30 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.comboBoxApGain.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxApGain.FormattingEnabled = true;
-            this.comboBoxApGain.Location = new System.Drawing.Point(101, 171);
+            this.comboBoxApGain.Location = new System.Drawing.Point(100, 174);
             this.comboBoxApGain.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.comboBoxApGain.Name = "comboBoxApGain";
-            this.comboBoxApGain.Size = new System.Drawing.Size(196, 24);
+            this.comboBoxApGain.Size = new System.Drawing.Size(226, 24);
             this.comboBoxApGain.TabIndex = 8;
             // 
-            // panelTrackBar
+            // tabPageProperties
             // 
-            this.panelTrackBar.Controls.Add(this.trackBarProbePosition);
-            this.panelTrackBar.Location = new System.Drawing.Point(868, 4);
-            this.panelTrackBar.Margin = new System.Windows.Forms.Padding(4);
-            this.panelTrackBar.Name = "panelTrackBar";
-            this.panelTrackBar.Size = new System.Drawing.Size(47, 658);
-            this.panelTrackBar.TabIndex = 33;
+            this.tabPageProperties.Controls.Add(this.propertyGrid);
+            this.tabPageProperties.Location = new System.Drawing.Point(4, 25);
+            this.tabPageProperties.Name = "tabPageProperties";
+            this.tabPageProperties.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageProperties.Size = new System.Drawing.Size(345, 655);
+            this.tabPageProperties.TabIndex = 1;
+            this.tabPageProperties.Text = "Properties";
+            this.tabPageProperties.UseVisualStyleBackColor = true;
             // 
-            // trackBarProbePosition
+            // propertyGrid
             // 
-            this.trackBarProbePosition.AutoSize = false;
-            this.trackBarProbePosition.BackColor = System.Drawing.SystemColors.Control;
-            this.trackBarProbePosition.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.trackBarProbePosition.Location = new System.Drawing.Point(0, 0);
-            this.trackBarProbePosition.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.trackBarProbePosition.Maximum = 100;
-            this.trackBarProbePosition.Name = "trackBarProbePosition";
-            this.trackBarProbePosition.Orientation = System.Windows.Forms.Orientation.Vertical;
-            this.trackBarProbePosition.Size = new System.Drawing.Size(47, 658);
-            this.trackBarProbePosition.TabIndex = 30;
-            this.trackBarProbePosition.TabStop = false;
-            this.trackBarProbePosition.TickFrequency = 2;
-            this.trackBarProbePosition.TickStyle = System.Windows.Forms.TickStyle.TopLeft;
-            this.trackBarProbePosition.Value = 50;
-            this.trackBarProbePosition.Scroll += new System.EventHandler(this.TrackBarScroll);
+            this.propertyGrid.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.propertyGrid.Location = new System.Drawing.Point(3, 3);
+            this.propertyGrid.Name = "propertyGrid";
+            this.propertyGrid.Size = new System.Drawing.Size(339, 649);
+            this.propertyGrid.TabIndex = 0;
             // 
             // NeuropixelsV1ProbeConfigurationDialog
             // 
@@ -596,12 +672,20 @@
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
             this.tableLayoutPanel1.ResumeLayout(false);
-            this.panelProbe.ResumeLayout(false);
             this.flowLayoutPanel1.ResumeLayout(false);
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
+            this.tableLayoutPanel2.ResumeLayout(false);
+            this.panelProbe.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.trackBarProbePosition)).EndInit();
+            this.tabControl1.ResumeLayout(false);
+            this.tabPageConfiguration.ResumeLayout(false);
             this.panelOptions.ResumeLayout(false);
             this.panelOptions.PerformLayout();
-            this.panelTrackBar.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.trackBarProbePosition)).EndInit();
+            this.tabPageProperties.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSource)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -615,7 +699,6 @@
         private System.Windows.Forms.ToolTip toolTip;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Panel panelProbe;
-        private System.Windows.Forms.Panel panelTrackBar;
         private System.Windows.Forms.TrackBar trackBarProbePosition;
         private System.Windows.Forms.Panel panelOptions;
         private System.Windows.Forms.TextBox textBoxLfpCorrection;
@@ -641,5 +724,12 @@
         private System.Windows.Forms.Label labelDefaultText;
         private System.Windows.Forms.ToolStripStatusLabel toolStripLabelFileName;
         private System.Windows.Forms.ToolStripStatusLabel toolStripFileName;
+        private System.Windows.Forms.TabControl tabControl1;
+        private System.Windows.Forms.TabPage tabPageConfiguration;
+        internal System.Windows.Forms.PropertyGrid propertyGrid;
+        private System.Windows.Forms.TabPage tabPageProperties;
+        private System.Windows.Forms.BindingSource bindingSource;
+        private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
     }
 }

@@ -95,6 +95,7 @@ namespace OpenEphys.Onix1
         /// The available references for a single-shank probe are <see cref="NeuropixelsV2SingleShankReference"/>.
         /// </remarks>
         [XmlIgnore]
+        [JsonIgnore]
         [Description("Defines the reference for the probe.")]
         [TypeConverter(typeof(NeuropixelsV2SingleShankReferenceConverter))]
         public override Enum Reference

@@ -36,21 +36,45 @@ namespace OpenEphys.Onix1.Design
         {
             InitializeComponent();
 
-            DialogNeuropixelsV1A = new(configureNeuropixelsV1A, nameof(ConfigureHeadstageNeuropixelsV1f.NeuropixelsV1A))
+            DialogNeuropixelsV1A = new(configureNeuropixelsV1A, nameof(ConfigureHeadstageNeuropixelsV1f.NeuropixelsV1A), true)
             {
                 Tag = configureNeuropixelsV1A.ProbeName
             };
 
             DialogNeuropixelsV1A.SetChildFormProperties(this).AddDialogToPanel(panelNeuropixelsV1A);
 
-            DialogNeuropixelsV1B = new(configureNeuropixelsV1B, nameof(ConfigureHeadstageNeuropixelsV1f.NeuropixelsV1B))
+            DialogNeuropixelsV1A.OnStateChange += (sender, e) =>
+            {
+                if (DialogNeuropixelsV1A.HasChanges)
+                {
+                    tabPageNeuropixelsV1A.Text += '*';
+                }
+                else
+                {
+                    tabPageNeuropixelsV1A.Text = tabPageNeuropixelsV1A.Text.TrimEnd('*');
+                }
+            };
+
+            DialogNeuropixelsV1B = new(configureNeuropixelsV1B, nameof(ConfigureHeadstageNeuropixelsV1f.NeuropixelsV1B), true)
             {
                 Tag = configureNeuropixelsV1B.ProbeName
             };
 
             DialogNeuropixelsV1B.SetChildFormProperties(this).AddDialogToPanel(panelNeuropixelsV1B);
 
-            DialogBno055 = new(new ConfigureBno055(configureBno055));
+            DialogNeuropixelsV1B.OnStateChange += (sender, e) =>
+            {
+                if (DialogNeuropixelsV1B.HasChanges)
+                {
+                    tabPageNeuropixelsV1B.Text += '*';
+                }
+                else
+                {
+                    tabPageNeuropixelsV1B.Text = tabPageNeuropixelsV1B.Text.TrimEnd('*');
+                }
+            };
+
+            DialogBno055 = new(configureBno055, true);
 
             DialogBno055.SetChildFormProperties(this).AddDialogToPanel(panelBno055);
 
