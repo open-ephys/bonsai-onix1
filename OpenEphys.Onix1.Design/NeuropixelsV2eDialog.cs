@@ -54,8 +54,8 @@ namespace OpenEphys.Onix1.Design
 
             ProbeConfigurations = new()
             {
-                { NeuropixelsV2Probe.ProbeA, new(configureNode.ProbeConfigurationA) },
-                { NeuropixelsV2Probe.ProbeB, new(configureNode.ProbeConfigurationB) }
+                { NeuropixelsV2Probe.ProbeA, new(configureNode.ProbeConfigurationA, NeuropixelsV2Probe.ProbeA.ToString()) },
+                { NeuropixelsV2Probe.ProbeB, new(configureNode.ProbeConfigurationB, NeuropixelsV2Probe.ProbeB.ToString()) }
             };
 
             foreach (var channelConfiguration in ProbeConfigurations)

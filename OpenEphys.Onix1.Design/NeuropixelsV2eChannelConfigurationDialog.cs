@@ -17,15 +17,18 @@ namespace OpenEphys.Onix1.Design
 
         internal NeuropixelsV2ProbeConfiguration ProbeConfiguration;
 
+        internal override string ProbeName { get; }
+
         readonly Func<int, int> GetChannelNumberFunc;
 
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV2eChannelConfigurationDialog"/>.
         /// </summary>
         /// <param name="probeConfiguration">A <see cref="NeuropixelsV2ProbeConfiguration"/> object holding the current configuration settings.</param>
+        /// <param name="probeName">The name of the probe.</param>
         // TODO: Call the new ChannelConfigurationDialog constructor with the ProbeInterface file
         // name instead of the probe group
-        public NeuropixelsV2eChannelConfigurationDialog(NeuropixelsV2ProbeConfiguration probeConfiguration)
+        public NeuropixelsV2eChannelConfigurationDialog(NeuropixelsV2ProbeConfiguration probeConfiguration, string probeName)
             : base(probeConfiguration.ProbeGroup.Clone())
         {
             zedGraphChannels.ZoomButtons = MouseButtons.None;
@@ -42,6 +45,8 @@ namespace OpenEphys.Onix1.Design
             UpdateContactLabels();
             DrawScale();
             RefreshZedGraph();
+
+            ProbeName = probeName;
         }
 
         internal override ProbeGroup DefaultChannelLayout()

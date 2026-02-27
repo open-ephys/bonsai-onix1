@@ -41,16 +41,17 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// Initializes a new instance of <see cref="NeuropixelsV1Dialog"/>.
+        /// Initializes a new instance of <see cref="NeuropixelsV1ProbeConfigurationDialog"/>.
         /// </summary>
         /// <param name="probeConfiguration">A <see cref="NeuropixelsV1ProbeConfiguration"/> object holding the current configuration settings.</param>
-        public NeuropixelsV1ProbeConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration)
+        /// <param name="probeName">The name of the probe.</param>
+        public NeuropixelsV1ProbeConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration, string probeName)
         {
             InitializeComponent();
             Shown += FormShown;
             FormClosing += DialogClosing;
 
-            ChannelConfiguration = new(probeConfiguration);
+            ChannelConfiguration = new(probeConfiguration, probeName);
             ChannelConfiguration
                 .SetChildFormProperties(this)
                 .AddDialogToPanel(panelProbe);
@@ -468,17 +469,17 @@ namespace OpenEphys.Onix1.Design
             trackBarProbePosition.Value = (int)(ChannelConfiguration.GetRelativeVerticalPosition() * 100);
         }
 
+        internal bool ProcessMenuShortcut(Keys keyData)
+        {
+            return ChannelConfiguration.Visible && ChannelConfigurationDialog.ProcessMenuShortcut(menuStrip, keyData);
+        }
+
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
-            if (DialogResult == DialogResult.Cancel)
+            if (DialogResult == DialogResult.Cancel || !ChannelConfiguration.Visible)
                 return;
 
             ChannelConfiguration.Close();
-
-            if (!ChannelConfiguration.IsDisposed)
-            {
-                e.Cancel = true;
-            }
         }
     }
 }

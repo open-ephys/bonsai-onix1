@@ -39,6 +39,8 @@ namespace OpenEphys.Onix1.Design
 
         internal readonly List<int> ReferenceContacts = new();
 
+        internal abstract string ProbeName { get; }
+
         internal bool[] SelectedContacts { get; private set; } = null;
 
         internal static string DefaultFileName = $"pi_configuration{ProbeInterfaceHelper.ProbeInterfaceFileExtension}";
@@ -352,7 +354,7 @@ namespace OpenEphys.Onix1.Design
             ofd.Filter = ProbeInterfaceHelper.ProbeInterfaceFileNameFilter;
             ofd.FilterIndex = 1;
             ofd.Multiselect = false;
-            ofd.Title = "Choose ProbeInterface file";
+            ofd.Title = $"{ProbeName}: Open File";
 
             if (ofd.ShowDialog() == DialogResult.OK && File.Exists(ofd.FileName))
             {
@@ -406,7 +408,7 @@ namespace OpenEphys.Onix1.Design
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Error Loading ProbeInterface File");
+                MessageBox.Show(ex.Message, $"Error Loading {ProbeName} ProbeInterface File");
                 return null;
             }
         }
@@ -1086,7 +1088,7 @@ namespace OpenEphys.Onix1.Design
         void MenuItemImportFile(object sender, EventArgs e)
         {
             var result = MessageBox.Show(
-                "Warning: Importing a file will overwrite the current probe configuration. Do you want to continue?",
+                $"Warning: Importing a file will overwrite the {ProbeName} configuration. Do you want to continue?",
                 "Import File",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Warning);
@@ -1100,7 +1102,7 @@ namespace OpenEphys.Onix1.Design
         void MenuItemLoadDefaultConfig(object sender, EventArgs e)
         {
             var result = MessageBox.Show(
-                "Warning: Loading the default configuration will overwrite the current probe configuration. Do you want to continue?",
+                $"Warning: Loading the default configuration will overwrite the {ProbeName} configuration. Do you want to continue?",
                 "Load Default Configuration",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Warning);
@@ -1113,13 +1115,19 @@ namespace OpenEphys.Onix1.Design
 
         void MenuItemOpenFile(object sender, EventArgs e)
         {
-            var result = MessageBox.Show(
-                "Warning: Opening a new file will discard the current probe configuration without saving. Do you want to continue?",
-                "Open File",
+            if (!string.IsNullOrEmpty(ProbeConfiguration.ProbeInterfaceFileName))
+            {
+                var result = MessageBox.Show(
+                $"Warning: Opening a new file will discard the {ProbeName} configuration without saving. Do you want to continue?",
+                $"{ProbeName}: Open File",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Warning);
 
-            if (result == DialogResult.Yes && OpenNewFile(updateFileName: true))
+                if (result == DialogResult.No)
+                    return;
+            }
+
+            if (OpenNewFile(updateFileName: true))
             {
                 RedrawProbeGroup();
             }
@@ -1129,14 +1137,17 @@ namespace OpenEphys.Onix1.Design
         {
             var fileName = GetFileName();
 
+            var directory = Path.GetDirectoryName(fileName);
+            if (string.IsNullOrEmpty(directory)) directory = ".";
+
             using SaveFileDialog sfd = new();
             sfd.Filter = ProbeInterfaceHelper.ProbeInterfaceFileNameFilter;
             sfd.FilterIndex = 1;
-            sfd.Title = "Save As";
+            sfd.Title = $"{ProbeName}: Save As";
             sfd.OverwritePrompt = true;
             sfd.ValidateNames = true;
-            sfd.FileName = fileName;
-            sfd.InitialDirectory = Path.GetDirectoryName(fileName);
+            sfd.FileName = Path.GetFileName(fileName);
+            sfd.InitialDirectory = directory;
 
             if (sfd.ShowDialog() == DialogResult.OK)
             {
@@ -1166,14 +1177,7 @@ namespace OpenEphys.Onix1.Design
                 return SaveFileAs();
             }
 
-            if (TrySaveFile(fileName, ProbeGroup))
-            {
-                ProbeConfiguration.ProbeInterfaceFileName = fileName;
-                ProbeConfigurationChanged();
-                return true;
-            }
-
-            return true;
+            return TrySaveFile(fileName, ProbeGroup);
         }
 
         void MenuItemSaveFile(object sender, EventArgs e)
@@ -1504,7 +1508,7 @@ namespace OpenEphys.Onix1.Design
 
             if (string.IsNullOrEmpty(fileName))
             {
-                fileName = DefaultFileName;
+                fileName = Path.Combine(Directory.GetCurrentDirectory(), DefaultFileName);
 
                 if (File.Exists(fileName))
                 {
@@ -1515,6 +1519,41 @@ namespace OpenEphys.Onix1.Design
             return fileName;
         }
 
+        static internal bool ProcessMenuShortcut(MenuStrip menuStrip, Keys keyData)
+        {
+            Stack<ToolStripItem> menuStack = new();
+
+            foreach (ToolStripItem item in menuStrip.Items)
+            {
+                menuStack.Push(item);
+            }
+
+            while (menuStack.Count > 0)
+            {
+                var current = menuStack.Pop();
+
+                if (current is ToolStripMenuItem menuItem && menuItem.Enabled)
+                {
+                    if (menuItem.HasDropDownItems)
+                    {
+                        foreach (ToolStripItem dropDownItem in menuItem.DropDownItems)
+                        {
+                            menuStack.Push(dropDownItem);
+                        }
+                    }
+
+                    if (menuItem.ShortcutKeys == keyData)
+                    {
+                        menuItem.PerformClick();
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
             if (DialogResult == DialogResult.Cancel)
@@ -1522,7 +1561,16 @@ namespace OpenEphys.Onix1.Design
 
             if (!SaveFile())
             {
-                e.Cancel = true;
+                var result = MessageBox.Show(
+                    $"Warning: The current {ProbeName} configuration will not be saved. Do you still want to exit without saving?",
+                    $"Saving {ProbeName} Configuration",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+
+                if (result == DialogResult.No)
+                {
+                    SaveFile();
+                }
             }
         }
     }

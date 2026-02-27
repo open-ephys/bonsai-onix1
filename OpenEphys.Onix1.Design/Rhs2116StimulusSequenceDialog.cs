@@ -64,7 +64,7 @@ namespace OpenEphys.Onix1.Design
 
             StepSize = Sequence.CurrentStepSize;
 
-            ChannelDialog = new(rhs2116Trigger.ProbeGroup);
+            ChannelDialog = new(rhs2116Trigger.ProbeGroup, nameof(Rhs2116));
 
             ChannelDialog.SetChildFormProperties(this).AddDialogToPanel(panelProbe);
             this.AddMenuItemsFromDialogToFileOption(ChannelDialog, "Channel Configuration");

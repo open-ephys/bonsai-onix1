@@ -30,7 +30,7 @@ namespace OpenEphys.Onix1.Design
         {
             InitializeComponent();
 
-            DialogNeuropixelsV1e = new(configureNeuropixelsV1e);
+            DialogNeuropixelsV1e = new(configureNeuropixelsV1e, nameof(NeuropixelsV1e));
 
             DialogNeuropixelsV1e.SetChildFormProperties(this).AddDialogToPanel(panelNeuropixelsV1e);
 
@@ -47,17 +47,27 @@ namespace OpenEphys.Onix1.Design
             Close();
         }
 
+        /// <inheritdoc/>
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (tabControl1.SelectedTab == tabPageNeuropixelsV1e)
+            {
+                return DialogNeuropixelsV1e.ProcessMenuShortcut(keyData);
+            }
+            else if (tabControl1.SelectedTab == tabPageBno055)
+            {
+                return true;
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
             if (DialogResult == DialogResult.Cancel)
                 return;
 
             DialogNeuropixelsV1e.Close();
-
-            if (!DialogNeuropixelsV1e.IsDisposed)
-            {
-                e.Cancel = true;
-            }
         }
     }
 }

@@ -36,23 +36,19 @@ namespace OpenEphys.Onix1.Design
         {
             InitializeComponent();
 
-            DialogNeuropixelsV1A = new(configureNeuropixelsV1A)
+            DialogNeuropixelsV1A = new(configureNeuropixelsV1A, nameof(ConfigureHeadstageNeuropixelsV1f.NeuropixelsV1A))
             {
                 Tag = configureNeuropixelsV1A.ProbeName
             };
 
             DialogNeuropixelsV1A.SetChildFormProperties(this).AddDialogToPanel(panelNeuropixelsV1A);
 
-            this.AddMenuItemsFromDialogToFileOption(DialogNeuropixelsV1A, "NeuropixelsV1A");
-
-            DialogNeuropixelsV1B = new(configureNeuropixelsV1B)
+            DialogNeuropixelsV1B = new(configureNeuropixelsV1B, nameof(ConfigureHeadstageNeuropixelsV1f.NeuropixelsV1B))
             {
                 Tag = configureNeuropixelsV1B.ProbeName
             };
 
             DialogNeuropixelsV1B.SetChildFormProperties(this).AddDialogToPanel(panelNeuropixelsV1B);
-
-            this.AddMenuItemsFromDialogToFileOption(DialogNeuropixelsV1B, "NeuropixelsV1B");
 
             DialogBno055 = new(new ConfigureBno055(configureBno055));
 
@@ -66,21 +62,32 @@ namespace OpenEphys.Onix1.Design
             DialogResult = DialogResult.OK;
         }
 
+        /// <inheritdoc/>
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (tabControl1.SelectedTab == tabPageNeuropixelsV1A)
+            {
+                return DialogNeuropixelsV1A.ProcessMenuShortcut(keyData);
+            }
+            else if (tabControl1.SelectedTab == tabPageNeuropixelsV1B)
+            {
+                return DialogNeuropixelsV1B.ProcessMenuShortcut(keyData);
+            }
+            else if (tabControl1.SelectedTab == tabPageBno055)
+            {
+                return true;
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
+            if (DialogResult == DialogResult.Cancel)
+                return;
+
             DialogNeuropixelsV1A.Close();
-
-            if (!DialogNeuropixelsV1A.IsDisposed)
-            {
-                e.Cancel = true;
-            }
-
             DialogNeuropixelsV1B.Close();
-
-            if (!DialogNeuropixelsV1B.IsDisposed)
-            {
-                e.Cancel = true;
-            }
         }
     }
 }

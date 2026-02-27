@@ -21,13 +21,14 @@ namespace OpenEphys.Onix1.Design
         /// Initializes a new instance of <see cref="NeuropixelsV1Dialog"/>.
         /// </summary>
         /// <param name="configureNode">A <see cref="ConfigureNeuropixelsV1e"/> object holding the current configuration settings.</param>
-        public NeuropixelsV1Dialog(IConfigureNeuropixelsV1 configureNode)
+        /// <param name="probeName">The name of the probe.</param>
+        public NeuropixelsV1Dialog(IConfigureNeuropixelsV1 configureNode, string probeName)
         {
             InitializeComponent();
             Shown += FormShown;
             FormClosing += DialogClosing;
 
-            ProbeConfigurationDialog = new(configureNode.ProbeConfiguration);
+            ProbeConfigurationDialog = new(configureNode.ProbeConfiguration, probeName);
             ProbeConfigurationDialog
                 .SetChildFormProperties(this)
                 .AddDialogToPanel(panelProbe);
@@ -44,6 +45,11 @@ namespace OpenEphys.Onix1.Design
             ProbeConfigurationDialog.Show();
         }
 
+        internal bool ProcessMenuShortcut(Keys keyData)
+        {
+            return ProbeConfigurationDialog.ProcessMenuShortcut(keyData);
+        }
+
         internal void Okay_Click(object sender, EventArgs e)
         {
             DialogResult = DialogResult.OK;
@@ -55,11 +61,6 @@ namespace OpenEphys.Onix1.Design
                 return;
 
             ProbeConfigurationDialog.Close();
-
-            if (!ProbeConfigurationDialog.IsDisposed)
-            {
-                e.Cancel = true;
-            }
         }
     }
 }

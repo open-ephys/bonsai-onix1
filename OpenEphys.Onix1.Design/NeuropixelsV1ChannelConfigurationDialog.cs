@@ -17,15 +17,20 @@ namespace OpenEphys.Onix1.Design
 
         readonly IReadOnlyList<int> ReferenceContactsList = new List<int> { 191, 575, 959 };
 
+        internal override string ProbeName { get; }
+
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV1ChannelConfigurationDialog"/>.
         /// </summary>
         /// <param name="probeConfiguration">A <see cref="NeuropixelsV1ProbeConfiguration"/> object holding the current configuration settings.</param>
-        public NeuropixelsV1ChannelConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration)
+        /// <param name="probeName">The name of the probe.</param>
+        public NeuropixelsV1ChannelConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration, string probeName)
             : base(new NeuropixelsV1ProbeConfiguration(probeConfiguration), typeof(NeuropixelsV1eProbeGroup))
         {
             zedGraphChannels.ZoomButtons = MouseButtons.None;
             zedGraphChannels.ZoomButtons2 = MouseButtons.None;
+
+            ProbeName = probeName;
 
             zedGraphChannels.ZoomStepFraction = 0.5;
 

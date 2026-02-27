@@ -38,7 +38,8 @@ namespace OpenEphys.Onix1.Design
         /// Initializes a new instance of <see cref="NeuropixelsV2ProbeConfiguration"/>.
         /// </summary>
         /// <param name="configuration">A <see cref="NeuropixelsV2ProbeConfiguration"/> object holding the current configuration settings.</param>
-        public NeuropixelsV2eProbeConfigurationDialog(NeuropixelsV2ProbeConfiguration configuration)
+        /// <param name="probeName">The name of the probe.</param>
+        public NeuropixelsV2eProbeConfigurationDialog(NeuropixelsV2ProbeConfiguration configuration, string probeName)
         {
             InitializeComponent();
             Shown += FormShown;
@@ -46,7 +47,7 @@ namespace OpenEphys.Onix1.Design
             textBoxProbeCalibrationFile.Text = configuration.GainCalibrationFileName;
             textBoxProbeCalibrationFile.TextChanged += (sender, e) => ProbeConfiguration.GainCalibrationFileName = ((TextBox)sender).Text;
 
-            ChannelConfiguration = new(configuration);
+            ChannelConfiguration = new(configuration, probeName);
             ChannelConfiguration.SetChildFormProperties(this).AddDialogToPanel(panelProbe);
 
             this.AddMenuItemsFromDialogToFileOption(ChannelConfiguration);
