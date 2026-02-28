@@ -29,7 +29,7 @@ namespace OpenEphys.Onix1
         readonly ConfigureNeuropixelsV2ePortController PortControl = new();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigureNeuropixelsV2e"/> class.
+        /// Initializes a new instance of the <see cref="ConfigureHeadstageNeuropixelsV2e"/> class.
         /// </summary>
         public ConfigureHeadstageNeuropixelsV2e()
         {
