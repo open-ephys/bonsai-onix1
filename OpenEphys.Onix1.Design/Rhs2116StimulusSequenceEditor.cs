@@ -18,7 +18,10 @@ namespace OpenEphys.Onix1.Design
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
                 if (editorState != null && !editorState.WorkflowRunning && component is ConfigureRhs2116Trigger configureNode)
                 {
-                    using var editorDialog = new Rhs2116StimulusSequenceDialog(configureNode);
+                    var configuration = new ConfigureRhs2116Trigger();
+                    DesignHelper.DeepCopyProperties(configureNode, configuration);
+
+                    using var editorDialog = new Rhs2116StimulusSequenceDialog(configuration);
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {

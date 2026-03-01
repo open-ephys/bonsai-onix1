@@ -39,26 +39,6 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Copy constructor for the <see cref="ConfigureHeadstage64OpticalStimulator"/> class.
-        /// </summary>
-        /// <param name="opticalStimulator">Existing <see cref="ConfigureHeadstage64OpticalStimulator"/> object.</param>
-        public ConfigureHeadstage64OpticalStimulator(ConfigureHeadstage64OpticalStimulator opticalStimulator) : this()
-        {
-            DeviceName = opticalStimulator.DeviceName;
-            DeviceAddress = opticalStimulator.DeviceAddress;
-            Delay = opticalStimulator.Delay;
-            Arm = opticalStimulator.Arm;
-            MaxCurrent = opticalStimulator.MaxCurrent;
-            ChannelOneCurrent = opticalStimulator.ChannelOneCurrent;
-            ChannelTwoCurrent = opticalStimulator.ChannelTwoCurrent;
-            PulseDuration = opticalStimulator.PulseDuration;
-            PulsesPerSecond = opticalStimulator.PulsesPerSecond;
-            PulsesPerBurst = opticalStimulator.PulsesPerBurst;
-            InterBurstInterval = opticalStimulator.InterBurstInterval;
-            BurstsPerTrain = opticalStimulator.BurstsPerTrain;
-        }
-
-        /// <summary>
         /// Gets or sets the device arm state.
         /// </summary>
         /// <remarks>

@@ -28,16 +28,25 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.Windows.Forms.Label label1;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(NeuropixelsV2eDialog));
             this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.tabControlProbe = new System.Windows.Forms.TabControl();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonOkay = new System.Windows.Forms.Button();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.splitContainer = new System.Windows.Forms.SplitContainer();
+            this.propertyGrid = new Bonsai.Design.PropertyGrid();
+            this.panelConfigurationDialogs = new System.Windows.Forms.Panel();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            label1 = new System.Windows.Forms.Label();
             this.menuStrip.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
+            this.splitContainer.Panel1.SuspendLayout();
+            this.splitContainer.Panel2.SuspendLayout();
+            this.splitContainer.SuspendLayout();
+            this.panelConfigurationDialogs.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -58,17 +67,6 @@
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 22);
             this.fileToolStripMenuItem.Text = "File";
-            // 
-            // tabControlProbe
-            // 
-            this.tabControlProbe.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabControlProbe.Location = new System.Drawing.Point(3, 2);
-            this.tabControlProbe.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabControlProbe.Name = "tabControlProbe";
-            this.tabControlProbe.SelectedIndex = 0;
-            this.tabControlProbe.Size = new System.Drawing.Size(1133, 634);
-            this.tabControlProbe.TabIndex = 1;
-            this.tabControlProbe.TabStop = false;
             // 
             // buttonCancel
             // 
@@ -97,7 +95,7 @@
             // 
             this.tableLayoutPanel1.ColumnCount = 1;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Controls.Add(this.tabControlProbe, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.splitContainer, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 0, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 24);
@@ -108,6 +106,42 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 49F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(1139, 687);
             this.tableLayoutPanel1.TabIndex = 3;
+            // 
+            // splitContainer
+            // 
+            this.splitContainer.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer.Location = new System.Drawing.Point(3, 3);
+            this.splitContainer.Name = "splitContainer";
+            // 
+            // splitContainer.Panel1
+            // 
+            this.splitContainer.Panel1.Controls.Add(this.propertyGrid);
+            // 
+            // splitContainer.Panel2
+            // 
+            this.splitContainer.Panel2.Controls.Add(this.panelConfigurationDialogs);
+            this.splitContainer.Size = new System.Drawing.Size(1133, 632);
+            this.splitContainer.SplitterDistance = 219;
+            this.splitContainer.TabIndex = 3;
+            // 
+            // propertyGrid
+            // 
+            this.propertyGrid.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.propertyGrid.Location = new System.Drawing.Point(0, 0);
+            this.propertyGrid.Name = "propertyGrid";
+            this.propertyGrid.Size = new System.Drawing.Size(219, 632);
+            this.propertyGrid.TabIndex = 0;
+            this.propertyGrid.SelectedGridItemChanged += new System.Windows.Forms.SelectedGridItemChangedEventHandler(this.PropertyGridChanged);
+            // 
+            // panelConfigurationDialogs
+            // 
+            this.panelConfigurationDialogs.Controls.Add(label1);
+            this.panelConfigurationDialogs.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelConfigurationDialogs.Location = new System.Drawing.Point(0, 0);
+            this.panelConfigurationDialogs.Margin = new System.Windows.Forms.Padding(0);
+            this.panelConfigurationDialogs.Name = "panelConfigurationDialogs";
+            this.panelConfigurationDialogs.Size = new System.Drawing.Size(910, 632);
+            this.panelConfigurationDialogs.TabIndex = 0;
             // 
             // flowLayoutPanel1
             // 
@@ -120,6 +154,16 @@
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(1131, 41);
             this.flowLayoutPanel1.TabIndex = 2;
+            // 
+            // label1
+            // 
+            label1.Dock = System.Windows.Forms.DockStyle.Fill;
+            label1.Location = new System.Drawing.Point(0, 0);
+            label1.Name = "label1";
+            label1.Size = new System.Drawing.Size(910, 632);
+            label1.TabIndex = 0;
+            label1.Text = "Select a probe configuration property to view the currently enabled electrodes.";
+            label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // NeuropixelsV2eDialog
             // 
@@ -138,6 +182,11 @@
             this.menuStrip.ResumeLayout(false);
             this.menuStrip.PerformLayout();
             this.tableLayoutPanel1.ResumeLayout(false);
+            this.splitContainer.Panel1.ResumeLayout(false);
+            this.splitContainer.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).EndInit();
+            this.splitContainer.ResumeLayout(false);
+            this.panelConfigurationDialogs.ResumeLayout(false);
             this.flowLayoutPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -150,8 +199,10 @@
         private System.Windows.Forms.Button buttonCancel;
         private System.Windows.Forms.Button buttonOkay;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
-        private System.Windows.Forms.TabControl tabControlProbe;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
+        private System.Windows.Forms.SplitContainer splitContainer;
+        private Bonsai.Design.PropertyGrid propertyGrid;
+        private System.Windows.Forms.Panel panelConfigurationDialogs;
     }
 }

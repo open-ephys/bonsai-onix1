@@ -41,28 +41,6 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Copy constructor for the <see cref="ConfigureHeadstage64ElectricalStimulator"/> class.
-        /// </summary>
-        /// <param name="electricalStimulator">Existing <see cref="ConfigureHeadstage64ElectricalStimulator"/> object.</param>
-        public ConfigureHeadstage64ElectricalStimulator(ConfigureHeadstage64ElectricalStimulator electricalStimulator) : this()
-        {
-            DeviceName = electricalStimulator.DeviceName;
-            DeviceAddress = electricalStimulator.DeviceAddress;
-            TriggerDelay = electricalStimulator.TriggerDelay;
-            Arm = electricalStimulator.Arm;
-            PhaseOneCurrent = electricalStimulator.PhaseOneCurrent;
-            InterPhaseCurrent = electricalStimulator.InterPhaseCurrent;
-            PhaseTwoCurrent = electricalStimulator.PhaseTwoCurrent;
-            PhaseOneDuration = electricalStimulator.PhaseOneDuration;
-            InterPhaseInterval = electricalStimulator.InterPhaseInterval;
-            PhaseTwoDuration = electricalStimulator.PhaseTwoDuration;
-            InterPulseInterval = electricalStimulator.InterPulseInterval;
-            InterBurstInterval = electricalStimulator.InterBurstInterval;
-            BurstPulseCount = electricalStimulator.BurstPulseCount;
-            TrainBurstCount = electricalStimulator.TrainBurstCount;
-        }
-
-        /// <summary>
         /// Gets or sets the device arm state.
         /// </summary>
         /// <remarks>

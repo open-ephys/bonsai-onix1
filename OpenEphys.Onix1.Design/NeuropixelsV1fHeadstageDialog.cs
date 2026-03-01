@@ -36,7 +36,7 @@ namespace OpenEphys.Onix1.Design
         {
             InitializeComponent();
 
-            DialogNeuropixelsV1A = new(configureNeuropixelsV1A)
+            DialogNeuropixelsV1A = new(configureNeuropixelsV1A, true)
             {
                 Tag = configureNeuropixelsV1A.ProbeName
             };
@@ -45,7 +45,7 @@ namespace OpenEphys.Onix1.Design
 
             this.AddMenuItemsFromDialogToFileOption(DialogNeuropixelsV1A, "NeuropixelsV1A");
 
-            DialogNeuropixelsV1B = new(configureNeuropixelsV1B)
+            DialogNeuropixelsV1B = new(configureNeuropixelsV1B, true)
             {
                 Tag = configureNeuropixelsV1B.ProbeName
             };
@@ -54,7 +54,7 @@ namespace OpenEphys.Onix1.Design
 
             this.AddMenuItemsFromDialogToFileOption(DialogNeuropixelsV1B, "NeuropixelsV1B");
 
-            DialogBno055 = new(new ConfigureBno055(configureBno055));
+            DialogBno055 = new(configureBno055, true);
 
             DialogBno055.SetChildFormProperties(this).AddDialogToPanel(panelBno055);
         }

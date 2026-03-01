@@ -16,13 +16,30 @@ namespace OpenEphys.Onix1.Design
             if (provider != null)
             {
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));  
-                if (editorState != null && !editorState.WorkflowRunning && component is IConfigureNeuropixelsV1 configureNeuropixelsV1)
+                if (editorState != null && !editorState.WorkflowRunning && component is ConfigureNeuropixelsV1e configureNeuropixelsV1e)
                 {
-                    using var editorDialog = new NeuropixelsV1Dialog(configureNeuropixelsV1);
+                    var configuration = new ConfigureNeuropixelsV1e();
+                    DesignHelper.DeepCopyProperties(configureNeuropixelsV1e, configuration);
+
+                    using var editorDialog = new NeuropixelsV1Dialog(configuration);
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
-                        configureNeuropixelsV1.ProbeConfiguration = editorDialog.ProbeConfigurationDialog.ProbeConfiguration;
+                        DesignHelper.CopyProperties(editorDialog.ConfigureNode, configureNeuropixelsV1e, DesignHelper.PropertiesToIgnore);
+
+                        return true;
+                    }
+                }
+                else if (editorState != null && !editorState.WorkflowRunning && component is ConfigureNeuropixelsV1f configureNeuropixelsV1f)
+                {
+                    var configuration = new ConfigureNeuropixelsV1f();
+                    DesignHelper.DeepCopyProperties(configureNeuropixelsV1f, configuration);
+
+                    using var editorDialog = new NeuropixelsV1Dialog(configuration);
+
+                    if (editorDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        DesignHelper.CopyProperties(editorDialog.ConfigureNode, configureNeuropixelsV1f, DesignHelper.PropertiesToIgnore);
 
                         return true;
                     }

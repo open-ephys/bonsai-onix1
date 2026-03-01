@@ -16,14 +16,31 @@ namespace OpenEphys.Onix1.Design
             if (provider != null)
             {
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
-                if (editorState != null && !editorState.WorkflowRunning && component is IConfigureNeuropixelsV2 configureNeuropixelsV2e)
+
+                if (editorState != null && !editorState.WorkflowRunning && component is ConfigureNeuropixelsV2e configureNeuropixelsV2e)
                 {
-                    using var editorDialog = new NeuropixelsV2eDialog(configureNeuropixelsV2e);
+                    var configureNode = new ConfigureNeuropixelsV2e();
+                    DesignHelper.DeepCopyProperties(configureNeuropixelsV2e, configureNode);
+
+                    using var editorDialog = new NeuropixelsV2eDialog(configureNode);
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
-                        DesignHelper.CopyProperties(editorDialog.ProbeConfigurationA, configureNeuropixelsV2e.ProbeConfigurationA, DesignHelper.PropertiesToIgnore);
-                        DesignHelper.CopyProperties(editorDialog.ProbeConfigurationB, configureNeuropixelsV2e.ProbeConfigurationB, DesignHelper.PropertiesToIgnore);
+                        DesignHelper.CopyProperties(editorDialog.ConfigureNode, configureNeuropixelsV2e, DesignHelper.PropertiesToIgnore);
+
+                        return true;
+                    }
+                }
+                else if (editorState != null && !editorState.WorkflowRunning && component is ConfigureNeuropixelsV2eBeta configureNeuropixelsV2eBeta)
+                {
+                    var configureNode = new ConfigureNeuropixelsV2eBeta();
+                    DesignHelper.DeepCopyProperties(configureNeuropixelsV2eBeta, configureNode);
+
+                    using var editorDialog = new NeuropixelsV2eDialog(configureNode);
+
+                    if (editorDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        DesignHelper.CopyProperties(editorDialog.ConfigureNode, configureNeuropixelsV2eBeta, DesignHelper.PropertiesToIgnore);
 
                         return true;
                     }

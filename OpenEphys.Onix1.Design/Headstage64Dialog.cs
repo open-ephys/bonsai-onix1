@@ -22,19 +22,19 @@ namespace OpenEphys.Onix1.Design
         {
             InitializeComponent();
 
-            Rhd2164Dialog = new(new ConfigureRhd2164(configureNode.Rhd2164));
+            Rhd2164Dialog = new(configureNode.Rhd2164, true);
             Rhd2164Dialog.SetChildFormProperties(this).AddDialogToTab(tabPageRhd2164);
 
-            Bno055Dialog = new(new ConfigureBno055(configureNode.Bno055));
+            Bno055Dialog = new(configureNode.Bno055, true);
             Bno055Dialog.SetChildFormProperties(this).AddDialogToTab(tabPageBno055);
 
-            TS4231V1Dialog = new(new ConfigureTS4231V1(configureNode.TS4231));
+            TS4231V1Dialog = new(configureNode.TS4231, true);
             TS4231V1Dialog.SetChildFormProperties(this).AddDialogToTab(tabPageTS4231);
 
-            ElectricalStimulatorSequenceDialog = new(configureNode.ElectricalStimulator);
+            ElectricalStimulatorSequenceDialog = new(configureNode.ElectricalStimulator, true);
             ElectricalStimulatorSequenceDialog.SetChildFormProperties(this).AddDialogToTab(tabPageElectricalStimulator);
 
-            OpticalStimulatorSequenceDialog = new(configureNode.OpticalStimulator);
+            OpticalStimulatorSequenceDialog = new(configureNode.OpticalStimulator, true);
             OpticalStimulatorSequenceDialog.SetChildFormProperties(this).AddDialogToTab(tabPageOpticalStimulator);
 
             menuStrip1.Visible = false;

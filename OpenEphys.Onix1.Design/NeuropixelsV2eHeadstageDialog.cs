@@ -25,8 +25,9 @@ namespace OpenEphys.Onix1.Design
         public NeuropixelsV2eHeadstageDialog(IConfigureNeuropixelsV2 configureNeuropixelsV2e, ConfigurePolledBno055 configureBno055)
         {
             InitializeComponent();
+            FormClosing += DialogClosing;
 
-            DialogNeuropixelsV2e = new(configureNeuropixelsV2e);
+            DialogNeuropixelsV2e = new(configureNeuropixelsV2e, true);
 
             DialogNeuropixelsV2e.SetChildFormProperties(this).AddDialogToPanel(panelNeuropixelsV2e);
 
@@ -41,7 +42,7 @@ namespace OpenEphys.Onix1.Design
                 tabPageNeuropixelsV2e.Text = "NeuropixelsV2eBeta";
             }
 
-            DialogBno055 = new(new ConfigurePolledBno055(configureBno055));
+            DialogBno055 = new(configureBno055, true);
 
             DialogBno055.SetChildFormProperties(this).AddDialogToPanel(panelBno055);
         }
@@ -49,6 +50,11 @@ namespace OpenEphys.Onix1.Design
         private void Okay_Click(object sender, System.EventArgs e)
         {
             DialogResult = DialogResult.OK;
+        }
+
+        void DialogClosing(object sender, FormClosingEventArgs e)
+        {
+            DialogNeuropixelsV2e.CopyConfigurations();
         }
     }
 }
