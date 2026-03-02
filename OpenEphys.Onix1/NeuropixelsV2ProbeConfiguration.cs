@@ -48,12 +48,6 @@ namespace OpenEphys.Onix1
     public abstract class NeuropixelsV2ProbeConfiguration
     {
         /// <summary>
-        /// Gets or sets the <see cref="NeuropixelsV2Probe"/> for this probe.
-        /// </summary>
-        [Browsable(false)]
-        public NeuropixelsV2Probe Probe { get; set; }
-
-        /// <summary>
         /// Gets or sets a value determining if the polarity of the electrode voltages acquired by the probe
         /// should be inverted.
         /// </summary>

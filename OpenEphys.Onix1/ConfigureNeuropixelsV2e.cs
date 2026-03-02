@@ -80,7 +80,7 @@ namespace OpenEphys.Onix1
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         [XmlElement(nameof(ProbeConfigurationA), typeof(NeuropixelsV2QuadShankProbeConfiguration))] // NB: Needed for backward compatibility
         [TypeConverter(typeof(GenericPropertyConverter))]
-        public NeuropixelsV2ProbeConfiguration ProbeConfigurationA { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe.ProbeA, NeuropixelsV2QuadShankReference.External);
+        public NeuropixelsV2ProbeConfiguration ProbeConfigurationA { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2QuadShankReference.External);
 
         /// <summary>
         /// Prevent the <see cref="ProbeConfigurationA"/> property from being serialized.
@@ -133,7 +133,7 @@ namespace OpenEphys.Onix1
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         [XmlElement(nameof(ProbeConfigurationB), typeof(NeuropixelsV2QuadShankProbeConfiguration))] // NB: Needed for backward compatibility
         [TypeConverter(typeof(GenericPropertyConverter))]
-        public NeuropixelsV2ProbeConfiguration ProbeConfigurationB { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe.ProbeB, NeuropixelsV2QuadShankReference.External);
+        public NeuropixelsV2ProbeConfiguration ProbeConfigurationB { get; set; } = new NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2QuadShankReference.External);
 
         /// <summary>
         /// Prevent the <see cref="ProbeConfigurationB"/> property from being serialized.
