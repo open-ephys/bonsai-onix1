@@ -89,7 +89,7 @@
             this.tabPageBno055.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tabPageBno055.Name = "tabPageBno055";
             this.tabPageBno055.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPageBno055.Size = new System.Drawing.Size(1342, 703);
+            this.tabPageBno055.Size = new System.Drawing.Size(1320, 712);
             this.tabPageBno055.TabIndex = 1;
             this.tabPageBno055.Text = "Bno055";
             this.tabPageBno055.UseVisualStyleBackColor = true;
@@ -100,7 +100,7 @@
             this.panelBno055.Location = new System.Drawing.Point(3, 2);
             this.panelBno055.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panelBno055.Name = "panelBno055";
-            this.panelBno055.Size = new System.Drawing.Size(1336, 699);
+            this.panelBno055.Size = new System.Drawing.Size(1314, 708);
             this.panelBno055.TabIndex = 0;
             // 
             // buttonCancel
@@ -185,7 +185,7 @@
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "NeuropixelsV1eHeadstageDialog";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "NeuropixelsV1e Headstage Configuration";
+            this.Text = "HeadstageNeuropixels1.0e Configuration";
             this.tabControl1.ResumeLayout(false);
             this.tabPageNeuropixelsV1e.ResumeLayout(false);
             this.tabPageNeuropixelsV1e.PerformLayout();

@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Headstage64ElectricalStimulatorSequenceDialog));
             this.SuspendLayout();
             // 
             // Headstage64ElectricalStimulatorSequenceDialog
@@ -37,7 +36,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1189, 592);
             this.Name = "Headstage64ElectricalStimulatorSequenceDialog";
-            this.Text = "Headstage 64 Electrical Stimulus Sequence";
+            this.Text = "Headstage64 Electrical Stimulus Sequence";
             this.ResumeLayout(false);
             this.PerformLayout();
 
