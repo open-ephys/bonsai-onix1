@@ -59,11 +59,9 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class.
         /// </summary>
-        /// <param name="probe">The <see cref="NeuropixelsV2Probe"/> for this probe.</param>
         /// <param name="reference">The <see cref="NeuropixelsV2QuadShankReference"/> reference value.</param>
-        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2Probe probe, NeuropixelsV2QuadShankReference reference)
+        public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2QuadShankReference reference)
         {
-            Probe = probe;
             Reference = reference;
             ProbeGroup = new NeuropixelsV2eQuadShankProbeGroup();
         }
@@ -76,7 +74,6 @@ namespace OpenEphys.Onix1
         {
             Reference = probeConfiguration.Reference;
             ProbeGroup = probeConfiguration.ProbeGroup.Clone();
-            Probe = probeConfiguration.Probe;
             InvertPolarity = probeConfiguration.InvertPolarity;
             GainCalibrationFileName = probeConfiguration.GainCalibrationFileName;
             probeInterfaceFileName = probeConfiguration.probeInterfaceFileName;
@@ -86,19 +83,16 @@ namespace OpenEphys.Onix1
         /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class with the given
         /// values.
         /// </summary>
-        /// <param name="probe">The <see cref="NeuropixelsV2Probe"/> for this probe.</param>
         /// <param name="reference">The <see cref="NeuropixelsV2QuadShankReference"/> reference value.</param>
         /// <param name="invertPolarity">Boolean defining if the signal polarity should be inverted.</param>
         /// <param name="gainCalibrationFileName">String defining the path to the gain calibration file.</param>
         /// <param name="probeInterfaceFileName">String defining the path to the ProbeInterface file.</param>
         public NeuropixelsV2QuadShankProbeConfiguration(
-            NeuropixelsV2Probe probe,
             NeuropixelsV2QuadShankReference reference,
             bool invertPolarity,
             string gainCalibrationFileName,
             string probeInterfaceFileName)
         {
-            Probe = probe;
             Reference = reference;
             InvertPolarity = invertPolarity;
             GainCalibrationFileName = gainCalibrationFileName;
@@ -110,7 +104,6 @@ namespace OpenEphys.Onix1
         /// <see cref="NeuropixelsV2eQuadShankProbeGroup"/> channel configuration. 
         /// </summary>
         /// <param name="probeGroup">The existing <see cref="NeuropixelsV2eQuadShankProbeGroup"/> instance to use.</param>
-        /// <param name="probe">The <see cref="NeuropixelsV2Probe"/> for this probe.</param>
         /// <param name="reference">The <see cref="NeuropixelsV2QuadShankReference"/> reference value.</param>
         /// <param name="invertPolarity">Boolean defining if the signal polarity should be inverted.</param>
         /// <param name="gainCalibrationFileName">String defining the path to the gain calibration file.</param>
@@ -118,7 +111,6 @@ namespace OpenEphys.Onix1
         [JsonConstructor]
         public NeuropixelsV2QuadShankProbeConfiguration(
             NeuropixelsV2eQuadShankProbeGroup probeGroup,
-            NeuropixelsV2Probe probe,
             NeuropixelsV2QuadShankReference reference,
             bool invertPolarity,
             string gainCalibrationFileName,
@@ -126,7 +118,6 @@ namespace OpenEphys.Onix1
         {
             ProbeGroup = probeGroup.Clone();
             Reference = reference;
-            Probe = probe;
             InvertPolarity = invertPolarity;
             GainCalibrationFileName = gainCalibrationFileName;
             ProbeInterfaceFileName = probeInterfaceFileName;

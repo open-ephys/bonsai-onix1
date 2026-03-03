@@ -32,8 +32,9 @@ namespace OpenEphys.Onix1.Design
                     var instance = (IConfigureNeuropixelsV2)context.Instance;
 
                     bool isBeta = instance is ConfigureNeuropixelsV2eBeta;
+                    string probeName = configuration == instance.ProbeConfigurationA ? nameof(NeuropixelsV2Probe.ProbeA) : nameof(NeuropixelsV2Probe.ProbeB);
 
-                    using var editorDialog = new NeuropixelsV2eProbeConfigurationDialog(configuration, isBeta);
+                    using var editorDialog = new NeuropixelsV2eProbeConfigurationDialog(configuration, isBeta, probeName);
 
                     if (isBeta)
                     {

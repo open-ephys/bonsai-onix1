@@ -49,7 +49,8 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <param name="configuration">A <see cref="NeuropixelsV2ProbeConfiguration"/> object holding the current configuration settings.</param>
         /// <param name="isBeta">Boolean denoting if this probe is a beta probe or not.</param>
-        public NeuropixelsV2eProbeConfigurationDialog(NeuropixelsV2ProbeConfiguration configuration, bool isBeta)
+        /// <param name="probeName">The name of the probe.</param>
+        public NeuropixelsV2eProbeConfigurationDialog(NeuropixelsV2ProbeConfiguration configuration, bool isBeta, string probeName)
         {
             InitializeComponent();
             Shown += FormShown;
@@ -59,12 +60,12 @@ namespace OpenEphys.Onix1.Design
 
             probeConfigurations = new()
             {
-                [ProbeType.SingleShank] = new NeuropixelsV2SingleShankProbeConfiguration(configuration.Probe,
+                [ProbeType.SingleShank] = new NeuropixelsV2SingleShankProbeConfiguration(
                         NeuropixelsV2SingleShankReference.External,
                         configuration.InvertPolarity,
                         configuration.GainCalibrationFileName,
                         configuration.ProbeInterfaceFileName),
-                [ProbeType.QuadShank] = new NeuropixelsV2QuadShankProbeConfiguration(configuration.Probe,
+                [ProbeType.QuadShank] = new NeuropixelsV2QuadShankProbeConfiguration(
                         NeuropixelsV2QuadShankReference.External,
                         configuration.InvertPolarity,
                         configuration.GainCalibrationFileName,
@@ -103,7 +104,7 @@ namespace OpenEphys.Onix1.Design
 
             CheckStatus();
 
-            Text += ": " + ProbeConfiguration.Probe.ToString();
+            Text += ": " + probeName;
         }
 
         ProbeType GetCurrentProbeType(NeuropixelsV2ProbeConfiguration configuration)
