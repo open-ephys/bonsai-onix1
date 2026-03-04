@@ -40,6 +40,10 @@ namespace OpenEphys.Onix1
             {
                 throw new IOException($"Unable to read '{probeInterfaceFileName}'. The file may be in use.", e);
             }
+            catch (InvalidOperationException e)
+            {
+                throw new InvalidOperationException($"Error loading '{probeInterfaceFileName}'. Ensure that the correct file is selected.\n\n{e.Message}", e);
+            }
             catch (Exception e)
             {
                 throw new IOException($"Unexpected error reading '{probeInterfaceFileName}'.", e);
