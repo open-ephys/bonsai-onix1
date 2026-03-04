@@ -39,12 +39,9 @@
             this.tabPageRhd2164 = new System.Windows.Forms.TabPage();
             this.tabPageBno055 = new System.Windows.Forms.TabPage();
             this.tabPageTS4231 = new System.Windows.Forms.TabPage();
-            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
-            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.tabControl.SuspendLayout();
-            this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -54,12 +51,12 @@
             this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.tabControl, 0, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 24);
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 42F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(1184, 587);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(1184, 611);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // flowLayoutPanel1
@@ -68,7 +65,7 @@
             this.flowLayoutPanel1.Controls.Add(this.buttonOK);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 548);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 572);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(1178, 36);
             this.flowLayoutPanel1.TabIndex = 2;
@@ -109,7 +106,7 @@
             this.tabControl.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
-            this.tabControl.Size = new System.Drawing.Size(1178, 541);
+            this.tabControl.Size = new System.Drawing.Size(1178, 565);
             this.tabControl.TabIndex = 1;
             // 
             // tabPageElectricalStimulator
@@ -117,7 +114,7 @@
             this.tabPageElectricalStimulator.Location = new System.Drawing.Point(4, 25);
             this.tabPageElectricalStimulator.Name = "tabPageElectricalStimulator";
             this.tabPageElectricalStimulator.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPageElectricalStimulator.Size = new System.Drawing.Size(1170, 512);
+            this.tabPageElectricalStimulator.Size = new System.Drawing.Size(1170, 536);
             this.tabPageElectricalStimulator.TabIndex = 4;
             this.tabPageElectricalStimulator.Text = "Electrical Stimulator";
             this.tabPageElectricalStimulator.UseVisualStyleBackColor = true;
@@ -162,41 +159,20 @@
             this.tabPageTS4231.Text = "TS4231";
             this.tabPageTS4231.UseVisualStyleBackColor = true;
             // 
-            // menuStrip1
-            // 
-            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem});
-            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
-            this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1184, 24);
-            this.menuStrip1.TabIndex = 1;
-            this.menuStrip1.Text = "menuStrip1";
-            // 
-            // fileToolStripMenuItem
-            // 
-            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
-            this.fileToolStripMenuItem.Text = "File";
-            // 
             // Headstage64Dialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1184, 611);
             this.Controls.Add(this.tableLayoutPanel1);
-            this.Controls.Add(this.menuStrip1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MainMenuStrip = this.menuStrip1;
             this.Name = "Headstage64Dialog";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Headstage64 Configuration";
             this.tableLayoutPanel1.ResumeLayout(false);
             this.flowLayoutPanel1.ResumeLayout(false);
             this.tabControl.ResumeLayout(false);
-            this.menuStrip1.ResumeLayout(false);
-            this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
@@ -210,8 +186,6 @@
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
         private System.Windows.Forms.Button buttonCancel;
         private System.Windows.Forms.Button buttonOK;
-        private System.Windows.Forms.MenuStrip menuStrip1;
-        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.TabPage tabPageElectricalStimulator;
         private System.Windows.Forms.TabPage tabPageOpticalStimulator;
     }

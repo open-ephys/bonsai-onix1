@@ -2,11 +2,7 @@
 using System.ComponentModel;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
 using Bonsai;
-using Newtonsoft.Json;
 
 namespace OpenEphys.Onix1
 {
@@ -45,7 +41,6 @@ namespace OpenEphys.Onix1
             DeviceAddress = rhs2116Trigger.DeviceAddress;
             DeviceName = rhs2116Trigger.DeviceName;
             TriggerSource = rhs2116Trigger.TriggerSource;
-            ProbeGroup = rhs2116Trigger.ProbeGroup.Clone();
             Armed = rhs2116Trigger.Armed;
             StimulusSequence = new(rhs2116Trigger.StimulusSequence);
         }
@@ -77,117 +72,6 @@ namespace OpenEphys.Onix1
         [Description("Specifies whether the trigger source is local or external.")]
         public Rhs2116TriggerSource TriggerSource { get; set; } = Rhs2116TriggerSource.Local;
 
-        Task<Rhs2116ProbeGroup> probeGroupTask = null;
-
-        Rhs2116ProbeGroup probeGroup = null;
-
-        /// <summary>
-        /// Gets or sets the <see cref="Rhs2116ProbeGroup"/> channel configuration.
-        /// </summary>
-        [XmlIgnore]
-        [Category(ConfigurationCategory)]
-        [Description("Defines the channel configuration")]
-        [Browsable(false)]
-        [Externalizable(false)]
-        public Rhs2116ProbeGroup ProbeGroup
-        {
-            get
-            {
-                if (probeGroup == null)
-                {
-                    try
-                    {
-                        probeGroup = probeGroupTask?.Result ?? new Rhs2116ProbeGroup();
-                    }
-                    catch (AggregateException ae)
-                    {
-                        probeGroup = new();
-                        throw new InvalidOperationException($"There was an error loading the ProbeInterface file, loading the default configuration instead.\n\nError: {ae.InnerException.Message}", ae.InnerException);
-                    }
-                }
-
-                return probeGroup;
-            }
-            set => probeGroup = value;
-        }
-
-        string probeInterfaceFileName;
-
-        /// <summary>
-        /// Gets or sets the file path where the ProbeInterface configuration will be saved.
-        /// </summary>
-        /// <remarks>
-        /// If left empty, the ProbeInterface configuration will not be saved.
-        /// </remarks>
-        [XmlIgnore]
-        [Category(ConfigurationCategory)]
-        [Description("File path to where the ProbeInterface file will be saved for this probe. If the file exists, it will be overwritten.")]
-        [FileNameFilter(ProbeInterfaceHelper.ProbeInterfaceFileNameFilter)]
-        [Editor("Bonsai.Design.SaveFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
-        public string ProbeInterfaceFileName
-        {
-            get => probeInterfaceFileName;
-            set => probeInterfaceFileName = value;
-        }
-
-        /// <summary>
-        /// Gets or sets the ProbeInterface file name, loading the given file asynchronously when set.
-        /// </summary>
-        [XmlIgnore]
-        [Browsable(false)]
-        [Externalizable(false)]
-        public string ProbeInterfaceLoadFileName
-        {
-            get => probeInterfaceFileName;
-            set
-            {
-                probeInterfaceFileName = value;
-                probeGroupTask = Task.Run(() =>
-                {
-                    if (string.IsNullOrEmpty(probeInterfaceFileName))
-                        return new Rhs2116ProbeGroup();
-
-                    return ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeInterfaceFileName, typeof(Rhs2116ProbeGroup)) as Rhs2116ProbeGroup;
-                });
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a string defining the path to an external ProbeInterface JSON file.
-        /// This variable is needed to properly save a workflow in Bonsai, but it is not
-        /// directly accessible in the Bonsai editor.
-        /// </summary>
-        /// <remarks>
-        /// [Obsolete]. Cannot tag this property with the Obsolete attribute due to https://github.com/dotnet/runtime/issues/100453
-        /// </remarks>
-        [Browsable(false)]
-        [Externalizable(false)]
-        [XmlElement(nameof(ProbeInterfaceFileName))]
-        public string ProbeInterfaceFileNameSerialize
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(ProbeInterfaceFileName))
-                    return "";
-
-                if (probeGroup != null)
-                    ProbeInterfaceHelper.SaveExternalProbeInterfaceFile(ProbeGroup, ProbeInterfaceFileName);
-
-                return ProbeInterfaceFileName;
-            }
-            set => ProbeInterfaceLoadFileName = value;
-        }
-
-        /// <summary>
-        /// Prevent the ProbeGroup property from being serialized.
-        /// </summary>
-        /// <returns>False</returns>
-        [Obsolete]
-        public bool ShouldSerializeProbeGroupString()
-        {
-            return false;
-        }
-
         /// <summary>
         /// Gets or sets if trigger is armed.
         /// </summary>
@@ -201,30 +85,6 @@ namespace OpenEphys.Onix1
         {
             get => triggerArmed.Value;
             set => triggerArmed.OnNext(value);
-        }
-
-        /// <summary>
-        /// Gets or sets a string defining the <see cref="ProbeGroup"/> in Base64.
-        /// </summary>
-        /// <remarks>
-        /// This variable is needed to properly save a workflow in Bonsai, but it is not
-        /// directly accessible in the Bonsai editor.
-        /// </remarks>
-        [Browsable(false)]
-        [Externalizable(false)]
-        [XmlElement(nameof(ProbeGroup))]
-        public string ProbeGroupString
-        {
-            get
-            {
-                var jsonString = JsonConvert.SerializeObject(ProbeGroup);
-                return Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonString));
-            }
-            set
-            {
-                var jsonString = Encoding.UTF8.GetString(Convert.FromBase64String(value));
-                ProbeGroup = JsonConvert.DeserializeObject<Rhs2116ProbeGroup>(jsonString);
-            }
         }
 
         /// <summary>
