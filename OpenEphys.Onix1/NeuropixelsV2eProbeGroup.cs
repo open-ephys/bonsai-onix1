@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
+using Newtonsoft.Json;
 using OpenEphys.ProbeInterface.NET;
 
 namespace OpenEphys.Onix1
@@ -102,5 +103,19 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <returns>List of <see cref="NeuropixelsV2Electrode"/> electrodes</returns>
         public abstract List<NeuropixelsV2Electrode> ToElectrodes();
+
+        /// <summary>
+        /// Gets the array representing the mapping of channels to Neuropixels V2 electrodes.
+        /// </summary>
+        [XmlIgnore]
+        [JsonIgnore]
+        public abstract NeuropixelsV2Electrode[] ChannelMap { get; }
+
+
+        /// <summary>
+        /// Enable the selected electrodes.
+        /// </summary>
+        /// <param name="electrodes">List of selected electrodes that are being enabled.</param>
+        public abstract void SelectElectrodes(NeuropixelsV2Electrode[] electrodes);
     }
 }

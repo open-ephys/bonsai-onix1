@@ -206,13 +206,25 @@ namespace OpenEphys.Onix1
         /// <returns>The original sequence modified by adding additional configuration actions required to configure a NeuropixelsV2eBeta device./></returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
+            if (string.IsNullOrEmpty(ProbeConfigurationA.ProbeInterfaceFileName))
+                throw new ArgumentException($"ProbeInterface file name must be specified for {nameof(ProbeConfigurationA)} in the configuration.");
+
+            if (string.IsNullOrEmpty(ProbeConfigurationB.ProbeInterfaceFileName))
+                throw new ArgumentException($"ProbeInterface file name must be specified for {nameof(ProbeConfigurationB)} in the configuration.");
+
             var enable = Enable;
             var probeConfigurationA = ProbeConfigurationA;
             var probeConfigurationB = ProbeConfigurationB;
+            var probeInterfaceFileNameA = ProbeConfigurationA.ProbeInterfaceFileName;
+            var probeInterfaceFileNameB = ProbeConfigurationB.ProbeInterfaceFileName;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
             return source.ConfigureAndLatchDevice(context =>
             {
+                // TODO: Confirm that this works with hardware
+                var probeGroupA = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeInterfaceFileNameA, typeof(NeuropixelsV2eProbeGroup)) as NeuropixelsV2eProbeGroup;
+                var probeGroupB = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeInterfaceFileNameB, typeof(NeuropixelsV2eProbeGroup)) as NeuropixelsV2eProbeGroup;
+
                 // configure device via the DS90UB9x deserializer device
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
                 device.WriteRegister(DS90UB9x.ENABLE, enable ? 1u : 0);
@@ -271,7 +283,7 @@ namespace OpenEphys.Onix1
                     gainCorrectionA = gainCorrection.Value.GainCorrectionFactor;
 
                     SelectProbe(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeA);
-                    probeControl.WriteConfiguration(probeConfigurationA);
+                    probeControl.WriteConfiguration(probeConfigurationA, probeGroupA);
                     ConfigureProbeStreaming(probeControl);
                 }
 
@@ -300,7 +312,7 @@ namespace OpenEphys.Onix1
                     gainCorrectionB = gainCorrection.Value.GainCorrectionFactor;
 
                     SelectProbe(serializer, ref gpo32Config, NeuropixelsV2eBeta.SelectProbeB);
-                    probeControl.WriteConfiguration(probeConfigurationB);
+                    probeControl.WriteConfiguration(probeConfigurationB, probeGroupB);
                     ConfigureProbeStreaming(probeControl);
                 }
 
@@ -314,7 +326,7 @@ namespace OpenEphys.Onix1
                 // Still its good to get them roughly (i.e. within 10 PCLKs) started at the same time.
                 SyncProbes(serializer, gpo10Config);
 
-                var deviceInfo = new NeuropixelsV2eDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB, probeAMetadata, probeBMetadata, probeConfigurationA, probeConfigurationB);
+                var deviceInfo = new NeuropixelsV2eDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB, probeAMetadata, probeBMetadata, probeConfigurationA, probeConfigurationB, probeGroupA, probeGroupB);
                 var shutdown = Disposable.Create(() =>
                 {
                     serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, NeuropixelsV2eBeta.DefaultGPO10Config);
