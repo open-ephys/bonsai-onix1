@@ -503,7 +503,7 @@ namespace OpenEphys.Onix1.Design
 
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
-            if (DialogResult == DialogResult.Cancel || !ChannelConfiguration.Visible)
+            if (DialogResult == DialogResult.Cancel)
                 return;
 
             ChannelConfiguration.Close();

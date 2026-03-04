@@ -403,7 +403,7 @@ namespace OpenEphys.Onix1.Design
 
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
-            if (DialogResult == DialogResult.Cancel)
+            if (DialogResult == DialogResult.Cancel || (string.IsNullOrEmpty(ProbeConfiguration.ProbeInterfaceFileName) && string.IsNullOrEmpty(ProbeConfiguration.GainCalibrationFileName)))
                 return;
 
             ChannelConfiguration.Close();

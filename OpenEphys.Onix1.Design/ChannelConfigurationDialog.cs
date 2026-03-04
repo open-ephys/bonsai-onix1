@@ -109,22 +109,28 @@ namespace OpenEphys.Onix1.Design
 
             ProbeConfiguration = probeConfiguration;
 
-            try
+            if (string.IsNullOrEmpty(ProbeConfiguration.ProbeInterfaceFileName))
             {
-                ProbeGroup = string.IsNullOrEmpty(ProbeConfiguration.ProbeInterfaceFileName)
-                    ? DefaultChannelLayout()
-                    : ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(ProbeConfiguration.ProbeInterfaceFileName, probeGroupType);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    $"An error occurred trying to load \"{ProbeConfiguration.ProbeInterfaceFileName}\". Loading the default configuration instead. For more details, see the error below:\n\n{ex.Message}",
-                    $"Error Loading {ProbeName} Configuration File",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-
-                ProbeConfiguration.ProbeInterfaceFileName = "";
                 ProbeGroup = DefaultChannelLayout();
+                HasChanges = true;
+            }
+            else
+            {
+                try
+                {
+                    ProbeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(ProbeConfiguration.ProbeInterfaceFileName, probeGroupType);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        $"An error occurred trying to load \"{ProbeConfiguration.ProbeInterfaceFileName}\". Loading the default configuration instead. For more details, see the error below:\n\n{ex.Message}",
+                        $"Error Loading {ProbeName} Configuration File",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+
+                    ProbeConfiguration.ProbeInterfaceFileName = "";
+                    ProbeGroup = DefaultChannelLayout();
+                }
             }
 
             RedrawProbeGroup();
@@ -1652,7 +1658,7 @@ namespace OpenEphys.Onix1.Design
 
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
-            if (DialogResult == DialogResult.Cancel || (!string.IsNullOrEmpty(ProbeConfiguration.ProbeInterfaceFileName) && !HasChanges))
+            if (DialogResult == DialogResult.Cancel || !HasChanges)
                 return;
 
             if (!SaveFile())
