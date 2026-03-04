@@ -45,9 +45,9 @@ namespace OpenEphys.Onix1.Design
 
         public IEnumerable<NeuropixelsV2Electrode> Electrodes { get; init; }
 
-        public NeuropixelsV2QuadShankInfo(NeuropixelsV2QuadShankProbeConfiguration probeConfiguration)
+        public NeuropixelsV2QuadShankInfo(NeuropixelsV2eQuadShankProbeGroup probeGroup)
         {
-            Electrodes = probeConfiguration.ProbeGroup.ToElectrodes();
+            Electrodes = probeGroup.ToElectrodes();
         }
 
         public Array GetReferenceEnumValues()

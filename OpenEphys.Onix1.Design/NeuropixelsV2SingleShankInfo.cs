@@ -20,9 +20,9 @@ namespace OpenEphys.Onix1.Design
 
         public IEnumerable<NeuropixelsV2Electrode> Electrodes { get; init; }
 
-        public NeuropixelsV2SingleShankInfo(NeuropixelsV2SingleShankProbeConfiguration probeConfiguration)
+        public NeuropixelsV2SingleShankInfo(NeuropixelsV2eSingleShankProbeGroup probeGroup)
         {
-            Electrodes = probeConfiguration.ProbeGroup.ToElectrodes();
+            Electrodes = probeGroup.ToElectrodes();
         }
 
         public Array GetReferenceEnumValues()

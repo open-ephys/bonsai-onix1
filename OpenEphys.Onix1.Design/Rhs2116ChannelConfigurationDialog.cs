@@ -19,10 +19,14 @@ namespace OpenEphys.Onix1.Design
         /// Initializes a new instance of <see cref="Rhs2116ChannelConfigurationDialog"/>.
         /// </summary>
         /// <param name="probeGroup">Channel configuration settings for a <see cref="Rhs2116ProbeGroup"/>.</param>
-        public Rhs2116ChannelConfigurationDialog(Rhs2116ProbeGroup probeGroup)
+        /// <param name="probeName">The name of the probe.</param>
+        // TODO: Call the new ChannelConfigurationDialog constructor with the ProbeInterface file
+        // name instead of the probe group
+        public Rhs2116ChannelConfigurationDialog(Rhs2116ProbeGroup probeGroup, string probeName)
             : base(probeGroup)
         {
             InitializeComponent();
+            ProbeGroup = probeGroup;
 
             zedGraphChannels.ZoomButtons = MouseButtons.None;
             zedGraphChannels.ZoomButtons2 = MouseButtons.None;
@@ -48,9 +52,9 @@ namespace OpenEphys.Onix1.Design
             return new Rhs2116ProbeGroup();
         }
 
-        internal override bool OpenFile(Type type)
+        internal override bool OpenNewFile(bool updateFileName = false)
         {
-            if (base.OpenFile(type))
+            if (base.OpenNewFile(updateFileName))
             {
                 OnFileOpenHandler();
 

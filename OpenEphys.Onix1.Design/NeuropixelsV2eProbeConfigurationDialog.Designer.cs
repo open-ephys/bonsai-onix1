@@ -37,16 +37,16 @@
             System.Windows.Forms.Label labelProbeType;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(NeuropixelsV2eProbeConfigurationDialog));
             this.toolStripLabelGainCalibrationSN = new System.Windows.Forms.ToolStripStatusLabel();
-            this.menuStrip = new System.Windows.Forms.MenuStrip();
-            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.buttonEnableContacts = new System.Windows.Forms.Button();
             this.buttonClearSelections = new System.Windows.Forms.Button();
             this.buttonChooseCalibrationFile = new System.Windows.Forms.Button();
             this.panelProbe = new System.Windows.Forms.Panel();
+            this.labelDefaultText = new System.Windows.Forms.Label();
             this.panelTrackBar = new System.Windows.Forms.Panel();
             this.trackBarProbePosition = new System.Windows.Forms.TrackBar();
             this.panelChannelOptions = new System.Windows.Forms.Panel();
+            this.comboBoxProbeType = new System.Windows.Forms.ComboBox();
             this.checkBoxInvertPolarity = new System.Windows.Forms.CheckBox();
             this.textBoxGainCorrection = new System.Windows.Forms.TextBox();
             this.textBoxProbeCalibrationFile = new System.Windows.Forms.TextBox();
@@ -57,15 +57,16 @@
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.toolStripLabelFileName = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripFileName = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripGainCalSN = new System.Windows.Forms.ToolStripStatusLabel();
-            this.comboBoxProbeType = new System.Windows.Forms.ComboBox();
             probeCalibrationFile = new System.Windows.Forms.Label();
             Reference = new System.Windows.Forms.Label();
             labelPresets = new System.Windows.Forms.Label();
             label1 = new System.Windows.Forms.Label();
             invertPolarity = new System.Windows.Forms.Label();
             labelProbeType = new System.Windows.Forms.Label();
-            this.menuStrip.SuspendLayout();
+            this.panelProbe.SuspendLayout();
             this.panelTrackBar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarProbePosition)).BeginInit();
             this.panelChannelOptions.SuspendLayout();
@@ -120,32 +121,25 @@
             invertPolarity.TabIndex = 9;
             invertPolarity.Text = "Invert\r\nPolarity:";
             // 
+            // labelProbeType
+            // 
+            labelProbeType.AutoSize = true;
+            labelProbeType.Location = new System.Drawing.Point(15, 231);
+            labelProbeType.Name = "labelProbeType";
+            labelProbeType.Size = new System.Drawing.Size(82, 16);
+            labelProbeType.TabIndex = 11;
+            labelProbeType.Text = "Probe Type:";
+            // 
             // toolStripLabelGainCalibrationSN
             // 
+            this.toolStripLabelGainCalibrationSN.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Left;
             this.toolStripLabelGainCalibrationSN.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.toolStripLabelGainCalibrationSN.Image = global::OpenEphys.Onix1.Design.Properties.Resources.StatusWarningImage;
             this.toolStripLabelGainCalibrationSN.Name = "toolStripLabelGainCalibrationSN";
-            this.toolStripLabelGainCalibrationSN.Size = new System.Drawing.Size(139, 20);
+            this.toolStripLabelGainCalibrationSN.Padding = new System.Windows.Forms.Padding(0, 0, 5, 0);
+            this.toolStripLabelGainCalibrationSN.Size = new System.Drawing.Size(148, 24);
             this.toolStripLabelGainCalibrationSN.Text = "Gain Calibration SN: ";
             this.toolStripLabelGainCalibrationSN.TextImageRelation = System.Windows.Forms.TextImageRelation.TextBeforeImage;
-            // 
-            // menuStrip
-            // 
-            this.menuStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
-            this.menuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem});
-            this.menuStrip.Location = new System.Drawing.Point(0, 0);
-            this.menuStrip.Name = "menuStrip";
-            this.menuStrip.Padding = new System.Windows.Forms.Padding(5, 1, 0, 1);
-            this.menuStrip.Size = new System.Drawing.Size(1234, 24);
-            this.menuStrip.TabIndex = 0;
-            this.menuStrip.Text = "menuStripNeuropixelsV2e";
-            // 
-            // fileToolStripMenuItem
-            // 
-            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 22);
-            this.fileToolStripMenuItem.Text = "File";
             // 
             // buttonEnableContacts
             // 
@@ -193,12 +187,23 @@
             // panelProbe
             // 
             this.panelProbe.AutoSize = true;
+            this.panelProbe.Controls.Add(this.labelDefaultText);
             this.panelProbe.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelProbe.Location = new System.Drawing.Point(3, 2);
             this.panelProbe.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panelProbe.Name = "panelProbe";
-            this.panelProbe.Size = new System.Drawing.Size(858, 662);
+            this.panelProbe.Size = new System.Drawing.Size(858, 682);
             this.panelProbe.TabIndex = 1;
+            // 
+            // labelDefaultText
+            // 
+            this.labelDefaultText.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.labelDefaultText.Location = new System.Drawing.Point(0, 0);
+            this.labelDefaultText.Name = "labelDefaultText";
+            this.labelDefaultText.Size = new System.Drawing.Size(858, 682);
+            this.labelDefaultText.TabIndex = 2;
+            this.labelDefaultText.Text = "Please provide a calibration file to configure your probe.";
+            this.labelDefaultText.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // panelTrackBar
             // 
@@ -207,7 +212,7 @@
             this.panelTrackBar.Location = new System.Drawing.Point(868, 4);
             this.panelTrackBar.Margin = new System.Windows.Forms.Padding(4);
             this.panelTrackBar.Name = "panelTrackBar";
-            this.panelTrackBar.Size = new System.Drawing.Size(47, 658);
+            this.panelTrackBar.Size = new System.Drawing.Size(47, 678);
             this.panelTrackBar.TabIndex = 30;
             // 
             // trackBarProbePosition
@@ -219,7 +224,7 @@
             this.trackBarProbePosition.Maximum = 100;
             this.trackBarProbePosition.Name = "trackBarProbePosition";
             this.trackBarProbePosition.Orientation = System.Windows.Forms.Orientation.Vertical;
-            this.trackBarProbePosition.Size = new System.Drawing.Size(47, 658);
+            this.trackBarProbePosition.Size = new System.Drawing.Size(47, 678);
             this.trackBarProbePosition.TabIndex = 22;
             this.trackBarProbePosition.TabStop = false;
             this.trackBarProbePosition.TickFrequency = 2;
@@ -251,8 +256,20 @@
             this.panelChannelOptions.Location = new System.Drawing.Point(922, 2);
             this.panelChannelOptions.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panelChannelOptions.Name = "panelChannelOptions";
-            this.panelChannelOptions.Size = new System.Drawing.Size(309, 662);
+            this.panelChannelOptions.Size = new System.Drawing.Size(309, 682);
             this.panelChannelOptions.TabIndex = 1;
+            // 
+            // comboBoxProbeType
+            // 
+            this.comboBoxProbeType.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.comboBoxProbeType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxProbeType.FormattingEnabled = true;
+            this.comboBoxProbeType.Location = new System.Drawing.Point(107, 227);
+            this.comboBoxProbeType.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.comboBoxProbeType.Name = "comboBoxProbeType";
+            this.comboBoxProbeType.Size = new System.Drawing.Size(188, 24);
+            this.comboBoxProbeType.TabIndex = 12;
             // 
             // checkBoxInvertPolarity
             // 
@@ -287,7 +304,6 @@
             this.textBoxProbeCalibrationFile.Size = new System.Drawing.Size(235, 22);
             this.textBoxProbeCalibrationFile.TabIndex = 1;
             this.textBoxProbeCalibrationFile.TabStop = false;
-            this.textBoxProbeCalibrationFile.TextChanged += new System.EventHandler(this.FileTextChanged);
             this.textBoxProbeCalibrationFile.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.TextBoxKeyPress);
             // 
             // comboBoxReference
@@ -353,13 +369,13 @@
             this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.panelChannelOptions, 2, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 24);
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 46F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(1234, 712);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(1234, 732);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // flowLayoutPanel1
@@ -369,7 +385,7 @@
             this.flowLayoutPanel1.Controls.Add(this.buttonOkay);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(4, 670);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(4, 690);
             this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(4);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(1226, 38);
@@ -379,42 +395,42 @@
             // 
             this.statusStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripLabelFileName,
+            this.toolStripFileName,
             this.toolStripLabelGainCalibrationSN,
             this.toolStripGainCalSN});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 736);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 732);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 13, 0);
-            this.statusStrip1.Size = new System.Drawing.Size(1234, 25);
+            this.statusStrip1.Size = new System.Drawing.Size(1234, 29);
             this.statusStrip1.TabIndex = 3;
             this.statusStrip1.Text = "statusStrip1";
+            // 
+            // toolStripLabelFileName
+            // 
+            this.toolStripLabelFileName.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripLabelFileName.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.toolStripLabelFileName.Image = global::OpenEphys.Onix1.Design.Properties.Resources.StatusWarningImage;
+            this.toolStripLabelFileName.Name = "toolStripLabelFileName";
+            this.toolStripLabelFileName.Size = new System.Drawing.Size(120, 24);
+            this.toolStripLabelFileName.Text = "ProbeInterface File: ";
+            this.toolStripLabelFileName.TextImageRelation = System.Windows.Forms.TextImageRelation.TextBeforeImage;
+            // 
+            // toolStripFileName
+            // 
+            this.toolStripFileName.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripFileName.Name = "toolStripFileName";
+            this.toolStripFileName.Padding = new System.Windows.Forms.Padding(5, 0, 0, 0);
+            this.toolStripFileName.Size = new System.Drawing.Size(93, 24);
+            this.toolStripFileName.Text = "No file selected";
+            this.toolStripFileName.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // toolStripGainCalSN
             // 
             this.toolStripGainCalSN.Name = "toolStripGainCalSN";
-            this.toolStripGainCalSN.Size = new System.Drawing.Size(91, 20);
+            this.toolStripGainCalSN.Size = new System.Drawing.Size(91, 24);
             this.toolStripGainCalSN.Text = "No file selected.";
             this.toolStripGainCalSN.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // comboBoxProbeType
-            // 
-            this.comboBoxProbeType.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.comboBoxProbeType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxProbeType.FormattingEnabled = true;
-            this.comboBoxProbeType.Location = new System.Drawing.Point(107, 227);
-            this.comboBoxProbeType.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.comboBoxProbeType.Name = "comboBoxProbeType";
-            this.comboBoxProbeType.Size = new System.Drawing.Size(188, 24);
-            this.comboBoxProbeType.TabIndex = 12;
-            // 
-            // labelProbeType
-            // 
-            labelProbeType.AutoSize = true;
-            labelProbeType.Location = new System.Drawing.Point(15, 231);
-            labelProbeType.Name = "labelProbeType";
-            labelProbeType.Size = new System.Drawing.Size(82, 16);
-            labelProbeType.TabIndex = 11;
-            labelProbeType.Text = "Probe Type:";
             // 
             // NeuropixelsV2eProbeConfigurationDialog
             // 
@@ -423,16 +439,12 @@
             this.ClientSize = new System.Drawing.Size(1234, 761);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.statusStrip1);
-            this.Controls.Add(this.menuStrip);
             this.DoubleBuffered = true;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MainMenuStrip = this.menuStrip;
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "NeuropixelsV2eProbeConfigurationDialog";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Neuropixels2.0 Probe Configuration";
-            this.menuStrip.ResumeLayout(false);
-            this.menuStrip.PerformLayout();
             this.panelTrackBar.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.trackBarProbePosition)).EndInit();
             this.panelChannelOptions.ResumeLayout(false);
@@ -448,9 +460,6 @@
         }
 
         #endregion
-
-        private System.Windows.Forms.MenuStrip menuStrip;
-        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolTip toolTip;
         private System.Windows.Forms.Panel panelProbe;
         private System.Windows.Forms.Panel panelTrackBar;
@@ -472,5 +481,8 @@
         private System.Windows.Forms.ToolStripStatusLabel toolStripLabelGainCalibrationSN;
         private System.Windows.Forms.CheckBox checkBoxInvertPolarity;
         private System.Windows.Forms.ComboBox comboBoxProbeType;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripLabelFileName;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripFileName;
+        private System.Windows.Forms.Label labelDefaultText;
     }
 }

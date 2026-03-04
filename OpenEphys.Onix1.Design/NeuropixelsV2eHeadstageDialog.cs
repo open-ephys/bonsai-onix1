@@ -17,6 +17,8 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         public readonly GenericDeviceDialog DialogBno055;
 
+        bool HasChanges => DialogNeuropixelsV2e.HasChanges;
+
         /// <summary>
         /// Initializes a new instance of a <see cref="NeuropixelsV2eHeadstageDialog"/>.
         /// </summary>
@@ -25,18 +27,29 @@ namespace OpenEphys.Onix1.Design
         public NeuropixelsV2eHeadstageDialog(IConfigureNeuropixelsV2 configureNeuropixelsV2e, ConfigurePolledBno055 configureBno055)
         {
             InitializeComponent();
+            FormClosing += DialogClosing;
 
             DialogNeuropixelsV2e = new(configureNeuropixelsV2e);
 
             DialogNeuropixelsV2e.SetChildFormProperties(this).AddDialogToPanel(panelNeuropixelsV2e);
 
-            if (configureNeuropixelsV2e is ConfigureNeuropixelsV2e)
+            DialogNeuropixelsV2e.OnStateChange += (sender, e) =>
             {
-                this.AddMenuItemsFromDialogToFileOption(DialogNeuropixelsV2e, "NeuropixelsV2e");
-            }
-            else if (configureNeuropixelsV2e is ConfigureNeuropixelsV2eBeta)
+                if (HasChanges)
+                {
+                    if (!tabPageNeuropixelsV2e.Text.EndsWith("*"))
+                    {
+                        tabPageNeuropixelsV2e.Text += '*';
+                    }
+                }
+                else
+                {
+                    tabPageNeuropixelsV2e.Text = tabPageNeuropixelsV2e.Text.TrimEnd('*');
+                }
+            };
+
+            if (configureNeuropixelsV2e is ConfigureNeuropixelsV2eBeta)
             {
-                this.AddMenuItemsFromDialogToFileOption(DialogNeuropixelsV2e, "NeuropixelsV2eBeta");
                 Text = Text.Replace("NeuropixelsV2e ", "NeuropixelsV2eBeta ");
                 tabPageNeuropixelsV2e.Text = "NeuropixelsV2eBeta";
             }
@@ -49,6 +62,35 @@ namespace OpenEphys.Onix1.Design
         private void Okay_Click(object sender, System.EventArgs e)
         {
             DialogResult = DialogResult.OK;
+        }
+
+        /// <inheritdoc/>
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (tabControl1.SelectedTab == tabPageNeuropixelsV2e)
+            {
+                return DialogNeuropixelsV2e.ProcessMenuShortcut(keyData);
+            }
+            else if (tabControl1.SelectedTab == tabPageBno055)
+            {
+                return true;
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        void DialogClosing(object sender, FormClosingEventArgs e)
+        {
+            if (DialogResult == DialogResult.Cancel)
+                return;
+
+            DialogNeuropixelsV2e.Close();
+
+            if (!DialogNeuropixelsV2e.IsDisposed)
+            {
+                e.Cancel = true;
+                return;
+            }
         }
     }
 }

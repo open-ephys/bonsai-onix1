@@ -152,19 +152,18 @@ namespace OpenEphys.Onix1
         /// </returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
-            if (string.IsNullOrEmpty(ProbeConfiguration.ProbeInterfaceFileName))
-                throw new ArgumentException("ProbeInterface file name must be specified in the configuration.");
-
             var enable = Enable;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
             var ledEnabled = EnableLed;
-            var invertPolarity = ProbeConfiguration.InvertPolarity;
-            var probeInterfaceFileName = ProbeConfiguration.ProbeInterfaceFileName;
+            var probeConfiguration = ProbeConfiguration;
 
             return source.ConfigureAndLatchDevice(context =>
             {
-                var probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeInterfaceFileName, typeof(NeuropixelsV1eProbeGroup)) as NeuropixelsV1eProbeGroup;
+                if (string.IsNullOrEmpty(probeConfiguration.ProbeInterfaceFileName))
+                    throw new ArgumentException($"ProbeInterface file name must be specified in {nameof(ConfigureNeuropixelsV1e)}.{nameof(ProbeConfiguration)}.");
+
+                var probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfiguration.ProbeInterfaceFileName, typeof(NeuropixelsV1eProbeGroup)) as NeuropixelsV1eProbeGroup;
 
                 // configure device via the DS90UB9x deserializer device
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
@@ -186,7 +185,7 @@ namespace OpenEphys.Onix1
 
                 // program shift registers
                 var probeControl = new NeuropixelsV1eRegisterContext(device, NeuropixelsV1.ProbeI2CAddress,
-                                        probeMetadata.ProbeSerialNumber, ProbeConfiguration, probeGroup);
+                                        probeMetadata.ProbeSerialNumber, probeConfiguration, probeGroup);
                 probeControl.InitializeProbe();
                 probeControl.WriteConfiguration();
                 probeControl.StartAcquisition();
@@ -197,7 +196,7 @@ namespace OpenEphys.Onix1
                     TurnOnLed(serializer, NeuropixelsV1e.DefaultGPO32Config);
                 }
 
-                var deviceInfo = new NeuropixelsV1eDeviceInfo(context, DeviceType, deviceAddress, probeControl, invertPolarity, probeGroup);
+                var deviceInfo = new NeuropixelsV1eDeviceInfo(context, DeviceType, deviceAddress, probeControl, probeConfiguration.InvertPolarity, probeGroup);
                 var shutdown = Disposable.Create(() =>
                 {
                     serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, NeuropixelsV1e.DefaultGPO10Config);
