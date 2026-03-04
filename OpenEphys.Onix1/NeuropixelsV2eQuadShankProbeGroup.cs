@@ -24,11 +24,12 @@ namespace OpenEphys.Onix1
         {
         }
 
+        const int numberOfShanks = 4;
+        private protected override int NumberOfShanks => numberOfShanks;
+
         static Probe[] DefaultProbes()
         {
             var probe = new Probe[1];
-
-            const int numberOfShanks = 4;
 
             probe[0] = new(ProbeNdim.Two,
                            ProbeSiUnits.um,

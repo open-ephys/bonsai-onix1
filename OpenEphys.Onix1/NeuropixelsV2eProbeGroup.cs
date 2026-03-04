@@ -17,6 +17,7 @@ namespace OpenEphys.Onix1
         private protected const float ShankOffsetX = 200f;
         private protected const float ShankWidthX = 70f;
         private protected const float ShankPitchX = 250f;
+        private protected abstract int NumberOfShanks { get; }
 
         /// <summary>
         /// Initializes a new instance of a <see cref="NeuropixelsV2eProbeGroup"/>.
@@ -25,6 +26,10 @@ namespace OpenEphys.Onix1
         public NeuropixelsV2eProbeGroup(string specification, string version, IEnumerable<Probe> probes)
             : base(specification, version, probes)
         {
+            if (NumberOfContacts != NeuropixelsV2.ElectrodePerShank * NumberOfShanks)
+            {
+                throw new InvalidOperationException($"Invalid number of electrodes found; expected {NeuropixelsV2.ElectrodePerShank * NumberOfShanks}, but found {NumberOfContacts}.");
+            }
         }
 
         /// <summary>

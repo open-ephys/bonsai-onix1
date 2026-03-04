@@ -54,6 +54,10 @@ namespace OpenEphys.Onix1
         public NeuropixelsV1eProbeGroup(string specification, string version, Probe[] probes)
             : base(specification, version, probes)
         {
+            if (NumberOfContacts != NeuropixelsV1.ElectrodeCount)
+            {
+                throw new InvalidOperationException($"Invalid number of electrodes found; expected {NeuropixelsV1.ElectrodeCount}, but found {NumberOfContacts}.");
+            }
         }
 
         /// <summary>
