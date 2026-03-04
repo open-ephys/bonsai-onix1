@@ -206,6 +206,11 @@ namespace OpenEphys.Onix1
         {
             return NeuropixelsV2QuadShankElectrode.GetChannelNumber(index);
         }
+
+        internal override Type GetProbeGroupType()
+        {
+            return typeof(NeuropixelsV2eQuadShankProbeGroup);
+        }
     }
 
     /// <summary>

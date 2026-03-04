@@ -194,24 +194,16 @@ namespace OpenEphys.Onix1
         /// </returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
-            if (string.IsNullOrEmpty(ProbeConfigurationA.ProbeInterfaceFileName))
-                throw new ArgumentException($"ProbeInterface file name must be specified for {nameof(ProbeConfigurationA)} in the configuration.");
-
-            if (string.IsNullOrEmpty(ProbeConfigurationB.ProbeInterfaceFileName))
-                throw new ArgumentException($"ProbeInterface file name must be specified for {nameof(ProbeConfigurationB)} in the configuration.");
-
             var enable = Enable;
             var probeConfigurationA = ProbeConfigurationA;
             var probeConfigurationB = ProbeConfigurationB;
-            var probeInterfaceFileNameA = ProbeConfigurationA.ProbeInterfaceFileName;
-            var probeInterfaceFileNameB = ProbeConfigurationB.ProbeInterfaceFileName;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
+
             return source.ConfigureAndLatchDevice(context =>
             {
-                // TODO: Confirm that this works with hardware
-                var probeGroupA = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeInterfaceFileNameA, typeof(NeuropixelsV2eProbeGroup)) as NeuropixelsV2eProbeGroup;
-                var probeGroupB = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeInterfaceFileNameB, typeof(NeuropixelsV2eProbeGroup)) as NeuropixelsV2eProbeGroup;
+                NeuropixelsV2eProbeGroup probeGroupA = null;
+                NeuropixelsV2eProbeGroup probeGroupB = null;
 
                 // configure device via the DS90UB9x deserializer device
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
@@ -242,6 +234,8 @@ namespace OpenEphys.Onix1
                 {
                     var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(probeConfigurationA.GainCalibrationFileName);
 
+                    probeGroupA = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfigurationA.ProbeInterfaceFileName, probeConfigurationA.GetProbeGroupType()) as NeuropixelsV2eProbeGroup;
+
                     if (!gainCorrection.HasValue)
                     {
                         throw new ArgumentException($"{NeuropixelsV2Probe.ProbeA}'s calibration file \"{probeConfigurationA.GainCalibrationFileName}\" is invalid.");
@@ -264,6 +258,8 @@ namespace OpenEphys.Onix1
                 if (probeBMetadata.ProbeSerialNumber != null)
                 {
                     var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(probeConfigurationB.GainCalibrationFileName);
+
+                    probeGroupB = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfigurationB.ProbeInterfaceFileName, probeConfigurationB.GetProbeGroupType()) as NeuropixelsV2eProbeGroup;
 
                     if (!gainCorrection.HasValue)
                     {

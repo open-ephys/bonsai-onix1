@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.ComponentModel;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Bonsai;
 using Newtonsoft.Json;
@@ -170,6 +168,11 @@ namespace OpenEphys.Onix1
         internal override int GetChannelNumber(int index)
         {
             return NeuropixelsV2SingleShankElectrode.GetChannelNumber(index);
+        }
+
+        internal override Type GetProbeGroupType()
+        {
+            return typeof(NeuropixelsV2eSingleShankProbeGroup);
         }
     }
 

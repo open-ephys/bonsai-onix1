@@ -130,5 +130,7 @@ namespace OpenEphys.Onix1
         internal abstract int GetChannelNumber(int index);
 
         internal abstract NeuropixelsV2ProbeConfiguration Clone();
+
+        internal abstract Type GetProbeGroupType();
     }
 }

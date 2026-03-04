@@ -78,6 +78,10 @@ namespace OpenEphys.Onix1
                 {
                     throw new NullReferenceException($"Gain correction value is null for {ProbeIndex}.");
                 }
+                else if (probeGroup == null)
+                {
+                    throw new NullReferenceException($"No ProbeGroup found for {ProbeIndex}.");
+                }
 
                 var device = info.GetDeviceContext(typeof(NeuropixelsV2eBeta));
                 var passthrough = device.GetPassthroughDeviceContext(typeof(DS90UB9x));
