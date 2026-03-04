@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Reflection;
-using Newtonsoft.Json;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -161,6 +159,21 @@ namespace OpenEphys.Onix1.Design
             child.Parent = parent;
 
             return child;
+        }
+
+        public static Form CopyMenuStripColor(this Form source, Form target)
+        {
+            var sourceMenuStrip = source.GetAllControls()
+                                        .OfType<MenuStrip>()
+                                        .FirstOrDefault() ?? throw new InvalidOperationException($"There are no menu strips in any child controls of the {source.Text} dialog.");
+            var targetMenuStrip = target.GetTopLevelControls()
+                                        .OfType<MenuStrip>()
+                                        .FirstOrDefault() ?? throw new InvalidOperationException($"There are no menu strips at the top level of the {target.Text} dialog to pull out.");
+
+            targetMenuStrip.BackColor = sourceMenuStrip.BackColor;
+            targetMenuStrip.ForeColor = sourceMenuStrip.ForeColor;
+
+            return source;
         }
 
         internal static readonly IEnumerable<string> PropertiesToIgnore = new[] { "DeviceName", "DeviceAddress" };
