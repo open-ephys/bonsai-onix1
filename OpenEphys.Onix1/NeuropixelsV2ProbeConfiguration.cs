@@ -45,7 +45,7 @@ namespace OpenEphys.Onix1
     [XmlInclude(typeof(NeuropixelsV2QuadShankProbeConfiguration))]
     [XmlInclude(typeof(NeuropixelsV2SingleShankProbeConfiguration))]
     [XmlType(Namespace = Constants.XmlNamespace)]
-    public abstract class NeuropixelsV2ProbeConfiguration
+    public abstract class NeuropixelsV2ProbeConfiguration : IProbeInterfaceConfiguration
     {
         /// <summary>
         /// Gets or sets a value determining if the polarity of the electrode voltages acquired by the probe
