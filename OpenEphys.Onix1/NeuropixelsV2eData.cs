@@ -67,10 +67,10 @@ namespace OpenEphys.Onix1
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
                 var info = (NeuropixelsV2eDeviceInfo)deviceInfo;
-                var (gainCorrection, probeConfiguration, metadata) = ProbeIndex switch
+                var (gainCorrection, probeConfiguration, metadata, probeGroup) = ProbeIndex switch
                 {
-                    NeuropixelsV2Probe.ProbeA => (info.GainCorrectionA, info.ProbeConfigurationA, info.ProbeMetadataA),
-                    NeuropixelsV2Probe.ProbeB => (info.GainCorrectionB, info.ProbeConfigurationB, info.ProbeMetadataB),
+                    NeuropixelsV2Probe.ProbeA => (info.GainCorrectionA, info.ProbeConfigurationA, info.ProbeMetadataA, info.ProbeGroupA),
+                    NeuropixelsV2Probe.ProbeB => (info.GainCorrectionB, info.ProbeConfigurationB, info.ProbeMetadataB, info.ProbeGroupB),
                     _ => throw new InvalidEnumArgumentException($"Unexpected {nameof(ProbeIndex)} value: {ProbeIndex}")
                 };
 
@@ -97,7 +97,7 @@ namespace OpenEphys.Onix1
                     var amplifierBuffer = new ushort[NeuropixelsV2e.ChannelCount, bufferSize];
                     var hubClockBuffer = new ulong[bufferSize];
                     var clockBuffer = new ulong[bufferSize];
-                    int[,] channelOrder = orderByDepth ? Neuropixels.OrderChannelsByDepth(probeConfiguration.ChannelMap, RawToChannel) : RawToChannel;
+                    int[,] channelOrder = orderByDepth ? Neuropixels.OrderChannelsByDepth(probeGroup.ChannelMap, RawToChannel) : RawToChannel;
 
                     var frameObserver = Observer.Create<oni.Frame>(
                         frame =>

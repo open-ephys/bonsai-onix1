@@ -30,13 +30,13 @@ namespace OpenEphys.Onix1
         public const int BaseBitsPerChannel = 4;
         public const int ElectrodePerShank = 1280;
 
-        internal static BitArray[] GenerateShankBits(NeuropixelsV2ProbeConfiguration probe)
+        internal static BitArray[] GenerateShankBits(NeuropixelsV2ProbeConfiguration probe, NeuropixelsV2eProbeGroup probeGroup)
         {
             BitArray[] shankBits = probe.CreateShankBits(probe.Reference);
 
             const int PixelOffset = (ElectrodePerShank - 1) / 2;
             const int ReferencePixelOffset = 3;
-            foreach (var c in probe.ChannelMap)
+            foreach (var c in probeGroup.ChannelMap)
             {
                 var baseIndex = c.IntraShankElectrodeIndex % 2;
                 var pixelIndex = c.IntraShankElectrodeIndex / 2;
