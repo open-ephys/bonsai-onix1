@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.ComponentModel;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Bonsai;
 using Newtonsoft.Json;
@@ -63,7 +61,6 @@ namespace OpenEphys.Onix1
         public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2QuadShankReference reference)
         {
             Reference = reference;
-            ProbeGroup = new NeuropixelsV2eQuadShankProbeGroup();
         }
 
         /// <summary>
@@ -73,71 +70,35 @@ namespace OpenEphys.Onix1
         public NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2QuadShankProbeConfiguration probeConfiguration)
         {
             Reference = probeConfiguration.Reference;
-            ProbeGroup = probeConfiguration.ProbeGroup.Clone();
             InvertPolarity = probeConfiguration.InvertPolarity;
             GainCalibrationFileName = probeConfiguration.GainCalibrationFileName;
-            probeInterfaceFileName = probeConfiguration.probeInterfaceFileName;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class with the given
-        /// values.
-        /// </summary>
-        /// <param name="reference">The <see cref="NeuropixelsV2QuadShankReference"/> reference value.</param>
-        /// <param name="invertPolarity">Boolean defining if the signal polarity should be inverted.</param>
-        /// <param name="gainCalibrationFileName">String defining the path to the gain calibration file.</param>
-        /// <param name="probeInterfaceFileName">String defining the path to the ProbeInterface file.</param>
-        public NeuropixelsV2QuadShankProbeConfiguration(
-            NeuropixelsV2QuadShankReference reference,
-            bool invertPolarity,
-            string gainCalibrationFileName,
-            string probeInterfaceFileName)
-        {
-            Reference = reference;
-            InvertPolarity = invertPolarity;
-            GainCalibrationFileName = gainCalibrationFileName;
-            ProbeInterfaceFileName = probeInterfaceFileName;
+            ProbeInterfaceFileName = probeConfiguration.ProbeInterfaceFileName;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class with the given
         /// <see cref="NeuropixelsV2eQuadShankProbeGroup"/> channel configuration. 
         /// </summary>
-        /// <param name="probeGroup">The existing <see cref="NeuropixelsV2eQuadShankProbeGroup"/> instance to use.</param>
         /// <param name="reference">The <see cref="NeuropixelsV2QuadShankReference"/> reference value.</param>
         /// <param name="invertPolarity">Boolean defining if the signal polarity should be inverted.</param>
         /// <param name="gainCalibrationFileName">String defining the path to the gain calibration file.</param>
         /// <param name="probeInterfaceFileName">String defining the path to the ProbeInterface file.</param>
         [JsonConstructor]
         public NeuropixelsV2QuadShankProbeConfiguration(
-            NeuropixelsV2eQuadShankProbeGroup probeGroup,
             NeuropixelsV2QuadShankReference reference,
             bool invertPolarity,
             string gainCalibrationFileName,
             string probeInterfaceFileName)
         {
-            ProbeGroup = probeGroup.Clone();
             Reference = reference;
             InvertPolarity = invertPolarity;
             GainCalibrationFileName = gainCalibrationFileName;
             ProbeInterfaceFileName = probeInterfaceFileName;
         }
 
-        internal override NeuropixelsV2ProbeConfiguration Clone()
+        internal override NeuropixelsV2ProbeConfiguration Clone() // TODO: is this needed?
         {
             return new NeuropixelsV2QuadShankProbeConfiguration(this);
-        }
-
-        /// <summary>
-        /// Gets the existing channel map listing all currently enabled electrodes.
-        /// </summary>
-        /// <remarks>
-        /// The channel map will always be 384 channels, and will return the 384 enabled electrodes.
-        /// </remarks>
-        [XmlIgnore]
-        public override NeuropixelsV2Electrode[] ChannelMap
-        {
-            get => NeuropixelsV2eQuadShankProbeGroup.ToChannelMap((NeuropixelsV2eQuadShankProbeGroup)ProbeGroup);
         }
 
         NeuropixelsV2QuadShankReference reference;
@@ -173,72 +134,6 @@ namespace OpenEphys.Onix1
                 Reference = Enum.TryParse<NeuropixelsV2QuadShankReference>(value, out var result)
                             ? result
                             : NeuropixelsV2QuadShankReference.External;
-            }
-        }
-
-        /// <inheritdoc/>
-        [XmlIgnore]
-        [Browsable(false)]
-        [Externalizable(false)]
-        public override string ProbeInterfaceLoadFileName
-        {
-            get => probeInterfaceFileName;
-            set
-            {
-                probeInterfaceFileName = value;
-                probeGroupTask = Task.Run(() =>
-                {
-                    if (string.IsNullOrEmpty(probeInterfaceFileName))
-                        return new NeuropixelsV2eQuadShankProbeGroup();
-
-                    return ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeInterfaceFileName, typeof(NeuropixelsV2eQuadShankProbeGroup)) as NeuropixelsV2eProbeGroup;
-                });
-            }
-        }
-
-        /// <inheritdoc/>
-        [XmlIgnore]
-        [Category(DeviceFactory.ConfigurationCategory)]
-        [Description("Defines the shape of the probe, and which contacts are currently selected for streaming.")]
-        [Browsable(false)]
-        [Externalizable(false)]
-        public override NeuropixelsV2eProbeGroup ProbeGroup
-        {
-            get
-            {
-                if (probeGroup == null)
-                {
-                    try
-                    {
-                        probeGroup = probeGroupTask?.Result ?? new NeuropixelsV2eQuadShankProbeGroup();
-                    }
-                    catch (AggregateException ae)
-                    {
-                        probeGroup = new NeuropixelsV2eQuadShankProbeGroup();
-                        throw new InvalidOperationException($"There was an error loading the ProbeInterface file, loading the default configuration instead.\n\nError: {ae.InnerException.Message}", ae.InnerException);
-                    }
-                }
-
-                return probeGroup;
-            }
-            set => probeGroup = value;
-        }
-
-        /// <inheritdoc/>
-        [Browsable(false)]
-        [Externalizable(false)]
-        [XmlElement(nameof(ProbeGroup))]
-        public override string ProbeGroupString
-        {
-            get
-            {
-                var jsonString = JsonConvert.SerializeObject(ProbeGroup);
-                return Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonString));
-            }
-            set
-            {
-                var jsonString = Encoding.UTF8.GetString(Convert.FromBase64String(value));
-                ProbeGroup = JsonConvert.DeserializeObject<NeuropixelsV2eQuadShankProbeGroup>(jsonString);
             }
         }
 

@@ -50,7 +50,6 @@ namespace OpenEphys.Onix1
         public NeuropixelsV2SingleShankProbeConfiguration(NeuropixelsV2SingleShankReference reference)
         {
             Reference = reference;
-            ProbeGroup = new NeuropixelsV2eSingleShankProbeGroup();
         }
 
         /// <summary>
@@ -60,20 +59,20 @@ namespace OpenEphys.Onix1
         public NeuropixelsV2SingleShankProbeConfiguration(NeuropixelsV2SingleShankProbeConfiguration probeConfiguration)
         {
             Reference = probeConfiguration.Reference;
-            ProbeGroup = probeConfiguration.ProbeGroup.Clone();
             InvertPolarity = probeConfiguration.InvertPolarity;
             GainCalibrationFileName = probeConfiguration.GainCalibrationFileName;
-            probeInterfaceFileName = probeConfiguration.probeInterfaceFileName;
+            ProbeInterfaceFileName = probeConfiguration.ProbeInterfaceFileName;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NeuropixelsV2SingleShankProbeConfiguration"/> class with the given
-        /// values. 
+        /// <see cref="NeuropixelsV2eSingleShankProbeGroup"/> channel configuration. 
         /// </summary>
         /// <param name="reference">The <see cref="NeuropixelsV2SingleShankReference"/> reference value.</param>
         /// <param name="invertPolarity">Boolean defining if the signal polarity should be inverted.</param>
         /// <param name="gainCalibrationFileName">String defining the path to the gain calibration file.</param>
         /// <param name="probeInterfaceFileName">String defining the path to the ProbeInterface file.</param>
+        [JsonConstructor]
         public NeuropixelsV2SingleShankProbeConfiguration(
             NeuropixelsV2SingleShankReference reference,
             bool invertPolarity,
@@ -86,44 +85,9 @@ namespace OpenEphys.Onix1
             ProbeInterfaceFileName = probeInterfaceFileName;
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="NeuropixelsV2SingleShankProbeConfiguration"/> class with the given
-        /// <see cref="NeuropixelsV2eSingleShankProbeGroup"/> channel configuration. 
-        /// </summary>
-        /// <param name="probeGroup">The existing <see cref="NeuropixelsV2eSingleShankProbeGroup"/> instance to use.</param>
-        /// <param name="reference">The <see cref="NeuropixelsV2SingleShankReference"/> reference value.</param>
-        /// <param name="invertPolarity">Boolean defining if the signal polarity should be inverted.</param>
-        /// <param name="gainCalibrationFileName">String defining the path to the gain calibration file.</param>
-        /// <param name="probeInterfaceFileName">String defining the path to the ProbeInterface file.</param>
-        [JsonConstructor]
-        public NeuropixelsV2SingleShankProbeConfiguration(NeuropixelsV2eSingleShankProbeGroup probeGroup,
-            NeuropixelsV2SingleShankReference reference,
-            bool invertPolarity,
-            string gainCalibrationFileName,
-            string probeInterfaceFileName)
-        {
-            ProbeGroup = probeGroup.Clone();
-            Reference = reference;
-            InvertPolarity = invertPolarity;
-            GainCalibrationFileName = gainCalibrationFileName;
-            ProbeInterfaceFileName = probeInterfaceFileName;
-        }
-
         internal override NeuropixelsV2ProbeConfiguration Clone()
         {
             return new NeuropixelsV2SingleShankProbeConfiguration(this);
-        }
-
-        /// <summary>
-        /// Gets the existing channel map listing all currently enabled electrodes.
-        /// </summary>
-        /// <remarks>
-        /// The channel map will always be 384 channels, and will return the 384 enabled electrodes.
-        /// </remarks>
-        [XmlIgnore]
-        public override NeuropixelsV2Electrode[] ChannelMap
-        {
-            get => NeuropixelsV2eSingleShankProbeGroup.ToChannelMap((NeuropixelsV2eSingleShankProbeGroup)ProbeGroup);
         }
 
         NeuropixelsV2SingleShankReference reference;
@@ -159,72 +123,6 @@ namespace OpenEphys.Onix1
                 Reference = Enum.TryParse<NeuropixelsV2SingleShankReference>(value, out var result)
                             ? result
                             : NeuropixelsV2SingleShankReference.External;
-            }
-        }
-
-        /// <inheritdoc/>
-        [XmlIgnore]
-        [Browsable(false)]
-        [Externalizable(false)]
-        public override string ProbeInterfaceLoadFileName
-        {
-            get => probeInterfaceFileName;
-            set
-            {
-                probeInterfaceFileName = value;
-                probeGroupTask = Task.Run(() =>
-                {
-                    if (string.IsNullOrEmpty(probeInterfaceFileName))
-                        return new NeuropixelsV2eSingleShankProbeGroup();
-
-                    return ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeInterfaceFileName, typeof(NeuropixelsV2eSingleShankProbeGroup)) as NeuropixelsV2eProbeGroup;
-                });
-            }
-        }
-
-        /// <inheritdoc/>
-        [XmlIgnore]
-        [Category(DeviceFactory.ConfigurationCategory)]
-        [Description("Defines the shape of the probe, and which contacts are currently selected for streaming.")]
-        [Browsable(false)]
-        [Externalizable(false)]
-        public override NeuropixelsV2eProbeGroup ProbeGroup
-        {
-            get
-            {
-                if (probeGroup == null)
-                {
-                    try
-                    {
-                        probeGroup = probeGroupTask?.Result ?? new NeuropixelsV2eSingleShankProbeGroup();
-                    }
-                    catch (AggregateException ae)
-                    {
-                        probeGroup = new NeuropixelsV2eSingleShankProbeGroup();
-                        throw new InvalidOperationException($"There was an error loading the ProbeInterface file, loading the default configuration instead.\n\nError: {ae.InnerException.Message}", ae.InnerException);
-                    }
-                }
-
-                return probeGroup;
-            }
-            set => probeGroup = value;
-        }
-
-        /// <inheritdoc/>
-        [Browsable(false)]
-        [Externalizable(false)]
-        [XmlElement(nameof(ProbeGroup))]
-        public override string ProbeGroupString
-        {
-            get
-            {
-                var jsonString = JsonConvert.SerializeObject(ProbeGroup);
-                return Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonString));
-            }
-            set
-            {
-                var jsonString = Encoding.UTF8.GetString(Convert.FromBase64String(value));
-                ProbeGroup = JsonConvert.DeserializeObject<NeuropixelsV2eSingleShankProbeGroup>(jsonString);
             }
         }
 

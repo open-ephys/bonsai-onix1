@@ -21,6 +21,8 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         public readonly GenericDeviceDialog DialogBno055;
 
+        bool HasChanges => DialogNeuropixelsV1e.HasChanges;
+
         /// <summary>
         /// Initializes a new instance of a <see cref="NeuropixelsV1eHeadstageDialog"/>.
         /// </summary>
@@ -30,20 +32,56 @@ namespace OpenEphys.Onix1.Design
         {
             InitializeComponent();
 
-            DialogNeuropixelsV1e = new(configureNeuropixelsV1e);
+            DialogNeuropixelsV1e = new(configureNeuropixelsV1e, nameof(NeuropixelsV1e));
 
             DialogNeuropixelsV1e.SetChildFormProperties(this).AddDialogToPanel(panelNeuropixelsV1e);
 
-            this.AddMenuItemsFromDialogToFileOption(DialogNeuropixelsV1e, "NeuropixelsV1e");
+            DialogNeuropixelsV1e.OnStateChange += (sender, e) =>
+            {
+                if (HasChanges)
+                {
+                    tabPageNeuropixelsV1e.Text += '*';
+                }
+                else
+                {
+                    tabPageNeuropixelsV1e.Text = tabPageNeuropixelsV1e.Text.TrimEnd('*');
+                }
+            };
 
             DialogBno055 = new(new ConfigurePolledBno055(configureBno055));
 
             DialogBno055.SetChildFormProperties(this).AddDialogToPanel(panelBno055);
+
+            FormClosing += DialogClosing;
         }
 
         private void Okay_Click(object sender, System.EventArgs e)
         {
             DialogResult = DialogResult.OK;
+            Close();
+        }
+
+        /// <inheritdoc/>
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (tabControl1.SelectedTab == tabPageNeuropixelsV1e)
+            {
+                return DialogNeuropixelsV1e.ProcessMenuShortcut(keyData);
+            }
+            else if (tabControl1.SelectedTab == tabPageBno055)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        void DialogClosing(object sender, FormClosingEventArgs e)
+        {
+            if (DialogResult == DialogResult.Cancel)
+                return;
+
+            DialogNeuropixelsV1e.Close();
         }
     }
 }

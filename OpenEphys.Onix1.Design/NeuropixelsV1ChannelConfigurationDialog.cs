@@ -8,7 +8,7 @@ using ZedGraph;
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Partial class to create a channel configuration GUI for the <see cref="ConfigureNeuropixelsV2e"/> class.
+    /// Partial class to create a channel configuration GUI for a Neuropixels V1 device.
     /// </summary>
     public partial class NeuropixelsV1ChannelConfigurationDialog : ChannelConfigurationDialog
     {
@@ -18,23 +18,12 @@ namespace OpenEphys.Onix1.Design
         readonly IReadOnlyList<int> ReferenceContactsList = new List<int> { 191, 575, 959 };
 
         /// <summary>
-        /// Public <see cref="NeuropixelsV1ProbeConfiguration"/> object that is modified by
-        /// <see cref="NeuropixelsV1ChannelConfigurationDialog"/>.
-        /// </summary>
-        public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; set; }
-
-        internal override ProbeGroup ProbeGroup
-        {
-            get => ProbeConfiguration.ProbeGroup;
-            set => ProbeConfiguration.ProbeGroup = value as NeuropixelsV1eProbeGroup ?? throw new ArgumentNullException($"Invalid probe group given; expected type {ProbeConfiguration.ProbeGroup.GetType()}, but found type {value.GetType()}");
-        }
-
-        /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV1ChannelConfigurationDialog"/>.
         /// </summary>
         /// <param name="probeConfiguration">A <see cref="NeuropixelsV1ProbeConfiguration"/> object holding the current configuration settings.</param>
-        public NeuropixelsV1ChannelConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration)
-            : base()
+        /// <param name="probeName">The name of the probe.</param>
+        public NeuropixelsV1ChannelConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration, string probeName)
+            : base(probeConfiguration, probeName, typeof(NeuropixelsV1eProbeGroup))
         {
             zedGraphChannels.ZoomButtons = MouseButtons.None;
             zedGraphChannels.ZoomButtons2 = MouseButtons.None;
@@ -42,9 +31,6 @@ namespace OpenEphys.Onix1.Design
             zedGraphChannels.ZoomStepFraction = 0.5;
 
             ReferenceContacts.AddRange(ReferenceContactsList);
-
-            ProbeConfiguration = new(probeConfiguration);
-            ResizeSelectedContacts();
 
             DrawProbeGroup();
             RefreshZedGraph();
@@ -57,14 +43,13 @@ namespace OpenEphys.Onix1.Design
 
         internal override void LoadDefaultChannelLayout()
         {
-            ProbeConfiguration.ProbeGroup = new();
-
+            base.LoadDefaultChannelLayout();
             OnFileOpenHandler();
         }
 
-        internal override bool OpenFile(Type type)
+        internal override bool OpenNewFile(bool updateFileName = false)
         {
-            if (base.OpenFile(type))
+            if (base.OpenNewFile(updateFileName))
             {
                 OnFileOpenHandler();
 
@@ -76,8 +61,6 @@ namespace OpenEphys.Onix1.Design
 
         private void OnFileOpenHandler()
         {
-            ResizeSelectedContacts();
-
             OnFileLoad?.Invoke(this, EventArgs.Empty);
         }
 
@@ -100,7 +83,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override void DrawScale()
         {
-            if (ProbeConfiguration == null || zedGraphChannels.MasterPane.PaneList.Count < 2)
+            if (zedGraphChannels.MasterPane.PaneList.Count < 2)
                 return;
 
             var pane = zedGraphChannels.MasterPane.PaneList[1];
@@ -115,7 +98,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override void HighlightEnabledContacts()
         {
-            if (ProbeConfiguration == null)
+            if (ProbeGroup == null)
                 return;
 
             var contactObjects = zedGraphChannels.GraphPane.GraphObjList.OfType<BoxObj>()
@@ -128,7 +111,7 @@ namespace OpenEphys.Onix1.Design
                 contact.Fill.Color = DisabledContactFill;
             }
 
-            var channelMap = ProbeConfiguration.ChannelMap;
+            var channelMap = NeuropixelsV1eProbeGroup.ToChannelMap(ProbeGroup as NeuropixelsV1eProbeGroup);
 
             var contactsToEnable = contactObjects.Where(c =>
             {
@@ -147,6 +130,9 @@ namespace OpenEphys.Onix1.Design
 
         internal override void UpdateContactLabels()
         {
+            if (ProbeGroup == null)
+                return;
+
             var textObjs = zedGraphChannels.GraphPane.GraphObjList.OfType<TextObj>()
                                                                   .Where(t => t.Tag is ContactTag);
 
@@ -157,7 +143,7 @@ namespace OpenEphys.Onix1.Design
                 textObj.FontSpec.FontColor = DisabledContactTextColor;
             }
 
-            var channelMap = ProbeConfiguration.ChannelMap;
+            var channelMap = NeuropixelsV1eProbeGroup.ToChannelMap(ProbeGroup as NeuropixelsV1eProbeGroup);
 
             textObjsToUpdate = textObjs.Where(c =>
             {
@@ -175,11 +161,6 @@ namespace OpenEphys.Onix1.Design
         internal override string ContactString(int deviceChannelIndex, int index)
         {
             return index.ToString();
-        }
-
-        internal void EnableElectrodes(NeuropixelsV1Electrode[] electrodes)
-        {
-            ProbeConfiguration.SelectElectrodes(electrodes);
         }
     }
 }
