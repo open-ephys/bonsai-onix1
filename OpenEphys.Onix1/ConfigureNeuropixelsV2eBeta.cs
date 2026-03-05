@@ -253,11 +253,14 @@ namespace OpenEphys.Onix1
                 // configure probe A streaming
                 if (probeAMetadata.ProbeSerialNumber != null)
                 {
-                    if (ProbeConfigurationA.IsGroundReference())
+                    if (probeConfigurationA.IsGroundReference())
                     {
                         throw new InvalidOperationException($"Neuropixels 2.0-Beta probes do not provide a Ground reference selection. Please select a different reference" +
                             $" for {NeuropixelsV2Probe.ProbeA}.");
                     }
+
+                    if (string.IsNullOrEmpty(probeConfigurationA.ProbeInterfaceFileName))
+                        throw new ArgumentException($"ProbeInterface file name must be specified in {nameof(ConfigureNeuropixelsV2eBeta)}.{nameof(probeConfigurationA)}.");
 
                     var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(probeConfigurationA.GainCalibrationFileName);
 
@@ -289,6 +292,9 @@ namespace OpenEphys.Onix1
                         throw new InvalidOperationException($"Neuropixels 2.0-Beta probes do not provide a Ground reference selection. Please select a different reference" +
                             $" for {NeuropixelsV2Probe.ProbeB}.");
                     }
+
+                    if (string.IsNullOrEmpty(probeConfigurationB.ProbeInterfaceFileName))
+                        throw new ArgumentException($"ProbeInterface file name must be specified in {nameof(ConfigureNeuropixelsV2eBeta)}.{nameof(probeConfigurationB)}.");
 
                     var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(probeConfigurationB.GainCalibrationFileName);
 

@@ -1664,12 +1664,12 @@ namespace OpenEphys.Onix1.Design
             if (!SaveFile())
             {
                 var result = MessageBox.Show(
-                    $"Warning: The current {ProbeName} configuration will not be saved. Do you want to exit without saving?",
+                    $"Warning: The current {ProbeName} configuration will be lost. Would you like to save the file?",
                     $"Saving {ProbeName} Configuration",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Warning);
 
-                if (result == DialogResult.No)
+                if (result == DialogResult.Yes)
                 {
                     if (!SaveFile())
                     {

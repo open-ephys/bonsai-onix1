@@ -234,6 +234,9 @@ namespace OpenEphys.Onix1
                 {
                     var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(probeConfigurationA.GainCalibrationFileName);
 
+                    if (string.IsNullOrEmpty(probeConfigurationA.ProbeInterfaceFileName))
+                        throw new ArgumentException($"ProbeInterface file name must be specified in {nameof(ConfigureNeuropixelsV2e)}.{nameof(ProbeConfigurationA)}.");
+
                     probeGroupA = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfigurationA.ProbeInterfaceFileName, probeConfigurationA.GetProbeGroupType()) as NeuropixelsV2eProbeGroup;
 
                     if (!gainCorrection.HasValue)
@@ -258,6 +261,9 @@ namespace OpenEphys.Onix1
                 if (probeBMetadata.ProbeSerialNumber != null)
                 {
                     var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(probeConfigurationB.GainCalibrationFileName);
+
+                    if (string.IsNullOrEmpty(probeConfigurationB.ProbeInterfaceFileName))
+                        throw new ArgumentException($"ProbeInterface file name must be specified in {nameof(ConfigureNeuropixelsV2e)}.{nameof(ProbeConfigurationB)}.");
 
                     probeGroupB = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfigurationB.ProbeInterfaceFileName, probeConfigurationB.GetProbeGroupType()) as NeuropixelsV2eProbeGroup;
 
