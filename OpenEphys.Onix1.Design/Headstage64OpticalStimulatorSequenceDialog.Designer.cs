@@ -36,7 +36,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1189, 592);
             this.Name = "Headstage64OpticalStimulatorSequenceDialog";
-            this.Text = "Headstage64OpticalStimulatorSequenceDialog";
+            this.Text = "Headstage64 Optical Stimulus Sequence";
             this.ResumeLayout(false);
             this.PerformLayout();
 

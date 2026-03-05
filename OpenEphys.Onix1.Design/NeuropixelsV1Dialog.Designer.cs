@@ -118,7 +118,7 @@
             this.panelProbe.Size = new System.Drawing.Size(1306, 702);
             this.panelProbe.TabIndex = 3;
             // 
-            // NeuropixelsV1eDialog
+            // NeuropixelsV1Dialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -128,9 +128,9 @@
             this.DoubleBuffered = true;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.Name = "NeuropixelsV1eDialog";
+            this.Name = "NeuropixelsV1Dialog";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "NeuropixelsV1 Configuration";
+            this.Text = "Neuropixels1.0 Configuration";
             this.menuStrip.ResumeLayout(false);
             this.menuStrip.PerformLayout();
             this.tableLayoutPanel1.ResumeLayout(false);

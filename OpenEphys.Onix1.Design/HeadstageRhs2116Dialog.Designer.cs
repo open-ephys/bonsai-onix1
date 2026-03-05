@@ -44,14 +44,14 @@
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // tabControlProperties
+            // tabControl
             // 
             this.tabControl.Controls.Add(this.tabPageStimulusSequence);
             this.tabControl.Controls.Add(this.tabPageRhs2116);
             this.tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl.Location = new System.Drawing.Point(3, 2);
             this.tabControl.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabControl.Name = "tabControlProperties";
+            this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
             this.tabControl.Size = new System.Drawing.Size(1328, 741);
             this.tabControl.TabIndex = 0;
@@ -72,7 +72,7 @@
             this.tabPageRhs2116.Location = new System.Drawing.Point(4, 25);
             this.tabPageRhs2116.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tabPageRhs2116.Name = "tabPageRhs2116";
-            this.tabPageRhs2116.Size = new System.Drawing.Size(1130, 593);
+            this.tabPageRhs2116.Size = new System.Drawing.Size(1320, 712);
             this.tabPageRhs2116.TabIndex = 2;
             this.tabPageRhs2116.Text = "Rhs2116";
             this.tabPageRhs2116.UseVisualStyleBackColor = true;
@@ -157,7 +157,7 @@
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "HeadstageRhs2116Dialog";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "HeadstageRhs2116Dialog";
+            this.Text = "HeadstageRhs2116 Configuration";
             this.tabControl.ResumeLayout(false);
             this.menuStrip.ResumeLayout(false);
             this.menuStrip.PerformLayout();
