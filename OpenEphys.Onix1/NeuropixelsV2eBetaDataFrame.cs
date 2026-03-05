@@ -9,7 +9,7 @@ namespace OpenEphys.Onix1
     public class NeuropixelsV2eBetaDataFrame : BufferedDataFrame
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="NeuropixelsV2eDataFrame"/> class.
+        /// Initializes a new instance of the <see cref="NeuropixelsV2eBetaDataFrame"/> class.
         /// </summary>
         /// <param name="clock">An array of <see cref="DataFrame.Clock"/> values.</param>
         /// <param name="hubClock">An array of hub clock counter values.</param>

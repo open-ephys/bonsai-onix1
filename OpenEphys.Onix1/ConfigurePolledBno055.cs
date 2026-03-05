@@ -97,20 +97,10 @@ namespace OpenEphys.Onix1
             {
                 // configure device via the DS90UB9x deserializer device
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
-                ConfigureDeserializer(device);
                 ConfigureBno055(device);
                 var deviceInfo = new PolledBno055DeviceInfo(context, DeviceType, deviceAddress, enable);
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
-        }
-
-        static void ConfigureDeserializer(DeviceContext device)
-        {
-            // configure deserializer I2C aliases
-            var deserializer = new I2CRegisterContext(device, DS90UB9x.DES_ADDR);
-            uint alias = PolledBno055.BNO055Address << 1;
-            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID4, alias);
-            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias4, alias);
         }
 
         void ConfigureBno055(DeviceContext device)

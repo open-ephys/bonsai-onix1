@@ -54,9 +54,9 @@ namespace OpenEphys.Onix1
         public bool OrderByDepth { get; set; } = false;
 
         /// <summary>
-        /// Generates a sequence of <see cref="NeuropixelsV2eDataFrame"/> objects.
+        /// Generates a sequence of <see cref="NeuropixelsV2eBetaDataFrame"/> objects.
         /// </summary>
-        /// <returns>A sequence of <see cref="NeuropixelsV2eDataFrame"/> objects.</returns>
+        /// <returns>A sequence of <see cref="NeuropixelsV2eBetaDataFrame"/> objects.</returns>
         public unsafe override IObservable<NeuropixelsV2eBetaDataFrame> Generate()
         {
             var bufferSize = BufferSize;

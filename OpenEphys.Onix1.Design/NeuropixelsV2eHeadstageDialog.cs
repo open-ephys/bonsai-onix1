@@ -30,11 +30,12 @@ namespace OpenEphys.Onix1.Design
 
             DialogNeuropixelsV2e.SetChildFormProperties(this).AddDialogToPanel(panelNeuropixelsV2e);
 
-            if (configureNeuropixelsV2e is ConfigureNeuropixelsV2e)
-            {
-                this.AddMenuItemsFromDialogToFileOption(DialogNeuropixelsV2e, "NeuropixelsV2e");
-            }
-            else if (configureNeuropixelsV2e is ConfigureNeuropixelsV2eBeta)
+            //if (configureNeuropixelsV2e is ConfigureNeuropixelsV2e)
+            //{
+            //    this.AddMenuItemsFromDialogToFileOption(DialogNeuropixelsV2e, "NeuropixelsV2e");
+            //}
+            //else 
+            if (configureNeuropixelsV2e is ConfigureNeuropixelsV2eBeta)
             {
                 this.AddMenuItemsFromDialogToFileOption(DialogNeuropixelsV2e, "NeuropixelsV2eBeta");
                 Text = Text.Replace("NeuropixelsV2e ", "NeuropixelsV2eBeta ");

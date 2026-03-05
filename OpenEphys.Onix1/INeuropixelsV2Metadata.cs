@@ -1,6 +1,6 @@
 ﻿namespace OpenEphys.Onix1
 {
-    interface INeuropixelsV2eMetadata
+    interface INeuropixelsV2Metadata
     {
         public string ProbePartNumber { get; }
 

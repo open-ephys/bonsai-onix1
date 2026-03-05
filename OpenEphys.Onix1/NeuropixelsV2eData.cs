@@ -3,23 +3,24 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Runtime.InteropServices;
 using Bonsai;
 using OpenCV.Net;
 
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Produces a sequence of <see cref="NeuropixelsV2eDataFrame"/> objects from a NeuropixelsV2e headstage.
+    /// Produces a sequence of <see cref="NeuropixelsV2DataFrame"/> objects from a NeuropixelsV2 probe.
     /// </summary>
     /// <remarks>
     /// This data IO operator must be linked to an appropriate configuration, such as a <see
-    /// cref="ConfigureNeuropixelsV2e"/>, using a shared <c>DeviceName</c>.
+    /// cref="ConfigureNeuropixelsV2PsbDecoder"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
-    [Description("Produces a sequence of NeuropixelsV2eDataFrame objects from a NeuropixelsV2e headstage.")]
-    public class NeuropixelsV2eData : Source<NeuropixelsV2eDataFrame>
+    [Description("Produces a sequence of NeuropixelsV2DataFrame objects from a Neuropixels V2 device.")]
+    public class NeuropixelsV2eData : Source<NeuropixelsV2DataFrame>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
-        [TypeConverter(typeof(NeuropixelsV2e.NameConverter))]
+        [TypeConverter(typeof(NeuropixelsV2.NameConverter))]
         [Description(SingleDeviceFactory.DeviceNameDescription)]
         [Category(DeviceFactory.ConfigurationCategory)]
         public string DeviceName { get; set; }
@@ -31,19 +32,12 @@ namespace OpenEphys.Onix1
         /// This property determines the number of samples that are collected from each of the 384 ephys
         /// channels before data is propagated. For instance, if this value is set to 30, then 384x30 samples,
         /// along with 30 corresponding clock values, will be collected and packed into each <see
-        /// cref="NeuropixelsV2eDataFrame"/>. Because channels are sampled at 30 kHz, this is equivalent to 1
+        /// cref="NeuropixelsV2DataFrame"/>. Because channels are sampled at 30 kHz, this is equivalent to 1
         /// millisecond of data from each channel.
         /// </remarks>
         [Description("The number of samples collected from each channel that are used to create a single NeuropixelsV2eDataFrame.")]
         [Category(DeviceFactory.ConfigurationCategory)]
         public int BufferSize { get; set; } = 30;
-
-        /// <summary>
-        /// Gets or sets the probe index.
-        /// </summary>
-        [Description("The index of the probe from which to collect sample data")]
-        [Category(DeviceFactory.ConfigurationCategory)]
-        public NeuropixelsV2Probe ProbeIndex { get; set; }
 
         /// <summary>
         /// Gets or sets a boolean value that controls if the channels are ordered by depth.
@@ -58,43 +52,36 @@ namespace OpenEphys.Onix1
         public bool OrderByDepth { get; set; } = false;
 
         /// <summary>
-        /// Generates a sequence of <see cref="NeuropixelsV2eDataFrame">NeuropixelsV2eDataFrames</see>.
+        /// Generates a sequence of <see cref="NeuropixelsV2DataFrame">NeuropixelsV2eDataFrames</see>.
         /// </summary>
-        /// <returns>A sequence of <see cref="NeuropixelsV2eDataFrame">NeuropixelsV2eDataFrames</see>.</returns>
-        public unsafe override IObservable<NeuropixelsV2eDataFrame> Generate()
+        /// <returns>A sequence of <see cref="NeuropixelsV2DataFrame">NeuropixelsV2eDataFrames</see>.</returns>
+        public unsafe override IObservable<NeuropixelsV2DataFrame> Generate()
         {
             var bufferSize = BufferSize;
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
-                var info = (NeuropixelsV2eDeviceInfo)deviceInfo;
-                var (gainCorrection, probeConfiguration, metadata) = ProbeIndex switch
-                {
-                    NeuropixelsV2Probe.ProbeA => (info.GainCorrectionA, info.ProbeConfigurationA, info.ProbeMetadataA),
-                    NeuropixelsV2Probe.ProbeB => (info.GainCorrectionB, info.ProbeConfigurationB, info.ProbeMetadataB),
-                    _ => throw new InvalidEnumArgumentException($"Unexpected {nameof(ProbeIndex)} value: {ProbeIndex}")
-                };
+                var info = (NeuropixelsV2PsbDecoderDeviceInfo)deviceInfo;
+                var probeIndex = info.StreamIndex;
+                var gainCorrection = info.GainCorrection ?? 1.0;
+                var probeConfiguration = info.ProbeConfiguration;
 
-                if (metadata.ProbeSerialNumber == null)
-                {
-                    throw new InvalidOperationException($"{ProbeIndex} is not detected. Ensure that the flex connection is properly seated.");
-                }
-                else if (gainCorrection == null)
-                {
-                    throw new NullReferenceException($"Gain correction value is null for {ProbeIndex}.");
-                }
-
-                var device = info.GetDeviceContext(typeof(NeuropixelsV2e));
+                var device = info.GetDeviceContext(typeof(NeuropixelsV2));
                 var passthrough = device.GetPassthroughDeviceContext(typeof(DS90UB9x));
                 var probeData = device.Context
                     .GetDeviceFrames(passthrough.Address)
-                    .Where(frame => NeuropixelsV2eDataFrame.GetProbeIndex(frame) == (int)ProbeIndex);
+                    .Where(frame => GetProbeIndex(frame) == probeIndex);
                 var orderByDepth = OrderByDepth;
                 var invertPolarity = probeConfiguration.InvertPolarity;
 
-                return Observable.Create<NeuropixelsV2eDataFrame>(observer =>
+                // zero-overhead 
+                delegate*<ushort*, ushort[,], int, double, int[,], void> copyBuffer = invertPolarity
+                    ? &CopyAmplifierBufferInverted
+                    : &CopyAmplifierBuffer;
+
+                return Observable.Create<NeuropixelsV2DataFrame>(observer =>
                 {
                     var sampleIndex = 0;
-                    var amplifierBuffer = new ushort[NeuropixelsV2e.ChannelCount, bufferSize];
+                    var amplifierBuffer = new ushort[NeuropixelsV2.ChannelCount, bufferSize];
                     var hubClockBuffer = new ulong[bufferSize];
                     var clockBuffer = new ulong[bufferSize];
                     int[,] channelOrder = orderByDepth ? Neuropixels.OrderChannelsByDepth(probeConfiguration.ChannelMap, RawToChannel) : RawToChannel;
@@ -102,14 +89,14 @@ namespace OpenEphys.Onix1
                     var frameObserver = Observer.Create<oni.Frame>(
                         frame =>
                         {
-                            var payload = (NeuropixelsV2Payload*)frame.Data.ToPointer();
-                            NeuropixelsV2eDataFrame.CopyAmplifierBuffer(payload->AmplifierData, amplifierBuffer, sampleIndex, gainCorrection.Value, invertPolarity, channelOrder);
+                            var payload = (NeuropixelsV2ePayload*)frame.Data.ToPointer();
+                            copyBuffer(payload->AmplifierData, amplifierBuffer, sampleIndex, gainCorrection, channelOrder);
                             hubClockBuffer[sampleIndex] = payload->HubClock;
                             clockBuffer[sampleIndex] = frame.Clock;
                             if (++sampleIndex >= bufferSize)
                             {
                                 var amplifierData = Mat.FromArray(amplifierBuffer);
-                                observer.OnNext(new NeuropixelsV2eDataFrame(clockBuffer, hubClockBuffer, amplifierData));
+                                observer.OnNext(new NeuropixelsV2DataFrame(clockBuffer, hubClockBuffer, amplifierData));
                                 hubClockBuffer = new ulong[bufferSize];
                                 clockBuffer = new ulong[bufferSize];
                                 sampleIndex = 0;
@@ -155,5 +142,69 @@ namespace OpenEphys.Onix1
             { 225, 227, 229, 231, 233, 235, 237, 239, 241, 243, 245, 247, 249, 251, 253, 255 },     // Data Index 38, ADC 15
             { 353, 355, 357, 359, 361, 363, 365, 367, 369, 371, 373, 375, 377, 379, 381, 383 },     // Data Index 39, ADC 23
         };
+
+        static unsafe ushort GetProbeIndex(oni.Frame frame)
+        {
+            var data = (NeuropixelsV2ePayload*)frame.Data.ToPointer();
+            return data->ProbeIndex;
+        }
+
+        static unsafe void CopyAmplifierBuffer(ushort* amplifierData, ushort[,] amplifierBuffer, int index, double gainCorrection, int[,] channelOrder)
+        {
+            // Loop over 16 "frames" within each "super-frame"
+            for (int i = 0; i < NeuropixelsV2.FramesPerSuperFrame; i++)
+            {
+                // The period of ADC data within data array is 36 words
+                var adcDataOffset = i * NeuropixelsV2.FrameWords;
+
+                for (int k = 0; k < NeuropixelsV2.AdcsPerProbe; k++)
+                {
+                    amplifierBuffer[channelOrder[k, i], index] = (ushort)(gainCorrection * amplifierData[AdcIndicies[k] + adcDataOffset]);
+                }
+            }
+        }
+
+        static unsafe void CopyAmplifierBufferInverted(ushort* amplifierData, ushort[,] amplifierBuffer, int index, double gainCorrection, int[,] channelOrder)
+        {
+            const double NumberOfAdcBins = 4096;
+            double inversionOffset = gainCorrection * NumberOfAdcBins;
+
+            // Loop over 16 "frames" within each "super-frame"
+            for (int i = 0; i < NeuropixelsV2.FramesPerSuperFrame; i++)
+            {
+                // The period of ADC data within data array is 36 words
+                var adcDataOffset = i * NeuropixelsV2.FrameWords;
+
+                for (int k = 0; k < NeuropixelsV2.AdcsPerProbe; k++)
+                {
+                    amplifierBuffer[channelOrder[k, i], index] = (ushort)(inversionOffset - gainCorrection * amplifierData[AdcIndicies[k] + adcDataOffset]);
+                }
+            }
+        }
+
+        // ADC & frame-index to channel mapping
+        // First dimension: data index
+        // Second dimension: frame index within super frame
+
+        static readonly int[] AdcIndicies = {
+            0, 1, 2,
+            4, 5, 6,
+            8, 9, 10,
+            12, 13, 14,
+            16, 17, 18,
+            20, 21, 22,
+            24, 25, 26,
+            28, 29, 30
+        };
     }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    unsafe struct NeuropixelsV2ePayload
+    {
+        public ulong HubClock;
+        public ushort ProbeIndex;
+        public ulong Reserved;
+        public fixed ushort AmplifierData[NeuropixelsV2.ChannelCount];
+    }
+
 }
