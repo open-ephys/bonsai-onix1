@@ -430,7 +430,7 @@
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "NeuropixelsV2eProbeConfigurationDialog";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "NeuropixelsV2e Probe Configuration";
+            this.Text = "Neuropixels2.0 Probe Configuration";
             this.menuStrip.ResumeLayout(false);
             this.menuStrip.PerformLayout();
             this.panelTrackBar.ResumeLayout(false);
