@@ -44,11 +44,6 @@ namespace OpenEphys.Onix1.Design
         public Rhs2116StimulusSequenceDialog(ConfigureRhs2116Trigger rhs2116Trigger)
             : base(NumberOfChannels, true, true)
         {
-            if (rhs2116Trigger.ProbeGroup.NumberOfContacts != NumberOfChannels)
-            {
-                throw new ArgumentException($"Probe group is not valid: {NumberOfChannels} channels were expected, there are {rhs2116Trigger.ProbeGroup.NumberOfContacts} instead.");
-            }
-
             InitializeComponent();
 
             Trigger = new(rhs2116Trigger);
@@ -67,14 +62,21 @@ namespace OpenEphys.Onix1.Design
 
             StepSize = Sequence.CurrentStepSize;
 
-            ChannelDialog = new(rhs2116Trigger.ProbeGroup, nameof(Rhs2116));
+            ChannelDialog = new("", nameof(Rhs2116))
+            {
+                HasChanges = false
+            };
 
             ChannelDialog.SetChildFormProperties(this).AddDialogToPanel(panelProbe);
-            this.AddMenuItemsFromDialogToFileOption(ChannelDialog, "Channel Configuration");
+            ChannelDialog.HideFileMenu();
+
+            fileToolStripMenuItem.DropDownItems.Add(new ToolStripSeparator());
+            ChannelDialog.dropDownImportFile.Text = "Import Probe Configuration";
+            fileToolStripMenuItem.DropDownItems.Add(ChannelDialog.dropDownImportFile);
 
             ChannelDialog.OnSelect += OnSelect;
             ChannelDialog.OnZoom += OnZoom;
-            ChannelDialog.OnFileLoad += OnFileLoad;
+            ChannelDialog.OnStateChange += (sender, e) => (sender as ChannelConfigurationDialog).HasChanges = false;
 
             StimulusSequenceOptions = new();
             groupBoxDefineStimuli.Controls.Add(StimulusSequenceOptions.SetChildFormProperties(this));
@@ -115,11 +117,6 @@ namespace OpenEphys.Onix1.Design
             StimulusSequenceOptions.textBoxStepSize.Text = GetStepSizeStringuA(StepSize);
 
             DrawStimulusWaveform();
-        }
-
-        void OnFileLoad(object sender, EventArgs e)
-        {
-            Trigger.ProbeGroup = (Rhs2116ProbeGroup)ChannelDialog.ProbeGroup;
         }
 
         internal void OnZoom(object sender, EventArgs e)

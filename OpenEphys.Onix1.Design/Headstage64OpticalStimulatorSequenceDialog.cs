@@ -139,8 +139,6 @@ namespace OpenEphys.Onix1.Design
             DisableVerticalZoom();
 
             DrawStimulusWaveform();
-
-            stimulusWaveformToolStripMenuItem.Text = "Optical Stimulus Sequence";
         }
 
         void KeyPressed(object sender, KeyPressEventArgs e)

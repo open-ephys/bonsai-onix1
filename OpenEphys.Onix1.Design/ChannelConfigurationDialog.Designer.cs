@@ -213,7 +213,7 @@
         internal ZedGraph.ZedGraphControl zedGraphChannels;
         private System.Windows.Forms.MenuStrip menuStrip;
         private System.Windows.Forms.ToolStripMenuItem fileMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem dropDownImportFile;
+        internal System.Windows.Forms.ToolStripMenuItem dropDownImportFile;
         private System.Windows.Forms.ToolStripMenuItem dropDownSaveFileAs;
         private System.Windows.Forms.ToolStripMenuItem dropDownLoadDefault;
         private System.Windows.Forms.Button buttonResetZoom;

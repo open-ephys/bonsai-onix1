@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
 using System.Reflection;
+using System.Windows.Forms;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -77,59 +77,6 @@ namespace OpenEphys.Onix1.Design
                         }
                     }
                 }
-            }
-
-            return thisForm;
-        }
-
-        /// <summary>
-        /// Given two forms, take all menu items that are in the "File" MenuItem of the child form, and copy them to the 
-        /// sub-menu name given, nested under the "File" MenuItem for the parent form
-        /// </summary>
-        /// <param name="thisForm"></param>
-        /// <param name="childForm"></param>
-        /// <param name="subMenuName"></param>
-        public static Form AddMenuItemsFromDialogToFileOption(this Form thisForm, Form childForm, string subMenuName)
-        {
-            const string FileString = "File";
-
-            if (childForm != null)
-            {
-                var childMenuStrip = childForm.GetAllControls()
-                                              .OfType<MenuStrip>()
-                                              .First() ?? throw new InvalidOperationException($"There are no menu strips in any child controls of the {childForm.Text} dialog.");
-
-                var thisMenuStrip = thisForm.GetTopLevelControls()
-                                            .OfType<MenuStrip>()
-                                            .FirstOrDefault() ?? throw new InvalidOperationException($"There are no menu strips at the top level of the {thisForm.Text} dialog to pull out.");
-
-                ToolStripMenuItem thisFileMenuItem = null;
-
-                foreach (ToolStripMenuItem menuItem in thisMenuStrip.Items)
-                {
-                    if (menuItem.Text == FileString)
-                    {
-                        thisFileMenuItem = menuItem;
-                    }
-                }
-
-                ToolStripMenuItem newChildMenuItems = new()
-                {
-                    Text = subMenuName
-                };
-
-                foreach (ToolStripMenuItem childItem in childMenuStrip.Items)
-                {
-                    if (childItem.Text == FileString)
-                    {
-                        while (childItem.DropDownItems.Count > 0)
-                        {
-                            newChildMenuItems.DropDownItems.Add(childItem.DropDownItems[0]);
-                        }
-                    }
-                }
-
-                thisFileMenuItem.DropDownItems.Add(newChildMenuItems);
             }
 
             return thisForm;
