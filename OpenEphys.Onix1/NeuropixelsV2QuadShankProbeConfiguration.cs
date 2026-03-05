@@ -96,7 +96,7 @@ namespace OpenEphys.Onix1
             ProbeInterfaceFileName = probeInterfaceFileName;
         }
 
-        internal override NeuropixelsV2ProbeConfiguration Clone() // TODO: is this needed?
+        internal override NeuropixelsV2ProbeConfiguration Clone()
         {
             return new NeuropixelsV2QuadShankProbeConfiguration(this);
         }
