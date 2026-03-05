@@ -67,8 +67,6 @@ namespace OpenEphys.Onix1.Design
             {
                 tableLayoutPanel1.Controls.Remove(flowLayoutPanel1);
                 tableLayoutPanel1.RowCount = 2;
-
-                menuStrip.Visible = false;
             }
         }
 
