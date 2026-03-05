@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using OpenEphys.ProbeInterface.NET;
 using Newtonsoft.Json;
 using System.Linq;
+using System.Xml.Serialization;
 
 namespace OpenEphys.Onix1
 {
@@ -53,6 +54,10 @@ namespace OpenEphys.Onix1
         public NeuropixelsV1eProbeGroup(string specification, string version, Probe[] probes)
             : base(specification, version, probes)
         {
+            if (NumberOfContacts != NeuropixelsV1.ElectrodeCount)
+            {
+                throw new InvalidOperationException($"Invalid number of electrodes found; expected {NeuropixelsV1.ElectrodeCount}, but found {NumberOfContacts}.");
+            }
         }
 
         /// <summary>
@@ -176,7 +181,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Updates the <see cref="Probe.DeviceChannelIndices"/> based on the given channel map.
         /// </summary>
-        /// <param name="channelMap">Existing <see cref="NeuropixelsV1ProbeConfiguration.ChannelMap"/>.</param>
+        /// <param name="channelMap">Existing channel map of selected electrodes.</param>
         internal void UpdateDeviceChannelIndices(NeuropixelsV1Electrode[] channelMap)
         {
             int[] newDeviceChannelIndices = new int[NumberOfContacts];
@@ -192,6 +197,13 @@ namespace OpenEphys.Onix1
 
             UpdateDeviceChannelIndices(0, newDeviceChannelIndices);
         }
+
+        /// <summary>
+        /// Gets the array representing the mapping of channels to Neuropixels V1 electrodes.
+        /// </summary>
+        [XmlIgnore]
+        [JsonIgnore]
+        public NeuropixelsV1Electrode[] ChannelMap { get => ToChannelMap(this); }
 
         /// <summary>
         /// Convert a <see cref="NeuropixelsV1eProbeGroup"/> object to a list of electrodes, which only includes currently enabled electrodes
@@ -229,6 +241,30 @@ namespace OpenEphys.Onix1
             }
 
             return electrodes;
+        }
+
+        /// <summary>
+        /// Enable the selected electrodes.
+        /// </summary>
+        /// <param name="electrodes">List of selected electrodes that are being enabled.</param>
+        public void SelectElectrodes(NeuropixelsV1Electrode[] electrodes)
+        {
+            var channelMap = ToChannelMap(this);
+
+            foreach (var e in electrodes)
+            {
+                try
+                {
+                    channelMap[e.Channel] = e;
+                }
+                catch (IndexOutOfRangeException ex)
+                {
+                    throw new IndexOutOfRangeException($"Electrode {e.Index} specifies channel {e.Channel} but only channels " +
+                        $"0 to {channelMap.Length - 1} are supported.", ex);
+                }
+            }
+
+            UpdateDeviceChannelIndices(channelMap);
         }
     }
 }

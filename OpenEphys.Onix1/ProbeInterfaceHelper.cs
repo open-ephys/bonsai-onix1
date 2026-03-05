@@ -6,7 +6,8 @@ namespace OpenEphys.Onix1
 {
     internal static class ProbeInterfaceHelper
     {
-        public const string ProbeInterfaceFileNameFilter = "ProbeInterface Files|*.json|All Files|*.*";
+        public const string ProbeInterfaceFileExtension = ".json";
+        public const string ProbeInterfaceFileNameFilter = "ProbeInterface Files|*" + ProbeInterfaceFileExtension + "|All Files|*.*";
 
         public static ProbeGroup LoadExternalProbeInterfaceFile(string probeInterfaceFileName, Type type)
         {
@@ -39,6 +40,10 @@ namespace OpenEphys.Onix1
             catch (IOException e)
             {
                 throw new IOException($"Unable to read '{probeInterfaceFileName}'. The file may be in use.", e);
+            }
+            catch (InvalidOperationException e)
+            {
+                throw new InvalidOperationException($"Error loading '{probeInterfaceFileName}'. Ensure that the correct file is selected.\n\n{e.Message}", e);
             }
             catch (Exception e)
             {
