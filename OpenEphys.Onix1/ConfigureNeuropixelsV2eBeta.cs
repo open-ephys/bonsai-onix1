@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Drawing.Design;
+using System.IO;
 using System.Reactive.Disposables;
 using System.Xml.Serialization;
 using Bonsai;
@@ -255,6 +256,11 @@ namespace OpenEphys.Onix1
                             $" for {NeuropixelsV2Probe.ProbeA}.");
                     }
 
+                    if (!File.Exists(probeConfigurationA.GainCalibrationFileName))
+                    {
+                        throw new ArgumentException($"A gain calibration file must be specified for {NeuropixelsV2Probe.ProbeA} with serial number {probeAMetadata.ProbeSerialNumber}");
+                    }
+
                     var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(probeConfigurationA.GainCalibrationFileName);
 
                     if (!gainCorrection.HasValue)
@@ -282,6 +288,11 @@ namespace OpenEphys.Onix1
                     {
                         throw new InvalidOperationException($"Neuropixels 2.0-Beta probes do not provide a Ground reference selection. Please select a different reference" +
                             $" for {NeuropixelsV2Probe.ProbeB}.");
+                    }
+
+                    if (!File.Exists(probeConfigurationB.GainCalibrationFileName))
+                    {
+                        throw new ArgumentException($"A gain calibration file must be specified for {NeuropixelsV2Probe.ProbeB} with serial number {probeBMetadata.ProbeSerialNumber}");
                     }
 
                     var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(probeConfigurationB.GainCalibrationFileName);
