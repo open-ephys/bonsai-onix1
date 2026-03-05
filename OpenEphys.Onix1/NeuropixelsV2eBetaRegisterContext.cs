@@ -49,7 +49,7 @@ namespace OpenEphys.Onix1
                 }
             }
 
-            if (ReadByte(NeuropixelsV2e.STATUS) != (uint)NeuropixelsV2Status.SR_OK)
+            if (ReadByte(NeuropixelsV2.STATUS) != (uint)NeuropixelsV2Status.SR_OK)
             {
                 Console.Error.WriteLine($"Warning: shift register {srAddress:X} status check failed. " +
                     $"{ShankName(srAddress)} may be damaged.");

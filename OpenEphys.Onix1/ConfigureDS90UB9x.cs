@@ -3,6 +3,31 @@ using System.Threading;
 
 namespace OpenEphys.Onix1
 {
+    internal abstract class ConfigureDS90UB9x : SingleDeviceFactory
+    {
+        public ConfigureDS90UB9x(Type deviceType)
+            : base(deviceType)
+        {
+        }
+
+        private protected abstract void ConfigureSerdes(DeviceContext device);
+
+        private protected abstract IDisposable ShutdownSerdes(DeviceContext device);
+
+        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
+        {
+            var deviceName = DeviceName;
+            var deviceAddress = DeviceAddress;
+
+            return source.ConfigureAndLatchDevice(context =>
+            {
+                var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
+                ConfigureSerdes(device);
+                return ShutdownSerdes(device);
+            });
+        }
+    }
+
     static class DS90UB9x
     {
         public const int ID = 24;
@@ -54,6 +79,14 @@ namespace OpenEphys.Onix1
             var sclTimes = (uint)Math.Round(1.0 / (100e-9 * i2cRate));
             serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.SclHigh, sclTimes);
             serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.SclLow, sclTimes);
+        }
+
+        internal class NameConverter : DeviceNameConverter
+        {
+            public NameConverter()
+                : base(typeof(DS90UB9x))
+            {
+            }
         }
     }
 
@@ -142,5 +175,17 @@ namespace OpenEphys.Onix1
     {
         Input = 0,
         Output = 1
-    }  
+    }
+
+    //public enum DS90UB9xDeserializerI2CAlias
+    //{
+    //    ID1 = 1,
+    //    ID2 = 2,
+    //    ID3 = 3,
+    //    ID4 = 4,
+    //    ID5 = 5, 
+    //    ID6 = 6
+    //    ID7 = 7,
+    //}
+
 }

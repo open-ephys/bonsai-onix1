@@ -26,7 +26,7 @@ namespace OpenEphys.Onix1
     public class ConfigureHeadstageNeuropixelsV2eBeta : MultiDeviceFactory
     {
         PortName port;
-        readonly ConfigureNeuropixelsV2ePortController PortControl = new();
+        readonly ConfigureHeadstageNeuropixelsV2ePortController PortControl = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureHeadstageNeuropixelsV2eBeta"/> class.
