@@ -98,7 +98,7 @@ namespace OpenEphys.Onix1
             {
                 throw new NotSupportedException("This library requires version 2.x of the ONIX firmware. "
                     + "Please perform a firmware update to use this library. Instructions can be found at "
-                    + "https://open-ephys.github.io/onix-docs/Hardware%20Guide/PCIe%20Host/updating-firmware.html");
+                    + "https://open-ephys.github.io/onix-docs/Hardware%20Guide/PCIe%20Controller/updating-gateware.html");
             }
         }
 
