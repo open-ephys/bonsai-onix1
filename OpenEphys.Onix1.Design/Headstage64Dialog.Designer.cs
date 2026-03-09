@@ -189,7 +189,7 @@
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "Headstage64Dialog";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Headstage64Dialog";
+            this.Text = "Headstage64 Configuration";
             this.tableLayoutPanel1.ResumeLayout(false);
             this.flowLayoutPanel1.ResumeLayout(false);
             this.tabControl.ResumeLayout(false);
