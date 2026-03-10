@@ -6,7 +6,7 @@ using System;
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Class that opens a new dialog for a <see cref="ConfigureHeadstageNeuropixelsV1e"/>.
+    /// Class that opens a new dialog for a <see cref="ConfigureHeadstageNeuropixelsV1f"/>.
     /// </summary>
     public class NeuropixelsV1fHeadstageEditor : WorkflowComponentEditor
     {

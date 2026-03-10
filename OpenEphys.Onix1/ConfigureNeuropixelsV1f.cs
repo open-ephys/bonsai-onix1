@@ -182,6 +182,7 @@ namespace OpenEphys.Onix1
     static class NeuropixelsV1f
     {
         public const int ID = 11;
+        public const uint MinimumVersion = 1;
 
         public const int I2cAddress = 0x70;
         public const int EepromI2cAddress = 0x55;
