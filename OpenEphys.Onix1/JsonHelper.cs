@@ -26,12 +26,12 @@ namespace OpenEphys.Onix1
 
                 if (errors.Count > 0)
                 {
-                    Console.WriteLine("There were errors encountered while parsing a JSON string.\n");
+                    string msg = "";
                     foreach (var e in errors)
                     {
-                        Console.Error.WriteLine(e);
+                        msg += e + "\n";
                     }
-                    return null;
+                    throw new InvalidOperationException(msg);
                 }
 
                 return obj;

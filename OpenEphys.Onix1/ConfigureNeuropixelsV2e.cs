@@ -200,8 +200,12 @@ namespace OpenEphys.Onix1
             var probeConfigurationB = ProbeConfigurationB;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
+
             return source.ConfigureAndLatchDevice(context =>
             {
+                NeuropixelsV2eProbeGroup probeGroupA = null;
+                NeuropixelsV2eProbeGroup probeGroupB = null;
+
                 // configure device via the DS90UB9x deserializer device
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
                 device.WriteRegister(DS90UB9x.ENABLE, enable ? 1u : 0);
@@ -236,6 +240,11 @@ namespace OpenEphys.Onix1
 
                     var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(probeConfigurationA.GainCalibrationFileName);
 
+                    if (string.IsNullOrEmpty(probeConfigurationA.ProbeInterfaceFileName))
+                        throw new ArgumentException($"ProbeInterface file name must be specified in {nameof(ConfigureNeuropixelsV2e)}.{nameof(ProbeConfigurationA)}.");
+
+                    probeGroupA = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfigurationA.ProbeInterfaceFileName, probeConfigurationA.GetProbeGroupType()) as NeuropixelsV2eProbeGroup;
+
                     if (!gainCorrection.HasValue)
                     {
                         throw new ArgumentException($"{NeuropixelsV2Probe.ProbeA}'s calibration file \"{probeConfigurationA.GainCalibrationFileName}\" is invalid.");
@@ -250,7 +259,7 @@ namespace OpenEphys.Onix1
                     gainCorrectionA = gainCorrection.Value.GainCorrectionFactor;
 
                     SelectProbe(serializer, NeuropixelsV2e.ProbeASelected);
-                    probeControl.WriteConfiguration(probeConfigurationA);
+                    probeControl.WriteConfiguration(probeConfigurationA, probeGroupA);
                     ConfigureProbeStreaming(probeControl);
                 }
 
@@ -263,6 +272,11 @@ namespace OpenEphys.Onix1
                     }
 
                     var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(probeConfigurationB.GainCalibrationFileName);
+
+                    if (string.IsNullOrEmpty(probeConfigurationB.ProbeInterfaceFileName))
+                        throw new ArgumentException($"ProbeInterface file name must be specified in {nameof(ConfigureNeuropixelsV2e)}.{nameof(ProbeConfigurationB)}.");
+
+                    probeGroupB = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfigurationB.ProbeInterfaceFileName, probeConfigurationB.GetProbeGroupType()) as NeuropixelsV2eProbeGroup;
 
                     if (!gainCorrection.HasValue)
                     {
@@ -278,14 +292,14 @@ namespace OpenEphys.Onix1
                     gainCorrectionB = gainCorrection.Value.GainCorrectionFactor;
 
                     SelectProbe(serializer, NeuropixelsV2e.ProbeBSelected);
-                    probeControl.WriteConfiguration(probeConfigurationB);
+                    probeControl.WriteConfiguration(probeConfigurationB, probeGroupB);
                     ConfigureProbeStreaming(probeControl);
                 }
 
                 // disconnect i2c bus from both probes to prevent digital interference during acquisition
                 SelectProbe(serializer, NeuropixelsV2e.NoProbeSelected);
 
-                var deviceInfo = new NeuropixelsV2eDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB, probeAMetadata, probeBMetadata, probeConfigurationA, probeConfigurationB);
+                var deviceInfo = new NeuropixelsV2eDeviceInfo(context, DeviceType, deviceAddress, gainCorrectionA, gainCorrectionB, probeAMetadata, probeBMetadata, probeConfigurationA, probeConfigurationB, probeGroupA, probeGroupB);
                 var shutdown = Disposable.Create(() =>
                 {
                     serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, NeuropixelsV2e.DefaultGPO10Config);

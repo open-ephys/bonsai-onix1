@@ -11,6 +11,7 @@ namespace OpenEphys.Onix1
     public class Rhs2116ProbeGroup : ProbeGroup
     {
         const int DefaultNumberOfChannelsPerProbe = 16;
+        const int ExpectedNumberOfElectrodes = 32;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Rhs2116ProbeGroup"/> class.
@@ -71,6 +72,10 @@ namespace OpenEphys.Onix1
         public Rhs2116ProbeGroup(string specification, string version, Probe[] probes)
             : base(specification, version, probes)
         {
+            if (NumberOfContacts != ExpectedNumberOfElectrodes)
+            {
+                throw new InvalidOperationException($"Invalid number of electrodes found; expected {ExpectedNumberOfElectrodes}, but found {NumberOfContacts}.");
+            }
         }
 
         /// <summary>

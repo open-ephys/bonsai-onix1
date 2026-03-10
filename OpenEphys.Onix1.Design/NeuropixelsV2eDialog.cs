@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace OpenEphys.Onix1.Design
@@ -9,15 +10,19 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     public partial class NeuropixelsV2eDialog : Form
     {
-        internal readonly Dictionary<NeuropixelsV2Probe, NeuropixelsV2eProbeConfigurationDialog> ProbeConfigurations;
+        internal event EventHandler OnStateChange;
+
+        internal readonly Dictionary<NeuropixelsV2Probe, NeuropixelsV2eProbeConfigurationDialog> ProbeConfigurationDialogs;
+
+        internal bool HasChanges => ProbeConfigurationDialogs.Values.Any(dialog => dialog.HasChanges);
 
         internal NeuropixelsV2ProbeConfiguration ProbeConfigurationA
         {
             get
             {
-                return ProbeConfigurations.TryGetValue(NeuropixelsV2Probe.ProbeA, out var probeConfigurationDialog)
+                return ProbeConfigurationDialogs.TryGetValue(NeuropixelsV2Probe.ProbeA, out var probeConfigurationDialog)
                     ? probeConfigurationDialog.ProbeConfiguration
-                    : throw new NullReferenceException("Unable to find the probe configuration dialog for Probe A.");
+                    : throw new NullReferenceException("Unable to find the probe configuration for Probe A.");
             }
         }
 
@@ -25,9 +30,9 @@ namespace OpenEphys.Onix1.Design
         {
             get
             {
-                return ProbeConfigurations.TryGetValue(NeuropixelsV2Probe.ProbeB, out var probeConfigurationDialog)
+                return ProbeConfigurationDialogs.TryGetValue(NeuropixelsV2Probe.ProbeB, out var probeConfigurationDialog)
                     ? probeConfigurationDialog.ProbeConfiguration
-                    : throw new NullReferenceException("Unable to find the probe configuration dialog for Probe B.");
+                    : throw new NullReferenceException("Unable to find the probe configuration for Probe B.");
             }
         }
 
@@ -46,6 +51,7 @@ namespace OpenEphys.Onix1.Design
         {
             InitializeComponent();
             Shown += FormShown;
+            FormClosing += DialogClosing;
 
             bool isBeta = false;
 
@@ -55,19 +61,33 @@ namespace OpenEphys.Onix1.Design
                 isBeta = true;
             }
 
-            ProbeConfigurations = new()
+            ProbeConfigurationDialogs = new()
             {
                 { NeuropixelsV2Probe.ProbeA, new(configureNode.ProbeConfigurationA, isBeta, nameof(NeuropixelsV2Probe.ProbeA)) },
                 { NeuropixelsV2Probe.ProbeB, new(configureNode.ProbeConfigurationB, isBeta, nameof(NeuropixelsV2Probe.ProbeB)) }
             };
 
-            foreach (var channelConfiguration in ProbeConfigurations)
+            foreach (var probeConfigurationDialog in ProbeConfigurationDialogs)
             {
-                string probeName = channelConfiguration.Key.ToString();
+                string probeName = probeConfigurationDialog.Key.ToString();
 
                 tabControlProbe.TabPages.Add(probeName, probeName);
-                channelConfiguration.Value.SetChildFormProperties(this).AddDialogToTab(tabControlProbe.TabPages[probeName]);
-                this.AddMenuItemsFromDialogToFileOption(channelConfiguration.Value, probeName);
+                probeConfigurationDialog.Value.SetChildFormProperties(this).AddDialogToTab(tabControlProbe.TabPages[probeName]);
+                probeConfigurationDialog.Value.OnStateChange += (sender, args) =>
+                {
+                    var dialog = sender as NeuropixelsV2eProbeConfigurationDialog;
+
+                    if (dialog.HasChanges)
+                    {
+                        tabControlProbe.TabPages[probeName].Text += '*';
+                    }
+                    else
+                    {
+                        tabControlProbe.TabPages[probeName].Text = tabControlProbe.TabPages[probeName].Text.TrimEnd('*');
+                    }
+
+                    OnStateChange?.Invoke(this, EventArgs.Empty);
+                };
             }
         }
 
@@ -77,19 +97,51 @@ namespace OpenEphys.Onix1.Design
             {
                 tableLayoutPanel1.Controls.Remove(flowLayoutPanel1);
                 tableLayoutPanel1.RowCount = 1;
-
-                menuStrip.Visible = false;
             }
 
-            foreach (var channelConfiguration in ProbeConfigurations)
+            foreach (var channelConfiguration in ProbeConfigurationDialogs)
             {
                 channelConfiguration.Value.Show();
             }
         }
 
+        internal bool ProcessMenuShortcut(Keys keyData)
+        {
+            foreach (var probeConfigurationDialogPair in ProbeConfigurationDialogs)
+            {
+                if (tabControlProbe.SelectedTab.Name == probeConfigurationDialogPair.Key.ToString() && probeConfigurationDialogPair.Value.ProcessMenuShortcut(keyData))
+                {
+                    return true;
+                }
+            }   
+
+            return false;
+        }
+
         internal void Okay_Click(object sender, EventArgs e)
         {
             DialogResult = DialogResult.OK;
+        }
+
+        void DialogClosing(object sender, FormClosingEventArgs e)
+        {
+            if (DialogResult == DialogResult.Cancel)
+                return;
+
+            bool cancel = false;
+
+            foreach (var dialog in ProbeConfigurationDialogs.Values)
+            {
+                dialog.Close();
+
+                if (!dialog.IsDisposed)
+                {
+                    cancel = true;
+                    break;
+                }
+            }
+
+            e.Cancel = cancel;
         }
     }
 }

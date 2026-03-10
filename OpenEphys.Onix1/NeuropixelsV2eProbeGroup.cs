@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
+using Newtonsoft.Json;
 using OpenEphys.ProbeInterface.NET;
 
 namespace OpenEphys.Onix1
@@ -16,6 +17,7 @@ namespace OpenEphys.Onix1
         private protected const float ShankOffsetX = 200f;
         private protected const float ShankWidthX = 70f;
         private protected const float ShankPitchX = 250f;
+        private protected abstract int NumberOfShanks { get; }
 
         /// <summary>
         /// Initializes a new instance of a <see cref="NeuropixelsV2eProbeGroup"/>.
@@ -24,6 +26,10 @@ namespace OpenEphys.Onix1
         public NeuropixelsV2eProbeGroup(string specification, string version, IEnumerable<Probe> probes)
             : base(specification, version, probes)
         {
+            if (NumberOfContacts != NeuropixelsV2.ElectrodePerShank * NumberOfShanks)
+            {
+                throw new InvalidOperationException($"Invalid number of electrodes found; expected {NeuropixelsV2.ElectrodePerShank * NumberOfShanks}, but found {NumberOfContacts}.");
+            }
         }
 
         /// <summary>
@@ -102,5 +108,19 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <returns>List of <see cref="NeuropixelsV2Electrode"/> electrodes</returns>
         public abstract List<NeuropixelsV2Electrode> ToElectrodes();
+
+        /// <summary>
+        /// Gets the array representing the mapping of channels to Neuropixels V2 electrodes.
+        /// </summary>
+        [XmlIgnore]
+        [JsonIgnore]
+        public abstract NeuropixelsV2Electrode[] ChannelMap { get; }
+
+
+        /// <summary>
+        /// Enable the selected electrodes.
+        /// </summary>
+        /// <param name="electrodes">List of selected electrodes that are being enabled.</param>
+        public abstract void SelectElectrodes(NeuropixelsV2Electrode[] electrodes);
     }
 }

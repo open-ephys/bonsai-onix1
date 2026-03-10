@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Serialization;
 using Newtonsoft.Json;
 using OpenEphys.ProbeInterface.NET;
 
@@ -23,11 +24,12 @@ namespace OpenEphys.Onix1
         {
         }
 
+        const int numberOfShanks = 1;
+        private protected override int NumberOfShanks => numberOfShanks;
+
         static Probe[] DefaultProbes()
         {
             var probe = new Probe[1];
-
-            const int numberOfShanks = 1;
 
             probe[0] = new(ProbeNdim.Two,
                            ProbeSiUnits.um,
@@ -157,6 +159,13 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
+        /// Gets the array representing the mapping of channels to <see cref="NeuropixelsV2SingleShankElectrode">NeuropixelsV2SingleShankElectrodes</see>.
+        /// </summary>
+        [XmlIgnore]
+        [JsonIgnore]
+        public override NeuropixelsV2Electrode[] ChannelMap { get => ToChannelMap(this); }
+
+        /// <summary>
         /// Convert a <see cref="NeuropixelsV2eSingleShankProbeGroup"/> object to a list of electrodes,
         /// which only includes currently enabled electrodes.
         /// </summary>
@@ -176,6 +185,30 @@ namespace OpenEphys.Onix1
             return enabledContacts.Select(c => new NeuropixelsV2SingleShankElectrode(c.Index))
                                   .OrderBy(e => e.Channel)
                                   .ToArray();
+        }
+
+        /// <summary>
+        /// Enable the selected electrodes.
+        /// </summary>
+        /// <param name="electrodes">List of selected electrodes that are being enabled.</param>
+        public override void SelectElectrodes(NeuropixelsV2Electrode[] electrodes)
+        {
+            var channelMap = ToChannelMap(this);
+
+            foreach (var e in electrodes)
+            {
+                try
+                {
+                    channelMap[e.Channel] = e as NeuropixelsV2SingleShankElectrode;
+                }
+                catch (IndexOutOfRangeException ex)
+                {
+                    throw new IndexOutOfRangeException($"Electrode {e.Index} specifies channel {e.Channel} but only channels " +
+                        $"0 to {channelMap.Length - 1} are supported.", ex);
+                }
+            }
+
+            UpdateDeviceChannelIndices(channelMap);
         }
     }
 }
