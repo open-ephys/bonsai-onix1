@@ -27,7 +27,6 @@ namespace OpenEphys.Onix1.Design
             StimulusSequenceDialog = new Rhs2116StimulusSequenceDialog(rhs2116Trigger);
 
             StimulusSequenceDialog.SetChildFormProperties(this).AddDialogToTab(tabPageStimulusSequence);
-            this.AddMenuItemsFromDialogToFileOption(StimulusSequenceDialog);
 
             Rhs2116Dialog = new(new ConfigureRhs2116Pair(rhs2116));
 

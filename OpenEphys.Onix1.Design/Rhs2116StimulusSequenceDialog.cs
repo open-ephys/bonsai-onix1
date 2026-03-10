@@ -44,17 +44,14 @@ namespace OpenEphys.Onix1.Design
         public Rhs2116StimulusSequenceDialog(ConfigureRhs2116Trigger rhs2116Trigger)
             : base(NumberOfChannels, true, true)
         {
-            if (rhs2116Trigger.ProbeGroup.NumberOfContacts != NumberOfChannels)
-            {
-                throw new ArgumentException($"Probe group is not valid: {NumberOfChannels} channels were expected, there are {rhs2116Trigger.ProbeGroup.NumberOfContacts} instead.");
-            }
-
             InitializeComponent();
 
             Trigger = new(rhs2116Trigger);
 
             dataGridViewStimulusTable.DataBindingComplete += DataBindingComplete;
             SetTableDataSource();
+
+            OnFileLoad += (sender, e) => SetTableDataSource();
 
             RequestedAnodicAmplitudeuA = new double[Sequence.Stimuli.Length];
             RequestedCathodicAmplitudeuA = new double[Sequence.Stimuli.Length];
@@ -67,14 +64,21 @@ namespace OpenEphys.Onix1.Design
 
             StepSize = Sequence.CurrentStepSize;
 
-            ChannelDialog = new(rhs2116Trigger.ProbeGroup, nameof(Rhs2116));
+            ChannelDialog = new("", nameof(Rhs2116))
+            {
+                HasChanges = false
+            };
 
             ChannelDialog.SetChildFormProperties(this).AddDialogToPanel(panelProbe);
-            this.AddMenuItemsFromDialogToFileOption(ChannelDialog, "Channel Configuration");
+            ChannelDialog.HideFileMenu();
+
+            fileToolStripMenuItem.DropDownItems.Add(new ToolStripSeparator());
+            ChannelDialog.dropDownImportFile.Text = "Import Probe Configuration";
+            fileToolStripMenuItem.DropDownItems.Add(ChannelDialog.dropDownImportFile);
 
             ChannelDialog.OnSelect += OnSelect;
             ChannelDialog.OnZoom += OnZoom;
-            ChannelDialog.OnFileLoad += OnFileLoad;
+            ChannelDialog.OnStateChange += (sender, e) => (sender as ChannelConfigurationDialog).HasChanges = false;
 
             StimulusSequenceOptions = new();
             groupBoxDefineStimuli.Controls.Add(StimulusSequenceOptions.SetChildFormProperties(this));
@@ -115,11 +119,6 @@ namespace OpenEphys.Onix1.Design
             StimulusSequenceOptions.textBoxStepSize.Text = GetStepSizeStringuA(StepSize);
 
             DrawStimulusWaveform();
-        }
-
-        void OnFileLoad(object sender, EventArgs e)
-        {
-            Trigger.ProbeGroup = (Rhs2116ProbeGroup)ChannelDialog.ProbeGroup;
         }
 
         internal void OnZoom(object sender, EventArgs e)
@@ -892,7 +891,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override void DeserializeStimulusSequence(string fileName)
         {
-            if (JsonHelper.DeserializeString(File.ReadAllText(fileName), typeof(Rhs2116StimulusSequencePair)) is Rhs2116StimulusSequencePair newSequence && newSequence.Stimuli.Length == 32)
+            if (JsonHelper.DeserializeString(File.ReadAllText(fileName), typeof(Rhs2116StimulusSequencePair)) is Rhs2116StimulusSequencePair newSequence && newSequence.Stimuli.Length == Trigger.StimulusSequence.Stimuli.Length)
             {
                 if (newSequence == new Rhs2116StimulusSequencePair())
                 {
@@ -938,7 +937,7 @@ namespace OpenEphys.Onix1.Design
 
         private void AddDeviceChannelIndexToGridRow()
         {
-            if (ChannelDialog == null || ChannelDialog.ProbeGroup.NumberOfContacts != 32)
+            if (ChannelDialog == null || ChannelDialog.ProbeGroup.NumberOfContacts != NumberOfChannels)
                 return;
 
             var deviceChannelIndices = ChannelDialog.ProbeGroup.GetDeviceChannelIndices();

@@ -38,7 +38,6 @@
             this.panelProbe = new System.Windows.Forms.Panel();
             this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.stimulusWaveformToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
@@ -132,6 +131,7 @@
             // 
             // menuStrip
             // 
+            this.menuStrip.BackColor = System.Drawing.SystemColors.Control;
             this.menuStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.menuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem});
@@ -145,32 +145,24 @@
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.stimulusWaveformToolStripMenuItem});
+            this.openFileToolStripMenuItem,
+            this.saveFileToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
             // 
-            // stimulusWaveformToolStripMenuItem
-            // 
-            this.stimulusWaveformToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.openFileToolStripMenuItem,
-            this.saveFileToolStripMenuItem});
-            this.stimulusWaveformToolStripMenuItem.Name = "stimulusWaveformToolStripMenuItem";
-            this.stimulusWaveformToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
-            this.stimulusWaveformToolStripMenuItem.Text = "Stimulus Waveform";
-            // 
             // openFileToolStripMenuItem
             // 
             this.openFileToolStripMenuItem.Name = "openFileToolStripMenuItem";
-            this.openFileToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
-            this.openFileToolStripMenuItem.Text = "Open File";
+            this.openFileToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
+            this.openFileToolStripMenuItem.Text = "Open Stimulus Waveform";
             this.openFileToolStripMenuItem.Click += new System.EventHandler(this.MenuItemLoadFile_Click);
             // 
             // saveFileToolStripMenuItem
             // 
             this.saveFileToolStripMenuItem.Name = "saveFileToolStripMenuItem";
-            this.saveFileToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
-            this.saveFileToolStripMenuItem.Text = "Save File";
+            this.saveFileToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
+            this.saveFileToolStripMenuItem.Text = "Save Stimulus Waveform";
             this.saveFileToolStripMenuItem.Click += new System.EventHandler(this.MenuItemSaveFile_Click);
             // 
             // tableLayoutPanel1
@@ -360,10 +352,8 @@
         internal System.Windows.Forms.ToolStripStatusLabel toolStripStatusText;
         private System.Windows.Forms.Button buttonOk;
         private System.Windows.Forms.MenuStrip menuStrip;
-        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
+        internal System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         internal System.Windows.Forms.Panel panelProbe;
-        internal System.Windows.Forms.ToolStripMenuItem openFileToolStripMenuItem;
-        internal System.Windows.Forms.ToolStripMenuItem saveFileToolStripMenuItem;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
@@ -374,8 +364,9 @@
         private System.Windows.Forms.TabPage tabPageWaveform;
         private System.Windows.Forms.TabPage tabPageTable;
         internal System.Windows.Forms.DataGridView dataGridViewStimulusTable;
-        internal System.Windows.Forms.ToolStripMenuItem stimulusWaveformToolStripMenuItem;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel2;
         private System.Windows.Forms.Button button1;
+        internal System.Windows.Forms.ToolStripMenuItem openFileToolStripMenuItem;
+        internal System.Windows.Forms.ToolStripMenuItem saveFileToolStripMenuItem;
     }
 }

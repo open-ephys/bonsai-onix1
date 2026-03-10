@@ -12,6 +12,8 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     public abstract partial class GenericStimulusSequenceDialog : Form
     {
+        internal event EventHandler OnFileLoad;
+
         readonly int NumberOfChannels;
         readonly bool UseProbeGroup;
         readonly bool UseTable;
@@ -67,8 +69,6 @@ namespace OpenEphys.Onix1.Design
             {
                 tableLayoutPanel1.Controls.Remove(flowLayoutPanel1);
                 tableLayoutPanel1.RowCount = 2;
-
-                menuStrip.Visible = false;
             }
         }
 
@@ -479,9 +479,15 @@ namespace OpenEphys.Onix1.Design
                 }
 
                 DeserializeStimulusSequence(ofd.FileName);
+                OnFileLoadHandler();
 
                 DrawStimulusWaveform();
             }
+        }
+
+        void OnFileLoadHandler()
+        {
+            OnFileLoad?.Invoke(this, EventArgs.Empty);
         }
 
         internal static void SetTextBoxBackgroundDefault(TextBox textBox)
