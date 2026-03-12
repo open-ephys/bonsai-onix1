@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Windows.Forms;
 
 namespace OpenEphys.Onix1.Design
@@ -14,29 +15,36 @@ namespace OpenEphys.Onix1.Design
 
         internal bool HasChanges => ProbeConfigurationDialog.HasChanges;
 
-        /// <summary>
-        /// Public <see cref="IConfigureNeuropixelsV1"/> interface that is manipulated by
-        /// <see cref="NeuropixelsV1Dialog"/>.
-        /// </summary>
-        [Obsolete]
-        public IConfigureNeuropixelsV1 ConfigureNode { get; set; }
+        IConfigureNeuropixelsV1 configureNeuropixelsV1;
+
+        internal IConfigureNeuropixelsV1 ConfigureNode
+        {
+            get => configureNeuropixelsV1;
+            private set
+            {
+                configureNeuropixelsV1 = value;
+                ProbeConfigurationDialog.propertyGrid.SelectedObject = value;
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV1Dialog"/>.
         /// </summary>
         /// <param name="configureNode">A <see cref="ConfigureNeuropixelsV1e"/> object holding the current configuration settings.</param>
         /// <param name="probeName">The name of the probe.</param>
-        public NeuropixelsV1Dialog(IConfigureNeuropixelsV1 configureNode, string probeName)
+        /// <param name="filterProperties">
+        /// <see langword="true"/> if the properties should be filtered by <see cref="DeviceTablePropertyAttribute"/>,
+        /// otherwise <see langword="false"/>. Default is <see langword="false"/>.
+        /// </param>
+        public NeuropixelsV1Dialog(IConfigureNeuropixelsV1 configureNode, string probeName, bool filterProperties = false)
         {
             InitializeComponent();
             Shown += FormShown;
             FormClosing += DialogClosing;
 
             ProbeConfigurationDialog = new(configureNode.ProbeConfiguration, probeName);
-            ProbeConfigurationDialog
-                .SetChildFormProperties(this)
-                .AddDialogToPanel(panelProbe);
-
+            ProbeConfigurationDialog.SetChildFormProperties(this).AddDialogToPanel(panelProbe);
+            ProbeConfigurationDialog.propertyGrid.SelectedObject = configureNode;
             ProbeConfigurationDialog.OnStateChange += (sender, e) =>
             {
                 if (HasChanges)
@@ -50,6 +58,18 @@ namespace OpenEphys.Onix1.Design
 
                 OnStateChange?.Invoke(this, EventArgs.Empty);
             };
+            
+            if (filterProperties)
+            {
+                ProbeConfigurationDialog.propertyGrid.BrowsableAttributes = new AttributeCollection(
+                    new Attribute[]
+                    {
+                        new BrowsableAttribute(true),
+                        new DeviceTablePropertyAttribute (false)
+                    });
+            }
+
+            configureNeuropixelsV1 = configureNode;
         }
 
         private void FormShown(object sender, EventArgs e)

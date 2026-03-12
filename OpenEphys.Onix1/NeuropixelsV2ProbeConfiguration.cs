@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Xml;
 using System.Xml.Serialization;
 using Bonsai;
+using Newtonsoft.Json;
 
 namespace OpenEphys.Onix1
 {
@@ -87,6 +88,8 @@ namespace OpenEphys.Onix1
         /// Gets or sets the reference for all electrodes.
         /// </summary>
         [XmlIgnore]
+        [JsonIgnore]
+        [Category(DeviceFactory.ConfigurationCategory)]
         [Description("Defines the reference for the probe.")]
         public abstract Enum Reference { get; set; }
 

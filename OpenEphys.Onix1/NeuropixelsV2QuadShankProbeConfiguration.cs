@@ -108,6 +108,7 @@ namespace OpenEphys.Onix1
         /// The available references for a quad-shank probe are <see cref="NeuropixelsV2QuadShankReference"/>.
         /// </remarks>
         [XmlIgnore]
+        [JsonIgnore]
         [Description("Defines the reference for the probe.")]
         [TypeConverter(typeof(NeuropixelsV2QuadShankReferenceConverter))]
         public override Enum Reference

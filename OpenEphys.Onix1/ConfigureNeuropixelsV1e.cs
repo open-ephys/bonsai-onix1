@@ -25,21 +25,6 @@ namespace OpenEphys.Onix1
         {
         }
 
-        /// <summary>
-        ///  Initializes a new instance of the <see cref="ConfigureNeuropixelsV1e"/> class with public
-        ///  properties copied from the specified configuration.
-        /// </summary>
-        /// <param name="configureNeuropixelsV1e">Existing <see cref="ConfigureNeuropixelsV1e"/> instance.</param>
-        public ConfigureNeuropixelsV1e(ConfigureNeuropixelsV1e configureNeuropixelsV1e)
-            : base(typeof(NeuropixelsV1e))
-        {
-            Enable = configureNeuropixelsV1e.Enable;
-            EnableLed = configureNeuropixelsV1e.EnableLed;
-            ProbeConfiguration = new(configureNeuropixelsV1e.ProbeConfiguration);
-            DeviceName = configureNeuropixelsV1e.DeviceName;
-            DeviceAddress = configureNeuropixelsV1e.DeviceAddress;
-        }
-
         /// <inheritdoc/>
         /// <remarks>
         /// If set to true, <see cref="NeuropixelsV1eData"/> will produce data. If set to false, 

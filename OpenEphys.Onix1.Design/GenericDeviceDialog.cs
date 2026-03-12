@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Windows.Forms;
 
 namespace OpenEphys.Onix1.Design
@@ -18,11 +19,27 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// Initializes a new instance of <see cref="GenericDeviceDialog"/>.
         /// </summary>
-        public GenericDeviceDialog(object device)
+        /// <param name="device">Device that will be displayed in the property grid.</param>
+        /// <param name="filterProperties">
+        /// <see langword="true"/> if the properties should be filtered by <see cref="DeviceTablePropertyAttribute"/>,
+        /// otherwise <see langword="false"/>. Default is <see langword="false"/>.
+        /// </param>
+        public GenericDeviceDialog(object device, bool filterProperties = false)
         {
             InitializeComponent();
 
             Shown += FormShown;
+
+            if (filterProperties)
+            {
+                propertyGrid.BrowsableAttributes = new AttributeCollection(
+                    new Attribute[]
+                    {
+                        new BrowsableAttribute(true),
+                        new DeviceTablePropertyAttribute(false)
+                    });
+            }
+
             Device = device;
         }
 

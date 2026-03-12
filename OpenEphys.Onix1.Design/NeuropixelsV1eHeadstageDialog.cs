@@ -21,8 +21,6 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         public readonly GenericDeviceDialog DialogBno055;
 
-        bool HasChanges => DialogNeuropixelsV1e.HasChanges;
-
         /// <summary>
         /// Initializes a new instance of a <see cref="NeuropixelsV1eHeadstageDialog"/>.
         /// </summary>
@@ -32,13 +30,13 @@ namespace OpenEphys.Onix1.Design
         {
             InitializeComponent();
 
-            DialogNeuropixelsV1e = new(configureNeuropixelsV1e, nameof(NeuropixelsV1e));
+            DialogNeuropixelsV1e = new(configureNeuropixelsV1e, nameof(NeuropixelsV1e), true);
 
             DialogNeuropixelsV1e.SetChildFormProperties(this).AddDialogToPanel(panelNeuropixelsV1e);
 
             DialogNeuropixelsV1e.OnStateChange += (sender, e) =>
             {
-                if (HasChanges)
+                if (DialogNeuropixelsV1e.HasChanges)
                 {
                     tabPageNeuropixelsV1e.Text += '*';
                 }
@@ -48,7 +46,7 @@ namespace OpenEphys.Onix1.Design
                 }
             };
 
-            DialogBno055 = new(new ConfigurePolledBno055(configureBno055));
+            DialogBno055 = new(configureBno055, true);
 
             DialogBno055.SetChildFormProperties(this).AddDialogToPanel(panelBno055);
 

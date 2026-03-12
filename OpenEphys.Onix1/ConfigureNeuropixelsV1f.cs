@@ -33,21 +33,6 @@ namespace OpenEphys.Onix1
             ProbeConfiguration = new();
         }
 
-        /// <summary>
-        ///  Initializes a new instance of the <see cref="ConfigureNeuropixelsV1f"/> class with public
-        ///  properties copied from the specified configuration.
-        /// </summary>
-        /// <param name="configureNeuropixelsV1f">Existing <see cref="ConfigureNeuropixelsV1f"/> instance.</param>
-        public ConfigureNeuropixelsV1f(ConfigureNeuropixelsV1f configureNeuropixelsV1f)
-            : base(typeof(NeuropixelsV1f))
-        {
-            ProbeName = configureNeuropixelsV1f.ProbeName;
-            Enable = configureNeuropixelsV1f.Enable;
-            ProbeConfiguration = new(configureNeuropixelsV1f.ProbeConfiguration);
-            DeviceName = configureNeuropixelsV1f.DeviceName;
-            DeviceAddress = configureNeuropixelsV1f.DeviceAddress;
-        }
-
         /// <inheritdoc/>
         /// <remarks>
         /// If set to true, <see cref="NeuropixelsV1fData"/> will produce data. If set to false, 
