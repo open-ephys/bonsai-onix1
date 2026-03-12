@@ -2,7 +2,7 @@
 
 namespace OpenEphys.Onix1.Design
 {
-    partial class SpatialTransformMatrixDialog
+    partial class LinearTransformMatrixDialog
     {
         /// <summary>
         /// Required designer variable.
@@ -30,7 +30,7 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SpatialTransformMatrixDialog));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LinearTransformMatrixDialog));
             this.tableLayoutPanelMain = new System.Windows.Forms.TableLayoutPanel();
             this.groupBoxStatus = new System.Windows.Forms.GroupBox();
             this.richTextBoxStatus = new System.Windows.Forms.RichTextBox();
@@ -70,7 +70,7 @@ namespace OpenEphys.Onix1.Design
             this.buttonOK = new System.Windows.Forms.Button();
             this.tableLayoutPanelSpatialMatrix = new System.Windows.Forms.TableLayoutPanel();
             this.labelSpatialMatrix = new System.Windows.Forms.Label();
-            this.textBoxSpatialTransformMatrix = new System.Windows.Forms.TextBox();
+            this.textBoxLinearTransformMatrix = new System.Windows.Forms.TextBox();
             this.richTextBoxInstructions = new System.Windows.Forms.RichTextBox();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -537,7 +537,7 @@ namespace OpenEphys.Onix1.Design
             this.tableLayoutPanelSpatialMatrix.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanelSpatialMatrix.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanelSpatialMatrix.Controls.Add(this.labelSpatialMatrix, 0, 0);
-            this.tableLayoutPanelSpatialMatrix.Controls.Add(this.textBoxSpatialTransformMatrix, 1, 0);
+            this.tableLayoutPanelSpatialMatrix.Controls.Add(this.textBoxLinearTransformMatrix, 1, 0);
             this.tableLayoutPanelSpatialMatrix.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanelSpatialMatrix.Location = new System.Drawing.Point(3, 340);
             this.tableLayoutPanelSpatialMatrix.Name = "tableLayoutPanelSpatialMatrix";
@@ -556,19 +556,19 @@ namespace OpenEphys.Onix1.Design
             this.labelSpatialMatrix.TabIndex = 1000;
             this.labelSpatialMatrix.Text = "Spatial Transform Matrix:";
             // 
-            // textBoxSpatialTransformMatrix
+            // textBoxLinearTransformMatrix
             // 
-            this.textBoxSpatialTransformMatrix.AcceptsReturn = true;
-            this.textBoxSpatialTransformMatrix.AcceptsTab = true;
-            this.textBoxSpatialTransformMatrix.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.textBoxSpatialTransformMatrix.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBoxSpatialTransformMatrix.Location = new System.Drawing.Point(132, 3);
-            this.textBoxSpatialTransformMatrix.Multiline = true;
-            this.textBoxSpatialTransformMatrix.Name = "textBoxSpatialTransformMatrix";
-            this.textBoxSpatialTransformMatrix.ReadOnly = true;
-            this.textBoxSpatialTransformMatrix.Size = new System.Drawing.Size(483, 74);
-            this.textBoxSpatialTransformMatrix.TabIndex = 1000;
-            this.textBoxSpatialTransformMatrix.TabStop = false;
+            this.textBoxLinearTransformMatrix.AcceptsReturn = true;
+            this.textBoxLinearTransformMatrix.AcceptsTab = true;
+            this.textBoxLinearTransformMatrix.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.textBoxLinearTransformMatrix.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textBoxLinearTransformMatrix.Location = new System.Drawing.Point(132, 3);
+            this.textBoxLinearTransformMatrix.Multiline = true;
+            this.textBoxLinearTransformMatrix.Name = "textBoxLinearTransformMatrix";
+            this.textBoxLinearTransformMatrix.ReadOnly = true;
+            this.textBoxLinearTransformMatrix.Size = new System.Drawing.Size(483, 74);
+            this.textBoxLinearTransformMatrix.TabIndex = 1000;
+            this.textBoxLinearTransformMatrix.TabStop = false;
             // 
             // richTextBoxInstructions
             // 
@@ -603,7 +603,7 @@ namespace OpenEphys.Onix1.Design
             this.toolStripStatusLabel.Size = new System.Drawing.Size(221, 16);
             this.toolStripStatusLabel.Text = "All fields must be properly populated.";
             // 
-            // SpatialTransformMatrixDialog
+            // LinearTransformMatrixDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -612,7 +612,7 @@ namespace OpenEphys.Onix1.Design
             this.Controls.Add(this.statusStrip);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(640, 700);
-            this.Name = "SpatialTransformMatrixDialog";
+            this.Name = "LinearTransformMatrixDialog";
             this.Text = "TS4231V1 Calibration GUI";
             this.tableLayoutPanelMain.ResumeLayout(false);
             this.tableLayoutPanelMain.PerformLayout();
@@ -670,7 +670,7 @@ namespace OpenEphys.Onix1.Design
         private System.Windows.Forms.Label labelZ;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanelSpatialMatrix;
         private System.Windows.Forms.Label labelSpatialMatrix;
-        private System.Windows.Forms.TextBox textBoxSpatialTransformMatrix;
+        private System.Windows.Forms.TextBox textBoxLinearTransformMatrix;
         private System.Windows.Forms.RichTextBox richTextBoxStatus;
         private System.Windows.Forms.TextBox textBoxUserCoordinate0Y;
         private System.Windows.Forms.RichTextBox richTextBoxInstructions;
