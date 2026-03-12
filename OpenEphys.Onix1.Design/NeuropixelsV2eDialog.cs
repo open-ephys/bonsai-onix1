@@ -128,6 +128,8 @@ namespace OpenEphys.Onix1.Design
                     propertyGrid.Refresh();
                 };
 
+                probeConfigurationDialog.Value.OnPropertyValueChanged += (sender, args) => propertyGrid.Refresh();
+
                 probeConfigurationDialog.Value.HidePropertiesTab();
             }
         }

@@ -16,6 +16,7 @@ namespace OpenEphys.Onix1.Design
 
         internal event EventHandler OnStateChange;
         internal event EventHandler OnProbeConfigurationChange;
+        internal event EventHandler OnPropertyValueChanged;
 
         internal bool HasChanges
         {
@@ -113,6 +114,7 @@ namespace OpenEphys.Onix1.Design
             textBoxProbeCalibrationFile.TextChanged += (sender, e) =>
             {
                 ProbeConfiguration.GainCalibrationFileName = ((TextBox)sender).Text;
+                PropertyValueChanged();
                 CheckStatus();
             };
 
@@ -133,6 +135,7 @@ namespace OpenEphys.Onix1.Design
                 }
 
                 bindingSource.ResetCurrentItem();
+                PropertyValueChanged();
             };
 
             comboBoxChannelPresets.DataSource = ProbeInfo.GetComboBoxChannelPresets();
@@ -158,18 +161,18 @@ namespace OpenEphys.Onix1.Design
                 $"{nameof(configuration.InvertPolarity)}",
                 false,
                 DataSourceUpdateMode.OnPropertyChanged);
+            checkBoxInvertPolarity.CheckedChanged += (sender, e) => PropertyValueChanged();
 
-            bindingSource.ListChanged += (sender, eventArgs) => propertyGrid.Refresh();
+            bindingSource.ListChanged += (sender, eventArgs) => PropertyValueChanged();
 
             tabControlProbe.SelectedIndexChanged += (sender, eventArgs) =>
             {
                 if (tabControlProbe.SelectedTab == tabPageProperties)
-                    propertyGrid.Refresh();
+                    PropertyValueChanged();
 
                 else if (tabControlProbe.SelectedTab == tabPageConfiguration)
                     bindingSource.ResetCurrentItem();
             };
-            toolStripFileName.Text = ProbeConfiguration.ProbeInterfaceFileName;
 
             CheckStatus();
         }
@@ -182,6 +185,12 @@ namespace OpenEphys.Onix1.Design
                 return ProbeType.QuadShank;
 
             throw new InvalidEnumArgumentException($"Unknown {nameof(NeuropixelsV2ProbeConfiguration)} type: {configuration.GetType()}");
+        }
+
+        void PropertyValueChanged()
+        {
+            propertyGrid.Refresh();
+            OnPropertyValueChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void ProbeTypeChanged(object sender, EventArgs e)
