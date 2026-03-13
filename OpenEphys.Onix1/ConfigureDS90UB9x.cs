@@ -176,16 +176,4 @@ namespace OpenEphys.Onix1
         Input = 0,
         Output = 1
     }
-
-    //public enum DS90UB9xDeserializerI2CAlias
-    //{
-    //    ID1 = 1,
-    //    ID2 = 2,
-    //    ID3 = 3,
-    //    ID4 = 4,
-    //    ID5 = 5, 
-    //    ID6 = 6
-    //    ID7 = 7,
-    //}
-
 }

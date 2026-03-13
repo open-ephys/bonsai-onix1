@@ -4,18 +4,18 @@ using OpenCV.Net;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Electrophysiology data produced by an Rhd2164 bioamplifier chip.
+    /// Represents electrophysiology and auxiliary data produced by an Rhd2000 bioamplifier chip.
     /// </summary>
-    public class Rhd2164DataFrame : BufferedDataFrame
+    public class Rhd2000DataFrame : BufferedDataFrame
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="Rhd2164DataFrame"/> class.
+        /// Initializes a new instance of the <see cref="Rhd2000DataFrame"/> class.
         /// </summary>
         /// <param name="clock">An array of <see cref="DataFrame.Clock"/> values.</param>
         /// <param name="hubClock"> An array of hub clock counter values.</param>
-        /// <param name="amplifierData">An array of Rhd2164 multi-channel electrophysiology data.</param>
-        /// <param name="auxData">An array of Rhd2164 auxiliary channel data.</param>
-        public Rhd2164DataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData, Mat auxData)
+        /// <param name="amplifierData">An array of multi-channel electrophysiology data.</param>
+        /// <param name="auxData">An array of auxiliary channel data.</param>
+        public Rhd2000DataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData, Mat auxData)
             : base(clock, hubClock)
         {
             AmplifierData = amplifierData;
@@ -26,10 +26,10 @@ namespace OpenEphys.Onix1
         /// Gets the buffered electrophysiology data array.
         /// </summary>
         /// <remarks>
-        /// Electrophysiology samples are organized in 64xN matrix with rows representing electrophysiology
+        /// Electrophysiology samples are organized in MxN matrix with M rows representing electrophysiology
         /// channel number and N columns representing sample index. Channels are ordered in accordance with
-        /// the Rhd2164 input number specified on its datasheet (channel 0 corresponds to input 0, channel 1
-        /// corresponds to input 1, and so on). Each column is a 64-channel vector of ADC samples whose
+        /// the Rhd2000 input number specified on its datasheet (channel 0 corresponds to input 0, channel 1
+        /// corresponds to input 1, and so on). Each column is a M-channel vector of ADC samples whose
         /// acquisition time is indicated by the corresponding elements in <see cref="DataFrame.Clock"/> and
         /// <see cref="DataFrame.HubClock"/>. Each ADC sample is a 16-bit, offset binary value encoded as a
         /// <see cref="ushort"/>. The following equation can be used to convert a sample to microvolts:
@@ -40,11 +40,11 @@ namespace OpenEphys.Onix1
         public Mat AmplifierData { get; }
 
         /// <summary>
-        /// Gets the buffered auxiliary data array. 
+        /// Gets the buffered auxiliary data array.
         /// </summary>
         /// <remarks>
         /// Auxiliary samples are organized in 3xN matrix with rows representing auxiliary channel number and N
-        /// columns representing sample index. Channels are ordered in accordance with the Rhd2164 input
+        /// columns representing sample index. Channels are ordered in accordance with the Rhd2000 input
         /// number specified on its datasheet (channel 0 corresponds to auxiliary input 0, channel 1
         /// corresponds to auxiliary input 1, and channel 2 corresponds to auxiliary input 2). Each column is
         /// a 3-channel vector of ADC samples whose acquisition time is indicated by the corresponding

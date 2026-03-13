@@ -35,6 +35,7 @@ namespace OpenEphys.Onix1
 
         public const int FramesPerSuperFrame = 16;
         public const int AdcsPerProbe = 24;
+        public const int TrashWords = 4;
         public const int FrameWords = 36; // TRASH TRASH TRASH 0 ADC0 ADC8 ADC16 0 ADC1 ADC9 ADC17 0 ... ADC7 ADC15 ADC23 0
 
         // unmanaged register map

@@ -101,7 +101,7 @@ namespace OpenEphys.Onix1
         }
     }
 
-    internal static class PortController
+    static class PortController
     {
         public const int ID = 23;
         public const uint MinimumVersion = 2;

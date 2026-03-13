@@ -6,7 +6,7 @@ using Bonsai.Design;
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Class that opens a new dialog for a <see cref="ConfigureNeuropixelsV2e"/>.
+    /// Class that opens a new dialog for a <see cref="ConfigureNeuropixelsV2PsbDecoder"/>.
     /// </summary>
     public class NeuropixelsV2eEditor : WorkflowComponentEditor
     {

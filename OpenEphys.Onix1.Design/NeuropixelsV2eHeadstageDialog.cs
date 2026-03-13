@@ -20,7 +20,7 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// Initializes a new instance of a <see cref="NeuropixelsV2eHeadstageDialog"/>.
         /// </summary>
-        /// <param name="configureNeuropixelsV2e">Configuration settings for a <see cref="ConfigureNeuropixelsV2e"/>.</param>
+        /// <param name="configureNeuropixelsV2e">Configuration settings for a <see cref="ConfigureNeuropixelsV2PsbDecoder"/>.</param>
         /// <param name="configureBno055">Configuration settings for a <see cref="ConfigurePolledBno055"/>.</param>
         public NeuropixelsV2eHeadstageDialog(IConfigureNeuropixelsV2 configureNeuropixelsV2e, ConfigurePolledBno055 configureBno055)
         {

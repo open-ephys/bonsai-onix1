@@ -7,7 +7,7 @@ using ZedGraph;
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Partial class to create a channel configuration GUI for <see cref="ConfigureNeuropixelsV2e"/>.
+    /// Partial class to create a channel configuration GUI for <see cref="ConfigureNeuropixelsV2PsbDecoder"/>.
     /// </summary>
     public partial class NeuropixelsV2eChannelConfigurationDialog : ChannelConfigurationDialog
     {

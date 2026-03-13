@@ -5,7 +5,7 @@ using System.Windows.Forms;
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Partial class to create a GUI for <see cref="ConfigureNeuropixelsV2e"/>.
+    /// Partial class to create a GUI for <see cref="ConfigureNeuropixelsV2PsbDecoder"/>.
     /// </summary>
     public partial class NeuropixelsV2eDialog : Form
     {
@@ -41,7 +41,7 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV2eDialog"/>.
         /// </summary>
-        /// <param name="configureNode">A <see cref="ConfigureNeuropixelsV2e"/> object holding the current configuration settings.</param>
+        /// <param name="configureNode">A <see cref="ConfigureNeuropixelsV2PsbDecoder"/> object holding the current configuration settings.</param>
         public NeuropixelsV2eDialog(IConfigureNeuropixelsV2 configureNode)
         {
             InitializeComponent();

@@ -31,14 +31,6 @@ namespace OpenEphys.Onix1
         readonly ConfigureHeadstageNeuropixelsV2ePortController PortControl = new();
         readonly ConfigureHeadstageNeuropixelsV2eDS90UB9x Serdes = new();
 
-        // Headstage-specific constants
-        const byte GPO10SupplyMask = 1 << 3; // Used to turn on VDDA analog supply
-        const byte GPO10ResetMask = 1 << 7; // Used to issue full reset commands to probes
-        const byte DefaultGPO10Config = 0b0001_0001; // NPs in reset, VDDA not enabled
-        const byte NoProbeSelected = 0b0001_0001; // No probes selected
-        const byte ProbeASelected = 0b0001_1001; // TODO: Changes in Rev. B of headstage
-        const byte ProbeBSelected = 0b1001_1001;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureHeadstageNeuropixelsV2e"/> class.
         /// </summary>
@@ -128,70 +120,35 @@ namespace OpenEphys.Onix1
         private protected override void PrepareDevices() 
         {
             NeuropixelsV2A.StreamIndex = 0;
-            NeuropixelsV2A.SelectProbe = serializer => SelectProbeA(serializer);
-            NeuropixelsV2A.DeselectProbe = serializer => DeselectProbes(serializer);
+            NeuropixelsV2A.SelectProbe = serializer => ConfigureHeadstageNeuropixelsV2eDS90UB9x.SelectProbeA(serializer);
+            NeuropixelsV2A.DeselectProbe = serializer => ConfigureHeadstageNeuropixelsV2eDS90UB9x.DeselectProbes(serializer);
 
             NeuropixelsV2B.StreamIndex = 1;
-            NeuropixelsV2B.SelectProbe = serializer => SelectProbeB(serializer);
-            NeuropixelsV2B.DeselectProbe = serializer => DeselectProbes(serializer);
+            NeuropixelsV2B.SelectProbe = serializer => ConfigureHeadstageNeuropixelsV2eDS90UB9x.SelectProbeB(serializer);
+            NeuropixelsV2B.DeselectProbe = serializer => ConfigureHeadstageNeuropixelsV2eDS90UB9x.DeselectProbes(serializer);
         }
 
         internal override IEnumerable<IDeviceConfiguration> GetDevices()
         {
             yield return PortControl;
-            yield return Serdes;
+            yield return Serdes; // must come before dependent devices that follow
             yield return NeuropixelsV2A;
             yield return NeuropixelsV2B;
             yield return Bno055;
-        }
-
-        static void SelectProbeA(I2CRegisterContext serializer)
-        {
-            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, ProbeASelected);
-            Thread.Sleep(20);
-        }
-
-        static void SelectProbeB(I2CRegisterContext serializer)
-        {
-            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, ProbeBSelected);
-            Thread.Sleep(20);
-        }
-
-        static void DeselectProbes(I2CRegisterContext serializer)
-        {
-            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, NoProbeSelected);
-            Thread.Sleep(20);
-        }
-
-        internal static void EnableProbeSupply(I2CRegisterContext serializer)
-        {
-            var gpo10Config = serializer.ReadByte((uint)DS90UB933SerializerI2CRegister.Gpio10);
-            gpo10Config |= GPO10SupplyMask;
-            DeselectProbes(serializer);
-
-            // turn on analog supply and wait for boot
-            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, gpo10Config);
-            Thread.Sleep(20);
-        }
-
-        internal static void ResetProbes(I2CRegisterContext serializer)
-        {
-            var gpo10Config = serializer.ReadByte((uint)DS90UB933SerializerI2CRegister.Gpio10);
-            gpo10Config = (byte)(gpo10Config & ~GPO10ResetMask);
-            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, gpo10Config);
-            gpo10Config |= GPO10ResetMask;
-            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, gpo10Config);
-        }
-
-        internal static void ShutdownProbes(I2CRegisterContext serializer)
-        {
-            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, DefaultGPO10Config);
-            DeselectProbes(serializer);
         }
     }
 
     class ConfigureHeadstageNeuropixelsV2eDS90UB9x : ConfigureDS90UB9x
     {
+
+        // Headstage-specific constants
+        const byte GPO10SupplyMask = 1 << 3; // Used to turn on VDDA analog supply
+        const byte GPO10ResetMask = 1 << 7; // Used to issue full reset commands to probes
+        const byte DefaultGPO10Config = 0b0001_0001; // NPs in reset, VDDA not enabled
+        const byte NoProbeSelected = 0b0001_0001; // No probes selected
+        const byte ProbeASelected = 0b0001_1001; // TODO: Changes in Rev. B of headstage
+        const byte ProbeBSelected = 0b1001_1001;
+
         public ConfigureHeadstageNeuropixelsV2eDS90UB9x()
             : base(typeof(DS90UB9x))
         {
@@ -232,19 +189,20 @@ namespace OpenEphys.Onix1
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID2, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias2, alias);
 
-            alias = PolledBno055.BNO055Address << 1;
+            alias = PolledBno055.I2CAddress << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID3, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias3, alias);
 
             var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
-            ConfigureHeadstageNeuropixelsV2e.ShutdownProbes(serializer); // ensure probes are in a powered down state before powering up.
-            ConfigureHeadstageNeuropixelsV2e.EnableProbeSupply(serializer);
+            ShutdownProbes(serializer); // ensure probes are powered down and deselected before starting
+            DeselectProbes(serializer);
+            EnableProbeSupply(serializer);
 
             // set I2C clock rate to ~400 kHz
             DS90UB9x.Set933I2CRate(device, 400e3);
 
             // issue full reset to both probes
-            ConfigureHeadstageNeuropixelsV2e.ResetProbes(serializer);
+            ResetProbes(serializer);
         }
 
         override private protected IDisposable ShutdownSerdes(DeviceContext device)
@@ -252,8 +210,49 @@ namespace OpenEphys.Onix1
             var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
             return Disposable.Create(() =>
             {
-                ConfigureHeadstageNeuropixelsV2e.ShutdownProbes(serializer); 
+                ShutdownProbes(serializer);
+                DeselectProbes(serializer);
             });
+        }
+
+        internal static void SelectProbeA(I2CRegisterContext serializer)
+        {
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, ProbeASelected);
+            Thread.Sleep(20);
+        }
+
+        internal static void SelectProbeB(I2CRegisterContext serializer)
+        {
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, ProbeBSelected);
+            Thread.Sleep(20);
+        }
+
+        internal static void DeselectProbes(I2CRegisterContext serializer)
+        {
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, NoProbeSelected);
+            Thread.Sleep(20);
+        }
+
+        static void EnableProbeSupply(I2CRegisterContext serializer)
+        {
+            var gpo10Config = serializer.ReadByte((uint)DS90UB933SerializerI2CRegister.Gpio10);
+            gpo10Config |= GPO10SupplyMask;
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, gpo10Config);
+            Thread.Sleep(20);
+        }
+
+        static void ResetProbes(I2CRegisterContext serializer)
+        {
+            var gpo10Config = serializer.ReadByte((uint)DS90UB933SerializerI2CRegister.Gpio10);
+            gpo10Config = (byte)(gpo10Config & ~GPO10ResetMask);
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, gpo10Config);
+            gpo10Config |= GPO10ResetMask;
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, gpo10Config);
+        }
+
+        static void ShutdownProbes(I2CRegisterContext serializer)
+        {
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, DefaultGPO10Config);
         }
     }
 }

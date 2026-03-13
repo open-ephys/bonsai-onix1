@@ -10,7 +10,7 @@ using OpenCV.Net;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Produces a sequence of <see cref="Rhd2164DataFrame"/> objects with data from an Intan
+    /// Produces a sequence of <see cref="Rhd2000DataFrame"/> objects with data from an Intan
     /// Rhd2164 bioacquisition chip.
     /// </summary>
     /// <remarks>
@@ -18,7 +18,7 @@ namespace OpenEphys.Onix1
     /// cref="ConfigureRhd2164"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Produces a sequence of Rhd2164DataFrame objects with data from an Intan Rhd2164 bioacquisition chip.")]
-    public class Rhd2164Data : Source<Rhd2164DataFrame>
+    public class Rhd2164Data : Source<Rhd2000DataFrame>
     {
         private readonly static int[] EphysChannelMap = new[] {0 ,  2,  4,  6,  8, 10, 12, 14,
                                                                16, 18, 20, 22, 24, 26, 28, 30,
@@ -36,12 +36,12 @@ namespace OpenEphys.Onix1
         public string DeviceName { get; set; }
 
         /// <summary>
-        /// Gets or sets the number of samples collected for each channel that are used to create a single <see cref="Rhd2164DataFrame"/>.
+        /// Gets or sets the number of samples collected for each channel that are used to create a single <see cref="Rhd2000DataFrame"/>.
         /// </summary>
         /// <remarks>
         /// This property determines the number of samples that are buffered for each electrophysiology and auxiliary channel produced by the Rhd2164 chip
         /// before data is propagated. For instance, if this value is set to 30, then 30 samples, along with corresponding clock values, will be collected
-        /// from each of the electrophysiology and auxiliary channels and packed into each <see cref="Rhd2164DataFrame"/>. Because channels are sampled at
+        /// from each of the electrophysiology and auxiliary channels and packed into each <see cref="Rhd2000DataFrame"/>. Because channels are sampled at
         /// 30 kHz, this is equivalent to 1 millisecond of data from each channel.
         /// </remarks>
         [Description("The number of samples collected for each channel that are used to create a single Rhd2164DataFrame.")]
@@ -49,14 +49,14 @@ namespace OpenEphys.Onix1
         public int BufferSize { get; set; } = 30;
 
         /// <summary>
-        /// Generates a sequence of <see cref="Rhd2164DataFrame"/> objects, each of which are a buffered set of multichannel samples an Rhd2164 device.
+        /// Generates a sequence of <see cref="Rhd2000DataFrame"/> objects, each of which are a buffered set of multichannel samples an Rhd2164 device.
         /// </summary>
-        /// <returns>A sequence of <see cref="Rhd2164DataFrame"/> objects.</returns>
-        public unsafe override IObservable<Rhd2164DataFrame> Generate()
+        /// <returns>A sequence of <see cref="Rhd2000DataFrame"/> objects.</returns>
+        public unsafe override IObservable<Rhd2000DataFrame> Generate()
         {
             var bufferSize = BufferSize;
             return DeviceManager.GetDevice(DeviceName).SelectMany(
-                deviceInfo => Observable.Create<Rhd2164DataFrame>(observer =>
+                deviceInfo => Observable.Create<Rhd2000DataFrame>(observer =>
                 {
                     var sampleIndex = 0;
                     var device = deviceInfo.GetDeviceContext(typeof(Rhd2164));
@@ -77,7 +77,7 @@ namespace OpenEphys.Onix1
                             {
                                 var amplifierData = BufferHelper.CopyTranspose(amplifierBuffer, bufferSize, Rhd2164.AmplifierChannelCount, Depth.U16, EphysChannelMap);
                                 var auxData = BufferHelper.CopyTranspose(auxBuffer, bufferSize, Rhd2164.AuxChannelCount, Depth.U16);
-                                observer.OnNext(new Rhd2164DataFrame(clockBuffer, hubClockBuffer, amplifierData, auxData));
+                                observer.OnNext(new Rhd2000DataFrame(clockBuffer, hubClockBuffer, amplifierData, auxData));
                                 hubClockBuffer = new ulong[bufferSize];
                                 clockBuffer = new ulong[bufferSize];
                                 sampleIndex = 0;

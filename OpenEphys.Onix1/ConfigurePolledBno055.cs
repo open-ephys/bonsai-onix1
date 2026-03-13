@@ -97,28 +97,26 @@ namespace OpenEphys.Onix1
             {
                 // configure device via the DS90UB9x deserializer device
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
-                ConfigureBno055(device);
+
+                // configure chip
+                var i2c = new I2CRegisterContext(device, PolledBno055.I2CAddress);
+                i2c.WriteByte(0x3E, 0x00); // Power mode normal
+                i2c.WriteByte(0x07, 0x00); // Page ID address 0
+                i2c.WriteByte(0x3F, 0x00); // Internal oscillator
+                i2c.WriteByte(0x41, (uint)AxisMap);  // Axis map config
+                i2c.WriteByte(0x42, (uint)AxisSign); // Axis sign
+                i2c.WriteByte(0x3D, 0x0C); // Operation mode is NDOF
+
                 var deviceInfo = new PolledBno055DeviceInfo(context, DeviceType, deviceAddress, enable);
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
         }
 
-        void ConfigureBno055(DeviceContext device)
-        {
-            // setup Bno055 device
-            var i2c = new I2CRegisterContext(device, PolledBno055.BNO055Address);
-            i2c.WriteByte(0x3E, 0x00); // Power mode normal
-            i2c.WriteByte(0x07, 0x00); // Page ID address 0
-            i2c.WriteByte(0x3F, 0x00); // Internal oscillator
-            i2c.WriteByte(0x41, (uint)AxisMap);  // Axis map config
-            i2c.WriteByte(0x42, (uint)AxisSign); // Axis sign
-            i2c.WriteByte(0x3D, 0x0C); // Operation mode is NDOF
-        }
     }
 
     static class PolledBno055
     {
-        public const int BNO055Address = 0x28;
+        public const int I2CAddress = 0x28;
         public const int EulerHeadingLsbAddress = 0x1A;
 
         internal class NameConverter : DeviceNameConverter

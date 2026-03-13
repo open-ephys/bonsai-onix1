@@ -7,13 +7,14 @@ using System.Xml.Serialization;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Configures a parallel serial bus decoder for a NeuropixelsV2 probe. 
+    /// Configures a parallel serial bus decoder for a Neuropixels V2 probe.
     /// </summary>
     /// <remarks>
-    /// This is a low-leve device that requires coordinated configuration wof the <cref>D</cref>
+    /// This is a low-level device that is only useful within the context of an appropriate <see
+    /// cref="MultiDeviceFactory"/>, e.g. <see cref="ConfigureHeadstageNeuropixelsV2e"/>.
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
-    [Description("Configures a parallel serial bus decoder for a NeuropixelsV2 probe.")]
+    [Description("Configures a parallel serial bus decoder for a Neuropixels V2 probe.")]
     public class ConfigureNeuropixelsV2PsbDecoder : SingleDeviceFactory
     {
         internal Action<I2CRegisterContext> SelectProbe { private get; set; } = _ => { };
@@ -43,13 +44,13 @@ namespace OpenEphys.Onix1
         [Category(ConfigurationCategory)]
         [Description("Probe configuration.")]
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
-        [XmlElement(nameof(ProbeConfiguration), typeof(NeuropixelsV2QuadShankProbeConfiguration))] // NB: Needed for backward compatibility
+        [XmlElement(nameof(ProbeConfiguration), typeof(NeuropixelsV2QuadShankProbeConfiguration))] // NB: Needed for backward compatibility; TODO: remove in 1.0.0
         [TypeConverter(typeof(GenericPropertyConverter))]
         public NeuropixelsV2ProbeConfiguration ProbeConfiguration { get; set; } 
             = new NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2QuadShankReference.External);
 
         /// <summary>
-        /// Configures a NeuropixelsV2 device.
+        /// Configures a Neuropixels V2 device.
         /// </summary>
         /// <remarks>
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
@@ -58,7 +59,7 @@ namespace OpenEphys.Onix1
         /// <param name="source">A sequence of <see cref="ContextTask"/> that holds all configuration actions.</param>
         /// <returns>
         /// The original sequence with the side effect of an additional configuration action to configure
-        /// a NeuropixelsV2e device.
+        /// a Neuropixels V2 device.
         /// </returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
@@ -87,65 +88,63 @@ namespace OpenEphys.Onix1
                 NeuropixelsV2GainCorrection? gainCorrection = null;
                 var probeControl = new NeuropixelsV2RegisterContext(device, NeuropixelsV2.ProbeAddress);
 
-                // configure probe A streaming
+                // check for probe being present
                 if (probeMetadata.ProbeSerialNumber != null)
                 {
-                    if (!File.Exists(probeConfiguration.GainCalibrationFileName))
+                    if (enable)
                     {
-                        throw new ArgumentException($"A gain calibration file must be provided.");
+                        if (!File.Exists(probeConfiguration.GainCalibrationFileName))
+                        {
+                            throw new ArgumentException($"A gain calibration file must be provided.");
+                        }
+
+                        gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(probeConfiguration.GainCalibrationFileName);
+
+                        if (!gainCorrection.HasValue)
+                        {
+                            throw new ArgumentException($"The calibration file \"{probeConfiguration.GainCalibrationFileName}\" has an invalid format.");
+                        }
+
+                        if (gainCorrection.Value.SerialNumber != probeMetadata.ProbeSerialNumber)
+                        {
+                            throw new ArgumentException($"The probe serial number ({probeMetadata.ProbeSerialNumber}) does not " +
+                                $"match the gain calibration file serial number: {gainCorrection.Value.SerialNumber}.");
+                        }
+
+                        // configure base and shank
+                        probeControl.WriteConfiguration(probeConfiguration);
+
+                        // write super sync bits into ASIC
+                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC11, 0b00011000);
+                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC10, 0b01100001);
+                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC9, 0b10000110);
+                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC8, 0b00011000);
+                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC7, 0b01100001);
+                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC6, 0b10000110);
+                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC5, 0b00011000);
+                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC4, 0b01100001);
+                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC3, 0b10000110);
+                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC2, 0b00011000);
+                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC1, 0b01100001);
+                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC0, 0b10111001);
+
+                        // activate recording mode on NP
+                        probeControl.WriteByte(NeuropixelsV2.OP_MODE, 0b0100_0000);
+
                     }
-
-                    gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(probeConfiguration.GainCalibrationFileName);
-
-                    if (!gainCorrection.HasValue)
+                    else
                     {
-                        throw new ArgumentException($"The calibration file \"{probeConfiguration.GainCalibrationFileName}\" has an invalid format.");
+                        // power down the probe
+                        probeControl.WriteByte(NeuropixelsV2.OP_MODE, 0b1000_0000);
                     }
-
-                    if (gainCorrection.Value.SerialNumber != probeMetadata.ProbeSerialNumber)
-                    {
-                        throw new ArgumentException($"The probe serial number ({probeMetadata.ProbeSerialNumber}) does not " +
-                            $"match the gain calibration file serial number: {gainCorrection.Value.SerialNumber}.");
-                    }
-
-                    probeControl.WriteConfiguration(probeConfiguration);
-                    ConfigureProbeStreaming(probeControl, enable);
                 }
 
                 // disconnect i2c bus from both probes to prevent digital interference during acquisition
                 DeselectProbe(serializer);
 
-                var deviceInfo = new NeuropixelsV2PsbDecoderDeviceInfo(context, DeviceType, deviceAddress, streamIndex, gainCorrection?.GainCorrectionFactor, probeConfiguration);
+                var deviceInfo = new NeuropixelsV2PsbDecoderDeviceInfo(context, DeviceType, deviceAddress, streamIndex, gainCorrection?.GainCorrectionFactor ?? 1.0, probeConfiguration);
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
-        }
-
-        static void ConfigureProbeStreaming(I2CRegisterContext i2cNP, bool probeEnabled)
-        {
-            if (probeEnabled)
-            {
-                // Write super sync bits into ASIC
-                i2cNP.WriteByte(NeuropixelsV2.SUPERSYNC11, 0b00011000);
-                i2cNP.WriteByte(NeuropixelsV2.SUPERSYNC10, 0b01100001);
-                i2cNP.WriteByte(NeuropixelsV2.SUPERSYNC9, 0b10000110);
-                i2cNP.WriteByte(NeuropixelsV2.SUPERSYNC8, 0b00011000);
-                i2cNP.WriteByte(NeuropixelsV2.SUPERSYNC7, 0b01100001);
-                i2cNP.WriteByte(NeuropixelsV2.SUPERSYNC6, 0b10000110);
-                i2cNP.WriteByte(NeuropixelsV2.SUPERSYNC5, 0b00011000);
-                i2cNP.WriteByte(NeuropixelsV2.SUPERSYNC4, 0b01100001);
-                i2cNP.WriteByte(NeuropixelsV2.SUPERSYNC3, 0b10000110);
-                i2cNP.WriteByte(NeuropixelsV2.SUPERSYNC2, 0b00011000);
-                i2cNP.WriteByte(NeuropixelsV2.SUPERSYNC1, 0b01100001);
-                i2cNP.WriteByte(NeuropixelsV2.SUPERSYNC0, 0b10111001);
-
-                // Activate recording mode on NP
-                i2cNP.WriteByte(NeuropixelsV2.OP_MODE, 0b0100_0000);
-            }
-            else
-            {
-                // Power down the probe
-                i2cNP.WriteByte(NeuropixelsV2.OP_MODE, 0b1000_0000);
-            }
         }
     }
 }

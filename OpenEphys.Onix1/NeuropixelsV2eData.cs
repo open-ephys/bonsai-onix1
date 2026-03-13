@@ -62,7 +62,7 @@ namespace OpenEphys.Onix1
             {
                 var info = (NeuropixelsV2PsbDecoderDeviceInfo)deviceInfo;
                 var probeIndex = info.StreamIndex;
-                var gainCorrection = info.GainCorrection ?? 1.0;
+                var gainCorrection = info.GainCorrection;
                 var probeConfiguration = info.ProbeConfiguration;
 
                 var device = info.GetDeviceContext(typeof(NeuropixelsV2));
@@ -73,11 +73,6 @@ namespace OpenEphys.Onix1
                 var orderByDepth = OrderByDepth;
                 var invertPolarity = probeConfiguration.InvertPolarity;
 
-                // zero-overhead 
-                delegate*<ushort*, ushort[,], int, double, int[,], void> copyBuffer = invertPolarity
-                    ? &CopyAmplifierBufferInverted
-                    : &CopyAmplifierBuffer;
-
                 return Observable.Create<NeuropixelsV2DataFrame>(observer =>
                 {
                     var sampleIndex = 0;
@@ -86,11 +81,12 @@ namespace OpenEphys.Onix1
                     var clockBuffer = new ulong[bufferSize];
                     int[,] channelOrder = orderByDepth ? Neuropixels.OrderChannelsByDepth(probeConfiguration.ChannelMap, RawToChannel) : RawToChannel;
 
+
                     var frameObserver = Observer.Create<oni.Frame>(
                         frame =>
                         {
                             var payload = (NeuropixelsV2ePayload*)frame.Data.ToPointer();
-                            copyBuffer(payload->AmplifierData, amplifierBuffer, sampleIndex, gainCorrection, channelOrder);
+                            CopyAmplifierBuffer(payload->AmplifierData, amplifierBuffer, sampleIndex, gainCorrection, channelOrder, invertPolarity);
                             hubClockBuffer[sampleIndex] = payload->HubClock;
                             clockBuffer[sampleIndex] = frame.Clock;
                             if (++sampleIndex >= bufferSize)
@@ -149,35 +145,21 @@ namespace OpenEphys.Onix1
             return data->ProbeIndex;
         }
 
-        static unsafe void CopyAmplifierBuffer(ushort* amplifierData, ushort[,] amplifierBuffer, int index, double gainCorrection, int[,] channelOrder)
-        {
-            // Loop over 16 "frames" within each "super-frame"
-            for (int i = 0; i < NeuropixelsV2.FramesPerSuperFrame; i++)
-            {
-                // The period of ADC data within data array is 36 words
-                var adcDataOffset = i * NeuropixelsV2.FrameWords;
-
-                for (int k = 0; k < NeuropixelsV2.AdcsPerProbe; k++)
-                {
-                    amplifierBuffer[channelOrder[k, i], index] = (ushort)(gainCorrection * amplifierData[AdcIndicies[k] + adcDataOffset]);
-                }
-            }
-        }
-
-        static unsafe void CopyAmplifierBufferInverted(ushort* amplifierData, ushort[,] amplifierBuffer, int index, double gainCorrection, int[,] channelOrder)
+        static unsafe void CopyAmplifierBuffer(ushort* amplifierData, ushort[,] amplifierBuffer, int index, double gainCorrection, int[,] channelOrder, bool invert)
         {
             const double NumberOfAdcBins = 4096;
-            double inversionOffset = gainCorrection * NumberOfAdcBins;
+            double multiplier = invert ? -gainCorrection : gainCorrection;
+            double offset = invert ? gainCorrection * NumberOfAdcBins : 0.0;
 
             // Loop over 16 "frames" within each "super-frame"
             for (int i = 0; i < NeuropixelsV2.FramesPerSuperFrame; i++)
             {
                 // The period of ADC data within data array is 36 words
-                var adcDataOffset = i * NeuropixelsV2.FrameWords;
+                var adcDataOffset = NeuropixelsV2.TrashWords + i * NeuropixelsV2.FrameWords;
 
                 for (int k = 0; k < NeuropixelsV2.AdcsPerProbe; k++)
                 {
-                    amplifierBuffer[channelOrder[k, i], index] = (ushort)(inversionOffset - gainCorrection * amplifierData[AdcIndicies[k] + adcDataOffset]);
+                    amplifierBuffer[channelOrder[k, i], index] = (ushort)(offset + multiplier * amplifierData[AdcIndicies[k] + adcDataOffset]);
                 }
             }
         }
@@ -203,8 +185,7 @@ namespace OpenEphys.Onix1
     {
         public ulong HubClock;
         public ushort ProbeIndex;
-        public ulong Reserved;
-        public fixed ushort AmplifierData[NeuropixelsV2.ChannelCount];
+        public fixed ushort AmplifierData[NeuropixelsV2.FrameWords * NeuropixelsV2.FramesPerSuperFrame];
     }
 
 }
