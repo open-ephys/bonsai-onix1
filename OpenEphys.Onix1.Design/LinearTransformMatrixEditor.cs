@@ -27,18 +27,18 @@ namespace OpenEphys.Onix1.Design
         /// <inheritdoc/>
         public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
         {
-            var editorService = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
             var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
+            if (!editorState.WorkflowRunning)
+            {
+                throw new InvalidOperationException("Workflow must be running to open this GUI.");
+            }
+            var editorService = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
             if (context != null && editorService != null)
             {
                 var source = GetDataSource(context, provider);
                 var dataFrames = source.Output.Merge().Select(x => x as TS4231V1PositionDataFrame);
                 using var visualizerDialog = new LinearTransformMatrixDialog(dataFrames, new LinearTransform3D((LinearTransform3D)value));
-                if (!editorState.WorkflowRunning)
-                {
-                    throw new InvalidOperationException("Workflow must be running to open this GUI.");
-                }
-                else if (editorService.ShowDialog(visualizerDialog) == DialogResult.OK)
+                if (editorService.ShowDialog(visualizerDialog) == DialogResult.OK)
                 {
                     return visualizerDialog.LinearTransform;
                 }

@@ -26,7 +26,7 @@ namespace OpenEphys.Onix1.Design
 
             richTextBoxInstructions.Clear();
             richTextBoxInstructions.BulletIndent = 16;
-            richTextBoxInstructions.SelectedText = "Follow the instructions below to transfom TS4231 position data from a generic base-station reference frame to a user-define reference frame:\n\n";
+            richTextBoxInstructions.SelectedText = "Follow the instructions below to transform TS4231 position data from a generic base-station reference frame to a user-defined reference frame:\n\n";
             richTextBoxInstructions.SelectionBullet = true;
             richTextBoxInstructions.SelectedText = "Determine a set of 4, well separated XYZ positions in the space in which the headstage will move. These positions should explore a large region of the territory that the headstage will explore and not be confined to a particular plane. Each position defined in this step corresponds to a row in the table below.\n";
             richTextBoxInstructions.SelectedText = "For the first position, place the headstage and click the first measure button on the GUI. After the TS4231 coordinate is obtained from the headstage, enter the known User coordinates in the X, Y, and Z text boxes to provide your spatial mapping. Repeat this process for the second, third, and fourth positions to populate the second, third, and fourth rows of the table.\n";
