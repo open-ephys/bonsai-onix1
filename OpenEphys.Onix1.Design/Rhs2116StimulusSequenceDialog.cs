@@ -166,6 +166,7 @@ namespace OpenEphys.Onix1.Design
             fileToolStripMenuItem.DropDownItems.Add(new ToolStripSeparator());
             ChannelDialog.dropDownImportFile.Text = "Import Probe Configuration";
             fileToolStripMenuItem.DropDownItems.Add(ChannelDialog.dropDownImportFile);
+            ChannelDialog.HideFileMenu();
 
             StimulusSequenceOptions.Show();
 
