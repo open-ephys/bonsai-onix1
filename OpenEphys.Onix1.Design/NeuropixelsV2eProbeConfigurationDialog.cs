@@ -76,6 +76,7 @@ namespace OpenEphys.Onix1.Design
 
             ChannelConfiguration.OnZoom += UpdateTrackBarLocation;
             ChannelConfiguration.OnFileLoad += OnFileLoadEvent;
+            ChannelConfiguration.OnFileImport += (sender, e) => CheckForExistingChannelPreset();
             ChannelConfiguration.OnProbeConfigurationChanged += (sender, e) =>
             {
                 ProbeConfigurationChanged();

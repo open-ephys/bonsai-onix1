@@ -1,10 +1,10 @@
-﻿using Bonsai.IO;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using Bonsai.IO;
 using OpenEphys.ProbeInterface.NET;
 using ZedGraph;
 
@@ -24,6 +24,8 @@ namespace OpenEphys.Onix1.Design
         internal event EventHandler OnProbeConfigurationChanged;
         internal event EventHandler OnMoveProbeGroup;
         internal event EventHandler OnStateChange;
+        internal event EventHandler OnFileLoad;
+        internal event EventHandler OnFileImport;
 
         bool hasChanges = false;
 
@@ -188,6 +190,7 @@ namespace OpenEphys.Onix1.Design
         {
             ProbeGroup = DefaultChannelLayout();
             RedrawProbeGroup();
+            OnFileLoadHandler();
         }
 
         /// <summary>
@@ -379,14 +382,36 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        internal virtual bool OpenNewFile(bool updateFileName = false)
+        static OpenFileDialog CreateOpenFileDialog(string fileName, string title)
         {
+            var directory = Path.GetDirectoryName(fileName);
+            if (string.IsNullOrEmpty(directory)) directory = ".";
+
             using OpenFileDialog ofd = new();
 
             ofd.Filter = ProbeInterfaceHelper.ProbeInterfaceFileNameFilter;
             ofd.FilterIndex = 1;
             ofd.Multiselect = false;
-            ofd.Title = $"{ProbeName}: Open File";
+            ofd.Title = title;
+            ofd.InitialDirectory = directory;
+
+            return ofd;
+        }
+
+        void OnFileLoadHandler()
+        {
+            OnFileLoad?.Invoke(this, EventArgs.Empty);
+        }
+
+        void OnFileImportHandler()
+        {
+            OnFileImport?.Invoke(this, EventArgs.Empty);
+        }
+
+        internal bool ImportFile()
+        {
+            var fileName = GetFileName();
+            var ofd = CreateOpenFileDialog(fileName, $"{ProbeName}: Open File");
 
             if (ofd.ShowDialog() == DialogResult.OK && File.Exists(ofd.FileName))
             {
@@ -394,14 +419,31 @@ namespace OpenEphys.Onix1.Design
 
                 if (result)
                 {
-                    if (updateFileName)
-                    {
-                        ProbeConfiguration.ProbeInterfaceFileName = ofd.FileName;
-                    }
+                    OnFileImportHandler();
+                }
+
+                return result;
+            }
+
+            return false;
+        }
+
+        internal bool OpenFile()
+        {
+            var fileName = GetFileName();
+            var ofd = CreateOpenFileDialog(fileName, $"{ProbeName}: Open File");
+
+            if (ofd.ShowDialog() == DialogResult.OK && File.Exists(ofd.FileName))
+            {
+                var result = TryUpdateProbeGroupFromFile(ofd.FileName);
+
+                if (result)
+                {
+                    ProbeConfiguration.ProbeInterfaceFileName = ofd.FileName;
+
+                    OnFileLoadHandler();
 
                     HasChanges = false;
-
-                    ProbeConfigurationChanged();
                 }
 
                 return result;
@@ -1053,10 +1095,9 @@ namespace OpenEphys.Onix1.Design
                 {
                     return;
                 }
-
             }
 
-            if (OpenNewFile())
+            if (ImportFile())
             {
                 RedrawProbeGroup();
                 HasChanges = true;
@@ -1100,7 +1141,7 @@ namespace OpenEphys.Onix1.Design
                 }
             }
 
-            if (OpenNewFile(updateFileName: true))
+            if (OpenFile())
             {
                 RedrawProbeGroup();
             }
@@ -1526,20 +1567,6 @@ namespace OpenEphys.Onix1.Design
 
         internal bool UpdateProbeConfiguration(IProbeInterfaceConfiguration configuration, Type probeGroupType)
         {
-            if (HasChanges && !string.IsNullOrEmpty(ProbeConfiguration.ProbeInterfaceFileName))
-            {
-                var result = MessageBox.Show(
-                    "Warning: Changing the probe configuration will overwrite the current configuration without saving. Do you want to continue?",
-                    "Changing Probe Configuration",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning);
-
-                if (result == DialogResult.No)
-                {
-                    return false;
-                }
-            }
-
             ProbeConfiguration = configuration;
             this.probeGroupType = probeGroupType;
             ProbeGroup = GetProbeGroup(configuration.ProbeInterfaceFileName);

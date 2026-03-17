@@ -13,7 +13,6 @@ namespace OpenEphys.Onix1.Design
     public partial class NeuropixelsV1ChannelConfigurationDialog : ScaledChannelConfigurationDialog
     {
         internal event EventHandler OnZoom;
-        internal event EventHandler OnFileLoad;
 
         readonly IReadOnlyList<int> ReferenceContactsList = new List<int> { 191, 575, 959 };
 
@@ -39,29 +38,6 @@ namespace OpenEphys.Onix1.Design
         internal override ProbeGroup DefaultChannelLayout()
         {
             return new NeuropixelsV1eProbeGroup();
-        }
-
-        internal override void LoadDefaultChannelLayout()
-        {
-            base.LoadDefaultChannelLayout();
-            OnFileOpenHandler();
-        }
-
-        internal override bool OpenNewFile(bool updateFileName = false)
-        {
-            if (base.OpenNewFile(updateFileName))
-            {
-                OnFileOpenHandler();
-
-                return true;
-            }
-
-            return false;
-        }
-
-        private void OnFileOpenHandler()
-        {
-            OnFileLoad?.Invoke(this, EventArgs.Empty);
         }
 
         internal override void ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState)
