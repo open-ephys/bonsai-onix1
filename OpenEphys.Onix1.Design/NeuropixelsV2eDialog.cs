@@ -166,9 +166,16 @@ namespace OpenEphys.Onix1.Design
         {
             foreach (var probeConfigurationDialog in ProbeConfigurationDialogs)
             {
-                if (propertyGrid.SelectedGridItem.Value as NeuropixelsV2ProbeConfiguration == probeConfigurationDialog.Value.ProbeConfiguration && probeConfigurationDialog.Value.ProcessMenuShortcut(keyData))
+                var gridItem = propertyGrid.SelectedGridItem;
+
+                while (gridItem != null)
                 {
-                    return true;
+                    if (gridItem.Value as NeuropixelsV2ProbeConfiguration == probeConfigurationDialog.Value.ProbeConfiguration && probeConfigurationDialog.Value.ProcessMenuShortcut(keyData))
+                    {
+                        return true;
+                    }
+
+                    gridItem = gridItem.Parent;
                 }
             }
 
