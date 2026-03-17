@@ -155,8 +155,8 @@ namespace OpenEphys.Onix1
             var position = 0.5 * (p1 + q1);
 
             return new TS4231V1PositionDataFrame(
-                queues.PulseHubClock.ElementAt(ValidPulseSequenceTemplate.Length / 8),
                 queues.PulseFrameClock.ElementAt(ValidPulseSequenceTemplate.Length / 8),
+                queues.PulseHubClock.ElementAt(ValidPulseSequenceTemplate.Length / 8),
                 payload->SensorIndex,
                 new Vector3((float)position[0].Val0, (float)position[1].Val0, (float)position[2].Val0));
         }
