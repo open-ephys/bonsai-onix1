@@ -148,16 +148,18 @@ namespace OpenEphys.Onix1
 
             return source.ConfigureAndLatchDevice(context =>
             {
-                if (string.IsNullOrEmpty(probeConfiguration.ProbeInterfaceFileName))
-                    throw new ArgumentException($"ProbeInterface file name must be specified in {nameof(ConfigureNeuropixelsV1f)}.{nameof(ProbeConfiguration)}.");
-
-                var probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfiguration.ProbeInterfaceFileName, typeof(NeuropixelsV1eProbeGroup)) as NeuropixelsV1eProbeGroup;
+                NeuropixelsV1eProbeGroup probeGroup = null;
 
                 var device = context.GetDeviceContext(deviceAddress, typeof(NeuropixelsV1f));
                 device.WriteRegister(NeuropixelsV1f.ENABLE, enable ? 1u : 0);
 
                 if (enable)
                 {
+                    if (string.IsNullOrEmpty(probeConfiguration.ProbeInterfaceFileName))
+                        throw new ArgumentException($"ProbeInterface file name must be specified in {nameof(ConfigureNeuropixelsV1f)}.{nameof(ProbeConfiguration)}.");
+
+                    probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfiguration.ProbeInterfaceFileName, typeof(NeuropixelsV1eProbeGroup)) as NeuropixelsV1eProbeGroup;
+
                     var probeControl = new NeuropixelsV1fRegisterContext(device, probeConfiguration, probeGroup);
                     probeControl.InitializeProbe();
                     probeControl.WriteShiftRegisters();

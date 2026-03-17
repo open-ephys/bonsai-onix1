@@ -70,6 +70,10 @@ namespace OpenEphys.Onix1
                 {
                     var sampleIndex = 0;
                     var info = (NeuropixelsV1fDeviceInfo)deviceInfo;
+                    if (info.ProbeGroup == null)
+                    {
+                        throw new NullReferenceException($"No ProbeGroup found for {nameof(NeuropixelsV1f)}.");
+                    }
                     var device = info.GetDeviceContext(typeof(NeuropixelsV1f));
                     var spikeBuffer = new ushort[NeuropixelsV1.ChannelCount, spikeBufferSize];
                     var lfpBuffer = new ushort[NeuropixelsV1.ChannelCount, lfpBufferSize];
