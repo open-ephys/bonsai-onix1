@@ -113,9 +113,9 @@
             probeCalibrationFile.Location = new System.Drawing.Point(15, 11);
             probeCalibrationFile.MaximumSize = new System.Drawing.Size(177, 36);
             probeCalibrationFile.Name = "probeCalibrationFile";
-            probeCalibrationFile.Size = new System.Drawing.Size(139, 16);
+            probeCalibrationFile.Size = new System.Drawing.Size(130, 16);
             probeCalibrationFile.TabIndex = 0;
-            probeCalibrationFile.Text = "Probe Calibration File:";
+            probeCalibrationFile.Text = "Gain Calibration File:";
             // 
             // Reference
             // 
@@ -288,7 +288,7 @@
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             this.tableLayoutPanel2.RowCount = 1;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 660F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 680F));
             this.tableLayoutPanel2.Size = new System.Drawing.Size(827, 680);
             this.tableLayoutPanel2.TabIndex = 3;
             // 
@@ -480,6 +480,7 @@
             this.statusStrip1.Location = new System.Drawing.Point(0, 732);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 13, 0);
+            this.statusStrip1.ShowItemToolTips = true;
             this.statusStrip1.Size = new System.Drawing.Size(1234, 29);
             this.statusStrip1.TabIndex = 3;
             this.statusStrip1.Text = "statusStrip1";
