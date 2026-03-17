@@ -60,7 +60,7 @@ namespace OpenEphys.Onix1
     static class TS4231V1
     {
         public const int ID = 25;
-        public const uint MinimumVersion = 2;
+        public const uint MinimumVersion = 1;
 
         // managed registers
         public const uint ENABLE = 0x0; // Enable or disable the data output stream
