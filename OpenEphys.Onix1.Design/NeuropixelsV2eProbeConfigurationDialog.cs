@@ -124,37 +124,11 @@ namespace OpenEphys.Onix1.Design
                 nameof(configuration.Reference),
                 false,
                 DataSourceUpdateMode.OnPropertyChanged);
-            comboBoxReference.SelectedIndexChanged += (sender, e) =>
-            {
-                // NB: Needed to capture mouse scroll wheel updates
-                var control = sender as Control;
-
-                foreach (Binding binding in control.DataBindings)
-                {
-                    binding.WriteValue();
-                }
-
-                bindingSource.ResetCurrentItem();
-                PropertyValueChanged();
-            };
+            comboBoxReference.SelectedIndexChanged += SelectedReferenceChanged;
 
             comboBoxChannelPresets.DataSource = ProbeInfo.GetComboBoxChannelPresets();
             CheckForExistingChannelPreset();
-            comboBoxChannelPresets.SelectedIndexChanged += (sender, e) =>
-            {
-                try
-                {
-                    Enum channelPreset = ((ComboBox)sender).SelectedItem as Enum ?? throw new InvalidEnumArgumentException("Invalid argument given for the channel preset.");
-                    ProbeGroup.SelectElectrodes(ProbeInfo.GetChannelPreset(channelPreset));
-                }
-                catch (InvalidEnumArgumentException ex)
-                {
-                    MessageBox.Show(ex.Message, "Invalid Preset Chosen");
-                    return;
-                }
-
-                UpdateProbeGroup();
-            };
+            comboBoxChannelPresets.SelectedIndexChanged += SelectedChannelPresetChanged;
 
             checkBoxInvertPolarity.DataBindings.Add("Checked",
                 bindingSource,
@@ -248,6 +222,11 @@ namespace OpenEphys.Onix1.Design
             CheckForExistingChannelPreset();
             comboBoxChannelPresets.SelectedIndexChanged += SelectedChannelPresetChanged;
 
+            comboBoxReference.SelectedIndexChanged -= SelectedReferenceChanged;
+            comboBoxReference.DataSource = ProbeInfo.GetReferenceEnumValues();
+            comboBoxReference.SelectedItem = ProbeConfiguration.Reference;
+            comboBoxReference.SelectedIndexChanged += SelectedReferenceChanged;
+
             bindingSource.DataSource = ProbeConfiguration;
             propertyGrid.SelectedObject = ProbeConfiguration;
 
@@ -273,14 +252,32 @@ namespace OpenEphys.Onix1.Design
 
         private void SelectedReferenceChanged(object sender, EventArgs e)
         {
-            ProbeConfiguration.Reference = (Enum)((ComboBox)sender).SelectedItem;
+            var comboBox = sender as ComboBox;
+            ProbeConfiguration.Reference = (Enum)comboBox.SelectedItem;
+
+            foreach (Binding binding in comboBox.DataBindings)
+            {
+                binding.WriteValue();
+            }
+
+            bindingSource.ResetCurrentItem();
+            PropertyValueChanged();
         }
 
-        private void SelectedChannelPresetChanged(object sender, EventArgs e)
+        void SelectedChannelPresetChanged(object sender, EventArgs e)
         {
-            Enum channelPreset = ((ComboBox)sender).SelectedItem as Enum ?? throw new InvalidEnumArgumentException("Invalid argument given for the channel preset.");
+            try
+            {
+                Enum channelPreset = ((ComboBox)sender).SelectedItem as Enum ?? throw new InvalidEnumArgumentException("Invalid argument given for the channel preset.");
+                SetChannelPreset(channelPreset);
+            }
+            catch (InvalidEnumArgumentException ex)
+            {
+                MessageBox.Show(ex.Message, "Invalid Preset Chosen");
+                return;
+            }
 
-            SetChannelPreset(channelPreset);
+            UpdateProbeGroup();
         }
 
         void SetChannelPreset(Enum channelPreset)
