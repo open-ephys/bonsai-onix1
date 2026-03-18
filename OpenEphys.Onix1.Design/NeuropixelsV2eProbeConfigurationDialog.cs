@@ -206,6 +206,8 @@ namespace OpenEphys.Onix1.Design
 
         void UpdateProbeConfiguration()
         {
+            SuspendLayout();
+
             var probeType = (ProbeType)comboBoxProbeType.SelectedItem;
 
             if (!ChannelConfiguration.UpdateProbeConfiguration(probeConfigurations[probeType], GetProbeGroupType(probeType)))
@@ -235,6 +237,9 @@ namespace OpenEphys.Onix1.Design
 
             ProbeConfigurationChanged();
             CheckStatus();
+
+            ResumeLayout();
+            Refresh();
         }
 
         internal Color PanelBorderColor { get; set; } = Color.Black;

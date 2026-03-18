@@ -219,6 +219,7 @@ namespace OpenEphys.Onix1.Design
             //     Otherwise, remove the probe configuration dialogs to show the default text box.
             if (e.NewSelection != null)
             {
+                SuspendLayout();
                 if (e.NewSelection.Value is NeuropixelsV2ProbeConfiguration probeConfiguration)
                 {
                     ShowProbeConfigurationDialog(probeConfiguration);
@@ -237,6 +238,7 @@ namespace OpenEphys.Onix1.Design
                         }
                     }
                 }
+                ResumeLayout();
             }
         }
 
