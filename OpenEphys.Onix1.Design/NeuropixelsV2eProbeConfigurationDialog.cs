@@ -170,8 +170,30 @@ namespace OpenEphys.Onix1.Design
             OnPropertyValueChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        private void ProbeTypeChanged(object sender, EventArgs e)
+        void RevertProbeType()
         {
+            comboBoxProbeType.SelectedIndexChanged -= ProbeTypeChanged;
+            comboBoxProbeType.SelectedItem = GetCurrentProbeType(ProbeConfiguration);
+            comboBoxProbeType.SelectedIndexChanged += ProbeTypeChanged;
+        }
+
+        void ProbeTypeChanged(object sender, EventArgs e)
+        {
+            if (HasChanges)
+            {
+                var result = MessageBox.Show(
+                    $"Warning: Changing the probe type will discard the unsaved {ChannelConfiguration.ProbeName} configuration. Do you want to continue?",
+                    "Import File",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+
+                if (result == DialogResult.No)
+                {
+                    RevertProbeType();
+                    return;
+                }
+            }
+
             UpdateProbeConfiguration();
         }
 
@@ -213,9 +235,7 @@ namespace OpenEphys.Onix1.Design
             if (!ChannelConfiguration.UpdateProbeConfiguration(probeConfigurations[probeType], GetProbeGroupType(probeType)))
             {
                 // NB: If the update fails, revert to the previous probe type selection to avoid inconsistencies in the GUI
-                comboBoxProbeType.SelectedIndexChanged -= ProbeTypeChanged;
-                comboBoxProbeType.SelectedItem = GetCurrentProbeType(ProbeConfiguration);
-                comboBoxProbeType.SelectedIndexChanged += ProbeTypeChanged;
+                RevertProbeType();
                 return;
             }
 

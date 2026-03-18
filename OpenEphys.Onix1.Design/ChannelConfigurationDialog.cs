@@ -61,7 +61,7 @@ namespace OpenEphys.Onix1.Design
 
         internal readonly List<int> ReferenceContacts = new();
 
-        string ProbeName { get; }
+        internal string ProbeName { get; }
 
         internal bool[] SelectedContacts { get; private set; } = null;
 
