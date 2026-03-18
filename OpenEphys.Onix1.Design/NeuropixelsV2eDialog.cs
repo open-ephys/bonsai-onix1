@@ -74,6 +74,13 @@ namespace OpenEphys.Onix1.Design
             }
 
             ConfigureNeuropixelsV2 = configureNode;
+            propertyGrid.PropertyValueChanged += (sender, e) =>
+            {
+                foreach (var dialog in ProbeConfigurationDialogs.Values)
+                {
+                    dialog.CheckStatus();
+                }
+            };
 
             bool isBeta = false;
 

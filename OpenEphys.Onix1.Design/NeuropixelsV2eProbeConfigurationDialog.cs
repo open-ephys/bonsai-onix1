@@ -98,6 +98,7 @@ namespace OpenEphys.Onix1.Design
             ChannelConfiguration.BringToFront();
 
             propertyGrid.SelectedObject = configuration;
+            propertyGrid.PropertyValueChanged += (sender, e) => CheckStatus();
             bindingSource.DataSource = configuration;
 
             comboBoxProbeType.DataSource = Enum.GetValues(typeof(ProbeType));
@@ -302,7 +303,7 @@ namespace OpenEphys.Onix1.Design
             UpdateProbeConfiguration();
         }
 
-        private void CheckStatus()
+        internal void CheckStatus()
         {
             const string NoFileSelected = "No file selected.";
             const string InvalidFile = "Invalid file.";
