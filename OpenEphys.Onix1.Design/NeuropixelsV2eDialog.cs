@@ -138,6 +138,8 @@ namespace OpenEphys.Onix1.Design
                 probeConfigurationDialog.Value.OnPropertyValueChanged += (sender, args) => propertyGrid.Refresh();
 
                 probeConfigurationDialog.Value.HidePropertiesTab();
+
+                probeConfigurationDialog.Value.PanelBorderColor = propertyGrid.ViewBorderColor;
             }
         }
 

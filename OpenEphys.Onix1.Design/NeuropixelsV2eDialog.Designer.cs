@@ -28,8 +28,8 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.label1 = new System.Windows.Forms.Label();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(NeuropixelsV2eDialog));
+            this.label1 = new System.Windows.Forms.Label();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonOkay = new System.Windows.Forms.Button();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
@@ -45,6 +45,16 @@
             this.panelConfigurationDialogs.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // label1
+            // 
+            this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label1.Location = new System.Drawing.Point(0, 0);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(910, 656);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "Select a probe configuration property to view the currently enabled electrodes.";
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // buttonCancel
             // 
@@ -98,7 +108,7 @@
             // splitContainer.Panel2
             // 
             this.splitContainer.Panel2.Controls.Add(this.panelConfigurationDialogs);
-            this.splitContainer.Size = new System.Drawing.Size(1133, 632);
+            this.splitContainer.Size = new System.Drawing.Size(1133, 656);
             this.splitContainer.SplitterDistance = 219;
             this.splitContainer.TabIndex = 3;
             // 
@@ -107,7 +117,7 @@
             this.propertyGrid.Dock = System.Windows.Forms.DockStyle.Fill;
             this.propertyGrid.Location = new System.Drawing.Point(0, 0);
             this.propertyGrid.Name = "propertyGrid";
-            this.propertyGrid.Size = new System.Drawing.Size(219, 632);
+            this.propertyGrid.Size = new System.Drawing.Size(219, 656);
             this.propertyGrid.TabIndex = 0;
             this.propertyGrid.SelectedGridItemChanged += new System.Windows.Forms.SelectedGridItemChangedEventHandler(this.PropertyGridChanged);
             // 
@@ -118,7 +128,7 @@
             this.panelConfigurationDialogs.Location = new System.Drawing.Point(0, 0);
             this.panelConfigurationDialogs.Margin = new System.Windows.Forms.Padding(0);
             this.panelConfigurationDialogs.Name = "panelConfigurationDialogs";
-            this.panelConfigurationDialogs.Size = new System.Drawing.Size(910, 632);
+            this.panelConfigurationDialogs.Size = new System.Drawing.Size(910, 656);
             this.panelConfigurationDialogs.TabIndex = 0;
             // 
             // flowLayoutPanel1
@@ -132,16 +142,6 @@
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(1131, 41);
             this.flowLayoutPanel1.TabIndex = 2;
-            // 
-            // label1
-            // 
-            this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label1.Location = new System.Drawing.Point(0, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(910, 632);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "Select a probe configuration property to view the currently enabled electrodes.";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // NeuropixelsV2eDialog
             // 

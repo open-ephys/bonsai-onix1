@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -236,12 +237,22 @@ namespace OpenEphys.Onix1.Design
             CheckStatus();
         }
 
+        internal Color PanelBorderColor { get; set; } = Color.Black;
+
         private void FormShown(object sender, EventArgs e)
         {
             if (!TopLevel)
             {
                 tableLayoutPanel1.Controls.Remove(flowLayoutPanel1);
                 tableLayoutPanel1.RowCount = 1;
+
+                ChannelConfiguration.panel.BorderStyle = BorderStyle.None;
+                ChannelConfiguration.panel.Paint += (sender, e) =>
+                {
+                    var panel = sender as Panel;
+                    var graphics = e.Graphics;
+                    ControlPaint.DrawBorder(graphics, panel.ClientRectangle, PanelBorderColor, ButtonBorderStyle.Solid);
+                };
             }
 
             splitContainer1.SplitterDistance = splitContainer1.Size.Width - splitContainer1.Panel2MinSize;

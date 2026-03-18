@@ -32,6 +32,8 @@ namespace OpenEphys.Onix1.Design
             ZoomInBoundaryX = 2;
             ZoomInBoundaryY = 2;
 
+            panel.BorderStyle = BorderStyle.None;
+
             DrawProbeGroup();
             RefreshZedGraph();
         }
