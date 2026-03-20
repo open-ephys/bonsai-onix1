@@ -11,7 +11,7 @@ namespace OpenEphys.Onix1
     /// This is a low-level device that is only useful within the context of an appropriate <see
     /// cref="MultiDeviceFactory"/>, e.g. <see cref="ConfigureHeadstageNeuropixelsV2Rhd2000e"/>.
     /// </remarks>
-    [Description("Configures a secondary NeuropixelsV2 device.")]
+    [Description("Configures a parallel serial bus decoder for an embedded Rhd2000 data stream.")]
     public class ConfigureRhd2000PsbDecoder : SingleDeviceFactory
     {
         internal ushort StreamIndex { private get; set; } = 0;
@@ -32,22 +32,24 @@ namespace OpenEphys.Onix1
         /// Gets or sets the per-channel ADC sampling rate.
         /// </summary>
         /// <remarks>
-        /// The amplifiers on the RHD2164 chip, past the analog filter, introduce a DC offset that varies with each channel.
-        /// The <see cref="Rhd2000DspCutoff"/> exists to remove this DC offset and ensure that all signals are centered at zero.
-        /// With it disabled, all the signals will appear centered at different values.
+        /// The amplifiers on the RHD2164 chip, past the analog filter, introduce a DC offset that varies with
+        /// each channel. The <see cref="Rhd2000DspCutoff"/> exists to remove this DC offset and ensure that
+        /// all signals are centered at zero. With it disabled, all the signals will appear centered at
+        /// different values.
         /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Specifies the per-channel ADC sampling rate.")]
         public Rhd2000PsbDecoderSampleRate SamplesPerSecond { get; set; } = Rhd2000PsbDecoderSampleRate.ThirtyKiloHertz;
 
-
         /// <summary>
-        /// Gets or sets the cutoff frequency for the digital (post-ADC) high-pass filter used for amplifier offset removal.
+        /// Gets or sets the cutoff frequency for the digital (post-ADC) high-pass filter used for amplifier
+        /// offset removal.
         /// </summary>
         /// <remarks>
-        /// The amplifiers on the RHD2164 chip, past the analog filter, introduce a DC offset that varies with each channel.
-        /// The <see cref="Rhd2000DspCutoff"/> exists to remove this DC offset and ensure that all signals are centered at zero.
-        /// With it disabled, all the signals will appear centered at different values.
+        /// The amplifiers on the RHD2164 chip, past the analog filter, introduce a DC offset that varies with
+        /// each channel. The <see cref="Rhd2000DspCutoff"/> exists to remove this DC offset and ensure that
+        /// all signals are centered at zero. With it disabled, all the signals will appear centered at
+        /// different values.
         /// </remarks>
         [Category(ConfigurationCategory)]
         [Description("Specifies the cutoff frequency for the digital (post-ADC) high-pass filter used for amplifier offset removal.")]
@@ -71,24 +73,25 @@ namespace OpenEphys.Onix1
         /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>
-        /// If set to true, <see cref="NeuropixelsV2eData"/> will produce data. If set to false,
-        /// <see cref="NeuropixelsV2eData"/> will not produce data.
+        /// If set to true, <see cref="Rhd2000eData"/> will produce data. If set to false,
+        /// <see cref="Rhd2000eData"/> will not produce data.
         /// </remarks>
         [Category(ConfigurationCategory)]
-        [Description("Specifies whether the NeuropixelsV2 device is enabled.")]
+        [Description("Specifies whether the Rhd2000 device is enabled.")]
         public bool Enable { get; set; } = true;
 
         /// <summary>
-        /// Configures a NeuropixelsV2e device.
+        /// Configures a Rhd2000 electrophysiology chip.
         /// </summary>
         /// <remarks>
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
         /// prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="ContextTask"/> that holds all configuration actions.</param>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> that holds all configuration
+        /// actions.</param>
         /// <returns>
-        /// The original sequence with the side effect of an additional configuration action to configure
-        /// a NeuropixelsV2e device.
+        /// The original sequence with the side effect of an additional configuration action to configure a
+        /// Rhd2000 device.
         /// </returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {

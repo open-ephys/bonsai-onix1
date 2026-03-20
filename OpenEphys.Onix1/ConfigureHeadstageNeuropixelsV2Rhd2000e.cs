@@ -59,7 +59,7 @@ namespace OpenEphys.Onix1
         [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
         [Description("Specifies the configuration for the Rhd2116 device.")]
-        public ConfigureRhd2000PsbDecoder Rhd2000 { get; set; } = new();
+        public ConfigureRhd2000PsbDecoderWithMax41400 Rhd2000 { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the Bno055 9-axis inertial measurement unit configuration.
