@@ -122,7 +122,6 @@ namespace OpenEphys.Onix1.Design
             if (string.IsNullOrEmpty(ProbeConfiguration.ProbeInterfaceFileName))
             {
                 ProbeGroup = DefaultChannelLayout();
-                HasChanges = true;
             }
             else
             {
@@ -435,25 +434,29 @@ namespace OpenEphys.Onix1.Design
             return false;
         }
 
-        internal bool OpenFile()
+        internal bool OpenFile(string fileName)
+        {
+            var result = TryUpdateProbeGroupFromFile(fileName);
+
+            if (result)
+            {
+                ProbeConfiguration.ProbeInterfaceFileName = fileName;
+                OnFileLoadHandler();
+
+                HasChanges = false;
+            }
+
+            return result;
+        }
+
+        internal bool OpenFileFromDialog()
         {
             var fileName = GetFileName();
             var ofd = CreateOpenFileDialog(fileName, $"{ProbeName}: Open File");
 
             if (ofd.ShowDialog() == DialogResult.OK && File.Exists(ofd.FileName))
             {
-                var result = TryUpdateProbeGroupFromFile(ofd.FileName);
-
-                if (result)
-                {
-                    ProbeConfiguration.ProbeInterfaceFileName = ofd.FileName;
-
-                    OnFileLoadHandler();
-
-                    HasChanges = false;
-                }
-
-                return result;
+                return OpenFile(ofd.FileName);
             }
 
             return false;
@@ -1149,7 +1152,7 @@ namespace OpenEphys.Onix1.Design
                 }
             }
 
-            if (OpenFile())
+            if (OpenFileFromDialog())
             {
                 RedrawProbeGroup();
             }

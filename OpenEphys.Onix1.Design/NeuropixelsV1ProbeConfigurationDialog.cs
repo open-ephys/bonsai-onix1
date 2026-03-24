@@ -77,6 +77,54 @@ namespace OpenEphys.Onix1.Design
 
             ChannelConfiguration.BringToFront();
             propertyGrid.SelectedObject = probeConfiguration;
+            propertyGrid.PropertyValueChanged += (sender, e) =>
+            {
+                if (e.ChangedItem.Label == nameof(NeuropixelsV1ProbeConfiguration.ProbeInterfaceFileName))
+                {
+                    static void RevertFileNameValue(PropertyGrid propertyGrid, PropertyValueChangedEventArgs e)
+                    {
+                        var gridItem = propertyGrid.SelectedGridItem;
+                        var parent = gridItem.Parent;
+                        var parentType = parent.Value.GetType();
+                        var propertyInfo = parentType.GetProperty(e.ChangedItem.PropertyDescriptor.Name);
+                        if (propertyInfo != null && propertyInfo.CanWrite)
+                        {
+                            propertyInfo.SetValue(parent.Value, e.OldValue);
+                            propertyGrid.Refresh();
+                        }
+                    }
+
+                    if (HasChanges && !string.IsNullOrEmpty(e.OldValue as string))
+                    {
+                        var result = MessageBox.Show(
+                            $"Warning: Changing the filename will discard the unsaved {ChannelConfiguration.ProbeName} configuration changes for \"{e.OldValue}\". Do you want to continue?",
+                            "Change File Name?",
+                            MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Warning);
+
+                        if (result == DialogResult.No)
+                        {
+                            RevertFileNameValue(sender as PropertyGrid, e);
+                            return;
+                        }
+                    }
+
+                    string fileName = e.ChangedItem.Value as string;
+                    if (File.Exists(fileName))
+                    {
+                        if (!ChannelConfiguration.OpenFile(fileName))
+                        {
+                            RevertFileNameValue(sender as PropertyGrid, e);
+                        }
+                    }
+                    else
+                    {
+                        HasChanges = true;
+                    }
+                }
+
+                CheckStatus();
+            };
             bindingSource.DataSource = probeConfiguration;
 
             // NB: Needed to capture mouse scroll wheel updates

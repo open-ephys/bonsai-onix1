@@ -22,7 +22,7 @@ namespace OpenEphys.Onix1.Design
         internal bool HasChanges
         {
             get => ChannelConfiguration.HasChanges;
-            private set => ChannelConfiguration.HasChanges = value;
+            set => ChannelConfiguration.HasChanges = value;
         }
 
         internal NeuropixelsV2ProbeConfiguration ProbeConfiguration
@@ -36,6 +36,8 @@ namespace OpenEphys.Onix1.Design
             get => ChannelConfiguration.ProbeGroup as NeuropixelsV2eProbeGroup;
             set => ChannelConfiguration.ProbeGroup = value;
         }
+
+        internal string ProbeName => ChannelConfiguration.ProbeName;
 
         INeuropixelsV2ProbeInfo ProbeInfo { get; set; }
 
@@ -471,6 +473,11 @@ namespace OpenEphys.Onix1.Design
         internal bool ProcessMenuShortcut(Keys keyData)
         {
             return ChannelConfiguration.Visible && ChannelConfiguration.ProcessMenuShortcut(keyData);
+        }
+
+        internal bool OpenProbeInterfaceFile(string fileName)
+        {
+            return ChannelConfiguration.OpenFile(fileName);
         }
 
         void DialogClosing(object sender, FormClosingEventArgs e)
