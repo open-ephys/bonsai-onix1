@@ -1121,6 +1121,7 @@ namespace OpenEphys.Onix1.Design
             }
 
             LoadDefaultChannelLayout();
+            OnFileImportHandler();
             HasChanges = true;
         }
 
