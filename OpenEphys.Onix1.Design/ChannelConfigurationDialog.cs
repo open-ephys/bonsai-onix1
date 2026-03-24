@@ -19,6 +19,13 @@ namespace OpenEphys.Onix1.Design
     {
         private protected Type probeGroupType;
 
+        enum SaveResult
+        {
+            Success,
+            Failure,
+            Cancelled
+        };
+
         internal event EventHandler OnResizeZedGraph;
         internal event EventHandler OnDrawProbeGroup;
         internal event EventHandler OnProbeConfigurationChanged;
@@ -367,18 +374,18 @@ namespace OpenEphys.Onix1.Design
             return false;
         }
 
-        internal static bool TrySaveFile(string fileName, ProbeGroup probeGroup)
+        static SaveResult TrySaveFile(string fileName, ProbeGroup probeGroup)
         {
             // NB: Catch all exceptions and show them as a MessageBox; uncaught exceptions will close the GUI without warning
             try
             {
                 JsonHelper.SerializeObject(probeGroup, fileName);
-                return true;
+                return SaveResult.Success;
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Error Saving ProbeInterface File");
-                return false;
+                return SaveResult.Failure;
             }
         }
 
@@ -1148,7 +1155,7 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        bool SaveFileAs()
+        SaveResult SaveFileAs()
         {
             var fileName = GetFileName();
 
@@ -1164,19 +1171,23 @@ namespace OpenEphys.Onix1.Design
             sfd.FileName = Path.GetFileName(fileName);
             sfd.InitialDirectory = directory;
 
-            if (sfd.ShowDialog() == DialogResult.OK)
+            var sfdResult = sfd.ShowDialog();
+
+            if (sfdResult == DialogResult.OK)
             {
-                if (TrySaveFile(sfd.FileName, ProbeGroup))
+                var result = TrySaveFile(sfd.FileName, ProbeGroup);
+
+                if (result == SaveResult.Success)
                 {
                     ProbeConfiguration.ProbeInterfaceFileName = sfd.FileName;
                     ProbeConfigurationChanged();
                     HasChanges = false;
-
-                    return true;
                 }
+
+                return result;
             }
 
-            return false;
+            return SaveResult.Cancelled;
         }
 
         void MenuItemSaveFileAs(object sender, EventArgs e)
@@ -1184,7 +1195,7 @@ namespace OpenEphys.Onix1.Design
             SaveFileAs();
         }
 
-        bool SaveFile()
+        SaveResult SaveFile()
         {
             var fileName = ProbeConfiguration.ProbeInterfaceFileName;
 
@@ -1198,7 +1209,7 @@ namespace OpenEphys.Onix1.Design
 
         void MenuItemSaveFile(object sender, EventArgs e)
         {
-            if (SaveFile())
+            if (SaveFile() == SaveResult.Success)
             {
                 HasChanges = false;
             }
@@ -1579,53 +1590,84 @@ namespace OpenEphys.Onix1.Design
 
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
-            if (DialogResult == DialogResult.Cancel || !HasChanges)
+            if (DialogResult == DialogResult.Cancel)
                 return;
 
-            var customMessageBox = new CustomMessageBox(
-                $"The ProbeInterface electrode configuration for {ProbeName} has unsaved changes; would you like to save the changes before closing?",
-                CustomMessageBox.CustomMessageBoxButtons.SaveSaveAsCancel,
-                $"Save {ProbeName} Configuration?");
-
-            var result = customMessageBox.ShowDialog();
-
-            if (result == DialogResult.Cancel)
+            if (HasChanges || string.IsNullOrEmpty(ProbeConfiguration.ProbeInterfaceFileName))
             {
-                e.Cancel = true;
-                return;
-            }
+                var customMessageBox = new CustomMessageBox(
+                    $"The ProbeInterface electrode configuration for {ProbeName} has unsaved changes; would you like to save the changes before closing?",
+                    CustomMessageBox.CustomMessageBoxButtons.SaveSaveAsCancel,
+                    $"Save {ProbeName} Configuration?");
 
-            if (customMessageBox.ClickedButton == CustomMessageBox.CustomMessageBoxButton.Button1) // NB: Save
-            {
-                while (!SaveFile())
+                var result = customMessageBox.ShowDialog();
+
+                if (result == DialogResult.Cancel)
                 {
-                    result = MessageBox.Show(
-                        $"Error: Failed to save {ProbeName} file. Do you want to try saving again?",
-                        $"Error Saving {ProbeName} File",
-                        MessageBoxButtons.YesNoCancel,
-                        MessageBoxIcon.Warning);
+                    e.Cancel = true;
+                    return;
+                }
 
-                    if (result == DialogResult.Cancel || result == DialogResult.No)
+                if (customMessageBox.ClickedButton == CustomMessageBox.CustomMessageBoxButton.Button1) // NB: Save
+                {
+                    while (true)
                     {
-                        e.Cancel = true;
-                        return;
+                        var saveResult = SaveFile();
+
+                        if (saveResult == SaveResult.Failure)
+                        {
+                            result = MessageBox.Show(
+                                $"Error: Failed to save {ProbeName} file. Do you want to try saving again?",
+                                $"Error Saving {ProbeName} File",
+                                MessageBoxButtons.YesNoCancel,
+                                MessageBoxIcon.Warning);
+
+                            if (result == DialogResult.Cancel || result == DialogResult.No)
+                            {
+                                e.Cancel = true;
+                                return;
+                            }
+                        }
+                        else if (saveResult == SaveResult.Cancelled)
+                        {
+                            e.Cancel = true;
+                            return;
+                        }
+                        else
+                        {
+                            return;
+                        }
                     }
                 }
-            }
-            else if (customMessageBox.ClickedButton == CustomMessageBox.CustomMessageBoxButton.Button2) // NB: Save As
-            {
-                while (!SaveFileAs())
+                else if (customMessageBox.ClickedButton == CustomMessageBox.CustomMessageBoxButton.Button2) // NB: Save As
                 {
-                    result = MessageBox.Show(
-                        $"Error: Failed to save {ProbeName} file. Do you want to try saving again?",
-                        $"Error Saving {ProbeName} File",
-                        MessageBoxButtons.YesNoCancel,
-                        MessageBoxIcon.Warning);
-
-                    if (result == DialogResult.Cancel || result == DialogResult.No)
+                    while (true)
                     {
-                        e.Cancel = true;
-                        return;
+                        var saveResult = SaveFileAs();
+
+                        if (saveResult == SaveResult.Failure)
+                        {
+                            result = MessageBox.Show(
+                            $"Error: Failed to save {ProbeName} file. Do you want to try saving again?",
+                            $"Error Saving {ProbeName} File",
+                            MessageBoxButtons.YesNoCancel,
+                            MessageBoxIcon.Warning);
+
+                            if (result == DialogResult.Cancel || result == DialogResult.No)
+                            {
+                                e.Cancel = true;
+                                return;
+                            }
+                        }
+                        else if (saveResult == SaveResult.Cancelled)
+                        {
+                            e.Cancel = true;
+                            return;
+                        }
+                        else
+                        {
+                            return;
+                        }
                     }
                 }
             }
