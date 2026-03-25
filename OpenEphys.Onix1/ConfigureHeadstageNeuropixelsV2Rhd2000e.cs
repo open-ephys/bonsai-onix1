@@ -58,7 +58,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
-        [Description("Specifies the configuration for the Rhd2116 device.")]
+        [Description("Specifies the configuration for the Rhd2000 device.")]
         public ConfigureRhd2000PsbDecoderWithMax41400 Rhd2000 { get; set; } = new();
 
         /// <summary>
@@ -121,6 +121,7 @@ namespace OpenEphys.Onix1
 
             Rhd2000.StreamIndex = 1;
             Rhd2000.EnableController = serializer => ConfigureHeadstageNeuropixelsV2Rhd2000eDS90UB9x.EnableRhd2000Controller(serializer);
+            Rhd2000.GetChipId = () => Serdes.Rhd2000Chip;
         }
 
         internal override IEnumerable<IDeviceConfiguration> GetDevices()
@@ -135,7 +136,10 @@ namespace OpenEphys.Onix1
 
     class ConfigureHeadstageNeuropixelsV2Rhd2000eDS90UB9x : ConfigureDS90UB9x
     {
-        // headstage-specific constants
+        readonly Version MinimumRevision = new(1, 0);
+        const int HeadstageIdRhd2216Variant = 11;
+        const int HeadstageIdRhd2132Variant = 12;
+
         const byte Gpo10NeuropixelVddaEnableMask = 1 << 3; // Used to turn on Probe VDDA supply
         const byte Gpo10NeuropixelResetMask = 1 << 7; // Used to issue full reset commands to probe
         const byte Gpo32NeuropixelI2cSelectionMask = 1 << 3; // Used to route I2C to probe
@@ -192,15 +196,41 @@ namespace OpenEphys.Onix1
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID4, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias4, alias);
 
-            var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
-            IntializeGpio(serializer);
-            EnableProbeSupply(serializer);
+            alias = HeadstageEeprom.I2CAddress << 1;
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID5, alias);
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias5, alias);
 
             // set I2C clock rate to ~400 kHz
             DS90UB9x.Set933I2CRate(device, 400e3);
 
-            // issue full reset to probe
+            // read and validate headstage EEPROM
+            var metadata = new HeadstageEeprom(device);
+            Rhd2000Chip = ValidateHeadstage(metadata);
+
+            // initialize headstage hardware
+            var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
+            IntializeGpio(serializer);
+            EnableProbeSupply(serializer);
             ResetProbe(serializer);
+        }
+
+        Rhd2000ChipId ValidateHeadstage(HeadstageEeprom metadata)
+        {
+            var chip = metadata.Id switch
+            {
+                HeadstageIdRhd2216Variant => Rhd2000ChipId.Rhd2216,
+                HeadstageIdRhd2132Variant => Rhd2000ChipId.Rhd2132,
+                _ => throw new InvalidOperationException($"Expected a Headstage-Neuropixels2.0/Rhd2000e but found " +
+                    $"'{metadata.Name}' (ID: {metadata.Id}).")
+            };
+
+            if (metadata.Revision < MinimumRevision)
+            {
+                throw new InvalidOperationException($"Headstage version {MinimumRevision} is required " +
+                    $"but version {metadata.Revision} was detected.");
+            }
+
+            return chip;
         }
 
         override private protected IDisposable ShutdownSerdes(DeviceContext device)
@@ -211,6 +241,8 @@ namespace OpenEphys.Onix1
                 IntializeGpio(serializer);
             });
         }
+
+        internal Rhd2000ChipId Rhd2000Chip { get; private set; } = Rhd2000ChipId.Rhd2132;
 
         internal static void SelectProbe(I2CRegisterContext serializer)
         {

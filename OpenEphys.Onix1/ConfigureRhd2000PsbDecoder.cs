@@ -16,7 +16,7 @@ namespace OpenEphys.Onix1
     {
         internal ushort StreamIndex { private get; set; } = 0;
 
-        const Rhd2000ChipId Chip  = Rhd2000ChipId.Rhd2216; // TODO: set headstage level via Hub ID in EEPROM
+        internal Func<Rhd2000ChipId> GetChipId { private get; set; } = () => Rhd2000ChipId.Rhd2216;
 
         internal Action<I2CRegisterContext> EnableController { private get; set; } = _ => { };
 
@@ -99,7 +99,7 @@ namespace OpenEphys.Onix1
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
             var streamIndex = StreamIndex;
-            var chip = Chip;
+            var chip = GetChipId();
             return source.ConfigureAndLatchDevice(context =>
             {
                 // configure device via the DS90UB9x deserializer device
