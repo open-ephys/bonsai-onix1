@@ -1,4 +1,5 @@
 ﻿using Apache.Arrow;
+using Apache.Arrow.Compression;
 using Apache.Arrow.Ipc;
 using System;
 using System.IO;
@@ -20,10 +21,19 @@ namespace OpenEphys.Onix1.FrameWriter
         /// </summary>
         /// <param name="filename">The name of the file on which the elements should be written.</param>
         /// <param name="schema">A <see cref="Schema"/> that defines the current file.</param>
-        public ArrowWriter(string filename, Schema schema)
+        /// <param name="compressData">Flag that specifies whether to compress the data using Zstd compression.</param>
+        public ArrowWriter(string filename, Schema schema, bool compressData)
         {
+            var options = compressData
+                ? new IpcOptions()
+                  {
+                      CompressionCodec = CompressionCodecType.Zstd,
+                      CompressionCodecFactory = new CompressionCodecFactory(),
+                      CompressionLevel = 1
+                  }
+                : null;
             stream = new FileStream(filename, FileMode.Create);
-            writer = new(stream, schema);
+            writer = new(stream, schema, false, options);
             writer.WriteStart();
         }
 

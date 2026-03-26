@@ -17,8 +17,11 @@ namespace OpenEphys.Onix1.FrameWriter
     /// to an Apache Arrow file using an <see cref="ArrowWriter"/>.
     /// </summary>
     [WorkflowElementCategory(ElementCategory.Sink)]
-    public class FrameWriter : FileSink
+    public class FrameWriter : FileSink, IFrameSink
     {
+        /// <inheritdoc/>
+        public bool CompressData { get; set; } = false;
+
         static readonly ConstructorInfo recordBatchConstructor = typeof(RecordBatch)
             .GetConstructor(
                 BindingFlags.Instance | BindingFlags.Public,
@@ -26,11 +29,14 @@ namespace OpenEphys.Onix1.FrameWriter
                 new Type[] { typeof(Schema), typeof(IArrowArray[]), typeof(int) },
                 null);
 
-        class BufferedDataFrameSink : FileSink<RecordBatch, ArrowWriter>
+        class BufferedDataFrameSink : FileSink<RecordBatch, ArrowWriter>, IFrameSink
         {
+            /// <inheritdoc/>
+            public bool CompressData { get; set; } = false;
+
             protected override ArrowWriter CreateWriter(string filename, RecordBatch batch)
             {
-                return new ArrowWriter(filename, batch.Schema);
+                return new ArrowWriter(filename, batch.Schema, CompressData);
             }
 
             protected override void Write(ArrowWriter writer, RecordBatch input)
@@ -51,7 +57,8 @@ namespace OpenEphys.Onix1.FrameWriter
                 FileName = this.FileName,
                 Suffix = this.Suffix,
                 Buffered = this.Buffered,
-                Overwrite = this.Overwrite
+                Overwrite = this.Overwrite,
+                CompressData = this.CompressData
             };
         }
 
@@ -85,8 +92,11 @@ namespace OpenEphys.Onix1.FrameWriter
             ), 1);
         }
 
-        class DataFrameSink : FileSink<DataFrame, ArrowBatchWriter<DataFrame>>
+        class DataFrameSink : FileSink<DataFrame, ArrowBatchWriter<DataFrame>>, IFrameSink
         {
+            /// <inheritdoc/>
+            public bool CompressData { get; set; } = false;
+
             readonly Schema schema;
             readonly Func<IList<DataFrame>, Schema, RecordBatch> createRecordBatch;
             readonly int bufferSize;
@@ -103,7 +113,7 @@ namespace OpenEphys.Onix1.FrameWriter
 
             protected override ArrowBatchWriter<DataFrame> CreateWriter(string filename, DataFrame frame)
             {
-                return new ArrowBatchWriter<DataFrame>(filename, schema, bufferSize, createRecordBatch);
+                return new ArrowBatchWriter<DataFrame>(filename, schema, bufferSize, CompressData, createRecordBatch);
             }
 
             protected override void Write(ArrowBatchWriter<DataFrame> writer, DataFrame input)
@@ -122,7 +132,8 @@ namespace OpenEphys.Onix1.FrameWriter
                 FileName = this.FileName,
                 Suffix = this.Suffix,
                 Buffered = this.Buffered,
-                Overwrite = this.Overwrite
+                Overwrite = this.Overwrite,
+                CompressData = this.CompressData
             };
         }
 

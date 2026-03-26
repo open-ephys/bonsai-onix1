@@ -11,7 +11,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Apache.Arrow" Version="22.1.0" />
     <PackageReference Include="Bonsai.Core" Version="2.9.0" />
     <PackageReference Include="Bonsai.System" Version="2.9.0" />
     <PackageReference Include="clroni" Version="6.2.0" />
@@ -21,6 +20,11 @@
     <PackageReference Include="OpenEphys.ProbeInterface.NET" Version="0.3.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\arrow-dotnet\src\Apache.Arrow.Compression\Apache.Arrow.Compression.csproj" />
+    <ProjectReference Include="..\..\arrow-dotnet\src\Apache.Arrow\Apache.Arrow.csproj" />
+  </ItemGroup>
+  
   <ItemGroup>
     <InternalsVisibleTo Include="OpenEphys.Onix1.Design" />
   </ItemGroup>

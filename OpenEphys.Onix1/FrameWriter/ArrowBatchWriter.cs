@@ -22,9 +22,10 @@ namespace OpenEphys.Onix1.FrameWriter
         /// <param name="filename">The path to the output file.</param>
         /// <param name="schema">The schema describing the structure of the data.</param>
         /// <param name="bufferSize">The maximum number of items to buffer before writing a batch.</param>
+        /// <param name="compressData">Indicates whether to compress the data.</param>
         /// <param name="createRecordBatch">A delegate to create a RecordBatch from a list of items and a schema.</param>
-        public ArrowBatchWriter(string filename, Schema schema, int bufferSize, Func<IList<T>, Schema, RecordBatch> createRecordBatch)
-            : base(filename, schema)
+        public ArrowBatchWriter(string filename, Schema schema, int bufferSize, bool compressData, Func<IList<T>, Schema, RecordBatch> createRecordBatch)
+            : base(filename, schema, compressData)
         {
             this.schema = schema;
             this.bufferSize = bufferSize;
