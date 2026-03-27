@@ -569,9 +569,6 @@ namespace OpenEphys.Onix1.Design
 
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
-            if (DialogResult == DialogResult.Cancel || (Adcs == null && string.IsNullOrEmpty(textBoxLfpCorrection.Text)))
-                return;
-
             ChannelConfiguration.Close();
 
             if (!ChannelConfiguration.IsDisposed)

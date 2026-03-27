@@ -97,9 +97,6 @@ namespace OpenEphys.Onix1.Design
 
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
-            if (DialogResult == DialogResult.Cancel)
-                return;
-
             DialogNeuropixelsV1A.Close();
 
             if (!DialogNeuropixelsV1A.IsDisposed)

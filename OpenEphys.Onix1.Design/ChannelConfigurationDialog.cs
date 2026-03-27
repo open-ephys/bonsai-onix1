@@ -1593,10 +1593,7 @@ namespace OpenEphys.Onix1.Design
 
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
-            if (DialogResult == DialogResult.Cancel)
-                return;
-
-            if (HasChanges || string.IsNullOrEmpty(ProbeConfiguration.ProbeInterfaceFileName))
+            if (HasChanges)
             {
                 var customMessageBox = new CustomMessageBox(
                     $"The ProbeInterface electrode configuration for {ProbeName} has unsaved changes; would you like to save the changes before closing?",

@@ -95,9 +95,6 @@ namespace OpenEphys.Onix1.Design
 
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
-            if (DialogResult == DialogResult.Cancel)
-                return;
-
             ProbeConfigurationDialog.Close();
 
             if (!ProbeConfigurationDialog.IsDisposed)
