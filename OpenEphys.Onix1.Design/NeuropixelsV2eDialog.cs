@@ -12,31 +12,13 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     public partial class NeuropixelsV2eDialog : Form
     {
+        readonly bool IsBeta = false;
+
         internal event EventHandler OnStateChange;
 
         internal readonly Dictionary<NeuropixelsV2Probe, NeuropixelsV2eProbeConfigurationDialog> ProbeConfigurationDialogs;
 
         internal bool HasChanges => ProbeConfigurationDialogs.Values.Any(dialog => dialog.HasChanges);
-
-        internal NeuropixelsV2ProbeConfiguration ProbeConfigurationA
-        {
-            get
-            {
-                return ProbeConfigurationDialogs.TryGetValue(NeuropixelsV2Probe.ProbeA, out var probeConfigurationDialog)
-                    ? probeConfigurationDialog.ProbeConfiguration
-                    : throw new NullReferenceException("Unable to find the probe configuration for Probe A.");
-            }
-        }
-
-        internal NeuropixelsV2ProbeConfiguration ProbeConfigurationB
-        {
-            get
-            {
-                return ProbeConfigurationDialogs.TryGetValue(NeuropixelsV2Probe.ProbeB, out var probeConfigurationDialog)
-                    ? probeConfigurationDialog.ProbeConfiguration
-                    : throw new NullReferenceException("Unable to find the probe configuration for Probe B.");
-            }
-        }
 
         IConfigureNeuropixelsV2 configureNeuropixelsV2;
 
@@ -92,10 +74,10 @@ namespace OpenEphys.Onix1.Design
                         }
                     }
 
-                    var probeConfigDialog = 
+                    var probeConfigDialog =
                         e.ChangedItem.Parent.Label == nameof(ConfigureNeuropixelsV2e.ProbeConfigurationA)
                         ? ProbeConfigurationDialogs[NeuropixelsV2Probe.ProbeA]
-                        : e.ChangedItem.Parent.Label == nameof(ConfigureNeuropixelsV2e.ProbeConfigurationB) 
+                        : e.ChangedItem.Parent.Label == nameof(ConfigureNeuropixelsV2e.ProbeConfigurationB)
                           ? ProbeConfigurationDialogs[NeuropixelsV2Probe.ProbeB]
                           : throw new NullReferenceException("Unable to find the probe configuration.");
 
@@ -134,58 +116,44 @@ namespace OpenEphys.Onix1.Design
                 }
             };
 
-            bool isBeta = false;
-
             if (configureNode is ConfigureNeuropixelsV2eBeta configureV2eBeta)
             {
                 Text = Text.Replace("NeuropixelsV2e ", "NeuropixelsV2eBeta ");
-                isBeta = true;
+                IsBeta = true;
             }
 
             ProbeConfigurationDialogs = new()
             {
-                { NeuropixelsV2Probe.ProbeA, new(configureNode.ProbeConfigurationA, isBeta, nameof(NeuropixelsV2Probe.ProbeA)) },
-                { NeuropixelsV2Probe.ProbeB, new(configureNode.ProbeConfigurationB, isBeta, nameof(NeuropixelsV2Probe.ProbeB)) }
+                { NeuropixelsV2Probe.ProbeA, new(configureNode.ProbeConfigurationA, IsBeta, nameof(NeuropixelsV2Probe.ProbeA)) },
+                { NeuropixelsV2Probe.ProbeB, new(configureNode.ProbeConfigurationB, IsBeta, nameof(NeuropixelsV2Probe.ProbeB)) }
             };
 
-            foreach (var probeConfigurationDialog in ProbeConfigurationDialogs)
-            {
-                string probeName = probeConfigurationDialog.Key.ToString();
+            InitializeProbeConfigurationDialogs(this, ProbeConfigurationDialogs, propertyGrid);
+        }
 
-                probeConfigurationDialog.Value.SetChildFormProperties(this);
+        static void InitializeProbeConfigurationDialogs(NeuropixelsV2eDialog dialog, Dictionary<NeuropixelsV2Probe, NeuropixelsV2eProbeConfigurationDialog> probeConfigDialogs, PropertyGrid propertyGrid)
+        {
+            foreach (var probeConfigurationDialog in probeConfigDialogs)
+            {
+                probeConfigurationDialog.Value.SetChildFormProperties(dialog);
                 probeConfigurationDialog.Value.OnStateChange += (sender, args) =>
                 {
-                    if (HasChanges)
+                    if (dialog.HasChanges)
                     {
-                        if (!Text.EndsWith("*"))
+                        if (!dialog.Text.EndsWith("*"))
                         {
-                            Text += '*';
+                            dialog.Text += '*';
                         }
                     }
                     else
                     {
-                        Text = Text.TrimEnd('*');
+                        dialog.Text = dialog.Text.TrimEnd('*');
                     }
 
-                    OnStateChange?.Invoke(this, EventArgs.Empty);
+                    dialog.OnStateChange?.Invoke(dialog, EventArgs.Empty);
                 };
 
-                probeConfigurationDialog.Value.OnProbeConfigurationChange += (sender, args) =>
-                {
-                    if (sender is NeuropixelsV2eProbeConfigurationDialog dialog)
-                    {
-                        if (probeConfigurationDialog.Key == NeuropixelsV2Probe.ProbeA)
-                        {
-                            configureNeuropixelsV2.ProbeConfigurationA = dialog.ProbeConfiguration;
-                        }
-                        else if (probeConfigurationDialog.Key == NeuropixelsV2Probe.ProbeB)
-                        {
-                            configureNeuropixelsV2.ProbeConfigurationB = dialog.ProbeConfiguration;
-                        }
-                    }
-
-                    propertyGrid.Refresh();
-                };
+                probeConfigurationDialog.Value.OnProbeConfigurationChange += dialog.ProbeConfigurationChanged;
 
                 probeConfigurationDialog.Value.OnPropertyValueChanged += (sender, args) => propertyGrid.Refresh();
 
@@ -193,6 +161,23 @@ namespace OpenEphys.Onix1.Design
 
                 probeConfigurationDialog.Value.PanelBorderColor = propertyGrid.ViewBorderColor;
             }
+        }
+
+        void ProbeConfigurationChanged(object sender, EventArgs e)
+        {
+            if (sender is NeuropixelsV2eProbeConfigurationDialog dialog)
+            {
+                if (dialog == ProbeConfigurationDialogs[NeuropixelsV2Probe.ProbeA])
+                {
+                    configureNeuropixelsV2.ProbeConfigurationA = dialog.ProbeConfiguration;
+                }
+                else if (dialog == ProbeConfigurationDialogs[NeuropixelsV2Probe.ProbeB])
+                {
+                    configureNeuropixelsV2.ProbeConfigurationB = dialog.ProbeConfiguration;
+                }
+            }
+
+            propertyGrid.Refresh();
         }
 
         private void FormShown(object sender, EventArgs e)
@@ -308,6 +293,33 @@ namespace OpenEphys.Onix1.Design
                 if (!dialog.IsDisposed)
                 {
                     cancel = true;
+
+                    // NB: Initialize any dialogs that were previously disposed of when the user cancels closing the dialog
+                    Queue<KeyValuePair<NeuropixelsV2Probe, NeuropixelsV2eProbeConfigurationDialog>> queue = new();
+
+                    foreach (var keyValuePair in ProbeConfigurationDialogs)
+                    {
+                        if (keyValuePair.Value.IsDisposed)
+                        {
+                            queue.Enqueue(keyValuePair);
+                        }
+                    }
+
+                    if (queue.Count > 0)
+                    {
+                        foreach (var keyValuePair in queue)
+                        {
+                            ProbeConfigurationDialogs[keyValuePair.Key] = new NeuropixelsV2eProbeConfigurationDialog(
+                                keyValuePair.Value.ProbeConfiguration,
+                                IsBeta,
+                                keyValuePair.Value.ProbeName);
+                        }
+
+                        InitializeProbeConfigurationDialogs(this, ProbeConfigurationDialogs, propertyGrid);
+
+                        PropertyGridChanged(sender, new(propertyGrid.SelectedGridItem, propertyGrid.SelectedGridItem));
+                    }
+
                     break;
                 }
             }

@@ -14,17 +14,17 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// Gets the <see cref="NeuropixelsV1Dialog"/> for ProbeA.
         /// </summary>
-        public readonly NeuropixelsV1Dialog DialogNeuropixelsV1A;
+        internal NeuropixelsV1Dialog DialogNeuropixelsV1A { get; private set; }
 
         /// <summary>
         /// Gets the <see cref="NeuropixelsV1Dialog"/> for ProbeB.
         /// </summary>
-        public readonly NeuropixelsV1Dialog DialogNeuropixelsV1B;
+        internal NeuropixelsV1Dialog DialogNeuropixelsV1B { get; private set; }
 
         /// <summary>
         /// Gets the <see cref="GenericDeviceDialog"/> for the Bno055.
         /// </summary>
-        public readonly GenericDeviceDialog DialogBno055;
+        internal GenericDeviceDialog DialogBno055 { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of a <see cref="NeuropixelsV1fHeadstageDialog"/>.
@@ -36,49 +36,39 @@ namespace OpenEphys.Onix1.Design
         {
             InitializeComponent();
 
-            DialogNeuropixelsV1A = new(configureNeuropixelsV1A, nameof(ConfigureHeadstageNeuropixelsV1f.NeuropixelsV1A), true)
-            {
-                Tag = configureNeuropixelsV1A.ProbeName
-            };
+            DialogNeuropixelsV1A = CreateNeuropixelsV1Dialog(this, configureNeuropixelsV1A, nameof(ConfigureHeadstageNeuropixelsV1f.NeuropixelsV1A), panelNeuropixelsV1A, tabPageNeuropixelsV1A);
 
-            DialogNeuropixelsV1A.SetChildFormProperties(this).AddDialogToPanel(panelNeuropixelsV1A);
-
-            DialogNeuropixelsV1A.OnStateChange += (sender, e) =>
-            {
-                if (DialogNeuropixelsV1A.HasChanges)
-                {
-                    tabPageNeuropixelsV1A.Text += '*';
-                }
-                else
-                {
-                    tabPageNeuropixelsV1A.Text = tabPageNeuropixelsV1A.Text.TrimEnd('*');
-                }
-            };
-
-            DialogNeuropixelsV1B = new(configureNeuropixelsV1B, nameof(ConfigureHeadstageNeuropixelsV1f.NeuropixelsV1B), true)
-            {
-                Tag = configureNeuropixelsV1B.ProbeName
-            };
-
-            DialogNeuropixelsV1B.SetChildFormProperties(this).AddDialogToPanel(panelNeuropixelsV1B);
-
-            DialogNeuropixelsV1B.OnStateChange += (sender, e) =>
-            {
-                if (DialogNeuropixelsV1B.HasChanges)
-                {
-                    tabPageNeuropixelsV1B.Text += '*';
-                }
-                else
-                {
-                    tabPageNeuropixelsV1B.Text = tabPageNeuropixelsV1B.Text.TrimEnd('*');
-                }
-            };
+            DialogNeuropixelsV1B = CreateNeuropixelsV1Dialog(this, configureNeuropixelsV1B, nameof(ConfigureHeadstageNeuropixelsV1f.NeuropixelsV1B), panelNeuropixelsV1B, tabPageNeuropixelsV1B);
 
             DialogBno055 = new(configureBno055, true);
 
             DialogBno055.SetChildFormProperties(this).AddDialogToPanel(panelBno055);
 
             FormClosing += DialogClosing;
+        }
+
+        static NeuropixelsV1Dialog CreateNeuropixelsV1Dialog(NeuropixelsV1fHeadstageDialog headstageDialog, ConfigureNeuropixelsV1f configureNeuropixelsV1, string probeName, Panel panel, TabPage tabPage)
+        {
+            var dialog = new NeuropixelsV1Dialog(configureNeuropixelsV1, probeName, true)
+            {
+                Tag = configureNeuropixelsV1.ProbeName
+            };
+
+            dialog.SetChildFormProperties(headstageDialog).AddDialogToPanel(panel);
+
+            dialog.OnStateChange += (sender, e) =>
+            {
+                if (dialog.HasChanges)
+                {
+                    tabPage.Text += '*';
+                }
+                else
+                {
+                    tabPage.Text = tabPage.Text.TrimEnd('*');
+                }
+            };
+
+            return dialog;
         }
 
         private void Okay_Click(object sender, System.EventArgs e)
@@ -123,6 +113,11 @@ namespace OpenEphys.Onix1.Design
             if (!DialogNeuropixelsV1B.IsDisposed)
             {
                 e.Cancel = true;
+
+                // NB: Initialize the previously disposed dialog when the user cancels closing the dialog
+                panelNeuropixelsV1A.Controls.Remove(DialogNeuropixelsV1A);
+                DialogNeuropixelsV1A = CreateNeuropixelsV1Dialog(this, DialogNeuropixelsV1A.ConfigureNode as ConfigureNeuropixelsV1f, nameof(ConfigureHeadstageNeuropixelsV1f.NeuropixelsV1A), panelNeuropixelsV1A, tabPageNeuropixelsV1A);
+
                 return;
             }
         }
