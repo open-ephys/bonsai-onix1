@@ -1600,7 +1600,7 @@ namespace OpenEphys.Onix1.Design
             {
                 var customMessageBox = new CustomMessageBox(
                     $"The ProbeInterface electrode configuration for {ProbeName} has unsaved changes; would you like to save the changes before closing?",
-                    CustomMessageBox.CustomMessageBoxButtons.SaveSaveAsCancel,
+                    CustomMessageBox.CustomMessageBoxButtons.SaveDiscardCancel,
                     $"Save {ProbeName} Configuration?");
 
                 var result = customMessageBox.ShowDialog();
@@ -1624,37 +1624,6 @@ namespace OpenEphys.Onix1.Design
                                 $"Error Saving {ProbeName} File",
                                 MessageBoxButtons.YesNoCancel,
                                 MessageBoxIcon.Warning);
-
-                            if (result == DialogResult.Cancel || result == DialogResult.No)
-                            {
-                                e.Cancel = true;
-                                return;
-                            }
-                        }
-                        else if (saveResult == SaveResult.Cancelled)
-                        {
-                            e.Cancel = true;
-                            return;
-                        }
-                        else
-                        {
-                            return;
-                        }
-                    }
-                }
-                else if (customMessageBox.ClickedButton == CustomMessageBox.CustomMessageBoxButton.Button2) // NB: Save As
-                {
-                    while (true)
-                    {
-                        var saveResult = SaveFileAs();
-
-                        if (saveResult == SaveResult.Failure)
-                        {
-                            result = MessageBox.Show(
-                            $"Error: Failed to save {ProbeName} file. Do you want to try saving again?",
-                            $"Error Saving {ProbeName} File",
-                            MessageBoxButtons.YesNoCancel,
-                            MessageBoxIcon.Warning);
 
                             if (result == DialogResult.Cancel || result == DialogResult.No)
                             {
