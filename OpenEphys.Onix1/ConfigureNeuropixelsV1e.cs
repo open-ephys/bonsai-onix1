@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.IO;
 using System.Reactive.Disposables;
 using System.Threading;
 using Bonsai;
@@ -145,10 +146,12 @@ namespace OpenEphys.Onix1
 
             return source.ConfigureAndLatchDevice(context =>
             {
-                if (string.IsNullOrEmpty(probeConfiguration.ProbeInterfaceFileName))
-                    throw new ArgumentException($"ProbeInterface file name must be specified in {nameof(ConfigureNeuropixelsV1e)}.{nameof(ProbeConfiguration)}.");
+                NeuropixelsV1eProbeGroup probeGroup = new();
 
-                var probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfiguration.ProbeInterfaceFileName, typeof(NeuropixelsV1eProbeGroup)) as NeuropixelsV1eProbeGroup;
+                if (File.Exists(probeConfiguration.ProbeInterfaceFileName))
+                {
+                    probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfiguration.ProbeInterfaceFileName, typeof(NeuropixelsV1eProbeGroup)) as NeuropixelsV1eProbeGroup;
+                }
 
                 // configure device via the DS90UB9x deserializer device
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));

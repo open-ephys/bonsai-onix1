@@ -99,7 +99,7 @@ namespace OpenEphys.Onix1
         {
             return false;
         }
-        
+
         /// <summary>
         /// Gets or sets the <see cref="ProbeConfigurationA"/> property.
         /// </summary>
@@ -189,8 +189,8 @@ namespace OpenEphys.Onix1
 
             return source.ConfigureAndLatchDevice(context =>
             {
-                NeuropixelsV2eProbeGroup probeGroupA = null;
-                NeuropixelsV2eProbeGroup probeGroupB = null;
+                NeuropixelsV2eProbeGroup probeGroupA = new NeuropixelsV2eQuadShankProbeGroup();
+                NeuropixelsV2eProbeGroup probeGroupB = new NeuropixelsV2eQuadShankProbeGroup();
 
                 // configure device via the DS90UB9x deserializer device
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
@@ -226,10 +226,10 @@ namespace OpenEphys.Onix1
 
                     var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(probeConfigurationA.GainCalibrationFileName);
 
-                    if (string.IsNullOrEmpty(probeConfigurationA.ProbeInterfaceFileName))
-                        throw new ArgumentException($"ProbeInterface file name must be specified in {nameof(ConfigureNeuropixelsV2e)}.{nameof(ProbeConfigurationA)}.");
-
-                    probeGroupA = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfigurationA.ProbeInterfaceFileName, probeConfigurationA.GetProbeGroupType()) as NeuropixelsV2eProbeGroup;
+                    if (File.Exists(probeConfigurationA.ProbeInterfaceFileName))
+                    {
+                        probeGroupA = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfigurationA.ProbeInterfaceFileName, probeConfigurationA.GetProbeGroupType()) as NeuropixelsV2eProbeGroup;
+                    }
 
                     if (!gainCorrection.HasValue)
                     {
@@ -259,10 +259,10 @@ namespace OpenEphys.Onix1
 
                     var gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(probeConfigurationB.GainCalibrationFileName);
 
-                    if (string.IsNullOrEmpty(probeConfigurationB.ProbeInterfaceFileName))
-                        throw new ArgumentException($"ProbeInterface file name must be specified in {nameof(ConfigureNeuropixelsV2e)}.{nameof(ProbeConfigurationB)}.");
-
-                    probeGroupB = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfigurationB.ProbeInterfaceFileName, probeConfigurationB.GetProbeGroupType()) as NeuropixelsV2eProbeGroup;
+                    if (File.Exists(probeConfigurationB.ProbeInterfaceFileName))
+                    {
+                        probeGroupB = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfigurationB.ProbeInterfaceFileName, probeConfigurationB.GetProbeGroupType()) as NeuropixelsV2eProbeGroup;
+                    }
 
                     if (!gainCorrection.HasValue)
                     {
