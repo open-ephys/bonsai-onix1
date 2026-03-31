@@ -81,22 +81,30 @@ namespace OpenEphys.Onix1.Design
                           ? ProbeConfigurationDialogs[NeuropixelsV2Probe.ProbeB]
                           : throw new NullReferenceException("Unable to find the probe configuration.");
 
-                    if (probeConfigDialog.HasChanges && !string.IsNullOrEmpty(e.OldValue as string))
+                    string fileName = e.ChangedItem.Value as string;
+
+                    if (probeConfigDialog.HasChanges && File.Exists(fileName))
                     {
                         var result = MessageBox.Show(
-                            $"Warning: Changing the filename will discard the unsaved {probeConfigDialog.ProbeName} configuration changes for \"{e.OldValue}\". Do you want to continue?",
+                            $"Warning: Changing the filename will discard the unsaved {probeConfigDialog.ProbeName} configuration changes. Do you want to save the current configuration before continuing?",
                             "Change File Name?",
-                            MessageBoxButtons.YesNo,
+                            MessageBoxButtons.YesNoCancel,
                             MessageBoxIcon.Warning);
 
-                        if (result == DialogResult.No)
+                        if (result == DialogResult.Cancel)
                         {
                             RevertFileNameValue(sender as PropertyGrid, e);
                             return;
                         }
+                        else if (result == DialogResult.Yes)
+                        {
+                            if (probeConfigDialog.SaveProbeInterfaceFile(e.OldValue as string) == ChannelConfigurationDialog.SaveResult.Cancelled)
+                            {
+                                return;
+                            }
+                        }
                     }
 
-                    string fileName = e.ChangedItem.Value as string;
                     if (File.Exists(fileName))
                     {
                         if (!probeConfigDialog.OpenProbeInterfaceFile(fileName))
@@ -140,6 +148,12 @@ namespace OpenEphys.Onix1.Design
                 {
                     if (dialog.HasChanges)
                     {
+                        if (!probeConfigurationDialog.Value.IsChannelConfigurationVisible)
+                        {
+                            probeConfigurationDialog.Value.HasChanges = false;
+                            return;
+                        }
+
                         if (!dialog.Text.EndsWith("*"))
                         {
                             dialog.Text += '*';

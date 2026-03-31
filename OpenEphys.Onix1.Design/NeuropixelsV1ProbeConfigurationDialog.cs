@@ -94,22 +94,30 @@ namespace OpenEphys.Onix1.Design
                         }
                     }
 
-                    if (HasChanges && !string.IsNullOrEmpty(e.OldValue as string))
+                    string fileName = e.ChangedItem.Value as string;
+
+                    if (HasChanges && File.Exists(fileName))
                     {
                         var result = MessageBox.Show(
-                            $"Warning: Changing the filename will discard the unsaved {ChannelConfiguration.ProbeName} configuration changes for \"{e.OldValue}\". Do you want to continue?",
+                            $"Warning: Changing the filename will discard the unsaved {ChannelConfiguration.ProbeName} configuration changes. Do you want to save the current configuration before continuing?",
                             "Change File Name?",
-                            MessageBoxButtons.YesNo,
+                            MessageBoxButtons.YesNoCancel,
                             MessageBoxIcon.Warning);
 
-                        if (result == DialogResult.No)
+                        if (result == DialogResult.Cancel)
                         {
                             RevertFileNameValue(sender as PropertyGrid, e);
                             return;
                         }
+                        else if (result == DialogResult.Yes)
+                        {
+                            if (ChannelConfiguration.SaveFile(e.OldValue as string) == ChannelConfigurationDialog.SaveResult.Cancelled)
+                            {
+                                return;
+                            }
+                        }
                     }
 
-                    string fileName = e.ChangedItem.Value as string;
                     if (File.Exists(fileName))
                     {
                         if (!ChannelConfiguration.OpenFile(fileName))

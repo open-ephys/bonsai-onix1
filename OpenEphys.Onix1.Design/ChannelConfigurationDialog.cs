@@ -1097,7 +1097,7 @@ namespace OpenEphys.Onix1.Design
             {
                 var result = MessageBox.Show(
                     $"Warning: Importing a file will overwrite the {ProbeName} configuration. Do you want to continue?",
-                    "Import File",
+                    $"{ProbeName}: Import File",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Warning);
 
@@ -1120,7 +1120,7 @@ namespace OpenEphys.Onix1.Design
             {
                 var result = MessageBox.Show(
                     $"Warning: Loading the default configuration will overwrite the {ProbeName} configuration. Do you want to continue?",
-                    "Load Default Configuration",
+                    $"{ProbeName}: Load Default Configuration",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Warning);
 
@@ -1595,12 +1595,11 @@ namespace OpenEphys.Onix1.Design
         {
             if (HasChanges)
             {
-                var customMessageBox = new CustomMessageBox(
+                var result = MessageBox.Show(
                     $"The ProbeInterface electrode configuration for {ProbeName} has unsaved changes; would you like to save the changes before closing?",
-                    CustomMessageBox.CustomMessageBoxButtons.SaveDiscardCancel,
-                    $"Save {ProbeName} Configuration?");
-
-                var result = customMessageBox.ShowDialog();
+                    $"Save {ProbeName} Configuration?",
+                    MessageBoxButtons.YesNoCancel,
+                    MessageBoxIcon.Warning);
 
                 if (result == DialogResult.Cancel)
                 {
@@ -1608,7 +1607,7 @@ namespace OpenEphys.Onix1.Design
                     return;
                 }
 
-                if (customMessageBox.ClickedButton == CustomMessageBox.CustomMessageBoxButton.Button1) // NB: Save
+                if (result == DialogResult.Yes)
                 {
                     while (true)
                     {

@@ -185,7 +185,7 @@ namespace OpenEphys.Onix1.Design
             {
                 var result = MessageBox.Show(
                     $"Warning: Changing the probe type will discard the unsaved {ChannelConfiguration.ProbeName} configuration. Do you want to continue?",
-                    "Import File",
+                    $"{ProbeName}: Changing Probe Type",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Warning);
 
