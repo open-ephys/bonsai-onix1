@@ -13,7 +13,7 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     public partial class NeuropixelsV2eProbeConfigurationDialog : Form
     {
-        readonly NeuropixelsV2eChannelConfigurationDialog ChannelConfiguration;
+        internal readonly NeuropixelsV2eChannelConfigurationDialog ChannelConfiguration;
 
         internal event EventHandler OnStateChange;
         internal event EventHandler OnProbeConfigurationChange;
@@ -331,7 +331,7 @@ namespace OpenEphys.Onix1.Design
             HasChanges = true;
         }
 
-        void CheckForExistingChannelPreset()
+        internal void CheckForExistingChannelPreset()
         {
             comboBoxChannelPresets.SelectedItem = ProbeInfo.CheckForExistingChannelPreset(ProbeGroup.ChannelMap);
         }
@@ -363,7 +363,14 @@ namespace OpenEphys.Onix1.Design
                 return;
             }
 
-            ChannelConfiguration.Visible = gainCorrection.HasValue;
+            bool isChannelConfigVisible = gainCorrection.HasValue;
+            ChannelConfiguration.Visible = isChannelConfigVisible;
+            comboBoxChannelPresets.Enabled = isChannelConfigVisible;
+
+            if (!isChannelConfigVisible)
+            {
+                DeselectContacts();
+            }
 
             textBoxGainCorrection.Text = gainCorrection.HasValue
                                          ? gainCorrection.Value.GainCorrectionFactor.ToString()
@@ -475,6 +482,11 @@ namespace OpenEphys.Onix1.Design
             return ChannelConfiguration.Visible && ChannelConfiguration.ProcessMenuShortcut(keyData);
         }
 
+        internal ChannelConfigurationDialog.SaveResult SaveProbeInterfaceFile(string fileName)
+        {
+            return ChannelConfiguration.SaveFile(fileName);
+        }
+
         internal bool OpenProbeInterfaceFile(string fileName)
         {
             return ChannelConfiguration.OpenFile(fileName);
@@ -482,7 +494,12 @@ namespace OpenEphys.Onix1.Design
 
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
-            ChannelConfiguration.Close();
+            if (HasChanges && this.HandleTopLevelDialogCancel(ref e, ChannelConfigurationDialog.ProbeConfigurationConfirmMessage))
+            {
+                return;
+            }
+
+            ChannelConfiguration.CloseWithResult(this);
 
             if (!ChannelConfiguration.IsDisposed)
             {

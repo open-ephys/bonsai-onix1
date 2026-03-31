@@ -26,6 +26,8 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         internal GenericDeviceDialog DialogBno055 { get; private set; }
 
+        bool HasChanges => DialogNeuropixelsV1A.HasChanges || DialogNeuropixelsV1B.HasChanges;
+
         /// <summary>
         /// Initializes a new instance of a <see cref="NeuropixelsV1fHeadstageDialog"/>.
         /// </summary>
@@ -60,7 +62,10 @@ namespace OpenEphys.Onix1.Design
             {
                 if (dialog.HasChanges)
                 {
-                    tabPage.Text += '*';
+                    if (!tabPage.Text.Contains("*"))
+                    {
+                        tabPage.Text += '*';
+                    }
                 }
                 else
                 {
@@ -97,7 +102,12 @@ namespace OpenEphys.Onix1.Design
 
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
-            DialogNeuropixelsV1A.Close();
+            if (HasChanges && this.HandleTopLevelDialogCancel(ref e, ChannelConfigurationDialog.ProbeConfigurationConfirmMessage))
+            {
+                return;
+            }
+
+            DialogNeuropixelsV1A.CloseWithResult(this);
 
             if (!DialogNeuropixelsV1A.IsDisposed)
             {
@@ -105,15 +115,19 @@ namespace OpenEphys.Onix1.Design
                 return;
             }
 
-            DialogNeuropixelsV1B.Close();
+            DialogNeuropixelsV1B.CloseWithResult(this);
 
             if (!DialogNeuropixelsV1B.IsDisposed)
             {
                 e.Cancel = true;
 
                 // NB: Initialize the previously disposed dialog when the user cancels closing the dialog
+                var dialog = DialogNeuropixelsV1A;
                 panelNeuropixelsV1A.Controls.Remove(DialogNeuropixelsV1A);
                 DialogNeuropixelsV1A = CreateNeuropixelsV1Dialog(this, DialogNeuropixelsV1A.ConfigureNode as ConfigureNeuropixelsV1f, nameof(ConfigureHeadstageNeuropixelsV1f.NeuropixelsV1A), panelNeuropixelsV1A, tabPageNeuropixelsV1A);
+                DialogNeuropixelsV1A.ProbeConfigurationDialog.ChannelConfiguration.ProbeGroup = dialog.ProbeConfigurationDialog.ChannelConfiguration.ProbeGroup;
+                DialogNeuropixelsV1A.ProbeConfigurationDialog.ChannelConfiguration.RedrawProbeGroup();
+                DialogNeuropixelsV1A.ProbeConfigurationDialog.CheckForExistingChannelPreset();
 
                 return;
             }

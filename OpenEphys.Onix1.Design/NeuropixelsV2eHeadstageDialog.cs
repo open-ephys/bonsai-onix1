@@ -79,7 +79,12 @@ namespace OpenEphys.Onix1.Design
 
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
-            DialogNeuropixelsV2e.Close();
+            if (DialogNeuropixelsV2e.HasChanges && this.HandleTopLevelDialogCancel(ref e, ChannelConfigurationDialog.ProbeConfigurationConfirmMessage))
+            {
+                return;
+            }
+
+            DialogNeuropixelsV2e.CloseWithResult(this);
 
             if (!DialogNeuropixelsV2e.IsDisposed)
             {

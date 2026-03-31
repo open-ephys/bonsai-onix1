@@ -15,7 +15,7 @@ namespace OpenEphys.Onix1.Design
     {
         internal event EventHandler OnStateChange;
 
-        readonly NeuropixelsV1ChannelConfigurationDialog ChannelConfiguration;
+        internal readonly NeuropixelsV1ChannelConfigurationDialog ChannelConfiguration;
 
         NeuropixelsV1Adc[] Adcs = null;
 
@@ -39,7 +39,7 @@ namespace OpenEphys.Onix1.Design
         internal bool HasChanges
         {
             get => ChannelConfiguration.HasChanges;
-            private set => ChannelConfiguration.HasChanges = value;
+            set => ChannelConfiguration.HasChanges = value;
         }
 
         /// <summary>
@@ -287,7 +287,7 @@ namespace OpenEphys.Onix1.Design
             HasChanges = true;
         }
 
-        private void CheckForExistingChannelPreset()
+        internal void CheckForExistingChannelPreset()
         {
             var channelMap = ProbeGroup.ChannelMap;
 
@@ -411,7 +411,14 @@ namespace OpenEphys.Onix1.Design
                                         ? gainCorrection.Value.LfpGainCorrectionFactor.ToString()
                                         : "";
 
-            ChannelConfiguration.Visible = adcCalibration.HasValue && gainCorrection.HasValue;
+            bool isChannelConfigVisible = adcCalibration.HasValue && gainCorrection.HasValue;
+            ChannelConfiguration.Visible = isChannelConfigVisible;
+            comboBoxChannelPresets.Enabled = isChannelConfigVisible;
+
+            if (!isChannelConfigVisible)
+            {
+                DeselectContacts();
+            }
 
             if (toolStripAdcCalSN.Text == NoFileSelected)
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusWarningImage;
@@ -577,7 +584,12 @@ namespace OpenEphys.Onix1.Design
 
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
-            ChannelConfiguration.Close();
+            if (HasChanges && this.HandleTopLevelDialogCancel(ref e, ChannelConfigurationDialog.ProbeConfigurationConfirmMessage))
+            {
+                return;
+            }
+
+            ChannelConfiguration.CloseWithResult(this);
 
             if (!ChannelConfiguration.IsDisposed)
             {

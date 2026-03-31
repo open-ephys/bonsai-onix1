@@ -19,7 +19,7 @@ namespace OpenEphys.Onix1.Design
     {
         private protected Type probeGroupType;
 
-        enum SaveResult
+        internal enum SaveResult
         {
             Success,
             Failure,
@@ -73,6 +73,7 @@ namespace OpenEphys.Onix1.Design
         internal bool[] SelectedContacts { get; private set; } = null;
 
         internal static string DefaultFileName = $"pi_configuration{ProbeInterfaceHelper.ProbeInterfaceFileExtension}";
+        internal static string ProbeConfigurationConfirmMessage = "There are unsaved probe configuration changes that will be discarded, do you want to exit?";
 
         [Obsolete("Designer only.", true)]
         ChannelConfigurationDialog()
@@ -1137,19 +1138,16 @@ namespace OpenEphys.Onix1.Design
 
         void MenuItemOpenFile(object sender, EventArgs e)
         {
-            if (!string.IsNullOrEmpty(ProbeConfiguration.ProbeInterfaceFileName))
+            if (HasChanges)
             {
-                if (HasChanges)
-                {
-                    var result = MessageBox.Show(
-                    $"Warning: Opening a new file will discard the {ProbeName} configuration without saving. Do you want to continue?",
-                    $"{ProbeName}: Open File",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning);
+                var result = MessageBox.Show(
+                $"Warning: Opening a new file will discard the {ProbeName} configuration without saving. Do you want to continue?",
+                $"{ProbeName}: Open File",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning);
 
-                    if (result == DialogResult.No)
-                        return;
-                }
+                if (result == DialogResult.No)
+                    return;
             }
 
             if (OpenFileFromDialog())
@@ -1198,24 +1196,30 @@ namespace OpenEphys.Onix1.Design
             SaveFileAs();
         }
 
+        internal SaveResult SaveFile(string fileName)
+        {
+            var result = string.IsNullOrEmpty(fileName)
+                ? SaveFileAs()
+                : TrySaveFile(fileName, ProbeGroup);
+
+            if (result == SaveResult.Success)
+            {
+                HasChanges = false;
+            }
+
+            return result;
+        }
+
         SaveResult SaveFile()
         {
             var fileName = ProbeConfiguration.ProbeInterfaceFileName;
 
-            if (string.IsNullOrEmpty(fileName))
-            {
-                return SaveFileAs();
-            }
-
-            return TrySaveFile(fileName, ProbeGroup);
+            return SaveFile(fileName);
         }
 
         void MenuItemSaveFile(object sender, EventArgs e)
         {
-            if (SaveFile() == SaveResult.Success)
-            {
-                HasChanges = false;
-            }
+            SaveFile();
         }
 
         void ResizeSelectedContacts()
@@ -1593,6 +1597,11 @@ namespace OpenEphys.Onix1.Design
 
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
+            if (this.HandleTopLevelDialogCancel(ref e))
+            {
+                return;
+            }
+
             if (HasChanges)
             {
                 var result = MessageBox.Show(

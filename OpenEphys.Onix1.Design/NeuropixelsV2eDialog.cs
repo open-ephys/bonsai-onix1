@@ -148,12 +148,6 @@ namespace OpenEphys.Onix1.Design
                 {
                     if (dialog.HasChanges)
                     {
-                        if (!probeConfigurationDialog.Value.IsChannelConfigurationVisible)
-                        {
-                            probeConfigurationDialog.Value.HasChanges = false;
-                            return;
-                        }
-
                         if (!dialog.Text.EndsWith("*"))
                         {
                             dialog.Text += '*';
@@ -295,11 +289,16 @@ namespace OpenEphys.Onix1.Design
 
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
+            if (HasChanges && this.HandleTopLevelDialogCancel(ref e, ChannelConfigurationDialog.ProbeConfigurationConfirmMessage))
+            {
+                return;
+            }
+
             bool cancel = false;
 
             foreach (var dialog in ProbeConfigurationDialogs.Values)
             {
-                dialog.Close();
+                dialog.CloseWithResult(this);
 
                 if (!dialog.IsDisposed)
                 {
@@ -324,6 +323,9 @@ namespace OpenEphys.Onix1.Design
                                 keyValuePair.Value.ProbeConfiguration,
                                 IsBeta,
                                 keyValuePair.Value.ProbeName);
+                            ProbeConfigurationDialogs[keyValuePair.Key].ChannelConfiguration.ProbeGroup = keyValuePair.Value.ChannelConfiguration.ProbeGroup;
+                            ProbeConfigurationDialogs[keyValuePair.Key].ChannelConfiguration.RedrawProbeGroup();
+                            ProbeConfigurationDialogs[keyValuePair.Key].CheckForExistingChannelPreset();
                         }
 
                         InitializeProbeConfigurationDialogs(this, ProbeConfigurationDialogs, propertyGrid);
