@@ -13,7 +13,11 @@ namespace OpenEphys.Onix1.Design
 
         internal readonly NeuropixelsV1ProbeConfigurationDialog ProbeConfigurationDialog;
 
-        internal bool HasChanges => ProbeConfigurationDialog.HasChanges;
+        internal bool HasChanges
+        {
+            get => ProbeConfigurationDialog.HasChanges;
+            set => ProbeConfigurationDialog.HasChanges = value;
+        }
 
         IConfigureNeuropixelsV1 configureNeuropixelsV1;
 
@@ -95,10 +99,12 @@ namespace OpenEphys.Onix1.Design
 
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
-            if (DialogResult == DialogResult.Cancel)
+            if (HasChanges && this.HandleTopLevelDialogCancel(ref e, ChannelConfigurationDialog.ProbeConfigurationConfirmMessage))
+            {
                 return;
+            }
 
-            ProbeConfigurationDialog.Close();
+            ProbeConfigurationDialog.CloseWithResult(this);
 
             if (!ProbeConfigurationDialog.IsDisposed)
             {

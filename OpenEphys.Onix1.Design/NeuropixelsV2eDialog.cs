@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -11,31 +12,13 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     public partial class NeuropixelsV2eDialog : Form
     {
+        readonly bool IsBeta = false;
+
         internal event EventHandler OnStateChange;
 
         internal readonly Dictionary<NeuropixelsV2Probe, NeuropixelsV2eProbeConfigurationDialog> ProbeConfigurationDialogs;
 
-        internal bool HasChanges => ProbeConfigurationDialogs.Values.Any(dialog => dialog.HasChanges && !string.IsNullOrEmpty(dialog.ProbeConfiguration.ProbeInterfaceFileName));
-
-        internal NeuropixelsV2ProbeConfiguration ProbeConfigurationA
-        {
-            get
-            {
-                return ProbeConfigurationDialogs.TryGetValue(NeuropixelsV2Probe.ProbeA, out var probeConfigurationDialog)
-                    ? probeConfigurationDialog.ProbeConfiguration
-                    : throw new NullReferenceException("Unable to find the probe configuration for Probe A.");
-            }
-        }
-
-        internal NeuropixelsV2ProbeConfiguration ProbeConfigurationB
-        {
-            get
-            {
-                return ProbeConfigurationDialogs.TryGetValue(NeuropixelsV2Probe.ProbeB, out var probeConfigurationDialog)
-                    ? probeConfigurationDialog.ProbeConfiguration
-                    : throw new NullReferenceException("Unable to find the probe configuration for Probe B.");
-            }
-        }
+        internal bool HasChanges => ProbeConfigurationDialogs.Values.Any(dialog => dialog.HasChanges);
 
         IConfigureNeuropixelsV2 configureNeuropixelsV2;
 
@@ -74,64 +57,135 @@ namespace OpenEphys.Onix1.Design
             }
 
             ConfigureNeuropixelsV2 = configureNode;
-
-            bool isBeta = false;
-
-            if (configureNode is ConfigureNeuropixelsV2eBeta configureV2eBeta)
+            propertyGrid.PropertyValueChanged += (sender, e) =>
             {
-                Text = Text.Replace("NeuropixelsV2e ", "NeuropixelsV2eBeta ");
-                isBeta = true;
-            }
-
-            ProbeConfigurationDialogs = new()
-            {
-                { NeuropixelsV2Probe.ProbeA, new(configureNode.ProbeConfigurationA, isBeta, nameof(NeuropixelsV2Probe.ProbeA)) },
-                { NeuropixelsV2Probe.ProbeB, new(configureNode.ProbeConfigurationB, isBeta, nameof(NeuropixelsV2Probe.ProbeB)) }
-            };
-
-            foreach (var probeConfigurationDialog in ProbeConfigurationDialogs)
-            {
-                string probeName = probeConfigurationDialog.Key.ToString();
-
-                probeConfigurationDialog.Value.SetChildFormProperties(this);
-                probeConfigurationDialog.Value.OnStateChange += (sender, args) =>
+                if (e.ChangedItem.Label == nameof(NeuropixelsV2ProbeConfiguration.ProbeInterfaceFileName))
                 {
-                    if (HasChanges)
+                    static void RevertFileNameValue(PropertyGrid propertyGrid, PropertyValueChangedEventArgs e)
                     {
-                        if (!Text.EndsWith("*"))
+                        var gridItem = propertyGrid.SelectedGridItem;
+                        var parent = gridItem.Parent;
+                        var parentType = parent.Value.GetType();
+                        var propertyInfo = parentType.GetProperty(e.ChangedItem.PropertyDescriptor.Name);
+                        if (propertyInfo != null && propertyInfo.CanWrite)
                         {
-                            Text += '*';
+                            propertyInfo.SetValue(parent.Value, e.OldValue);
+                            propertyGrid.Refresh();
+                        }
+                    }
+
+                    var probeConfigDialog =
+                        e.ChangedItem.Parent.Label == nameof(ConfigureNeuropixelsV2e.ProbeConfigurationA)
+                        ? ProbeConfigurationDialogs[NeuropixelsV2Probe.ProbeA]
+                        : e.ChangedItem.Parent.Label == nameof(ConfigureNeuropixelsV2e.ProbeConfigurationB)
+                          ? ProbeConfigurationDialogs[NeuropixelsV2Probe.ProbeB]
+                          : throw new NullReferenceException("Unable to find the probe configuration.");
+
+                    string fileName = e.ChangedItem.Value as string;
+
+                    if (probeConfigDialog.HasChanges && File.Exists(fileName))
+                    {
+                        var result = MessageBox.Show(
+                            $"Warning: Changing the filename will discard the unsaved {probeConfigDialog.ProbeName} configuration changes. Do you want to save the current configuration before continuing?",
+                            "Change File Name?",
+                            MessageBoxButtons.YesNoCancel,
+                            MessageBoxIcon.Warning);
+
+                        if (result == DialogResult.Cancel)
+                        {
+                            RevertFileNameValue(sender as PropertyGrid, e);
+                            return;
+                        }
+                        else if (result == DialogResult.Yes)
+                        {
+                            if (probeConfigDialog.SaveProbeInterfaceFile(e.OldValue as string) == ChannelConfigurationDialog.SaveResult.Cancelled)
+                            {
+                                return;
+                            }
+                        }
+                    }
+
+                    if (File.Exists(fileName))
+                    {
+                        if (!probeConfigDialog.OpenProbeInterfaceFile(fileName))
+                        {
+                            RevertFileNameValue(sender as PropertyGrid, e);
                         }
                     }
                     else
                     {
-                        Text = Text.TrimEnd('*');
+                        probeConfigDialog.HasChanges = true;
                     }
+                }
 
-                    OnStateChange?.Invoke(this, EventArgs.Empty);
-                };
-
-                probeConfigurationDialog.Value.OnProbeConfigurationChange += (sender, args) =>
+                foreach (var dialog in ProbeConfigurationDialogs.Values)
                 {
-                    if (sender is NeuropixelsV2eProbeConfigurationDialog dialog)
+                    dialog.CheckStatus();
+                }
+            };
+
+            if (configureNode is ConfigureNeuropixelsV2eBeta configureV2eBeta)
+            {
+                Text = Text.Replace("NeuropixelsV2e ", "NeuropixelsV2eBeta ");
+                IsBeta = true;
+            }
+
+            ProbeConfigurationDialogs = new()
+            {
+                { NeuropixelsV2Probe.ProbeA, new(configureNode.ProbeConfigurationA, IsBeta, nameof(NeuropixelsV2Probe.ProbeA)) },
+                { NeuropixelsV2Probe.ProbeB, new(configureNode.ProbeConfigurationB, IsBeta, nameof(NeuropixelsV2Probe.ProbeB)) }
+            };
+
+            InitializeProbeConfigurationDialogs(this, ProbeConfigurationDialogs, propertyGrid);
+        }
+
+        static void InitializeProbeConfigurationDialogs(NeuropixelsV2eDialog dialog, Dictionary<NeuropixelsV2Probe, NeuropixelsV2eProbeConfigurationDialog> probeConfigDialogs, PropertyGrid propertyGrid)
+        {
+            foreach (var probeConfigurationDialog in probeConfigDialogs)
+            {
+                probeConfigurationDialog.Value.SetChildFormProperties(dialog);
+                probeConfigurationDialog.Value.OnStateChange += (sender, args) =>
+                {
+                    if (dialog.HasChanges)
                     {
-                        if (probeConfigurationDialog.Key == NeuropixelsV2Probe.ProbeA)
+                        if (!dialog.Text.EndsWith("*"))
                         {
-                            configureNeuropixelsV2.ProbeConfigurationA = dialog.ProbeConfiguration;
-                        }
-                        else if (probeConfigurationDialog.Key == NeuropixelsV2Probe.ProbeB)
-                        {
-                            configureNeuropixelsV2.ProbeConfigurationB = dialog.ProbeConfiguration;
+                            dialog.Text += '*';
                         }
                     }
+                    else
+                    {
+                        dialog.Text = dialog.Text.TrimEnd('*');
+                    }
 
-                    propertyGrid.Refresh();
+                    dialog.OnStateChange?.Invoke(dialog, EventArgs.Empty);
                 };
+
+                probeConfigurationDialog.Value.OnProbeConfigurationChange += dialog.ProbeConfigurationChanged;
 
                 probeConfigurationDialog.Value.OnPropertyValueChanged += (sender, args) => propertyGrid.Refresh();
 
                 probeConfigurationDialog.Value.HidePropertiesTab();
+
+                probeConfigurationDialog.Value.PanelBorderColor = propertyGrid.ViewBorderColor;
             }
+        }
+
+        void ProbeConfigurationChanged(object sender, EventArgs e)
+        {
+            if (sender is NeuropixelsV2eProbeConfigurationDialog dialog)
+            {
+                if (dialog == ProbeConfigurationDialogs[NeuropixelsV2Probe.ProbeA])
+                {
+                    configureNeuropixelsV2.ProbeConfigurationA = dialog.ProbeConfiguration;
+                }
+                else if (dialog == ProbeConfigurationDialogs[NeuropixelsV2Probe.ProbeB])
+                {
+                    configureNeuropixelsV2.ProbeConfigurationB = dialog.ProbeConfiguration;
+                }
+            }
+
+            propertyGrid.Refresh();
         }
 
         private void FormShown(object sender, EventArgs e)
@@ -166,9 +220,16 @@ namespace OpenEphys.Onix1.Design
         {
             foreach (var probeConfigurationDialog in ProbeConfigurationDialogs)
             {
-                if (propertyGrid.SelectedGridItem.Value as NeuropixelsV2ProbeConfiguration == probeConfigurationDialog.Value.ProbeConfiguration && probeConfigurationDialog.Value.ProcessMenuShortcut(keyData))
+                var gridItem = propertyGrid.SelectedGridItem;
+
+                while (gridItem != null)
                 {
-                    return true;
+                    if (gridItem.Value as NeuropixelsV2ProbeConfiguration == probeConfigurationDialog.Value.ProbeConfiguration && probeConfigurationDialog.Value.ProcessMenuShortcut(keyData))
+                    {
+                        return true;
+                    }
+
+                    gridItem = gridItem.Parent;
                 }
             }
 
@@ -203,6 +264,7 @@ namespace OpenEphys.Onix1.Design
             //     Otherwise, remove the probe configuration dialogs to show the default text box.
             if (e.NewSelection != null)
             {
+                SuspendLayout();
                 if (e.NewSelection.Value is NeuropixelsV2ProbeConfiguration probeConfiguration)
                 {
                     ShowProbeConfigurationDialog(probeConfiguration);
@@ -221,23 +283,56 @@ namespace OpenEphys.Onix1.Design
                         }
                     }
                 }
+                ResumeLayout();
             }
         }
 
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
-            if (DialogResult == DialogResult.Cancel)
+            if (HasChanges && this.HandleTopLevelDialogCancel(ref e, ChannelConfigurationDialog.ProbeConfigurationConfirmMessage))
+            {
                 return;
+            }
 
             bool cancel = false;
 
             foreach (var dialog in ProbeConfigurationDialogs.Values)
             {
-                dialog.Close();
+                dialog.CloseWithResult(this);
 
                 if (!dialog.IsDisposed)
                 {
                     cancel = true;
+
+                    // NB: Initialize any dialogs that were previously disposed of when the user cancels closing the dialog
+                    Queue<KeyValuePair<NeuropixelsV2Probe, NeuropixelsV2eProbeConfigurationDialog>> queue = new();
+
+                    foreach (var keyValuePair in ProbeConfigurationDialogs)
+                    {
+                        if (keyValuePair.Value.IsDisposed)
+                        {
+                            queue.Enqueue(keyValuePair);
+                        }
+                    }
+
+                    if (queue.Count > 0)
+                    {
+                        foreach (var keyValuePair in queue)
+                        {
+                            ProbeConfigurationDialogs[keyValuePair.Key] = new NeuropixelsV2eProbeConfigurationDialog(
+                                keyValuePair.Value.ProbeConfiguration,
+                                IsBeta,
+                                keyValuePair.Value.ProbeName);
+                            ProbeConfigurationDialogs[keyValuePair.Key].ChannelConfiguration.ProbeGroup = keyValuePair.Value.ChannelConfiguration.ProbeGroup;
+                            ProbeConfigurationDialogs[keyValuePair.Key].ChannelConfiguration.RedrawProbeGroup();
+                            ProbeConfigurationDialogs[keyValuePair.Key].CheckForExistingChannelPreset();
+                        }
+
+                        InitializeProbeConfigurationDialogs(this, ProbeConfigurationDialogs, propertyGrid);
+
+                        PropertyGridChanged(sender, new(propertyGrid.SelectedGridItem, propertyGrid.SelectedGridItem));
+                    }
+
                     break;
                 }
             }

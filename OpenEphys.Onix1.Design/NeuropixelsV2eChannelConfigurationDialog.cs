@@ -12,7 +12,6 @@ namespace OpenEphys.Onix1.Design
     public partial class NeuropixelsV2eChannelConfigurationDialog : ScaledChannelConfigurationDialog
     {
         internal event EventHandler OnZoom;
-        internal event EventHandler OnFileLoad;
 
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV2eChannelConfigurationDialog"/>.
@@ -50,23 +49,6 @@ namespace OpenEphys.Onix1.Design
                 MessageBox.Show("Unable to Load Default Configuration", ex.Message);
                 return;
             }
-        }
-
-        internal override bool OpenNewFile(bool updateFileName = false)
-        {
-            if (base.OpenNewFile(updateFileName))
-            {
-                OnFileOpenHandler();
-
-                return true;
-            }
-
-            return false;
-        }
-
-        private void OnFileOpenHandler()
-        {
-            OnFileLoad?.Invoke(this, EventArgs.Empty);
         }
 
         internal override void ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState)

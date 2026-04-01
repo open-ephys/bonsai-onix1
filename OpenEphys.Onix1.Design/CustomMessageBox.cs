@@ -38,7 +38,11 @@ namespace OpenEphys.Onix1.Design
             /// <summary>
             /// Specifies that there are three buttons, "Save", "Save As", and "Cancel"
             /// </summary>
-            SaveSaveAsCancel
+            SaveSaveAsCancel,
+            /// <summary>
+            /// Specifies that there are three buttons, "Save", "Discard", and "Cancel"
+            /// </summary>
+            SaveDiscardCancel
         }
 
         /// <summary>
@@ -111,6 +115,11 @@ namespace OpenEphys.Onix1.Design
                 case CustomMessageBoxButtons.SaveSaveAsCancel:
                     button1Text = "Save";
                     button2Text = "Save As";
+                    button3Text = "Cancel";
+                    break;
+                case CustomMessageBoxButtons.SaveDiscardCancel:
+                    button1Text = "Save";
+                    button2Text = "Discard";
                     button3Text = "Cancel";
                     break;
             }

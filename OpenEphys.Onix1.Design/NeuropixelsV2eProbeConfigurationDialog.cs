@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -12,7 +13,7 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     public partial class NeuropixelsV2eProbeConfigurationDialog : Form
     {
-        readonly NeuropixelsV2eChannelConfigurationDialog ChannelConfiguration;
+        internal readonly NeuropixelsV2eChannelConfigurationDialog ChannelConfiguration;
 
         internal event EventHandler OnStateChange;
         internal event EventHandler OnProbeConfigurationChange;
@@ -21,7 +22,7 @@ namespace OpenEphys.Onix1.Design
         internal bool HasChanges
         {
             get => ChannelConfiguration.HasChanges;
-            private set => ChannelConfiguration.HasChanges = value;
+            set => ChannelConfiguration.HasChanges = value;
         }
 
         internal NeuropixelsV2ProbeConfiguration ProbeConfiguration
@@ -35,6 +36,8 @@ namespace OpenEphys.Onix1.Design
             get => ChannelConfiguration.ProbeGroup as NeuropixelsV2eProbeGroup;
             set => ChannelConfiguration.ProbeGroup = value;
         }
+
+        internal string ProbeName => ChannelConfiguration.ProbeName;
 
         INeuropixelsV2ProbeInfo ProbeInfo { get; set; }
 
@@ -76,6 +79,7 @@ namespace OpenEphys.Onix1.Design
 
             ChannelConfiguration.OnZoom += UpdateTrackBarLocation;
             ChannelConfiguration.OnFileLoad += OnFileLoadEvent;
+            ChannelConfiguration.OnFileImport += (sender, e) => CheckForExistingChannelPreset();
             ChannelConfiguration.OnProbeConfigurationChanged += (sender, e) =>
             {
                 ProbeConfigurationChanged();
@@ -97,6 +101,7 @@ namespace OpenEphys.Onix1.Design
             ChannelConfiguration.BringToFront();
 
             propertyGrid.SelectedObject = configuration;
+            propertyGrid.PropertyValueChanged += (sender, e) => CheckStatus();
             bindingSource.DataSource = configuration;
 
             comboBoxProbeType.DataSource = Enum.GetValues(typeof(ProbeType));
@@ -124,37 +129,11 @@ namespace OpenEphys.Onix1.Design
                 nameof(configuration.Reference),
                 false,
                 DataSourceUpdateMode.OnPropertyChanged);
-            comboBoxReference.SelectedIndexChanged += (sender, e) =>
-            {
-                // NB: Needed to capture mouse scroll wheel updates
-                var control = sender as Control;
-
-                foreach (Binding binding in control.DataBindings)
-                {
-                    binding.WriteValue();
-                }
-
-                bindingSource.ResetCurrentItem();
-                PropertyValueChanged();
-            };
+            comboBoxReference.SelectedIndexChanged += SelectedReferenceChanged;
 
             comboBoxChannelPresets.DataSource = ProbeInfo.GetComboBoxChannelPresets();
             CheckForExistingChannelPreset();
-            comboBoxChannelPresets.SelectedIndexChanged += (sender, e) =>
-            {
-                try
-                {
-                    Enum channelPreset = ((ComboBox)sender).SelectedItem as Enum ?? throw new InvalidEnumArgumentException("Invalid argument given for the channel preset.");
-                    ProbeGroup.SelectElectrodes(ProbeInfo.GetChannelPreset(channelPreset));
-                }
-                catch (InvalidEnumArgumentException ex)
-                {
-                    MessageBox.Show(ex.Message, "Invalid Preset Chosen");
-                    return;
-                }
-
-                UpdateProbeGroup();
-            };
+            comboBoxChannelPresets.SelectedIndexChanged += SelectedChannelPresetChanged;
 
             checkBoxInvertPolarity.DataBindings.Add("Checked",
                 bindingSource,
@@ -193,8 +172,30 @@ namespace OpenEphys.Onix1.Design
             OnPropertyValueChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        private void ProbeTypeChanged(object sender, EventArgs e)
+        void RevertProbeType()
         {
+            comboBoxProbeType.SelectedIndexChanged -= ProbeTypeChanged;
+            comboBoxProbeType.SelectedItem = GetCurrentProbeType(ProbeConfiguration);
+            comboBoxProbeType.SelectedIndexChanged += ProbeTypeChanged;
+        }
+
+        void ProbeTypeChanged(object sender, EventArgs e)
+        {
+            if (HasChanges)
+            {
+                var result = MessageBox.Show(
+                    $"Warning: Changing the probe type will discard the unsaved {ChannelConfiguration.ProbeName} configuration. Do you want to continue?",
+                    $"{ProbeName}: Changing Probe Type",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+
+                if (result == DialogResult.No)
+                {
+                    RevertProbeType();
+                    return;
+                }
+            }
+
             UpdateProbeConfiguration();
         }
 
@@ -229,14 +230,14 @@ namespace OpenEphys.Onix1.Design
 
         void UpdateProbeConfiguration()
         {
+            SuspendLayout();
+
             var probeType = (ProbeType)comboBoxProbeType.SelectedItem;
 
             if (!ChannelConfiguration.UpdateProbeConfiguration(probeConfigurations[probeType], GetProbeGroupType(probeType)))
             {
                 // NB: If the update fails, revert to the previous probe type selection to avoid inconsistencies in the GUI
-                comboBoxProbeType.SelectedIndexChanged -= ProbeTypeChanged;
-                comboBoxProbeType.SelectedItem = GetCurrentProbeType(ProbeConfiguration);
-                comboBoxProbeType.SelectedIndexChanged += ProbeTypeChanged;
+                RevertProbeType();
                 return;
             }
 
@@ -248,12 +249,22 @@ namespace OpenEphys.Onix1.Design
             CheckForExistingChannelPreset();
             comboBoxChannelPresets.SelectedIndexChanged += SelectedChannelPresetChanged;
 
+            comboBoxReference.SelectedIndexChanged -= SelectedReferenceChanged;
+            comboBoxReference.DataSource = ProbeInfo.GetReferenceEnumValues();
+            comboBoxReference.SelectedItem = ProbeConfiguration.Reference;
+            comboBoxReference.SelectedIndexChanged += SelectedReferenceChanged;
+
             bindingSource.DataSource = ProbeConfiguration;
             propertyGrid.SelectedObject = ProbeConfiguration;
 
             ProbeConfigurationChanged();
             CheckStatus();
+
+            ResumeLayout();
+            Refresh();
         }
+
+        internal Color PanelBorderColor { get; set; } = Color.Black;
 
         private void FormShown(object sender, EventArgs e)
         {
@@ -261,6 +272,14 @@ namespace OpenEphys.Onix1.Design
             {
                 tableLayoutPanel1.Controls.Remove(flowLayoutPanel1);
                 tableLayoutPanel1.RowCount = 1;
+
+                ChannelConfiguration.panel.BorderStyle = BorderStyle.None;
+                ChannelConfiguration.panel.Paint += (sender, e) =>
+                {
+                    var panel = sender as Panel;
+                    var graphics = e.Graphics;
+                    ControlPaint.DrawBorder(graphics, panel.ClientRectangle, PanelBorderColor, ButtonBorderStyle.Solid);
+                };
             }
 
             splitContainer1.SplitterDistance = splitContainer1.Size.Width - splitContainer1.Panel2MinSize;
@@ -273,14 +292,32 @@ namespace OpenEphys.Onix1.Design
 
         private void SelectedReferenceChanged(object sender, EventArgs e)
         {
-            ProbeConfiguration.Reference = (Enum)((ComboBox)sender).SelectedItem;
+            var comboBox = sender as ComboBox;
+            ProbeConfiguration.Reference = (Enum)comboBox.SelectedItem;
+
+            foreach (Binding binding in comboBox.DataBindings)
+            {
+                binding.WriteValue();
+            }
+
+            bindingSource.ResetCurrentItem();
+            PropertyValueChanged();
         }
 
-        private void SelectedChannelPresetChanged(object sender, EventArgs e)
+        void SelectedChannelPresetChanged(object sender, EventArgs e)
         {
-            Enum channelPreset = ((ComboBox)sender).SelectedItem as Enum ?? throw new InvalidEnumArgumentException("Invalid argument given for the channel preset.");
+            try
+            {
+                Enum channelPreset = ((ComboBox)sender).SelectedItem as Enum ?? throw new InvalidEnumArgumentException("Invalid argument given for the channel preset.");
+                SetChannelPreset(channelPreset);
+            }
+            catch (InvalidEnumArgumentException ex)
+            {
+                MessageBox.Show(ex.Message, "Invalid Preset Chosen");
+                return;
+            }
 
-            SetChannelPreset(channelPreset);
+            UpdateProbeGroup();
         }
 
         void SetChannelPreset(Enum channelPreset)
@@ -294,7 +331,7 @@ namespace OpenEphys.Onix1.Design
             HasChanges = true;
         }
 
-        void CheckForExistingChannelPreset()
+        internal void CheckForExistingChannelPreset()
         {
             comboBoxChannelPresets.SelectedItem = ProbeInfo.CheckForExistingChannelPreset(ProbeGroup.ChannelMap);
         }
@@ -304,7 +341,7 @@ namespace OpenEphys.Onix1.Design
             UpdateProbeConfiguration();
         }
 
-        private void CheckStatus()
+        internal void CheckStatus()
         {
             const string NoFileSelected = "No file selected.";
             const string InvalidFile = "Invalid file.";
@@ -326,7 +363,14 @@ namespace OpenEphys.Onix1.Design
                 return;
             }
 
-            ChannelConfiguration.Visible = gainCorrection.HasValue;
+            bool isChannelConfigVisible = gainCorrection.HasValue;
+            ChannelConfiguration.Visible = isChannelConfigVisible;
+            comboBoxChannelPresets.Enabled = isChannelConfigVisible;
+
+            if (!isChannelConfigVisible)
+            {
+                DeselectContacts();
+            }
 
             textBoxGainCorrection.Text = gainCorrection.HasValue
                                          ? gainCorrection.Value.GainCorrectionFactor.ToString()
@@ -438,12 +482,24 @@ namespace OpenEphys.Onix1.Design
             return ChannelConfiguration.Visible && ChannelConfiguration.ProcessMenuShortcut(keyData);
         }
 
+        internal ChannelConfigurationDialog.SaveResult SaveProbeInterfaceFile(string fileName)
+        {
+            return ChannelConfiguration.SaveFile(fileName);
+        }
+
+        internal bool OpenProbeInterfaceFile(string fileName)
+        {
+            return ChannelConfiguration.OpenFile(fileName);
+        }
+
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
-            if (DialogResult == DialogResult.Cancel || (string.IsNullOrEmpty(ProbeConfiguration.ProbeInterfaceFileName) && string.IsNullOrEmpty(ProbeConfiguration.GainCalibrationFileName)))
+            if (HasChanges && this.HandleTopLevelDialogCancel(ref e, ChannelConfigurationDialog.ProbeConfigurationConfirmMessage))
+            {
                 return;
+            }
 
-            ChannelConfiguration.Close();
+            ChannelConfiguration.CloseWithResult(this);
 
             if (!ChannelConfiguration.IsDisposed)
             {

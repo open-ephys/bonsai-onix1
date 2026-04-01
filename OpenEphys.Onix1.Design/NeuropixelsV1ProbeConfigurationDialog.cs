@@ -15,7 +15,7 @@ namespace OpenEphys.Onix1.Design
     {
         internal event EventHandler OnStateChange;
 
-        readonly NeuropixelsV1ChannelConfigurationDialog ChannelConfiguration;
+        internal readonly NeuropixelsV1ChannelConfigurationDialog ChannelConfiguration;
 
         NeuropixelsV1Adc[] Adcs = null;
 
@@ -39,7 +39,7 @@ namespace OpenEphys.Onix1.Design
         internal bool HasChanges
         {
             get => ChannelConfiguration.HasChanges;
-            private set => ChannelConfiguration.HasChanges = value;
+            set => ChannelConfiguration.HasChanges = value;
         }
 
         /// <summary>
@@ -60,6 +60,7 @@ namespace OpenEphys.Onix1.Design
 
             ChannelConfiguration.OnZoom += UpdateTrackBarLocation;
             ChannelConfiguration.OnFileLoad += OnFileLoadEvent;
+            ChannelConfiguration.OnFileImport += (sender, e) => CheckForExistingChannelPreset();
             ChannelConfiguration.OnStateChange += (sender, e) =>
             {
                 if (HasChanges)
@@ -76,6 +77,62 @@ namespace OpenEphys.Onix1.Design
 
             ChannelConfiguration.BringToFront();
             propertyGrid.SelectedObject = probeConfiguration;
+            propertyGrid.PropertyValueChanged += (sender, e) =>
+            {
+                if (e.ChangedItem.Label == nameof(NeuropixelsV1ProbeConfiguration.ProbeInterfaceFileName))
+                {
+                    static void RevertFileNameValue(PropertyGrid propertyGrid, PropertyValueChangedEventArgs e)
+                    {
+                        var gridItem = propertyGrid.SelectedGridItem;
+                        var parent = gridItem.Parent;
+                        var parentType = parent.Value.GetType();
+                        var propertyInfo = parentType.GetProperty(e.ChangedItem.PropertyDescriptor.Name);
+                        if (propertyInfo != null && propertyInfo.CanWrite)
+                        {
+                            propertyInfo.SetValue(parent.Value, e.OldValue);
+                            propertyGrid.Refresh();
+                        }
+                    }
+
+                    string fileName = e.ChangedItem.Value as string;
+
+                    if (HasChanges && File.Exists(fileName))
+                    {
+                        var result = MessageBox.Show(
+                            $"Warning: Changing the filename will discard the unsaved {ChannelConfiguration.ProbeName} configuration changes. Do you want to save the current configuration before continuing?",
+                            "Change File Name?",
+                            MessageBoxButtons.YesNoCancel,
+                            MessageBoxIcon.Warning);
+
+                        if (result == DialogResult.Cancel)
+                        {
+                            RevertFileNameValue(sender as PropertyGrid, e);
+                            return;
+                        }
+                        else if (result == DialogResult.Yes)
+                        {
+                            if (ChannelConfiguration.SaveFile(e.OldValue as string) == ChannelConfigurationDialog.SaveResult.Cancelled)
+                            {
+                                return;
+                            }
+                        }
+                    }
+
+                    if (File.Exists(fileName))
+                    {
+                        if (!ChannelConfiguration.OpenFile(fileName))
+                        {
+                            RevertFileNameValue(sender as PropertyGrid, e);
+                        }
+                    }
+                    else
+                    {
+                        HasChanges = true;
+                    }
+                }
+
+                CheckStatus();
+            };
             bindingSource.DataSource = probeConfiguration;
 
             // NB: Needed to capture mouse scroll wheel updates
@@ -230,7 +287,7 @@ namespace OpenEphys.Onix1.Design
             HasChanges = true;
         }
 
-        private void CheckForExistingChannelPreset()
+        internal void CheckForExistingChannelPreset()
         {
             var channelMap = ProbeGroup.ChannelMap;
 
@@ -354,7 +411,14 @@ namespace OpenEphys.Onix1.Design
                                         ? gainCorrection.Value.LfpGainCorrectionFactor.ToString()
                                         : "";
 
-            ChannelConfiguration.Visible = adcCalibration.HasValue && gainCorrection.HasValue;
+            bool isChannelConfigVisible = adcCalibration.HasValue && gainCorrection.HasValue;
+            ChannelConfiguration.Visible = isChannelConfigVisible;
+            comboBoxChannelPresets.Enabled = isChannelConfigVisible;
+
+            if (!isChannelConfigVisible)
+            {
+                DeselectContacts();
+            }
 
             if (toolStripAdcCalSN.Text == NoFileSelected)
                 toolStripLabelAdcCalibrationSN.Image = Properties.Resources.StatusWarningImage;
@@ -520,10 +584,12 @@ namespace OpenEphys.Onix1.Design
 
         void DialogClosing(object sender, FormClosingEventArgs e)
         {
-            if (DialogResult == DialogResult.Cancel || (Adcs == null && string.IsNullOrEmpty(textBoxLfpCorrection.Text)))
+            if (HasChanges && this.HandleTopLevelDialogCancel(ref e, ChannelConfigurationDialog.ProbeConfigurationConfirmMessage))
+            {
                 return;
+            }
 
-            ChannelConfiguration.Close();
+            ChannelConfiguration.CloseWithResult(this);
 
             if (!ChannelConfiguration.IsDisposed)
             {

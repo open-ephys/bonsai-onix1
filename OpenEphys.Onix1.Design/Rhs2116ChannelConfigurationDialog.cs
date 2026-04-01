@@ -13,7 +13,6 @@ namespace OpenEphys.Onix1.Design
     {
         internal event EventHandler OnSelect;
         internal event EventHandler OnZoom;
-        internal event EventHandler OnFileLoad;
 
         /// <summary>
         /// Initializes a new instance of <see cref="Rhs2116ChannelConfigurationDialog"/>.
@@ -33,37 +32,15 @@ namespace OpenEphys.Onix1.Design
             ZoomInBoundaryX = 2;
             ZoomInBoundaryY = 2;
 
+            panel.BorderStyle = BorderStyle.None;
+
             DrawProbeGroup();
             RefreshZedGraph();
-        }
-
-        internal override void LoadDefaultChannelLayout()
-        {
-            base.LoadDefaultChannelLayout();
-
-            OnFileOpenHandler();
         }
 
         internal override ProbeGroup DefaultChannelLayout()
         {
             return new Rhs2116ProbeGroup();
-        }
-
-        internal override bool OpenNewFile(bool updateFileName = false)
-        {
-            if (base.OpenNewFile(updateFileName))
-            {
-                OnFileOpenHandler();
-
-                return true;
-            }
-
-            return false;
-        }
-
-        void OnFileOpenHandler()
-        {
-            OnFileLoad?.Invoke(this, EventArgs.Empty);
         }
 
         internal override void SelectedContactChanged()

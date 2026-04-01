@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.IO;
 using Bonsai;
 
 namespace OpenEphys.Onix1
@@ -155,10 +156,10 @@ namespace OpenEphys.Onix1
 
                 if (enable)
                 {
-                    if (string.IsNullOrEmpty(probeConfiguration.ProbeInterfaceFileName))
-                        throw new ArgumentException($"ProbeInterface file name must be specified in {nameof(ConfigureNeuropixelsV1f)}.{nameof(ProbeConfiguration)}.");
-
-                    probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfiguration.ProbeInterfaceFileName, typeof(NeuropixelsV1eProbeGroup)) as NeuropixelsV1eProbeGroup;
+                    if (File.Exists(probeConfiguration.ProbeInterfaceFileName))
+                    {
+                        probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfiguration.ProbeInterfaceFileName, typeof(NeuropixelsV1eProbeGroup)) as NeuropixelsV1eProbeGroup;
+                    }
 
                     var probeControl = new NeuropixelsV1fRegisterContext(device, probeConfiguration, probeGroup);
                     probeControl.InitializeProbe();

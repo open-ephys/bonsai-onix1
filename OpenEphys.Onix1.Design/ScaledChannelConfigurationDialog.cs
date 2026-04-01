@@ -141,7 +141,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override void ResizeAxes()
         {
-            const float ScalingFactor = 1.15f;
+            const float ScalingFactor = 1.10f;
             RectangleF rect = zedGraphChannels.MasterPane.Rect;
 
             float width = rect.Width;

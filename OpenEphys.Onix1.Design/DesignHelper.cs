@@ -103,5 +103,38 @@ namespace OpenEphys.Onix1.Design
         {
             CopyPropertiesCore(source, target, propertiesToIgnore, shallowCopy: false);
         }
+
+        public static void CloseWithResult(this Form form, Form parent)
+        {
+            form.DialogResult = parent.DialogResult;
+            form.Close();
+        }
+
+        const string GenericConfirmMessage = "Are you sure you want to exit the dialog? Any changes made will be discarded.";
+
+        public static DialogResult ConfirmClosing(string msg = GenericConfirmMessage)
+        {
+            return MessageBox.Show(
+                    msg,
+                    "Confirm Exit",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+        }
+
+        public static bool HandleTopLevelDialogCancel(this Form form, ref FormClosingEventArgs e, string msg = GenericConfirmMessage)
+        {
+            if (form.TopLevel && form.DialogResult == DialogResult.Cancel)
+            {
+                var result = ConfirmClosing(msg);
+                if (result == DialogResult.No)
+                {
+                    e.Cancel = true;
+                }
+
+                return true;
+            }
+
+            return false;
+        }
     }
 }
