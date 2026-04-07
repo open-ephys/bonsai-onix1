@@ -58,20 +58,21 @@ namespace OpenEphys.Onix1
         public unsafe override IObservable<NeuropixelsV2DataFrame> Generate()
         {
             var bufferSize = BufferSize;
+
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
                 var info = (NeuropixelsV2PsbDecoderDeviceInfo)deviceInfo;
                 var probeIndex = info.StreamIndex;
                 var gainCorrection = info.GainCorrection;
-                var probeConfiguration = info.ProbeConfiguration;
+                var channelMap = info.ProbeConfiguration.ChannelMap.ToArray();
+                var orderByDepth = OrderByDepth;
+                var invertPolarity = info.ProbeConfiguration.InvertPolarity;
 
                 var device = info.GetDeviceContext(typeof(NeuropixelsV2));
                 var passthrough = device.GetPassthroughDeviceContext(typeof(DS90UB9x));
                 var probeData = device.Context
                     .GetDeviceFrames(passthrough.Address)
                     .Where(frame => GetProbeIndex(frame) == probeIndex);
-                var orderByDepth = OrderByDepth;
-                var invertPolarity = probeConfiguration.InvertPolarity;
 
                 return Observable.Create<NeuropixelsV2DataFrame>(observer =>
                 {
@@ -79,8 +80,7 @@ namespace OpenEphys.Onix1
                     var amplifierBuffer = new ushort[NeuropixelsV2.ChannelCount, bufferSize];
                     var hubClockBuffer = new ulong[bufferSize];
                     var clockBuffer = new ulong[bufferSize];
-                    int[,] channelOrder = orderByDepth ? Neuropixels.OrderChannelsByDepth(probeConfiguration.ChannelMap, RawToChannel) : RawToChannel;
-
+                    int[,] channelOrder = orderByDepth ? Neuropixels.OrderChannelsByDepth(channelMap, RawToChannel) : RawToChannel;
 
                     var frameObserver = Observer.Create<oni.Frame>(
                         frame =>

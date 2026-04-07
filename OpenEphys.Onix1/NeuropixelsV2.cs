@@ -3,27 +3,6 @@ using System.Collections;
 
 namespace OpenEphys.Onix1
 {
-    /// <summary>
-    /// Specifies the probe as A or B.
-    /// </summary>
-    public enum NeuropixelsV2Probe
-    {
-        /// <summary>
-        /// Specifies that this is Probe A.
-        /// </summary>
-        ProbeA = 0,
-        /// <summary>
-        /// Specifies that this is Probe B.
-        /// </summary>
-        ProbeB = 1
-    }
-
-    [Flags]
-    enum NeuropixelsV2Status : uint
-    {
-        SR_OK = 1 << 7 // Indicates the SR chain comparison is OK
-    }
-
     static class NeuropixelsV2
     {
         public const int ProbeAddress = 0x10;
@@ -120,6 +99,12 @@ namespace OpenEphys.Onix1
             {
             }
         }
+    }
+
+    [Flags]
+    enum NeuropixelsV2Status : uint
+    {
+        SR_OK = 1 << 7 // Indicates the SR chain comparison is OK
     }
 }
 

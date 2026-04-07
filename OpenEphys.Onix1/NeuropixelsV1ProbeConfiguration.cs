@@ -35,7 +35,7 @@ namespace OpenEphys.Onix1
     }
 
     /// <summary>
-    /// Defines a configuration for NeuropixelsV1e.
+    /// Defines a configuration for NeuropixelsV1.
     /// </summary>
     public class NeuropixelsV1ProbeConfiguration
     {

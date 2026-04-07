@@ -1,7 +1,7 @@
 ﻿namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// ADC calibration values for a NeuropixelsV1e device.
+    /// ADC calibration values for a NeuropixelsV1 device.
     /// </summary>
     public class NeuropixelsV1Adc
     {

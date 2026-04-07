@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing.Design;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
-using System.Xml.Serialization;
 using Bonsai;
 
 namespace OpenEphys.Onix1
@@ -122,13 +122,6 @@ namespace OpenEphys.Onix1
             set => focus.OnNext(value);
         }
 
-        // This is a hack. The hardware is quite unreliable and requires special assistance in order to
-        // operate. We do a lot of retries to make this happen. Once we have successful configuration, redoing
-        // it can cause failure. Therefore, we allow ConfigureMiniscopeV4 to set this variable in order to
-        // skip redundant configuration in Process(). This is not a great solution.
-        [XmlIgnore]
-        internal bool Configured { get; set; } = false;
-
         /// <summary>
         /// Configures the camera on a UCLA Miniscope V4.
         /// </summary>
@@ -152,104 +145,49 @@ namespace OpenEphys.Onix1
 
             return source.ConfigureAndLatchDevice(context =>
             {
-                try
+                // configure device via the DS90UB9x deserializer device
+                var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
+
+                // NB: required to get serdes link for miniscope, so this cannot be inside enable clause
+                ConfigureSensor(device);
+
+                var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
+                var shutdown = Disposable.Create(() =>
                 {
-                    // configure device via the DS90UB9x deserializer device
-                    var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
+                    // turn off EWL
+                    var max14574 = new I2CRegisterContext(device, UclaMiniscopeV4.Max14574Address);
+                    max14574.WriteByte(0x03, 0x00);
 
-                    // TODO: early exit if false?
-                    device.WriteRegister(DS90UB9x.ENABLE, enable ? 1u : 0);
+                    // turn off LED
+                    var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
+                    atMega.WriteByte(0x01, 0xFF);
+                });
 
-                    // check if configuration was already performed on this object
-                    if (!Configured)
-                    {
-                        ConfigureDeserializer(device);
-                        ConfigureCameraSystem(device, frameRate, interleaveLed);
-                    }
+                var disposables = new List<IDisposable>();
 
-                    var deviceInfo = new DeviceInfo(context, DeviceType, deviceAddress);
-                    var shutdown = Disposable.Create(() =>
-                    {
-                        // turn off EWL
-                        var max14574 = new I2CRegisterContext(device, UclaMiniscopeV4.Max14574Address);
-                        max14574.WriteByte(0x03, 0x00);
-
-                        // turn off LED
-                        var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
-                        atMega.WriteByte(1, 0xFF);
-                    });
-                    return new CompositeDisposable(
-                        ledBrightness.Subscribe(value => SetLedBrightness(device, value)),
-                        sensorGain.Subscribe(value => SetSensorGain(device, value)),
-                        focus.Subscribe(value => SetLiquidLensVoltage(device, value)),
-                        DeviceManager.RegisterDevice(deviceName, deviceInfo),
-                        shutdown);
-                }
-                finally
+                // NB: the DS90UB9x supports multiple streams and we don't want to overwrite other streams'
+                // enable state
+                if (enable)
                 {
-                    // needs to be reconfigured past this point, cannot rely on putting this action in
-                    // shutdown disposable since any exception before this function returns will not enforce
-                    // this setting
-                    Configured = false;
+                    device.WriteRegister(DS90UB9x.ENABLE, 1u);
+                    ConfigureImager(device, frameRate, interleaveLed);
+
+                    disposables.Add(ledBrightness.Subscribe(value => SetLedBrightness(device, value)));
+                    disposables.Add(sensorGain.Subscribe(value => SetSensorGain(device, value)));
+                    disposables.Add(focus.Subscribe(value => SetLiquidLensVoltage(device, value)));
                 }
+
+                disposables.Add(DeviceManager.RegisterDevice(deviceName, deviceInfo));
+                disposables.Add(shutdown);
+
+                return new CompositeDisposable(disposables);
             });
         }
 
-        internal static void ConfigureDeserializer(DeviceContext device)
-        {
-            // configure deserializer
-            device.WriteRegister(DS90UB9x.TRIGGEROFF, 0);
-            device.WriteRegister(DS90UB9x.READSZ, UclaMiniscopeV4.SensorColumns);
-            device.WriteRegister(DS90UB9x.TRIGGER, (uint)DS90UB9xTriggerMode.HsyncEdgePositive);
-            device.WriteRegister(DS90UB9x.SYNCBITS, 0);
-            device.WriteRegister(DS90UB9x.DATAGATE, (uint)DS90UB9xDataGate.VsyncPositive);
-
-            // NB: This is required because Bonsai is not guaranteed to capture every frame at the start of
-            // acquisition. For this reason, the frame start needs to be marked.
-            device.WriteRegister(DS90UB9x.MARK, (uint)DS90UB9xMarkMode.VsyncRising);
-
-            // The camera does not rely on magic words for data alignment
-            device.WriteRegister(DS90UB9x.MAGIC_MASK, 0);
-            device.WriteRegister(DS90UB9x.MAGIC, 0);
-            device.WriteRegister(DS90UB9x.MAGIC_WAIT, 0);
-            device.WriteRegister(DS90UB9x.DATAMODE, 0);
-            device.WriteRegister(DS90UB9x.DATALINES0, 0);
-            device.WriteRegister(DS90UB9x.DATALINES1, 0);
-
-            DS90UB9x.Initialize933SerDesLink(device, DS90UB9xMode.Raw12BitLowFrequency);
-
-            var deserializer = new I2CRegisterContext(device, DS90UB9x.DES_ADDR);
-
-            uint i2cAlias = UclaMiniscopeV4.AtMegaAddress << 1;
-            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID1, i2cAlias);
-            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias1, i2cAlias);
-
-            i2cAlias = UclaMiniscopeV4.Tpl0102Address << 1;
-            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID2, i2cAlias);
-            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias2, i2cAlias);
-
-            i2cAlias = UclaMiniscopeV4.Max14574Address << 1;
-            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID3, i2cAlias);
-            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias3, i2cAlias);
-
-            // Nominal I2C rate for miniscope
-            Set200kHzI2C(device);
-        }
-
-        static void Set80kHzI2C(DeviceContext device)
-        {
-            DS90UB9x.Set933I2CRate(device, 80e3); // Empirical data for reliably communication with atMega 
-        }
-
-        static void Set200kHzI2C(DeviceContext device)
-        {
-            DS90UB9x.Set933I2CRate(device, 200e3); // This allows maximum rate bno sampling
-        }
-
-        internal static void ConfigureCameraSystem(DeviceContext device, UclaMiniscopeV4FramesPerSecond frameRate, bool interleaveLed)
+        static void ConfigureSensor(DeviceContext device)
         {
             // NB: atMega (bit-banged I2C to SPI) requires that we talk slowly
-            Set80kHzI2C(device);
+            DS90UB9x.Set933I2CRate(device, UclaMiniscopeV4.AtMegaBitBangI2cClockRate);
 
             // set up Python480
             var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
@@ -259,6 +197,13 @@ namespace OpenEphys.Onix1
             WriteCameraRegister(atMega, 200, 3300); // Set frame rate to 30 Hz
             WriteCameraRegister(atMega, 201, 3000); // Set Exposure
 
+            // NB: interaction with the atMega (bit-banged I2C to SPI) requires that we talk slowly, reset to
+            // talk to normal chips
+            DS90UB9x.Set933I2CRate(device, UclaMiniscopeV4.NominalI2cClockRate);
+        }
+
+        static void ConfigureImager(DeviceContext device, UclaMiniscopeV4FramesPerSecond frameRate, bool interleaveLed)
+        {
             // set up potentiometer
             var tpl0102 = new I2CRegisterContext(device, UclaMiniscopeV4.Tpl0102Address);
             tpl0102.WriteByte(0x00, 0x72);
@@ -279,12 +224,16 @@ namespace OpenEphys.Onix1
                 _ => 3300
             };
 
+            // NB: atMega (bit-banged I2C to SPI) requires that we talk slowly
+            DS90UB9x.Set933I2CRate(device, UclaMiniscopeV4.AtMegaBitBangI2cClockRate);
+
+            var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
             atMega.WriteByte(0x04, (uint)(interleaveLed ? 0x00 : 0x03));
             WriteCameraRegister(atMega, 200, shutterWidth);
 
             // NB: interaction with the atMega (bit-banged I2C to SPI) requires that we talk slowly, reset to
             // talk to normal chips
-            Set200kHzI2C(device);
+            DS90UB9x.Set933I2CRate(device, UclaMiniscopeV4.NominalI2cClockRate);
         }
 
         static void WriteCameraRegister(I2CRegisterContext i2c, uint register, uint value)
@@ -300,25 +249,25 @@ namespace OpenEphys.Onix1
             i2c.WriteByte(valLow, 0x00);
         }
 
-        internal static void SetLedBrightness(DeviceContext device, double percent)
+        static void SetLedBrightness(DeviceContext device, double percent)
         {
             // NB: atMega (bit-banded i2c to SPI) requires that we talk slowly
-            Set80kHzI2C(device);
+            DS90UB9x.Set933I2CRate(device, UclaMiniscopeV4.AtMegaBitBangI2cClockRate);
             var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
             atMega.WriteByte(0x01, (uint)((percent == 0) ? 0xFF : 0x08));
 
             var tpl0102 = new I2CRegisterContext(device, UclaMiniscopeV4.Tpl0102Address);
             tpl0102.WriteByte(0x01, (uint)(255 * ((100 - percent) / 100.0)));
-            Set200kHzI2C(device);
+            DS90UB9x.Set933I2CRate(device, UclaMiniscopeV4.NominalI2cClockRate);
         }
 
-        internal static void SetSensorGain(DeviceContext device, UclaMiniscopeV4SensorGain gain)
+        static void SetSensorGain(DeviceContext device, UclaMiniscopeV4SensorGain gain)
         {
             // NB: atMega (bit-banded i2c to SPI) requires that we talk slowly
-            Set80kHzI2C(device);
+            DS90UB9x.Set933I2CRate(device, UclaMiniscopeV4.AtMegaBitBangI2cClockRate);
             var atMega = new I2CRegisterContext(device, UclaMiniscopeV4.AtMegaAddress);
             WriteCameraRegister(atMega, 204, (uint)gain);
-            Set200kHzI2C(device);
+            DS90UB9x.Set933I2CRate(device, UclaMiniscopeV4.NominalI2cClockRate);
         }
 
         internal static void SetLiquidLensVoltage(DeviceContext device, double focus)
@@ -338,6 +287,9 @@ namespace OpenEphys.Onix1
 
         public const int SensorRows = 608;
         public const int SensorColumns = 608;
+
+        internal const double NominalI2cClockRate = 200e3; // Maximum reliable serdes I2C clock rate in Hz
+        internal const double AtMegaBitBangI2cClockRate = 80e3; // Maximum relable serdes I2C clock rate when using the Atmega bit-bang passthrough in Hz
 
         internal class NameConverter : DeviceNameConverter
         {

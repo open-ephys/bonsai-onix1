@@ -2,9 +2,9 @@
 
 namespace OpenEphys.Onix1
 {
-    class NeuropixelsV1eDeviceInfo : DeviceInfo
+    class NeuropixelsV1PsbDecoderDeviceInfo : DeviceInfo
     {
-        public NeuropixelsV1eDeviceInfo(ContextTask context, Type deviceType, uint deviceAddress, NeuropixelsV1eRegisterContext probeControl, bool invertPolarity, NeuropixelsV1ProbeConfiguration probeConfiguration)
+        public NeuropixelsV1PsbDecoderDeviceInfo(ContextTask context, Type deviceType, uint deviceAddress, NeuropixelsV1RegisterContext probeControl, bool invertPolarity, NeuropixelsV1ProbeConfiguration probeConfiguration)
             : base(context, deviceType, deviceAddress)
         {
             ApGainCorrection = probeControl.ApGainCorrection;

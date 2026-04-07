@@ -111,7 +111,7 @@ namespace OpenEphys.Onix1
 
             foreach (var b in shankBytes)
             {
-                WriteByte(NeuropixelsV1e.SR_CHAIN1, b);
+                WriteByte(NeuropixelsV1f.SR_CHAIN1, b);
             }
 
             // base configuration

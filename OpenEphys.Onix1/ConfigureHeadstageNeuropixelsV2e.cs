@@ -140,6 +140,8 @@ namespace OpenEphys.Onix1
 
     class ConfigureHeadstageNeuropixelsV2eDS90UB9x : ConfigureDS90UB9x
     {
+        readonly Version MinimumRevision = new(1, 0);
+        const uint HeadstageId = 8;
 
         // Headstage-specific constants
         const byte GPO10SupplyMask = 1 << 3; // Used to turn on VDDA analog supply
@@ -156,10 +158,9 @@ namespace OpenEphys.Onix1
 
         override private protected void ConfigureSerdes(DeviceContext device)
         {
-            // configure device via the DS90UB9x deserializer device
-            device.WriteRegister(DS90UB9x.ENABLE, 0); // Default to disabled and let individual instances re-enable if they want
+            // default to disabled and let individual instances re-enable
+            device.WriteRegister(DS90UB9x.ENABLE, 0); 
 
-            // configure deserializer aliases and serializer power supply
             // configure deserializer trigger mode
             device.WriteRegister(DS90UB9x.TRIGGEROFF, 0);
             device.WriteRegister(DS90UB9x.TRIGGER, (uint)DS90UB9xTriggerMode.Continuous);
@@ -181,17 +182,21 @@ namespace OpenEphys.Onix1
             // configure deserializer I2C aliases
             var deserializer = new I2CRegisterContext(device, DS90UB9x.DES_ADDR);
 
-            uint alias = NeuropixelsV2.ProbeAddress << 1;
+            uint alias = HeadstageEeprom.I2CAddress << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID1, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias1, alias);
 
-            alias = NeuropixelsV2.FlexEEPROMAddress << 1;
+            alias = NeuropixelsV2.ProbeAddress << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID2, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias2, alias);
 
-            alias = PolledBno055.I2CAddress << 1;
+            alias = NeuropixelsV2.FlexEEPROMAddress << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID3, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias3, alias);
+
+            alias = PolledBno055.I2CAddress << 1;
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID4, alias);
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias4, alias);
 
             var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
             ShutdownProbes(serializer); // ensure probes are powered down and deselected before starting
@@ -201,8 +206,26 @@ namespace OpenEphys.Onix1
             // set I2C clock rate to ~400 kHz
             DS90UB9x.Set933I2CRate(device, 400e3);
 
+            // read and validate headstage EEPROM
+            ValidateHeadstage(new HeadstageEeprom(device));
+
             // issue full reset to both probes
             ResetProbes(serializer);
+        }
+
+        void ValidateHeadstage(HeadstageEeprom metadata)
+        {
+            if (metadata.Id != HeadstageId)
+            {
+                throw new InvalidOperationException(
+                    $"Expected a Headstage-NeuropixelsV2.0e but found '{metadata.Name}' (ID: {metadata.Id}).");
+            }
+
+            if (metadata.Revision < MinimumRevision)
+            {
+                throw new InvalidOperationException(
+                    $"Headstage version {MinimumRevision} is required but version {metadata.Revision} was detected.");
+            }
         }
 
         override private protected IDisposable ShutdownSerdes(DeviceContext device)

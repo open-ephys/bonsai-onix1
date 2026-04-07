@@ -18,14 +18,14 @@ namespace OpenEphys.Onix1
         public void WriteConfiguration(NeuropixelsV2ProbeConfiguration probe)
         {
             var baseBits = NeuropixelsV2.GenerateBaseBits(probe);
-            WriteShiftRegister(NeuropixelsV2eBeta.SR_CHAIN5, baseBits[0]);
-            WriteShiftRegister(NeuropixelsV2eBeta.SR_CHAIN6, baseBits[1]);
+            WriteShiftRegister(NeuropixelsV2Beta.SR_CHAIN5, baseBits[0]);
+            WriteShiftRegister(NeuropixelsV2Beta.SR_CHAIN6, baseBits[1]);
 
             var shankBits = NeuropixelsV2.GenerateShankBits(probe);
-            WriteShiftRegister(NeuropixelsV2eBeta.SR_CHAIN1, shankBits[0]);
-            WriteShiftRegister(NeuropixelsV2eBeta.SR_CHAIN2, shankBits[1]);
-            WriteShiftRegister(NeuropixelsV2eBeta.SR_CHAIN3, shankBits[2]);
-            WriteShiftRegister(NeuropixelsV2eBeta.SR_CHAIN4, shankBits[3]);
+            WriteShiftRegister(NeuropixelsV2Beta.SR_CHAIN1, shankBits[0]);
+            WriteShiftRegister(NeuropixelsV2Beta.SR_CHAIN2, shankBits[1]);
+            WriteShiftRegister(NeuropixelsV2Beta.SR_CHAIN3, shankBits[2]);
+            WriteShiftRegister(NeuropixelsV2Beta.SR_CHAIN4, shankBits[3]);
         }
 
 
@@ -37,11 +37,11 @@ namespace OpenEphys.Onix1
             while (count-- > 0)
             {
                 // This allows Base shift registers to get a good STATUS, but does not help shank registers.
-                WriteByte(NeuropixelsV2eBeta.SOFT_RESET, 0xFF);
-                WriteByte(NeuropixelsV2eBeta.SOFT_RESET, 0x00);
+                WriteByte(NeuropixelsV2Beta.SOFT_RESET, 0xFF);
+                WriteByte(NeuropixelsV2Beta.SOFT_RESET, 0x00);
 
-                WriteByte(NeuropixelsV2eBeta.SR_LENGTH1, (uint)(bytes.Length % 0x100));
-                WriteByte(NeuropixelsV2eBeta.SR_LENGTH2, (uint)(bytes.Length / 0x100));
+                WriteByte(NeuropixelsV2Beta.SR_LENGTH1, (uint)(bytes.Length % 0x100));
+                WriteByte(NeuropixelsV2Beta.SR_LENGTH2, (uint)(bytes.Length / 0x100));
 
                 foreach (var b in bytes)
                 {
@@ -51,17 +51,17 @@ namespace OpenEphys.Onix1
 
             if (ReadByte(NeuropixelsV2.STATUS) != (uint)NeuropixelsV2Status.SR_OK)
             {
-                Console.Error.WriteLine($"Warning: shift register {srAddress:X} status check failed. " +
+                Console.Error.WriteLine($"Warning: shift register 0x{srAddress:X2} status check failed. " +
                     $"{ShankName(srAddress)} may be damaged.");
             }
         }
 
         static string ShankName(uint shiftRegisterAddress) => shiftRegisterAddress switch
         {
-            NeuropixelsV2eBeta.SR_CHAIN1 => "Shank 1",
-            NeuropixelsV2eBeta.SR_CHAIN2 => "Shank 2",
-            NeuropixelsV2eBeta.SR_CHAIN3 => "Shank 3",
-            NeuropixelsV2eBeta.SR_CHAIN4 => "Shank 4",
+            NeuropixelsV2Beta.SR_CHAIN1 => "Shank 1",
+            NeuropixelsV2Beta.SR_CHAIN2 => "Shank 2",
+            NeuropixelsV2Beta.SR_CHAIN3 => "Shank 3",
+            NeuropixelsV2Beta.SR_CHAIN4 => "Shank 4",
             _ => throw new InvalidOperationException("Shift register address is not valid."),
         };
     }
