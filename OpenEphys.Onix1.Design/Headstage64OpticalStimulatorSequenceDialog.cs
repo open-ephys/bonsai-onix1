@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using ZedGraph;
@@ -15,12 +14,11 @@ namespace OpenEphys.Onix1.Design
     {
         readonly static int NumberOfChannels = 2;
 
-        internal readonly ConfigureHeadstage64OpticalStimulator OpticalStimulator;
+        internal ConfigureHeadstage64OpticalStimulator OpticalStimulator
+        {
+            get => (ConfigureHeadstage64OpticalStimulator)Device;
+        }
         readonly Headstage64OpticalStimulatorOptions StimulusSequenceOptions;
-
-        readonly Dictionary<TextBox, TextBoxBinding<double>> currentBindings;
-        readonly Dictionary<TextBox, TextBoxBinding<double>> timeBindings;
-        readonly Dictionary<TextBox, TextBoxBinding<uint>> countBindings;
 
         private protected override string XAxisScaleUnits => "ms";
         private protected override string YAxisScaleUnits => "mA";
@@ -30,104 +28,107 @@ namespace OpenEphys.Onix1.Design
         /// visual feedback on what the resulting stimulus sequence looks like.
         /// </summary>
         /// <param name="opticalStimulator">Existing stimulus sequence.</param>
-        public Headstage64OpticalStimulatorSequenceDialog(ConfigureHeadstage64OpticalStimulator opticalStimulator)
-            : base(NumberOfChannels, false)
+        /// <param name="filterProperties">
+        /// <see langword="true"/> if the properties should be filtered by <see cref="DeviceTablePropertyAttribute"/>,
+        /// otherwise <see langword="false"/>. Default is <see langword="false"/>.
+        /// </param>
+        public Headstage64OpticalStimulatorSequenceDialog(ConfigureHeadstage64OpticalStimulator opticalStimulator, bool filterProperties = false)
+            : base(opticalStimulator, NumberOfChannels, filterProperties)
         {
             InitializeComponent();
             HideMenuStrip();
 
-            OpticalStimulator = new(opticalStimulator);
-
             StimulusSequenceOptions = new(OpticalStimulator);
             StimulusSequenceOptions.SetChildFormProperties(this);
-            groupBoxDefineStimuli.Controls.Add(StimulusSequenceOptions);
+            tabPageDefineStimuli.Controls.Add(StimulusSequenceOptions);
 
             StimulusSequenceOptions.trackBarChannelOnePercent.Scroll += ChannelPercentTrackBarChanged;
             StimulusSequenceOptions.trackBarChannelTwoPercent.Scroll += ChannelPercentTrackBarChanged;
 
-            currentBindings = new()
+            StimulusSequenceOptions.textBoxMaxCurrent.DataBindings.Add(
+                "Text",
+                bindingSource,
+                nameof(OpticalStimulator.MaxCurrent),
+                false,
+                DataSourceUpdateMode.OnValidation);
+
+            StimulusSequenceOptions.textBoxChannelOnePercent.DataBindings.Add(
+                "Text",
+                bindingSource,
+                nameof(OpticalStimulator.ChannelOneCurrent),
+                false,
+                DataSourceUpdateMode.OnValidation);
+
+            StimulusSequenceOptions.textBoxChannelTwoPercent.DataBindings.Add(
+                "Text",
+                bindingSource,
+                nameof(OpticalStimulator.ChannelTwoCurrent),
+                false,
+                DataSourceUpdateMode.OnValidation);
+
+            StimulusSequenceOptions.textBoxInterBurstInterval.DataBindings.Add(
+                "Text",
+                bindingSource,
+                nameof(OpticalStimulator.InterBurstInterval),
+                false,
+                DataSourceUpdateMode.OnValidation);
+
+            StimulusSequenceOptions.textBoxDelay.DataBindings.Add(
+                "Text",
+                bindingSource,
+                nameof(OpticalStimulator.Delay),
+                false,
+                DataSourceUpdateMode.OnValidation);
+
+            StimulusSequenceOptions.textBoxPulseDuration.DataBindings.Add(
+                "Text",
+                bindingSource,
+                nameof(OpticalStimulator.PulseDuration),
+                false,
+                DataSourceUpdateMode.OnValidation);
+
+            StimulusSequenceOptions.textBoxPulseFrequencyHz.DataBindings.Add(
+                "Text",
+                bindingSource,
+                nameof(OpticalStimulator.PulsesPerSecond),
+                false,
+                DataSourceUpdateMode.OnValidation);
+
+            StimulusSequenceOptions.textBoxPulsesPerBurst.DataBindings.Add(
+                "Text",
+                bindingSource,
+                nameof(OpticalStimulator.PulsesPerBurst),
+                false,
+                DataSourceUpdateMode.OnValidation);
+
+            StimulusSequenceOptions.textBoxBurstsPerTrain.DataBindings.Add(
+                "Text",
+                bindingSource,
+                nameof(OpticalStimulator.BurstsPerTrain),
+                false,
+                DataSourceUpdateMode.OnValidation);
+
+            foreach (Control control in StimulusSequenceOptions.GetAllControls().OfType<TextBox>())
             {
-                { StimulusSequenceOptions.textBoxMaxCurrent,
-                    new TextBoxBinding<double>(
-                        StimulusSequenceOptions.textBoxMaxCurrent,
-                        value => { OpticalStimulator.MaxCurrent = value; return OpticalStimulator.MaxCurrent; },
-                        double.Parse) },
-                { StimulusSequenceOptions.textBoxChannelOnePercent,
-                    new TextBoxBinding<double>(
-                        StimulusSequenceOptions.textBoxChannelOnePercent,
-                        value =>
+                control.Validated += (sender, e) =>
+                {
+                    DrawStimulusWaveform();
+                };
+
+                control.KeyPress += (sender, e) =>
+                {
+                    if (e.KeyChar == '\r' && sender is TextBox tb)
+                    {
+                        foreach (Binding binding in tb.DataBindings)
                         {
-                            OpticalStimulator.ChannelOneCurrent = value;
-                            StimulusSequenceOptions.trackBarChannelOnePercent.Value = (int)(OpticalStimulator.ChannelOneCurrent * StimulusSequenceOptions.channelOneScalingFactor);
-                            return OpticalStimulator.ChannelOneCurrent;
-                        },
-                        double.Parse) },
-                { StimulusSequenceOptions.textBoxChannelTwoPercent,
-                    new TextBoxBinding<double>(
-                        StimulusSequenceOptions.textBoxChannelTwoPercent,
-                        value =>
-                        {
-                            OpticalStimulator.ChannelTwoCurrent = value;
-                            StimulusSequenceOptions.trackBarChannelTwoPercent.Value = (int)(OpticalStimulator.ChannelTwoCurrent * StimulusSequenceOptions.channelTwoScalingFactor);
-                            return OpticalStimulator.ChannelTwoCurrent;
-                        },
-                        double.Parse) }
-            };
+                            binding.WriteValue();
+                        }
 
-            timeBindings = new()
-            {
-                { StimulusSequenceOptions.textBoxInterBurstInterval,
-                    new TextBoxBinding<double>(
-                        StimulusSequenceOptions.textBoxInterBurstInterval,
-                        value => { OpticalStimulator.InterBurstInterval = value; return OpticalStimulator.InterBurstInterval; },
-                        double.Parse) },
-                { StimulusSequenceOptions.textBoxDelay,
-                    new TextBoxBinding<double>(
-                        StimulusSequenceOptions.textBoxDelay,
-                        value => { OpticalStimulator.Delay = value; return OpticalStimulator.Delay; },
-                        double.Parse) },
-                { StimulusSequenceOptions.textBoxPulseDuration,
-                    new TextBoxBinding<double>(
-                        StimulusSequenceOptions.textBoxPulseDuration,
-                        value => { OpticalStimulator.PulseDuration = value; return OpticalStimulator.PulseDuration; },
-                        double.Parse) },
-                { StimulusSequenceOptions.textBoxPulseFrequencyHz,
-                    new TextBoxBinding<double>(
-                        StimulusSequenceOptions.textBoxPulseFrequencyHz,
-                        value => { OpticalStimulator.PulsesPerSecond = value; return OpticalStimulator.PulsesPerSecond; },
-                        double.Parse) },
-            };
+                        bindingSource.ResetCurrentItem();
 
-            countBindings = new()
-            {
-                { StimulusSequenceOptions.textBoxPulsesPerBurst,
-                    new TextBoxBinding<uint>(
-                        StimulusSequenceOptions.textBoxPulsesPerBurst,
-                        value => { OpticalStimulator.PulsesPerBurst = value; return OpticalStimulator.PulsesPerBurst; },
-                        uint.Parse) },
-                { StimulusSequenceOptions.textBoxBurstsPerTrain,
-                    new TextBoxBinding<uint>(
-                        StimulusSequenceOptions.textBoxBurstsPerTrain,
-                        value => { OpticalStimulator.BurstsPerTrain = value; return OpticalStimulator.BurstsPerTrain; },
-                        uint.Parse) }
-            };
-
-            foreach (var binding in currentBindings)
-            {
-                binding.Key.Leave += TextBoxChanged;
-                binding.Key.KeyPress += KeyPressed;
-            }
-
-            foreach (var binding in timeBindings)
-            {
-                binding.Key.Leave += TextBoxChanged;
-                binding.Key.KeyPress += KeyPressed;
-            }
-
-            foreach (var binding in countBindings)
-            {
-                binding.Key.Leave += TextBoxChanged;
-                binding.Key.KeyPress += KeyPressed;
+                        DrawStimulusWaveform();
+                    }
+                };
             }
 
             StimulusSequenceOptions.Show();
@@ -140,41 +141,16 @@ namespace OpenEphys.Onix1.Design
 
             DrawStimulusWaveform();
 
-            stimulusWaveformToolStripMenuItem.Text = "Optical Stimulus Sequence";
-        }
+            bindingSource.ListChanged += (sender, eventArgs) => propertyGrid.Refresh();
 
-        void KeyPressed(object sender, KeyPressEventArgs e)
-        {
-            if (e.KeyChar == '\r' && sender is TextBox)
+            tabControlProperties.SelectedIndexChanged += (sender, eventArgs) =>
             {
-                TextBoxChanged(sender, e);
-            }
-        }
+                if (tabControlProperties.SelectedTab == tabPageProperties)
+                    propertyGrid.Refresh();
 
-        void TextBoxChanged(object sender, EventArgs e)
-        {
-            if (sender is TextBox textBox)
-            {
-                if (currentBindings.TryGetValue(textBox, out var currentBinding))
-                {
-                    currentBinding.UpdateFromTextBox();
-                }
-                else if (timeBindings.TryGetValue(textBox, out var timeBinding))
-                {
-                    timeBinding.UpdateFromTextBox();
-                }
-                else if (countBindings.TryGetValue(textBox, out var countBinding))
-                {
-                    countBinding.UpdateFromTextBox();
-                }
-                else
-                {
-                    throw new NotImplementedException($"No valid text box found when updating parameters in {nameof(Headstage64OpticalStimulatorSequenceDialog)}");
-                }
-
-                SetTextBoxBackgroundDefault(textBox);
-                DrawStimulusWaveform();
-            }
+                else if (tabControlProperties.SelectedTab == tabPageDefineStimuli)
+                    bindingSource.ResetCurrentItem();
+            };
         }
 
         void ChannelPercentTrackBarChanged(object sender, EventArgs eventArgs)
@@ -197,6 +173,8 @@ namespace OpenEphys.Onix1.Design
                 {
                     throw new NotImplementedException($"Could not find a valid track bar when updating parameters in {nameof(Headstage64OpticalStimulatorSequenceDialog)}");
                 }
+
+                propertyGrid.Refresh();
 
                 DrawStimulusWaveform();
             }

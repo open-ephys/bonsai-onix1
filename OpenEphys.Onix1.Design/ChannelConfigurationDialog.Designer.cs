@@ -30,19 +30,52 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ChannelConfigurationDialog));
+            this.panel = new System.Windows.Forms.Panel();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.zedGraphChannels = new ZedGraph.ZedGraphControl();
+            this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
             this.buttonResetZoom = new System.Windows.Forms.Button();
             this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.fileMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dropDownOpenFile = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.dropDownSaveFile = new System.Windows.Forms.ToolStripMenuItem();
+            this.dropDownSaveFileAs = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.dropDownImportFile = new System.Windows.Forms.ToolStripMenuItem();
             this.dropDownLoadDefault = new System.Windows.Forms.ToolStripMenuItem();
-            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
-            this.menuStrip.SuspendLayout();
+            this.panel.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
+            this.menuStrip.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // panel
+            // 
+            this.panel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel.Controls.Add(this.tableLayoutPanel1);
+            this.panel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel.Location = new System.Drawing.Point(0, 27);
+            this.panel.Name = "panel";
+            this.panel.Padding = new System.Windows.Forms.Padding(1);
+            this.panel.Size = new System.Drawing.Size(609, 547);
+            this.panel.TabIndex = 7;
+            // 
+            // tableLayoutPanel1
+            // 
+            this.tableLayoutPanel1.ColumnCount = 1;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.Controls.Add(this.zedGraphChannels, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel2, 0, 1);
+            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(2, 2);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 2;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 42F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 42F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(603, 541);
+            this.tableLayoutPanel1.TabIndex = 6;
             // 
             // zedGraphChannels
             // 
@@ -58,11 +91,20 @@
             this.zedGraphChannels.ScrollMinX = 0D;
             this.zedGraphChannels.ScrollMinY = 0D;
             this.zedGraphChannels.ScrollMinY2 = 0D;
-            this.zedGraphChannels.Size = new System.Drawing.Size(599, 496);
+            this.zedGraphChannels.Size = new System.Drawing.Size(593, 487);
             this.zedGraphChannels.TabIndex = 4;
             this.zedGraphChannels.TabStop = false;
             this.zedGraphChannels.UseExtendedPrintDialog = true;
             this.zedGraphChannels.ZoomEvent += new ZedGraph.ZedGraphControl.ZoomEventHandler(this.ZoomEvent);
+            // 
+            // flowLayoutPanel2
+            // 
+            this.flowLayoutPanel2.Controls.Add(this.buttonResetZoom);
+            this.flowLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.flowLayoutPanel2.Location = new System.Drawing.Point(3, 502);
+            this.flowLayoutPanel2.Name = "flowLayoutPanel2";
+            this.flowLayoutPanel2.Size = new System.Drawing.Size(597, 36);
+            this.flowLayoutPanel2.TabIndex = 5;
             // 
             // buttonResetZoom
             // 
@@ -79,78 +121,92 @@
             // 
             // menuStrip
             // 
+            this.menuStrip.AutoSize = false;
+            this.menuStrip.BackColor = System.Drawing.SystemColors.Control;
             this.menuStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.menuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileMenuItem});
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
             this.menuStrip.Padding = new System.Windows.Forms.Padding(5, 1, 0, 1);
-            this.menuStrip.Size = new System.Drawing.Size(609, 24);
+            this.menuStrip.ShowItemToolTips = true;
+            this.menuStrip.Size = new System.Drawing.Size(609, 27);
             this.menuStrip.TabIndex = 5;
-            this.menuStrip.Text = "menuStripChannelConfiguration";
             // 
             // fileMenuItem
             // 
             this.fileMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.dropDownOpenFile,
+            this.toolStripSeparator1,
             this.dropDownSaveFile,
+            this.dropDownSaveFileAs,
+            this.toolStripSeparator2,
+            this.dropDownImportFile,
             this.dropDownLoadDefault});
             this.fileMenuItem.Name = "fileMenuItem";
-            this.fileMenuItem.Size = new System.Drawing.Size(37, 22);
+            this.fileMenuItem.Size = new System.Drawing.Size(37, 25);
             this.fileMenuItem.Text = "File";
             // 
             // dropDownOpenFile
             // 
             this.dropDownOpenFile.Name = "dropDownOpenFile";
+            this.dropDownOpenFile.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
             this.dropDownOpenFile.Size = new System.Drawing.Size(218, 22);
-            this.dropDownOpenFile.Text = "Import ProbeInterface File";
+            this.dropDownOpenFile.Text = "Open";
+            this.dropDownOpenFile.ToolTipText = "Open a new file and update the ProbeInterface file name to the new file path.";
             this.dropDownOpenFile.Click += new System.EventHandler(this.MenuItemOpenFile);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(215, 6);
             // 
             // dropDownSaveFile
             // 
             this.dropDownSaveFile.Name = "dropDownSaveFile";
+            this.dropDownSaveFile.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
             this.dropDownSaveFile.Size = new System.Drawing.Size(218, 22);
-            this.dropDownSaveFile.Text = "Export ProbeInterface File";
+            this.dropDownSaveFile.Text = "Save";
+            this.dropDownSaveFile.ToolTipText = "Save the current electrode configuration to the current file path.";
             this.dropDownSaveFile.Click += new System.EventHandler(this.MenuItemSaveFile);
+            // 
+            // dropDownSaveFileAs
+            // 
+            this.dropDownSaveFileAs.Name = "dropDownSaveFileAs";
+            this.dropDownSaveFileAs.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift) 
+            | System.Windows.Forms.Keys.S)));
+            this.dropDownSaveFileAs.Size = new System.Drawing.Size(218, 22);
+            this.dropDownSaveFileAs.Text = "Save As...";
+            this.dropDownSaveFileAs.ToolTipText = "Save the electrode configuration to a new file path.";
+            this.dropDownSaveFileAs.Click += new System.EventHandler(this.MenuItemSaveFileAs);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(215, 6);
+            // 
+            // dropDownImportFile
+            // 
+            this.dropDownImportFile.Name = "dropDownImportFile";
+            this.dropDownImportFile.Size = new System.Drawing.Size(218, 22);
+            this.dropDownImportFile.Text = "Import Configuration";
+            this.dropDownImportFile.ToolTipText = "Import the contents of another file without overwriting the file path.";
+            this.dropDownImportFile.Click += new System.EventHandler(this.MenuItemImportFile);
             // 
             // dropDownLoadDefault
             // 
             this.dropDownLoadDefault.Name = "dropDownLoadDefault";
             this.dropDownLoadDefault.Size = new System.Drawing.Size(218, 22);
             this.dropDownLoadDefault.Text = "Load Default Configuration";
+            this.dropDownLoadDefault.ToolTipText = "Load the default configuration without changing the file path.";
             this.dropDownLoadDefault.Click += new System.EventHandler(this.MenuItemLoadDefaultConfig);
-            // 
-            // tableLayoutPanel1
-            // 
-            this.tableLayoutPanel1.ColumnCount = 1;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Controls.Add(this.zedGraphChannels, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel2, 0, 1);
-            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 24);
-            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 2;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 42F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 42F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(609, 550);
-            this.tableLayoutPanel1.TabIndex = 6;
-            // 
-            // flowLayoutPanel2
-            // 
-            this.flowLayoutPanel2.Controls.Add(this.buttonResetZoom);
-            this.flowLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanel2.Location = new System.Drawing.Point(3, 511);
-            this.flowLayoutPanel2.Name = "flowLayoutPanel2";
-            this.flowLayoutPanel2.Size = new System.Drawing.Size(603, 36);
-            this.flowLayoutPanel2.TabIndex = 5;
             // 
             // ChannelConfigurationDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(609, 574);
-            this.Controls.Add(this.tableLayoutPanel1);
+            this.Controls.Add(this.panel);
             this.Controls.Add(this.menuStrip);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip;
@@ -158,13 +214,13 @@
             this.Name = "ChannelConfigurationDialog";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Channel Configuration";
-            this.menuStrip.ResumeLayout(false);
-            this.menuStrip.PerformLayout();
+            this.panel.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.flowLayoutPanel2.ResumeLayout(false);
+            this.menuStrip.ResumeLayout(false);
+            this.menuStrip.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
@@ -172,11 +228,16 @@
         internal ZedGraph.ZedGraphControl zedGraphChannels;
         private System.Windows.Forms.MenuStrip menuStrip;
         private System.Windows.Forms.ToolStripMenuItem fileMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem dropDownOpenFile;
-        private System.Windows.Forms.ToolStripMenuItem dropDownSaveFile;
+        internal System.Windows.Forms.ToolStripMenuItem dropDownImportFile;
+        private System.Windows.Forms.ToolStripMenuItem dropDownSaveFileAs;
         private System.Windows.Forms.ToolStripMenuItem dropDownLoadDefault;
         private System.Windows.Forms.Button buttonResetZoom;
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel2;
+        private System.Windows.Forms.ToolStripMenuItem dropDownOpenFile;
+        private System.Windows.Forms.ToolStripMenuItem dropDownSaveFile;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        internal System.Windows.Forms.Panel panel;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
     }
 }

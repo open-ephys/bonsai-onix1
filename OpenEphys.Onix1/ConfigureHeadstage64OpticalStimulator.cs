@@ -39,26 +39,6 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Copy constructor for the <see cref="ConfigureHeadstage64OpticalStimulator"/> class.
-        /// </summary>
-        /// <param name="opticalStimulator">Existing <see cref="ConfigureHeadstage64OpticalStimulator"/> object.</param>
-        public ConfigureHeadstage64OpticalStimulator(ConfigureHeadstage64OpticalStimulator opticalStimulator) : this()
-        {
-            DeviceName = opticalStimulator.DeviceName;
-            DeviceAddress = opticalStimulator.DeviceAddress;
-            Delay = opticalStimulator.Delay;
-            Arm = opticalStimulator.Arm;
-            MaxCurrent = opticalStimulator.MaxCurrent;
-            ChannelOneCurrent = opticalStimulator.ChannelOneCurrent;
-            ChannelTwoCurrent = opticalStimulator.ChannelTwoCurrent;
-            PulseDuration = opticalStimulator.PulseDuration;
-            PulsesPerSecond = opticalStimulator.PulsesPerSecond;
-            PulsesPerBurst = opticalStimulator.PulsesPerBurst;
-            InterBurstInterval = opticalStimulator.InterBurstInterval;
-            BurstsPerTrain = opticalStimulator.BurstsPerTrain;
-        }
-
-        /// <summary>
         /// Gets or sets the device arm state.
         /// </summary>
         /// <remarks>
@@ -227,6 +207,7 @@ namespace OpenEphys.Onix1
         /// This value should be kept below 50 mA to prevent excess head accumulation on the headstage.
         /// </remarks>
         [Description("The total direct current required during the application of a burst (mA). Should be less than 50 mA.")]
+        [Category(AcquisitionCategory)]
         public double BurstCurrent
         {
             get

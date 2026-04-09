@@ -10,37 +10,37 @@ using Bonsai.Design;
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Partial class to create a spatial-calibration GUI for <see cref="TS4231V1SpatialTransform.SpatialTransform"/>.
+    /// Partial class to create a spatial-calibration GUI for <see cref="TS4231V1LinearTransform.LinearTransform"/>.
     /// </summary>
-    public partial class SpatialTransformMatrixDialog : Form
+    public partial class LinearTransformMatrixDialog : Form
     {
-        internal SpatialTransform3D SpatialTransform;
+        internal LinearTransform3D LinearTransform;
         const byte NumMeasurements = 100;
         readonly IObservable<TS4231V1PositionDataFrame> PositionDataSource;
         IDisposable richTextBoxStatusUpdateSubscription;
         IDisposable MeasurementCalculationSubscription;
 
-        internal SpatialTransformMatrixDialog(IObservable<TS4231V1PositionDataFrame> dataSource, SpatialTransform3D transformProperties)
+        internal LinearTransformMatrixDialog(IObservable<TS4231V1PositionDataFrame> dataSource, LinearTransform3D transformProperties)
         {
             InitializeComponent();
 
             richTextBoxInstructions.Clear();
             richTextBoxInstructions.BulletIndent = 16;
-            richTextBoxInstructions.SelectedText = "Follow the instructions below to transfom TS4231 position data from a generic base-station reference frame to a user-define reference frame:\n\n";
+            richTextBoxInstructions.SelectedText = "Follow the instructions below to transform TS4231 position data from a generic base-station reference frame to a user-defined reference frame:\n\n";
             richTextBoxInstructions.SelectionBullet = true;
             richTextBoxInstructions.SelectedText = "Determine a set of 4, well separated XYZ positions in the space in which the headstage will move. These positions should explore a large region of the territory that the headstage will explore and not be confined to a particular plane. Each position defined in this step corresponds to a row in the table below.\n";
             richTextBoxInstructions.SelectedText = "For the first position, place the headstage and click the first measure button on the GUI. After the TS4231 coordinate is obtained from the headstage, enter the known User coordinates in the X, Y, and Z text boxes to provide your spatial mapping. Repeat this process for the second, third, and fourth positions to populate the second, third, and fourth rows of the table.\n";
-            richTextBoxInstructions.SelectedText = "Click \"OK\" to close this GUI and set the spatial transform properties in the workflow.\n";
+            richTextBoxInstructions.SelectedText = "Click \"OK\" to close this GUI and set the linear transform properties in the workflow.\n";
             richTextBoxInstructions.SelectionBullet = false;
             richTextBoxInstructions.SelectedText = "\nFor more in-depth instructions, find the corresponding tutorial in Open Ephys' online documentation.";
 
-            SpatialTransform = transformProperties;
+            LinearTransform = transformProperties;
             PositionDataSource = dataSource;
 
             var ts4231TextBoxes = new TextBox[] {
                 textBoxTS4231Coordinate0, textBoxTS4231Coordinate1,
                 textBoxTS4231Coordinate2, textBoxTS4231Coordinate3 };
-            var preTransformCoordinates = MatrixToFloatArray(SpatialTransform.A);
+            var preTransformCoordinates = MatrixToFloatArray(LinearTransform.A);
             for (byte i = 0; i < 4; i++)
                 ts4231TextBoxes[i].Text = float.IsNaN(preTransformCoordinates[i * 3]) ? "" :  $"{preTransformCoordinates[i * 3]}, " +
                                                                                               $"{preTransformCoordinates[i * 3 + 1]}, " +
@@ -51,19 +51,19 @@ namespace OpenEphys.Onix1.Design
                 textBoxUserCoordinate1X, textBoxUserCoordinate1Y, textBoxUserCoordinate1Z,
                 textBoxUserCoordinate2X, textBoxUserCoordinate2Y, textBoxUserCoordinate2Z,
                 textBoxUserCoordinate3X, textBoxUserCoordinate3Y, textBoxUserCoordinate3Z };
-            var postTransformCoordinates = MatrixToFloatArray(SpatialTransform.B);
+            var postTransformCoordinates = MatrixToFloatArray(LinearTransform.B);
             foreach (var (tb, comp) in Enumerable.Zip(userTextBoxes, postTransformCoordinates, (tb, comp) => (tb, comp)))
                 tb.Text = float.IsNaN(comp) ? "" : comp.ToString();
 
-            IndicateSpatialTransformStatus();
+            IndicateLinearTransformStatus();
         }
 
         void TextBoxUserCoordinate_TextChanged(object sender, EventArgs e)
         {
             var tag = Convert.ToByte(((TextBox)sender).Tag);
-            try { SpatialTransform.B = SetMatrixElement(SpatialTransform.B, float.Parse(((TextBox)sender).Text), tag / 3, tag % 3); }
-            catch { SpatialTransform.B = SetMatrixElement(SpatialTransform.B, float.NaN, tag / 3, tag % 3); }
-            IndicateSpatialTransformStatus();
+            try { LinearTransform.B = SetMatrixElement(LinearTransform.B, float.Parse(((TextBox)sender).Text), tag / 3, tag % 3); }
+            catch { LinearTransform.B = SetMatrixElement(LinearTransform.B, float.NaN, tag / 3, tag % 3); }
+            IndicateLinearTransformStatus();
         }
 
         void ButtonMeasure_Click(object sender, EventArgs e)
@@ -72,15 +72,15 @@ namespace OpenEphys.Onix1.Design
             var index = Convert.ToByte(((Button)sender).Tag);
 
             for (byte i = 0; i < 3; i++)
-                SpatialTransform.A = SetMatrixElement(SpatialTransform.A, float.NaN, index, i);
+                LinearTransform.A = SetMatrixElement(LinearTransform.A, float.NaN, index, i);
             ts4231TextBoxes[index].Text = "";
             
             if (((Button)sender).Text == "Measure")
             {
                 richTextBoxStatus.SelectionColor = Color.Blue;
                 richTextBoxStatus.AppendText($"Measurement at coordinate {index} initiated.\n");
-                IndicateSpatialTransformStatus();
-                textBoxSpatialTransformMatrix.Text = "";
+                IndicateLinearTransformStatus();
+                textBoxLinearTransformMatrix.Text = "";
                 ((Button)sender).Text = "Cancel";
                 EnableButtons(false, index);
 
@@ -124,9 +124,9 @@ namespace OpenEphys.Onix1.Design
                         acc =>
                         {
                             var measurement = acc.Sum / NumMeasurements;
-                            SpatialTransform.A = SetMatrixElement(SpatialTransform.A, measurement.X, index, 0);
-                            SpatialTransform.A = SetMatrixElement(SpatialTransform.A, measurement.Y, index, 1);
-                            SpatialTransform.A = SetMatrixElement(SpatialTransform.A, measurement.Z, index, 2);
+                            LinearTransform.A = SetMatrixElement(LinearTransform.A, measurement.X, index, 0);
+                            LinearTransform.A = SetMatrixElement(LinearTransform.A, measurement.Y, index, 1);
+                            LinearTransform.A = SetMatrixElement(LinearTransform.A, measurement.Z, index, 2);
                             return (Position: measurement, Valid: acc.Count == NumMeasurements);
                         })
                     .ObserveOn(new ControlScheduler(this))
@@ -136,7 +136,7 @@ namespace OpenEphys.Onix1.Design
                         if (measurement.Valid)
                         {
                             ts4231TextBoxes[index].Text = $"{measurement.Position.X}, {measurement.Position.Y}, {measurement.Position.Z}";
-                            IndicateSpatialTransformStatus();
+                            IndicateLinearTransformStatus();
                         }
                     });
 
@@ -157,27 +157,27 @@ namespace OpenEphys.Onix1.Design
         {
             var confirmationMessage = "";
             var invalidInput = false;
-            if (ContainsNaN(SpatialTransform.A) || ContainsNaN(SpatialTransform.B))
+            if (ContainsNaN(LinearTransform.A) || ContainsNaN(LinearTransform.B))
             {
                 confirmationMessage = $"At least one entry in the TS4231V1 Calibration GUI form is invalid:\n\n";
 
                 for (byte i = 0; i < 4; i++)
-                    if (float.IsNaN(MatrixToFloatArray(SpatialTransform.A)[i * 3]))
+                    if (float.IsNaN(MatrixToFloatArray(LinearTransform.A)[i * 3]))
                         confirmationMessage += $" • TS4231 coordinate {i}\n";
 
                 var axes = new char[] { 'X', 'Y', 'Z' };
                 var coordinates = new byte[] { 0, 1, 2, 3 };
 
                 for (byte i = 0; i < 12; i++)
-                    if (float.IsNaN(MatrixToFloatArray(SpatialTransform.B)[i]))
+                    if (float.IsNaN(MatrixToFloatArray(LinearTransform.B)[i]))
                         confirmationMessage += $" • Component {axes[i % 3]} from user coordinate {coordinates[i / 3]}\n";
 
                 confirmationMessage += "\nAny invalid entry will not be saved. ";
                 invalidInput = true;
             }
-            else if (!Matrix4x4.Invert(SpatialTransform.M, out _))
+            else if (!Matrix4x4.Invert(LinearTransform.M, out _))
             { 
-                confirmationMessage = $"The calculated spatial transform matrix is non-invertible. ";
+                confirmationMessage = $"The calculated linear transform matrix is non-invertible. ";
                 invalidInput = true;
             }
 
@@ -198,25 +198,25 @@ namespace OpenEphys.Onix1.Design
             Array.ForEach(buttons, button => button.Enabled = enable || (Convert.ToByte(button.Tag) == index));
         }
 
-        void IndicateSpatialTransformStatus()
+        void IndicateLinearTransformStatus()
         {
-            if (ContainsNaN(SpatialTransform.A) || ContainsNaN(SpatialTransform.B))
+            if (ContainsNaN(LinearTransform.A) || ContainsNaN(LinearTransform.B))
             {
                 toolStripStatusLabel.Image = Properties.Resources.StatusWarningImage;
                 toolStripStatusLabel.Text = "All fields must be properly populated.";
-                textBoxSpatialTransformMatrix.Text = "";
+                textBoxLinearTransformMatrix.Text = "";
             }
-            else if (!Matrix4x4.Invert(SpatialTransform.M, out _))
+            else if (!Matrix4x4.Invert(LinearTransform.M, out _))
             {
                 toolStripStatusLabel.Image = Properties.Resources.StatusWarningImage;
-                toolStripStatusLabel.Text = "The calculated spatial transform matrix must be invertible.";
-                textBoxSpatialTransformMatrix.Text = "";
+                toolStripStatusLabel.Text = "The calculated linear transform matrix must be invertible.";
+                textBoxLinearTransformMatrix.Text = "";
             }
             else 
             {
                 toolStripStatusLabel.Image = Properties.Resources.StatusReadyImage;
-                toolStripStatusLabel.Text = "Spatial transform matrix is calculated.";
-                textBoxSpatialTransformMatrix.Text = Matrix4x4ToPrettyString(SpatialTransform.M);
+                toolStripStatusLabel.Text = "Linear transform matrix is calculated.";
+                textBoxLinearTransformMatrix.Text = Matrix4x4ToPrettyString(LinearTransform.M);
             }
         }
 

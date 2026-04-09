@@ -70,13 +70,17 @@ namespace OpenEphys.Onix1
                 {
                     var sampleIndex = 0;
                     var info = (NeuropixelsV1fDeviceInfo)deviceInfo;
+                    if (info.ProbeGroup == null)
+                    {
+                        throw new NullReferenceException($"No ProbeGroup found for {nameof(NeuropixelsV1f)}.");
+                    }
                     var device = info.GetDeviceContext(typeof(NeuropixelsV1f));
                     var spikeBuffer = new ushort[NeuropixelsV1.ChannelCount, spikeBufferSize];
                     var lfpBuffer = new ushort[NeuropixelsV1.ChannelCount, lfpBufferSize];
                     var frameCountBuffer = new int[spikeBufferSize * NeuropixelsV1.FramesPerSuperFrame];
                     var hubClockBuffer = new ulong[spikeBufferSize];
                     var clockBuffer = new ulong[spikeBufferSize];
-                    int[,] channelOrder = orderByDepth ? Neuropixels.OrderChannelsByDepth(info.ProbeConfiguration.ChannelMap, RawToChannel) : RawToChannel;
+                    int[,] channelOrder = orderByDepth ? Neuropixels.OrderChannelsByDepth(info.ProbeGroup.ChannelMap, RawToChannel) : RawToChannel;
 
                     var frameObserver = Observer.Create<oni.Frame>(
                         frame =>

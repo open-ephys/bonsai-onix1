@@ -1,8 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Drawing.Design;
-using System.Xml.Serialization;
 using System.IO;
+using System.Xml.Serialization;
 
 namespace OpenEphys.Onix1
 {
@@ -15,7 +15,7 @@ namespace OpenEphys.Onix1
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a parallel serial bus decoder for a single NeuropixelsV2-Beta probe.")]
-    public class ConfigureNeuropixelsV2BetaPsbDecoder : SingleDeviceFactory
+    public class ConfigureNeuropixelsV2BetaPsbDecoder : SingleDeviceFactory, IConfigureNeuropixelsV2
     {
         internal Action<I2CRegisterContext> SelectProbe { private get; set; } = _ => { };
         internal Action<I2CRegisterContext> SyncProbes { private get; set; } = _ => { };
@@ -81,8 +81,11 @@ namespace OpenEphys.Onix1
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
             var streamIndex = StreamIndex;
+
             return source.ConfigureAndLatchDevice(context =>
             {
+                NeuropixelsV2eProbeGroup probeGroup = new NeuropixelsV2eQuadShankProbeGroup();
+
                 // configure device via the DS90UB9x deserializer device
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
                 var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
@@ -128,7 +131,12 @@ namespace OpenEphys.Onix1
                                 $"match the gain calibration file serial number: {gainCorrection.Value.SerialNumber}.");
                         }
 
-                        probeControl.WriteConfiguration(probeConfiguration);
+                        if (File.Exists(probeConfiguration.ProbeInterfaceFileName))
+                        {
+                            probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfiguration.ProbeInterfaceFileName, typeof(NeuropixelsV2eQuadShankProbeGroup)) as NeuropixelsV2eProbeGroup;
+                        }
+
+                        probeControl.WriteConfiguration(probeConfiguration, probeGroup);
 
                         // configure probe streaming
                         probeControl.WriteByte(NeuropixelsV2Beta.OP_MODE, 0b0100_0000);
@@ -140,7 +148,7 @@ namespace OpenEphys.Onix1
 
                 var deviceInfo = new NeuropixelsV2BetaPsbDecoderDeviceInfo(
                     context, DeviceType, deviceAddress, streamIndex,
-                    gainCorrection?.GainCorrectionFactor ?? 1.0, probeConfiguration);
+                    gainCorrection?.GainCorrectionFactor ?? 1.0, probeConfiguration, probeGroup);
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
         }

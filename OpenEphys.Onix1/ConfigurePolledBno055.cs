@@ -25,21 +25,6 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Initializes a new instance of <see cref="ConfigurePolledBno055"/> with its properties copied from an
-        /// existing instance.
-        /// </summary>
-        /// <param name="configurePolledBno055">A pre-existing <see cref="ConfigurePolledBno055"/> object.</param>
-        public ConfigurePolledBno055(ConfigurePolledBno055 configurePolledBno055)
-            : base(typeof(PolledBno055))
-        {
-            Enable = configurePolledBno055.Enable;
-            DeviceName = configurePolledBno055.DeviceName;
-            DeviceAddress = configurePolledBno055.DeviceAddress;
-            AxisMap = configurePolledBno055.AxisMap;
-            AxisSign = configurePolledBno055.AxisSign;
-        }
-
-        /// <summary>
         /// Gets or sets a value specifying whether the Bno055 device is enabled.
         /// </summary>
         /// <remarks>

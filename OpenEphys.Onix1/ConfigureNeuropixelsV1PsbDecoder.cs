@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.IO;
 
 namespace OpenEphys.Onix1
 {
@@ -55,10 +56,16 @@ namespace OpenEphys.Onix1
             var enable = Enable;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
-            var invertPolarity = ProbeConfiguration.InvertPolarity;
             var probeConfiguration = new NeuropixelsV1ProbeConfiguration(ProbeConfiguration);
             return source.ConfigureAndLatchDevice(context =>
             {
+                NeuropixelsV1eProbeGroup probeGroup = new();
+
+                if (File.Exists(probeConfiguration.ProbeInterfaceFileName))
+                {
+                    probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfiguration.ProbeInterfaceFileName, typeof(NeuropixelsV1eProbeGroup)) as NeuropixelsV1eProbeGroup;
+                }
+
                 // configure device via the DS90UB9x deserializer device
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
                 var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
@@ -75,12 +82,12 @@ namespace OpenEphys.Onix1
 
                 // program shift registers
                 var probeControl = new NeuropixelsV1RegisterContext(device, NeuropixelsV1.ProbeI2CAddress,
-                    probeMetadata.ProbeSerialNumber, probeConfiguration);
+                    probeMetadata.ProbeSerialNumber, probeConfiguration, probeGroup);
                 probeControl.InitializeProbe();
                 probeControl.WriteConfiguration();
                 probeControl.StartAcquisition();
 
-                var deviceInfo = new NeuropixelsV1PsbDecoderDeviceInfo(context, DeviceType, deviceAddress, probeControl, invertPolarity, probeConfiguration);
+                var deviceInfo = new NeuropixelsV1PsbDecoderDeviceInfo(context, DeviceType, deviceAddress, probeControl, probeConfiguration, probeGroup);
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
         }

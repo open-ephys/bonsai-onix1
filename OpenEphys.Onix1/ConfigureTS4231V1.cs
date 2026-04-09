@@ -25,18 +25,6 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Initializes a copy instance of the <see cref="ConfigureTS4231V1"/> class with the given values.
-        /// </summary>
-        /// <param name="configureTS4231V1">Existing configuration settings.</param>
-        public ConfigureTS4231V1(ConfigureTS4231V1 configureTS4231V1)
-            : this()
-        {
-            Enable = configureTS4231V1.Enable;
-            DeviceAddress = configureTS4231V1.DeviceAddress;
-            DeviceName = configureTS4231V1.DeviceName;
-        }
-
-        /// <summary>
         /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>
@@ -72,7 +60,7 @@ namespace OpenEphys.Onix1
     static class TS4231V1
     {
         public const int ID = 25;
-        public const uint MinimumVersion = 2;
+        public const uint MinimumVersion = 1;
 
         // managed registers
         public const uint ENABLE = 0x0; // Enable or disable the data output stream

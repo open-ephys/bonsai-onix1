@@ -9,17 +9,17 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Transforms a sequence of 3D positions from <see cref="TS4231V1DataFrame"/> to an external coordinate system.
     /// </summary>
-    [DefaultProperty(nameof(SpatialTransform))]
-    public class TS4231V1SpatialTransform : Transform<TS4231V1PositionDataFrame, TS4231V1PositionDataFrame>
+    [DefaultProperty(nameof(LinearTransform))]
+    public class TS4231V1LinearTransform : Transform<TS4231V1PositionDataFrame, TS4231V1PositionDataFrame>
     {
         /// <summary>
         /// Gets or sets the pre- and post- transform coordinates to calculate
-        /// the spatial transform matrix as well as the spatial transform matrix
+        /// the linear transform matrix as well as the linear transform matrix
         /// itself.
         /// </summary>
-        [Editor("OpenEphys.Onix1.Design.SpatialTransformMatrixEditor, OpenEphys.Onix1.Design", DesignTypes.UITypeEditor)]
+        [Editor("OpenEphys.Onix1.Design.LinearTransformMatrixEditor, OpenEphys.Onix1.Design", DesignTypes.UITypeEditor)]
         [Description("Data for transforming position measurements to another reference frame.")]
-        public SpatialTransform3D SpatialTransform { get; set; } = new();
+        public LinearTransform3D LinearTransform { get; set; } = new();
 
         /// <summary>
         /// Transforms a sequence of <see cref="TS4231V1PositionDataFrame"/>
@@ -34,7 +34,7 @@ namespace OpenEphys.Onix1
         {
             return source.Select(input =>
                 new TS4231V1PositionDataFrame(input.Clock, input.HubClock, input.SensorIndex, 
-                    Vector3.Transform(input.Position, SpatialTransform.M)));
+                    Vector3.Transform(input.Position, LinearTransform.M)));
         }
     }
 }

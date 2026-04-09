@@ -15,13 +15,13 @@ namespace OpenEphys.Onix1
         {
         }
 
-        public void WriteConfiguration(NeuropixelsV2ProbeConfiguration probe)
+        public void WriteConfiguration(NeuropixelsV2ProbeConfiguration probe, NeuropixelsV2eProbeGroup probeGroup)
         {
             var baseBits = NeuropixelsV2.GenerateBaseBits(probe);
             WriteShiftRegister(NeuropixelsV2.SR_CHAIN5, baseBits[0]);
             WriteShiftRegister(NeuropixelsV2.SR_CHAIN6, baseBits[1]);
 
-            var shankBits = NeuropixelsV2.GenerateShankBits(probe);
+            var shankBits = NeuropixelsV2.GenerateShankBits(probe, probeGroup);
 
             if (shankBits.Length == 1)
             {

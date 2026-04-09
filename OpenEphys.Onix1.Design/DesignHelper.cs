@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Windows.Forms;
 using System.Reflection;
+using System.Windows.Forms;
 using Newtonsoft.Json;
 
 namespace OpenEphys.Onix1.Design
@@ -22,119 +21,6 @@ namespace OpenEphys.Onix1.Design
                     stack.Push(child);
                 yield return next;
             }
-        }
-
-        public static IEnumerable<Control> GetTopLevelControls(this Control root)
-        {
-            var stack = new Stack<Control>();
-            stack.Push(root);
-
-            if (stack.Any())
-            {
-                var next = stack.Pop();
-                foreach (Control child in next.Controls)
-                {
-                    yield return child;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Given two forms, take all menu items that are in the "File" MenuItem of the child form, and copy them directly to the 
-        /// "File" MenuItem for the parent form
-        /// </summary>
-        /// <param name="thisForm"></param>
-        /// <param name="childForm"></param>
-        public static Form AddMenuItemsFromDialogToFileOption(this Form thisForm, Form childForm)
-        {
-            const string FileString = "File";
-
-            if (childForm != null)
-            {
-                var childMenuStrip = childForm.GetAllControls()
-                                              .OfType<MenuStrip>()
-                                              .FirstOrDefault() ?? throw new InvalidOperationException($"There are no menu strips in any child controls of the {childForm.Text} dialog.");
-
-                var thisMenuStrip = thisForm.GetTopLevelControls()
-                                            .OfType<MenuStrip>()
-                                            .FirstOrDefault() ?? throw new InvalidOperationException($"There are no menu strips at the top level of the {thisForm.Text} dialog to pull out.");
-
-                ToolStripMenuItem existingMenuItem = null;
-
-                foreach (ToolStripMenuItem menuItem in thisMenuStrip.Items)
-                {
-                    if (menuItem.Text == FileString)
-                    {
-                        existingMenuItem = menuItem;
-                    }
-                }
-
-                foreach (ToolStripMenuItem menuItem in childMenuStrip.Items)
-                {
-                    if (menuItem.Text == FileString)
-                    {
-                        while (menuItem.DropDownItems.Count > 0)
-                        {
-                            existingMenuItem.DropDownItems.Add(menuItem.DropDownItems[0]);
-                        }
-                    }
-                }
-            }
-
-            return thisForm;
-        }
-
-        /// <summary>
-        /// Given two forms, take all menu items that are in the "File" MenuItem of the child form, and copy them to the 
-        /// sub-menu name given, nested under the "File" MenuItem for the parent form
-        /// </summary>
-        /// <param name="thisForm"></param>
-        /// <param name="childForm"></param>
-        /// <param name="subMenuName"></param>
-        public static Form AddMenuItemsFromDialogToFileOption(this Form thisForm, Form childForm, string subMenuName)
-        {
-            const string FileString = "File";
-
-            if (childForm != null)
-            {
-                var childMenuStrip = childForm.GetAllControls()
-                                              .OfType<MenuStrip>()
-                                              .First() ?? throw new InvalidOperationException($"There are no menu strips in any child controls of the {childForm.Text} dialog.");
-
-                var thisMenuStrip = thisForm.GetTopLevelControls()
-                                            .OfType<MenuStrip>()
-                                            .FirstOrDefault() ?? throw new InvalidOperationException($"There are no menu strips at the top level of the {thisForm.Text} dialog to pull out.");
-
-                ToolStripMenuItem thisFileMenuItem = null;
-
-                foreach (ToolStripMenuItem menuItem in thisMenuStrip.Items)
-                {
-                    if (menuItem.Text == FileString)
-                    {
-                        thisFileMenuItem = menuItem;
-                    }
-                }
-
-                ToolStripMenuItem newChildMenuItems = new()
-                {
-                    Text = subMenuName
-                };
-
-                foreach (ToolStripMenuItem childItem in childMenuStrip.Items)
-                {
-                    if (childItem.Text == FileString)
-                    {
-                        while (childItem.DropDownItems.Count > 0)
-                        {
-                            newChildMenuItems.DropDownItems.Add(childItem.DropDownItems[0]);
-                        }
-                    }
-                }
-
-                thisFileMenuItem.DropDownItems.Add(newChildMenuItems);
-            }
-
-            return thisForm;
         }
 
         public static Form AddDialogToTab(this Form form, TabPage tabPage)
@@ -165,7 +51,7 @@ namespace OpenEphys.Onix1.Design
 
         internal static readonly IEnumerable<string> PropertiesToIgnore = new[] { "DeviceName", "DeviceAddress" };
 
-        public static void CopyProperties<T>(T source, T target, IEnumerable<string> propertiesToIgnore = null) where T : class
+        static void CopyPropertiesCore<T>(T source, T target, IEnumerable<string> propertiesToIgnore, bool shallowCopy) where T : class
         {
             if (source == null || target == null)
                 throw new NullReferenceException("Null objects cannot have their properties copied from/to.");
@@ -182,9 +68,73 @@ namespace OpenEphys.Onix1.Design
                 if (property.CanRead && property.CanWrite)
                 {
                     var value = property.GetValue(source);
-                    property.SetValue(target, value);
+
+                    if (value == null)
+                        continue;
+
+                    var type = property.PropertyType;
+
+                    if (shallowCopy || type.IsPrimitive || type.IsEnum || type == typeof(Enum) || type == typeof(string))
+                    {
+                        property.SetValue(target, value);
+                    }
+                    else
+                    {
+                        var settings = new JsonSerializerSettings()
+                        {
+                            TypeNameHandling = TypeNameHandling.All
+                        };
+
+                        var concreteType = value.GetType();
+                        var json = JsonConvert.SerializeObject(value, settings);
+                        var deepCopy = JsonConvert.DeserializeObject(json, concreteType, settings);
+                        property.SetValue(target, deepCopy);
+                    }
                 }
             }
+        }
+
+        public static void CopyProperties<T>(T source, T target, IEnumerable<string> propertiesToIgnore = null) where T : class
+        {
+            CopyPropertiesCore(source, target, propertiesToIgnore, shallowCopy: true);
+        }
+
+        public static void DeepCopyProperties<T>(T source, T target, IEnumerable<string> propertiesToIgnore = null) where T : class
+        {
+            CopyPropertiesCore(source, target, propertiesToIgnore, shallowCopy: false);
+        }
+
+        public static void CloseWithResult(this Form form, Form parent)
+        {
+            form.DialogResult = parent.DialogResult;
+            form.Close();
+        }
+
+        const string GenericConfirmMessage = "Are you sure you want to exit the dialog? Any changes made will be discarded.";
+
+        public static DialogResult ConfirmClosing(string msg = GenericConfirmMessage)
+        {
+            return MessageBox.Show(
+                    msg,
+                    "Confirm Exit",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+        }
+
+        public static bool HandleTopLevelDialogCancel(this Form form, ref FormClosingEventArgs e, string msg = GenericConfirmMessage)
+        {
+            if (form.TopLevel && form.DialogResult == DialogResult.Cancel)
+            {
+                var result = ConfirmClosing(msg);
+                if (result == DialogResult.No)
+                {
+                    e.Cancel = true;
+                }
+
+                return true;
+            }
+
+            return false;
         }
     }
 }

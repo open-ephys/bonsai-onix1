@@ -1,15 +1,14 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Numerics;
 using System.Xml.Serialization;
 
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Data necessary to construct a spatial transform matrix as well as the
-    /// spatial transform matrix itself.
+    /// Data necessary to construct a linear transform matrix as well as the
+    /// linear transform matrix itself.
     /// </summary>
-    public class SpatialTransform3D
+    public class LinearTransform3D
     {
 
         Matrix4x4 a, b;
@@ -28,16 +27,16 @@ namespace OpenEphys.Onix1
 
         /// <summary>
         /// The M matrix in <see cref="A"/> * <see cref="B"/> = M. It is the
-        /// spatial transform matrix. It calculated as M = A.inv * B.
+        /// linear transform matrix. It calculated as M = A.inv * B.
         /// </summary>
         [XmlIgnore]
         public Matrix4x4 M { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SpatialTransform3D"/>
+        /// Initializes a new instance of the <see cref="LinearTransform3D"/>
         /// class with default values.
         /// </summary>
-        public SpatialTransform3D()
+        public LinearTransform3D()
         {
             A = B = new(float.NaN, float.NaN, float.NaN, 1,
                         float.NaN, float.NaN, float.NaN, 1,
@@ -50,11 +49,11 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SpatialTransform3D"/>
+        /// Initializes a new instance of the <see cref="LinearTransform3D"/>
         /// class as a copy of an existing instance.
         /// </summary>
         /// <param name="other">The instance to copy.</param>
-        public SpatialTransform3D(SpatialTransform3D other)
+        public LinearTransform3D(LinearTransform3D other)
         {
             A = other.A;
             B = other.B;

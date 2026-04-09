@@ -4,6 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using Bonsai.IO;
 using OpenEphys.ProbeInterface.NET;
 using ZedGraph;
 
@@ -16,37 +17,145 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     public abstract partial class ChannelConfigurationDialog : Form
     {
+        private protected Type probeGroupType;
+
+        internal enum SaveResult
+        {
+            Success,
+            Failure,
+            Cancelled
+        };
+
         internal event EventHandler OnResizeZedGraph;
         internal event EventHandler OnDrawProbeGroup;
+        internal event EventHandler OnProbeConfigurationChanged;
+        internal event EventHandler OnMoveProbeGroup;
+        internal event EventHandler OnStateChange;
+        internal event EventHandler OnFileLoad;
+        internal event EventHandler OnFileImport;
 
-        internal virtual ProbeGroup ProbeGroup { get; set; }
+        bool hasChanges = false;
+
+        /// <summary>
+        /// Gets whether changes have been made to the channel configuration that have not yet been applied/saved.
+        /// </summary>
+        public bool HasChanges
+        {
+            get => hasChanges;
+            internal set
+            {
+                if (hasChanges != value)
+                {
+                    hasChanges = value;
+                    OnStateChange?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        ProbeGroup probeGroup;
+
+        internal ProbeGroup ProbeGroup
+        {
+            get => probeGroup;
+            set
+            {
+                probeGroup = value;
+                ResizeSelectedContacts();
+            }
+        }
+
+        internal IProbeInterfaceConfiguration ProbeConfiguration { get; set; }
 
         internal readonly List<int> ReferenceContacts = new();
 
+        internal string ProbeName { get; }
+
         internal bool[] SelectedContacts { get; private set; } = null;
+
+        internal static string DefaultFileName = $"pi_configuration{ProbeInterfaceHelper.ProbeInterfaceFileExtension}";
+        internal static string ProbeConfigurationConfirmMessage = "There are unsaved probe configuration changes that will be discarded, do you want to exit?";
+
+        [Obsolete("Designer only.", true)]
+        ChannelConfigurationDialog()
+        {
+            InitializeComponent();
+        }
 
         /// <summary>
         /// Constructs the dialog window.
         /// </summary>
-        public ChannelConfigurationDialog()
+        /// <param name="probeGroup">Channel configuration given as a <see cref="ProbeInterface.NET.ProbeGroup"/></param>
+        [Obsolete("This constructor is obsolete and will be removed in future version.")]
+        public ChannelConfigurationDialog(ProbeGroup probeGroup)
         {
             InitializeComponent();
-            Shown += FormShown;
 
-            ReferenceContacts = new List<int>();
+            if (probeGroup == null)
+            {
+                LoadDefaultChannelLayout();
+            }
+            else
+            {
+                ProbeGroup = probeGroup;
+            }
+
+            probeGroupType = ProbeGroup.GetType();
+
+            InitializeDialog();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the ChannelConfigurationDialog using the specified probe configuration and
+        /// probe group type.
+        /// </summary>
+        /// <param name="probeConfiguration">The probe interface configuration to use for loading or initializing the channel layout.</param>
+        /// <param name="probeName">The name of the probe.</param>
+        /// <param name="probeGroupType">The type representing the probe group.</param>
+        public ChannelConfigurationDialog(IProbeInterfaceConfiguration probeConfiguration, string probeName, Type probeGroupType)
+        {
+            InitializeComponent();
+
+            this.probeGroupType = probeGroupType;
+            ProbeName = probeName;
+
+            ProbeConfiguration = probeConfiguration;
+
+            if (string.IsNullOrEmpty(ProbeConfiguration.ProbeInterfaceFileName))
+            {
+                ProbeGroup = DefaultChannelLayout();
+            }
+            else
+            {
+                try
+                {
+                    ProbeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(ProbeConfiguration.ProbeInterfaceFileName, probeGroupType);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        $"An error occurred trying to load \"{ProbeConfiguration.ProbeInterfaceFileName}\". Loading the default configuration instead. For more details, see the error below:\n\n{ex.Message}",
+                        $"Error Loading {ProbeName} Configuration File",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+
+                    ProbeConfiguration.ProbeInterfaceFileName = "";
+                    ProbeGroup = DefaultChannelLayout();
+                }
+            }
+
+            RedrawProbeGroup();
+
+            InitializeDialog();
+        }
+
+        void InitializeDialog()
+        {
+            Shown += FormShown;
+            FormClosing += DialogClosing;
 
             zedGraphChannels.MouseDownEvent += MouseDownEvent;
             zedGraphChannels.MouseMoveEvent += MouseMoveEvent;
             zedGraphChannels.MouseUpEvent += MouseUpEvent;
-
-            if (IsDrawScale())
-            {
-                var pane = new GraphPane();
-
-                InitializeScalePane(pane);
-
-                zedGraphChannels.MasterPane.Add(pane);
-            }
 
             InitializeZedGraphControl(zedGraphChannels);
             InitializeProbePane(zedGraphChannels.GraphPane);
@@ -57,18 +166,16 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        /// <summary>
-        /// Constructs the dialog window using the given probe group, and plots all contacts after loading.
-        /// </summary>
-        /// <param name="probeGroup">Channel configuration given as a <see cref="ProbeInterface.NET.ProbeGroup"/></param>
-        public ChannelConfigurationDialog(ProbeGroup probeGroup)
-            : this()
+        ProbeGroup GetProbeGroup(string fileName)
         {
-            ProbeGroup = probeGroup;
-            ResizeSelectedContacts();
-
-            DrawProbeGroup();
-            RefreshZedGraph();
+            if (string.IsNullOrEmpty(fileName) || !File.Exists(fileName))
+            {
+                return DefaultChannelLayout();
+            }
+            else
+            {
+                return LoadConfigurationFile(fileName) ?? DefaultChannelLayout();
+            }
         }
 
         /// <summary>
@@ -84,20 +191,13 @@ namespace OpenEphys.Onix1.Design
         /// </code>
         /// </example>
         /// <returns>Returns an object that inherits from <see cref="ProbeInterface.NET.ProbeGroup"/></returns>
-        internal virtual ProbeGroup DefaultChannelLayout()
-        {
-            throw new NotImplementedException();
-        }
+        internal abstract ProbeGroup DefaultChannelLayout();
 
         internal virtual void LoadDefaultChannelLayout()
         {
             ProbeGroup = DefaultChannelLayout();
-            ResizeSelectedContacts();
-        }
-
-        internal void ResizeSelectedContacts()
-        {
-            SelectedContacts = new bool[ProbeGroup.NumberOfContacts];
+            RedrawProbeGroup();
+            OnFileLoadHandler();
         }
 
         /// <summary>
@@ -122,15 +222,6 @@ namespace OpenEphys.Onix1.Design
                     sender.ZoomOut(sender.GraphPane);
                 }
             }
-
-            if (IsDrawScale())
-                SyncYAxes(zedGraphChannels.MasterPane.PaneList[0], zedGraphChannels.MasterPane.PaneList[1]);
-        }
-
-        static void SyncYAxes(GraphPane source, GraphPane target)
-        {
-            target.YAxis.Scale.Min = source.YAxis.Scale.Min;
-            target.YAxis.Scale.Max = source.YAxis.Scale.Max;
         }
 
         private void SetEqualAxisLimits(ZedGraphControl zedGraphControl)
@@ -266,73 +357,147 @@ namespace OpenEphys.Onix1.Design
 
         private void FormShown(object sender, EventArgs e)
         {
-            if (!TopLevel)
-            {
-                menuStrip.Visible = false;
-            }
-
             ResizeZedGraph();
         }
 
-        internal virtual bool OpenFile(Type type)
+        internal bool TryUpdateProbeGroupFromFile(string fileName)
         {
-            var newConfiguration = OpenAndParseConfigurationFile(type);
+            var newProbeGroup = LoadConfigurationFile(fileName);
 
-            if (newConfiguration != null)
+            if (newProbeGroup != null && ValidateProbeGroup(newProbeGroup))
             {
-                ProbeGroup = newConfiguration;
+                ProbeGroup = newProbeGroup;
+                RedrawProbeGroup();
                 return true;
             }
 
             return false;
         }
 
-        internal void ValidateProbeGroup(ProbeGroup newConfiguration)
+        static SaveResult TrySaveFile(string fileName, ProbeGroup probeGroup)
+        {
+            // NB: Catch all exceptions and show them as a MessageBox; uncaught exceptions will close the GUI without warning
+            try
+            {
+                JsonHelper.SerializeObject(probeGroup, fileName);
+                return SaveResult.Success;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error Saving ProbeInterface File");
+                return SaveResult.Failure;
+            }
+        }
+
+        static OpenFileDialog CreateOpenFileDialog(string fileName, string title)
+        {
+            var directory = Path.GetDirectoryName(fileName);
+            if (string.IsNullOrEmpty(directory)) directory = ".";
+
+            using OpenFileDialog ofd = new();
+
+            ofd.Filter = ProbeInterfaceHelper.ProbeInterfaceFileNameFilter;
+            ofd.FilterIndex = 1;
+            ofd.Multiselect = false;
+            ofd.Title = title;
+            ofd.InitialDirectory = directory;
+
+            return ofd;
+        }
+
+        void OnFileLoadHandler()
+        {
+            OnFileLoad?.Invoke(this, EventArgs.Empty);
+        }
+
+        void OnFileImportHandler()
+        {
+            OnFileImport?.Invoke(this, EventArgs.Empty);
+        }
+
+        internal bool ImportFile()
+        {
+            var fileName = GetFileName();
+            var ofd = CreateOpenFileDialog(fileName, $"{ProbeName}: Open File");
+
+            if (ofd.ShowDialog() == DialogResult.OK && File.Exists(ofd.FileName))
+            {
+                var result = TryUpdateProbeGroupFromFile(ofd.FileName);
+
+                if (result)
+                {
+                    OnFileImportHandler();
+                }
+
+                return result;
+            }
+
+            return false;
+        }
+
+        internal bool OpenFile(string fileName)
+        {
+            var result = TryUpdateProbeGroupFromFile(fileName);
+
+            if (result)
+            {
+                ProbeConfiguration.ProbeInterfaceFileName = fileName;
+                OnFileLoadHandler();
+
+                HasChanges = false;
+            }
+
+            return result;
+        }
+
+        internal bool OpenFileFromDialog()
+        {
+            var fileName = GetFileName();
+            var ofd = CreateOpenFileDialog(fileName, $"{ProbeName}: Open File");
+
+            if (ofd.ShowDialog() == DialogResult.OK && File.Exists(ofd.FileName))
+            {
+                return OpenFile(ofd.FileName);
+            }
+
+            return false;
+        }
+
+        internal bool ValidateProbeGroup(ProbeGroup newConfiguration)
         {
             if (newConfiguration == null)
             {
-                throw new ArgumentNullException($"{nameof(newConfiguration)} is null, {nameof(ProbeGroup)} is invalid.");
+                return false;
             }
 
             if (ProbeGroup.NumberOfContacts == newConfiguration.NumberOfContacts)
             {
                 newConfiguration.Validate();
+
+                return true;
             }
             else
             {
-                throw new ArgumentException($"Number of contacts does not match; expected {ProbeGroup.NumberOfContacts} contacts" +
-                    $", but found {newConfiguration.NumberOfContacts} contacts. Double check that the correct file is chosen.");
+                MessageBox.Show($"Error: Number of contacts does not match; expected {ProbeGroup.NumberOfContacts} contacts" +
+                    $", but found {newConfiguration.NumberOfContacts} contacts", "Contact Number Mismatch");
+
+                return false;
             }
         }
 
-        internal ProbeGroup OpenAndParseConfigurationFile(Type type)
+        internal ProbeGroup LoadConfigurationFile(string fileName)
         {
-            using OpenFileDialog ofd = new();
-
-            ofd.Filter = "Probe Interface Files (*.json)|*.json";
-            ofd.FilterIndex = 1;
-            ofd.Multiselect = false;
-            ofd.Title = "Choose probe interface file";
-
-            if (ofd.ShowDialog() == DialogResult.OK && File.Exists(ofd.FileName))
+            // NB: This method is called from an open dialog; throwing an exception without handling it would close the dialog.
+            //     Show the resulting exception as a MessageBox to warn the user of the exception without closing the whole dialog.
+            try
             {
-                // NB: This method is called from an open dialog; throwing an exception without handling it would close the dialog.
-                //     Show the resulting exception as a MessageBox to warn the user of the exception with closing the whole dialog.
-                try
-                {
-                    var newConfiguration = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(ofd.FileName, type);
-                    ValidateProbeGroup(newConfiguration);
-
-                    return newConfiguration;
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message, "Error Importing ProbeInterface File");
-                    return null;
-                }
+                return ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(fileName, probeGroupType);
             }
-
-            return null;
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, $"Error Loading {ProbeName} ProbeInterface File");
+                return null;
+            }
         }
 
         internal void DrawProbeGroup()
@@ -347,12 +512,15 @@ namespace OpenEphys.Onix1.Design
             HighlightSelectedContacts();
             DrawContactLabels();
 
-            if (IsDrawScale())
-            {
-                DrawScale();
-            }
-
             OnDrawProbeGroupHandler();
+        }
+
+        internal void UpdateProbeGroup()
+        {
+            HighlightEnabledContacts();
+            HighlightSelectedContacts();
+            UpdateContactLabels();
+            RefreshZedGraph();
         }
 
         void OnDrawProbeGroupHandler()
@@ -648,7 +816,6 @@ namespace OpenEphys.Onix1.Design
             textObj.FontSpec.IsBold = true;
             textObj.FontSpec.Border.IsVisible = false;
             textObj.FontSpec.Fill.IsVisible = false;
-            textObj.FontSpec.Fill.IsVisible = false;
         }
 
         const string DisabledContactString = "Off";
@@ -657,10 +824,6 @@ namespace OpenEphys.Onix1.Design
         {
             return deviceChannelIndex == -1 ? DisabledContactString : index.ToString();
         }
-
-        internal virtual bool IsDrawScale() => false;
-
-        internal virtual void DrawScale() { }
 
         internal void UpdateFontSize()
         {
@@ -837,76 +1000,16 @@ namespace OpenEphys.Onix1.Design
             EnableZoom(zedGraph);
         }
 
-        static void EnablePan(ZedGraphControl zedGraph)
+        internal static void EnablePan(ZedGraphControl zedGraph)
         {
             zedGraph.IsEnableHPan = true;
             zedGraph.IsEnableVPan = true;
         }
 
-        static void DisablePan(ZedGraphControl zedGraph)
-        {
-            zedGraph.IsEnableHPan = false;
-            zedGraph.IsEnableVPan = false;
-        }
-
-        static void EnableZoom(ZedGraphControl zedGraph)
+        internal static void EnableZoom(ZedGraphControl zedGraph)
         {
             zedGraph.IsEnableZoom = true;
             zedGraph.IsEnableWheelZoom = true;
-        }
-
-        static void DisableZoom(ZedGraphControl zedGraph)
-        {
-            zedGraph.IsEnableZoom = false;
-            zedGraph.IsEnableWheelZoom = false;
-        }
-
-        static void InitializeScalePane(GraphPane pane)
-        {
-            pane.Title.IsVisible = false;
-            pane.TitleGap = 0;
-            pane.Border.IsVisible = false;
-            pane.Border.Width = 0;
-            pane.Chart.Border.IsVisible = false;
-            pane.Margin.All = 0;
-
-            pane.Y2Axis.IsVisible = false;
-
-            pane.XAxis.IsVisible = false;
-            pane.XAxis.IsAxisSegmentVisible = false;
-            pane.XAxis.Scale.MaxAuto = true;
-            pane.XAxis.Scale.MinAuto = true;
-            pane.XAxis.MajorGrid.IsZeroLine = false;
-            pane.XAxis.CrossAuto = false;
-            pane.XAxis.Cross = double.MinValue;
-
-            pane.YAxis.IsVisible = true;
-            pane.YAxis.IsAxisSegmentVisible = true;
-            pane.YAxis.Scale.MaxAuto = true;
-            pane.YAxis.Scale.MinAuto = true;
-            pane.YAxis.CrossAuto = false;
-            pane.YAxis.Cross = double.MinValue;
-
-            pane.YAxis.MajorGrid.IsZeroLine = false;
-            pane.YAxis.MajorGrid.IsVisible = false;
-            pane.YAxis.MinorGrid.IsVisible = false;
-
-            pane.YAxis.Scale.IsPreventLabelOverlap = true;
-            pane.YAxis.Scale.MajorStep = 100;
-            pane.YAxis.Scale.IsLabelsInside = true;
-            pane.YAxis.Scale.FontSpec.Size = 65f;
-            pane.YAxis.Scale.FontSpec.IsBold = false;
-            pane.YAxis.Scale.LabelGap = 0.6f;
-
-            pane.YAxis.MinorTic.IsInside = false;
-            pane.YAxis.MinorTic.IsOutside = false;
-            pane.YAxis.MinorTic.IsOpposite = false;
-
-            pane.YAxis.MajorTic.IsInside = true;
-            pane.YAxis.MajorTic.IsOutside = false;
-            pane.YAxis.MajorTic.IsOpposite = false;
-            pane.YAxis.MajorTic.Size = 40f;
-            pane.YAxis.MajorTic.PenWidth = 1.5f;
         }
 
         static void InitializeProbePane(GraphPane graphPane)
@@ -930,21 +1033,6 @@ namespace OpenEphys.Onix1.Design
             graphPane.YAxis.Scale.MinAuto = true;
         }
 
-        private void MenuItemSaveFile(object sender, EventArgs e)
-        {
-            using SaveFileDialog sfd = new();
-            sfd.Filter = "Probe Interface Files (*.json)|*.json";
-            sfd.FilterIndex = 1;
-            sfd.Title = "Choose where to save the probe interface file";
-            sfd.OverwritePrompt = true;
-            sfd.ValidateNames = true;
-
-            if (sfd.ShowDialog() == DialogResult.OK)
-            {
-                JsonHelper.SerializeObject(ProbeGroup, sfd.FileName);
-            }
-        }
-
         internal void ConnectResizeEventHandler()
         {
             DisconnectResizeEventHandler();
@@ -964,21 +1052,11 @@ namespace OpenEphys.Onix1.Design
         internal void ResizeZedGraph()
         {
             ResizeAxes();
-
-            if (IsDrawScale())
-            {
-                var rect = zedGraphChannels.MasterPane.Rect;
-
-                float squareSize = rect.Height;
-
-                zedGraphChannels.MasterPane.PaneList[0].Rect = new RectangleF(rect.Left, rect.Top, squareSize, squareSize);
-                zedGraphChannels.MasterPane.PaneList[1].Rect = new RectangleF(rect.Left + squareSize, rect.Top, rect.Width - squareSize, squareSize);
-            }
+            OnResizeHandler();
 
             UpdateFontSize();
             RefreshZedGraph();
             Update();
-            OnResizeHandler();
         }
 
         private void OnResizeHandler()
@@ -986,23 +1064,20 @@ namespace OpenEphys.Onix1.Design
             OnResizeZedGraph?.Invoke(this, EventArgs.Empty);
         }
 
-        void ResizeAxes()
+        internal virtual void ResizeAxes()
         {
-            float scalingFactor = IsDrawScale() ? 1.15f : 1.0f;
-            RectangleF rect = IsDrawScale() ? zedGraphChannels.MasterPane.Rect : zedGraphChannels.GraphPane.Rect;
+            RectangleF rect = zedGraphChannels.GraphPane.Rect;
 
             float width = rect.Width;
             float height = rect.Height;
 
-            float desiredWidth = height * scalingFactor;
-
-            if (width < desiredWidth)
+            if (width < height)
             {
-                height = width / scalingFactor;
+                height = width;
             }
             else
             {
-                width = desiredWidth;
+                width = height;
             }
 
             float x = MathF.Round(rect.Left + (rect.Width - width) / 2f);
@@ -1010,32 +1085,155 @@ namespace OpenEphys.Onix1.Design
 
             var newRect = new RectangleF(x, y, width, height);
 
-            if (IsDrawScale())
-                zedGraphChannels.MasterPane.Rect = newRect;
-            else
+            zedGraphChannels.GraphPane.Rect = newRect;
+            DisconnectResizeEventHandler();
+            zedGraphChannels.Size = new Size((int)newRect.Width, (int)newRect.Height);
+            zedGraphChannels.Location = new Point((int)newRect.X, (int)newRect.Y);
+            ConnectResizeEventHandler();
+        }
+
+        void MenuItemImportFile(object sender, EventArgs e)
+        {
+            if (HasChanges)
             {
-                zedGraphChannels.GraphPane.Rect = newRect;
-                DisconnectResizeEventHandler();
-                zedGraphChannels.Size = new Size((int)newRect.Width, (int)newRect.Height);
-                zedGraphChannels.Location = new Point((int)newRect.X, (int)newRect.Y);
-                ConnectResizeEventHandler();
+                var result = MessageBox.Show(
+                    $"Warning: Importing a file will overwrite the {ProbeName} configuration. Do you want to continue?",
+                    $"{ProbeName}: Import File",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+
+                if (result == DialogResult.No)
+                {
+                    return;
+                }
+            }
+
+            if (ImportFile())
+            {
+                RedrawProbeGroup();
+                HasChanges = true;
             }
         }
 
-        private void MenuItemOpenFile(object sender, EventArgs e)
+        void MenuItemLoadDefaultConfig(object sender, EventArgs e)
         {
-            if (OpenFile(ProbeGroup.GetType()))
+            if (HasChanges)
             {
-                DrawProbeGroup();
-                ResetZoom();
-                UpdateFontSize();
-                RefreshZedGraph();
-            }
-        }
+                var result = MessageBox.Show(
+                    $"Warning: Loading the default configuration will overwrite the {ProbeName} configuration. Do you want to continue?",
+                    $"{ProbeName}: Load Default Configuration",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
 
-        private void MenuItemLoadDefaultConfig(object sender, EventArgs e)
-        {
+                if (result == DialogResult.No)
+                {
+                    return;
+                }
+            }
+
             LoadDefaultChannelLayout();
+            OnFileImportHandler();
+            HasChanges = true;
+        }
+
+        void MenuItemOpenFile(object sender, EventArgs e)
+        {
+            if (HasChanges)
+            {
+                var result = MessageBox.Show(
+                $"Warning: Opening a new file will discard the {ProbeName} configuration without saving. Do you want to continue?",
+                $"{ProbeName}: Open File",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning);
+
+                if (result == DialogResult.No)
+                    return;
+            }
+
+            if (OpenFileFromDialog())
+            {
+                RedrawProbeGroup();
+            }
+        }
+
+        SaveResult SaveFileAs()
+        {
+            var fileName = GetFileName();
+
+            var directory = Path.GetDirectoryName(fileName);
+            if (string.IsNullOrEmpty(directory)) directory = ".";
+
+            using SaveFileDialog sfd = new();
+            sfd.Filter = ProbeInterfaceHelper.ProbeInterfaceFileNameFilter;
+            sfd.FilterIndex = 1;
+            sfd.Title = $"{ProbeName}: Save As";
+            sfd.OverwritePrompt = true;
+            sfd.ValidateNames = true;
+            sfd.FileName = Path.GetFileName(fileName);
+            sfd.InitialDirectory = directory;
+
+            var sfdResult = sfd.ShowDialog();
+
+            if (sfdResult == DialogResult.OK)
+            {
+                var result = TrySaveFile(sfd.FileName, ProbeGroup);
+
+                if (result == SaveResult.Success)
+                {
+                    ProbeConfiguration.ProbeInterfaceFileName = sfd.FileName;
+                    ProbeConfigurationChanged();
+                    HasChanges = false;
+                }
+
+                return result;
+            }
+
+            return SaveResult.Cancelled;
+        }
+
+        void MenuItemSaveFileAs(object sender, EventArgs e)
+        {
+            SaveFileAs();
+        }
+
+        internal SaveResult SaveFile(string fileName)
+        {
+            var result = string.IsNullOrEmpty(fileName)
+                ? SaveFileAs()
+                : TrySaveFile(fileName, ProbeGroup);
+
+            if (result == SaveResult.Success)
+            {
+                HasChanges = false;
+            }
+
+            return result;
+        }
+
+        SaveResult SaveFile()
+        {
+            var fileName = ProbeConfiguration.ProbeInterfaceFileName;
+
+            return SaveFile(fileName);
+        }
+
+        void MenuItemSaveFile(object sender, EventArgs e)
+        {
+            SaveFile();
+        }
+
+        void ResizeSelectedContacts()
+        {
+            SelectedContacts = new bool[ProbeGroup.NumberOfContacts];
+        }
+
+        void ProbeConfigurationChanged()
+        {
+            OnProbeConfigurationChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        internal void RedrawProbeGroup()
+        {
             DrawProbeGroup();
             ResetZoom();
             UpdateFontSize();
@@ -1056,6 +1254,11 @@ namespace OpenEphys.Onix1.Design
             zedGraphChannels.ZoomOutAll(zedGraphChannels.GraphPane);
             SetEqualAspectRatio();
             UpdateFontSize();
+        }
+
+        void OnMoveProbeGroupHandler()
+        {
+            OnMoveProbeGroup?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -1084,8 +1287,7 @@ namespace OpenEphys.Onix1.Design
             zedGraphChannels.GraphPane.YAxis.Scale.Min = newMinY;
             zedGraphChannels.GraphPane.YAxis.Scale.Max = newMinY + currentRange;
 
-            if (IsDrawScale())
-                SyncYAxes(zedGraphChannels.MasterPane.PaneList[0], zedGraphChannels.MasterPane.PaneList[1]);
+            OnMoveProbeGroupHandler();
         }
 
         internal float GetRelativeVerticalPosition()
@@ -1159,27 +1361,13 @@ namespace OpenEphys.Onix1.Design
             }
             else if (e.Button == MouseButtons.Middle)
             {
-                if (IsDrawScale())
-                    SyncYAxes(zedGraphChannels.MasterPane.PaneList[0], zedGraphChannels.MasterPane.PaneList[1]);
+                OnMoveProbeGroupHandler();
 
                 return false;
             }
             else if (e.Button == MouseButtons.None)
             {
                 sender.Cursor = Cursors.Arrow;
-
-                var currentPane = sender.MasterPane.FindPane(new PointF(e.X, e.Y));
-
-                if (currentPane == sender.MasterPane.PaneList[0])
-                {
-                    EnablePan(sender);
-                    EnableZoom(sender);
-                }
-                else if (IsDrawScale() && currentPane == sender.MasterPane.PaneList[1])
-                {
-                    DisablePan(sender);
-                    DisableZoom(sender);
-                }
 
                 return true;
             }
@@ -1335,10 +1523,131 @@ namespace OpenEphys.Onix1.Design
         {
             ResetZoom();
 
-            if (IsDrawScale())
-                SyncYAxes(zedGraphChannels.MasterPane.PaneList[0], zedGraphChannels.MasterPane.PaneList[1]);
+            OnMoveProbeGroupHandler();
 
             RefreshZedGraph();
+        }
+
+        internal void HideFileMenu()
+        {
+            menuStrip.Visible = false;
+        }
+
+        string GetFileName()
+        {
+            var fileName = ProbeConfiguration.ProbeInterfaceFileName;
+
+            if (string.IsNullOrEmpty(fileName))
+            {
+                fileName = Path.Combine(Directory.GetCurrentDirectory(), DefaultFileName);
+
+                if (File.Exists(fileName))
+                {
+                    fileName = PathHelper.AppendFileCount(fileName);
+                }
+            }
+
+            return fileName;
+        }
+
+        internal bool ProcessMenuShortcut(Keys keyData)
+        {
+            Stack<ToolStripItem> menuStack = new();
+
+            foreach (ToolStripItem item in menuStrip.Items)
+            {
+                menuStack.Push(item);
+            }
+
+            while (menuStack.Count > 0)
+            {
+                var current = menuStack.Pop();
+
+                if (current is ToolStripMenuItem menuItem && menuItem.Enabled)
+                {
+                    if (menuItem.HasDropDownItems)
+                    {
+                        foreach (ToolStripItem dropDownItem in menuItem.DropDownItems)
+                        {
+                            menuStack.Push(dropDownItem);
+                        }
+                    }
+
+                    if (menuItem.ShortcutKeys == keyData)
+                    {
+                        menuItem.PerformClick();
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        internal bool UpdateProbeConfiguration(IProbeInterfaceConfiguration configuration, Type probeGroupType)
+        {
+            ProbeConfiguration = configuration;
+            this.probeGroupType = probeGroupType;
+            ProbeGroup = GetProbeGroup(configuration.ProbeInterfaceFileName);
+            RedrawProbeGroup();
+            HasChanges = false;
+
+            return true;
+        }
+
+        void DialogClosing(object sender, FormClosingEventArgs e)
+        {
+            if (this.HandleTopLevelDialogCancel(ref e))
+            {
+                return;
+            }
+
+            if (HasChanges)
+            {
+                var result = MessageBox.Show(
+                    $"The ProbeInterface electrode configuration for {ProbeName} has unsaved changes; would you like to save the changes before closing?",
+                    $"Save {ProbeName} Configuration?",
+                    MessageBoxButtons.YesNoCancel,
+                    MessageBoxIcon.Warning);
+
+                if (result == DialogResult.Cancel)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                if (result == DialogResult.Yes)
+                {
+                    while (true)
+                    {
+                        var saveResult = SaveFile();
+
+                        if (saveResult == SaveResult.Failure)
+                        {
+                            result = MessageBox.Show(
+                                $"Error: Failed to save {ProbeName} file. Do you want to try saving again?",
+                                $"Error Saving {ProbeName} File",
+                                MessageBoxButtons.YesNoCancel,
+                                MessageBoxIcon.Warning);
+
+                            if (result == DialogResult.Cancel || result == DialogResult.No)
+                            {
+                                e.Cancel = true;
+                                return;
+                            }
+                        }
+                        else if (saveResult == SaveResult.Cancelled)
+                        {
+                            e.Cancel = true;
+                            return;
+                        }
+                        else
+                        {
+                            return;
+                        }
+                    }
+                }
+            }
         }
     }
 }

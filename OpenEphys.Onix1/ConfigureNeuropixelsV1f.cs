@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.IO;
 using Bonsai;
 
 namespace OpenEphys.Onix1
@@ -21,20 +22,6 @@ namespace OpenEphys.Onix1
         public ConfigureNeuropixelsV1f()
             : base(typeof(NeuropixelsV1f))
         {
-        }
-
-        /// <summary>
-        ///  Initializes a new instance of the <see cref="ConfigureNeuropixelsV1f"/> class with public
-        ///  properties copied from the specified configuration.
-        /// </summary>
-        /// <param name="configureNeuropixelsV1f">Existing <see cref="ConfigureNeuropixelsV1f"/> instance.</param>
-        public ConfigureNeuropixelsV1f(ConfigureNeuropixelsV1f configureNeuropixelsV1f)
-            : base(typeof(NeuropixelsV1f))
-        {
-            Enable = configureNeuropixelsV1f.Enable;
-            ProbeConfiguration = new(configureNeuropixelsV1f.ProbeConfiguration);
-            DeviceName = configureNeuropixelsV1f.DeviceName;
-            DeviceAddress = configureNeuropixelsV1f.DeviceAddress;
         }
 
         /// <inheritdoc/>
@@ -140,22 +127,30 @@ namespace OpenEphys.Onix1
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;
-            var invertPolarity = ProbeConfiguration.InvertPolarity;
+            var probeConfiguration = ProbeConfiguration;
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
+
             return source.ConfigureAndLatchDevice(context =>
             {
+                NeuropixelsV1eProbeGroup probeGroup = null;
+
                 var device = context.GetDeviceContext(deviceAddress, typeof(NeuropixelsV1f));
                 device.WriteRegister(NeuropixelsV1f.ENABLE, enable ? 1u : 0);
 
                 if (enable)
                 {
-                    var probeControl = new NeuropixelsV1fRegisterContext(device, ProbeConfiguration);
+                    if (File.Exists(probeConfiguration.ProbeInterfaceFileName))
+                    {
+                        probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfiguration.ProbeInterfaceFileName, typeof(NeuropixelsV1eProbeGroup)) as NeuropixelsV1eProbeGroup;
+                    }
+
+                    var probeControl = new NeuropixelsV1fRegisterContext(device, probeConfiguration, probeGroup);
                     probeControl.InitializeProbe();
                     probeControl.WriteShiftRegisters();
                 }
 
-                var deviceInfo = new NeuropixelsV1fDeviceInfo(context, DeviceType, deviceAddress, ProbeConfiguration);
+                var deviceInfo = new NeuropixelsV1fDeviceInfo(context, DeviceType, deviceAddress, probeGroup);
 
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
@@ -165,6 +160,7 @@ namespace OpenEphys.Onix1
     static class NeuropixelsV1f
     {
         public const int ID = 11;
+        public const uint MinimumVersion = 1;
 
         public const int I2cAddress = 0x70;
         public const int EepromI2cAddress = 0x55;

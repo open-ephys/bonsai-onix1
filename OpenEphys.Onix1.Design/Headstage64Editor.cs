@@ -18,7 +18,10 @@ namespace OpenEphys.Onix1.Design
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
                 if (editorState != null && !editorState.WorkflowRunning && component is ConfigureHeadstage64 configureNode)
                 {
-                    using var editorDialog = new Headstage64Dialog(configureNode);
+                    var configuration = new ConfigureHeadstage64();
+                    DesignHelper.DeepCopyProperties(configureNode, configuration);
+
+                    using var editorDialog = new Headstage64Dialog(configuration);
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
@@ -27,10 +30,10 @@ namespace OpenEphys.Onix1.Design
                         DesignHelper.CopyProperties((ConfigureTS4231V1)editorDialog.TS4231V1Dialog.Device, configureNode.TS4231, DesignHelper.PropertiesToIgnore);
 
                         if (editorDialog.ElectricalStimulatorSequenceDialog.DialogResult == DialogResult.OK)
-                            configureNode.ElectricalStimulator = editorDialog.ElectricalStimulatorSequenceDialog.ElectricalStimulator;
+                            DesignHelper.CopyProperties((ConfigureHeadstage64ElectricalStimulator)editorDialog.ElectricalStimulatorSequenceDialog.Device, configureNode.ElectricalStimulator, DesignHelper.PropertiesToIgnore);
 
                         if (editorDialog.OpticalStimulatorSequenceDialog.DialogResult == DialogResult.OK)
-                            configureNode.OpticalStimulator = editorDialog.OpticalStimulatorSequenceDialog.OpticalStimulator;
+                            DesignHelper.CopyProperties((ConfigureHeadstage64OpticalStimulator)editorDialog.OpticalStimulatorSequenceDialog.Device, configureNode.OpticalStimulator, DesignHelper.PropertiesToIgnore);
 
                         return true;
                     }

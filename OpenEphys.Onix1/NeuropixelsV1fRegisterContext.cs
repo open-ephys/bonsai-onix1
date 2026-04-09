@@ -21,7 +21,7 @@ namespace OpenEphys.Onix1
         readonly BitArray ShankConfig;
         readonly BitArray[] BaseConfigs;
 
-        public NeuropixelsV1fRegisterContext(DeviceContext deviceContext, NeuropixelsV1ProbeConfiguration configuration)
+        public NeuropixelsV1fRegisterContext(DeviceContext deviceContext, NeuropixelsV1ProbeConfiguration configuration, NeuropixelsV1eProbeGroup probeGroup)
             : base(deviceContext, NeuropixelsV1.ProbeI2CAddress)
         {
             device = deviceContext;
@@ -55,7 +55,6 @@ namespace OpenEphys.Onix1
             var gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(configuration.GainCalibrationFileName,
                 configuration.SpikeAmplifierGain, configuration.LfpAmplifierGain, NeuropixelsV1.ElectrodeCount);
 
-
             if (!gainCorrection.HasValue)
             {
                 throw new ArgumentException($"The calibration file \"{configuration.GainCalibrationFileName}\" is invalid.");
@@ -75,7 +74,7 @@ namespace OpenEphys.Onix1
             AdcOffsets = Adcs.ToList().Select(a => (ushort)a.Offset).ToArray();
 
             // create Configuration bit arrays
-            ShankConfig = NeuropixelsV1.MakeShankBits(configuration);
+            ShankConfig = NeuropixelsV1.MakeShankBits(configuration, probeGroup);
             BaseConfigs = NeuropixelsV1.MakeConfigBits(configuration, Adcs);
         }
 

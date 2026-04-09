@@ -1,37 +1,78 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Windows.Forms;
 
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Partial class to create a GUI for <see cref="ConfigureNeuropixelsV1e"/>.
+    /// Partial class to create a GUI for <see cref="IConfigureNeuropixelsV1"/>.
     /// </summary>
     public partial class NeuropixelsV1Dialog : Form
     {
+        internal event EventHandler OnStateChange;
+
         internal readonly NeuropixelsV1ProbeConfigurationDialog ProbeConfigurationDialog;
 
-        /// <summary>
-        /// Public <see cref="IConfigureNeuropixelsV1"/> interface that is manipulated by
-        /// <see cref="NeuropixelsV1Dialog"/>.
-        /// </summary>
-        [Obsolete]
-        public IConfigureNeuropixelsV1 ConfigureNode { get; set; }
+        internal bool HasChanges
+        {
+            get => ProbeConfigurationDialog.HasChanges;
+            set => ProbeConfigurationDialog.HasChanges = value;
+        }
+
+        IConfigureNeuropixelsV1 configureNeuropixelsV1;
+
+        internal IConfigureNeuropixelsV1 ConfigureNode
+        {
+            get => configureNeuropixelsV1;
+            private set
+            {
+                configureNeuropixelsV1 = value;
+                ProbeConfigurationDialog.propertyGrid.SelectedObject = value;
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV1Dialog"/>.
         /// </summary>
-        /// <param name="configureNode">A <see cref="ConfigureNeuropixelsV1e"/> object holding the current configuration settings.</param>
-        public NeuropixelsV1Dialog(IConfigureNeuropixelsV1 configureNode)
+        /// <param name="configureNode">A <see cref="IConfigureNeuropixelsV1"/> object holding the current configuration settings.</param>
+        /// <param name="probeName">The name of the probe.</param>
+        /// <param name="filterProperties">
+        /// <see langword="true"/> if the properties should be filtered by <see cref="DeviceTablePropertyAttribute"/>,
+        /// otherwise <see langword="false"/>. Default is <see langword="false"/>.
+        /// </param>
+        public NeuropixelsV1Dialog(IConfigureNeuropixelsV1 configureNode, string probeName, bool filterProperties = false)
         {
             InitializeComponent();
             Shown += FormShown;
+            FormClosing += DialogClosing;
 
-            ProbeConfigurationDialog = new(configureNode.ProbeConfiguration);
-            ProbeConfigurationDialog
-                .SetChildFormProperties(this)
-                .AddDialogToPanel(panelProbe);
+            ProbeConfigurationDialog = new(configureNode.ProbeConfiguration, probeName);
+            ProbeConfigurationDialog.SetChildFormProperties(this).AddDialogToPanel(panelProbe);
+            ProbeConfigurationDialog.OnStateChange += (sender, e) =>
+            {
+                if (HasChanges)
+                {
+                    Text += '*';
+                }
+                else
+                {
+                    Text = Text.TrimEnd('*');
+                }
 
-            this.AddMenuItemsFromDialogToFileOption(ProbeConfigurationDialog);
+                OnStateChange?.Invoke(this, EventArgs.Empty);
+            };
+            
+            if (filterProperties)
+            {
+                ProbeConfigurationDialog.propertyGrid.BrowsableAttributes = new AttributeCollection(
+                    new Attribute[]
+                    {
+                        new BrowsableAttribute(true),
+                        new DeviceTablePropertyAttribute (false)
+                    });
+            }
+
+            ConfigureNode = configureNode;
         }
 
         private void FormShown(object sender, EventArgs e)
@@ -40,16 +81,35 @@ namespace OpenEphys.Onix1.Design
             {
                 tableLayoutPanel1.Controls.Remove(flowLayoutPanel1);
                 tableLayoutPanel1.RowCount = 1;
-
-                menuStrip.Visible = false;
             }
 
             ProbeConfigurationDialog.Show();
         }
 
+        internal bool ProcessMenuShortcut(Keys keyData)
+        {
+            return ProbeConfigurationDialog.ProcessMenuShortcut(keyData);
+        }
+
         internal void Okay_Click(object sender, EventArgs e)
         {
             DialogResult = DialogResult.OK;
+        }
+
+        void DialogClosing(object sender, FormClosingEventArgs e)
+        {
+            if (HasChanges && this.HandleTopLevelDialogCancel(ref e, ChannelConfigurationDialog.ProbeConfigurationConfirmMessage))
+            {
+                return;
+            }
+
+            ProbeConfigurationDialog.CloseWithResult(this);
+
+            if (!ProbeConfigurationDialog.IsDisposed)
+            {
+                e.Cancel = true;
+                return;
+            }
         }
     }
 }

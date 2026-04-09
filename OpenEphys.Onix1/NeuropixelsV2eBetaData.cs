@@ -59,7 +59,7 @@ namespace OpenEphys.Onix1
             {
                 var info = (NeuropixelsV2BetaPsbDecoderDeviceInfo)deviceInfo;
                 var gainCorrection = info.GainCorrection;
-                var channelMap = info.ProbeConfiguration.ChannelMap.ToArray();
+                var channelMap = info.ProbeGroup.ChannelMap.ToArray();
                 var streamIndex = info.StreamIndex;
                 var orderByDepth = OrderByDepth;
                 var invertPolarity = info.ProbeConfiguration.InvertPolarity;

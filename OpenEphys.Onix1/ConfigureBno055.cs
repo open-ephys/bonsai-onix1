@@ -22,18 +22,6 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Copy constructor for the <see cref="ConfigureBno055"/> class.
-        /// </summary>
-        /// <param name="configureBno055">Existing <see cref="ConfigureBno055"/> object to be copied.</param>
-        public ConfigureBno055(ConfigureBno055 configureBno055)
-            : base(typeof(Bno055))
-        {
-            Enable = configureBno055.Enable;
-            DeviceName = configureBno055.DeviceName;
-            DeviceAddress = configureBno055.DeviceAddress;
-        }
-
-        /// <summary>
         /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>
@@ -69,7 +57,7 @@ namespace OpenEphys.Onix1
     static class Bno055
     {
         public const int ID = 9;
-        public const uint MinimumVersion = 2;
+        public const uint MinimumVersion = 1;
 
         // constants
         public const float EulerAngleScale = 1f / 16; // 1 degree = 16 LSB

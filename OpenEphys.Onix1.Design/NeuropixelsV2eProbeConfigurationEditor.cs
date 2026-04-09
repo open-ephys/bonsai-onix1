@@ -26,20 +26,16 @@ namespace OpenEphys.Onix1.Design
                 var editorService = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
 
-                if (editorService != null && editorState != null && !editorState.WorkflowRunning &&
-                    value is NeuropixelsV2ProbeConfiguration configuration)
+                if (editorService != null && editorState != null && !editorState.WorkflowRunning && value is NeuropixelsV2ProbeConfiguration configuration)
                 {
                     var instance = (IConfigureNeuropixelsV2)context.Instance;
 
-                    bool isBeta = instance is ConfigureNeuropixelsV2eBeta;
-                    string probeName = configuration == instance.ProbeConfigurationA ? nameof(NeuropixelsV2Probe.ProbeA) : nameof(NeuropixelsV2Probe.ProbeB);
+                    bool isBeta = instance is ConfigureNeuropixelsV2BetaPsbDecoder;
+                    string probeName = nameof(IConfigureNeuropixelsV2.ProbeConfiguration);
 
-                    using var editorDialog = new NeuropixelsV2eProbeConfigurationDialog(configuration, isBeta, probeName);
+                    var configurationCopy = configuration.Clone();
 
-                    if (isBeta)
-                    {
-                        editorDialog.Text = editorDialog.Text.Replace("NeuropixelsV2e ", "NeuropixelsV2eBeta ");
-                    }
+                    using var editorDialog = new NeuropixelsV2eProbeConfigurationDialog(configurationCopy, isBeta, probeName);
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {

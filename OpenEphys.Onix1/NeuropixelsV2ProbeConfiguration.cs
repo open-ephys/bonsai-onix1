@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.ComponentModel;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
 using Bonsai;
+using Newtonsoft.Json;
 
 namespace OpenEphys.Onix1
 {
@@ -45,7 +45,7 @@ namespace OpenEphys.Onix1
     [XmlInclude(typeof(NeuropixelsV2QuadShankProbeConfiguration))]
     [XmlInclude(typeof(NeuropixelsV2SingleShankProbeConfiguration))]
     [XmlType(Namespace = Constants.XmlNamespace)]
-    public abstract class NeuropixelsV2ProbeConfiguration
+    public abstract class NeuropixelsV2ProbeConfiguration : IProbeInterfaceConfiguration
     {
         /// <summary>
         /// Gets or sets a value determining if the polarity of the electrode voltages acquired by the probe
@@ -88,6 +88,8 @@ namespace OpenEphys.Onix1
         /// Gets or sets the reference for all electrodes.
         /// </summary>
         [XmlIgnore]
+        [JsonIgnore]
+        [Category(DeviceFactory.ConfigurationCategory)]
         [Description("Defines the reference for the probe.")]
         public abstract Enum Reference { get; set; }
 
@@ -103,135 +105,13 @@ namespace OpenEphys.Onix1
         public abstract string ReferenceSerialized { get; set; }
 
         /// <summary>
-        /// Gets the existing channel map listing all currently enabled electrodes.
-        /// </summary>
-        /// <remarks>
-        /// The channel map will always be 384 channels, and will return the 384 enabled electrodes.
-        /// </remarks>
-        [XmlIgnore]
-        public abstract NeuropixelsV2Electrode[] ChannelMap { get; }
-
-        /// <summary>
-        /// Update the <see cref="ChannelMap"/> with the selected electrodes.
-        /// </summary>
-        /// <param name="electrodes">List of selected electrodes that are being added to the <see cref="ChannelMap"/></param>
-        public void SelectElectrodes(NeuropixelsV2Electrode[] electrodes)
-        {
-            if (electrodes.Length == 0) return;
-
-            var channelMap = ChannelMap;
-
-            foreach (var e in electrodes)
-            {
-                try
-                {
-                    channelMap[e.Channel] = e;
-                }
-                catch (IndexOutOfRangeException ex)
-                {
-                    throw new IndexOutOfRangeException($"Electrode {e.Index} specifies channel {e.Channel} but only channels " +
-                        $"0 to {channelMap.Length - 1} are supported.", ex);
-                }
-            }
-
-            ProbeGroup.UpdateDeviceChannelIndices(channelMap);
-        }
-
-        /// <summary>
-        /// Protected task that loads the ProbeInterface file asynchronously.
-        /// </summary>
-        protected Task<NeuropixelsV2eProbeGroup> probeGroupTask = null;
-
-        /// <summary>
-        /// Protected <see cref="NeuropixelsV2eProbeGroup"/> class.
-        /// </summary>
-        protected NeuropixelsV2eProbeGroup probeGroup = null;
-
-        /// <summary>
-        /// Gets the <see cref="ProbeGroup"/> channel configuration for this probe.
-        /// </summary>
-        [XmlIgnore]
-        [Category(DeviceFactory.ConfigurationCategory)]
-        [Description("Defines the shape of the probe, and which contacts are currently selected for streaming.")]
-        [Browsable(false)]
-        [Externalizable(false)]
-        public abstract NeuropixelsV2eProbeGroup ProbeGroup { get; set; }
-
-        /// <summary>
-        /// Gets or sets a string defining the <see cref="ProbeGroup"/> in Base64.
-        /// This variable is needed to properly save a workflow in Bonsai, but it is not
-        /// directly accessible in the Bonsai editor.
-        /// </summary>
-        /// <remarks>
-        /// [Obsolete]. Cannot tag this property with the Obsolete attribute due to https://github.com/dotnet/runtime/issues/100453
-        /// </remarks>
-        [Browsable(false)]
-        [Externalizable(false)]
-        [XmlElement(nameof(ProbeGroup))]
-        public abstract string ProbeGroupString { get; set; }
-
-        /// <summary>
-        /// Prevent the ProbeGroup property from being serialized.
-        /// </summary>
-        /// <returns>False</returns>
-        [Obsolete]
-        public bool ShouldSerializeProbeGroupString()
-        {
-            return false;
-        }
-
-        /// <summary>
-        /// Protected ProbeInterface file name.
-        /// </summary>
-        protected string probeInterfaceFileName;
-
-        /// <summary>
         /// Gets or sets the file path where the ProbeInterface configuration will be saved.
         /// </summary>
-        /// <remarks>
-        /// If left empty, the ProbeInterface configuration will not be saved.
-        /// </remarks>
-        [XmlIgnore]
         [Category(DeviceFactory.ConfigurationCategory)]
-        [Description("File path to where the ProbeInterface file will be saved for this probe. If the file exists, it will be overwritten.")]
+        [Description("File path to where the ProbeInterface file exists for this probe.")]
         [FileNameFilter(ProbeInterfaceHelper.ProbeInterfaceFileNameFilter)]
-        [Editor("Bonsai.Design.SaveFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
-        public string ProbeInterfaceFileName
-        {
-            get => probeInterfaceFileName;
-            set => probeInterfaceFileName = value;
-        }
-
-        /// <summary>
-        /// Gets or sets the ProbeInterface file name, loading the given file asynchronously when set.
-        /// </summary>
-        [XmlIgnore]
-        [Browsable(false)]
-        [Externalizable(false)]
-        public abstract string ProbeInterfaceLoadFileName { get; set; }
-
-        /// <summary>
-        /// Gets or sets a string defining the path to an external ProbeInterface JSON file.
-        /// This variable is needed to properly save a workflow in Bonsai, but it is not
-        /// directly accessible in the Bonsai editor.
-        /// </summary>
-        [Browsable(false)]
-        [Externalizable(false)]
-        [XmlElement(nameof(ProbeInterfaceFileName))]
-        public string ProbeInterfaceFileNameSerialize
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(ProbeInterfaceFileName))
-                    return "";
-
-                if (probeGroup != null)
-                    ProbeInterfaceHelper.SaveExternalProbeInterfaceFile(ProbeGroup, ProbeInterfaceFileName);
-
-                return ProbeInterfaceFileName;
-            }
-            set => ProbeInterfaceLoadFileName = value;
-        }
+        [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
+        public string ProbeInterfaceFileName { get; set; }
         
         const int ReferencePixelCount = 4;
         const int DummyRegisterCount = 4;
@@ -253,5 +133,7 @@ namespace OpenEphys.Onix1
         internal abstract int GetChannelNumber(int index);
 
         internal abstract NeuropixelsV2ProbeConfiguration Clone();
+
+        internal abstract Type GetProbeGroupType();
     }
 }

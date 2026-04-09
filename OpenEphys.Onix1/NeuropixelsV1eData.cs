@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// This data IO operator must be linked to an appropriate configuration, such as a <see
-    /// cref="ConfigureNeuropixelsV1e"/>, using a shared <c>DeviceName</c>.
+    /// cref="ConfigureNeuropixelsV1PsbDecoder"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Produces a sequence of NeuropixelsV1eDataFrame objects from a NeuropixelsV1e headstage.")]
     public class NeuropixelsV1eData : Source<NeuropixelsV1DataFrame>
@@ -72,9 +72,9 @@ namespace OpenEphys.Onix1
                 var lfpGain = info.LfpGainCorrection;
                 var adcThresholds = info.AdcThresholds.ToArray();
                 var adcOffsets = info.AdcOffsets.ToArray();
-                var invertPolarity = info.InvertPolarity;
+                var probeConfiguration = info.ProbeConfiguration;
                 var orderByDepth = OrderByDepth;
-                var channelMap = info.ProbeConfiguration.ChannelMap.ToArray();
+                var channelMap = info.ProbeGroup.ChannelMap.ToArray();
 
                 var device = info.GetDeviceContext(typeof(NeuropixelsV1));
                 var passthrough = device.GetPassthroughDeviceContext(typeof(DS90UB9x));
@@ -94,7 +94,7 @@ namespace OpenEphys.Onix1
                         frame =>
                         {
                             var payload = (NeuropixelsV1ePayload*)frame.Data.ToPointer();
-                            NeuropixelsV1eDataFrame.CopyAmplifierBuffer(payload->AmplifierData, frameCountBuffer, spikeBuffer, lfpBuffer, sampleIndex, apGain, lfpGain, adcThresholds, adcOffsets, invertPolarity, channelOrder);
+                            NeuropixelsV1eDataFrame.CopyAmplifierBuffer(payload->AmplifierData, frameCountBuffer, spikeBuffer, lfpBuffer, sampleIndex, apGain, lfpGain, adcThresholds, adcOffsets, probeConfiguration.InvertPolarity, channelOrder);
                             hubClockBuffer[sampleIndex] = payload->HubClock;
                             clockBuffer[sampleIndex] = frame.Clock;
                             if (++sampleIndex >= spikeBufferSize)

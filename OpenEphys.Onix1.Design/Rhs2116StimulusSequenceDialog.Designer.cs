@@ -36,7 +36,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1147, 670);
             this.Name = "Rhs2116StimulusSequenceDialog";
-            this.Text = "Rhs2116StimulusSequenceDialog";
+            this.Text = "Rhs2116 Stimulus Sequence";
             this.ResumeLayout(false);
             this.PerformLayout();
 

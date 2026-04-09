@@ -29,23 +29,6 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigureRhs2116"/> class with the given settings.
-        /// </summary>
-        /// <param name="rhs2116">Existing <see cref="ConfigureRhs2116"/> device, whose settings will be copied.</param>
-        public ConfigureRhs2116(ConfigureRhs2116 rhs2116)
-            : base(typeof(Rhs2116))
-        {
-            Enable = rhs2116.Enable;
-            DspCutoff = rhs2116.DspCutoff;
-            RespectExternalActiveStim = rhs2116.RespectExternalActiveStim;
-            AnalogLowCutoffRecovery = rhs2116.AnalogLowCutoffRecovery;
-            AnalogLowCutoff = rhs2116.AnalogLowCutoff;
-            AnalogHighCutoff = rhs2116.AnalogHighCutoff;
-            DeviceAddress = rhs2116.DeviceAddress;
-            DeviceName = rhs2116.DeviceName;
-        }
-
-        /// <summary>
         /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>

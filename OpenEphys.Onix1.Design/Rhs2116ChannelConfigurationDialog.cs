@@ -13,14 +13,14 @@ namespace OpenEphys.Onix1.Design
     {
         internal event EventHandler OnSelect;
         internal event EventHandler OnZoom;
-        internal event EventHandler OnFileLoad;
 
         /// <summary>
         /// Initializes a new instance of <see cref="Rhs2116ChannelConfigurationDialog"/>.
         /// </summary>
-        /// <param name="probeGroup">Channel configuration settings for a <see cref="Rhs2116ProbeGroup"/>.</param>
-        public Rhs2116ChannelConfigurationDialog(Rhs2116ProbeGroup probeGroup)
-            : base(probeGroup)
+        /// <param name="probeInterfaceFileName">The ProbeInterface filename.</param>
+        /// <param name="probeName">The name of the probe.</param>
+        public Rhs2116ChannelConfigurationDialog(string probeInterfaceFileName, string probeName)
+            : base(new Rhs2116ProbeConfiguration(probeInterfaceFileName), probeName, typeof(Rhs2116ProbeGroup))
         {
             InitializeComponent();
 
@@ -32,37 +32,15 @@ namespace OpenEphys.Onix1.Design
             ZoomInBoundaryX = 2;
             ZoomInBoundaryY = 2;
 
+            panel.BorderStyle = BorderStyle.None;
+
             DrawProbeGroup();
             RefreshZedGraph();
-        }
-
-        internal override void LoadDefaultChannelLayout()
-        {
-            base.LoadDefaultChannelLayout();
-
-            OnFileOpenHandler();
         }
 
         internal override ProbeGroup DefaultChannelLayout()
         {
             return new Rhs2116ProbeGroup();
-        }
-
-        internal override bool OpenFile(Type type)
-        {
-            if (base.OpenFile(type))
-            {
-                OnFileOpenHandler();
-
-                return true;
-            }
-
-            return false;
-        }
-
-        void OnFileOpenHandler()
-        {
-            OnFileLoad?.Invoke(this, EventArgs.Empty);
         }
 
         internal override void SelectedContactChanged()
