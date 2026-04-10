@@ -305,10 +305,10 @@ namespace OpenEphys.Onix1
         }
         protected override bool ConfigurePortVoltage(DeviceContext device, out double voltage)
         {
-            const double MinVoltage = 3.8;
-            const double MaxVoltage = 5.5;
-            const double VoltageOffset = 0.5;
-            const double VoltageIncrement = 0.2;
+            const double MinVoltage = 4.0;
+            const double MaxVoltage = 6.0;
+            const double VoltageOffset = 0.8;
+            const double VoltageIncrement = 0.1;
 
             voltage = MinVoltage;
             for (; voltage <= MaxVoltage; voltage += VoltageIncrement)

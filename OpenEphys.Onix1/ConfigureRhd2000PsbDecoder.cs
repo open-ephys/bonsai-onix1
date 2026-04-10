@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Xml.Serialization;
 
 namespace OpenEphys.Onix1
 {
@@ -99,7 +98,6 @@ namespace OpenEphys.Onix1
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
             var streamIndex = StreamIndex;
-            var chip = GetChipId();
             return source.ConfigureAndLatchDevice(context =>
             {
                 // configure device via the DS90UB9x deserializer device
@@ -168,7 +166,7 @@ namespace OpenEphys.Onix1
                     i2c.WriteByte(Rhd2000PsbDecoder.CLKDIVIDER, Rhd2000PsbDecoderSampleRate.ToRegister(SamplesPerSecond.Value));
                 }
 
-                var deviceInfo = new Rhd2000PsbDecoderDeviceInfo(context, DeviceType, deviceAddress, streamIndex, Rhd2000.ToEphysChannelCount(chip));
+                var deviceInfo = new Rhd2000PsbDecoderDeviceInfo(context, DeviceType, deviceAddress, streamIndex, Rhd2000.ToEphysChannelCount(GetChipId()));
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
         }
