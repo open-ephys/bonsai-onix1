@@ -7,7 +7,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Partial class to create a GUI for <see cref="ConfigureNeuropixelsV2PsbDecoder"/>.
     /// </summary>
-    public partial class NeuropixelsV2eDialog : Form
+    public partial class NeuropixelsV2eDialog : Form, IHeadstageChildDialog
     {
         readonly bool IsBeta = false;
 
@@ -103,6 +103,16 @@ namespace OpenEphys.Onix1.Design
         {
             return ProbeConfigurationDialog.ProcessMenuShortcut(keyData);
         }
+
+        bool IHeadstageChildDialog.HasChanges => HasChanges;
+
+        event EventHandler IHeadstageChildDialog.OnStateChange
+        {
+            add { OnStateChange += value; }
+            remove { OnStateChange -= value; }
+        }
+
+        bool IHeadstageChildDialog.ProcessMenuShortcut(Keys keyData) => ProcessMenuShortcut(keyData);
 
         internal void Okay_Click(object sender, EventArgs e)
         {

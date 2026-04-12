@@ -1,40 +1,32 @@
-﻿using System.Windows.Forms;
-
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Partial class to create a GUI for <see cref="ConfigureHeadstageNeuropixelsV2e"/>.
+    /// GUI for <see cref="ConfigureHeadstageNeuropixelsV2e"/> and
+    /// <see cref="ConfigureHeadstageNeuropixelsV2eBeta"/>. Hosts two
+    /// <see cref="NeuropixelsV2eDialog"/> instances (ProbeA and ProbeB) and one
+    /// <see cref="GenericDeviceDialog"/> for the Bno055, each in its own tab.
     /// </summary>
-    public partial class NeuropixelsV2eHeadstageDialog : Form
+    public class NeuropixelsV2eHeadstageDialog : HeadstageDialog
     {
-        internal NeuropixelsV2eDialog DialogNeuropixelsV2A { get; private set; }
-        internal NeuropixelsV2eDialog DialogNeuropixelsV2B { get; private set; }
+        /// <summary>Gets the <see cref="NeuropixelsV2eDialog"/> for ProbeA.</summary>
+        internal NeuropixelsV2eDialog DialogNeuropixelsV2A =>
+            (NeuropixelsV2eDialog)GetProbeDialog(0);
 
-        internal readonly GenericDeviceDialog DialogBno055;
+        /// <summary>Gets the <see cref="NeuropixelsV2eDialog"/> for ProbeB.</summary>
+        internal NeuropixelsV2eDialog DialogNeuropixelsV2B =>
+            (NeuropixelsV2eDialog)GetProbeDialog(1);
 
-        bool HasChanges => DialogNeuropixelsV2A.HasChanges || DialogNeuropixelsV2B.HasChanges;
-
-        NeuropixelsV2eHeadstageDialog(ConfigurePolledBno055 bno055)
-        {
-            InitializeComponent();
-            FormClosing += DialogClosing;
-
-            DialogBno055 = new(bno055, true);
-            DialogBno055.SetChildFormProperties(this).AddDialogToPanel(panelBno055);
-        }
+        /// <summary>Gets the <see cref="GenericDeviceDialog"/> for the Bno055.</summary>
+        internal GenericDeviceDialog DialogBno055 { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of a <see cref="NeuropixelsV2eHeadstageDialog"/>.
         /// </summary>
         /// <param name="configureHeadstage">Configuration settings for a <see cref="ConfigureHeadstageNeuropixelsV2e"/>.</param>
         public NeuropixelsV2eHeadstageDialog(ConfigureHeadstageNeuropixelsV2e configureHeadstage)
-            : this(configureHeadstage.Bno055)
         {
             Text = "HeadstageNeuropixels2.0 Configuration";
-
-            DialogNeuropixelsV2A = CreateNeuropixelsV2Dialog(this, configureHeadstage.NeuropixelsV2A, nameof(configureHeadstage.NeuropixelsV2A), panelNeuropixelsV2A, tabPageNeuropixelsV2A);
-
-            DialogNeuropixelsV2B = CreateNeuropixelsV2Dialog(this, configureHeadstage.NeuropixelsV2B, nameof(configureHeadstage.NeuropixelsV2B), panelNeuropixelsV2B, tabPageNeuropixelsV2B);
+            InitializeTabs(configureHeadstage.NeuropixelsV2A, configureHeadstage.NeuropixelsV2B, configureHeadstage.Bno055);
         }
 
         /// <summary>
@@ -42,96 +34,35 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <param name="configureHeadstage">Configuration settings for a <see cref="ConfigureHeadstageNeuropixelsV2eBeta"/>.</param>
         public NeuropixelsV2eHeadstageDialog(ConfigureHeadstageNeuropixelsV2eBeta configureHeadstage)
-            : this(configureHeadstage.Bno055)
         {
             Text = "HeadstageNeuropixels2.0-Beta Configuration";
-
-            DialogNeuropixelsV2A = CreateNeuropixelsV2Dialog(this, configureHeadstage.NeuropixelsV2A, nameof(configureHeadstage.NeuropixelsV2A), panelNeuropixelsV2A, tabPageNeuropixelsV2A);
-
-            DialogNeuropixelsV2B = CreateNeuropixelsV2Dialog(this, configureHeadstage.NeuropixelsV2B, nameof(configureHeadstage.NeuropixelsV2B), panelNeuropixelsV2B, tabPageNeuropixelsV2B);
+            InitializeTabs(configureHeadstage.NeuropixelsV2A, configureHeadstage.NeuropixelsV2B, configureHeadstage.Bno055);
         }
 
-        static NeuropixelsV2eDialog CreateNeuropixelsV2Dialog(NeuropixelsV2eHeadstageDialog headstageDialog, IConfigureNeuropixelsV2 configureNeuropixelsV2, string probeName, Panel panel, TabPage tabPage)
+        void InitializeTabs(IConfigureNeuropixelsV2 neuropixelsV2A, IConfigureNeuropixelsV2 neuropixelsV2B, ConfigurePolledBno055 bno055)
         {
-            var dialog = new NeuropixelsV2eDialog(configureNeuropixelsV2, probeName, true);
+            const string nameA = nameof(ConfigureHeadstageNeuropixelsV2e.NeuropixelsV2A);
+            const string nameB = nameof(ConfigureHeadstageNeuropixelsV2e.NeuropixelsV2B);
 
-            dialog.SetChildFormProperties(headstageDialog).AddDialogToPanel(panel);
+            AddProbeTab(nameA, new NeuropixelsV2eDialog(neuropixelsV2A, nameA, true),
+                old => RecreateDialog(old));
 
-            dialog.OnStateChange += (sender, e) =>
-            {
-                if (dialog.HasChanges)
-                {
-                    if (!tabPage.Text.Contains("*"))
-                    {
-                        tabPage.Text += '*';
-                    }
-                }
-                else
-                {
-                    tabPage.Text = tabPage.Text.TrimEnd('*');
-                }
-            };
+            AddProbeTab(nameB, new NeuropixelsV2eDialog(neuropixelsV2B, nameB, true),
+                old => RecreateDialog(old));
 
-            tabPage.Text = probeName;
-
-            return dialog;
+            DialogBno055 = new GenericDeviceDialog(bno055, true);
+            AddDeviceTab("Bno055", DialogBno055);
         }
 
-        private void Okay_Click(object sender, System.EventArgs e)
+        static NeuropixelsV2eDialog RecreateDialog(NeuropixelsV2eDialog old)
         {
-            DialogResult = DialogResult.OK;
-        }
-
-        /// <inheritdoc/>
-        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
-        {
-            if (tabControl1.SelectedTab == tabPageNeuropixelsV2A)
-            {
-                return DialogNeuropixelsV2A.ProcessMenuShortcut(keyData);
-            }
-            else if (tabControl1.SelectedTab == tabPageNeuropixelsV2B)
-            {
-                return DialogNeuropixelsV2B.ProcessMenuShortcut(keyData);
-            }
-            else if (tabControl1.SelectedTab == tabPageBno055)
-            {
-                return true;
-            }
-
-            return base.ProcessCmdKey(ref msg, keyData);
-        }
-
-        void DialogClosing(object sender, FormClosingEventArgs e)
-        {
-            if (HasChanges && this.HandleTopLevelDialogCancel(ref e, ChannelConfigurationDialog.ProbeConfigurationConfirmMessage))
-            {
-                return;
-            }
-
-            DialogNeuropixelsV2A.CloseWithResult(this);
-
-            if (!DialogNeuropixelsV2A.IsDisposed)
-            {
-                e.Cancel = true;
-                return;
-            }
-
-            DialogNeuropixelsV2B.CloseWithResult(this);
-
-            if (!DialogNeuropixelsV2B.IsDisposed)
-            {
-                e.Cancel = true;
-
-                // NB: Initialize the previously disposed dialog when the user cancels closing the dialog
-                var dialog = DialogNeuropixelsV2A;
-                panelNeuropixelsV2A.Controls.Remove(DialogNeuropixelsV2A);
-                DialogNeuropixelsV2A = CreateNeuropixelsV2Dialog(this, DialogNeuropixelsV2A.ConfigureNeuropixelsV2, DialogNeuropixelsV2A.ProbeConfigurationDialog.ProbeName, panelNeuropixelsV2A, tabPageNeuropixelsV2A);
-                DialogNeuropixelsV2A.ProbeConfigurationDialog.ChannelConfiguration.ProbeGroup = dialog.ProbeConfigurationDialog.ChannelConfiguration.ProbeGroup;
-                DialogNeuropixelsV2A.ProbeConfigurationDialog.ChannelConfiguration.RedrawProbeGroup();
-                DialogNeuropixelsV2A.ProbeConfigurationDialog.CheckForExistingChannelPreset();
-
-                return;
-            }
+            var newDialog = new NeuropixelsV2eDialog(
+                old.ConfigureNeuropixelsV2, old.ProbeConfigurationDialog.ProbeName, true);
+            newDialog.ProbeConfigurationDialog.ChannelConfiguration.ProbeGroup =
+                old.ProbeConfigurationDialog.ChannelConfiguration.ProbeGroup;
+            newDialog.ProbeConfigurationDialog.ChannelConfiguration.RedrawProbeGroup();
+            newDialog.ProbeConfigurationDialog.CheckForExistingChannelPreset();
+            return newDialog;
         }
     }
 }

@@ -341,8 +341,6 @@ namespace OpenEphys.Onix1.Design
                 };
             }
 
-            splitContainer1.SplitterDistance = splitContainer1.Size.Width - splitContainer1.Panel2MinSize;
-
             if (ChannelConfiguration.Visible)
                 ChannelConfiguration.Show();
             ChannelConfiguration.ConnectResizeEventHandler();
