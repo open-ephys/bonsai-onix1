@@ -1,16 +1,11 @@
-﻿using System;
-using System.Windows.Forms;
-
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Partial class to create a GUI for <see cref="ConfigureHeadstageRhs2116"/>.
+    /// GUI for <see cref="ConfigureHeadstageRhs2116"/>. Hosts a
+    /// <see cref="Rhs2116StimulusSequenceDialog"/> and a <see cref="GenericDeviceDialog"/> for
+    /// the Rhs2116 pair, each in its own tab.
     /// </summary>
-    /// <remarks>
-    /// Within the GUI, there are two tabs, 
-    /// specifically for <see cref="ConfigureRhs2116"/> and for <see cref="ConfigureRhs2116Trigger"/>. 
-    /// </remarks>
-    public partial class HeadstageRhs2116Dialog : Form
+    public class HeadstageRhs2116Dialog : HeadstageDialog
     {
         internal readonly Rhs2116StimulusSequenceDialog StimulusSequenceDialog;
         internal readonly GenericDeviceDialog Rhs2116Dialog;
@@ -22,24 +17,13 @@ namespace OpenEphys.Onix1.Design
         /// <param name="rhs2116">Current configuration settings for a single <see cref="ConfigureRhs2116"/>.</param>
         public HeadstageRhs2116Dialog(ConfigureRhs2116Trigger rhs2116Trigger, ConfigureRhs2116Pair rhs2116)
         {
-            InitializeComponent();
+            Text = "HeadstageRhs2116 Configuration";
 
             StimulusSequenceDialog = new Rhs2116StimulusSequenceDialog(rhs2116Trigger, true);
-
-            StimulusSequenceDialog.SetChildFormProperties(this).AddDialogToTab(tabPageStimulusSequence);
+            AddSequenceTab("Stimulus Sequence", StimulusSequenceDialog);
 
             Rhs2116Dialog = new(rhs2116, true);
-
-            Rhs2116Dialog.SetChildFormProperties(this).AddDialogToTab(tabPageRhs2116);
-        }
-
-        void OnClickOK(object sender, EventArgs e)
-        {
-            if (StimulusSequenceDialog.CanCloseForm(out DialogResult result))
-            {
-                DialogResult = result;
-                Close();
-            }
+            AddDeviceTab("Rhs2116", Rhs2116Dialog);
         }
     }
 }

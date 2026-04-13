@@ -1,31 +1,35 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using Bonsai.Reactive;
+using ZedGraph;
 
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
     /// Abstract base class for headstage configuration dialogs that host multiple child
-    /// dialogs in tabs. Layout is built programmatically, so no Designer file is needed.
+    /// dialogs in tabs. The layout is built programmatically, so no Designer file is needed.
     /// </summary>
     /// <remarks>
-    /// Subclasses call <see cref="AddProbeTab{T}"/> and <see cref="AddDeviceTab"/> in their
-    /// constructors to register tabs. The base class then handles:
+    /// Subclasses call <see cref="AddProbeTab{T}"/>, <see cref="AddSequenceTab{T}"/>, and
+    /// <see cref="AddDeviceTab"/> in their constructors to register tabs. The base class handles:
     /// <list type="bullet">
     ///   <item>OK / Cancel buttons</item>
     ///   <item>Routing keyboard shortcuts to the active probe tab</item>
-    ///   <item>Prompting on cancel when there are unsaved changes</item>
-    ///   <item>Closing child dialogs in order and recreating any that were closed prematurely</item>
+    ///   <item>Prompting on cancel when there are unsaved probe changes</item>
+    ///   <item>Closing child probe dialogs in order and recreating any that were closed prematurely</item>
+    ///   <item>Validating stimulus sequence dialogs before allowing OK to close the headstage dialog</item>
     /// </list>
     /// </remarks>
     public abstract class HeadstageDialog : Form
     {
         private readonly TabControl tabControl;
-        private readonly List<ProbeTabEntry> probeTabs = new List<ProbeTabEntry>();
-        private readonly HashSet<TabPage> deviceTabPages = new HashSet<TabPage>();
+        private readonly List<ProbeTabEntry> probeTabs = new();
+        private readonly List<StimulusSequenceTabEntry> stimulusSequenceTabs = new();
+        private readonly HashSet<TabPage> deviceTabPages = new();
 
         /// <summary>
         /// Initializes a new instance of <see cref="HeadstageDialog"/> with a programmatically
@@ -58,7 +62,7 @@ namespace OpenEphys.Onix1.Design
                 UseVisualStyleBackColor = true,
                 Anchor = AnchorStyles.Bottom | AnchorStyles.Right
             };
-            buttonOkay.Click += (s, e) => DialogResult = DialogResult.OK;
+            buttonOkay.Click += ValidateStimulusSequences;
 
             var buttonCancel = new Button
             {
@@ -104,9 +108,9 @@ namespace OpenEphys.Onix1.Design
         protected bool HasChanges => probeTabs.Any(e => e.Dialog.HasChanges);
 
         /// <summary>
-        /// Returns the <see cref="IHeadstageChildDialog"/> registered at the given probe-tab index.
+        /// Returns the <see cref="IProbeInterfaceDialog"/> registered at the given probe-tab index.
         /// </summary>
-        protected IHeadstageChildDialog GetProbeDialog(int index) => probeTabs[index].Dialog;
+        protected IProbeInterfaceDialog GetProbeDialog(int index) => probeTabs[index].Dialog;
 
         /// <summary>
         /// Registers a probe dialog as a new tab. Probe tabs support unsaved-change tracking,
@@ -120,12 +124,30 @@ namespace OpenEphys.Onix1.Design
         /// in-progress state (e.g. probe group selection) to be copied across.
         /// </param>
         protected void AddProbeTab<T>(string tabName, T dialog, Func<T, T> recreate)
-            where T : Form, IHeadstageChildDialog
+            where T : Form, IProbeInterfaceDialog
         {
             var (tabPage, panel) = CreateTabWithPanel(tabName);
             dialog.SetChildFormProperties(this).AddDialogToPanel(panel);
             SubscribeStateChange(dialog, tabPage);
             probeTabs.Add(new ProbeTabEntry(tabPage, panel, dialog, old => recreate((T)old)));
+        }
+
+        /// <summary>
+        /// Registers a stimulus sequence dialog as a new tab. Sequence tabs are validated via
+        /// <see cref="IStimulusSequenceDialog.CanCloseForm"/> when the user clicks OK, before
+        /// the headstage dialog is allowed to close. The dialog is added directly to the tab page
+        /// (without an intermediate panel) to match the layout expected by sequence dialogs.
+        /// </summary>
+        /// <typeparam name="T">Concrete sequence dialog type.</typeparam>
+        /// <param name="tabName">Label shown on the tab and used in validation prompts.</param>
+        /// <param name="dialog">Sequence dialog to host.</param>
+        protected void AddSequenceTab<T>(string tabName, T dialog)
+            where T : Form, IStimulusSequenceDialog
+        {
+            var tabPage = new TabPage { Text = tabName, UseVisualStyleBackColor = true };
+            tabControl.TabPages.Add(tabPage);
+            dialog.SetChildFormProperties(this).AddDialogToTab(tabPage);
+            stimulusSequenceTabs.Add(new StimulusSequenceTabEntry(tabName, dialog));
         }
 
         /// <summary>
@@ -150,7 +172,7 @@ namespace OpenEphys.Onix1.Design
             return (tabPage, panel);
         }
 
-        private static void SubscribeStateChange(IHeadstageChildDialog dialog, TabPage tabPage)
+        private static void SubscribeStateChange(IProbeInterfaceDialog dialog, TabPage tabPage)
         {
             dialog.OnStateChange += (s, e) =>
             {
@@ -164,6 +186,31 @@ namespace OpenEphys.Onix1.Design
                     tabPage.Text = tabPage.Text.TrimEnd('*');
                 }
             };
+        }
+
+        private void ValidateStimulusSequences(object sender, EventArgs e)
+        {
+            if (stimulusSequenceTabs.Count == 0)
+            {
+                // No sequence validation needed
+                DialogResult = DialogResult.OK;
+                return;
+            }
+
+            // Validate every sequence dialog. 
+            var anyOk = false;
+            foreach (var entry in stimulusSequenceTabs)
+            {
+                if (!entry.Dialog.CanCloseForm(out var result, entry.Name))
+                    return; // Shortcircuit on the first failure.
+                if (result == DialogResult.OK)
+                    anyOk = true;
+            }
+
+            // OK if at least one sequence was valid
+            // Cancel if all were discarded as invalid.
+            DialogResult = anyOk ? DialogResult.OK : DialogResult.Cancel;
+            Close();
         }
 
         /// <inheritdoc/>
@@ -206,16 +253,28 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
+        private sealed class StimulusSequenceTabEntry
+        {
+            public string Name { get; }
+            public IStimulusSequenceDialog Dialog { get; }
+
+            public StimulusSequenceTabEntry(string name, IStimulusSequenceDialog dialog)
+            {
+                Name = name;
+                Dialog = dialog;
+            }
+        }
+
         private sealed class ProbeTabEntry
         {
             public TabPage TabPage { get; }
             public Panel Panel { get; }
-            public IHeadstageChildDialog Dialog { get; private set; }
+            public IProbeInterfaceDialog Dialog { get; private set; }
 
-            private readonly Func<IHeadstageChildDialog, IHeadstageChildDialog> factory;
+            private readonly Func<IProbeInterfaceDialog, IProbeInterfaceDialog> factory;
 
-            public ProbeTabEntry(TabPage tabPage, Panel panel, IHeadstageChildDialog dialog,
-                Func<IHeadstageChildDialog, IHeadstageChildDialog> factory)
+            public ProbeTabEntry(TabPage tabPage, Panel panel, IProbeInterfaceDialog dialog,
+                Func<IProbeInterfaceDialog, IProbeInterfaceDialog> factory)
             {
                 TabPage = tabPage;
                 Panel = panel;

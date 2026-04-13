@@ -12,7 +12,6 @@ namespace OpenEphys.Onix1
     /// This configuration operator can be linked to a data IO operator, such as <see cref="Rhs2116Data"/>,
     /// using a shared <c>DeviceName</c>.
     /// </remarks>
-    [Editor("OpenEphys.Onix1.Design.Rhs2116Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     public class ConfigureRhs2116 : SingleDeviceFactory
     {
         readonly BehaviorSubject<Rhs2116AnalogLowCutoff> analogLowCutoff = new(Rhs2116AnalogLowCutoff.Low100mHz);
