@@ -125,7 +125,7 @@ namespace OpenEphys.Onix1
     static class Rhd2164
     {
         public const int ID = 3;
-        public const uint MinimumVersion = 2;
+        public const uint MinimumVersion = 1;
 
         // constants
         public const int AmplifierChannelCount = 64;
