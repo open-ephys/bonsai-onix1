@@ -102,8 +102,7 @@ namespace OpenEphys.Onix1
 
             Console.Error.WriteLine($"Error: The {expectedType.Name} device at address {address} is v{deviceVersion}, " +
                 $"but v{minimumVersion} is required by {libraryName} {libraryVersion}.");
-            Console.Error.WriteLine($"In order to use {libraryName} {libraryVersion} with this device, you will need to update it firmware. " +
-                $"Firmware update files and instructions can be found at https://open-ephys.github.io/onix-docs/index.html.");
+            Console.Error.WriteLine("In order to use this device, you will need to use an older version of the software.");
 
             throw new InvalidOperationException($"Invalid device version. The {expectedType.Name} device at address {address} is v{deviceVersion}, " +
                 $"but v{minimumVersion} is required.");
