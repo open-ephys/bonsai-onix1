@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using Apache.Arrow;
 
 namespace OpenEphys.Onix1.FrameWriter
@@ -10,8 +12,8 @@ namespace OpenEphys.Onix1.FrameWriter
     /// <typeparam name="T">The type of items to be written and batched.</typeparam>
     public sealed class ArrowBatchWriter<T> : ArrowWriter
     {
-        readonly int bufferSize;
-        readonly List<T> buffer;
+        readonly Subject<T> subject = new();
+        readonly IDisposable subscription;
         readonly Func<IList<T>, Schema, RecordBatch> createRecordBatch;
         readonly Schema schema;
 
@@ -24,14 +26,18 @@ namespace OpenEphys.Onix1.FrameWriter
         /// <param name="filename">The path to the output file.</param>
         /// <param name="schema">The schema describing the structure of the data.</param>
         /// <param name="bufferSize">The maximum number of items to buffer before writing a batch.</param>
+        /// <param name="timeout">The maximum time to wait before writing a batch.</param>
         /// <param name="createRecordBatch">A delegate to create a RecordBatch from a list of items and a schema.</param>
-        public ArrowBatchWriter(string filename, Schema schema, int bufferSize, Func<IList<T>, Schema, RecordBatch> createRecordBatch)
+        public ArrowBatchWriter(string filename, Schema schema, int bufferSize, TimeSpan timeout, Func<IList<T>, Schema, RecordBatch> createRecordBatch)
             : base(filename, schema)
         {
             this.schema = schema;
-            this.bufferSize = bufferSize;
-            buffer = new(bufferSize);
             this.createRecordBatch = createRecordBatch;
+
+            subscription = subject
+                .Buffer(timeout, bufferSize)
+                .Where(list => list.Count > 0)
+                .Subscribe(WriteBatch);
         }
 
         /// <summary>
@@ -40,25 +46,13 @@ namespace OpenEphys.Onix1.FrameWriter
         /// <param name="item">The item to add to the buffer.</param>
         public void Write(T item)
         {
-            buffer.Add(item);
-
-            if (buffer.Count >= bufferSize)
-            {
-                Flush();
-            }
+            subject.OnNext(item);
         }
 
-        /// <summary>
-        /// Writes any buffered records as a batch and clears the buffer.
-        /// </summary>
-        public void Flush()
+        void WriteBatch(IList<T> items)
         {
-            if (buffer.Count > 0)
-            {
-                var recordBatch = createRecordBatch(buffer, schema);
-                base.Write(recordBatch);
-                buffer.Clear();
-            }
+            var recordBatch = createRecordBatch(items, schema);
+            base.Write(recordBatch);
         }
 
         /// <inheritdoc/>
@@ -70,7 +64,9 @@ namespace OpenEphys.Onix1.FrameWriter
 
                 if (disposing)
                 {
-                    Flush();
+                    subject.OnCompleted();
+                    subscription.Dispose();
+                    subject.Dispose();
                 }
             }
 

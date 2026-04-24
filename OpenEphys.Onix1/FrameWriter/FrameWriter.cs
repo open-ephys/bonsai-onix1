@@ -18,12 +18,15 @@ namespace OpenEphys.Onix1.FrameWriter
     [WorkflowElementCategory(ElementCategory.Sink)]
     public class FrameWriter : FileSink
     {
+        readonly TimeSpan BufferTimeout = TimeSpan.FromSeconds(5);
+
         BufferedDataFrameSink CreateBufferedDataFrameSink(
             Schema schema,
             Func<IList<BufferedDataFrame>, Schema, RecordBatch> createRecordBatch,
-            int bufferSize)
+            int bufferSize,
+            TimeSpan timeout)
         {
-            return new BufferedDataFrameSink(schema, createRecordBatch, bufferSize)
+            return new BufferedDataFrameSink(schema, createRecordBatch, bufferSize, timeout)
             {
                 FileName = this.FileName,
                 Suffix = this.Suffix,
@@ -35,9 +38,10 @@ namespace OpenEphys.Onix1.FrameWriter
         DataFrameSink CreateDataFrameSink(
             Schema schema,
             Func<IList<DataFrame>, Schema, RecordBatch> createRecordBatch,
-            int bufferSize)
+            int bufferSize,
+            TimeSpan timeout)
         {
-            return new DataFrameSink(schema, createRecordBatch, bufferSize)
+            return new DataFrameSink(schema, createRecordBatch, bufferSize, timeout)
             {
                 FileName = this.FileName,
                 Suffix = this.Suffix,
@@ -160,7 +164,7 @@ namespace OpenEphys.Onix1.FrameWriter
                         createRecordBatch = CreateBufferedFrameRecordBatchBuilder(frameType, members).Compile();
                     })
                     .IgnoreElements(),
-                Observable.Defer(() => CreateBufferedDataFrameSink(schema, createRecordBatch, bufferSize).Process(frames))
+                Observable.Defer(() => CreateBufferedDataFrameSink(schema, createRecordBatch, bufferSize, BufferTimeout).Process(frames))
             ), 1);
         }
 
@@ -188,7 +192,7 @@ namespace OpenEphys.Onix1.FrameWriter
                         createRecordBatch = CreateDataFrameRecordBatchBuilder(frameType, members).Compile();
                     })
                     .IgnoreElements(),
-                Observable.Defer(() => CreateDataFrameSink(schema, createRecordBatch, BufferSize).Process(frames))
+                Observable.Defer(() => CreateDataFrameSink(schema, createRecordBatch, BufferSize, BufferTimeout).Process(frames))
             ), 1);
         }
     }

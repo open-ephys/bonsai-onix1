@@ -10,20 +10,23 @@ namespace OpenEphys.Onix1.FrameWriter
         readonly Schema schema;
         readonly Func<IList<DataFrame>, Schema, RecordBatch> createRecordBatch;
         readonly int bufferSize;
+        readonly TimeSpan timeout;
 
         public DataFrameSink(
             Schema schema,
             Func<IList<DataFrame>, Schema, RecordBatch> createRecordBatch,
-            int bufferSize)
+            int bufferSize,
+            TimeSpan timeout)
         {
             this.schema = schema;
             this.createRecordBatch = createRecordBatch;
             this.bufferSize = bufferSize;
+            this.timeout = timeout;
         }
 
         protected override ArrowBatchWriter<DataFrame> CreateWriter(string filename, DataFrame frame)
         {
-            return new ArrowBatchWriter<DataFrame>(filename, schema, bufferSize, createRecordBatch);
+            return new ArrowBatchWriter<DataFrame>(filename, schema, bufferSize, timeout, createRecordBatch);
         }
 
         protected override void Write(ArrowBatchWriter<DataFrame> writer, DataFrame input)
