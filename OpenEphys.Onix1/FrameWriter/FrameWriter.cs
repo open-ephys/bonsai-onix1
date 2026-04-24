@@ -19,6 +19,9 @@ namespace OpenEphys.Onix1.FrameWriter
     public class FrameWriter : FileSink
     {
         readonly TimeSpan BufferTimeout = TimeSpan.FromSeconds(5);
+        const int DefaultBufferSize = 1000;
+        const int MinimumBufferSize = 50;
+        const int MaximumBufferSize = 10000;
 
         BufferedDataFrameSink CreateBufferedDataFrameSink(
             Schema schema,
@@ -138,6 +141,21 @@ namespace OpenEphys.Onix1.FrameWriter
                 members);
         }
 
+        static int ClampBufferSize(int bufferSize) => Math.Min(Math.Max(bufferSize, MinimumBufferSize), MaximumBufferSize);
+
+        static int GetBufferSize(Type frameType)
+        {
+            var sampleRateAttribute = frameType.GetCustomAttribute<ExpectedSampleRateAttribute>();
+            if (sampleRateAttribute != null)
+            {
+                const double BufferDurationSeconds = 1.0;
+                int bufferSize = (int)(sampleRateAttribute.SampleRateHz * BufferDurationSeconds);
+                return ClampBufferSize(bufferSize);
+            }
+
+            return DefaultBufferSize;
+        }
+
         /// <summary>
         /// Writes all of the data frames in the sequence to an Apache Arrow file.
         /// </summary>
@@ -148,10 +166,9 @@ namespace OpenEphys.Onix1.FrameWriter
         /// </returns>
         public IObservable<BufferedDataFrame> Process(IObservable<BufferedDataFrame> source)
         {
-            const int BufferSizeInSamples = 30000;
             Schema schema = null;
             Func<IList<BufferedDataFrame>, Schema, RecordBatch> createRecordBatch = null;
-            int bufferSize = 1000;
+            int bufferSize = DefaultBufferSize;
 
             return source.Replay(frames => Observable.Concat(
                 frames.Take(1)
@@ -159,7 +176,7 @@ namespace OpenEphys.Onix1.FrameWriter
                     {
                         var frameType = frame.GetType();
                         var members = FrameWriterHelper.GetDataMembers(frameType);
-                        bufferSize = (int)Math.Ceiling((double)BufferSizeInSamples / frame.Clock.Length);
+                        bufferSize = (int)Math.Ceiling((double)GetBufferSize(frameType) / frame.Clock.Length);
                         schema = GenerateSchema(members, frame);
                         createRecordBatch = CreateBufferedFrameRecordBatchBuilder(frameType, members).Compile();
                     })
@@ -178,9 +195,9 @@ namespace OpenEphys.Onix1.FrameWriter
         /// </returns>
         public IObservable<DataFrame> Process(IObservable<DataFrame> source)
         {
-            const int BufferSize = 50;
             Schema schema = null;
             Func<IList<DataFrame>, Schema, RecordBatch> createRecordBatch = null;
+            int bufferSize = DefaultBufferSize;
 
             return source.Replay(frames => Observable.Concat(
                 frames.Take(1)
@@ -188,11 +205,12 @@ namespace OpenEphys.Onix1.FrameWriter
                     {
                         var frameType = frame.GetType();
                         var members = FrameWriterHelper.GetDataMembers(frameType);
+                        bufferSize = GetBufferSize(frameType);
                         schema = GenerateSchema(members, frame);
                         createRecordBatch = CreateDataFrameRecordBatchBuilder(frameType, members).Compile();
                     })
                     .IgnoreElements(),
-                Observable.Defer(() => CreateDataFrameSink(schema, createRecordBatch, BufferSize, BufferTimeout).Process(frames))
+                Observable.Defer(() => CreateDataFrameSink(schema, createRecordBatch, bufferSize, BufferTimeout).Process(frames))
             ), 1);
         }
     }

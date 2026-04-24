@@ -6,6 +6,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Buffered analog data produced by the ONIX breakout board.
     /// </summary>
+    [ExpectedSampleRate(100_000)]
     public class AnalogInputDataFrame : BufferedDataFrame
     {
         /// <summary>

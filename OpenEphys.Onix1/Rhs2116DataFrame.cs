@@ -10,6 +10,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Buffered data from a Rhs2116 device.
     /// </summary>
+    [ExpectedSampleRate(30_193)]
     public class Rhs2116DataFrame : BufferedDataFrame
     {
         /// <summary>

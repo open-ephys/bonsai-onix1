@@ -6,6 +6,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Electrophysiology data produced by an Rhd2164 bioamplifier chip.
     /// </summary>
+    [ExpectedSampleRate(30_000)]
     public class Rhd2164DataFrame : BufferedDataFrame
     {
         /// <summary>

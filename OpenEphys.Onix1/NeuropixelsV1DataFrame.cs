@@ -5,6 +5,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Buffered data from a NeuropixelsV1 probe.
     /// </summary>
+    [ExpectedSampleRate(30_000)]
     public class NeuropixelsV1DataFrame : BufferedDataFrame
     {
         /// <summary>

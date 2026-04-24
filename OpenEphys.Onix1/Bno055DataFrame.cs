@@ -21,6 +21,7 @@ namespace OpenEphys.Onix1
     /// and Roll = 0 degrees; Gravity: X = 0, Y = 0, Z = 9.8 m/s^2). Linear acceleration readings are always
     /// taken relative to the chip's axis definitions (they are "egocentric").
     /// </remarks>
+    [ExpectedSampleRate(100)]
     public class Bno055DataFrame : DataFrame
     {
         /// <summary>
