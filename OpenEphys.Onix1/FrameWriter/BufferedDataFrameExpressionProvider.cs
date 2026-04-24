@@ -15,24 +15,32 @@ namespace OpenEphys.Onix1.FrameWriter
 
         public BufferedDataFrameExpressionProvider()
         {
-            InputParameter = Expression.Parameter(typeof(BufferedDataFrame), "frame");
+            InputParameter = Expression.Parameter(typeof(IList<BufferedDataFrame>), "frame");
         }
 
         public Expression GetLengthExpression()
         {
-            return Expression.ArrayLength(
-                    Expression.Property(
-                        InputParameter,
-                        nameof(BufferedDataFrame.Clock)));
+            // NB: We assume that all frames in the batch have the same number of rows, so we can take the length of the first frame's clock array and multiply by the number of frames.
+            var firstFrame = Expression.Property(
+                InputParameter,
+                typeof(IList<BufferedDataFrame>).GetProperty("Item"),
+                Expression.Constant(0));
+            var clockArray = Expression.Property(firstFrame, nameof(BufferedDataFrame.Clock));
+            var clockArrayLength = Expression.ArrayLength(clockArray);
+            var numberOfFrames = Expression.Property(
+                    Expression.Convert(InputParameter, typeof(ICollection<BufferedDataFrame>)),
+                    nameof(ICollection<BufferedDataFrame>.Count));
+            return Expression.Multiply(clockArrayLength, numberOfFrames);
         }
 
         public List<Expression> GetArrayPopulationExpressions(
             ParameterExpression arrowArrays,
             ParameterExpression arrowArrayIndex,
-            Expression batchRows,
+            ParameterExpression batchRows,
             Type frameType,
             IEnumerable<MemberInfo> members)
         {
+            var frameParameter = Expression.Parameter(typeof(BufferedDataFrame), "df");
             List<Expression> expressions = new();
 
             var stack = new Stack<MemberNode>(members.Select(m => new MemberNode { Member = m }));
@@ -44,34 +52,37 @@ namespace OpenEphys.Onix1.FrameWriter
 
                 if (memberType.IsArray)
                 {
-                    var convertMethod = typeof(FrameWriterHelper)
-                        .GetMethod(nameof(FrameWriterHelper.ConvertArrayToArrowArray), BindingFlags.Static | BindingFlags.NonPublic)
-                        .MakeGenericMethod(memberType.GetElementType());
+                    var memberAccessor = FrameWriterHelper.CreateMemberAccess(
+                        Expression.Convert(frameParameter, frameType),
+                        current);
 
-                    var arrayProperty = Expression.Property(
-                        Expression.Convert(InputParameter, frameType),
-                        current.GetFullName());
-                    var arrayArrowType = Expression.Constant(FrameWriterHelper.GetArrowType(memberType.GetElementType()));
+                    var convertFrameMemberMethod = typeof(BufferedDataFrameExpressionProvider)
+                                .GetMethod(nameof(ConvertFrameMemberToArrowArray), BindingFlags.Static | BindingFlags.NonPublic)
+                                .MakeGenericMethod(memberType.GetElementType());
 
-                    var block = Expression.Block(
-                        Expression.Assign(
-                            Expression.ArrayAccess(arrowArrays, arrowArrayIndex),
-                            Expression.Call(
-                                convertMethod,
-                                arrayProperty,
-                                arrayArrowType,
-                                batchRows)),
-                        Expression.PostIncrementAssign(arrowArrayIndex));
-
-                    expressions.Add(block);
+                    expressions.Add(ConvertFrameMemberExpressionBuilder(
+                        memberType, frameParameter, arrowArrays, arrowArrayIndex,
+                        InputParameter, memberAccessor,
+                        convertFrameMemberMethod));
                 }
                 else if (memberType == typeof(Mat))
                 {
+                    var combineMatMethod = typeof(BufferedDataFrameExpressionProvider)
+                        .GetMethod(nameof(CombineMatObjects), BindingFlags.Static | BindingFlags.NonPublic);
+
+                    var combinedMat = Expression.Variable(typeof(Mat), "combinedMat");
+                    var combineMatCall = Expression.Call(
+                        combineMatMethod,
+                        InputParameter,
+                        Expression.Lambda<Func<BufferedDataFrame, Mat>>(
+                            FrameWriterHelper.CreateMemberAccess(
+                                Expression.Convert(frameParameter, frameType),
+                                current),
+                            frameParameter));
+
                     var convertMatRowMethod = typeof(BufferedDataFrameExpressionProvider)
                         .GetMethod(nameof(ConvertMatRowToArrowArray), BindingFlags.Static | BindingFlags.NonPublic);
 
-                    var matProperty = Expression.Property(
-                        Expression.Convert(InputParameter, frameType), current.GetFullName());
                     var matElementType = Expression.Variable(typeof(IArrowType), "matElementType");
                     var rowIndex = Expression.Variable(typeof(int), "rowIndex");
                     var breakLabel = Expression.Label("break");
@@ -81,7 +92,7 @@ namespace OpenEphys.Onix1.FrameWriter
                             Expression.ArrayAccess(arrowArrays, arrowArrayIndex),
                             Expression.Call(
                                 convertMatRowMethod,
-                                matProperty,
+                                combinedMat,
                                 rowIndex,
                                 matElementType,
                                 batchRows)),
@@ -99,19 +110,23 @@ namespace OpenEphys.Onix1.FrameWriter
                                     null,
                                     new[] { typeof(Depth) },
                                     null),
-                                Expression.Property(matProperty, nameof(Mat.Depth)))),
+                                Expression.Property(combinedMat, nameof(Mat.Depth)))),
                         Expression.Loop(
                             Expression.IfThenElse(
                                 Expression.LessThan(
                                     rowIndex,
-                                    Expression.Property(matProperty, nameof(Mat.Rows))),
+                                    Expression.Property(combinedMat, nameof(Mat.Rows))),
                                 Expression.Block(
                                     loopBody,
                                     Expression.PostIncrementAssign(rowIndex)),
                                 Expression.Break(breakLabel)),
                             breakLabel));
 
-                    expressions.Add(forLoop);
+                    expressions.Add(Expression.Block(
+                        new[] { combinedMat },
+                        Expression.Assign(combinedMat, combineMatCall),
+                        forLoop
+                    ));
                 }
                 else
                 {
@@ -121,6 +136,69 @@ namespace OpenEphys.Onix1.FrameWriter
             }
 
             return expressions;
+        }
+
+        static int GetTotalSamples(IList<BufferedDataFrame> frames)
+        {
+            if (frames.Count == 0)
+                return 0;
+            int samplesPerFrame = frames[0].Clock.Length;
+            return frames.Count * samplesPerFrame;
+        }
+
+        static IArrowArray ConvertFrameMemberToArrowArray<TMember>(IList<BufferedDataFrame> frames, Func<BufferedDataFrame, TMember[]> getter, IArrowType arrowType) where TMember : unmanaged
+        {
+            int length = GetTotalSamples(frames);
+
+            if (length == 0)
+                return ArrowArrayFactory.BuildArray(new ArrayData(arrowType, 0, 0, 0, new[] { ArrowBuffer.Empty, ArrowBuffer.Empty }, null, null));
+
+            int samplesPerFrame = frames[0].Clock.Length;
+            var array = new TMember[length];
+
+            for (int i = 0; i < frames.Count; i++)
+            {
+                var member = getter(frames[i]);
+
+                for (int j = 0; j < samplesPerFrame; j++)
+                {
+                    array[i * samplesPerFrame + j] = member[j];
+                }
+            }
+
+            return FrameWriterHelper.ConvertArrayToArrowArray(array, arrowType, length);
+        }
+
+        static Expression ConvertFrameMemberExpressionBuilder(
+            Type memberType,
+            ParameterExpression frameParameter,
+            ParameterExpression arrowArrays,
+            ParameterExpression arrowArrayIndex,
+            ParameterExpression frames,
+            Expression memberAccessor,
+            MethodInfo convertFrameMemberMethod)
+        {
+            var arrayArrowType = Expression.Constant(FrameWriterHelper.GetArrowType(memberType.GetElementType()));
+            var getter = Expression.Lambda(
+                            typeof(Func<,>).MakeGenericType(typeof(BufferedDataFrame), memberType),
+                            memberAccessor,
+                            frameParameter
+                        );
+
+            var block = Expression.Block(
+                Expression.Assign(
+                    Expression.ArrayAccess(arrowArrays, arrowArrayIndex),
+                    Expression.Call(
+                        convertFrameMemberMethod,
+                        frames,
+                        getter,
+                        arrayArrowType
+                    )
+                ),
+                Expression.PostIncrementAssign(arrowArrayIndex)
+            );
+
+            return block;
         }
 
         static ArrowBuffer CreateStrideValidityBitmap(int validCount, int totalCount, int stride)
@@ -149,6 +227,29 @@ namespace OpenEphys.Onix1.FrameWriter
                 *destPtr = *srcPtr++;
                 destPtr += stride;
             }
+        }
+
+        static Mat CombineMatObjects(IList<BufferedDataFrame> frames, Func<BufferedDataFrame, Mat> getter)
+        {
+            Mat first = getter(frames[0]);
+            int length = first.Cols * frames.Count;
+
+            Mat dest = new(first.Rows, length, first.Depth, first.Channels);
+
+            int samplesPerFrame = first.Cols;
+            int rows = first.Rows;
+            int offset = 0;
+
+            for (int i = 0; i < frames.Count; i++)
+            {
+                Mat src = getter(frames[i]);
+
+                using var destRect = dest.GetSubRect(new Rect(offset, 0, samplesPerFrame, rows));
+                CV.Copy(src, destRect);
+                offset += samplesPerFrame;
+            }
+
+            return dest;
         }
 
         static unsafe IArrowArray ConvertMatRowToArrowArray(Mat mat, int rowIndex, IArrowType elementType, int batchRows)

@@ -44,8 +44,13 @@ namespace OpenEphys.Onix1.FrameWriter
             var arrowArrayIndex = Expression.Variable(typeof(int), "arrowArrayIndex");
             var schemaParameter = Expression.Parameter(typeof(Schema), "schema");
             var batchRowsExpression = provider.GetLengthExpression();
+            var batchRowsVariable = Expression.Variable(typeof(int), "batchRows");
 
-            expressions.Add(batchRowsExpression);
+            parameters.Add(batchRowsVariable);
+            expressions.Add(Expression.Assign(
+                batchRowsVariable,
+                batchRowsExpression
+            ));
 
             parameters.Add(arrowArrays);
             expressions.Add(InitializeArrowArrayFromSchema(schemaParameter, arrowArrays));
@@ -55,13 +60,13 @@ namespace OpenEphys.Onix1.FrameWriter
 
             expressions.AddRange(
                 provider.GetArrayPopulationExpressions(
-                    arrowArrays, arrowArrayIndex, batchRowsExpression, frameType, members));
+                    arrowArrays, arrowArrayIndex, batchRowsVariable, frameType, members));
 
             var recordBatch = Expression.Variable(typeof(RecordBatch), "recordBatch");
             parameters.Add(recordBatch);
             expressions.Add(Expression.Assign(
                 recordBatch,
-                Expression.New(recordBatchConstructor, schemaParameter, arrowArrays, batchRowsExpression)));
+                Expression.New(recordBatchConstructor, schemaParameter, arrowArrays, batchRowsVariable)));
 
             var createRecordBatch = Expression.Block(parameters, expressions);
 

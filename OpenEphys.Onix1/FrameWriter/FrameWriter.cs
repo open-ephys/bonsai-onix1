@@ -18,9 +18,12 @@ namespace OpenEphys.Onix1.FrameWriter
     [WorkflowElementCategory(ElementCategory.Sink)]
     public class FrameWriter : FileSink
     {
-        BufferedDataFrameSink CreateBufferedDataFrameSink()
+        BufferedDataFrameSink CreateBufferedDataFrameSink(
+            Schema schema,
+            Func<IList<BufferedDataFrame>, Schema, RecordBatch> createRecordBatch,
+            int bufferSize)
         {
-            return new BufferedDataFrameSink
+            return new BufferedDataFrameSink(schema, createRecordBatch, bufferSize)
             {
                 FileName = this.FileName,
                 Suffix = this.Suffix,
@@ -121,11 +124,11 @@ namespace OpenEphys.Onix1.FrameWriter
                 members);
         }
 
-        static Expression<Func<BufferedDataFrame, Schema, RecordBatch>> CreateBufferedFrameRecordBatchBuilder(
+        static Expression<Func<IList<BufferedDataFrame>, Schema, RecordBatch>> CreateBufferedFrameRecordBatchBuilder(
             Type frameType,
             IEnumerable<MemberInfo> members)
         {
-            return RecordBatchExpressionFactory.CreateBuilder<Func<BufferedDataFrame, Schema, RecordBatch>>(
+            return RecordBatchExpressionFactory.CreateBuilder<Func<IList<BufferedDataFrame>, Schema, RecordBatch>>(
                 new BufferedDataFrameExpressionProvider(),
                 frameType,
                 members);
@@ -141,8 +144,10 @@ namespace OpenEphys.Onix1.FrameWriter
         /// </returns>
         public IObservable<BufferedDataFrame> Process(IObservable<BufferedDataFrame> source)
         {
+            const int BufferSizeInSamples = 30000;
             Schema schema = null;
-            Func<BufferedDataFrame, Schema, RecordBatch> createRecordBatch = null;
+            Func<IList<BufferedDataFrame>, Schema, RecordBatch> createRecordBatch = null;
+            int bufferSize = 1000;
 
             return source.Replay(frames => Observable.Concat(
                 frames.Take(1)
@@ -150,14 +155,12 @@ namespace OpenEphys.Onix1.FrameWriter
                     {
                         var frameType = frame.GetType();
                         var members = FrameWriterHelper.GetDataMembers(frameType);
+                        bufferSize = (int)Math.Ceiling((double)BufferSizeInSamples / frame.Clock.Length);
                         schema = GenerateSchema(members, frame);
                         createRecordBatch = CreateBufferedFrameRecordBatchBuilder(frameType, members).Compile();
                     })
                     .IgnoreElements(),
-                Observable.Defer(() => CreateBufferedDataFrameSink().Process(
-                    frames,
-                    frame => createRecordBatch(frame, schema)
-                ))
+                Observable.Defer(() => CreateBufferedDataFrameSink(schema, createRecordBatch, bufferSize).Process(frames))
             ), 1);
         }
 

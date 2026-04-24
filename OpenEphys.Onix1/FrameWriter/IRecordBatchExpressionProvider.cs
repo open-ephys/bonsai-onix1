@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1.FrameWriter
         List<Expression> GetArrayPopulationExpressions(
             ParameterExpression arrowArrays,
             ParameterExpression arrowArrayIndex,
-            Expression batchRows,
+            ParameterExpression batchRows,
             Type frameType,
             IEnumerable<MemberInfo> members);
     }

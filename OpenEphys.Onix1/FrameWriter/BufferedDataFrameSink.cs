@@ -1,24 +1,34 @@
 ﻿using System;
+using System.Collections.Generic;
 using Apache.Arrow;
 using Bonsai.IO;
 
 namespace OpenEphys.Onix1.FrameWriter
 {
-    class BufferedDataFrameSink : FileSink<RecordBatch, ArrowWriter>
+    class BufferedDataFrameSink : FileSink<BufferedDataFrame, ArrowBatchWriter<BufferedDataFrame>>
     {
-        protected override ArrowWriter CreateWriter(string filename, RecordBatch batch)
+        readonly Schema schema;
+        readonly Func<IList<BufferedDataFrame>, Schema, RecordBatch> createRecordBatch;
+        readonly int bufferSize;
+
+        public BufferedDataFrameSink(
+            Schema schema,
+            Func<IList<BufferedDataFrame>, Schema, RecordBatch> createRecordBatch,
+            int bufferSize)
         {
-            return new ArrowWriter(filename, batch.Schema);
+            this.schema = schema;
+            this.createRecordBatch = createRecordBatch;
+            this.bufferSize = bufferSize;
         }
 
-        protected override void Write(ArrowWriter writer, RecordBatch input)
+        protected override ArrowBatchWriter<BufferedDataFrame> CreateWriter(string filename, BufferedDataFrame dataFrame)
+        {
+            return new ArrowBatchWriter<BufferedDataFrame>(filename, schema, bufferSize, createRecordBatch);
+        }
+
+        protected override void Write(ArrowBatchWriter<BufferedDataFrame> writer, BufferedDataFrame input)
         {
             writer.Write(input);
-        }
-
-        public IObservable<BufferedDataFrame> Process(IObservable<BufferedDataFrame> source, Func<BufferedDataFrame, RecordBatch> selector)
-        {
-            return base.Process(source, selector);
         }
     }
 }

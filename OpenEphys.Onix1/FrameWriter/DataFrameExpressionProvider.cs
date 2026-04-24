@@ -27,7 +27,7 @@ namespace OpenEphys.Onix1.FrameWriter
         public List<Expression> GetArrayPopulationExpressions(
             ParameterExpression arrowArrays,
             ParameterExpression arrowArrayIndex,
-            Expression batchRows,
+            ParameterExpression batchRows,
             Type frameType,
             IEnumerable<MemberInfo> members)
         {
@@ -43,18 +43,18 @@ namespace OpenEphys.Onix1.FrameWriter
 
                 if (memberType.IsPrimitive)
                 {
-                    var memberAccessor = CreateMemberAccess(
+                    var memberAccessor = FrameWriterHelper.CreateMemberAccess(
                         Expression.Convert(frameParameter, frameType),
                         current);
 
                     expressions.Add(ConvertFrameMemberExpressionBuilder(
                         memberType, frameParameter, arrowArrays, arrowArrayIndex,
-                        InputParameter, (MemberExpression)batchRows, memberAccessor));
+                        InputParameter, batchRows, memberAccessor));
                 }
                 else if (memberType.IsEnum)
                 {
                     var memberAccessor = Expression.Convert(
-                        CreateMemberAccess(
+                        FrameWriterHelper.CreateMemberAccess(
                             Expression.Convert(frameParameter, frameType),
                             current),
                         Enum.GetUnderlyingType(memberType));
@@ -62,7 +62,7 @@ namespace OpenEphys.Onix1.FrameWriter
                     expressions.Add(ConvertFrameMemberExpressionBuilder(
                         Enum.GetUnderlyingType(memberType), frameParameter,
                         arrowArrays, arrowArrayIndex, InputParameter,
-                        (MemberExpression)batchRows, memberAccessor));
+                        batchRows, memberAccessor));
                 }
                 else if (memberType.IsValueType)
                 {
@@ -90,21 +90,6 @@ namespace OpenEphys.Onix1.FrameWriter
             return expressions;
         }
 
-        static MemberExpression CreateMemberAccess(Expression instance, MemberInfo member)
-        {
-            return member is PropertyInfo property
-                ? Expression.Property(instance, property)
-                : Expression.Field(instance, (FieldInfo)member);
-        }
-
-        static MemberExpression CreateMemberAccess(Expression instance, MemberNode member)
-        {
-            if (member.Parent == null)
-                return CreateMemberAccess(instance, member.Member);
-
-            return CreateMemberAccess(CreateMemberAccess(instance, member.Parent), member.Member);
-        }
-
         static IArrowArray ConvertFrameMemberToArrowArray<TMember>(IList<DataFrame> frames, Func<DataFrame, TMember> getter, IArrowType arrowType, int length) where TMember : unmanaged
         {
             var array = new TMember[length];
@@ -123,7 +108,7 @@ namespace OpenEphys.Onix1.FrameWriter
             ParameterExpression arrowArrays,
             ParameterExpression arrowArrayIndex,
             ParameterExpression frames,
-            MemberExpression count,
+            ParameterExpression count,
             Expression memberAccessor)
         {
             var convertFrameMemberMethod = typeof(DataFrameExpressionProvider)
@@ -135,7 +120,7 @@ namespace OpenEphys.Onix1.FrameWriter
                             typeof(Func<,>).MakeGenericType(typeof(DataFrame), memberType),
                             memberAccessor,
                             frameParameter
-                        ).Compile();
+                        );
 
             var block = Expression.Block(
                 Expression.Assign(
@@ -143,7 +128,7 @@ namespace OpenEphys.Onix1.FrameWriter
                     Expression.Call(
                         convertFrameMemberMethod,
                         frames,
-                        Expression.Constant(getter, getter.GetType()),
+                        getter,
                         arrayArrowType,
                         count
                     )

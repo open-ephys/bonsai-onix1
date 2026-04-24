@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using Apache.Arrow;
 using Apache.Arrow.Types;
@@ -43,6 +44,21 @@ namespace OpenEphys.Onix1.FrameWriter
             );
 
             return ArrowArrayFactory.BuildArray(arrayData);
+        }
+
+        static MemberExpression CreateMemberAccess(Expression instance, MemberInfo member)
+        {
+            return member is PropertyInfo property
+                ? Expression.Property(instance, property)
+                : Expression.Field(instance, (FieldInfo)member);
+        }
+
+        internal static MemberExpression CreateMemberAccess(Expression instance, MemberNode member)
+        {
+            if (member.Parent == null)
+                return CreateMemberAccess(instance, member.Member);
+
+            return CreateMemberAccess(CreateMemberAccess(instance, member.Parent), member.Member);
         }
 
         internal static IArrowType GetArrowType(Type type) => ArrowTypeMap.TryGetValue(type, out var arrowType)
