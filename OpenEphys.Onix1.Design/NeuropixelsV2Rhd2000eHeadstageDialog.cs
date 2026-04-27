@@ -3,7 +3,7 @@
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Partial class to create a GUI for <see cref="ConfigureHeadstageNeuropixelsV2e"/>.
+    /// Partial class to create a GUI for <see cref="ConfigureHeadstageNeuropixelsV2Rhd2000e"/>.
     /// </summary>
     public partial class NeuropixelsV2Rhd2000eHeadstageDialog : Form
     {
@@ -75,7 +75,7 @@ namespace OpenEphys.Onix1.Design
             {
                 return DialogNeuropixelsV2.ProcessMenuShortcut(keyData);
             }
-            else if (tabControl1.SelectedTab == tabPageBno055)
+            else if (tabControl1.SelectedTab == tabPageBno055 || tabControl1.SelectedTab == tabPageRhd2000)
             {
                 return true;
             }
@@ -95,15 +95,6 @@ namespace OpenEphys.Onix1.Design
             if (!DialogNeuropixelsV2.IsDisposed)
             {
                 e.Cancel = true;
-
-                // NB: Initialize the previously disposed dialog when the user cancels closing the dialog
-                var dialog = DialogNeuropixelsV2;
-                panelNeuropixelsV2A.Controls.Remove(DialogNeuropixelsV2);
-                DialogNeuropixelsV2 = CreateNeuropixelsV2Dialog(this, DialogNeuropixelsV2.ConfigureNeuropixelsV2, DialogNeuropixelsV2.ProbeConfigurationDialog.ProbeName, panelNeuropixelsV2A, tabPageNeuropixelsV2);
-                DialogNeuropixelsV2.ProbeConfigurationDialog.ChannelConfiguration.ProbeGroup = dialog.ProbeConfigurationDialog.ChannelConfiguration.ProbeGroup;
-                DialogNeuropixelsV2.ProbeConfigurationDialog.ChannelConfiguration.RedrawProbeGroup();
-                DialogNeuropixelsV2.ProbeConfigurationDialog.CheckForExistingChannelPreset();
-
                 return;
             }
         }
