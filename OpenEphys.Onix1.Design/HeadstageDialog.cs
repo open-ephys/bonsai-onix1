@@ -192,17 +192,15 @@ namespace OpenEphys.Onix1.Design
         {
             if (stimulusSequenceTabs.Count == 0)
             {
-                // No sequence validation needed
                 DialogResult = DialogResult.OK;
                 return;
             }
 
-            // Validate every sequence dialog. 
             var anyOk = false;
             foreach (var entry in stimulusSequenceTabs)
             {
                 if (!entry.Dialog.CanCloseForm(out var result, entry.Name))
-                    return; // Shortcircuit on the first failure.
+                    return; // Short-circuit on the first failure.
                 if (result == DialogResult.OK)
                     anyOk = true;
             }

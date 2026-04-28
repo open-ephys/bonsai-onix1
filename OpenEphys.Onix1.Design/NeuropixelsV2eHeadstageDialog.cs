@@ -1,4 +1,4 @@
-namespace OpenEphys.Onix1.Design
+﻿namespace OpenEphys.Onix1.Design
 {
     /// <summary>
     /// GUI for <see cref="ConfigureHeadstageNeuropixelsV2e"/> and
