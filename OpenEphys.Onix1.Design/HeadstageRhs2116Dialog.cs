@@ -1,4 +1,4 @@
-namespace OpenEphys.Onix1.Design
+﻿namespace OpenEphys.Onix1.Design
 {
     /// <summary>
     /// GUI for <see cref="ConfigureHeadstageRhs2116"/>. Hosts a
@@ -20,7 +20,7 @@ namespace OpenEphys.Onix1.Design
             Text = "HeadstageRhs2116 Configuration";
 
             StimulusSequenceDialog = new Rhs2116StimulusSequenceDialog(rhs2116Trigger, true);
-            AddSequenceTab("Stimulus Sequence", StimulusSequenceDialog);
+            AddSequenceTab("Rhs2116 Stimulus", StimulusSequenceDialog);
 
             Rhs2116Dialog = new(rhs2116, true);
             AddDeviceTab("Rhs2116", Rhs2116Dialog);
