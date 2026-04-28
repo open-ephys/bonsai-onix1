@@ -1,4 +1,4 @@
-namespace OpenEphys.Onix1.Design
+﻿namespace OpenEphys.Onix1.Design
 {
     /// <summary>
     /// GUI for <see cref="ConfigureHeadstageNeuropixelsV1f"/>. Hosts two
@@ -51,6 +51,7 @@ namespace OpenEphys.Onix1.Design
                 old.ProbeConfigurationDialog.ChannelConfiguration.ProbeGroup;
             newDialog.ProbeConfigurationDialog.ChannelConfiguration.RedrawProbeGroup();
             newDialog.ProbeConfigurationDialog.CheckForExistingChannelPreset();
+            newDialog.HasChanges = old.HasChanges;
             return newDialog;
         }
     }

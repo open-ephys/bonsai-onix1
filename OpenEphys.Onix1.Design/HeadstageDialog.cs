@@ -4,8 +4,6 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using Bonsai.Reactive;
-using ZedGraph;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -287,7 +285,6 @@ namespace OpenEphys.Onix1.Design
                 var newForm = (Form)newDialog;
                 Panel.Controls.Remove((Form)oldDialog);
                 newForm.SetChildFormProperties(parent).AddDialogToPanel(Panel);
-                TabPage.Text = TabPage.Text.TrimEnd('*');
                 SubscribeStateChange(newDialog, TabPage);
                 Dialog = newDialog;
             }
