@@ -8,7 +8,7 @@ namespace OpenEphys.Onix1
         public const uint I2CAddress = 0x51;
 
         // header field offsets (absolute, in bytes)
-        const uint HeaderIdentOffset = 0; // 4 bytes: "OEHS"
+        const uint HeaderIdentOffset = 0; // 4 bytes: "HSOE"
         const uint HeaderVersionOffset = 4; // u8
         const uint InternalAreaOffset = 5; // u8, in multiples of 8 bytes; 0 = not present
         const uint DeviceInfoOffset = 6; // u8, in multiples of 8 bytes
