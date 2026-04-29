@@ -22,13 +22,13 @@ namespace OpenEphys.Onix1.Design
                     var configuration = new ConfigureHeadstageNeuropixelsV1e();
                     DesignHelper.DeepCopyProperties(configureHeadstage, configuration);
 
-                    using var editorDialog = new NeuropixelsV1eHeadstageDialog(configuration.NeuropixelsV1e, configuration.Bno055);
+                    using var editorDialog = new NeuropixelsV1eHeadstageDialog(configuration);
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
                         DesignHelper.CopyProperties((ConfigurePolledBno055)editorDialog.DialogBno055.Device, configureHeadstage.Bno055, DesignHelper.PropertiesToIgnore);
 
-                        DesignHelper.CopyProperties((ConfigureNeuropixelsV1e)editorDialog.DialogNeuropixelsV1e.ConfigureNode, configureHeadstage.NeuropixelsV1e, DesignHelper.PropertiesToIgnore);
+                        DesignHelper.CopyProperties((ConfigureNeuropixelsV1PsbDecoder)editorDialog.DialogNeuropixelsV1e.ConfigureNode, configureHeadstage.NeuropixelsV1, DesignHelper.PropertiesToIgnore);
 
                         return true;
                     }

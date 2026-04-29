@@ -248,6 +248,7 @@ namespace OpenEphys.Onix1.Design
             if (ChannelConfiguration.Visible)
                 ChannelConfiguration.Show();
             ChannelConfiguration.ConnectResizeEventHandler();
+            ChannelConfiguration.ResizeZedGraph();
         }
 
         private void SetChannelPreset(ChannelPreset preset)

@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// This data IO operator must be linked to an appropriate configuration, such as a <see
-    /// cref="ConfigureNeuropixelsV1e"/>, using a shared <c>DeviceName</c>.
+    /// cref="ConfigureNeuropixelsV1PsbDecoder"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Produces a sequence of NeuropixelsV1eDataFrame objects from a NeuropixelsV1e headstage.")]
     public class NeuropixelsV1eData : Source<NeuropixelsV1DataFrame>
@@ -22,7 +22,7 @@ namespace OpenEphys.Onix1
         int bufferSize = 36;
 
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
-        [TypeConverter(typeof(NeuropixelsV1e.NameConverter))]
+        [TypeConverter(typeof(NeuropixelsV1.NameConverter))]
         [Description(SingleDeviceFactory.DeviceNameDescription)]
         [Category(DeviceFactory.ConfigurationCategory)]
         public string DeviceName { get; set; }
@@ -64,15 +64,21 @@ namespace OpenEphys.Onix1
         {
             var spikeBufferSize = BufferSize;
             var lfpBufferSize = spikeBufferSize / NeuropixelsV1.FramesPerRoundRobin;
-            var orderByDepth = OrderByDepth;
 
             return DeviceManager.GetDevice(DeviceName).SelectMany(deviceInfo =>
             {
-                var info = (NeuropixelsV1eDeviceInfo)deviceInfo;
-                var device = info.GetDeviceContext(typeof(NeuropixelsV1e));
+                var info = (NeuropixelsV1PsbDecoderDeviceInfo)deviceInfo;
+                var apGain = info.ApGainCorrection;
+                var lfpGain = info.LfpGainCorrection;
+                var adcThresholds = info.AdcThresholds.ToArray();
+                var adcOffsets = info.AdcOffsets.ToArray();
+                var probeConfiguration = info.ProbeConfiguration;
+                var orderByDepth = OrderByDepth;
+                var channelMap = info.ProbeGroup.ChannelMap.ToArray();
+
+                var device = info.GetDeviceContext(typeof(NeuropixelsV1));
                 var passthrough = device.GetPassthroughDeviceContext(typeof(DS90UB9x));
                 var probeData = device.Context.GetDeviceFrames(passthrough.Address);
-                int[,] channelOrder = orderByDepth ? Neuropixels.OrderChannelsByDepth(info.ProbeGroup.ChannelMap, RawToChannel) : RawToChannel;
 
                 return Observable.Create<NeuropixelsV1DataFrame>(observer =>
                 {
@@ -82,12 +88,13 @@ namespace OpenEphys.Onix1
                     var frameCountBuffer = new int[spikeBufferSize * NeuropixelsV1.FramesPerSuperFrame];
                     var hubClockBuffer = new ulong[spikeBufferSize];
                     var clockBuffer = new ulong[spikeBufferSize];
+                    int[,] channelOrder = orderByDepth ? Neuropixels.OrderChannelsByDepth(channelMap, RawToChannel) : RawToChannel;
 
                     var frameObserver = Observer.Create<oni.Frame>(
                         frame =>
                         {
                             var payload = (NeuropixelsV1ePayload*)frame.Data.ToPointer();
-                            NeuropixelsV1eDataFrame.CopyAmplifierBuffer(payload->AmplifierData, frameCountBuffer, spikeBuffer, lfpBuffer, sampleIndex, info.ApGainCorrection, info.LfpGainCorrection, info.AdcThresholds, info.AdcOffsets, info.InvertPolarity, channelOrder);
+                            NeuropixelsV1eDataFrame.CopyAmplifierBuffer(payload->AmplifierData, frameCountBuffer, spikeBuffer, lfpBuffer, sampleIndex, apGain, lfpGain, adcThresholds, adcOffsets, probeConfiguration.InvertPolarity, channelOrder);
                             hubClockBuffer[sampleIndex] = payload->HubClock;
                             clockBuffer[sampleIndex] = frame.Clock;
                             if (++sampleIndex >= spikeBufferSize)

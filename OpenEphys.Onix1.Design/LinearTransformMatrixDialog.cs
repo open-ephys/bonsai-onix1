@@ -30,7 +30,7 @@ namespace OpenEphys.Onix1.Design
             richTextBoxInstructions.SelectionBullet = true;
             richTextBoxInstructions.SelectedText = "Determine a set of 4, well separated XYZ positions in the space in which the headstage will move. These positions should explore a large region of the territory that the headstage will explore and not be confined to a particular plane. Each position defined in this step corresponds to a row in the table below.\n";
             richTextBoxInstructions.SelectedText = "For the first position, place the headstage and click the first measure button on the GUI. After the TS4231 coordinate is obtained from the headstage, enter the known User coordinates in the X, Y, and Z text boxes to provide your spatial mapping. Repeat this process for the second, third, and fourth positions to populate the second, third, and fourth rows of the table.\n";
-            richTextBoxInstructions.SelectedText = "Click \"OK\" to close this GUI and set the spatial transform properties in the workflow.\n";
+            richTextBoxInstructions.SelectedText = "Click \"OK\" to close this GUI and set the linear transform properties in the workflow.\n";
             richTextBoxInstructions.SelectionBullet = false;
             richTextBoxInstructions.SelectedText = "\nFor more in-depth instructions, find the corresponding tutorial in Open Ephys' online documentation.";
 
@@ -177,7 +177,7 @@ namespace OpenEphys.Onix1.Design
             }
             else if (!Matrix4x4.Invert(LinearTransform.M, out _))
             { 
-                confirmationMessage = $"The calculated spatial transform matrix is non-invertible. ";
+                confirmationMessage = $"The calculated linear transform matrix is non-invertible. ";
                 invalidInput = true;
             }
 
@@ -209,13 +209,13 @@ namespace OpenEphys.Onix1.Design
             else if (!Matrix4x4.Invert(LinearTransform.M, out _))
             {
                 toolStripStatusLabel.Image = Properties.Resources.StatusWarningImage;
-                toolStripStatusLabel.Text = "The calculated spatial transform matrix must be invertible.";
+                toolStripStatusLabel.Text = "The calculated linear transform matrix must be invertible.";
                 textBoxLinearTransformMatrix.Text = "";
             }
             else 
             {
                 toolStripStatusLabel.Image = Properties.Resources.StatusReadyImage;
-                toolStripStatusLabel.Text = "Spatial transform matrix is calculated.";
+                toolStripStatusLabel.Text = "Linear transform matrix is calculated.";
                 textBoxLinearTransformMatrix.Text = Matrix4x4ToPrettyString(LinearTransform.M);
             }
         }

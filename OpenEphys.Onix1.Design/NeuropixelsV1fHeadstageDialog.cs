@@ -51,10 +51,7 @@ namespace OpenEphys.Onix1.Design
 
         static NeuropixelsV1Dialog CreateNeuropixelsV1Dialog(NeuropixelsV1fHeadstageDialog headstageDialog, ConfigureNeuropixelsV1f configureNeuropixelsV1, string probeName, Panel panel, TabPage tabPage)
         {
-            var dialog = new NeuropixelsV1Dialog(configureNeuropixelsV1, probeName, true)
-            {
-                Tag = configureNeuropixelsV1.ProbeName
-            };
+            var dialog = new NeuropixelsV1Dialog(configureNeuropixelsV1, probeName, true);
 
             dialog.SetChildFormProperties(headstageDialog).AddDialogToPanel(panel);
 

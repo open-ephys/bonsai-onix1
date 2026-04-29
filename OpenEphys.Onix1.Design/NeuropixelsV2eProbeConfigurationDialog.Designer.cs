@@ -573,7 +573,7 @@
         private System.Windows.Forms.Button buttonEnableContacts;
         private System.Windows.Forms.Button buttonClearSelections;
         private System.Windows.Forms.TabPage tabPageProperties;
-        private Bonsai.Design.PropertyGrid propertyGrid;
+        internal Bonsai.Design.PropertyGrid propertyGrid;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private System.Windows.Forms.ComboBox comboBoxProbeType;
         private System.Windows.Forms.ToolStripStatusLabel toolStripLabelFileName;

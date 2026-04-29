@@ -30,7 +30,11 @@ namespace OpenEphys.Onix1
             return (linkState & PortController.LINKSTATE_SL) != 0;
         }
 
-        protected abstract bool ConfigurePortVoltage(DeviceContext device, out double voltage);
+        protected virtual bool ConfigurePortVoltage(DeviceContext device, out double voltage)
+        {
+            throw new NotSupportedException($"{GetType().Name} does not support automatic port voltage configuration. " +
+                $"Set the port voltage manually before use.");
+        }
 
         protected virtual bool ConfigurePortVoltageOverride(DeviceContext device, double voltage)
         {
@@ -101,7 +105,7 @@ namespace OpenEphys.Onix1
         }
     }
 
-    internal static class PortController
+    static class PortController
     {
         public const int ID = 23;
         public const uint MinimumVersion = 2;

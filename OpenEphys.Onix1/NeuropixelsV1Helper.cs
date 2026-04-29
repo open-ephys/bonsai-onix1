@@ -5,7 +5,7 @@ using System.Linq;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Static helper class for NeuropixelsV1e methods.
+    /// Static helper class for NeuropixelsV1.
     /// </summary>
     public static class NeuropixelsV1Helper
     {

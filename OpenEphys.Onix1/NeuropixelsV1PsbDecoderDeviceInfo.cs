@@ -2,16 +2,16 @@
 
 namespace OpenEphys.Onix1
 {
-    class NeuropixelsV1eDeviceInfo : DeviceInfo
+    class NeuropixelsV1PsbDecoderDeviceInfo : DeviceInfo
     {
-        public NeuropixelsV1eDeviceInfo(ContextTask context, Type deviceType, uint deviceAddress, NeuropixelsV1eRegisterContext probeControl, bool invertPolarity, NeuropixelsV1eProbeGroup probeGroup)
+        public NeuropixelsV1PsbDecoderDeviceInfo(ContextTask context, Type deviceType, uint deviceAddress, NeuropixelsV1RegisterContext probeControl, NeuropixelsV1ProbeConfiguration probeConfiguration, NeuropixelsV1eProbeGroup probeGroup)
             : base(context, deviceType, deviceAddress)
         {
             ApGainCorrection = probeControl.ApGainCorrection;
             LfpGainCorrection = probeControl.LfpGainCorrection;
             AdcThresholds = probeControl.AdcThresholds;
             AdcOffsets = probeControl.AdcOffsets;
-            InvertPolarity = invertPolarity;
+            ProbeConfiguration = probeConfiguration;
             ProbeGroup = probeGroup;
         }
 
@@ -19,7 +19,7 @@ namespace OpenEphys.Onix1
         public double LfpGainCorrection { get; }
         public ushort[] AdcThresholds { get; }
         public ushort[] AdcOffsets { get; }
-        public bool InvertPolarity { get; }
+        public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; }
         public NeuropixelsV1eProbeGroup ProbeGroup { get; }
     }
 }

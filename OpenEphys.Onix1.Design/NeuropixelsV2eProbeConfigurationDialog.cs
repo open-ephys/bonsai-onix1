@@ -61,8 +61,6 @@ namespace OpenEphys.Onix1.Design
             Shown += FormShown;
             FormClosing += DialogClosing;
 
-            Text += ": " + probeName;
-
             probeConfigurations = new()
             {
                 [ProbeType.SingleShank] = new NeuropixelsV2SingleShankProbeConfiguration(),
@@ -101,7 +99,63 @@ namespace OpenEphys.Onix1.Design
             ChannelConfiguration.BringToFront();
 
             propertyGrid.SelectedObject = configuration;
-            propertyGrid.PropertyValueChanged += (sender, e) => CheckStatus();
+            propertyGrid.PropertyValueChanged += (sender, e) =>
+            {
+                if (e.ChangedItem.Label == nameof(NeuropixelsV2ProbeConfiguration.ProbeInterfaceFileName))
+                {
+                    static void RevertFileNameValue(PropertyGrid propertyGrid, PropertyValueChangedEventArgs e)
+                    {
+                        var gridItem = propertyGrid.SelectedGridItem;
+                        var parent = gridItem.Parent;
+                        var parentType = parent.Value.GetType();
+                        var propertyInfo = parentType.GetProperty(e.ChangedItem.PropertyDescriptor.Name);
+                        if (propertyInfo != null && propertyInfo.CanWrite)
+                        {
+                            propertyInfo.SetValue(parent.Value, e.OldValue);
+                            propertyGrid.Refresh();
+                        }
+                    }
+
+                    string fileName = e.ChangedItem.Value as string;
+
+                    if (HasChanges && File.Exists(fileName))
+                    {
+                        var result = MessageBox.Show(
+                            $"Warning: Changing the filename will discard the unsaved {ChannelConfiguration.ProbeName} configuration changes. Do you want to save the current configuration before continuing?",
+                            "Change File Name?",
+                            MessageBoxButtons.YesNoCancel,
+                            MessageBoxIcon.Warning);
+
+                        if (result == DialogResult.Cancel)
+                        {
+                            RevertFileNameValue(sender as PropertyGrid, e);
+                            return;
+                        }
+                        else if (result == DialogResult.Yes)
+                        {
+                            if (ChannelConfiguration.SaveFile(e.OldValue as string) == ChannelConfigurationDialog.SaveResult.Cancelled)
+                            {
+                                return;
+                            }
+                        }
+                    }
+
+                    if (File.Exists(fileName))
+                    {
+                        if (!ChannelConfiguration.OpenFile(fileName))
+                        {
+                            RevertFileNameValue(sender as PropertyGrid, e);
+                        }
+                    }
+                    else
+                    {
+                        HasChanges = true;
+                    }
+                }
+
+                CheckStatus();
+            };
+
             bindingSource.DataSource = configuration;
 
             comboBoxProbeType.DataSource = Enum.GetValues(typeof(ProbeType));
@@ -152,6 +206,11 @@ namespace OpenEphys.Onix1.Design
                 else if (tabControlProbe.SelectedTab == tabPageConfiguration)
                     bindingSource.ResetCurrentItem();
             };
+
+            if (isBeta)
+            {
+                Text = Text.Replace("NeuropixelsV2e ", "NeuropixelsV2eBeta ");
+            }
 
             CheckStatus();
         }
@@ -472,24 +531,9 @@ namespace OpenEphys.Onix1.Design
             ChannelConfiguration.UpdateProbeGroup();
         }
 
-        internal void HidePropertiesTab()
-        {
-            tabControlProbe.TabPages.Remove(tabPageProperties);
-        }
-
         internal bool ProcessMenuShortcut(Keys keyData)
         {
             return ChannelConfiguration.Visible && ChannelConfiguration.ProcessMenuShortcut(keyData);
-        }
-
-        internal ChannelConfigurationDialog.SaveResult SaveProbeInterfaceFile(string fileName)
-        {
-            return ChannelConfiguration.SaveFile(fileName);
-        }
-
-        internal bool OpenProbeInterfaceFile(string fileName)
-        {
-            return ChannelConfiguration.OpenFile(fileName);
         }
 
         void DialogClosing(object sender, FormClosingEventArgs e)

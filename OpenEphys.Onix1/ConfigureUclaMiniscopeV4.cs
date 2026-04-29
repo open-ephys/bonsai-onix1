@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Threading;
-using oni;
+using System.Reactive.Disposables;
 
 namespace OpenEphys.Onix1
 {
@@ -22,10 +21,10 @@ namespace OpenEphys.Onix1
     /// </remarks>
     public class ConfigureUclaMiniscopeV4 : MultiDeviceFactory
     {
-        const double MaxVoltage = 5.7;
 
         PortName port;
         readonly ConfigureUclaMiniscopeV4PortController PortControl = new();
+        readonly ConfigureUclaMiniscopeV4DS90UB9x Serdes = new();
 
         /// <summary>
         /// Initialize a new instance of a <see cref="ConfigureUclaMiniscopeV4"/> class.
@@ -70,23 +69,16 @@ namespace OpenEphys.Onix1
                 PortControl.DeviceAddress = (uint)port;
                 Camera.DeviceAddress = offset + 0;
                 Bno055.DeviceAddress = offset + 1;
-
-                // Hack: we configure the camera using the port controller below. configuration is super
-                // unreliable, so we do a bunch of retries in the logic PortController logic. We don't want to
-                // reperform configuration in the Camera object after this. So we capture a reference to the
-                // camera here in order to inform it we have already performed configuration. 
-                PortControl.Camera = Camera;
+                Serdes.DeviceAddress = offset + 2;
             }
         }
 
         /// <summary>
-        /// Gets or sets the port voltage override.
+        /// Gets or sets the port voltage.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// If defined, it will override automated voltage discovery and apply the specified voltage to the miniscope.
-        /// If left blank, an automated headstage detection algorithm will attempt to communicate with the miniscope and
-        /// apply an appropriate voltage for stable operation. Because ONIX allows any coaxial tether to be used, some of
+        /// The port voltage applied to the miniscope. Because ONIX allows any coaxial tether to be used, some of
         /// which are thin enough to result in a significant voltage drop, its may be required to manually specify the
         /// port voltage.
         /// </para>
@@ -95,9 +87,8 @@ namespace OpenEphys.Onix1
         /// voltages may result in damage.
         /// </para>
         /// </remarks>
-        [Description("If defined, it will override automated voltage discovery and apply the specified voltage " +
-                     "to the miniscope. Warning: this device requires 4.0 to 5.0V, measured at the scope, for proper operation. " +
-                     "Supplying higher voltages may result in damage to the miniscope.")]
+        [Description("The port voltage applied to the miniscope. Warning: this device requires 4.0 to 5.0V, measured at the scope, " +
+                     "for proper operation. Supplying higher voltages may result in damage to the miniscope.")]
         [Category(ConfigurationCategory)]
         [TypeConverter(typeof(PortVoltageConverter))]
         public AutoPortVoltage PortVoltage
@@ -109,99 +100,67 @@ namespace OpenEphys.Onix1
         internal override IEnumerable<IDeviceConfiguration> GetDevices()
         {
             yield return PortControl;
+            yield return Serdes; // must come before dependent devices that follow
             yield return Camera;
             yield return Bno055;
         }
+    }
 
-        class ConfigureUclaMiniscopeV4PortController : ConfigurePortController
+    class ConfigureUclaMiniscopeV4DS90UB9x : ConfigureDS90UB9x
+    {
+        public ConfigureUclaMiniscopeV4DS90UB9x()
+            : base(typeof(DS90UB9x))
         {
-            internal ConfigureUclaMiniscopeV4Camera Camera;
+        }
 
-            public ConfigureUclaMiniscopeV4PortController()
-                : base(typeof(PortController))
-            {
-            }
+        override private protected IDisposable ShutdownSerdes(DeviceContext device)
+        {
+            return Disposable.Empty;
+        }
 
-            protected override bool ConfigurePortVoltage(DeviceContext device, out double voltage)
-            {
-                const double MinVoltage = 5.2;
-                const double VoltageIncrement = 0.05;
+        override private protected void ConfigureSerdes(DeviceContext device)
+        {
+            // configure deserializer
+            device.WriteRegister(DS90UB9x.TRIGGEROFF, 0);
+            device.WriteRegister(DS90UB9x.READSZ, UclaMiniscopeV4.SensorColumns);
+            device.WriteRegister(DS90UB9x.TRIGGER, (uint)DS90UB9xTriggerMode.HsyncEdgePositive);
+            device.WriteRegister(DS90UB9x.SYNCBITS, 0);
+            device.WriteRegister(DS90UB9x.DATAGATE, (uint)DS90UB9xDataGate.VsyncPositive);
 
-                voltage = MinVoltage;
-                for (; voltage <= MaxVoltage; voltage += VoltageIncrement)
-                {
-                    SetPortVoltage(device, voltage);
-                    if (CheckLinkStateWithRetry(device))
-                    {
-                        return true;
-                    }
-                }
+            // NB: This is required because Bonsai is not guaranteed to capture every frame at the start of
+            // acquisition. For this reason, the frame start needs to be marked.
+            device.WriteRegister(DS90UB9x.MARK, (uint)DS90UB9xMarkMode.VsyncRising);
 
-                return false;
-            }
+            // The camera does not rely on magic words for data alignment
+            device.WriteRegister(DS90UB9x.MAGIC_MASK, 0);
+            device.WriteRegister(DS90UB9x.MAGIC, 0);
+            device.WriteRegister(DS90UB9x.MAGIC_WAIT, 0);
+            device.WriteRegister(DS90UB9x.DATAMODE, 0);
+            device.WriteRegister(DS90UB9x.DATALINES0, 0);
+            device.WriteRegister(DS90UB9x.DATALINES1, 0);
 
-            void SetPortVoltage(DeviceContext device, double voltage)
-            {
-                if (voltage > MaxVoltage)
-                {
-                    throw new ArgumentException($"The port voltage must be set to a value less than {MaxVoltage} " +
-                        $"volts to prevent damage to the miniscope.");
-                }
+            DS90UB9x.Initialize933SerDesLink(device, DS90UB9xMode.Raw12BitLowFrequency);
 
-                const int WaitUntilVoltageSettles = 400;
-                device.WriteRegister(PortController.PORTVOLTAGE, 0);
-                Thread.Sleep(WaitUntilVoltageSettles);
-                device.WriteRegister(PortController.PORTVOLTAGE, (uint)(10 * voltage));
-                Thread.Sleep(WaitUntilVoltageSettles);
-            }
+            var deserializer = new I2CRegisterContext(device, DS90UB9x.DES_ADDR);
 
-            override protected bool CheckLinkState(DeviceContext device)
-            {
-                var ds90ub9x = device.Context.GetPassthroughDeviceContext(DeviceAddress << 8, typeof(DS90UB9x));
-                ConfigureUclaMiniscopeV4Camera.ConfigureDeserializer(ds90ub9x);
+            uint alias = UclaMiniscopeV4.AtMegaAddress << 1;
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID1, alias);
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias1, alias);
 
-                const int FailureToWriteRegister = -6;
-                try
-                {
-                    ConfigureUclaMiniscopeV4Camera.ConfigureCameraSystem(ds90ub9x, Camera.FrameRate, Camera.InterleaveLed);
-                }
-                catch (ONIException ex) when (ex.Number == FailureToWriteRegister)
-                {
-                    return false;
-                }
+            alias = UclaMiniscopeV4.Tpl0102Address << 1;
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID2, alias);
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias2, alias);
 
-                Thread.Sleep(150);
-                var linkState = device.ReadRegister(PortController.LINKSTATE);
-                return (linkState & PortController.LINKSTATE_SL) != 0;
-            }
+            alias = UclaMiniscopeV4.Max14574Address << 1;
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID3, alias);
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias3, alias);
 
-            bool CheckLinkStateWithRetry(DeviceContext device)
-            {
-                const int TotalTries = 5;
-                for (int i = 0; i < TotalTries; i++)
-                {
-                    if (CheckLinkState(device))
-                    {
-                        Camera.Configured = true;
-                        return true;
-                    }
-                }
+            alias = PolledBno055.I2CAddress << 1;
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID4, alias);
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias4, alias);
 
-                return false;
-            }
-
-            override protected bool ConfigurePortVoltageOverride(DeviceContext device, double voltage)
-            {
-                const int TotalTries = 3;
-                for (int i = 0; i < TotalTries; i++)
-                {
-                    SetPortVoltage(device, voltage);
-                    if (CheckLinkStateWithRetry(device))
-                        return true;
-                }
-
-                return false;
-            }
+            // set I2C clock rate to ~200 kHz
+            DS90UB9x.Set933I2CRate(device, UclaMiniscopeV4.NominalI2cClockRate);
         }
     }
 }

@@ -70,6 +70,8 @@ namespace OpenEphys.Onix1
             }
         }
 
+        private protected virtual void PrepareDevices() { }
+
         /// <summary>
         /// Configure all devices in the device group.
         /// </summary>
@@ -88,6 +90,8 @@ namespace OpenEphys.Onix1
             {
                 throw new InvalidOperationException("A valid device group name must be specified.");
             }
+
+            PrepareDevices();
 
             var output = source;
             foreach (var device in GetDevices())
