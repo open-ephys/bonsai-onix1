@@ -9,7 +9,7 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix1.FrameWriter
 {
-    static class FrameWriterHelper
+    static class DataFrameWriterHelper
     {
         static readonly Dictionary<Type, IArrowType> ArrowTypeMap = new()
         {
@@ -87,7 +87,7 @@ namespace OpenEphys.Onix1.FrameWriter
                 type.GetProperties(BindingFlags.Instance | BindingFlags.Public));
 
             return members
-                .Where(prop => prop.GetCustomAttribute(typeof(FrameWriterIgnoreAttribute)) == null)
+                .Where(prop => prop.GetCustomAttribute(typeof(DataFrameWriterIgnoreAttribute)) == null)
                 .OrderBy(member => member.MetadataToken);
         }
 
@@ -103,7 +103,7 @@ namespace OpenEphys.Onix1.FrameWriter
 
         internal static bool IsMemberIgnored(MemberInfo rootMember, MemberInfo member)
         {
-            var attr = rootMember.GetCustomAttribute<FrameWriterIgnoreMembersAttribute>();
+            var attr = rootMember.GetCustomAttribute<DataFrameWriterIgnoreMembersAttribute>();
 
             if (attr == null)
                 return false;
@@ -115,6 +115,74 @@ namespace OpenEphys.Onix1.FrameWriter
                 return true;
 
             return false;
+        }
+
+        static object GetMemberValue(MemberInfo member, object instance)
+        {
+            return member switch
+            {
+                FieldInfo fieldInfo => fieldInfo.GetValue(instance),
+                PropertyInfo propertyInfo => propertyInfo.GetValue(instance),
+                _ => throw new InvalidOperationException($"Cannot get value of {member.GetType()} member from {instance.GetType()} object."),
+            };
+        }
+
+        internal static Schema GenerateSchema(IEnumerable<MemberInfo> members, object instance)
+        {
+            var fields = new List<Field>();
+            var stack = new Stack<MemberNode>(members.Select(m => new MemberNode { Member = m }));
+
+            while (stack.Count > 0)
+            {
+                var current = stack.Pop();
+                var memberType = DataFrameWriterHelper.GetMemberType(current.Member);
+
+                if (memberType.IsPrimitive)
+                {
+                    fields.Add(new Field(current.GetFullName(), DataFrameWriterHelper.GetArrowType(memberType), false));
+                }
+                else if (memberType.IsArray)
+                {
+                    fields.Add(new Field(current.GetFullName(), DataFrameWriterHelper.GetArrowType(memberType.GetElementType()), false));
+                }
+                else if (memberType.IsEnum)
+                {
+                    // TODO: See if the Dictionary type in Arrow would be better for enums
+                    fields.Add(new Field(current.GetFullName(), DataFrameWriterHelper.GetArrowType(Enum.GetUnderlyingType(memberType)), false));
+                }
+                else if (memberType.IsValueType)
+                {
+                    var structMembers = DataFrameWriterHelper.GetDataMembers(memberType);
+
+                    foreach (var structMember in structMembers.Reverse())
+                    {
+                        if (DataFrameWriterHelper.IsMemberIgnored(current.Member, structMember))
+                            continue;
+
+                        stack.Push(new MemberNode
+                        {
+                            Member = structMember,
+                            Parent = current
+                        });
+                    }
+                }
+                else if (memberType == typeof(Mat))
+                {
+                    var mat = GetMemberValue(current.Member, instance) as Mat ?? throw new NullReferenceException($"No valid Mat property on the {instance.GetType()} object.");
+
+                    for (int i = 0; i < mat.Rows; i++)
+                    {
+                        // Note: Could add an attribute to data frames properties to specify custom field naming
+                        fields.Add(new Field($"{current.GetFullName()}Ch{i}", DataFrameWriterHelper.GetArrowType(mat.Depth), false));
+                    }
+                }
+                else
+                {
+                    throw new NotSupportedException($"The member type '{memberType}' is not supported for generating schemas.");
+                }
+            }
+
+            return new Schema(fields, null);
         }
     }
 }

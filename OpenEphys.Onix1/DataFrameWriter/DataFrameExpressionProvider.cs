@@ -39,11 +39,11 @@ namespace OpenEphys.Onix1.FrameWriter
             while (stack.Count > 0)
             {
                 var current = stack.Pop();
-                var memberType = FrameWriterHelper.GetMemberType(current.Member);
+                var memberType = DataFrameWriterHelper.GetMemberType(current.Member);
 
                 if (memberType.IsPrimitive)
                 {
-                    var memberAccessor = FrameWriterHelper.CreateMemberAccess(
+                    var memberAccessor = DataFrameWriterHelper.CreateMemberAccess(
                         Expression.Convert(frameParameter, frameType),
                         current);
 
@@ -54,7 +54,7 @@ namespace OpenEphys.Onix1.FrameWriter
                 else if (memberType.IsEnum)
                 {
                     var memberAccessor = Expression.Convert(
-                        FrameWriterHelper.CreateMemberAccess(
+                        DataFrameWriterHelper.CreateMemberAccess(
                             Expression.Convert(frameParameter, frameType),
                             current),
                         Enum.GetUnderlyingType(memberType));
@@ -66,11 +66,11 @@ namespace OpenEphys.Onix1.FrameWriter
                 }
                 else if (memberType.IsValueType)
                 {
-                    var structMembers = FrameWriterHelper.GetDataMembers(memberType);
+                    var structMembers = DataFrameWriterHelper.GetDataMembers(memberType);
 
                     foreach (var structMember in structMembers.Reverse())
                     {
-                        if (FrameWriterHelper.IsMemberIgnored(current.Member, structMember))
+                        if (DataFrameWriterHelper.IsMemberIgnored(current.Member, structMember))
                             continue;
 
                         stack.Push(new MemberNode
@@ -99,7 +99,7 @@ namespace OpenEphys.Onix1.FrameWriter
                 array[i] = getter(frames[i]);
             }
 
-            return FrameWriterHelper.ConvertArrayToArrowArray(array, arrowType, length);
+            return DataFrameWriterHelper.ConvertArrayToArrowArray(array, arrowType, length);
         }
 
         static Expression ConvertFrameMemberExpressionBuilder(
@@ -115,7 +115,7 @@ namespace OpenEphys.Onix1.FrameWriter
                         .GetMethod(nameof(ConvertFrameMemberToArrowArray), BindingFlags.Static | BindingFlags.NonPublic)
                         .MakeGenericMethod(memberType);
 
-            var arrayArrowType = Expression.Constant(FrameWriterHelper.GetArrowType(memberType));
+            var arrayArrowType = Expression.Constant(DataFrameWriterHelper.GetArrowType(memberType));
             var getter = Expression.Lambda(
                             typeof(Func<,>).MakeGenericType(typeof(DataFrame), memberType),
                             memberAccessor,

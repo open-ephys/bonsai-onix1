@@ -14,8 +14,6 @@ namespace OpenEphys.Onix1.FrameWriter
     {
         readonly Subject<T> subject = new();
         readonly IDisposable subscription;
-        readonly Func<IList<T>, Schema, RecordBatch> createRecordBatch;
-        readonly Schema schema;
 
         bool isDisposed = false;
 
@@ -31,29 +29,17 @@ namespace OpenEphys.Onix1.FrameWriter
         public ArrowBatchWriter(string filename, Schema schema, int bufferSize, TimeSpan timeout, Func<IList<T>, Schema, RecordBatch> createRecordBatch)
             : base(filename, schema)
         {
-            this.schema = schema;
-            this.createRecordBatch = createRecordBatch;
-
             subscription = subject
                 .Buffer(timeout, bufferSize)
                 .Where(list => list.Count > 0)
-                .Subscribe(WriteBatch);
+                .Subscribe(items => WriteRecordBatch(createRecordBatch(items, schema))); 
         }
 
         /// <summary>
         /// Adds an item to the buffer and flushes the buffer when it reaches its maximum size.
         /// </summary>
         /// <param name="item">The item to add to the buffer.</param>
-        public void Write(T item)
-        {
-            subject.OnNext(item);
-        }
-
-        void WriteBatch(IList<T> items)
-        {
-            var recordBatch = createRecordBatch(items, schema);
-            base.Write(recordBatch);
-        }
+        public void Write(T item) => subject.OnNext(item);
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)

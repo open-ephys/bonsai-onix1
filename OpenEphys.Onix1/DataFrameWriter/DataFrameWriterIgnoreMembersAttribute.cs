@@ -6,7 +6,7 @@ namespace OpenEphys.Onix1.FrameWriter
     /// Tells the FrameWriter to ignore member types from this property when writing frames to disk.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
-    public sealed class FrameWriterIgnoreMembersAttribute : Attribute
+    public sealed class DataFrameWriterIgnoreMembersAttribute : Attribute
     {
         /// <summary>
         /// Gets the <see cref="MemberType"/> to ignore.
@@ -14,19 +14,19 @@ namespace OpenEphys.Onix1.FrameWriter
         public MemberType MemberType { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="FrameWriterIgnoreMembersAttribute"/> with
+        /// Initializes a new instance of the <see cref="DataFrameWriterIgnoreMembersAttribute"/> with
         /// <see cref="MemberType.All"/> as the <see cref="MemberType"/>
         /// </summary>
-        public FrameWriterIgnoreMembersAttribute()
+        public DataFrameWriterIgnoreMembersAttribute()
             : this(MemberType.All)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="FrameWriterIgnoreMembersAttribute"/> with the
+        /// Initializes a new instance of the <see cref="DataFrameWriterIgnoreMembersAttribute"/> with the
         /// given <see cref="MemberType"/>
         /// </summary>
         /// <param name="memberType">Selected <see cref="MemberType"/> to ignore.</param>
-        public FrameWriterIgnoreMembersAttribute(MemberType memberType)
+        public DataFrameWriterIgnoreMembersAttribute(MemberType memberType)
         {
             MemberType = memberType;
         }

@@ -11,10 +11,10 @@ namespace OpenEphys.Onix1.FrameWriter
     /// </summary>
     public class ArrowWriter : IDisposable
     {
-        readonly Stream stream = null;
-        readonly ArrowFileWriter writer = null;
+        readonly Stream stream;
+        readonly ArrowFileWriter writer;
 
-        int isDisposed = 0;
+        bool isDisposed = false;
 
         /// <summary>
         /// Initializes a new instance of the ArrowWriter class using the specified stream.
@@ -32,10 +32,7 @@ namespace OpenEphys.Onix1.FrameWriter
         /// Writes the specified record batch to the underlying stream.
         /// </summary>
         /// <param name="batch">The record batch to write.</param>
-        public void Write(RecordBatch batch)
-        {
-            writer.WriteRecordBatch(batch);
-        }
+        private protected void WriteRecordBatch(RecordBatch batch) => writer.WriteRecordBatch(batch);
 
         /// <summary>
         /// Disposes of the resources used by the instance, optionally releasing managed resources if disposing is true.
@@ -43,13 +40,21 @@ namespace OpenEphys.Onix1.FrameWriter
         /// <param name="disposing">True to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (Interlocked.CompareExchange(ref isDisposed, 1, 0) == 0)
+            if (!isDisposed)
             {
+                isDisposed = true;
+
                 if (disposing)
                 {
-                    writer.WriteEnd();
-                    writer.Dispose();
-                    stream.Dispose();
+                    try 
+                    { 
+                        writer.WriteEnd(); 
+                    } 
+                    finally 
+                    {
+                        writer.Dispose(); 
+                        stream.Dispose(); 
+                    }
                 }
             }
         }
@@ -60,6 +65,7 @@ namespace OpenEphys.Onix1.FrameWriter
         public void Dispose()
         {
             Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }
