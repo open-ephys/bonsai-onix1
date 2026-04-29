@@ -5,14 +5,14 @@ using Bonsai.IO;
 
 namespace OpenEphys.Onix1.FrameWriter
 {
-    class BufferedDataFrameSink : FileSink<BufferedDataFrame, ArrowBatchWriter<BufferedDataFrame>>
+    class BufferedDataFrameArrowFileSink : FileSink<BufferedDataFrame, ArrowBatchWriter<BufferedDataFrame>>
     {
         readonly Schema schema;
         readonly Func<IList<BufferedDataFrame>, Schema, RecordBatch> createRecordBatch;
         readonly int bufferSize;
         readonly TimeSpan timeout;
 
-        public BufferedDataFrameSink(
+        public BufferedDataFrameArrowFileSink(
             Schema schema,
             Func<IList<BufferedDataFrame>, Schema, RecordBatch> createRecordBatch,
             int bufferSize,

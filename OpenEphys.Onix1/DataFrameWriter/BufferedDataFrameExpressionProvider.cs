@@ -48,11 +48,11 @@ namespace OpenEphys.Onix1.FrameWriter
             while (stack.Count > 0)
             {
                 var current = stack.Pop();
-                var memberType = FrameWriterHelper.GetMemberType(current.Member);
+                var memberType = DataFrameWriterHelper.GetMemberType(current.Member);
 
                 if (memberType.IsArray)
                 {
-                    var memberAccessor = FrameWriterHelper.CreateMemberAccess(
+                    var memberAccessor = DataFrameWriterHelper.CreateMemberAccess(
                         Expression.Convert(frameParameter, frameType),
                         current);
 
@@ -75,7 +75,7 @@ namespace OpenEphys.Onix1.FrameWriter
                         combineMatMethod,
                         InputParameter,
                         Expression.Lambda<Func<BufferedDataFrame, Mat>>(
-                            FrameWriterHelper.CreateMemberAccess(
+                            DataFrameWriterHelper.CreateMemberAccess(
                                 Expression.Convert(frameParameter, frameType),
                                 current),
                             frameParameter));
@@ -104,8 +104,8 @@ namespace OpenEphys.Onix1.FrameWriter
                         Expression.Assign(
                             matElementType,
                             Expression.Call(
-                                typeof(FrameWriterHelper).GetMethod(
-                                    nameof(FrameWriterHelper.GetArrowType),
+                                typeof(DataFrameWriterHelper).GetMethod(
+                                    nameof(DataFrameWriterHelper.GetArrowType),
                                     BindingFlags.Static | BindingFlags.NonPublic,
                                     null,
                                     new[] { typeof(Depth) },
@@ -166,7 +166,7 @@ namespace OpenEphys.Onix1.FrameWriter
                 }
             }
 
-            return FrameWriterHelper.ConvertArrayToArrowArray(array, arrowType, length);
+            return DataFrameWriterHelper.ConvertArrayToArrowArray(array, arrowType, length);
         }
 
         static Expression ConvertFrameMemberExpressionBuilder(
@@ -178,7 +178,7 @@ namespace OpenEphys.Onix1.FrameWriter
             Expression memberAccessor,
             MethodInfo convertFrameMemberMethod)
         {
-            var arrayArrowType = Expression.Constant(FrameWriterHelper.GetArrowType(memberType.GetElementType()));
+            var arrayArrowType = Expression.Constant(DataFrameWriterHelper.GetArrowType(memberType.GetElementType()));
             var getter = Expression.Lambda(
                             typeof(Func<,>).MakeGenericType(typeof(BufferedDataFrame), memberType),
                             memberAccessor,
@@ -226,6 +226,21 @@ namespace OpenEphys.Onix1.FrameWriter
             {
                 *destPtr = *srcPtr++;
                 destPtr += stride;
+            }
+        }
+
+        static unsafe void StrideCopyFromDepth(Depth depth, void* src, void* dest, int elementCount, int stride)
+        {
+            switch (depth)
+            {
+                case Depth.U8: StrideCopy<byte>(src, dest, elementCount, stride); break;
+                case Depth.S8: StrideCopy<sbyte>(src, dest, elementCount, stride); break;
+                case Depth.U16: StrideCopy<ushort>(src, dest, elementCount, stride); break;
+                case Depth.S16: StrideCopy<short>(src, dest, elementCount, stride); break;
+                case Depth.S32: StrideCopy<int>(src, dest, elementCount, stride); break;
+                case Depth.F32: StrideCopy<float>(src, dest, elementCount, stride); break;
+                case Depth.F64: StrideCopy<double>(src, dest, elementCount, stride); break;
+                default: throw new NotSupportedException($"Cannot StrideCopy for depth '{depth}'.");
             }
         }
 
@@ -280,7 +295,8 @@ namespace OpenEphys.Onix1.FrameWriter
 
                 fixed (byte* bufferPtr = buffer)
                 {
-                    StrideCopy<ushort>(rowManager.Memory.Pin().Pointer, bufferPtr, length, stride);
+                    using var handle = rowManager.Memory.Pin();
+                    StrideCopyFromDepth(mat.Depth, handle.Pointer, bufferPtr, length, stride);
                 }
 
                 arrowBuffer = new ArrowBuffer(buffer);
