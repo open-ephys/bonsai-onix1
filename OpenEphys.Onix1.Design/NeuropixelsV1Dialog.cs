@@ -5,9 +5,9 @@ using System.Windows.Forms;
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Partial class to create a GUI for <see cref="ConfigureNeuropixelsV1e"/>.
+    /// Partial class to create a GUI for <see cref="IConfigureNeuropixelsV1"/>.
     /// </summary>
-    public partial class NeuropixelsV1Dialog : Form
+    internal partial class NeuropixelsV1Dialog : Form, IProbeInterfaceDialog
     {
         internal event EventHandler OnStateChange;
 
@@ -34,7 +34,7 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV1Dialog"/>.
         /// </summary>
-        /// <param name="configureNode">A <see cref="ConfigureNeuropixelsV1e"/> object holding the current configuration settings.</param>
+        /// <param name="configureNode">A <see cref="IConfigureNeuropixelsV1"/> object holding the current configuration settings.</param>
         /// <param name="probeName">The name of the probe.</param>
         /// <param name="filterProperties">
         /// <see langword="true"/> if the properties should be filtered by <see cref="DeviceTablePropertyAttribute"/>,
@@ -48,7 +48,6 @@ namespace OpenEphys.Onix1.Design
 
             ProbeConfigurationDialog = new(configureNode.ProbeConfiguration, probeName);
             ProbeConfigurationDialog.SetChildFormProperties(this).AddDialogToPanel(panelProbe);
-            ProbeConfigurationDialog.propertyGrid.SelectedObject = configureNode;
             ProbeConfigurationDialog.OnStateChange += (sender, e) =>
             {
                 if (HasChanges)
@@ -73,7 +72,7 @@ namespace OpenEphys.Onix1.Design
                     });
             }
 
-            configureNeuropixelsV1 = configureNode;
+            ConfigureNode = configureNode;
         }
 
         private void FormShown(object sender, EventArgs e)
@@ -91,6 +90,16 @@ namespace OpenEphys.Onix1.Design
         {
             return ProbeConfigurationDialog.ProcessMenuShortcut(keyData);
         }
+
+        bool IProbeInterfaceDialog.HasChanges => HasChanges;
+
+        event EventHandler IProbeInterfaceDialog.OnStateChange
+        {
+            add { OnStateChange += value; }
+            remove { OnStateChange -= value; }
+        }
+
+        bool IProbeInterfaceDialog.ProcessMenuShortcut(Keys keyData) => ProcessMenuShortcut(keyData);
 
         internal void Okay_Click(object sender, EventArgs e)
         {

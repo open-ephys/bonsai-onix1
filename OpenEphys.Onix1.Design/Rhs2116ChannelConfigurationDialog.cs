@@ -9,7 +9,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Partial class to create a channel configuration GUI for a <see cref="ConfigureRhs2116Trigger"/>.
     /// </summary>
-    public partial class Rhs2116ChannelConfigurationDialog : ChannelConfigurationDialog
+    internal partial class Rhs2116ChannelConfigurationDialog : ChannelConfigurationDialog
     {
         internal event EventHandler OnSelect;
         internal event EventHandler OnZoom;

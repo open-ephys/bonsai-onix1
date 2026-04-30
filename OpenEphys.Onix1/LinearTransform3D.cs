@@ -1,13 +1,12 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Numerics;
 using System.Xml.Serialization;
 
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Data necessary to construct a spatial transform matrix as well as the
-    /// spatial transform matrix itself.
+    /// Data necessary to construct a linear transform matrix as well as the
+    /// linear transform matrix itself.
     /// </summary>
     public class LinearTransform3D
     {
@@ -28,7 +27,7 @@ namespace OpenEphys.Onix1
 
         /// <summary>
         /// The M matrix in <see cref="A"/> * <see cref="B"/> = M. It is the
-        /// spatial transform matrix. It calculated as M = A.inv * B.
+        /// linear transform matrix. It calculated as M = A.inv * B.
         /// </summary>
         [XmlIgnore]
         public Matrix4x4 M { get; private set; }

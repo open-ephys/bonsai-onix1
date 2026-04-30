@@ -9,7 +9,7 @@ namespace OpenEphys.Onix1.Design
     /// Simple dialog window that serves as the base class for all scaled Channel Configuration windows.
     /// Adds a scale bar in the same ZedGraph object as the original channel configuration.
     /// </summary>
-    public abstract class ScaledChannelConfigurationDialog : ChannelConfigurationDialog
+    internal abstract class ScaledChannelConfigurationDialog : ChannelConfigurationDialog
     {
         /// <summary>
         /// Constructs the <see cref="ScaledChannelConfigurationDialog"/>.

@@ -5,7 +5,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Create a custom message box form that allows for custom button names
     /// </summary>
-    public partial class CustomMessageBox : Form
+    internal partial class CustomMessageBox : Form
     {
         /// <summary>
         /// Specifies the button that was clicked in a <see cref="CustomMessageBox"/>.

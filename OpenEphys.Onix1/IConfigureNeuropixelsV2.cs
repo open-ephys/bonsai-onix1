@@ -11,13 +11,8 @@
         public bool Enable { get; set; }
 
         /// <summary>
-        /// Gets or sets the electrode configuration for Probe A.
+        /// Gets or sets the probe configuration.
         /// </summary>
-        public NeuropixelsV2ProbeConfiguration ProbeConfigurationA { get; set; }
-
-        /// <summary>
-        /// Gets or sets the electrode configuration for Probe B.
-        /// </summary>
-        public NeuropixelsV2ProbeConfiguration ProbeConfigurationB { get; set; }
+        public NeuropixelsV2ProbeConfiguration ProbeConfiguration { get; set; }
     }
 }

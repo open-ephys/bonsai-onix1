@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1
     {
         /// <summary>
         /// Gets or sets the pre- and post- transform coordinates to calculate
-        /// the spatial transform matrix as well as the spatial transform matrix
+        /// the linear transform matrix as well as the linear transform matrix
         /// itself.
         /// </summary>
         [Editor("OpenEphys.Onix1.Design.LinearTransformMatrixEditor, OpenEphys.Onix1.Design", DesignTypes.UITypeEditor)]

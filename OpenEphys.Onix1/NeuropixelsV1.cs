@@ -3,22 +3,6 @@ using System.Collections;
 
 namespace OpenEphys.Onix1
 {
-    /// <summary>
-    /// Specifies the probe as A or B.
-    /// </summary>
-    public enum NeuropixelsV1Probe
-    {
-        /// <summary>
-        /// Specifies that this is Probe A.
-        /// </summary>
-        ProbeA = 0,
-        /// <summary>
-        /// Specifies that this is Probe B.
-        /// </summary>
-        ProbeB = 1
-    }
-
-    // Probe constants
     static class NeuropixelsV1
     {
         public const int ProbeI2CAddress = 0x70;
@@ -30,6 +14,24 @@ namespace OpenEphys.Onix1
         public const int ChannelCount = 384;
         public const int ElectrodeCount = 960;
         public const int FrameWords = 40;
+
+        // unmanaged registers
+        public const uint OP_MODE = 0X00;
+        public const uint REC_MOD = 0X01;
+        public const uint CAL_MOD = 0X02;
+        public const uint TEST_CONFIG1 = 0x03;
+        public const uint TEST_CONFIG2 = 0x04;
+        public const uint TEST_CONFIG3 = 0x05;
+        public const uint TEST_CONFIG4 = 0x06;
+        public const uint TEST_CONFIG5 = 0x07;
+        public const uint STATUS = 0X08;
+        public const uint SYNC = 0X09;
+        public const uint SR_CHAIN1 = 0X0E; // Shank configuration
+        public const uint SR_CHAIN3 = 0X0C; // Odd channels
+        public const uint SR_CHAIN2 = 0X0D; // Even channels
+        public const uint SR_LENGTH2 = 0X0F;
+        public const uint SR_LENGTH1 = 0X10;
+        public const uint SOFT_RESET = 0X11;
 
         internal static BitArray MakeShankBits(NeuropixelsV1ProbeConfiguration configuration, NeuropixelsV1eProbeGroup probeGroup)
         {
@@ -186,5 +188,110 @@ namespace OpenEphys.Onix1
 
             return BaseConfigs;
         }
+
+        internal class NameConverter : DeviceNameConverter
+        {
+            public NameConverter()
+                : base(typeof(NeuropixelsV1))
+            {
+            }
+        }
+    }
+
+    [Flags]
+    enum NeuropixelsV1CalibrationRegisterValues : uint
+    {
+        CAL_OFF = 0,
+        OSC_ACTIVE = 1 << 4, // 0 = external osc inactive, 1 = activate the external calibration oscillator
+        ADC_CAL = 1 << 5, // Enable ADC calibration
+        CH_CAL = 1 << 6, // Enable channel gain calibration
+        PIX_CAL = 1 << 7, // Enable pixel + channel gain calibration
+
+        // Useful combinations
+        OSC_ACTIVE_AND_ADC_CAL = OSC_ACTIVE | ADC_CAL,
+        OSC_ACTIVE_AND_CH_CAL = OSC_ACTIVE | CH_CAL,
+        OSC_ACTIVE_AND_PIX_CAL = OSC_ACTIVE | PIX_CAL,
+
+    };
+
+    [Flags]
+    enum NeuropixelsV1RecordRegisterValues : uint
+    {
+        RESET_ALL = 1 << 5, // 1 = Set analog SR chains to default values
+        DIG_ENABLE = 1 << 6, // 0 = Reset the MUX, ADC, and PSB counter, 1 = Disable reset
+        CH_ENABLE = 1 << 7, // 0 = Reset channel pseudo-registers, 1 = Disable reset
+
+        // Useful combinations
+        SR_RESET = RESET_ALL | CH_ENABLE | DIG_ENABLE,
+        DIG_CH_RESET = 0,  // Yes, this is actually correct
+        ACTIVE = DIG_ENABLE | CH_ENABLE,
+    };
+
+    [Flags]
+    enum NeuropixelsV1OperationRegisterValues : uint
+    {
+        TEST = 1 << 3, // Enable Test mode
+        DIG_TEST = 1 << 4, // Enable Digital Test mode
+        CALIBRATE = 1 << 5, // Enable calibration mode
+        RECORD = 1 << 6, // Enable recording mode
+        POWER_DOWN = 1 << 7, // Enable power down mode
+
+        // Useful combinations
+        RECORD_AND_DIG_TEST = RECORD | DIG_TEST,
+        RECORD_AND_CALIBRATE = RECORD | CALIBRATE,
+    };
+
+    /// <summary>
+    /// Specifies the reference source for all electrodes.
+    /// </summary>
+    public enum NeuropixelsV1ReferenceSource : byte
+    {
+        /// <summary>
+        /// Specifies that the reference should be External.
+        /// </summary>
+        External = 0b001,
+        /// <summary>
+        /// Specifies that the reference should be the Tip.
+        /// </summary>
+        Tip = 0b010
+    }
+
+    /// <summary>
+    /// Specifies the gain for all electrodes
+    /// </summary>
+    public enum NeuropixelsV1Gain : byte
+    {
+        /// <summary>
+        /// Specifies that the gain should be 50x.
+        /// </summary>
+        Gain50 = 0b000,
+        /// <summary>
+        /// Specifies that the gain should be 125x.
+        /// </summary>
+        Gain125 = 0b001,
+        /// <summary>
+        /// Specifies that the gain should be 250x.
+        /// </summary>
+        Gain250 = 0b010,
+        /// <summary>
+        /// Specifies that the gain should be 500x.
+        /// </summary>
+        Gain500 = 0b011,
+        /// <summary>
+        /// Specifies that the gain should be 1000x.
+        /// </summary>
+        Gain1000 = 0b100,
+        /// <summary>
+        /// Specifies that the gain should be 1500x.
+        /// </summary>
+        Gain1500 = 0b101,
+        /// <summary>
+        /// Specifies that the gain should be 2000x.
+        /// </summary>
+        Gain2000 = 0b110,
+        /// <summary>
+        /// Specifies that the gain should be 3000x.
+        /// </summary>
+        Gain3000 = 0b111
     }
 }

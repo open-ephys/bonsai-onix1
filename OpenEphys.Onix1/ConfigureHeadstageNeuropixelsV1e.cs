@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Reactive.Disposables;
 using System.Threading;
 
 namespace OpenEphys.Onix1
@@ -28,6 +29,7 @@ namespace OpenEphys.Onix1
     {
         PortName port;
         readonly ConfigureNeuropixelsV1ePortController PortControl = new();
+        readonly ConfigureHeadstageNeuropixelsV1eDS90UB9x Serdes = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureHeadstageNeuropixelsV1e"/> class.
@@ -39,12 +41,12 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets or sets the NeuropixelsV1e configuration.
+        /// Gets or sets the NeuropixelsV1 configuration.
         /// </summary>
         [Category(DevicesCategory)]
         [TypeConverter(typeof(SingleDeviceFactoryConverter))]
-        [Description("Specifies the configuration for the NeuropixelsV1e device.")]
-        public ConfigureNeuropixelsV1e NeuropixelsV1e { get; set; } = new();
+        [Description("Specifies the configuration for the Neuropixels V1.")]
+        public ConfigureNeuropixelsV1PsbDecoder NeuropixelsV1 { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the Bno055 9-axis inertial measurement unit configuration.
@@ -71,8 +73,9 @@ namespace OpenEphys.Onix1
                 port = value;
                 var offset = (uint)port << 8;
                 PortControl.DeviceAddress = (uint)port;
-                NeuropixelsV1e.DeviceAddress = offset + 0;
+                NeuropixelsV1.DeviceAddress = offset + 0;
                 Bno055.DeviceAddress = offset + 1;
+                Serdes.DeviceAddress = offset + 2;
             }
         }
 
@@ -96,10 +99,25 @@ namespace OpenEphys.Onix1
             set => PortControl.PortVoltage = value;
         }
 
+        /// <summary>
+        /// Gets or sets the LED enable state.
+        /// </summary>
+        /// <remarks>
+        /// If true, the headstage LED will turn on during data acquisition. If false, the LED will not turn on.
+        /// </remarks>
+        [Category(ConfigurationCategory)]
+        [Description("Specifies whether the headstage LED will turn on during acquisition.")]
+        public bool TrackingLed
+        {
+            get => Serdes.EnableLed;
+            set => Serdes.EnableLed = value;
+        }
+
         internal override IEnumerable<IDeviceConfiguration> GetDevices()
         {
             yield return PortControl;
-            yield return NeuropixelsV1e;
+            yield return Serdes; // must come before dependent devices that follow
+            yield return NeuropixelsV1;
             yield return Bno055;
         }
 
@@ -140,6 +158,125 @@ namespace OpenEphys.Onix1
                 device.WriteRegister(PortController.PORTVOLTAGE, (uint)(10 * voltage));
                 Thread.Sleep(200);
             }
+        }
+    }
+
+    class ConfigureHeadstageNeuropixelsV1eDS90UB9x : ConfigureDS90UB9x
+    {
+        readonly Version MinimumRevision = new(1, 0);
+        const uint HeadstageId = 6;
+
+        public const byte DefaultGPO10Config = 0b0001_0001; // GPIO0 Low, NP in MUX reset
+        public const byte DefaultGPO32Config = 0b1001_0001; // LED off, GPIO1 Low
+        public const byte Gpo10EnableMuxMask = 1 << 3; // Used to issue mux reset command to probe
+        public const byte Gpo32DisableLedMask = 1 << 7; // Used to turn on and off LED
+
+        public ConfigureHeadstageNeuropixelsV1eDS90UB9x()
+            : base(typeof(DS90UB9x))
+        {
+        }
+
+        public bool EnableLed { get; set; } = true;
+
+        override private protected void ConfigureSerdes(DeviceContext device)
+        {
+            // default to disabled and let individual instances re-enable
+            device.WriteRegister(DS90UB9x.ENABLE, 0);
+
+            // configure deserializer trigger mode
+            device.WriteRegister(DS90UB9x.TRIGGEROFF, 0);
+            device.WriteRegister(DS90UB9x.TRIGGER, (uint)DS90UB9xTriggerMode.Continuous);
+            device.WriteRegister(DS90UB9x.SYNCBITS, 0);
+            device.WriteRegister(DS90UB9x.DATAGATE, 0b0000_0001_0001_0011_0000_0000_0000_0001);
+            device.WriteRegister(DS90UB9x.MARK, (uint)DS90UB9xMarkMode.Disabled);
+
+            // configure one magic word-triggered stream for the PSB bus
+            device.WriteRegister(DS90UB9x.READSZ, 851973); // 13 frames/superframe, 7x 140-bit words on each serial line per frame
+            device.WriteRegister(DS90UB9x.MAGIC_MASK, 0b11000000000000000000001111111111); // Enable inverse, wait for non-inverse, 10-bit magic word
+            device.WriteRegister(DS90UB9x.MAGIC, 816); // Super-frame sync word
+            device.WriteRegister(DS90UB9x.MAGIC_WAIT, 0);
+            device.WriteRegister(DS90UB9x.DATAMODE, 913);
+            device.WriteRegister(DS90UB9x.DATALINES0, 0x3245106B); // Sync, psb[0], psb[1], psb[2], psb[3], psb[4], psb[5], psb[6]
+            device.WriteRegister(DS90UB9x.DATALINES1, 0xFFFFFFFF);
+
+            DS90UB9x.Initialize933SerDesLink(device, DS90UB9xMode.Raw12BitHighFrequency);
+
+            // configure deserializer I2C aliases
+            var deserializer = new I2CRegisterContext(device, DS90UB9x.DES_ADDR);
+
+            uint alias = HeadstageEeprom.I2CAddress << 1;
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID1, alias);
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias1, alias);
+
+            alias = NeuropixelsV1.ProbeI2CAddress << 1;
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID2, alias);
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias2, alias);
+
+            alias = NeuropixelsV1.FlexEepromI2CAddress << 1;
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID3, alias);
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias3, alias);
+
+            alias = PolledBno055.I2CAddress << 1;
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID4, alias);
+            deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias4, alias);
+
+            // initialize GPIO to default state
+            var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, DefaultGPO10Config);
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, DefaultGPO32Config);
+
+            // set I2C clock rate to ~400 kHz
+            DS90UB9x.Set933I2CRate(device, 400e3);
+
+            // read and validate headstage EEPROM
+            ValidateHeadstage(new HeadstageEeprom(device));
+
+            if (EnableLed)
+            {
+                TurnOnLed(serializer);
+            }
+
+            ResetProbe(serializer);
+        }
+
+        void ValidateHeadstage(HeadstageEeprom metadata)
+        {
+            if (metadata.Id != HeadstageId)
+            {
+                throw new InvalidOperationException(
+                    $"Expected a Headstage-NeuropixelsV1.0e but found '{metadata.Name}' (ID: {metadata.Id}).");
+            }
+
+            if (metadata.Revision < MinimumRevision)
+            {
+                throw new InvalidOperationException(
+                    $"Headstage version {MinimumRevision} is required but version {metadata.Revision} was detected.");
+            }
+        }
+        static void TurnOnLed(I2CRegisterContext serializer)
+        {
+            var gpo32Config = serializer.ReadByte((uint)DS90UB933SerializerI2CRegister.Gpio32);
+            gpo32Config = (byte)(gpo32Config & ~Gpo32DisableLedMask);
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, gpo32Config);
+        }
+
+        static void ResetProbe(I2CRegisterContext serializer)
+        {
+            var gpo10Config = serializer.ReadByte((uint)DS90UB933SerializerI2CRegister.Gpio10);
+            gpo10Config &= (byte)(gpo10Config & ~Gpo10EnableMuxMask);
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, gpo10Config);
+            gpo10Config |= Gpo10EnableMuxMask;
+            serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, gpo10Config);
+        }
+
+        override private protected IDisposable ShutdownSerdes(DeviceContext device)
+        {
+            var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
+            return Disposable.Create(() =>
+            {
+                serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, DefaultGPO10Config);
+                serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, DefaultGPO32Config);
+            });
         }
     }
 

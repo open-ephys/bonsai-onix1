@@ -24,16 +24,6 @@ namespace OpenEphys.Onix1
         {
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigureNeuropixelsV1f"/> class with the specified <see cref="NeuropixelsV1Probe"/> name.
-        /// </summary>
-        public ConfigureNeuropixelsV1f(NeuropixelsV1Probe probeName)
-            : base(typeof(NeuropixelsV1f))
-        {
-            ProbeName = probeName;
-            ProbeConfiguration = new();
-        }
-
         /// <inheritdoc/>
         /// <remarks>
         /// If set to true, <see cref="NeuropixelsV1fData"/> will produce data. If set to false, 
@@ -121,12 +111,6 @@ namespace OpenEphys.Onix1
         {
             return false;
         }
-
-        /// <summary>
-        /// Gets or sets the <see cref="NeuropixelsV1Probe"/> for this probe.
-        /// </summary>
-        [Browsable(false)]
-        public NeuropixelsV1Probe ProbeName { get; set; } = NeuropixelsV1Probe.ProbeA;
 
         /// <summary>
         /// Configures a NeuropixelsV1 device on an ONIX NeuropixelsV1f headstage.

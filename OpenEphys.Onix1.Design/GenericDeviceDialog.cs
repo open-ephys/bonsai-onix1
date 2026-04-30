@@ -8,7 +8,7 @@ namespace OpenEphys.Onix1.Design
     /// Abstract form that implements a very basic GUI consisting of a single property grid and
     /// two buttons (OK / Cancel).
     /// </summary>
-    public partial class GenericDeviceDialog : Form
+    internal partial class GenericDeviceDialog : Form
     {
         internal object Device
         {

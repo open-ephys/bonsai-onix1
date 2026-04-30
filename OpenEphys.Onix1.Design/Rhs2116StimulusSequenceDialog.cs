@@ -10,7 +10,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Partial class to create a channel configuration GUI for a <see cref="Rhs2116StimulusSequencePair"/>.
     /// </summary>
-    public partial class Rhs2116StimulusSequenceDialog : GenericStimulusSequenceDialog
+    internal partial class Rhs2116StimulusSequenceDialog : GenericStimulusSequenceDialog
     {
         readonly TabControl tabControlVisualization = new();
         readonly TabPage tabPageWaveform = new();

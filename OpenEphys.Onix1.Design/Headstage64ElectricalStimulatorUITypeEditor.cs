@@ -10,7 +10,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Class that opens a new dialog for a <see cref="ConfigureHeadstage64ElectricalStimulator"/>.
     /// </summary>
-    public class Headstage64ElectricalStimulatorUITypeEditor : UITypeEditor
+    internal class Headstage64ElectricalStimulatorUITypeEditor : UITypeEditor
     {
         /// <inheritdoc/>
         public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)

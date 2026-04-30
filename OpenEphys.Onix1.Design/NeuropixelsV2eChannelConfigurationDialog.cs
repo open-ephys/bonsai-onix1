@@ -7,9 +7,9 @@ using ZedGraph;
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Partial class to create a channel configuration GUI for <see cref="ConfigureNeuropixelsV2e"/>.
+    /// Partial class to create a channel configuration GUI for a Neuropixels 2.0 probe.
     /// </summary>
-    public partial class NeuropixelsV2eChannelConfigurationDialog : ScaledChannelConfigurationDialog
+    internal partial class NeuropixelsV2eChannelConfigurationDialog : ScaledChannelConfigurationDialog
     {
         internal event EventHandler OnZoom;
 

@@ -15,7 +15,7 @@ namespace OpenEphys.Onix1.Design
     /// Within, there are a number of useful methods for initializing, resizing, and drawing channels.
     /// Each device must implement their own ChannelConfigurationDialog.
     /// </summary>
-    public abstract partial class ChannelConfigurationDialog : Form
+    internal abstract partial class ChannelConfigurationDialog : Form
     {
         private protected Type probeGroupType;
 

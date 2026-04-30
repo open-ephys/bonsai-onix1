@@ -10,7 +10,7 @@ namespace OpenEphys.Onix1
     public class NeuropixelsV2eBetaDataFrame : BufferedDataFrame
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="NeuropixelsV2eDataFrame"/> class.
+        /// Initializes a new instance of the <see cref="NeuropixelsV2eBetaDataFrame"/> class.
         /// </summary>
         /// <param name="clock">An array of <see cref="DataFrame.Clock"/> values.</param>
         /// <param name="hubClock">An array of hub clock counter values.</param>
@@ -49,65 +49,5 @@ namespace OpenEphys.Onix1
         /// around back to 0. This can be used to detect dropped frames.
         /// </remarks>
         public int[] FrameCount { get; }
-
-        internal static unsafe ushort GetProbeIndex(oni.Frame frame)
-        {
-            var data = (NeuropixelsV2BetaPayload*)frame.Data.ToPointer();
-            return data->ProbeIndex;
-        }
-
-        internal static unsafe void CopyAmplifierBuffer(ushort* superFrame, ushort[,] amplifierBuffer, int[] frameCounter, int index, double gainCorrection, bool invertPolarity, int[,] channelOrder)
-        {
-            if (invertPolarity)
-            {
-                const double NumberOfAdcBins = 16384;
-                double inversionOffset = gainCorrection * NumberOfAdcBins;
-
-                // Loop over 16 "frames" within each "super frame"
-                for (var i = 0; i < NeuropixelsV2eBeta.FramesPerSuperFrame; i++)
-                {
-                    var frameOffset = i * NeuropixelsV2eBeta.FrameWords;
-                    var frameCounterIndex = index * NeuropixelsV2eBeta.FramesPerSuperFrame + i;
-                    frameCounter[frameCounterIndex] = (superFrame[frameOffset] << 14) | (superFrame[frameOffset + 1] << 0);
-
-                    // The period of data within super frame is 28 words (24 ADCs, 2 Syncs, 2 counters)
-                    var adcDataOffset = 2 + frameOffset;
-
-                    // Loop over ADC samples within each "frame" and map to channel position
-                    for (var k = 0; k < NeuropixelsV2eBeta.ADCsPerProbe; k++)
-                    {
-                        amplifierBuffer[channelOrder[k, i], index] = (ushort)(inversionOffset - gainCorrection * superFrame[adcDataOffset + k]);
-                    }
-                }
-            }
-            else
-            {
-                // Loop over 16 "frames" within each "super frame"
-                for (var i = 0; i < NeuropixelsV2eBeta.FramesPerSuperFrame; i++)
-                {
-                    var frameOffset = i * NeuropixelsV2eBeta.FrameWords;
-                    var frameCounterIndex = index * NeuropixelsV2eBeta.FramesPerSuperFrame + i;
-                    frameCounter[frameCounterIndex] = (superFrame[frameOffset] << 14) | (superFrame[frameOffset + 1] << 0);
-
-                    // The period of data within super frame is 28 words (24 ADCs, 2 Syncs, 2 counters)
-                    var adcDataOffset = 2 + frameOffset;
-
-                    // Loop over ADC samples within each "frame" and map to channel position
-                    for (var k = 0; k < NeuropixelsV2eBeta.ADCsPerProbe; k++)
-                    {
-                        amplifierBuffer[channelOrder[k, i], index] = (ushort)(gainCorrection * superFrame[adcDataOffset + k]);
-                    }
-                }
-            }
-        }
-    }
-
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    unsafe struct NeuropixelsV2BetaPayload
-    {
-        public ulong HubClock;
-        public ushort ProbeIndex;
-        public uint Reserved;
-        public fixed ushort SuperFrame[NeuropixelsV2eBeta.FramesPerSuperFrame * NeuropixelsV2eBeta.FrameWords];
     }
 }

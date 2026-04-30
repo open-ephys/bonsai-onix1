@@ -6,9 +6,9 @@ using Bonsai.Design;
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Class that opens a new dialog for a <see cref="ConfigureNeuropixelsV2e"/>.
+    /// Class that opens a new dialog for a <see cref="ConfigureNeuropixelsV2PsbDecoder"/>.
     /// </summary>
-    public class NeuropixelsV2eEditor : WorkflowComponentEditor
+    internal class NeuropixelsV2eEditor : WorkflowComponentEditor
     {
         /// <inheritdoc/>
         public override bool EditComponent(ITypeDescriptorContext context, object component, IServiceProvider provider, IWin32Window owner)
@@ -17,12 +17,12 @@ namespace OpenEphys.Onix1.Design
             {
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
 
-                if (editorState != null && !editorState.WorkflowRunning && component is ConfigureNeuropixelsV2e configureNeuropixelsV2e)
+                if (editorState != null && !editorState.WorkflowRunning && component is ConfigureNeuropixelsV2PsbDecoder configureNeuropixelsV2e)
                 {
-                    var configureNode = new ConfigureNeuropixelsV2e();
+                    var configureNode = new ConfigureNeuropixelsV2PsbDecoder();
                     DesignHelper.DeepCopyProperties(configureNeuropixelsV2e, configureNode);
 
-                    using var editorDialog = new NeuropixelsV2eDialog(configureNode);
+                    using var editorDialog = new NeuropixelsV2eDialog(configureNode, nameof(NeuropixelsV2));
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
@@ -31,12 +31,12 @@ namespace OpenEphys.Onix1.Design
                         return true;
                     }
                 }
-                else if (editorState != null && !editorState.WorkflowRunning && component is ConfigureNeuropixelsV2eBeta configureNeuropixelsV2eBeta)
+                else if (editorState != null && !editorState.WorkflowRunning && component is ConfigureNeuropixelsV2BetaPsbDecoder configureNeuropixelsV2eBeta)
                 {
-                    var configureNode = new ConfigureNeuropixelsV2eBeta();
+                    var configureNode = new ConfigureNeuropixelsV2BetaPsbDecoder();
                     DesignHelper.DeepCopyProperties(configureNeuropixelsV2eBeta, configureNode);
 
-                    using var editorDialog = new NeuropixelsV2eDialog(configureNode);
+                    using var editorDialog = new NeuropixelsV2eDialog(configureNode, nameof(NeuropixelsV2));
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {

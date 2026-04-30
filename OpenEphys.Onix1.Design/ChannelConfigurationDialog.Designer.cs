@@ -55,10 +55,11 @@
             this.panel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panel.Controls.Add(this.tableLayoutPanel1);
             this.panel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel.Location = new System.Drawing.Point(0, 27);
+            this.panel.Location = new System.Drawing.Point(0, 22);
+            this.panel.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.panel.Name = "panel";
             this.panel.Padding = new System.Windows.Forms.Padding(1);
-            this.panel.Size = new System.Drawing.Size(609, 547);
+            this.panel.Size = new System.Drawing.Size(457, 445);
             this.panel.TabIndex = 7;
             // 
             // tableLayoutPanel1
@@ -68,21 +69,22 @@
             this.tableLayoutPanel1.Controls.Add(this.zedGraphChannels, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel2, 0, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(2, 2);
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(1, 1);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 42F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 42F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(603, 541);
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 34F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 34F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(453, 441);
             this.tableLayoutPanel1.TabIndex = 6;
             // 
             // zedGraphChannels
             // 
             this.zedGraphChannels.AutoSize = true;
             this.zedGraphChannels.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.zedGraphChannels.Location = new System.Drawing.Point(5, 6);
-            this.zedGraphChannels.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+            this.zedGraphChannels.Location = new System.Drawing.Point(4, 5);
+            this.zedGraphChannels.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.zedGraphChannels.Name = "zedGraphChannels";
             this.zedGraphChannels.ScrollGrace = 0D;
             this.zedGraphChannels.ScrollMaxX = 0D;
@@ -91,7 +93,7 @@
             this.zedGraphChannels.ScrollMinX = 0D;
             this.zedGraphChannels.ScrollMinY = 0D;
             this.zedGraphChannels.ScrollMinY2 = 0D;
-            this.zedGraphChannels.Size = new System.Drawing.Size(593, 487);
+            this.zedGraphChannels.Size = new System.Drawing.Size(445, 397);
             this.zedGraphChannels.TabIndex = 4;
             this.zedGraphChannels.TabStop = false;
             this.zedGraphChannels.UseExtendedPrintDialog = true;
@@ -101,18 +103,21 @@
             // 
             this.flowLayoutPanel2.Controls.Add(this.buttonResetZoom);
             this.flowLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanel2.Location = new System.Drawing.Point(3, 502);
+            this.flowLayoutPanel2.Location = new System.Drawing.Point(2, 410);
+            this.flowLayoutPanel2.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.flowLayoutPanel2.Name = "flowLayoutPanel2";
-            this.flowLayoutPanel2.Size = new System.Drawing.Size(597, 36);
+            this.flowLayoutPanel2.Size = new System.Drawing.Size(449, 28);
             this.flowLayoutPanel2.TabIndex = 5;
             // 
             // buttonResetZoom
             // 
             this.buttonResetZoom.Image = global::OpenEphys.Onix1.Design.Properties.Resources.MagnifyingGlass;
             this.buttonResetZoom.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.buttonResetZoom.Location = new System.Drawing.Point(3, 3);
+            this.buttonResetZoom.Location = new System.Drawing.Point(2, 3);
+            this.buttonResetZoom.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.buttonResetZoom.Name = "buttonResetZoom";
-            this.buttonResetZoom.Size = new System.Drawing.Size(132, 32);
+            this.buttonResetZoom.Padding = new System.Windows.Forms.Padding(10, 0, 0, 0);
+            this.buttonResetZoom.Size = new System.Drawing.Size(110, 26);
             this.buttonResetZoom.TabIndex = 0;
             this.buttonResetZoom.Text = "Reset Zoom";
             this.buttonResetZoom.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
@@ -128,9 +133,9 @@
             this.fileMenuItem});
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
-            this.menuStrip.Padding = new System.Windows.Forms.Padding(5, 1, 0, 1);
+            this.menuStrip.Padding = new System.Windows.Forms.Padding(4, 1, 0, 1);
             this.menuStrip.ShowItemToolTips = true;
-            this.menuStrip.Size = new System.Drawing.Size(609, 27);
+            this.menuStrip.Size = new System.Drawing.Size(457, 22);
             this.menuStrip.TabIndex = 5;
             // 
             // fileMenuItem
@@ -144,7 +149,7 @@
             this.dropDownImportFile,
             this.dropDownLoadDefault});
             this.fileMenuItem.Name = "fileMenuItem";
-            this.fileMenuItem.Size = new System.Drawing.Size(37, 25);
+            this.fileMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileMenuItem.Text = "File";
             // 
             // dropDownOpenFile
@@ -203,14 +208,14 @@
             // 
             // ChannelConfigurationDialog
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(609, 574);
+            this.ClientSize = new System.Drawing.Size(457, 467);
             this.Controls.Add(this.panel);
             this.Controls.Add(this.menuStrip);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip;
-            this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.Margin = new System.Windows.Forms.Padding(2, 1, 2, 1);
             this.Name = "ChannelConfigurationDialog";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Channel Configuration";

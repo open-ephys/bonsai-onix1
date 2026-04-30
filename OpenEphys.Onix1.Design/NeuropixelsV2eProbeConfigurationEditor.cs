@@ -10,7 +10,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Class that opens a new dialog for a <see cref="NeuropixelsV2ProbeConfiguration"/>.
     /// </summary>
-    public class NeuropixelsV2eProbeConfigurationEditor : UITypeEditor
+    internal class NeuropixelsV2eProbeConfigurationEditor : UITypeEditor
     {
         /// <inheritdoc/>
         public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
@@ -30,17 +30,12 @@ namespace OpenEphys.Onix1.Design
                 {
                     var instance = (IConfigureNeuropixelsV2)context.Instance;
 
-                    bool isBeta = instance is ConfigureNeuropixelsV2eBeta;
-                    string probeName = configuration == instance.ProbeConfigurationA ? nameof(NeuropixelsV2Probe.ProbeA) : nameof(NeuropixelsV2Probe.ProbeB);
+                    bool isBeta = instance is ConfigureNeuropixelsV2BetaPsbDecoder;
+                    string probeName = nameof(IConfigureNeuropixelsV2.ProbeConfiguration);
 
                     var configurationCopy = configuration.Clone();
 
                     using var editorDialog = new NeuropixelsV2eProbeConfigurationDialog(configurationCopy, isBeta, probeName);
-
-                    if (isBeta)
-                    {
-                        editorDialog.Text = editorDialog.Text.Replace("NeuropixelsV2e ", "NeuropixelsV2eBeta ");
-                    }
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {

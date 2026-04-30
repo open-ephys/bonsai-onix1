@@ -2,7 +2,7 @@
 
 namespace OpenEphys.Onix1
 {
-    class NeuropixelsV2eBetaMetadata : INeuropixelsV2eMetadata
+    class NeuropixelsV2eBetaMetadata : INeuropixelsV2Metadata
     {
         const uint OFFSET_FLEX_VERSION = 0x00;
         const uint OFFSET_FLEX_REVISION = 0x01;
@@ -12,7 +12,7 @@ namespace OpenEphys.Onix1
 
         public NeuropixelsV2eBetaMetadata(I2CRegisterContext serializer)
         {
-            var flexI2C = new I2CRegisterContext(serializer, NeuropixelsV2e.FlexEEPROMAddress);
+            var flexI2C = new I2CRegisterContext(serializer, NeuropixelsV2.FlexEEPROMAddress);
             try
             {
                 ProbePartNumber = flexI2C.ReadString(OFFSET_PROBE_PN, 20);

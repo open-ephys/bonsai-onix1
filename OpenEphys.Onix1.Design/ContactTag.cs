@@ -3,7 +3,7 @@
     /// <summary>
     /// Public class used to create tags for contacts in their respective GUIs.
     /// </summary>
-    public class ContactTag
+    internal class ContactTag
     {
         const string ContactStringFormat = "Probe_{0}-Contact_{1}";
         const string TextStringFormat = "TextProbe_{0}-Contact_{1}";

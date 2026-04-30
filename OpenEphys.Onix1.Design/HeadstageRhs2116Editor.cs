@@ -8,7 +8,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Class that opens a new dialog for a <see cref="ConfigureHeadstageRhs2116"/>.
     /// </summary>
-    public class HeadstageRhs2116Editor : WorkflowComponentEditor
+    internal class HeadstageRhs2116Editor : WorkflowComponentEditor
     {
         /// <inheritdoc/>
         public override bool EditComponent(ITypeDescriptorContext context, object component, IServiceProvider provider, IWin32Window owner)

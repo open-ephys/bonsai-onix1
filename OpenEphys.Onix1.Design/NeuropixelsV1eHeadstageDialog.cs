@@ -1,93 +1,43 @@
-﻿using System.Windows.Forms;
-
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Partial class to create a GUI for <see cref="ConfigureHeadstageNeuropixelsV1e"/>.
+    /// GUI for <see cref="ConfigureHeadstageNeuropixelsV1e"/>. Hosts one
+    /// <see cref="NeuropixelsV1Dialog"/> and one <see cref="GenericDeviceDialog"/> for the Bno055,
+    /// each in its own tab.
     /// </summary>
-    /// <remarks>
-    /// Within the GUI, there is a tab for both devices encapsulated by a <see cref="ConfigureHeadstageNeuropixelsV1e"/>,
-    /// specifically a <see cref="ConfigureNeuropixelsV1e"/> and a <see cref="ConfigurePolledBno055"/>. 
-    /// </remarks>
-    public partial class NeuropixelsV1eHeadstageDialog : Form
+    internal class NeuropixelsV1eHeadstageDialog : HeadstageDialog
     {
-        /// <summary>
-        /// Gets the <see cref="NeuropixelsV1Dialog"/>.
-        /// </summary>
-        public readonly NeuropixelsV1Dialog DialogNeuropixelsV1e;
+        /// <summary>Gets the <see cref="NeuropixelsV1Dialog"/>.</summary>
+        public NeuropixelsV1Dialog DialogNeuropixelsV1e =>
+            (NeuropixelsV1Dialog)GetProbeDialog(0);
 
-        /// <summary>
-        /// Gets the <see cref="GenericDeviceDialog"/> for the Bno055.
-        /// </summary>
+        /// <summary>Gets the <see cref="GenericDeviceDialog"/> for the Bno055.</summary>
         public readonly GenericDeviceDialog DialogBno055;
 
         /// <summary>
         /// Initializes a new instance of a <see cref="NeuropixelsV1eHeadstageDialog"/>.
         /// </summary>
-        /// <param name="configureNeuropixelsV1e">Configuration settings for a <see cref="ConfigureNeuropixelsV1e"/>.</param>
-        /// <param name="configureBno055">Configuration settings for a <see cref="ConfigurePolledBno055"/>.</param>
-        public NeuropixelsV1eHeadstageDialog(ConfigureNeuropixelsV1e configureNeuropixelsV1e, ConfigurePolledBno055 configureBno055)
+        /// <param name="configureHeadstage">Configuration settings for a <see cref="ConfigureHeadstageNeuropixelsV1e"/>.</param>
+        public NeuropixelsV1eHeadstageDialog(ConfigureHeadstageNeuropixelsV1e configureHeadstage)
         {
-            InitializeComponent();
+            Text = "HeadstageNeuropixels1.0e Configuration";
 
-            DialogNeuropixelsV1e = new(configureNeuropixelsV1e, nameof(NeuropixelsV1e), true);
+            const string probeName = nameof(NeuropixelsV1);
+            var probeDialog = new NeuropixelsV1Dialog(configureHeadstage.NeuropixelsV1, probeName, true);
+            AddProbeTab(probeName, probeDialog, old => RecreateDialog(old, probeName));
 
-            DialogNeuropixelsV1e.SetChildFormProperties(this).AddDialogToPanel(panelNeuropixelsV1e);
-
-            DialogNeuropixelsV1e.OnStateChange += (sender, e) =>
-            {
-                if (DialogNeuropixelsV1e.HasChanges)
-                {
-                    tabPageNeuropixelsV1e.Text += '*';
-                }
-                else
-                {
-                    tabPageNeuropixelsV1e.Text = tabPageNeuropixelsV1e.Text.TrimEnd('*');
-                }
-            };
-
-            DialogBno055 = new(configureBno055, true);
-
-            DialogBno055.SetChildFormProperties(this).AddDialogToPanel(panelBno055);
-
-            FormClosing += DialogClosing;
+            DialogBno055 = new GenericDeviceDialog(configureHeadstage.Bno055, true);
+            AddDeviceTab("Bno055", DialogBno055);
         }
 
-        private void Okay_Click(object sender, System.EventArgs e)
+        static NeuropixelsV1Dialog RecreateDialog(NeuropixelsV1Dialog old, string probeName)
         {
-            DialogResult = DialogResult.OK;
-            Close();
-        }
-
-        /// <inheritdoc/>
-        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
-        {
-            if (tabControl1.SelectedTab == tabPageNeuropixelsV1e)
-            {
-                return DialogNeuropixelsV1e.ProcessMenuShortcut(keyData);
-            }
-            else if (tabControl1.SelectedTab == tabPageBno055)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        void DialogClosing(object sender, FormClosingEventArgs e)
-        {
-            if (DialogNeuropixelsV1e.HasChanges && this.HandleTopLevelDialogCancel(ref e, ChannelConfigurationDialog.ProbeConfigurationConfirmMessage))
-            {
-                return;
-            }
-
-            DialogNeuropixelsV1e.CloseWithResult(this);
-
-            if (!DialogNeuropixelsV1e.IsDisposed)
-            {
-                e.Cancel = true;
-                return;
-            }
+            var newDialog = new NeuropixelsV1Dialog((IConfigureNeuropixelsV1)old.ConfigureNode, probeName, true);
+            newDialog.ProbeConfigurationDialog.ChannelConfiguration.ProbeGroup =
+                old.ProbeConfigurationDialog.ChannelConfiguration.ProbeGroup;
+            newDialog.ProbeConfigurationDialog.ChannelConfiguration.RedrawProbeGroup();
+            newDialog.ProbeConfigurationDialog.CheckForExistingChannelPreset();
+            return newDialog;
         }
     }
 }

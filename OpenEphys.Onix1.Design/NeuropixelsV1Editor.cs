@@ -8,7 +8,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Class that opens a new dialog for a NeuropixelsV1 device.
     /// </summary>
-    public class NeuropixelsV1Editor : WorkflowComponentEditor
+    internal class NeuropixelsV1Editor : WorkflowComponentEditor
     {
         /// <inheritdoc/>
         public override bool EditComponent(ITypeDescriptorContext context, object component, IServiceProvider provider, IWin32Window owner)
@@ -16,9 +16,9 @@ namespace OpenEphys.Onix1.Design
             if (provider != null)
             {
                 var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));  
-                if (editorState != null && !editorState.WorkflowRunning && component is ConfigureNeuropixelsV1e configureNeuropixelsV1e)
+                if (editorState != null && !editorState.WorkflowRunning && component is ConfigureNeuropixelsV1PsbDecoder configureNeuropixelsV1e)
                 {
-                    var configuration = new ConfigureNeuropixelsV1e();
+                    var configuration = new ConfigureNeuropixelsV1PsbDecoder();
                     DesignHelper.DeepCopyProperties(configureNeuropixelsV1e, configuration);
 
                     using var editorDialog = new NeuropixelsV1Dialog(configuration, nameof(NeuropixelsV1));
