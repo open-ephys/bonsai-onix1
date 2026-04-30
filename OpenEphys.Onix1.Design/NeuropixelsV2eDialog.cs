@@ -7,7 +7,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Partial class to create a GUI for <see cref="ConfigureNeuropixelsV2PsbDecoder"/>.
     /// </summary>
-    public partial class NeuropixelsV2eDialog : Form, IProbeInterfaceDialog
+    internal partial class NeuropixelsV2eDialog : Form, IProbeInterfaceDialog
     {
         readonly bool IsBeta = false;
 

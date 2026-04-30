@@ -12,7 +12,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Partial class to create a spatial-calibration GUI for <see cref="TS4231V1LinearTransform.LinearTransform"/>.
     /// </summary>
-    public partial class LinearTransformMatrixDialog : Form
+    internal partial class LinearTransformMatrixDialog : Form
     {
         internal LinearTransform3D LinearTransform;
         const byte NumMeasurements = 100;

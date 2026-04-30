@@ -8,7 +8,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Class that opens a new dialog for a <see cref="ConfigureRhs2116Trigger"/>.
     /// </summary>
-    public class Rhs2116StimulusSequenceEditor : WorkflowComponentEditor
+    internal class Rhs2116StimulusSequenceEditor : WorkflowComponentEditor
     {
         /// <inheritdoc/>
         public override bool EditComponent(ITypeDescriptorContext context, object component, IServiceProvider provider, IWin32Window owner)

@@ -5,7 +5,7 @@
     /// <see cref="Rhs2116StimulusSequenceDialog"/> and a <see cref="GenericDeviceDialog"/> for
     /// the Rhs2116 pair, each in its own tab.
     /// </summary>
-    public class HeadstageRhs2116Dialog : HeadstageDialog
+    internal class HeadstageRhs2116Dialog : HeadstageDialog
     {
         internal readonly Rhs2116StimulusSequenceDialog StimulusSequenceDialog;
         internal readonly GenericDeviceDialog Rhs2116Dialog;

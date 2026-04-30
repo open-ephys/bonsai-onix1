@@ -5,7 +5,7 @@ namespace OpenEphys.Onix1.Design
     /// <see cref="NeuropixelsV1Dialog"/> and one <see cref="GenericDeviceDialog"/> for the Bno055,
     /// each in its own tab.
     /// </summary>
-    public class NeuropixelsV1eHeadstageDialog : HeadstageDialog
+    internal class NeuropixelsV1eHeadstageDialog : HeadstageDialog
     {
         /// <summary>Gets the <see cref="NeuropixelsV1Dialog"/>.</summary>
         public NeuropixelsV1Dialog DialogNeuropixelsV1e =>

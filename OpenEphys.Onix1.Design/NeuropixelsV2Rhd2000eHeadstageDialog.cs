@@ -5,7 +5,7 @@ namespace OpenEphys.Onix1.Design
     /// <see cref="NeuropixelsV2eDialog"/>, one <see cref="GenericDeviceDialog"/> for the
     /// Rhd2000, and one <see cref="GenericDeviceDialog"/> for the Bno055, each in its own tab.
     /// </summary>
-    public class NeuropixelsV2Rhd2000eHeadstageDialog : HeadstageDialog
+    internal class NeuropixelsV2Rhd2000eHeadstageDialog : HeadstageDialog
     {
         /// <summary>Gets the <see cref="NeuropixelsV2eDialog"/>.</summary>
         internal NeuropixelsV2eDialog DialogNeuropixelsV2 =>

@@ -22,7 +22,7 @@ namespace OpenEphys.Onix1.Design
     ///   <item>Validating stimulus sequence dialogs before allowing OK to close the headstage dialog</item>
     /// </list>
     /// </remarks>
-    public abstract class HeadstageDialog : Form
+    internal abstract class HeadstageDialog : Form
     {
         private readonly TabControl tabControl;
         private readonly List<ProbeTabEntry> probeTabs = new();

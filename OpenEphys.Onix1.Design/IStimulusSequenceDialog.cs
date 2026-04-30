@@ -7,7 +7,7 @@ namespace OpenEphys.Onix1.Design
     /// <see cref="HeadstageDialog"/>. The dialog is responsible for validating its own
     /// sequence and reporting whether the headstage dialog may proceed to close.
     /// </summary>
-    public interface IStimulusSequenceDialog
+    internal interface IStimulusSequenceDialog
     {
         /// <summary>
         /// Validates the sequence. If invalid, prompts the user to discard or keep editing.

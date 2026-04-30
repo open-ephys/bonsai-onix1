@@ -8,7 +8,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Class that opens a new dialog for a <see cref="ConfigureHeadstageNeuropixelsV1e"/>.
     /// </summary>
-    public class NeuropixelsV1eHeadstageEditor : WorkflowComponentEditor
+    internal class NeuropixelsV1eHeadstageEditor : WorkflowComponentEditor
     {
         /// <inheritdoc/>
         public override bool EditComponent(ITypeDescriptorContext context, object component, IServiceProvider provider, IWin32Window owner)

@@ -6,7 +6,7 @@
     /// <see cref="NeuropixelsV2eDialog"/> instances (ProbeA and ProbeB) and one
     /// <see cref="GenericDeviceDialog"/> for the Bno055, each in its own tab.
     /// </summary>
-    public class NeuropixelsV2eHeadstageDialog : HeadstageDialog
+    internal class NeuropixelsV2eHeadstageDialog : HeadstageDialog
     {
         /// <summary>Gets the <see cref="NeuropixelsV2eDialog"/> for ProbeA.</summary>
         internal NeuropixelsV2eDialog DialogNeuropixelsV2A =>

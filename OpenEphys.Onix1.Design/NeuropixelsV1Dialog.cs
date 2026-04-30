@@ -7,7 +7,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Partial class to create a GUI for <see cref="IConfigureNeuropixelsV1"/>.
     /// </summary>
-    public partial class NeuropixelsV1Dialog : Form, IProbeInterfaceDialog
+    internal partial class NeuropixelsV1Dialog : Form, IProbeInterfaceDialog
     {
         internal event EventHandler OnStateChange;
 

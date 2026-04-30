@@ -5,7 +5,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Partial class that holds the stimulus definition UI elements for a <see cref="Headstage64OpticalStimulatorSequenceDialog"/>.
     /// </summary>
-    public partial class Headstage64OpticalStimulatorOptions : Form
+    internal partial class Headstage64OpticalStimulatorOptions : Form
     {
         /// <summary>
         /// Initialize a new <see cref="Headstage64OpticalStimulatorOptions"/> dialog.

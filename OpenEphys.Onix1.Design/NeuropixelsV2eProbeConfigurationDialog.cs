@@ -11,7 +11,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Partial class to create a GUI for <see cref="NeuropixelsV2ProbeConfiguration"/>.
     /// </summary>
-    public partial class NeuropixelsV2eProbeConfigurationDialog : Form
+    internal partial class NeuropixelsV2eProbeConfigurationDialog : Form
     {
         internal readonly NeuropixelsV2eChannelConfigurationDialog ChannelConfiguration;
 
