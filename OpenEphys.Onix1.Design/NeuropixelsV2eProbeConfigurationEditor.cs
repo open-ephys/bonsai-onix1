@@ -10,7 +10,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Class that opens a new dialog for a <see cref="NeuropixelsV2ProbeConfiguration"/>.
     /// </summary>
-    public class NeuropixelsV2eProbeConfigurationEditor : UITypeEditor
+    internal class NeuropixelsV2eProbeConfigurationEditor : UITypeEditor
     {
         /// <inheritdoc/>
         public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)

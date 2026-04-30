@@ -1,12 +1,11 @@
-﻿using System;
-using System.Windows.Forms;
-
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Partial class to create a channel configuration GUI for a <see cref="Headstage64Dialog"/>.
+    /// GUI for <see cref="ConfigureHeadstage64"/>. Hosts two stimulus sequence dialogs
+    /// (Electrical and Optical Stimulator) and three <see cref="GenericDeviceDialog"/> tabs
+    /// (Rhd2164, Bno055, TS4231), each in its own tab.
     /// </summary>
-    public partial class Headstage64Dialog : Form
+    internal class Headstage64Dialog : HeadstageDialog
     {
         internal readonly GenericDeviceDialog Rhd2164Dialog;
         internal readonly GenericDeviceDialog Bno055Dialog;
@@ -20,36 +19,22 @@ namespace OpenEphys.Onix1.Design
         /// <param name="configureNode">Configure node for a Headstage 64.</param>
         public Headstage64Dialog(ConfigureHeadstage64 configureNode)
         {
-            InitializeComponent();
-
-            Rhd2164Dialog = new(configureNode.Rhd2164, true);
-            Rhd2164Dialog.SetChildFormProperties(this).AddDialogToTab(tabPageRhd2164);
-
-            Bno055Dialog = new(configureNode.Bno055, true);
-            Bno055Dialog.SetChildFormProperties(this).AddDialogToTab(tabPageBno055);
-
-            TS4231V1Dialog = new(configureNode.TS4231, true);
-            TS4231V1Dialog.SetChildFormProperties(this).AddDialogToTab(tabPageTS4231);
+            Text = "Headstage64 Configuration";
 
             ElectricalStimulatorSequenceDialog = new(configureNode.ElectricalStimulator, true);
-            ElectricalStimulatorSequenceDialog.SetChildFormProperties(this).AddDialogToTab(tabPageElectricalStimulator);
+            AddSequenceTab("Electrical Stimulator", ElectricalStimulatorSequenceDialog);
 
             OpticalStimulatorSequenceDialog = new(configureNode.OpticalStimulator, true);
-            OpticalStimulatorSequenceDialog.SetChildFormProperties(this).AddDialogToTab(tabPageOpticalStimulator);
-        }
+            AddSequenceTab("Optical Stimulator", OpticalStimulatorSequenceDialog);
 
-        void OnClickOk(object sender, EventArgs e)
-        {
-            if (ElectricalStimulatorSequenceDialog.CanCloseForm(out DialogResult electricalResult, "Electrical Stimulator")
-                && OpticalStimulatorSequenceDialog.CanCloseForm(out DialogResult opticalResult, "Optical Stimulator"))
-            {
-                if (electricalResult == DialogResult.OK || opticalResult == DialogResult.OK)
-                    DialogResult = DialogResult.OK;
-                else
-                    DialogResult = DialogResult.Cancel;
+            Rhd2164Dialog = new(configureNode.Rhd2164, true);
+            AddDeviceTab("Rhd2164", Rhd2164Dialog);
 
-                Close();
-            }
+            Bno055Dialog = new(configureNode.Bno055, true);
+            AddDeviceTab("Bno055", Bno055Dialog);
+
+            TS4231V1Dialog = new(configureNode.TS4231, true);
+            AddDeviceTab("TS4231", TS4231V1Dialog);
         }
     }
 }

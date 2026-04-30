@@ -10,7 +10,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Partial class to create a channel configuration GUI for the <see cref="NeuropixelsV1ProbeConfiguration"/> class.
     /// </summary>
-    public partial class NeuropixelsV1ChannelConfigurationDialog : ScaledChannelConfigurationDialog
+    internal partial class NeuropixelsV1ChannelConfigurationDialog : ScaledChannelConfigurationDialog
     {
         internal event EventHandler OnZoom;
 

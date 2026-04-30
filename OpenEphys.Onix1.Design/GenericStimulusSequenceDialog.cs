@@ -11,7 +11,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Partial class to create a channel configuration GUI for a <see cref="GenericStimulusSequenceDialog"/>.
     /// </summary>
-    public abstract partial class GenericStimulusSequenceDialog : Form
+    internal abstract partial class GenericStimulusSequenceDialog : Form, IStimulusSequenceDialog
     {
         internal event EventHandler OnFileLoad;
         
@@ -92,6 +92,9 @@ namespace OpenEphys.Onix1.Design
                 }
             }
         }
+
+        bool IStimulusSequenceDialog.CanCloseForm(out DialogResult result, string stimulusName)
+            => CanCloseForm(out result, stimulusName);
 
         internal bool CanCloseForm(out DialogResult result, string stimulusName = "Stimulus")
         {

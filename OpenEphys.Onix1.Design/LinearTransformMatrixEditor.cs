@@ -13,7 +13,7 @@ namespace OpenEphys.Onix1.Design
     /// Provides a user interface editor that displays a spatial-calibration dialog 
     /// for a <see cref="TS4231V1PositionData"/>.
     /// </summary>
-    public class LinearTransformMatrixEditor : DataSourceTypeEditor
+    internal class LinearTransformMatrixEditor : DataSourceTypeEditor
     {
         /// <inheritdoc/>
         public LinearTransformMatrixEditor() : base(DataSource.Input, typeof(void)) { }

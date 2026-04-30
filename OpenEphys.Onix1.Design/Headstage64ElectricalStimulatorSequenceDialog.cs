@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -10,7 +9,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Partial class to create a channel configuration GUI for a <see cref="ConfigureHeadstage64ElectricalStimulator"/>.
     /// </summary>
-    public partial class Headstage64ElectricalStimulatorSequenceDialog : GenericStimulusSequenceDialog
+    internal partial class Headstage64ElectricalStimulatorSequenceDialog : GenericStimulusSequenceDialog
     {
         internal ConfigureHeadstage64ElectricalStimulator ElectricalStimulator
         {

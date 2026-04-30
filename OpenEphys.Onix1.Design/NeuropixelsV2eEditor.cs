@@ -8,7 +8,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Class that opens a new dialog for a <see cref="ConfigureNeuropixelsV2PsbDecoder"/>.
     /// </summary>
-    public class NeuropixelsV2eEditor : WorkflowComponentEditor
+    internal class NeuropixelsV2eEditor : WorkflowComponentEditor
     {
         /// <inheritdoc/>
         public override bool EditComponent(ITypeDescriptorContext context, object component, IServiceProvider provider, IWin32Window owner)

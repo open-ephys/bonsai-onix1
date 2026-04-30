@@ -7,7 +7,7 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// Partial class to create a GUI for <see cref="IConfigureNeuropixelsV1"/>.
     /// </summary>
-    public partial class NeuropixelsV1Dialog : Form
+    internal partial class NeuropixelsV1Dialog : Form, IProbeInterfaceDialog
     {
         internal event EventHandler OnStateChange;
 
@@ -90,6 +90,16 @@ namespace OpenEphys.Onix1.Design
         {
             return ProbeConfigurationDialog.ProcessMenuShortcut(keyData);
         }
+
+        bool IProbeInterfaceDialog.HasChanges => HasChanges;
+
+        event EventHandler IProbeInterfaceDialog.OnStateChange
+        {
+            add { OnStateChange += value; }
+            remove { OnStateChange -= value; }
+        }
+
+        bool IProbeInterfaceDialog.ProcessMenuShortcut(Keys keyData) => ProcessMenuShortcut(keyData);
 
         internal void Okay_Click(object sender, EventArgs e)
         {
