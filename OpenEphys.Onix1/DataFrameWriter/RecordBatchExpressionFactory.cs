@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Apache.Arrow;
 
-namespace OpenEphys.Onix1.FrameWriter
+namespace OpenEphys.Onix1.DataFrameWriter
 {
     static class RecordBatchExpressionFactory
     {

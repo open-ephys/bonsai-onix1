@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace OpenEphys.Onix1.FrameWriter
+namespace OpenEphys.Onix1.DataFrameWriter
 {
     /// <summary>
     /// Tells the FrameWriter to ignore this property when writing frames to disk.

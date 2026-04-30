@@ -8,7 +8,7 @@ using Apache.Arrow;
 using Bonsai;
 using Bonsai.IO;
 
-namespace OpenEphys.Onix1.FrameWriter
+namespace OpenEphys.Onix1.DataFrameWriter
 {
     /// <summary>
     /// Represents an operator that writes each data frame in the sequence

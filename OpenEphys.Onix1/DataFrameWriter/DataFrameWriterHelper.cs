@@ -7,7 +7,7 @@ using Apache.Arrow;
 using Apache.Arrow.Types;
 using OpenCV.Net;
 
-namespace OpenEphys.Onix1.FrameWriter
+namespace OpenEphys.Onix1.DataFrameWriter
 {
     static class DataFrameWriterHelper
     {
@@ -135,28 +135,27 @@ namespace OpenEphys.Onix1.FrameWriter
             while (stack.Count > 0)
             {
                 var current = stack.Pop();
-                var memberType = DataFrameWriterHelper.GetMemberType(current.Member);
+                var memberType = GetMemberType(current.Member);
 
                 if (memberType.IsPrimitive)
                 {
-                    fields.Add(new Field(current.GetFullName(), DataFrameWriterHelper.GetArrowType(memberType), false));
+                    fields.Add(new Field(current.GetFullName(), GetArrowType(memberType), false));
                 }
                 else if (memberType.IsArray)
                 {
-                    fields.Add(new Field(current.GetFullName(), DataFrameWriterHelper.GetArrowType(memberType.GetElementType()), false));
+                    fields.Add(new Field(current.GetFullName(), GetArrowType(memberType.GetElementType()), false));
                 }
                 else if (memberType.IsEnum)
                 {
                     // TODO: See if the Dictionary type in Arrow would be better for enums
-                    fields.Add(new Field(current.GetFullName(), DataFrameWriterHelper.GetArrowType(Enum.GetUnderlyingType(memberType)), false));
+                    fields.Add(new Field(current.GetFullName(), GetArrowType(Enum.GetUnderlyingType(memberType)), false));
                 }
                 else if (memberType.IsValueType)
                 {
-                    var structMembers = DataFrameWriterHelper.GetDataMembers(memberType);
-
+                    var structMembers = GetDataMembers(memberType); 
                     foreach (var structMember in structMembers.Reverse())
                     {
-                        if (DataFrameWriterHelper.IsMemberIgnored(current.Member, structMember))
+                        if (IsMemberIgnored(current.Member, structMember))
                             continue;
 
                         stack.Push(new MemberNode
@@ -173,7 +172,7 @@ namespace OpenEphys.Onix1.FrameWriter
                     for (int i = 0; i < mat.Rows; i++)
                     {
                         // Note: Could add an attribute to data frames properties to specify custom field naming
-                        fields.Add(new Field($"{current.GetFullName()}Ch{i}", DataFrameWriterHelper.GetArrowType(mat.Depth), false));
+                        fields.Add(new Field($"{current.GetFullName()}Ch{i}", GetArrowType(mat.Depth), false));
                     }
                 }
                 else

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Apache.Arrow;
 using Bonsai.IO;
 
-namespace OpenEphys.Onix1.FrameWriter
+namespace OpenEphys.Onix1.DataFrameWriter
 {
     class DataFrameArrowFileSink : FileSink<DataFrame, ArrowBatchWriter<DataFrame>>
     {

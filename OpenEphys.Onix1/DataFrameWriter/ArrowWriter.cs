@@ -1,10 +1,9 @@
 ﻿using System;
 using System.IO;
-using System.Threading;
 using Apache.Arrow;
 using Apache.Arrow.Ipc;
 
-namespace OpenEphys.Onix1.FrameWriter
+namespace OpenEphys.Onix1.DataFrameWriter
 {
     /// <summary>
     /// Writes Apache Arrow record batches to a stream.

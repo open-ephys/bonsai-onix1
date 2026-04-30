@@ -2,7 +2,7 @@
 using System;
 using System.Buffers;
 
-namespace OpenEphys.Onix1.FrameWriter
+namespace OpenEphys.Onix1.DataFrameWriter
 {
     /// <summary>
     /// Provides a MemoryManager implementation for accessing a specific row of a Mat object as a span or memory
