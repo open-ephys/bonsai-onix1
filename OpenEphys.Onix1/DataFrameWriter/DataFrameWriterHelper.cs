@@ -11,6 +11,9 @@ namespace OpenEphys.Onix1.DataFrameWriter
 {
     static class DataFrameWriterHelper
     {
+        const int DefaultBufferSize = 1000;
+        const int MinimumBufferSize = 100;
+
         static readonly Dictionary<Type, IArrowType> ArrowTypeMap = new()
         {
             [typeof(byte)] = UInt8Type.Default,
@@ -182,6 +185,19 @@ namespace OpenEphys.Onix1.DataFrameWriter
             }
 
             return new Schema(fields, null);
+        }
+
+        internal static int GetBufferSize(Type frameType)
+        {
+            var sampleRateAttribute = frameType.GetCustomAttribute<ExpectedSampleRateAttribute>();
+            if (sampleRateAttribute != null)
+            {
+                const double BufferDurationSeconds = 1.0;
+                var bufferSize = (int)(sampleRateAttribute.SampleRateHz * BufferDurationSeconds);
+                return bufferSize >= MinimumBufferSize ? bufferSize : MinimumBufferSize;
+            }
+
+            return DefaultBufferSize;
         }
     }
 }
