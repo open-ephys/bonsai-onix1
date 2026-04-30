@@ -6,7 +6,7 @@ using System.Reflection;
 using Apache.Arrow;
 using Apache.Arrow.Types;
 
-namespace OpenEphys.Onix1.FrameWriter
+namespace OpenEphys.Onix1.DataFrameWriter
 {
     class DataFrameExpressionProvider : IRecordBatchExpressionProvider
     {

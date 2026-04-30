@@ -7,7 +7,7 @@ using Apache.Arrow;
 using Apache.Arrow.Types;
 using OpenCV.Net;
 
-namespace OpenEphys.Onix1.FrameWriter
+namespace OpenEphys.Onix1.DataFrameWriter
 {
     class BufferedDataFrameExpressionProvider : IRecordBatchExpressionProvider
     {
