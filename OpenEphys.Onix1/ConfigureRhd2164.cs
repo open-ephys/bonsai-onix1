@@ -125,7 +125,7 @@ namespace OpenEphys.Onix1
     static class Rhd2164
     {
         public const int ID = 3;
-        public const uint MinimumVersion = 2;
+        public const uint MinimumVersion = 1;
 
         // TODO: consider moving these constants to Rhd2000.cs and renaming this class
         public const int AmplifierChannelCount = 64;
