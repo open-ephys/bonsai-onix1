@@ -17,13 +17,13 @@ namespace OpenEphys.Onix1
         /// The A matrix in A * <see cref="M"/> = <see cref="B"/>. It is
         /// constructed from a set of four pre-transform Cartesian coordinates.
         /// </summary>
-        public Matrix4x4 A { get => a; set { a = value; M = UpdateM(A, B); } }
+        public Matrix4x4 A { get => a; set { a = value; M = UpdateM(a, B); } }
 
         /// <summary>
         /// The B matrix in <see cref="A"/> * <see cref="M"/> = B. It is
         /// constructed from a set of four post-transform Cartesian coordinates.
         /// </summary>
-        public Matrix4x4 B { get => b; set { b = value; M = UpdateM(A, B); } }
+        public Matrix4x4 B { get => b; set { b = value; M = UpdateM(A, b); } }
 
         /// <summary>
         /// The M matrix in <see cref="A"/> * <see cref="B"/> = M. It is the
