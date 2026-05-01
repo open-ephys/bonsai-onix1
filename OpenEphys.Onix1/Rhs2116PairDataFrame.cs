@@ -5,6 +5,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Buffered data from two Rhs2116 devices.
     /// </summary>
+    [ExpectedSampleRate(30_193)]
     public class Rhs2116PairDataFrame : BufferedDataFrame
     {
         /// <summary>

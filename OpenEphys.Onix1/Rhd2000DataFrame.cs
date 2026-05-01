@@ -6,6 +6,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Represents electrophysiology and auxiliary data produced by an Rhd2000 bioamplifier chip.
     /// </summary>
+    [ExpectedSampleRate(30_000)]
     public class Rhd2000DataFrame : BufferedDataFrame
     {
         /// <summary>
