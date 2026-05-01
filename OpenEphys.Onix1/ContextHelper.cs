@@ -102,7 +102,8 @@ namespace OpenEphys.Onix1
 
             Console.Error.WriteLine($"Error: The {expectedType.Name} device at address {address} is v{deviceVersion}, " +
                 $"but v{minimumVersion} is required by {libraryName} {libraryVersion}.");
-            Console.Error.WriteLine("In order to use this device, you will need to use an older version of the software.");
+            Console.Error.WriteLine($"In order to use this device, you will need to use a previous version of {libraryName} " +
+                $"that is compatible with {expectedType.Name} v{deviceVersion}.");
 
             throw new InvalidOperationException($"Invalid device version. The {expectedType.Name} device at address {address} is v{deviceVersion}, " +
                 $"but v{minimumVersion} is required.");
