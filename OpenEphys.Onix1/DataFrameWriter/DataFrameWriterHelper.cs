@@ -11,7 +11,16 @@ namespace OpenEphys.Onix1.DataFrameWriter
 {
     static class DataFrameWriterHelper
     {
+        /// <summary>
+        /// Represents the default number of <see cref="DataFrame">DataFrames</see> in a <see
+        /// cref="RecordBatch"/>.
+        /// </summary>
         const int DefaultBufferSize = 1000;
+        
+        /// <summary>
+        /// Represents the mimumum number of <see cref="DataFrame">DataFrames</see> in a <see
+        /// cref="RecordBatch"/>.
+        /// </summary>
         const int MinimumBufferSize = 100;
 
         static readonly Dictionary<Type, IArrowType> ArrowTypeMap = new()
