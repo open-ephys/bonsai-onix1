@@ -6,6 +6,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Buffered data from a Nric1384 bioacquisition chip.
     /// </summary>
+    [ExpectedSampleRate(30_000)]
     public class Nric1384DataFrame : BufferedDataFrame
     {
         /// <summary>

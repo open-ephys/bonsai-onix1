@@ -1,7 +1,7 @@
 ﻿namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// An abstract class for representing <see cref="oni.Frame"/> objects in way that suits their use in this library.
+    /// A class that represents an <see cref="oni.Frame"/>.
     /// </summary>
     public abstract class DataFrame
     {
@@ -45,7 +45,7 @@
     }
 
     /// <summary>
-    /// An abstract class for representing buffered groups <see cref="oni.Frame"/> objects in way that suits their use in this library.
+    /// A class that represents a block of <see cref="oni.Frame">oni.Frames</see>.
     /// </summary>
     public abstract class BufferedDataFrame
     {

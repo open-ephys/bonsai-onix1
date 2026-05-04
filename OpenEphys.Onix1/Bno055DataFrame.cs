@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using OpenEphys.Onix1.DataFrameWriter;
 
 namespace OpenEphys.Onix1
 {
@@ -20,6 +21,7 @@ namespace OpenEphys.Onix1
     /// and Roll = 0 degrees; Gravity: X = 0, Y = 0, Z = 9.8 m/s^2). Linear acceleration readings are always
     /// taken relative to the chip's axis definitions (they are "egocentric").
     /// </remarks>
+    [ExpectedSampleRate(100)]
     public class Bno055DataFrame : DataFrame
     {
         /// <summary>
@@ -76,6 +78,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets the 3D orientation represented as a Quaternion.
         /// </summary>
+        [DataFrameWriterIgnoreMembers(MemberType.Properties)]
         public Quaternion Quaternion { get; }
 
         /// <summary>
