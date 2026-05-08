@@ -41,7 +41,7 @@ namespace OpenEphys.Onix1
     [Description("Starts data acquisition and frame distribution on a ContextTask.")]
     public class StartAcquisition : Combinator<ContextTask, IGroupedObservable<uint, oni.Frame>>
     {
-        int readSize = 2048;
+        int readSize = 8192;
 
         /// <summary>
         /// Gets or sets the number of bytes read per cycle of the <see cref="ContextTask"/>'s acquisition
