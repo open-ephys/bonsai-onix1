@@ -6,6 +6,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Channels;
 
 namespace OpenEphys.Onix1
 {
@@ -55,7 +56,9 @@ namespace OpenEphys.Onix1
         bool disposed;
         Task readFrames;
         Task distributeFrames;
+        Task writeFrames;
         Task acquisition = Task.CompletedTask;
+        Channel<Action> writeQueue;
         CancellationTokenSource collectFramesCancellation;
         event Func<ContextTask, IDisposable> ConfigureAndLatchControllerEvent;
         event Func<ContextTask, IDisposable> ConfigureAndLatchLinkEvent;
@@ -291,7 +294,7 @@ namespace OpenEphys.Onix1
             }
             finally
             {
-                 Reset();
+                Reset();
             }
         }
 
@@ -449,7 +452,40 @@ namespace OpenEphys.Onix1
                     TaskCreationOptions.LongRunning,
                     TaskScheduler.Default);
 
-                    return acquisition = Task.WhenAll(distributeFrames, readFrames).ContinueWith(task =>
+                    var options = new UnboundedChannelOptions()
+                    {
+                        SingleReader = true
+                    };
+                    writeQueue = Channel.CreateUnbounded<Action>(options);
+
+                    writeFrames = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            while (!collectFramesToken.IsCancellationRequested)
+                            {
+                                var writeAction = await writeQueue.Reader.ReadAsync(collectFramesToken);
+
+                                lock (writeLock)
+                                {
+                                    writeAction();
+                                }
+                            }
+                        }
+                        catch (OperationCanceledException)
+                        {
+#if DEBUG
+                            Console.WriteLine("Frame write task has been cancelled by " + this.GetType());
+#endif
+                        }
+                        finally
+                        {
+                            writeQueue.Writer.Complete();
+                        }
+                    },
+                    collectFramesToken);
+
+                    return acquisition = Task.WhenAll(distributeFrames, readFrames, writeFrames).ContinueWith(task =>
                     {
                         if (readFrames.IsFaulted && readFrames.Exception is AggregateException ex)
                         {
@@ -470,6 +506,8 @@ namespace OpenEphys.Onix1
                             }
                             frameQueue?.Dispose();
                             frameQueue = null;
+                            while (writeQueue?.Reader.TryRead(out _) == true) { }
+                            writeQueue = null;
                             ctx.Stop();
 
                             contextConfiguration.Dispose();
@@ -555,26 +593,17 @@ namespace OpenEphys.Onix1
 
         internal void Write<T>(uint deviceAddress, T data) where T : unmanaged
         {
-            lock (writeLock)
-            {
-                ctx.Write(deviceAddress, data);
-            }
+            writeQueue?.Writer.TryWrite(() => ctx.Write(deviceAddress, data));
         }
 
         internal void Write<T>(uint deviceAddress, T[] data) where T : unmanaged
         {
-            lock (writeLock)
-            {
-                ctx.Write(deviceAddress, data);
-            }
+            writeQueue?.Writer.TryWrite(() => ctx.Write(deviceAddress, data));
         }
 
         internal void Write(uint deviceAddress, IntPtr data, int dataSize)
         {
-            lock (writeLock)
-            {
-                ctx.Write(deviceAddress, data, dataSize);
-            }
+            writeQueue?.Writer.TryWrite(() => ctx.Write(deviceAddress, data, dataSize));
         }
 
         internal oni.Hub GetHub(uint deviceAddress) => ctx.GetHub(deviceAddress);
