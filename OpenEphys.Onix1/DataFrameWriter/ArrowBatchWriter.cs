@@ -26,8 +26,9 @@ namespace OpenEphys.Onix1.DataFrameWriter
         /// <param name="bufferSize">The maximum number of items to buffer before writing a batch.</param>
         /// <param name="timeout">The maximum time to wait before writing a batch.</param>
         /// <param name="createRecordBatch">A delegate to create a RecordBatch from a list of items and a schema.</param>
-        public ArrowBatchWriter(string filename, Schema schema, int bufferSize, TimeSpan timeout, Func<IList<T>, Schema, RecordBatch> createRecordBatch)
-            : base(filename, schema)
+        /// <param name="enableCompression">A boolean indicating whether to enable compression.</param>
+        public ArrowBatchWriter(string filename, Schema schema, int bufferSize, TimeSpan timeout, Func<IList<T>, Schema, RecordBatch> createRecordBatch, bool enableCompression = false)
+            : base(filename, schema, enableCompression)
         {
             subscription = subject
                 .Buffer(timeout, bufferSize)

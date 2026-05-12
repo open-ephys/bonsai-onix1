@@ -11,7 +11,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Apache.Arrow" Version="22.1.0" />
+    <PackageReference Include="Apache.Arrow" Version="23.0.0" />
+    <PackageReference Include="Apache.Arrow.Compression" Version="23.0.0" />
     <PackageReference Include="Bonsai.Core" Version="2.9.0" />
     <PackageReference Include="Bonsai.System" Version="2.9.0" />
     <PackageReference Include="clroni" Version="6.2.0" />

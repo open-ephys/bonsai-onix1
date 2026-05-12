@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Bonsai;
 using Bonsai.IO;
 
@@ -9,9 +9,14 @@ namespace OpenEphys.Onix1.DataFrameWriter
     /// to an Apache Arrow file using an <see cref="ArrowWriter"/>.
     /// </summary>
     [WorkflowElementCategory(ElementCategory.Sink)]
-    public class DataFrameWriter : FileSink
+    public class DataFrameWriter : FileSink, IArrowSinkOptions
     {
         const int SecondsBeforeFlush = 5;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to enable compression when writing to the Arrow file.
+        /// </summary>
+        public bool EnableCompression { get; set; } = false;
 
         /// <summary>
         /// Writes all of the data frames in the sequence to an Apache Arrow file.
@@ -23,13 +28,7 @@ namespace OpenEphys.Onix1.DataFrameWriter
         /// </returns>
         public IObservable<BufferedDataFrame> Process(IObservable<BufferedDataFrame> source)
         {
-            return new BufferedDataFrameArrowFileSink(TimeSpan.FromSeconds(SecondsBeforeFlush))
-            {
-                FileName = this.FileName,
-                Suffix = this.Suffix,
-                Buffered = this.Buffered,
-                Overwrite = this.Overwrite
-            }.Process(source);
+            return ConfigureSink(new BufferedDataFrameArrowFileSink(TimeSpan.FromSeconds(SecondsBeforeFlush))).Process(source);
         }
 
         /// <summary>
@@ -42,13 +41,17 @@ namespace OpenEphys.Onix1.DataFrameWriter
         /// </returns>
         public IObservable<DataFrame> Process(IObservable<DataFrame> source)
         {
-            return new DataFrameArrowFileSink(TimeSpan.FromSeconds(SecondsBeforeFlush))
-            {
-                FileName = this.FileName,
-                Suffix = this.Suffix,
-                Buffered = this.Buffered,
-                Overwrite = this.Overwrite
-            }.Process(source);
+            return ConfigureSink(new DataFrameArrowFileSink(TimeSpan.FromSeconds(SecondsBeforeFlush))).Process(source);
+        }
+
+        T ConfigureSink<T>(T sink) where T : FileSink, IArrowSinkOptions
+        {
+            sink.FileName = FileName;
+            sink.Suffix = Suffix;
+            sink.Buffered = Buffered;
+            sink.Overwrite = Overwrite;
+            sink.EnableCompression = EnableCompression;
+            return sink;
         }
     }
 }
