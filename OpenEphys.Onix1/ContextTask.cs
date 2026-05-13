@@ -501,7 +501,6 @@ namespace OpenEphys.Onix1
                             }
                             frameQueue?.Dispose();
                             frameQueue = null;
-                            while (writeQueue?.Reader.TryRead(out _) == true) { }
                             writeQueue = null;
                             ctx.Stop();
 
