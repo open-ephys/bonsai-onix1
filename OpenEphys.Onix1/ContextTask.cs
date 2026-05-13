@@ -462,14 +462,9 @@ namespace OpenEphys.Onix1
                     {
                         try
                         {
-                            while (!collectFramesToken.IsCancellationRequested)
+                            await foreach (var writeAction in writeQueue.Reader.ReadAllAsync(collectFramesToken))
                             {
-                                var writeAction = await writeQueue.Reader.ReadAsync(collectFramesToken);
-
-                                lock (writeLock)
-                                {
-                                    writeAction();
-                                }
+                                writeAction();
                             }
                         }
                         catch (OperationCanceledException)
