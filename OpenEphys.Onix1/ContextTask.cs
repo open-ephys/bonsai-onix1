@@ -596,11 +596,6 @@ namespace OpenEphys.Onix1
             writeQueue?.Writer.TryWrite(() => ctx.Write(deviceAddress, data));
         }
 
-        internal void Write(uint deviceAddress, IntPtr data, int dataSize)
-        {
-            writeQueue?.Writer.TryWrite(() => ctx.Write(deviceAddress, data, dataSize));
-        }
-
         internal oni.Hub GetHub(uint deviceAddress) => ctx.GetHub(deviceAddress);
 
         internal uint GetPassthroughDeviceAddress(uint deviceAddress)
