@@ -4,7 +4,7 @@ using Apache.Arrow;
 
 namespace OpenEphys.Onix1.DataFrameWriter
 {
-    class BufferedDataFrameArrowFileSink : ArrowFileSink<BufferedDataFrame, ArrowBatchWriter<BufferedDataFrame>>
+    class BufferedDataFrameArrowFileSink : ArrowFileSink<BufferedDataFrame>
     {
         readonly TimeSpan timeout;
 

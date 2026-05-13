@@ -9,7 +9,7 @@ namespace OpenEphys.Onix1.DataFrameWriter
     /// to an Apache Arrow file using an <see cref="ArrowWriter"/>.
     /// </summary>
     [WorkflowElementCategory(ElementCategory.Sink)]
-    public class DataFrameWriter : FileSink, IArrowSinkOptions
+    public class DataFrameWriter : FileSink
     {
         const int SecondsBeforeFlush = 5;
 
@@ -28,7 +28,14 @@ namespace OpenEphys.Onix1.DataFrameWriter
         /// </returns>
         public IObservable<BufferedDataFrame> Process(IObservable<BufferedDataFrame> source)
         {
-            return ConfigureSink(new BufferedDataFrameArrowFileSink(TimeSpan.FromSeconds(SecondsBeforeFlush))).Process(source);
+            return new BufferedDataFrameArrowFileSink(TimeSpan.FromSeconds(SecondsBeforeFlush))
+            {
+                FileName = this.FileName,
+                Suffix = this.Suffix,
+                Buffered = this.Buffered,
+                Overwrite = this.Overwrite,
+                EnableCompression = this.EnableCompression
+            }.Process(source);
         }
 
         /// <summary>
@@ -41,17 +48,14 @@ namespace OpenEphys.Onix1.DataFrameWriter
         /// </returns>
         public IObservable<DataFrame> Process(IObservable<DataFrame> source)
         {
-            return ConfigureSink(new DataFrameArrowFileSink(TimeSpan.FromSeconds(SecondsBeforeFlush))).Process(source);
-        }
-
-        T ConfigureSink<T>(T sink) where T : FileSink, IArrowSinkOptions
-        {
-            sink.FileName = FileName;
-            sink.Suffix = Suffix;
-            sink.Buffered = Buffered;
-            sink.Overwrite = Overwrite;
-            sink.EnableCompression = EnableCompression;
-            return sink;
+            return new DataFrameArrowFileSink(TimeSpan.FromSeconds(SecondsBeforeFlush))
+            {
+                FileName = this.FileName,
+                Suffix = this.Suffix,
+                Buffered = this.Buffered,
+                Overwrite = this.Overwrite,
+                EnableCompression = this.EnableCompression
+            }.Process(source);
         }
     }
 }
