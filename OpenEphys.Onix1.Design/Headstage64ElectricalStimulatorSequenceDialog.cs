@@ -90,7 +90,7 @@ namespace OpenEphys.Onix1.Design
                 false,
                 DataSourceUpdateMode.OnValidation);
 
-            StimulusSequenceOptions.textBoxPulsePeriod.DataBindings.Add(
+            StimulusSequenceOptions.textBoxInterPulseInterval.DataBindings.Add(
                 "Text",
                 bindingSource,
                 nameof(ElectricalStimulator.InterPulseInterval),
@@ -215,14 +215,6 @@ namespace OpenEphys.Onix1.Design
                 SetTextBoxBackgroundError(StimulusSequenceOptions.textBoxPhaseTwoDuration);
                 return false;
             }
-            else if (AnyCurrentIsSet(electricalStimulator) && electricalStimulator.BurstPulseCount > 1
-                && (electricalStimulator.InterPulseInterval == 0
-                   || electricalStimulator.InterPulseInterval < electricalStimulator.PhaseOneDuration + electricalStimulator.InterPhaseInterval + electricalStimulator.PhaseTwoDuration))
-            {
-                reason = "Pulse period is too short.";
-                SetTextBoxBackgroundError(StimulusSequenceOptions.textBoxPulsePeriod);
-                return false;
-            }
             else if (AnyCurrentIsSet(electricalStimulator) && electricalStimulator.InterPulseInterval != 0 && electricalStimulator.BurstPulseCount == 0)
             {
                 reason = "Burst pulse count has not been set.";
@@ -273,7 +265,7 @@ namespace OpenEphys.Onix1.Design
 
                             if (j != ElectricalStimulator.BurstPulseCount - 1)
                             {
-                                waveforms[channel].Add(new PointPair(waveforms[channel].Last().X + ElectricalStimulator.InterPulseInterval - (ElectricalStimulator.PhaseOneDuration + ElectricalStimulator.InterPhaseInterval + ElectricalStimulator.PhaseTwoDuration), 0));
+                                waveforms[channel].Add(new PointPair(waveforms[channel].Last().X + ElectricalStimulator.InterPulseInterval, 0));
                             }
                         }
 

@@ -40,10 +40,10 @@
             this.textBoxPhaseOneDuration = new System.Windows.Forms.TextBox();
             this.textBoxInterPhaseDuration = new System.Windows.Forms.TextBox();
             this.textBoxPhaseTwoDuration = new System.Windows.Forms.TextBox();
-            this.labelPulsePeriod = new System.Windows.Forms.Label();
+            this.labelInterPulseInterval = new System.Windows.Forms.Label();
             this.textBoxBurstPulseCount = new System.Windows.Forms.TextBox();
             this.labelBurstPulseCount = new System.Windows.Forms.Label();
-            this.textBoxPulsePeriod = new System.Windows.Forms.TextBox();
+            this.textBoxInterPulseInterval = new System.Windows.Forms.TextBox();
             this.textBoxInterBurstInterval = new System.Windows.Forms.TextBox();
             this.labelInterBurstInterval = new System.Windows.Forms.Label();
             this.textBoxTrainBurstCount = new System.Windows.Forms.TextBox();
@@ -189,14 +189,14 @@
             this.textBoxPhaseTwoDuration.Size = new System.Drawing.Size(75, 22);
             this.textBoxPhaseTwoDuration.TabIndex = 5;
             // 
-            // labelPulsePeriod
+            // labelInterPulseInterval
             // 
-            this.labelPulsePeriod.AutoSize = true;
-            this.labelPulsePeriod.Location = new System.Drawing.Point(106, 146);
-            this.labelPulsePeriod.Name = "labelPulsePeriod";
-            this.labelPulsePeriod.Size = new System.Drawing.Size(109, 16);
-            this.labelPulsePeriod.TabIndex = 4;
-            this.labelPulsePeriod.Text = "Pulse Period [µs]";
+            this.labelInterPulseInterval.AutoSize = true;
+            this.labelInterPulseInterval.Location = new System.Drawing.Point(81, 153);
+            this.labelInterPulseInterval.Name = "labelInterPulseInterval";
+            this.labelInterPulseInterval.Size = new System.Drawing.Size(141, 16);
+            this.labelInterPulseInterval.TabIndex = 4;
+            this.labelInterPulseInterval.Text = "Inter-Pulse Interval [µs]";
             // 
             // textBoxBurstPulseCount
             // 
@@ -215,12 +215,12 @@
             this.labelBurstPulseCount.TabIndex = 6;
             this.labelBurstPulseCount.Text = "Burst Pulse Count";
             // 
-            // textBoxPulsePeriod
+            // textBoxInterPulseInterval
             // 
-            this.textBoxPulsePeriod.Location = new System.Drawing.Point(237, 146);
-            this.textBoxPulsePeriod.Name = "textBoxPulsePeriod";
-            this.textBoxPulsePeriod.Size = new System.Drawing.Size(75, 22);
-            this.textBoxPulsePeriod.TabIndex = 1;
+            this.textBoxInterPulseInterval.Location = new System.Drawing.Point(237, 150);
+            this.textBoxInterPulseInterval.Name = "textBoxInterPulseInterval";
+            this.textBoxInterPulseInterval.Size = new System.Drawing.Size(75, 22);
+            this.textBoxInterPulseInterval.TabIndex = 1;
             // 
             // textBoxInterBurstInterval
             // 
@@ -284,8 +284,8 @@
             this.Controls.Add(this.labelInterBurstInterval);
             this.Controls.Add(this.textBoxBurstPulseCount);
             this.Controls.Add(this.labelBurstPulseCount);
-            this.Controls.Add(this.textBoxPulsePeriod);
-            this.Controls.Add(this.labelPulsePeriod);
+            this.Controls.Add(this.textBoxInterPulseInterval);
+            this.Controls.Add(this.labelInterPulseInterval);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "Headstage64ElectricalStimulatorOptions";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
@@ -311,10 +311,10 @@
         internal System.Windows.Forms.TextBox textBoxPhaseOneDuration;
         internal System.Windows.Forms.TextBox textBoxInterPhaseDuration;
         internal System.Windows.Forms.TextBox textBoxPhaseTwoDuration;
-        private System.Windows.Forms.Label labelPulsePeriod;
+        private System.Windows.Forms.Label labelInterPulseInterval;
         internal System.Windows.Forms.TextBox textBoxBurstPulseCount;
         private System.Windows.Forms.Label labelBurstPulseCount;
-        internal System.Windows.Forms.TextBox textBoxPulsePeriod;
+        internal System.Windows.Forms.TextBox textBoxInterPulseInterval;
         internal System.Windows.Forms.TextBox textBoxInterBurstInterval;
         private System.Windows.Forms.Label labelInterBurstInterval;
         internal System.Windows.Forms.TextBox textBoxTrainBurstCount;
