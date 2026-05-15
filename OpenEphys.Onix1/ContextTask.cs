@@ -34,42 +34,6 @@ namespace OpenEphys.Onix1
     /// </remarks>
     public class ContextTask : IDisposable
     {
-        abstract class WriteAction
-        {
-            readonly uint deviceAddress;
-
-            internal abstract void Write(oni.Context ctx);
-
-            public WriteAction(uint deviceAddress)
-            {
-                this.deviceAddress = deviceAddress;
-            }
-
-            internal sealed class Scalar<T> : WriteAction where T : unmanaged
-            {
-                readonly T data;
-
-                public Scalar(uint deviceAddress, T data) : base(deviceAddress)
-                {
-                    this.data = data;
-                }
-
-                internal override void Write(oni.Context ctx) => ctx.Write(deviceAddress, data);
-            }
-
-            internal sealed class Array<T> : WriteAction where T : unmanaged
-            {
-                readonly T[] data;
-
-                public Array(uint deviceAddress, T[] data) : base(deviceAddress)
-                {
-                    this.data = data;
-                }
-
-                internal override void Write(oni.Context ctx) => ctx.Write(deviceAddress, data);
-            }
-        }
-
         readonly oni.Context ctx;
 
         /// <summary>
@@ -94,7 +58,7 @@ namespace OpenEphys.Onix1
         Task distributeFrames;
         Task writeFrames;
         Task acquisition = Task.CompletedTask;
-        Channel<WriteAction> writeQueue;
+        Channel<WriterTaskAction> writeActionChannel;
         CancellationTokenSource collectFramesCancellation;
         event Func<ContextTask, IDisposable> ConfigureAndLatchControllerEvent;
         event Func<ContextTask, IDisposable> ConfigureAndLatchLinkEvent;
@@ -492,13 +456,13 @@ namespace OpenEphys.Onix1
                     {
                         SingleReader = true
                     };
-                    writeQueue = Channel.CreateUnbounded<WriteAction>(options);
+                    writeActionChannel = Channel.CreateUnbounded<WriterTaskAction>(options);
 
                     writeFrames = Task.Run(async () =>
                     {
                         try
                         {
-                            await foreach (var writeAction in writeQueue.Reader.ReadAllAsync(collectFramesToken))
+                            await foreach (var writeAction in writeActionChannel.Reader.ReadAllAsync(collectFramesToken))
                             {
                                 writeAction.Write(ctx);
                             }
@@ -511,7 +475,7 @@ namespace OpenEphys.Onix1
                         }
                         finally
                         {
-                            writeQueue.Writer.Complete();
+                            writeActionChannel.Writer.Complete();
                         }
                     },
                     collectFramesToken);
@@ -537,8 +501,8 @@ namespace OpenEphys.Onix1
                             }
                             frameQueue?.Dispose();
                             frameQueue = null;
-                            while (writeQueue?.Reader.TryRead(out _) == true) { }
-                            writeQueue = null;
+                            while (writeActionChannel?.Reader.TryRead(out _) == true) { }
+                            writeActionChannel = null;
                             ctx.Stop();
 
                             contextConfiguration.Dispose();
@@ -624,12 +588,12 @@ namespace OpenEphys.Onix1
 
         internal void Write<T>(uint deviceAddress, T data) where T : unmanaged
         {
-            writeQueue?.Writer.TryWrite(new WriteAction.Scalar<T>(deviceAddress, data));
+            writeActionChannel?.Writer.TryWrite(new ScalarWriterTaskAction<T>(deviceAddress, data));
         }
 
         internal void Write<T>(uint deviceAddress, T[] data) where T : unmanaged
         {
-            writeQueue?.Writer.TryWrite(new WriteAction.Array<T>(deviceAddress, data));
+            writeActionChannel?.Writer.TryWrite(new ArrayWriterTaskAction<T>(deviceAddress, data));
         }
 
         internal oni.Hub GetHub(uint deviceAddress) => ctx.GetHub(deviceAddress);
