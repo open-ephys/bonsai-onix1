@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Bonsai;
 using Bonsai.IO;
 
@@ -12,6 +12,11 @@ namespace OpenEphys.Onix1.DataFrameWriter
     public class DataFrameWriter : FileSink
     {
         const int SecondsBeforeFlush = 5;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to enable compression when writing to the Arrow file.
+        /// </summary>
+        public bool EnableCompression { get; set; } = false;
 
         /// <summary>
         /// Writes all of the data frames in the sequence to an Apache Arrow file.
@@ -28,7 +33,8 @@ namespace OpenEphys.Onix1.DataFrameWriter
                 FileName = this.FileName,
                 Suffix = this.Suffix,
                 Buffered = this.Buffered,
-                Overwrite = this.Overwrite
+                Overwrite = this.Overwrite,
+                EnableCompression = this.EnableCompression
             }.Process(source);
         }
 
@@ -47,7 +53,8 @@ namespace OpenEphys.Onix1.DataFrameWriter
                 FileName = this.FileName,
                 Suffix = this.Suffix,
                 Buffered = this.Buffered,
-                Overwrite = this.Overwrite
+                Overwrite = this.Overwrite,
+                EnableCompression = this.EnableCompression
             }.Process(source);
         }
     }

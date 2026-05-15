@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using Apache.Arrow;
-using Bonsai.IO;
 
 namespace OpenEphys.Onix1.DataFrameWriter
 {
-    class DataFrameArrowFileSink : FileSink<DataFrame, ArrowBatchWriter<DataFrame>>
+    class DataFrameArrowFileSink : ArrowFileSink<DataFrame>
     {
         readonly TimeSpan timeout;
 
@@ -21,7 +20,7 @@ namespace OpenEphys.Onix1.DataFrameWriter
             var schema = DataFrameWriterHelper.GenerateSchema(members, frame);
             var createRecordBatch = RecordBatchExpressionFactory.CreateBuilder<Func<IList<DataFrame>, Schema, RecordBatch>>( new DataFrameExpressionProvider(), frameType, members).Compile();
             var bufferSize = DataFrameWriterHelper.GetBufferSize(frameType);
-            return new ArrowBatchWriter<DataFrame>(filename, schema, bufferSize, timeout, createRecordBatch);
+            return new ArrowBatchWriter<DataFrame>(filename, schema, bufferSize, timeout, createRecordBatch, EnableCompression);
         }
 
         protected override void Write(ArrowBatchWriter<DataFrame> writer, DataFrame input)

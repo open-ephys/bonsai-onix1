@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Apache.Arrow;
+using Apache.Arrow.Compression;
 using Apache.Arrow.Ipc;
 
 namespace OpenEphys.Onix1.DataFrameWriter
@@ -20,12 +21,19 @@ namespace OpenEphys.Onix1.DataFrameWriter
         /// </summary>
         /// <param name="filename">The name of the file on which the elements should be written.</param>
         /// <param name="schema">A <see cref="Schema"/> that defines the current file.</param>
-        public ArrowWriter(string filename, Schema schema)
+        /// <param name="enableCompression">A boolean indicating whether to enable compression.</param>
+        public ArrowWriter(string filename, Schema schema, bool enableCompression = false)
         {
             stream = new FileStream(filename, FileMode.Create);
-            writer = new(stream, schema);
+            writer = new(stream, schema, leaveOpen: false, enableCompression ? CompressionOptions : null);
             writer.WriteStart();
         }
+
+        static readonly IpcOptions CompressionOptions = new()
+        {
+            CompressionCodec = CompressionCodecType.Zstd,
+            CompressionCodecFactory = new CompressionCodecFactory()
+        };
 
         /// <summary>
         /// Writes the specified record batch to the underlying stream.
