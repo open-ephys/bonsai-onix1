@@ -36,7 +36,7 @@ namespace OpenEphys.Onix1.Design
             textBoxPhaseTwoCurrent.Text = electricalStimulator.PhaseTwoCurrent.ToString();
             textBoxPhaseTwoDuration.Text = electricalStimulator.PhaseTwoDuration.ToString();
 
-            textBoxPulsePeriod.Text = electricalStimulator.InterPulseInterval.ToString();
+            textBoxInterPulseInterval.Text = electricalStimulator.InterPulseInterval.ToString();
             textBoxBurstPulseCount.Text = electricalStimulator.BurstPulseCount.ToString();
             textBoxInterBurstInterval.Text = electricalStimulator.InterBurstInterval.ToString();
             textBoxTrainBurstCount.Text = electricalStimulator.TrainBurstCount.ToString();
@@ -47,7 +47,7 @@ namespace OpenEphys.Onix1.Design
         {
             if (int.TryParse(textBoxBurstPulseCount.Text, out int result))
             {
-                textBoxPulsePeriod.Enabled = result > 1;
+                textBoxInterPulseInterval.Enabled = result > 1;
             }
         }
 
