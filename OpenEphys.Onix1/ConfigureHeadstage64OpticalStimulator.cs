@@ -302,7 +302,7 @@ namespace OpenEphys.Onix1
     static class Headstage64OpticalStimulator
     {
         public const int ID = 5;
-        public const uint MinimumVersion = 2;
+        public const uint MinimumVersion = 1;
 
         // NB: can be read with MINRHEOR and POTRES, but will not change
         public const uint MinRheostatResistanceOhms = 590;
