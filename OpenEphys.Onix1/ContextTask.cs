@@ -58,7 +58,7 @@ namespace OpenEphys.Onix1
         Task distributeFrames;
         Task writeFrames;
         Task acquisition = Task.CompletedTask;
-        Channel<Action> writeQueue;
+        Channel<WriterTaskAction> writeActionChannel;
         CancellationTokenSource collectFramesCancellation;
         event Func<ContextTask, IDisposable> ConfigureAndLatchControllerEvent;
         event Func<ContextTask, IDisposable> ConfigureAndLatchLinkEvent;
@@ -456,15 +456,15 @@ namespace OpenEphys.Onix1
                     {
                         SingleReader = true
                     };
-                    writeQueue = Channel.CreateUnbounded<Action>(options);
+                    writeActionChannel = Channel.CreateUnbounded<WriterTaskAction>(options);
 
                     writeFrames = Task.Run(async () =>
                     {
                         try
                         {
-                            await foreach (var writeAction in writeQueue.Reader.ReadAllAsync(collectFramesToken))
+                            await foreach (var writeAction in writeActionChannel.Reader.ReadAllAsync(collectFramesToken))
                             {
-                                writeAction();
+                                writeAction.Write(ctx);
                             }
                         }
                         catch (OperationCanceledException)
@@ -475,7 +475,7 @@ namespace OpenEphys.Onix1
                         }
                         finally
                         {
-                            writeQueue.Writer.Complete();
+                            writeActionChannel.Writer.Complete();
                         }
                     },
                     collectFramesToken);
@@ -501,7 +501,7 @@ namespace OpenEphys.Onix1
                             }
                             frameQueue?.Dispose();
                             frameQueue = null;
-                            writeQueue = null;
+                            writeActionChannel = null;
                             ctx.Stop();
 
                             contextConfiguration.Dispose();
@@ -587,12 +587,12 @@ namespace OpenEphys.Onix1
 
         internal void Write<T>(uint deviceAddress, T data) where T : unmanaged
         {
-            writeQueue?.Writer.TryWrite(() => ctx.Write(deviceAddress, data));
+            writeActionChannel?.Writer.TryWrite(new ScalarWriterTaskAction<T>(deviceAddress, data));
         }
 
         internal void Write<T>(uint deviceAddress, T[] data) where T : unmanaged
         {
-            writeQueue?.Writer.TryWrite(() => ctx.Write(deviceAddress, data));
+            writeActionChannel?.Writer.TryWrite(new ArrayWriterTaskAction<T>(deviceAddress, data));
         }
 
         internal oni.Hub GetHub(uint deviceAddress) => ctx.GetHub(deviceAddress);
