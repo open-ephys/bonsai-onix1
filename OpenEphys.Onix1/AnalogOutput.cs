@@ -108,11 +108,8 @@ namespace OpenEphys.Onix1
                     // twos-complement to offset binary
                     const short Mask = -32768;
                     short[] dataArray = new short[outputBuffer.Rows];
-                    fixed (short* dataArrayPtr = dataArray)
-                    {
-                        Mat mat = new(outputBuffer.Rows, outputBuffer.Cols, outputBuffer.Depth, 1, (IntPtr)dataArrayPtr, outputBuffer.Step);
-                        CV.XorS(outputBuffer, new Scalar(Mask, 0, 0), mat);
-                    }
+                    Mat mat = Mat.CreateMatHeader(dataArray, outputBuffer.Rows, outputBuffer.Cols, outputBuffer.Depth, 1);
+                    CV.XorS(outputBuffer, new Scalar(Mask, 0, 0), mat);
                     device.Write(dataArray);
                 });
             });
