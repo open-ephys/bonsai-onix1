@@ -16,12 +16,19 @@ namespace OpenEphys.Onix1.DataFrameWriter
         /// cref="RecordBatch"/>.
         /// </summary>
         const int DefaultBufferSize = 1000;
-        
+
         /// <summary>
         /// Represents the mimumum number of <see cref="DataFrame">DataFrames</see> in a <see
         /// cref="RecordBatch"/>.
         /// </summary>
         const int MinimumBufferSize = 100;
+
+        /// <summary>
+        /// Represents the size of the buffer in seconds. This is used to calculate the number of
+        /// incoming data frames to buffer before writing to the Arrow file, based on the expected
+        /// sample rate of the incoming data.
+        /// </summary>
+        const double BufferDurationSeconds = 1.0;
 
         static readonly Dictionary<Type, IArrowType> ArrowTypeMap = new()
         {
@@ -164,7 +171,7 @@ namespace OpenEphys.Onix1.DataFrameWriter
                 }
                 else if (memberType.IsValueType)
                 {
-                    var structMembers = GetDataMembers(memberType); 
+                    var structMembers = GetDataMembers(memberType);
                     foreach (var structMember in structMembers.Reverse())
                     {
                         if (IsMemberIgnored(current.Member, structMember))
@@ -201,7 +208,6 @@ namespace OpenEphys.Onix1.DataFrameWriter
             var sampleRateAttribute = frameType.GetCustomAttribute<ExpectedSampleRateAttribute>();
             if (sampleRateAttribute != null)
             {
-                const double BufferDurationSeconds = 1.0;
                 var bufferSize = (int)(sampleRateAttribute.SampleRateHz * BufferDurationSeconds);
                 return bufferSize >= MinimumBufferSize ? bufferSize : MinimumBufferSize;
             }
