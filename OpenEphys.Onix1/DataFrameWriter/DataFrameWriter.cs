@@ -5,8 +5,8 @@ using Bonsai.IO;
 namespace OpenEphys.Onix1.DataFrameWriter
 {
     /// <summary>
-    /// Represents an operator that writes each data frame in the sequence
-    /// to an Apache Arrow file using an <see cref="ArrowWriter"/>.
+    /// Represents an operator that writes each data frame in the sequence to an Apache Arrow file using an
+    /// <see cref="ArrowWriter"/>.
     /// </summary>
     [WorkflowElementCategory(ElementCategory.Sink)]
     public class DataFrameWriter : FileSink
@@ -21,10 +21,11 @@ namespace OpenEphys.Onix1.DataFrameWriter
         /// <summary>
         /// Writes all of the data frames in the sequence to an Apache Arrow file.
         /// </summary>
-        /// <param name="source">The sequence of <see cref="BufferedDataFrame">BufferedDataFrame's</see> to write.</param>
+        /// <param name="source">The sequence of <see cref="BufferedDataFrame">BufferedDataFrame's</see> to
+        /// write.</param>
         /// <returns>
-        /// An observable sequence that is identical to the source sequence but where
-        /// there is an additional side effect of writing the frames to an Apache Arrow file.
+        /// An observable sequence that is identical to the source sequence but where there is an additional
+        /// side effect of writing the frames to an Apache Arrow file.
         /// </returns>
         public IObservable<BufferedDataFrame> Process(IObservable<BufferedDataFrame> source)
         {
