@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Apache.Arrow;
@@ -20,8 +19,8 @@ namespace OpenEphys.Onix1.DataFrameWriter
         public Expression GetLengthExpression()
         {
             return Expression.Property(
-                    Expression.Convert(InputParameter, typeof(ICollection<DataFrame>)),
-                    nameof(ICollection<DataFrame>.Count));
+                Expression.Convert(InputParameter, typeof(ICollection<DataFrame>)),
+                nameof(ICollection<DataFrame>.Count));
         }
 
         public List<Expression> GetArrayPopulationExpressions(
@@ -29,68 +28,49 @@ namespace OpenEphys.Onix1.DataFrameWriter
             ParameterExpression arrowArrayIndex,
             ParameterExpression batchRows,
             Type frameType,
-            IEnumerable<MemberInfo> members)
+            IEnumerable<MemberFieldGroup> fieldGroups)
         {
-            var frameParameter = Expression.Parameter(typeof(DataFrame), "df");
-            List<Expression> expressions = new();
+            var frameParameter = Expression.Parameter(typeof(DataFrame), "dataFrame");
+            var expressions = new List<Expression>();
 
-            var stack = new Stack<MemberNode>(members.Select(m => new MemberNode { Member = m }));
-
-            while (stack.Count > 0)
+            foreach (var group in fieldGroups)
             {
-                var current = stack.Pop();
-                var memberType = DataFrameWriterHelper.GetMemberType(current.Member);
+                var memberType = DataFrameWriterHelper.GetMemberType(group.Member.Member);
 
-                if (memberType.IsPrimitive)
+                switch (memberType)
                 {
-                    var memberAccessor = DataFrameWriterHelper.CreateMemberAccess(
-                        Expression.Convert(frameParameter, frameType),
-                        current);
-
-                    expressions.Add(ConvertFrameMemberExpressionBuilder(
-                        memberType, frameParameter, arrowArrays, arrowArrayIndex,
-                        InputParameter, batchRows, memberAccessor));
-                }
-                else if (memberType.IsEnum)
-                {
-                    var memberAccessor = Expression.Convert(
-                        DataFrameWriterHelper.CreateMemberAccess(
-                            Expression.Convert(frameParameter, frameType),
-                            current),
-                        Enum.GetUnderlyingType(memberType));
-
-                    expressions.Add(ConvertFrameMemberExpressionBuilder(
-                        Enum.GetUnderlyingType(memberType), frameParameter,
-                        arrowArrays, arrowArrayIndex, InputParameter,
-                        batchRows, memberAccessor));
-                }
-                else if (memberType.IsValueType)
-                {
-                    var structMembers = DataFrameWriterHelper.GetDataMembers(memberType);
-
-                    foreach (var structMember in structMembers.Reverse())
+                    case { IsPrimitive: true }:
+                    { 
+                        var memberAccessor = DataFrameWriterHelper.CreateMemberAccess(
+                        Expression.Convert(frameParameter, frameType), group.Member);
+                        expressions.Add(ConvertFrameMemberExpressionBuilder(
+                            memberType, frameParameter, arrowArrays, arrowArrayIndex,
+                            InputParameter, batchRows, memberAccessor));
+                        break;
+                     }
+                    case { IsEnum: true }:
                     {
-                        if (DataFrameWriterHelper.IsMemberIgnored(current.Member, structMember))
-                            continue;
-
-                        stack.Push(new MemberNode
-                        {
-                            Member = structMember,
-                            Parent = current
-                        });
+                        var memberAccessor = Expression.Convert(
+                            DataFrameWriterHelper.CreateMemberAccess(
+                                Expression.Convert(frameParameter, frameType), group.Member),
+                            Enum.GetUnderlyingType(memberType));
+                        expressions.Add(ConvertFrameMemberExpressionBuilder(
+                            Enum.GetUnderlyingType(memberType), frameParameter,
+                            arrowArrays, arrowArrayIndex, InputParameter, batchRows, memberAccessor));
+                        break;
                     }
-                }
-                else
-                {
-                    throw new NotSupportedException(
-                        $"The member type '{memberType}' is not supported for generating RecordBatch builders.");
+                    default:
+                        throw new NotSupportedException($"The member type '{memberType}' is not supported for generating RecordBatch builders.");
                 }
             }
 
             return expressions;
         }
 
-        static IArrowArray ConvertFrameMemberToArrowArray<TMember>(IList<DataFrame> frames, Func<DataFrame, TMember> getter, IArrowType arrowType, int length) where TMember : unmanaged
+        static IArrowArray ConvertFrameMemberToArrowArray<TMember>(
+            IList<DataFrame> frames,
+            Func<DataFrame, TMember> getter, 
+            IArrowType arrowType, int length) where TMember : unmanaged
         {
             var array = new TMember[length];
 
@@ -122,7 +102,7 @@ namespace OpenEphys.Onix1.DataFrameWriter
                             frameParameter
                         );
 
-            var block = Expression.Block(
+            return Expression.Block(
                 Expression.Assign(
                     Expression.ArrayAccess(arrowArrays, arrowArrayIndex),
                     Expression.Call(
@@ -135,8 +115,6 @@ namespace OpenEphys.Onix1.DataFrameWriter
                 ),
                 Expression.PostIncrementAssign(arrowArrayIndex)
             );
-
-            return block;
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Apache.Arrow;
@@ -15,7 +14,7 @@ namespace OpenEphys.Onix1.DataFrameWriter
 
         public BufferedDataFrameExpressionProvider()
         {
-            InputParameter = Expression.Parameter(typeof(IList<BufferedDataFrame>), "frame");
+            InputParameter = Expression.Parameter(typeof(IList<BufferedDataFrame>), "bufferedDataFrames");
         }
 
         public Expression GetLengthExpression()
@@ -28,8 +27,8 @@ namespace OpenEphys.Onix1.DataFrameWriter
             var clockArray = Expression.Property(firstFrame, nameof(BufferedDataFrame.Clock));
             var clockArrayLength = Expression.ArrayLength(clockArray);
             var numberOfFrames = Expression.Property(
-                    Expression.Convert(InputParameter, typeof(ICollection<BufferedDataFrame>)),
-                    nameof(ICollection<BufferedDataFrame>.Count));
+                Expression.Convert(InputParameter, typeof(ICollection<BufferedDataFrame>)),
+                nameof(ICollection<BufferedDataFrame>.Count));
             return Expression.Multiply(clockArrayLength, numberOfFrames);
         }
 
@@ -38,104 +37,175 @@ namespace OpenEphys.Onix1.DataFrameWriter
             ParameterExpression arrowArrayIndex,
             ParameterExpression batchRows,
             Type frameType,
-            IEnumerable<MemberInfo> members)
+            IEnumerable<MemberFieldGroup> fieldGroups)
         {
-            var frameParameter = Expression.Parameter(typeof(BufferedDataFrame), "df");
-            List<Expression> expressions = new();
+            var frameParameter = Expression.Parameter(typeof(BufferedDataFrame), "bufferedDataFrame");
+            var expressions = new List<Expression>();
 
-            var stack = new Stack<MemberNode>(members.Select(m => new MemberNode { Member = m }));
-
-            while (stack.Count > 0)
+            foreach (var group in fieldGroups)
             {
-                var current = stack.Pop();
-                var memberType = DataFrameWriterHelper.GetMemberType(current.Member);
+                var memberType = DataFrameWriterHelper.GetMemberType(group.Member.Member);
 
-                if (memberType.IsArray)
+                switch (memberType)
                 {
-                    var memberAccessor = DataFrameWriterHelper.CreateMemberAccess(
-                        Expression.Convert(frameParameter, frameType),
-                        current);
+                    case { IsArray: true }:
+                        expressions.Add(BuildArrayExpression(group, frameType, frameParameter, arrowArrays, arrowArrayIndex));
+                        break;
 
-                    var convertFrameMemberMethod = typeof(BufferedDataFrameExpressionProvider)
-                                .GetMethod(nameof(ConvertFrameMemberToArrowArray), BindingFlags.Static | BindingFlags.NonPublic)
-                                .MakeGenericMethod(memberType.GetElementType());
+                    case var t when t == typeof(Mat):
+                        if (group.Fields[0].DataType is RunEndEncodedType)
+                            expressions.Add(BuildRunEndEncodedMatExpression(group, frameType, frameParameter, arrowArrays, arrowArrayIndex));
+                        else
+                            expressions.Add(BuildMatExpression(group, frameType, frameParameter, arrowArrays, arrowArrayIndex, batchRows));
+                        break;
 
-                    expressions.Add(ConvertFrameMemberExpressionBuilder(
-                        memberType, frameParameter, arrowArrays, arrowArrayIndex,
-                        InputParameter, memberAccessor,
-                        convertFrameMemberMethod));
-                }
-                else if (memberType == typeof(Mat))
-                {
-                    var combineMatMethod = typeof(BufferedDataFrameExpressionProvider)
-                        .GetMethod(nameof(CombineMatObjects), BindingFlags.Static | BindingFlags.NonPublic);
-
-                    var combinedMat = Expression.Variable(typeof(Mat), "combinedMat");
-                    var combineMatCall = Expression.Call(
-                        combineMatMethod,
-                        InputParameter,
-                        Expression.Lambda<Func<BufferedDataFrame, Mat>>(
-                            DataFrameWriterHelper.CreateMemberAccess(
-                                Expression.Convert(frameParameter, frameType),
-                                current),
-                            frameParameter));
-
-                    var convertMatRowMethod = typeof(BufferedDataFrameExpressionProvider)
-                        .GetMethod(nameof(ConvertMatRowToArrowArray), BindingFlags.Static | BindingFlags.NonPublic);
-
-                    var matElementType = Expression.Variable(typeof(IArrowType), "matElementType");
-                    var rowIndex = Expression.Variable(typeof(int), "rowIndex");
-                    var breakLabel = Expression.Label("break");
-
-                    var loopBody = Expression.Block(
-                        Expression.Assign(
-                            Expression.ArrayAccess(arrowArrays, arrowArrayIndex),
-                            Expression.Call(
-                                convertMatRowMethod,
-                                combinedMat,
-                                rowIndex,
-                                matElementType,
-                                batchRows)),
-                        Expression.PostIncrementAssign(arrowArrayIndex));
-
-                    var forLoop = Expression.Block(
-                        new[] { matElementType, rowIndex },
-                        Expression.Assign(rowIndex, Expression.Constant(0)),
-                        Expression.Assign(
-                            matElementType,
-                            Expression.Call(
-                                typeof(DataFrameWriterHelper).GetMethod(
-                                    nameof(DataFrameWriterHelper.GetArrowType),
-                                    BindingFlags.Static | BindingFlags.NonPublic,
-                                    null,
-                                    new[] { typeof(Depth) },
-                                    null),
-                                Expression.Property(combinedMat, nameof(Mat.Depth)))),
-                        Expression.Loop(
-                            Expression.IfThenElse(
-                                Expression.LessThan(
-                                    rowIndex,
-                                    Expression.Property(combinedMat, nameof(Mat.Rows))),
-                                Expression.Block(
-                                    loopBody,
-                                    Expression.PostIncrementAssign(rowIndex)),
-                                Expression.Break(breakLabel)),
-                            breakLabel));
-
-                    expressions.Add(Expression.Block(
-                        new[] { combinedMat },
-                        Expression.Assign(combinedMat, combineMatCall),
-                        forLoop
-                    ));
-                }
-                else
-                {
-                    throw new NotSupportedException(
+                    default:
+                        throw new NotSupportedException(
                         $"The member type '{memberType}' is not supported for generating RecordBatch builders.");
                 }
             }
 
             return expressions;
+        }
+
+        Expression BuildArrayExpression(
+            MemberFieldGroup group,
+            Type frameType,
+            ParameterExpression frameParameter,
+            ParameterExpression arrowArrays,
+            ParameterExpression arrowArrayIndex)
+        {
+            var memberType = DataFrameWriterHelper.GetMemberType(group.Member.Member);
+            var memberAccessor = DataFrameWriterHelper.CreateMemberAccess(
+                Expression.Convert(frameParameter, frameType), group.Member);
+
+            var convertFrameMemberMethod = typeof(BufferedDataFrameExpressionProvider)
+                .GetMethod(nameof(ConvertFrameMemberToArrowArray), BindingFlags.Static | BindingFlags.NonPublic)
+                .MakeGenericMethod(memberType.GetElementType());
+
+            return ConvertFrameMemberExpressionBuilder(
+                memberType, frameParameter, arrowArrays, arrowArrayIndex,
+                InputParameter, memberAccessor, convertFrameMemberMethod);
+        }
+
+        Expression BuildMatExpression(
+            MemberFieldGroup group,
+            Type frameType,
+            ParameterExpression frameParameter,
+            ParameterExpression arrowArrays,
+            ParameterExpression arrowArrayIndex,
+            ParameterExpression batchRows)
+        {
+            var combineMatMethod = typeof(BufferedDataFrameExpressionProvider)
+                .GetMethod(nameof(CombineMatObjects), BindingFlags.Static | BindingFlags.NonPublic);
+            var convertMatRowMethod = typeof(BufferedDataFrameExpressionProvider)
+                .GetMethod(nameof(ConvertMatRowToArrowArray), BindingFlags.Static | BindingFlags.NonPublic);
+            var getArrowTypeMethod = typeof(DataFrameWriterHelper).GetMethod(
+                nameof(DataFrameWriterHelper.GetArrowType),
+                BindingFlags.Static | BindingFlags.NonPublic,
+                null, new[] { typeof(Depth) }, null);
+
+            var combinedMat = Expression.Variable(typeof(Mat), "combinedMat");
+            var matElementType = Expression.Variable(typeof(IArrowType), "matElementType");
+            var rowIndex = Expression.Variable(typeof(int), "rowIndex");
+            var breakLabel = Expression.Label("break");
+
+            var combineMatCall = Expression.Call(
+                combineMatMethod,
+                InputParameter,
+                Expression.Lambda<Func<BufferedDataFrame, Mat>>(
+                    DataFrameWriterHelper.CreateMemberAccess(
+                        Expression.Convert(frameParameter, frameType), group.Member),
+                    frameParameter));
+
+            var loopBody = Expression.Block(
+                Expression.Assign(
+                    Expression.ArrayAccess(arrowArrays, arrowArrayIndex),
+                    Expression.Call(convertMatRowMethod, combinedMat, rowIndex, matElementType, batchRows)),
+                Expression.PostIncrementAssign(arrowArrayIndex));
+
+            var forLoop = Expression.Block(
+                new[] { matElementType, rowIndex },
+                Expression.Assign(rowIndex, Expression.Constant(0)),
+                Expression.Assign(
+                    matElementType,
+                    Expression.Call(getArrowTypeMethod, Expression.Property(combinedMat, nameof(Mat.Depth)))),
+                Expression.Loop(
+                    Expression.IfThenElse(
+                        Expression.LessThan(rowIndex, Expression.Property(combinedMat, nameof(Mat.Rows))),
+                        Expression.Block(loopBody, Expression.PostIncrementAssign(rowIndex)),
+                        Expression.Break(breakLabel)),
+                    breakLabel));
+
+            return Expression.Block(
+                new[] { combinedMat },
+                Expression.Assign(combinedMat, combineMatCall),
+                forLoop);
+        }
+
+        Expression BuildRunEndEncodedMatExpression(
+            MemberFieldGroup group,
+            Type frameType,
+            ParameterExpression frameParameter,
+            ParameterExpression arrowArrays,
+            ParameterExpression arrowArrayIndex)
+        {
+            var combineMatMethod = typeof(BufferedDataFrameExpressionProvider)
+                .GetMethod(nameof(CombineMatObjects), BindingFlags.Static | BindingFlags.NonPublic);
+            var convertMatRowMethod = typeof(BufferedDataFrameExpressionProvider)
+                .GetMethod(nameof(ConvertMatRowToRunEndEncodedArrowArray), BindingFlags.Static | BindingFlags.NonPublic);
+            var getArrowTypeMethod = typeof(DataFrameWriterHelper).GetMethod(
+                nameof(DataFrameWriterHelper.GetArrowType),
+                BindingFlags.Static | BindingFlags.NonPublic,
+                null, new[] { typeof(Depth) }, null);
+
+            var attr = group.Member.Member.GetCustomAttribute<SubsampledAttribute>();
+            var stride = Expression.Constant(attr.Divisor);
+
+            var combinedMat = Expression.Variable(typeof(Mat), "combinedMat");
+            var matElementType = Expression.Variable(typeof(IArrowType), "matElementType");
+            var rowIndex = Expression.Variable(typeof(int), "rowIndex");
+            var runEndsArray = Expression.Variable(typeof(IArrowArray), "runEndArray");
+            var breakLabel = Expression.Label("break");
+
+            var combineMatCall = Expression.Call(
+                combineMatMethod,
+                InputParameter,
+                Expression.Lambda<Func<BufferedDataFrame, Mat>>(
+                    DataFrameWriterHelper.CreateMemberAccess(
+                        Expression.Convert(frameParameter, frameType), group.Member),
+                    frameParameter));
+
+            var runEndsArrayCall = Expression.Call(
+                typeof(BufferedDataFrameExpressionProvider)
+                    .GetMethod(nameof(CreateRunEnds), BindingFlags.Static | BindingFlags.NonPublic),
+                Expression.Property(combinedMat, nameof(Mat.Cols)),
+                stride);
+
+            var loopBody = Expression.Block(
+                Expression.Assign(
+                    Expression.ArrayAccess(arrowArrays, arrowArrayIndex),
+                    Expression.Call(convertMatRowMethod, combinedMat, rowIndex, matElementType, runEndsArray)),
+                Expression.PostIncrementAssign(arrowArrayIndex));
+
+            var forLoop = Expression.Block(
+                new[] { matElementType, rowIndex, runEndsArray },
+                Expression.Assign(runEndsArray, runEndsArrayCall),
+                Expression.Assign(rowIndex, Expression.Constant(0)),
+                Expression.Assign(
+                    matElementType,
+                    Expression.Call(getArrowTypeMethod, Expression.Property(combinedMat, nameof(Mat.Depth)))),
+                Expression.Loop(
+                    Expression.IfThenElse(
+                        Expression.LessThan(rowIndex, Expression.Property(combinedMat, nameof(Mat.Rows))),
+                        Expression.Block(loopBody, Expression.PostIncrementAssign(rowIndex)),
+                        Expression.Break(breakLabel)),
+                    breakLabel));
+
+            return Expression.Block(
+                new[] { combinedMat },
+                Expression.Assign(combinedMat, combineMatCall),
+                forLoop);
         }
 
         static int GetTotalSamples(IList<BufferedDataFrame> frames)
@@ -146,7 +216,10 @@ namespace OpenEphys.Onix1.DataFrameWriter
             return frames.Count * samplesPerFrame;
         }
 
-        static IArrowArray ConvertFrameMemberToArrowArray<TMember>(IList<BufferedDataFrame> frames, Func<BufferedDataFrame, TMember[]> getter, IArrowType arrowType) where TMember : unmanaged
+        static IArrowArray ConvertFrameMemberToArrowArray<TMember>(
+            IList<BufferedDataFrame> frames, 
+            Func<BufferedDataFrame, TMember[]> getter, 
+            IArrowType arrowType) where TMember : unmanaged
         {
             int length = GetTotalSamples(frames);
 
@@ -185,7 +258,7 @@ namespace OpenEphys.Onix1.DataFrameWriter
                             frameParameter
                         );
 
-            var block = Expression.Block(
+            return Expression.Block(
                 Expression.Assign(
                     Expression.ArrayAccess(arrowArrays, arrowArrayIndex),
                     Expression.Call(
@@ -197,51 +270,18 @@ namespace OpenEphys.Onix1.DataFrameWriter
                 ),
                 Expression.PostIncrementAssign(arrowArrayIndex)
             );
-
-            return block;
         }
 
-        static ArrowBuffer CreateStrideValidityBitmap(int validCount, int totalCount, int stride)
+        static IArrowArray CreateRunEnds(int dataLength, int runLength)
         {
-            int byteCount = (totalCount + 7) / 8;
-            byte[] bitmap = new byte[byteCount];
+            var runEndsBuilder = new Int32Array.Builder().Reserve(dataLength);
 
-            for (int i = 0; i < validCount; i++)
+            for (int i = 0; i < dataLength; i++)
             {
-                int bitIndex = i * stride;
-                if (bitIndex >= totalCount) break;
-
-                bitmap[bitIndex >> 3] |= (byte)(1 << (bitIndex & 7));
+                runEndsBuilder.Append((i + 1) * runLength);
             }
 
-            return new ArrowBuffer(bitmap);
-        }
-
-        static unsafe void StrideCopy<T>(void* src, void* dest, int elementCount, int stride) where T : unmanaged
-        {
-            T* srcPtr = (T*)src;
-            T* destPtr = (T*)dest;
-
-            for (int i = 0; i < elementCount; i++)
-            {
-                *destPtr = *srcPtr++;
-                destPtr += stride;
-            }
-        }
-
-        static unsafe void StrideCopyFromDepth(Depth depth, void* src, void* dest, int elementCount, int stride)
-        {
-            switch (depth)
-            {
-                case Depth.U8: StrideCopy<byte>(src, dest, elementCount, stride); break;
-                case Depth.S8: StrideCopy<sbyte>(src, dest, elementCount, stride); break;
-                case Depth.U16: StrideCopy<ushort>(src, dest, elementCount, stride); break;
-                case Depth.S16: StrideCopy<short>(src, dest, elementCount, stride); break;
-                case Depth.S32: StrideCopy<int>(src, dest, elementCount, stride); break;
-                case Depth.F32: StrideCopy<float>(src, dest, elementCount, stride); break;
-                case Depth.F64: StrideCopy<double>(src, dest, elementCount, stride); break;
-                default: throw new NotSupportedException($"Cannot StrideCopy for depth '{depth}'.");
-            }
+            return runEndsBuilder.Build();
         }
 
         static Mat CombineMatObjects(IList<BufferedDataFrame> frames, Func<BufferedDataFrame, Mat> getter)
@@ -267,53 +307,45 @@ namespace OpenEphys.Onix1.DataFrameWriter
             return dest;
         }
 
-        static unsafe IArrowArray ConvertMatRowToArrowArray(Mat mat, int rowIndex, IArrowType elementType, int batchRows)
+        static IArrowArray ConvertMatRowToArrowArray(Mat mat, int rowIndex, IArrowType elementType, int batchRows)
         {
-            int length = mat.Cols;
-
-            if (batchRows < length)
-                throw new InvalidOperationException($"The number of batch rows ({batchRows}) is smaller than the number of samples in the Mat ({length}).");
-
-            if (batchRows % length != 0)
-                throw new InvalidOperationException($"The number of batch rows ({batchRows}) must be a multiple of the number of samples in the Mat ({length}).");
-
-            int stride = batchRows / length;
+            if (batchRows != mat.Cols)
+                throw new InvalidOperationException($"The number of batch rows ({batchRows}) is not equal to the number of samples in the Mat ({mat.Cols}).");
 
             var rowManager = new MatRowMemoryManager(mat, rowIndex);
-            int nullCount = batchRows - length;
-            ArrowBuffer arrowBuffer;
-            ArrowBuffer nullBitmap;
-
-            if (nullCount == 0)
-            {
-                arrowBuffer = new ArrowBuffer(rowManager.Memory);
-                nullBitmap = ArrowBuffer.Empty;
-            }
-            else
-            {
-                byte[] buffer = new byte[batchRows * mat.ElementSize];
-
-                fixed (byte* bufferPtr = buffer)
-                {
-                    using var handle = rowManager.Memory.Pin();
-                    StrideCopyFromDepth(mat.Depth, handle.Pointer, bufferPtr, length, stride);
-                }
-
-                arrowBuffer = new ArrowBuffer(buffer);
-                nullBitmap = CreateStrideValidityBitmap(length, batchRows, stride);
-            }
 
             var arrayData = new ArrayData(
                 elementType,
                 batchRows,
-                nullCount,
                 0,
-                new[] { nullBitmap, arrowBuffer },
+                0,
+                new[] { ArrowBuffer.Empty, new ArrowBuffer(rowManager.Memory) },
                 null,
                 null
             );
 
             return ArrowArrayFactory.BuildArray(arrayData);
+        }
+
+        static IArrowArray ConvertMatRowToRunEndEncodedArrowArray(Mat mat, int rowIndex, IArrowType elementType, IArrowArray runEnds)
+        {
+            int length = mat.Cols;
+
+            if (runEnds.Length != length)
+                throw new InvalidOperationException($"The number of run ends ({runEnds.Length}) is smaller than the number of samples in the Mat ({length}).");
+
+            var rowManager = new MatRowMemoryManager(mat, rowIndex);
+            var values = new ArrayData(
+                elementType,
+                length,
+                0,
+                0,
+                new[] { ArrowBuffer.Empty, new ArrowBuffer(rowManager.Memory) },
+                null,
+                null
+            );
+
+            return new RunEndEncodedArray(runEnds, ArrowArrayFactory.BuildArray(values));
         }
     }
 }

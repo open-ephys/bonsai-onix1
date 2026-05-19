@@ -17,8 +17,10 @@ namespace OpenEphys.Onix1.DataFrameWriter
         {
             var frameType = frame.GetType();
             var members = DataFrameWriterHelper.GetDataMembers(frameType);
-            var schema = DataFrameWriterHelper.GenerateSchema(members, frame);
-            var createRecordBatch = RecordBatchExpressionFactory.CreateBuilder<Func<IList<DataFrame>, Schema, RecordBatch>>( new DataFrameExpressionProvider(), frameType, members).Compile();
+            var fieldGroups = DataFrameWriterHelper.BuildFieldMappings(members, frame);
+            var schema = DataFrameWriterHelper.BuildSchema(fieldGroups);
+            var createRecordBatch = RecordBatchExpressionFactory.CreateBuilder<Func<IList<DataFrame>, Schema, RecordBatch>>(
+                new DataFrameExpressionProvider(), frameType, fieldGroups).Compile();
             var bufferSize = DataFrameWriterHelper.GetBufferSize(frameType);
             return new ArrowBatchWriter<DataFrame>(filename, schema, bufferSize, timeout, createRecordBatch, EnableCompression);
         }

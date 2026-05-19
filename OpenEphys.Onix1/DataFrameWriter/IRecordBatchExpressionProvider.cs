@@ -1,7 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace OpenEphys.Onix1.DataFrameWriter
 {
@@ -16,6 +15,6 @@ namespace OpenEphys.Onix1.DataFrameWriter
             ParameterExpression arrowArrayIndex,
             ParameterExpression batchRows,
             Type frameType,
-            IEnumerable<MemberInfo> members);
+            IEnumerable<MemberFieldGroup> fieldGroups);
     }
 }
