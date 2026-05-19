@@ -12,8 +12,7 @@ namespace OpenEphys.Onix1.DataFrameWriter
     public class DataFrameWriter : FileSink
     {
         /// <summary>
-        /// Number of seconds to wait before flushing any data in the buffer to the Arrow file.
-        /// Ensures that devices with sporadic sample rates are still saved to the file periodically.
+        /// Ensures that data produced by devices with non-uniform or slow sample rates are written to file periodically.
         /// </summary>
         const int SecondsBeforeFlush = 5;
 
