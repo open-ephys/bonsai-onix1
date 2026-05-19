@@ -20,7 +20,7 @@ namespace OpenEphys.Onix1.DataFrameWriter
         /// When enabled, data is compressed using the <see
         /// href="https://github.com/facebook/zstd">Zstandard</see> compression algorithm before
         /// writing. This reduces file size at the cost of additional CPU overhead on read and
-        /// write. Each block of data is compressed independently.
+        /// write.
         /// </remarks>
         public bool EnableCompression { get; set; } = false;
 
