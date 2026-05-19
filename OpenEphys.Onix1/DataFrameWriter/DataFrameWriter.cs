@@ -11,6 +11,9 @@ namespace OpenEphys.Onix1.DataFrameWriter
     [WorkflowElementCategory(ElementCategory.Sink)]
     public class DataFrameWriter : FileSink
     {
+        /// <summary>
+        /// Ensures that data produced by devices with non-uniform or slow sample rates are written to file periodically.
+        /// </summary>
         const int SecondsBeforeFlush = 5;
 
         /// <summary>
