@@ -17,9 +17,9 @@ namespace OpenEphys.Onix1.DataFrameWriter
         /// Gets or sets a value indicating whether to enable compression when writing to the Arrow file.
         /// </summary>
         /// <remarks>
-        /// When enabled, the writer will use Zstandard (Zstd) compression to compress the record batches
-        /// before writing them to the file. This can significantly reduce the file size, especially for 
-        /// channels with redundant data. Each record batch will be compressed independently.
+        /// When enabled, record batches are compressed with Zstandard (Zstd) before writing.
+        /// This reduces file size at the cost of additional CPU overhead on read and write. 
+        /// Each record batch is compressed independently.
         /// </remarks>
         public bool EnableCompression { get; set; } = false;
 
