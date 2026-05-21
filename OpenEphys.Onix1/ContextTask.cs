@@ -411,7 +411,6 @@ namespace OpenEphys.Onix1
                                     throw;
                                 }
                                 frameQueue.Add(frame, collectFramesToken);
-
                             }
                         }
                         catch (OperationCanceledException)
@@ -421,7 +420,7 @@ namespace OpenEphys.Onix1
                             // while loop context and will be disposed.
                             Console.WriteLine("Frame collection task has been cancelled by " + this.GetType());
 #endif
-                        };
+                        }
                     },
                     collectFramesToken,
                     TaskCreationOptions.LongRunning,
@@ -452,11 +451,11 @@ namespace OpenEphys.Onix1
                     TaskCreationOptions.LongRunning,
                     TaskScheduler.Default);
 
-                    var options = new UnboundedChannelOptions()
+                    var unboundedChannelOptions = new UnboundedChannelOptions()
                     {
                         SingleReader = true
                     };
-                    writeActionChannel = Channel.CreateUnbounded<WriterTaskAction>(options);
+                    writeActionChannel = Channel.CreateUnbounded<WriterTaskAction>(unboundedChannelOptions);
 
                     writeFrames = Task.Run(async () =>
                     {
@@ -464,7 +463,15 @@ namespace OpenEphys.Onix1
                         {
                             await foreach (var writeAction in writeActionChannel.Reader.ReadAllAsync(collectFramesToken))
                             {
-                                writeAction.Write(ctx);
+                                try
+                                {
+                                    writeAction.Write(ctx);
+                                }
+                                catch (Exception)
+                                {
+                                    collectFramesCancellation.Cancel();
+                                    throw;
+                                }
                             }
                         }
                         catch (OperationCanceledException)
