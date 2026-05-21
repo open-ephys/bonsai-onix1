@@ -463,15 +463,7 @@ namespace OpenEphys.Onix1
                         {
                             await foreach (var writeAction in writeActionChannel.Reader.ReadAllAsync(collectFramesToken))
                             {
-                                try
-                                {
-                                    writeAction.Write(ctx);
-                                }
-                                catch (Exception)
-                                {
-                                    collectFramesCancellation.Cancel();
-                                    throw;
-                                }
+                                writeAction.Write(ctx);
                             }
                         }
                         catch (OperationCanceledException)
@@ -479,6 +471,11 @@ namespace OpenEphys.Onix1
 #if DEBUG
                             Console.WriteLine("Frame write task has been cancelled by " + this.GetType());
 #endif
+                        }
+                        catch (Exception)
+                        {
+                            collectFramesCancellation.Cancel();
+                            throw;
                         }
                         finally
                         {
@@ -489,7 +486,7 @@ namespace OpenEphys.Onix1
 
                     return acquisition = Task.WhenAll(distributeFrames, readFrames, writeFrames).ContinueWith(task =>
                     {
-                        if (readFrames.IsFaulted && readFrames.Exception is AggregateException ex)
+                        if (task.IsFaulted && task.Exception is AggregateException ex)
                         {
                             var error = ex.InnerExceptions.Count == 1 ? ex.InnerExceptions[0] : ex;
                             frameReceived.OnError(error);
