@@ -6,7 +6,7 @@ namespace OpenEphys.Onix1.DataFrameWriter
     /// Tells the FrameWriter to ignore member types from this property when writing frames to disk.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
-    public sealed class DataFrameWriterIgnoreMembersAttribute : Attribute
+    internal sealed class DataFrameWriterIgnoreMembersAttribute : Attribute
     {
         /// <summary>
         /// Gets the <see cref="MemberType"/> to ignore.
