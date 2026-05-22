@@ -69,6 +69,7 @@ namespace OpenEphys.Onix1
         /// where <c>LFP Gain</c> can be 50, 125, 250, 500, 1000, 1500, 2000, or 3000 depending on the value of <see
         /// cref="NeuropixelsV1ProbeConfiguration.LfpAmplifierGain"/>.
         /// </remarks>
+        [Subsampled(divisor: 12)]
         public Mat LfpData { get; }
     }
 }

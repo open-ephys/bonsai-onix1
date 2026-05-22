@@ -24,18 +24,18 @@ namespace OpenEphys.Onix1.DataFrameWriter
             );
 
             return Expression.Assign(
-                    arrowArrays,
-                    Expression.NewArrayBounds(
-                        typeof(IArrowArray),
-                        Expression.Property(fieldsListAsCollection, nameof(Schema.FieldsList.Count))
-                    )
-                );
+                arrowArrays,
+                Expression.NewArrayBounds(
+                    typeof(IArrowArray),
+                    Expression.Property(fieldsListAsCollection, nameof(Schema.FieldsList.Count))
+                )
+            );
         }
 
         internal static Expression<TDelegate> CreateBuilder<TDelegate>(
             IRecordBatchExpressionProvider provider,
             Type frameType,
-            IEnumerable<MemberInfo> members)
+            IReadOnlyList<MemberFieldGroup> fieldGroups)
         {
             var expressions = new List<Expression>();
             var parameters = new List<ParameterExpression>();
@@ -43,14 +43,10 @@ namespace OpenEphys.Onix1.DataFrameWriter
             var arrowArrays = Expression.Variable(typeof(IArrowArray[]), "arrowArrays");
             var arrowArrayIndex = Expression.Variable(typeof(int), "arrowArrayIndex");
             var schemaParameter = Expression.Parameter(typeof(Schema), "schema");
-            var batchRowsExpression = provider.GetLengthExpression();
             var batchRowsVariable = Expression.Variable(typeof(int), "batchRows");
 
             parameters.Add(batchRowsVariable);
-            expressions.Add(Expression.Assign(
-                batchRowsVariable,
-                batchRowsExpression
-            ));
+            expressions.Add(Expression.Assign(batchRowsVariable, provider.GetLengthExpression()));
 
             parameters.Add(arrowArrays);
             expressions.Add(InitializeArrowArrayFromSchema(schemaParameter, arrowArrays));
@@ -60,7 +56,7 @@ namespace OpenEphys.Onix1.DataFrameWriter
 
             expressions.AddRange(
                 provider.GetArrayPopulationExpressions(
-                    arrowArrays, arrowArrayIndex, batchRowsVariable, frameType, members));
+                    arrowArrays, arrowArrayIndex, batchRowsVariable, frameType, fieldGroups));
 
             var recordBatch = Expression.Variable(typeof(RecordBatch), "recordBatch");
             parameters.Add(recordBatch);

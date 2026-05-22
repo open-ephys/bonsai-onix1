@@ -30,20 +30,33 @@ namespace OpenEphys.Onix1.DataFrameWriter
         /// </summary>
         const double BufferDurationSeconds = 1.0;
 
-        static readonly Dictionary<Type, IArrowType> ArrowTypeMap = new()
+        internal static IArrowType GetArrowType(Type type) => type switch
         {
-            [typeof(byte)] = UInt8Type.Default,
-            [typeof(sbyte)] = Int8Type.Default,
-            [typeof(ushort)] = UInt16Type.Default,
-            [typeof(short)] = Int16Type.Default,
-            [typeof(uint)] = UInt32Type.Default,
-            [typeof(int)] = Int32Type.Default,
-            [typeof(ulong)] = UInt64Type.Default,
-            [typeof(long)] = Int64Type.Default,
-            [typeof(float)] = FloatType.Default,
-            [typeof(double)] = DoubleType.Default,
-            [typeof(bool)] = BooleanType.Default,
-            [typeof(string)] = StringType.Default
+            _ when type == typeof(byte) => UInt8Type.Default,
+            _ when type == typeof(sbyte) => Int8Type.Default,
+            _ when type == typeof(ushort) => UInt16Type.Default,
+            _ when type == typeof(short) => Int16Type.Default,
+            _ when type == typeof(uint) => UInt32Type.Default,
+            _ when type == typeof(int) => Int32Type.Default,
+            _ when type == typeof(ulong) => UInt64Type.Default,
+            _ when type == typeof(long) => Int64Type.Default,
+            _ when type == typeof(float) => FloatType.Default,
+            _ when type == typeof(double) => DoubleType.Default,
+            _ when type == typeof(bool) => BooleanType.Default,
+            _ when type == typeof(string) => StringType.Default,
+            _ => throw new NotSupportedException($"The type '{type}' is not supported for mapping to an ArrowType.")
+        };
+
+        internal static IArrowType GetArrowType(Depth depth) => depth switch
+        {
+            Depth.U8 => GetArrowType(typeof(byte)),
+            Depth.S8 => GetArrowType(typeof(sbyte)),
+            Depth.U16 => GetArrowType(typeof(ushort)),
+            Depth.S16 => GetArrowType(typeof(short)),
+            Depth.S32 => GetArrowType(typeof(int)),
+            Depth.F32 => GetArrowType(typeof(float)),
+            Depth.F64 => GetArrowType(typeof(double)),
+            _ => throw new NotSupportedException($"Cannot get the ArrowType for the given depth value '{depth}'.")
         };
 
         internal static IArrowArray ConvertArrayToArrowArray<T>(T[] array, IArrowType arrowType, int length) where T : unmanaged
@@ -78,25 +91,6 @@ namespace OpenEphys.Onix1.DataFrameWriter
                 return CreateMemberAccess(instance, member.Member);
 
             return CreateMemberAccess(CreateMemberAccess(instance, member.Parent), member.Member);
-        }
-
-        internal static IArrowType GetArrowType(Type type) => ArrowTypeMap.TryGetValue(type, out var arrowType)
-            ? arrowType
-            : throw new NotSupportedException($"The type '{type}' is not supported for mapping to an ArrowType.");
-
-        internal static IArrowType GetArrowType(Depth depth)
-        {
-            return depth switch
-            {
-                Depth.U8 => GetArrowType(typeof(byte)),
-                Depth.S8 => GetArrowType(typeof(sbyte)),
-                Depth.U16 => GetArrowType(typeof(ushort)),
-                Depth.S16 => GetArrowType(typeof(short)),
-                Depth.S32 => GetArrowType(typeof(int)),
-                Depth.F32 => GetArrowType(typeof(float)),
-                Depth.F64 => GetArrowType(typeof(double)),
-                _ => throw new NotSupportedException($"Cannot get the ArrowType for the given depth value '{depth}'.")
-            };
         }
 
         internal static IEnumerable<MemberInfo> GetDataMembers(Type type)
@@ -136,19 +130,46 @@ namespace OpenEphys.Onix1.DataFrameWriter
             return false;
         }
 
-        static object GetMemberValue(MemberInfo member, object instance)
+        static object GetMemberValue(MemberInfo member, object instance) => member switch
         {
-            return member switch
+            FieldInfo fieldInfo => fieldInfo.GetValue(instance),
+            PropertyInfo propertyInfo => propertyInfo.GetValue(instance),
+            _ => throw new InvalidOperationException($"Cannot get value of {member.GetType()} member from {instance.GetType()} object."),
+
+        };
+
+        static Field CreatePrimitiveField(MemberNode node, Type type) =>
+            new(node.GetFullName(), GetArrowType(type), false);
+
+        static Field CreateArrayField(MemberNode node, Type arrayType) =>
+            new(node.GetFullName(), GetArrowType(arrayType.GetElementType()), false);
+
+        static Field CreateEnumField(MemberNode node, Type enumType) =>
+            new(node.GetFullName(), GetArrowType(Enum.GetUnderlyingType(enumType)), false);
+
+        static IReadOnlyList<Field> CreateMatFields(MemberNode node, object instance)
+        {
+            var mat = GetMemberValue(node.Member, instance) as Mat
+                ?? throw new NullReferenceException($"No valid Mat property on the {instance.GetType()} object.");
+            var reeAttr = node.Member.GetCustomAttribute<SubsampledAttribute>();
+            var fields = new List<Field>(mat.Rows);
+
+            for (int i = 0; i < mat.Rows; i++)
             {
-                FieldInfo fieldInfo => fieldInfo.GetValue(instance),
-                PropertyInfo propertyInfo => propertyInfo.GetValue(instance),
-                _ => throw new InvalidOperationException($"Cannot get value of {member.GetType()} member from {instance.GetType()} object."),
-            };
+                var fieldName = $"{node.GetFullName()}{i}";
+                fields.Add(reeAttr != null
+                    ? new Field(fieldName, new RunEndEncodedType(
+                        new Field($"runEnds{i}", Int32Type.Default, false),
+                        new Field($"values{i}", GetArrowType(mat.Depth), false)), false)
+                    : new Field(fieldName, GetArrowType(mat.Depth), false));
+            }
+
+            return fields;
         }
 
-        internal static Schema GenerateSchema(IEnumerable<MemberInfo> members, object instance)
+        internal static IReadOnlyList<MemberFieldGroup> BuildFieldMappings(IEnumerable<MemberInfo> members, object instance)
         {
-            var fields = new List<Field>();
+            var groups = new List<MemberFieldGroup>();
             var stack = new Stack<MemberNode>(members.Select(m => new MemberNode { Member = m }));
 
             while (stack.Count > 0)
@@ -156,52 +177,42 @@ namespace OpenEphys.Onix1.DataFrameWriter
                 var current = stack.Pop();
                 var memberType = GetMemberType(current.Member);
 
-                if (memberType.IsPrimitive)
+                switch (memberType)
                 {
-                    fields.Add(new Field(current.GetFullName(), GetArrowType(memberType), false));
-                }
-                else if (memberType.IsArray)
-                {
-                    fields.Add(new Field(current.GetFullName(), GetArrowType(memberType.GetElementType()), false));
-                }
-                else if (memberType.IsEnum)
-                {
-                    // TODO: See if the Dictionary type in Arrow would be better for enums
-                    fields.Add(new Field(current.GetFullName(), GetArrowType(Enum.GetUnderlyingType(memberType)), false));
-                }
-                else if (memberType.IsValueType)
-                {
-                    var structMembers = GetDataMembers(memberType);
-                    foreach (var structMember in structMembers.Reverse())
-                    {
-                        if (IsMemberIgnored(current.Member, structMember))
-                            continue;
+                    case { IsPrimitive: true }:
+                        groups.Add(new MemberFieldGroup(current, new[] { CreatePrimitiveField(current, memberType) }));
+                        break;
 
-                        stack.Push(new MemberNode
+                    case { IsArray: true }:
+                        groups.Add(new MemberFieldGroup(current, new[] { CreateArrayField(current, memberType) }));
+                        break;
+
+                    case { IsEnum: true }:
+                        groups.Add(new MemberFieldGroup(current, new[] { CreateEnumField(current, memberType) }));
+                        break;
+
+                    case { IsValueType: true }:
+                        foreach (var structMember in GetDataMembers(memberType).Reverse())
                         {
-                            Member = structMember,
-                            Parent = current
-                        });
-                    }
-                }
-                else if (memberType == typeof(Mat))
-                {
-                    var mat = GetMemberValue(current.Member, instance) as Mat ?? throw new NullReferenceException($"No valid Mat property on the {instance.GetType()} object.");
+                            if (!IsMemberIgnored(current.Member, structMember))
+                                stack.Push(new MemberNode { Member = structMember, Parent = current });
+                        }
+                        break;
 
-                    for (int i = 0; i < mat.Rows; i++)
-                    {
-                        // Note: Could add an attribute to data frames properties to specify custom field naming
-                        fields.Add(new Field($"{current.GetFullName()}Ch{i}", GetArrowType(mat.Depth), false));
-                    }
-                }
-                else
-                {
-                    throw new NotSupportedException($"The member type '{memberType}' is not supported for generating schemas.");
+                    case var t when t == typeof(Mat):
+                        groups.Add(new MemberFieldGroup(current, CreateMatFields(current, instance)));
+                        break;
+
+                    default:
+                        throw new NotSupportedException($"The member type '{memberType}' is not supported for generating schema mappings.");
                 }
             }
 
-            return new Schema(fields, null);
+            return groups;
         }
+
+        internal static Schema BuildSchema(IReadOnlyList<MemberFieldGroup> fieldGroups) => 
+            new(fieldGroups.SelectMany(g => g.Fields), null);
 
         internal static int GetBufferSize(Type frameType)
         {
