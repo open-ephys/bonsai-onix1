@@ -30,7 +30,7 @@ namespace OpenEphys.Onix1.DataFrameWriter
         /// <summary>
         /// Writes all of the data frames in the sequence to an Apache Arrow file.
         /// </summary>
-        /// <param name="source">The sequence of <see cref="BufferedDataFrame">BufferedDataFrame's</see> to
+        /// <param name="source">The sequence of <see cref="BufferedDataFrame">BufferedDataFrames</see> to
         /// write.</param>
         /// <returns>
         /// An observable sequence that is identical to the source sequence but where there is an additional
@@ -51,7 +51,7 @@ namespace OpenEphys.Onix1.DataFrameWriter
         /// <summary>
         /// Writes all of the data frames in the sequence to an Apache Arrow file.
         /// </summary>
-        /// <param name="source">The sequence of <see cref="DataFrame">DataFrame's</see> to write.</param>
+        /// <param name="source">The sequence of <see cref="DataFrame">DataFrames</see> to write.</param>
         /// <returns>
         /// An observable sequence that is identical to the source sequence but where
         /// there is an additional side effect of writing the frames to an Apache Arrow file.
