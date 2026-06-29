@@ -12,6 +12,8 @@ namespace OpenEphys.Onix1
         public const int FramesPerRoundRobin = 12;
         public const int AdcCount = 32;
         public const int ChannelCount = 384;
+        public const int AdcBits = 10;
+        public const int AdcMidpoint = 1 << (AdcBits - 1);
         public const int ElectrodeCount = 960;
         public const int FrameWords = 40;
 
@@ -187,6 +189,20 @@ namespace OpenEphys.Onix1
             }
 
             return BaseConfigs;
+        }
+
+        internal static int[][] AdcChannelGroups()
+        {
+            const int ChannelsPerAdc = ChannelCount / AdcCount;
+
+            var groups = new int[AdcCount][];
+            for (int a = 0; a < AdcCount; a++)
+            {
+                groups[a] = new int[ChannelsPerAdc];
+                for (int i = 0; i < ChannelsPerAdc; i++)
+                    groups[a][i] = a + i * AdcCount;
+            }
+            return groups;
         }
 
         internal class NameConverter : DeviceNameConverter

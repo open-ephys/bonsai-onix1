@@ -9,6 +9,8 @@ namespace OpenEphys.Onix1
         public const int FlexEEPROMAddress = 0x50;
 
         public const int ChannelCount = 384;
+        public const int AdcBits = 12;
+        public const int AdcMidpoint = 1 << (AdcBits - 1);
         public const int BaseBitsPerChannel = 4;
         public const int ElectrodePerShank = 1280;
 
@@ -90,6 +92,22 @@ namespace OpenEphys.Onix1
             }
 
             return baseBits;
+        }
+
+        internal static int[][] AdcChannelGroups()
+        {
+
+            const int channelsPerAdc = ChannelCount / AdcsPerProbe;
+            var groups = new int[AdcsPerProbe][];
+            for (int a = 0; a < AdcsPerProbe; a++)
+            {
+                int block = a / 2, parity = a % 2;
+                groups[a] = new int[channelsPerAdc];
+                for (int i = 0; i < channelsPerAdc; i++)
+                    groups[a][i] = block * 32 + parity + i * 2;
+            }
+
+            return groups;
         }
 
         internal class NameConverter : DeviceNameConverter

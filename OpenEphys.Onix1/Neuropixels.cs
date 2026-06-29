@@ -45,4 +45,15 @@ namespace OpenEphys.Onix1
             return spatialRawToChannel;
         }
     }
+
+    /// <summary>
+    /// Specifies the Neuropixels base ASIC version.
+    /// </summary>
+    public enum NeuropixelsAsicVersion
+    {
+        /// <summary>Specifies NeuropixelsV1 (10-bit ADC, 32 ADCs × 12 channels).</summary>
+        V1,
+        /// <summary>Specifies NeuropixelsV2 (12-bit ADC, 24 ADCs × 16 channels).</summary>
+        V2
+    }
 }
