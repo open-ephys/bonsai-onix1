@@ -311,9 +311,18 @@ namespace OpenEphys.Onix1
         Gain3000 = 0b111
     }
 
+    /// <summary>
+    /// Specifies a frequency band supported by Neuropixels V1 probes.
+    /// </summary>
     public enum NeuropixelsV1EphysBand
     {
+        /// <summary>
+        /// Local field potential band, sampled at 2.5 kHz.
+        /// </summary>
         Lfp,
+        /// <summary>
+        /// Spike band, sampled at 30 kHz.
+        /// </summary>
         Spike
     }
 }
