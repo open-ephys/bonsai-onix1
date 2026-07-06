@@ -310,4 +310,10 @@ namespace OpenEphys.Onix1
         /// </summary>
         Gain3000 = 0b111
     }
+
+    public enum NeuropixelsV1EphysBand
+    {
+        Lfp,
+        Spike
+    }
 }
