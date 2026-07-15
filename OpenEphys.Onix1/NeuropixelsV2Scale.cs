@@ -62,7 +62,7 @@ namespace OpenEphys.Onix1
             return source.Select(input => {
                 var output = new Mat(input.AmplifierData.Size, Depth.F32, input.AmplifierData.Channels);
                 CV.ConvertScale(input.AmplifierData, output, 3.05176, 3.05176 * -NeuropixelsV2.AdcMidpoint);
-                return useCmr ? Neuropixels.ApplyCmr(output, groups) : output;
+                return useCmr ? Neuropixels.ApplyCmrF32(output, groups) : output;
             });
         }
     }

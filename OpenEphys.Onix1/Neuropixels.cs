@@ -69,8 +69,14 @@ namespace OpenEphys.Onix1
         /// <returns>
         /// The same <paramref name="input"/> matrix, modified in place, for convenient chaining.
         /// </returns>
-        internal static unsafe Mat ApplyCmr(Mat input, int[][] groups)
+        /// <exception cref="ArgumentException">
+        /// <paramref name="input"/> is not <see cref="Depth.F32"/>.
+        /// </exception>
+        internal static unsafe Mat ApplyCmrF32(Mat input, int[][] groups)
         {
+            if (input.Depth != Depth.F32)
+                throw new ArgumentException($"Expected {nameof(Depth.F32)} matrix but got {input.Depth}.", nameof(input));
+
             int samples = input.Cols;
             int step = input.Step;
             byte* ptr = (byte*)input.Data.ToPointer();

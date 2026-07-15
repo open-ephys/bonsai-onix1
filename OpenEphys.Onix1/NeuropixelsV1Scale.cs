@@ -94,7 +94,7 @@ namespace OpenEphys.Onix1
                 var raw = getRaw(input);
                 var output = new Mat(raw.Size, Depth.F32, raw.Channels);
                 CV.ConvertScale(raw, output, alpha, beta);
-                return useCmr ? Neuropixels.ApplyCmr(output, adcGroups) : output;
+                return useCmr ? Neuropixels.ApplyCmrF32(output, adcGroups) : output;
             });
         }
 
