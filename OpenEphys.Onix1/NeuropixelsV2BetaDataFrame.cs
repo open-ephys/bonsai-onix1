@@ -1,22 +1,21 @@
-﻿using System.Runtime.InteropServices;
-using OpenCV.Net;
+﻿using OpenCV.Net;
 
 namespace OpenEphys.Onix1
 {
     /// <summary>
     /// Buffered data from a NeuropixelsV2-Beta probe.
     /// </summary>
-    [ExpectedSampleRate(30_000)]
-    public class NeuropixelsV2eBetaDataFrame : BufferedDataFrame
+    [ExpectedSampleRate(NeuropixelsV2.SamplesPerChannelPerSecond)]
+    public class NeuropixelsV2BetaDataFrame : BufferedDataFrame
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="NeuropixelsV2eBetaDataFrame"/> class.
+        /// Initializes a new instance of the <see cref="NeuropixelsV2BetaDataFrame"/> class.
         /// </summary>
         /// <param name="clock">An array of <see cref="DataFrame.Clock"/> values.</param>
         /// <param name="hubClock">An array of hub clock counter values.</param>
         /// <param name="amplifierData">An array of multi-channel amplifier data.</param>
         /// <param name="frameCount">An array of frame count values.</param>
-        public NeuropixelsV2eBetaDataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData, int[] frameCount)
+        public NeuropixelsV2BetaDataFrame(ulong[] clock, ulong[] hubClock, Mat amplifierData, int[] frameCount)
             : base(clock, hubClock)
         {
             AmplifierData = amplifierData;
@@ -37,6 +36,7 @@ namespace OpenEphys.Onix1
         /// Electrode Voltage (µV) = 0.76294 × (ADC Sample – 8192)
         /// </code>
         /// </remarks>
+        /// <seealso cref="NeuropixelsV2Scale"/>
         public Mat AmplifierData { get; }
 
         /// <summary>

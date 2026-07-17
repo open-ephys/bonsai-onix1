@@ -10,9 +10,9 @@ using OpenCV.Net;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Produces a sequence of <see cref="Nric1384DataFrame"/> objects from a Nric1384 bioacquisition device.
+    /// Produces a sequence of <see cref="NeuropixelsV1DataFrame"/> objects from a Nric1384 bioacquisition device.
     /// </summary>
-    public class Nric1384Data : Source<Nric1384DataFrame>
+    public class Nric1384Data : Source<NeuropixelsV1DataFrame>
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [Description(SingleDeviceFactory.DeviceNameDescription)]
@@ -40,10 +40,10 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Generates a sequence of <see cref="Nric1384DataFrame"/> objects.
+        /// Generates a sequence of <see cref="NeuropixelsV1DataFrame"/> objects.
         /// </summary>
-        /// <returns>A sequence of <see cref="Nric1384DataFrame"/> objects.</returns>
-        public unsafe override IObservable<Nric1384DataFrame> Generate()
+        /// <returns>A sequence of <see cref="NeuropixelsV1DataFrame"/> objects.</returns>
+        public unsafe override IObservable<NeuropixelsV1DataFrame> Generate()
         {
             var spikeBufferSize = BufferSize;
             var lfpBufferSize = spikeBufferSize / NeuropixelsV1.FramesPerRoundRobin;
@@ -52,7 +52,7 @@ namespace OpenEphys.Onix1
             {
                 var device = deviceInfo.GetDeviceContext(typeof(Nric1384));
 
-                return Observable.Create<Nric1384DataFrame>(observer =>
+                return Observable.Create<NeuropixelsV1DataFrame>(observer =>
                 {
                     var sampleIndex = 0;
                     var spikeBuffer = new short[NeuropixelsV1.ChannelCount * spikeBufferSize];
@@ -73,7 +73,7 @@ namespace OpenEphys.Onix1
                         {
                             var lfpData = BufferHelper.CopyTranspose(lfpBuffer, lfpBufferSize, NeuropixelsV1.ChannelCount, Depth.U16);
                             var apData = BufferHelper.CopyTranspose(spikeBuffer, spikeBufferSize, NeuropixelsV1.ChannelCount, Depth.U16);
-                            observer.OnNext(new Nric1384DataFrame(clockBuffer, hubClockBuffer, frameCountBuffer, apData, lfpData));
+                            observer.OnNext(new NeuropixelsV1DataFrame(clockBuffer, hubClockBuffer, frameCountBuffer, apData, lfpData));
                             frameCountBuffer = new int[spikeBufferSize];
                             hubClockBuffer = new ulong[spikeBufferSize];
                             clockBuffer = new ulong[spikeBufferSize];
