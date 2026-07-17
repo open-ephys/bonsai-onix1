@@ -5,7 +5,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Buffered data from a NeuropixelsV1 probe.
     /// </summary>
-    [ExpectedSampleRate(30_000)]
+    [ExpectedSampleRate(NeuropixelsV1.SamplesPerChannelPerSecond)]
     public class NeuropixelsV1DataFrame : BufferedDataFrame
     {
         /// <summary>
@@ -46,11 +46,11 @@ namespace OpenEphys.Onix1
         /// binary value represented as a <see cref="ushort"/>. The following equation can be used to convert
         /// a sample to microvolts:
         /// <code> 
-        /// Electrode Voltage (µV) = (1,171.875 / AP Gain) × (ADC Sample – 512) 
+        /// Electrode Voltage (µV) = (1,171.875 / SpikeAmplifierGain) × (ADC Sample – 512) 
         /// </code>
-        /// where <c>AP Gain</c> can be 50, 125, 250, 500, 1000, 1500, 2000, or 3000 depending on the value of <see
-        /// cref="NeuropixelsV1ProbeConfiguration.SpikeAmplifierGain"/>.
+        /// where <c>SpikeAmplifierGain</c> is a value from <see cref="NeuropixelsV1Gain"/>.
         /// </remarks>
+        /// <seealso cref="NeuropixelsV1Scale"/>
         public Mat SpikeData { get; }
 
         /// <summary>
@@ -64,11 +64,11 @@ namespace OpenEphys.Onix1
         /// binary value represented as a <see cref="ushort"/>. The following equation can be used to convert
         /// a sample to microvolts:
         /// <code> 
-        /// Electrode Voltage (µV) = (1,171.875 / LFP Gain) × (ADC Sample – 512)
+        /// Electrode Voltage (µV) = (1,171.875 / LfpAmplifierGain) × (ADC Sample – 512)
         /// </code>
-        /// where <c>LFP Gain</c> can be 50, 125, 250, 500, 1000, 1500, 2000, or 3000 depending on the value of <see
-        /// cref="NeuropixelsV1ProbeConfiguration.LfpAmplifierGain"/>.
+        /// where <c>LfpAmplifierGain</c> is a value from <see cref="NeuropixelsV1Gain"/>.
         /// </remarks>
+        /// <seealso cref="NeuropixelsV1Scale"/>
         [Subsampled(divisor: 12)]
         public Mat LfpData { get; }
     }

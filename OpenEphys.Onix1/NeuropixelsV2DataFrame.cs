@@ -5,7 +5,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Buffered data from a NeuropixelsV2 probe.
     /// </summary>
-    [ExpectedSampleRate(30_000)]
+    [ExpectedSampleRate(NeuropixelsV2.SamplesPerChannelPerSecond)]
     public class NeuropixelsV2DataFrame : BufferedDataFrame
     {
         /// <summary>
@@ -34,6 +34,7 @@ namespace OpenEphys.Onix1
         /// Electrode Voltage (µV) = 3.05176 × (ADC Sample – 2048)
         /// </code>
         /// </remarks>
+        /// <seealso cref="NeuropixelsV2Scale"/>
         public Mat AmplifierData { get; }
     }
 }

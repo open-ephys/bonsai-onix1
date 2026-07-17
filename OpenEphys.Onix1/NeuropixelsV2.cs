@@ -8,6 +8,8 @@ namespace OpenEphys.Onix1
         public const int ProbeAddress = 0x10;
         public const int FlexEEPROMAddress = 0x50;
 
+        public const int SamplesPerChannelPerSecond = 30_000;
+
         public const int ChannelCount = 384;
         public const int AdcBits = 12;
         public const int AdcMidpoint = 1 << (AdcBits - 1);

@@ -8,6 +8,8 @@ namespace OpenEphys.Onix1
         public const int ProbeI2CAddress = 0x70;
         public const int FlexEepromI2CAddress = 0x50;
 
+        public const int SamplesPerChannelPerSecond = 30_000;
+
         public const int FramesPerSuperFrame = 13;
         public const int FramesPerRoundRobin = 12;
         public const int AdcCount = 32;
