@@ -27,7 +27,7 @@ namespace OpenEphys.Onix1
     }
 
     /// <summary>
-    /// Defines a configuration for single-shank, Neuropixels 2.0 and 2.0-beta probes.
+    /// Defines a configuration for single-shank, Neuropixels 2.0 probes.
     /// </summary>
     [DisplayName(XmlTypeName)]
     [XmlType(TypeName = XmlTypeName, Namespace = Constants.XmlNamespace)]
@@ -63,8 +63,7 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="NeuropixelsV2SingleShankProbeConfiguration"/> class with the given
-        /// <see cref="NeuropixelsV2eSingleShankProbeGroup"/> channel configuration. 
+        /// Initializes a new instance of the <see cref="NeuropixelsV2SingleShankProbeConfiguration"/> class.
         /// </summary>
         /// <param name="reference">The <see cref="NeuropixelsV2SingleShankReference"/> reference value.</param>
         /// <param name="invertPolarity">Boolean defining if the signal polarity should be inverted.</param>
@@ -166,14 +165,9 @@ namespace OpenEphys.Onix1
 
         internal override bool IsGroundReference() => (NeuropixelsV2SingleShankReference)Reference == NeuropixelsV2SingleShankReference.Ground;
 
-        internal override int GetChannelNumber(int index)
-        {
-            return NeuropixelsV2SingleShankElectrode.GetChannelNumber(index);
-        }
-
         internal override Type GetProbeGroupType()
         {
-            return typeof(NeuropixelsV2eSingleShankProbeGroup);
+            return typeof(NeuropixelsV2SingleShankProbeGroup);
         }
     }
 

@@ -22,12 +22,11 @@ namespace OpenEphys.Onix1.Design
                     var configureNode = new ConfigureNeuropixelsV2PsbDecoder();
                     DesignHelper.DeepCopyProperties(configureNeuropixelsV2e, configureNode);
 
-                    using var editorDialog = new NeuropixelsV2eDialog(configureNode, nameof(NeuropixelsV2));
-
-                    if (editorDialog.ShowDialog() == DialogResult.OK)
+                    using var editorDialog = new NeuropixelsV2eImGuiDialog(configureNode, nameof(NeuropixelsV2));
+                    using var shell = new ProbeShellDialog(editorDialog);
+                    if (shell.ShowDialog() == DialogResult.OK)
                     {
                         DesignHelper.CopyProperties(editorDialog.ConfigureNeuropixelsV2, configureNeuropixelsV2e, DesignHelper.PropertiesToIgnore);
-
                         return true;
                     }
                 }
@@ -36,12 +35,11 @@ namespace OpenEphys.Onix1.Design
                     var configureNode = new ConfigureNeuropixelsV2BetaPsbDecoder();
                     DesignHelper.DeepCopyProperties(configureNeuropixelsV2eBeta, configureNode);
 
-                    using var editorDialog = new NeuropixelsV2eDialog(configureNode, nameof(NeuropixelsV2));
-
-                    if (editorDialog.ShowDialog() == DialogResult.OK)
+                    using var editorDialog = new NeuropixelsV2eImGuiDialog(configureNode, nameof(NeuropixelsV2));
+                    using var shell = new ProbeShellDialog(editorDialog);
+                    if (shell.ShowDialog() == DialogResult.OK)
                     {
                         DesignHelper.CopyProperties(editorDialog.ConfigureNeuropixelsV2, configureNeuropixelsV2eBeta, DesignHelper.PropertiesToIgnore);
-
                         return true;
                     }
                 }

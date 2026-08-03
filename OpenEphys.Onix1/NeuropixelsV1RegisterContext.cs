@@ -19,7 +19,7 @@ namespace OpenEphys.Onix1
         readonly BitArray[] BaseConfigs;
 
         public NeuropixelsV1RegisterContext(DeviceContext deviceContext, uint i2cAddress, ulong probeSerialNumber,
-            NeuropixelsV1ProbeConfiguration probeConfiguration, NeuropixelsV1eProbeGroup probeGroup)
+            NeuropixelsV1ProbeConfiguration probeConfiguration, NeuropixelsV1ProbeGroup probeGroup)
             : base(deviceContext, i2cAddress)
         {
             if (!File.Exists(probeConfiguration.GainCalibrationFileName))

@@ -1,0 +1,94 @@
+{
+  "specification": "probeinterface",
+  "version": "0.3.2",
+  "probes": [
+    {
+      "ndim": 2,
+      "si_units": "mm",
+        "annotations": {
+            "model_name": "OEHSRHS2116",
+            "description": "ONIX Headstage 32ch Stim/Record Default Omnetics Pinout",
+            "manufacturer": "Open Ephys"
+        },
+      "contact_positions": [
+        [0.0, 1.0], [1.0, 1.0], [2.0, 1.0], [3.0, 1.0], [4.0, 1.0], [5.0, 1.0], [6.0, 1.0], [7.0, 1.0], [8.0, 1.0],
+        [9.0, 1.0], [10.0, 1.0], [11.0, 1.0], [12.0, 1.0], [13.0, 1.0], [14.0, 1.0], [15.0, 1.0], [16.0, 1.0], [17.0, 1.0],
+        [0.0, 0.0], [1.0, 0.0], [2.0, 0.0], [3.0, 0.0], [4.0, 0.0], [5.0, 0.0], [6.0, 0.0], [7.0, 0.0], [8.0, 0.0],
+        [9.0, 0.0], [10.0, 0.0], [11.0, 0.0], [12.0, 0.0], [13.0, 0.0], [14.0, 0.0], [15.0, 0.0], [16.0, 0.0], [17.0, 0.0]
+      ],
+      "contact_shapes": [
+        "circle", "circle", "circle", "circle", "circle", "circle", "circle", "circle", "circle",
+        "circle", "circle", "circle", "circle", "circle", "circle", "circle", "circle", "circle",
+        "circle", "circle", "circle", "circle", "circle", "circle", "circle", "circle", "circle",
+        "circle", "circle", "circle", "circle", "circle", "circle", "circle", "circle", "circle"
+      ],
+      "contact_shape_params": [
+        {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3},
+        {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3},
+        {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3},
+        {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3},
+        {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3},
+        {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3}, {"radius": 0.3}
+      ],
+        "probe_planar_contour": [
+            [ -0.5, -0.5 ],
+            [ 17.5, -0.5 ],
+            [ 17.5, 1.5 ],
+            [ -0.5, 1.5 ],
+            [ -0.5, -0.5 ],
+            [ -0.5, 1.5 ],
+            [ -1.5, 1.5 ],
+            [ -1.5, 2.1 ],
+            [ 18.5, 2.1 ],
+            [ 18.5, 1.5 ],
+            [ -0.5, 1.5 ]
+        ],
+      "device_channel_indices": [
+        -1, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -1,
+        -1, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, -1
+      ],
+        "contact_ids": [
+            "GND",
+            "CH15",
+            "CH14",
+            "CH13",
+            "CH12",
+            "CH11",
+            "CH10",
+            "CH9",
+            "CH8",
+            "CH7",
+            "CH6",
+            "CH5",
+            "CH4",
+            "CH3",
+            "CH2",
+            "CH1",
+            "CH0",
+            "REF",
+            "REF",
+            "CH16",
+            "CH17",
+            "CH18",
+            "CH19",
+            "CH20",
+            "CH21",
+            "CH22",
+            "CH23",
+            "CH24",
+            "CH25",
+            "CH26",
+            "CH27",
+            "CH28",
+            "CH29",
+            "CH30",
+            "CH31",
+            "GND"
+        ],
+      "shank_ids": [
+        "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+        "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""
+      ]
+    }
+  ]
+}

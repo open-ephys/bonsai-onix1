@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Drawing.Design;
 using System.IO;
 using System.Xml.Serialization;
 
@@ -43,7 +42,6 @@ namespace OpenEphys.Onix1
         /// <inheritdoc/>
         [Category(ConfigurationCategory)]
         [Description("Probe configuration.")]
-        [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         [XmlElement(nameof(ProbeConfiguration), typeof(NeuropixelsV2QuadShankProbeConfiguration))] // NB: Needed for backward compatibility; TODO: remove in 1.0.0
         [TypeConverter(typeof(GenericPropertyConverter))]
         public NeuropixelsV2ProbeConfiguration ProbeConfiguration { get; set; } 
@@ -71,7 +69,7 @@ namespace OpenEphys.Onix1
 
             return source.ConfigureAndLatchDevice(context =>
             {
-                NeuropixelsV2eProbeGroup probeGroup = new NeuropixelsV2eQuadShankProbeGroup();
+                NeuropixelsV2ProbeGroup probeGroup = new NeuropixelsV2QuadShankProbeGroup();
 
                 // configure device via the DS90UB9x deserializer device
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
@@ -116,7 +114,11 @@ namespace OpenEphys.Onix1
 
                         if (File.Exists(probeConfiguration.ProbeInterfaceFileName))
                         {
-                            probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfiguration.ProbeInterfaceFileName, probeConfiguration.GetProbeGroupType()) as NeuropixelsV2eProbeGroup;
+                            probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(
+                                probeConfiguration.ProbeInterfaceFileName,
+                                probeConfiguration.GetProbeGroupType()) as NeuropixelsV2ProbeGroup
+                                ?? throw new InvalidDataException(
+                                    $"Probe interface file '{probeConfiguration.ProbeInterfaceFileName}' did not produce a valid {nameof(NeuropixelsV2ProbeGroup)}.");
                         }
 
                         // configure base and shank

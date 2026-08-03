@@ -112,11 +112,11 @@ namespace OpenEphys.Onix1
         [FileNameFilter(ProbeInterfaceHelper.ProbeInterfaceFileNameFilter)]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string ProbeInterfaceFileName { get; set; }
-        
+
         const int ReferencePixelCount = 4;
         const int DummyRegisterCount = 4;
 
-        private protected const int RegistersPerShank = NeuropixelsV2.ElectrodePerShank + ReferencePixelCount + DummyRegisterCount;
+        private protected const int RegistersPerShank = NeuropixelsV2.ElectrodesPerShank + ReferencePixelCount + DummyRegisterCount;
 
         private protected const int ShiftRegisterBitExternalElectrode0 = 1285;
         private protected const int ShiftRegisterBitExternalElectrode1 = 2;
@@ -129,8 +129,6 @@ namespace OpenEphys.Onix1
         internal abstract int GetReferenceBit(Enum reference);
 
         internal abstract bool IsGroundReference();
-
-        internal abstract int GetChannelNumber(int index);
 
         internal abstract NeuropixelsV2ProbeConfiguration Clone();
 

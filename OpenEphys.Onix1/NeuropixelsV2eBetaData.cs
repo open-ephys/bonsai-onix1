@@ -59,7 +59,6 @@ namespace OpenEphys.Onix1
             {
                 var info = (NeuropixelsV2BetaPsbDecoderDeviceInfo)deviceInfo;
                 var gainCorrection = info.GainCorrection;
-                var channelMap = info.ProbeGroup.ChannelMap.ToArray();
                 var streamIndex = info.StreamIndex;
                 var orderByDepth = OrderByDepth;
                 var invertPolarity = info.ProbeConfiguration.InvertPolarity;
@@ -77,7 +76,7 @@ namespace OpenEphys.Onix1
                     var frameCounter = new int[NeuropixelsV2Beta.FramesPerSuperFrame * bufferSize];
                     var hubClockBuffer = new ulong[bufferSize];
                     var clockBuffer = new ulong[bufferSize];
-                    int[,] channelOrder = orderByDepth ? Neuropixels.OrderChannelsByDepth(channelMap, RawToChannel) : RawToChannel;
+                    int[,] channelOrder = orderByDepth ? Neuropixels.OrderChannelsByDepth(info.ProbeGroup, RawToChannel) : RawToChannel;
 
                     var frameObserver = Observer.Create<oni.Frame>(
                         frame =>

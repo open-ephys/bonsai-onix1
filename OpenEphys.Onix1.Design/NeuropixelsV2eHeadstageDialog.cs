@@ -1,20 +1,20 @@
 ﻿namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// GUI for <see cref="ConfigureHeadstageNeuropixelsV2e"/> and
-    /// <see cref="ConfigureHeadstageNeuropixelsV2eBeta"/>. Hosts two
-    /// <see cref="NeuropixelsV2eDialog"/> instances (ProbeA and ProbeB) and one
-    /// <see cref="GenericDeviceDialog"/> for the Bno055, each in its own tab.
+    /// GUI for <see cref="ConfigureHeadstageNeuropixelsV2e"/> and <see
+    /// cref="ConfigureHeadstageNeuropixelsV2eBeta"/>. Hosts two <see cref="NeuropixelsV2eImGuiDialog"/>
+    /// instances (ProbeA and ProbeB) and one <see cref="GenericDeviceDialog"/> for the Bno055, each in its
+    /// own tab.
     /// </summary>
     internal class NeuropixelsV2eHeadstageDialog : HeadstageDialog
     {
-        /// <summary>Gets the <see cref="NeuropixelsV2eDialog"/> for ProbeA.</summary>
-        internal NeuropixelsV2eDialog DialogNeuropixelsV2A =>
-            (NeuropixelsV2eDialog)GetProbeDialog(0);
+        /// <summary>Gets the <see cref="NeuropixelsV2eImGuiDialog"/> for ProbeA.</summary>
+        internal NeuropixelsV2eImGuiDialog DialogNeuropixelsV2A =>
+            (NeuropixelsV2eImGuiDialog)GetProbeDialog(0);
 
-        /// <summary>Gets the <see cref="NeuropixelsV2eDialog"/> for ProbeB.</summary>
-        internal NeuropixelsV2eDialog DialogNeuropixelsV2B =>
-            (NeuropixelsV2eDialog)GetProbeDialog(1);
+        /// <summary>Gets the <see cref="NeuropixelsV2eImGuiDialog"/> for ProbeB.</summary>
+        internal NeuropixelsV2eImGuiDialog DialogNeuropixelsV2B =>
+            (NeuropixelsV2eImGuiDialog)GetProbeDialog(1);
 
         /// <summary>Gets the <see cref="GenericDeviceDialog"/> for the Bno055.</summary>
         internal GenericDeviceDialog DialogBno055 { get; private set; }
@@ -44,25 +44,16 @@
             const string nameA = nameof(ConfigureHeadstageNeuropixelsV2e.NeuropixelsV2A);
             const string nameB = nameof(ConfigureHeadstageNeuropixelsV2e.NeuropixelsV2B);
 
-            AddProbeTab(nameA, new NeuropixelsV2eDialog(neuropixelsV2A, nameA, true),
-                old => RecreateDialog(old));
+            AddProbeTab(nameA,
+                new NeuropixelsV2eImGuiDialog(neuropixelsV2A, nameA, PortName.PortA, true), // TODO: get port from configureHeadstage somehow
+                old => new NeuropixelsV2eImGuiDialog(old.ConfigureNeuropixelsV2, nameA, PortName.PortA, true));
 
-            AddProbeTab(nameB, new NeuropixelsV2eDialog(neuropixelsV2B, nameB, true),
-                old => RecreateDialog(old));
+            AddProbeTab(nameB, 
+                new NeuropixelsV2eImGuiDialog(neuropixelsV2B, nameB, PortName.PortA, false),
+                old => new NeuropixelsV2eImGuiDialog(old.ConfigureNeuropixelsV2, nameB, PortName.PortA, false));
 
             DialogBno055 = new GenericDeviceDialog(bno055, true);
             AddDeviceTab("Bno055", DialogBno055);
-        }
-
-        static NeuropixelsV2eDialog RecreateDialog(NeuropixelsV2eDialog old)
-        {
-            var newDialog = new NeuropixelsV2eDialog(
-                old.ConfigureNeuropixelsV2, old.ProbeConfigurationDialog.ProbeName, true);
-            newDialog.ProbeConfigurationDialog.ChannelConfiguration.ProbeGroup =
-                old.ProbeConfigurationDialog.ChannelConfiguration.ProbeGroup;
-            newDialog.ProbeConfigurationDialog.ChannelConfiguration.RedrawProbeGroup();
-            newDialog.ProbeConfigurationDialog.CheckForExistingChannelPreset();
-            return newDialog;
         }
     }
 }

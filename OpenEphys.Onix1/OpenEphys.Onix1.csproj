@@ -19,7 +19,14 @@
     <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.0" />
     <PackageReference Include="Microsoft.Bcl.Numerics" Version="9.0.7" />
     <PackageReference Include="OpenCV.Net" Version="3.4.2" />
-    <PackageReference Include="OpenEphys.ProbeInterface.NET" Version="0.3.0" />
+    <PackageReference Include="OpenEphys.ProbeInterface.NET" Version="0.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\NP1000.json" />
+    <EmbeddedResource Include="Resources\NP2003.json" />
+    <EmbeddedResource Include="Resources\NP2013.json" />
+    <EmbeddedResource Include="Resources\OEHSRHS2116.json" />
   </ItemGroup>
 
   <ItemGroup>

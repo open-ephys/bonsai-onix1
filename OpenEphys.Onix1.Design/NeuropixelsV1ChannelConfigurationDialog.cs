@@ -22,7 +22,7 @@ namespace OpenEphys.Onix1.Design
         /// <param name="probeConfiguration">A <see cref="NeuropixelsV1ProbeConfiguration"/> object holding the current configuration settings.</param>
         /// <param name="probeName">The name of the probe.</param>
         public NeuropixelsV1ChannelConfigurationDialog(NeuropixelsV1ProbeConfiguration probeConfiguration, string probeName)
-            : base(probeConfiguration, probeName, typeof(NeuropixelsV1eProbeGroup))
+            : base(probeConfiguration, probeName, typeof(NeuropixelsV1ProbeGroup))
         {
             zedGraphChannels.ZoomButtons = MouseButtons.None;
             zedGraphChannels.ZoomButtons2 = MouseButtons.None;
@@ -37,7 +37,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override ProbeGroup DefaultChannelLayout()
         {
-            return new NeuropixelsV1eProbeGroup();
+            return new NeuropixelsV1ProbeGroup();
         }
 
         internal override void ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState)
@@ -85,13 +85,15 @@ namespace OpenEphys.Onix1.Design
                 contact.Fill.Color = DisabledContactFill;
             }
 
-            var channelMap = NeuropixelsV1eProbeGroup.ToChannelMap(ProbeGroup as NeuropixelsV1eProbeGroup);
+            var npProbeGroup = ProbeGroup as NeuropixelsV1ProbeGroup;
+            var channelMap = npProbeGroup?.ChannelMap;
 
             var contactsToEnable = contactObjects.Where(c =>
             {
+                if (npProbeGroup == null) return false;
                 var tag = c.Tag as ContactTag;
-                var channel = NeuropixelsV1Electrode.GetChannelNumber(tag.ContactIndex);
-                return channelMap[channel].Index == tag.ContactIndex;
+                int channel = npProbeGroup.GetChannel(tag.ContactIndex);
+                return channelMap.TryGetValue(channel, out var contactIndex) && contactIndex == tag.ContactIndex;
             });
 
             foreach (var contact in contactsToEnable)
@@ -117,13 +119,15 @@ namespace OpenEphys.Onix1.Design
                 textObj.FontSpec.FontColor = DisabledContactTextColor;
             }
 
-            var channelMap = NeuropixelsV1eProbeGroup.ToChannelMap(ProbeGroup as NeuropixelsV1eProbeGroup);
+            var npProbeGroup = ProbeGroup as NeuropixelsV1ProbeGroup;
+            var channelMap = npProbeGroup?.ChannelMap;
 
             textObjsToUpdate = textObjs.Where(c =>
             {
+                if (npProbeGroup == null) return false;
                 var tag = c.Tag as ContactTag;
-                var channel = NeuropixelsV1Electrode.GetChannelNumber(tag.ContactIndex);
-                return channelMap[channel].Index == tag.ContactIndex;
+                int channel = npProbeGroup.GetChannel(tag.ContactIndex);
+                return channelMap.TryGetValue(channel, out var contactIndex) && contactIndex == tag.ContactIndex;
             });
 
             foreach (var textObj in textObjsToUpdate)

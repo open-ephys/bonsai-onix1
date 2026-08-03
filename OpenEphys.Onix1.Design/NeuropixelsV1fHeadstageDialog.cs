@@ -50,7 +50,6 @@
             newDialog.ProbeConfigurationDialog.ChannelConfiguration.ProbeGroup =
                 old.ProbeConfigurationDialog.ChannelConfiguration.ProbeGroup;
             newDialog.ProbeConfigurationDialog.ChannelConfiguration.RedrawProbeGroup();
-            newDialog.ProbeConfigurationDialog.CheckForExistingChannelPreset();
             newDialog.HasChanges = old.HasChanges;
             return newDialog;
         }
