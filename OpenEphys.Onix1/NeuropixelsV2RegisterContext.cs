@@ -15,7 +15,7 @@ namespace OpenEphys.Onix1
         {
         }
 
-        public void WriteConfiguration(NeuropixelsV2ProbeConfiguration probe, NeuropixelsV2eProbeGroup probeGroup)
+        public void WriteConfiguration(NeuropixelsV2ProbeConfiguration probe, NeuropixelsV2ProbeGroup probeGroup)
         {
             var baseBits = NeuropixelsV2.GenerateBaseBits(probe);
             WriteShiftRegister(NeuropixelsV2.SR_CHAIN5, baseBits[0]);
@@ -36,7 +36,7 @@ namespace OpenEphys.Onix1
             }
             else
             {
-                throw new InvalidOperationException("Unknown number of shanks are ready to be written.");
+                throw new InvalidOperationException("Attempted to write invalid probe configuration.");
             }
         }
 
@@ -59,7 +59,7 @@ namespace OpenEphys.Onix1
                     WriteByte(srAddress, b);
                 }
             }
-;
+
             if (ReadByte(NeuropixelsV2.STATUS) != (uint)NeuropixelsV2Status.SR_OK)
             {
                 if (srAddress == NeuropixelsV2.SR_CHAIN5 || srAddress == NeuropixelsV2.SR_CHAIN6)

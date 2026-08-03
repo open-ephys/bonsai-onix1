@@ -4,12 +4,12 @@ namespace OpenEphys.Onix1
 {
     class NeuropixelsV1fDeviceInfo : DeviceInfo
     {
-        public NeuropixelsV1fDeviceInfo(ContextTask context, Type deviceType, uint deviceAddress, NeuropixelsV1eProbeGroup probeGroup)
+        public NeuropixelsV1fDeviceInfo(ContextTask context, Type deviceType, uint deviceAddress, NeuropixelsV1ProbeGroup probeGroup)
             : base(context, deviceType, deviceAddress)
         {
             ProbeGroup = probeGroup;
         }
 
-        public NeuropixelsV1eProbeGroup ProbeGroup { get; }
+        public NeuropixelsV1ProbeGroup ProbeGroup { get; }
     }
 }

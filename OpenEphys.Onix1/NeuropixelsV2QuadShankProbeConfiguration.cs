@@ -77,7 +77,7 @@ namespace OpenEphys.Onix1
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NeuropixelsV2QuadShankProbeConfiguration"/> class with the given
-        /// <see cref="NeuropixelsV2eQuadShankProbeGroup"/> channel configuration. 
+        /// <see cref="NeuropixelsV2QuadShankProbeGroup"/> channel configuration. 
         /// </summary>
         /// <param name="reference">The <see cref="NeuropixelsV2QuadShankReference"/> reference value.</param>
         /// <param name="invertPolarity">Boolean defining if the signal polarity should be inverted.</param>
@@ -203,14 +203,9 @@ namespace OpenEphys.Onix1
 
         internal override bool IsGroundReference() => (NeuropixelsV2QuadShankReference)Reference == NeuropixelsV2QuadShankReference.Ground;
 
-        internal override int GetChannelNumber(int index)
-        {
-            return NeuropixelsV2QuadShankElectrode.GetChannelNumber(index);
-        }
-
         internal override Type GetProbeGroupType()
         {
-            return typeof(NeuropixelsV2eQuadShankProbeGroup);
+            return typeof(NeuropixelsV2QuadShankProbeGroup);
         }
     }
 

@@ -37,7 +37,7 @@ namespace OpenEphys.Onix1
         public const uint SR_LENGTH1 = 0X10;
         public const uint SOFT_RESET = 0X11;
 
-        internal static BitArray MakeShankBits(NeuropixelsV1ProbeConfiguration configuration, NeuropixelsV1eProbeGroup probeGroup)
+        internal static BitArray MakeShankBits(NeuropixelsV1ProbeConfiguration configuration, NeuropixelsV1ProbeGroup probeGroup)
         {
             const int ShankConfigurationBitCount = 968;
             const int ShankBitExt1 = 965;
@@ -48,13 +48,14 @@ namespace OpenEphys.Onix1
 
             var shankBits = new BitArray(ShankConfigurationBitCount);
 
-            foreach (var e in probeGroup.ChannelMap)
+            foreach (var kvp in probeGroup.ChannelMap)
             {
-                if (e.Index == InternalReferenceChannel) continue;
+                int contactIdx = kvp.Value;
+                if (contactIdx == InternalReferenceChannel) continue;
 
-                int bitIndex = e.Index % 2 == 0 ?
-                        485 + (e.Index / 2) : // even electrode
-                        482 - (e.Index / 2);  // odd electrode
+                int bitIndex = contactIdx % 2 == 0 ?
+                        485 + (contactIdx / 2) : // even electrode
+                        482 - (contactIdx / 2);  // odd electrode
 
                 shankBits[bitIndex] = true;
             }

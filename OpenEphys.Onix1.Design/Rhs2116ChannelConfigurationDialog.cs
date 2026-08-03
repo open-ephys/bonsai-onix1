@@ -20,7 +20,7 @@ namespace OpenEphys.Onix1.Design
         /// <param name="probeInterfaceFileName">The ProbeInterface filename.</param>
         /// <param name="probeName">The name of the probe.</param>
         public Rhs2116ChannelConfigurationDialog(string probeInterfaceFileName, string probeName)
-            : base(new Rhs2116ProbeConfiguration(probeInterfaceFileName), probeName, typeof(Rhs2116ProbeGroup))
+            : base(new Rhs2116ProbeConfiguration(probeInterfaceFileName), probeName, typeof(ProbeGroup))
         {
             InitializeComponent();
 
@@ -40,12 +40,31 @@ namespace OpenEphys.Onix1.Design
 
         internal override ProbeGroup DefaultChannelLayout()
         {
-            return new Rhs2116ProbeGroup();
+            return ProbeGroupResource.LoadDefault<ProbeGroup>("OEHSRHS2116.json");
         }
 
         internal override void SelectedContactChanged()
         {
+            if (ClearUnmappedContactSelections())
+                HighlightSelectedContacts();
             OnSelectHandler();
+        }
+
+        private bool ClearUnmappedContactSelections()
+        {
+            if (ProbeGroup?.ChannelMap == null) return false;
+
+            bool changed = false;
+
+            for (int i = 0; i < SelectedContacts.Length; i++) 
+            {
+                if (SelectedContacts[i] && !ProbeGroup.TryGetMappedChannel(0, i, out int _)) // TODO: Implicit assumption of single probe in probe group because selectedcontacts is flat
+                {
+                    SelectedContacts[i] = false;
+                    changed = true;
+                }
+            }
+            return changed;
         }
 
         private void OnSelectHandler()
@@ -74,8 +93,6 @@ namespace OpenEphys.Onix1.Design
 
         internal override string ContactString(int deviceChannelIndex, int index)
         {
-            string s = base.ContactString(deviceChannelIndex, index);
-
             int indexOffset = 0;
             int probeIndex = 0;
 
@@ -90,17 +107,9 @@ namespace OpenEphys.Onix1.Design
             }
 
             int currentIndex = index - indexOffset;
-
             var currentProbe = ProbeGroup.Probes.ElementAt(probeIndex);
 
-            if (currentProbe.ContactAnnotations != null
-                && currentProbe.ContactAnnotations.Annotations != null
-                && currentProbe.ContactAnnotations.Annotations.Length > currentIndex)
-            {
-                s += "\n" + currentProbe.ContactAnnotations.Annotations[currentIndex];
-            }
-
-            return s;
+            return currentProbe.Contacts[currentIndex].ContactId ?? currentIndex.ToString();
         }
     }
 }

@@ -66,11 +66,15 @@ namespace OpenEphys.Onix1
             var probeConfiguration = new NeuropixelsV1ProbeConfiguration(ProbeConfiguration);
             return source.ConfigureAndLatchDevice(context =>
             {
-                NeuropixelsV1eProbeGroup probeGroup = new();
+                NeuropixelsV1ProbeGroup probeGroup = new();
 
                 if (File.Exists(probeConfiguration.ProbeInterfaceFileName))
                 {
-                    probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfiguration.ProbeInterfaceFileName, typeof(NeuropixelsV1eProbeGroup)) as NeuropixelsV1eProbeGroup;
+                    probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(
+                        probeConfiguration.ProbeInterfaceFileName, 
+                        typeof(NeuropixelsV1ProbeGroup)) as NeuropixelsV1ProbeGroup
+                        ?? throw new InvalidDataException(
+                            $"Probe interface file '{probeConfiguration.ProbeInterfaceFileName}' did not produce a valid {nameof(NeuropixelsV1ProbeGroup)}.");
                 }
 
                 // configure device via the DS90UB9x deserializer device

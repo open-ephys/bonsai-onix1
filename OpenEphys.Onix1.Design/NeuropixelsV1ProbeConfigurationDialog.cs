@@ -19,17 +19,7 @@ namespace OpenEphys.Onix1.Design
 
         NeuropixelsV1Adc[] Adcs = null;
 
-        enum ChannelPreset
-        {
-            BankA,
-            BankB,
-            BankC,
-            SingleColumn,
-            Tetrodes,
-            None
-        }
-
-        NeuropixelsV1eProbeGroup ProbeGroup => ChannelConfiguration.ProbeGroup as NeuropixelsV1eProbeGroup ?? throw new InvalidCastException($"Expected the ProbeGroup to be of type '{nameof(NeuropixelsV1eProbeGroup)}', but it is '{ChannelConfiguration.ProbeGroup.GetType().Name}'.");
+        NeuropixelsV1ProbeGroup ProbeGroup => ChannelConfiguration.ProbeGroup as NeuropixelsV1ProbeGroup ?? throw new InvalidCastException($"Expected the ProbeGroup to be of type '{nameof(NeuropixelsV1ProbeGroup)}', but it is '{ChannelConfiguration.ProbeGroup.GetType().Name}'.");
 
         internal NeuropixelsV1ProbeConfiguration ProbeConfiguration
         {
@@ -60,7 +50,7 @@ namespace OpenEphys.Onix1.Design
 
             ChannelConfiguration.OnZoom += UpdateTrackBarLocation;
             ChannelConfiguration.OnFileLoad += OnFileLoadEvent;
-            ChannelConfiguration.OnFileImport += (sender, e) => CheckForExistingChannelPreset();
+            //ChannelConfiguration.OnFileImport += (sender, e) => CheckForExistingChannelPreset();
             ChannelConfiguration.OnStateChange += (sender, e) =>
             {
                 if (HasChanges)
@@ -209,18 +199,14 @@ namespace OpenEphys.Onix1.Design
             toolStripFileName.Text = ProbeConfiguration.ProbeInterfaceFileName;
             ChannelConfiguration.OnProbeConfigurationChanged += (sender, e) => CheckStatus();
 
-            comboBoxChannelPresets.DataSource = Enum.GetValues(typeof(ChannelPreset));
-            CheckForExistingChannelPreset();
+            comboBoxChannelPresets.DataSource = Enum.GetValues(typeof(NeuropixelsV1ChannelPreset));
             comboBoxChannelPresets.SelectedIndexChanged += (sender, e) =>
             {
-                var channelPreset = ((ComboBox)sender).SelectedItem is ChannelPreset preset
+                var channelPreset = ((ComboBox)sender).SelectedItem is NeuropixelsV1ChannelPreset preset
                     ? preset
                     : throw new InvalidEnumArgumentException($"Invalid channel preset value found.");
 
-                if (channelPreset != ChannelPreset.None)
-                {
-                    SetChannelPreset(channelPreset);
-                }
+                SetChannelPreset(channelPreset);
             };
 
             CheckStatus();
@@ -251,36 +237,10 @@ namespace OpenEphys.Onix1.Design
             ChannelConfiguration.ResizeZedGraph();
         }
 
-        private void SetChannelPreset(ChannelPreset preset)
+        private void SetChannelPreset(NeuropixelsV1ChannelPreset preset)
         {
-            var electrodes = NeuropixelsV1eProbeGroup.ToElectrodes(ProbeGroup);
-
-            switch (preset)
-            {
-                case ChannelPreset.BankA:
-                    ProbeGroup.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.A).ToArray());
-                    break;
-
-                case ChannelPreset.BankB:
-                    ProbeGroup.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.B).ToArray());
-                    break;
-
-                case ChannelPreset.BankC:
-                    ProbeGroup.SelectElectrodes(electrodes.Where(e => e.Bank == NeuropixelsV1Bank.C ||
-                                                                     (e.Bank == NeuropixelsV1Bank.B && e.Index >= 576)).ToArray());
-                    break;
-
-                case ChannelPreset.SingleColumn:
-                    ProbeGroup.SelectElectrodes(electrodes.Where(e => (e.Index % 2 == 0 && e.Bank == NeuropixelsV1Bank.A) ||
-                                                                      (e.Index % 2 == 1 && e.Bank == NeuropixelsV1Bank.B)).ToArray());
-                    break;
-
-                case ChannelPreset.Tetrodes:
-                    ProbeGroup.SelectElectrodes(electrodes.Where(e => (e.Index % 8 < 4 && e.Bank == NeuropixelsV1Bank.A) ||
-                                                                      (e.Index % 8 > 3 && e.Bank == NeuropixelsV1Bank.B)).ToArray());
-                    break;
-            }
-
+          
+            ProbeGroup.SelectPreset(preset);
             ChannelConfiguration.HighlightEnabledContacts();
             ChannelConfiguration.HighlightSelectedContacts();
             ChannelConfiguration.UpdateContactLabels();
@@ -288,42 +248,8 @@ namespace OpenEphys.Onix1.Design
             HasChanges = true;
         }
 
-        internal void CheckForExistingChannelPreset()
-        {
-            var channelMap = ProbeGroup.ChannelMap;
-
-            if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.A))
-            {
-                comboBoxChannelPresets.SelectedItem = ChannelPreset.BankA;
-            }
-            else if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.B))
-            {
-                comboBoxChannelPresets.SelectedItem = ChannelPreset.BankB;
-            }
-            else if (channelMap.All(e => e.Bank == NeuropixelsV1Bank.C ||
-                                        (e.Bank == NeuropixelsV1Bank.B && e.Index >= 576)))
-            {
-                comboBoxChannelPresets.SelectedItem = ChannelPreset.BankC;
-            }
-            else if (channelMap.All(e => (e.Index % 2 == 0 && e.Bank == NeuropixelsV1Bank.A) ||
-                                         (e.Index % 2 == 1 && e.Bank == NeuropixelsV1Bank.B)))
-            {
-                comboBoxChannelPresets.SelectedItem = ChannelPreset.SingleColumn;
-            }
-            else if (channelMap.All(e => (e.Index % 8 < 4 && e.Bank == NeuropixelsV1Bank.A) ||
-                                         (e.Index % 8 > 3 && e.Bank == NeuropixelsV1Bank.B)))
-            {
-                comboBoxChannelPresets.SelectedItem = ChannelPreset.Tetrodes;
-            }
-            else
-            {
-                comboBoxChannelPresets.SelectedItem = ChannelPreset.None;
-            }
-        }
-
         private void OnFileLoadEvent(object sender, EventArgs e)
         {
-            CheckForExistingChannelPreset();
             CheckStatus();
         }
 
@@ -539,18 +465,15 @@ namespace OpenEphys.Onix1.Design
 
         private void EnableSelectedContacts()
         {
-            var electrodes = NeuropixelsV1eProbeGroup.ToElectrodes(ProbeGroup);
+            var selectedContactIndices = Enumerable.Range(0, ProbeGroup.NumberOfContacts)
+                .Where(i => i < ChannelConfiguration.SelectedContacts.Length && ChannelConfiguration.SelectedContacts[i])
+                .ToList();
 
-            var selectedElectrodes = electrodes.Where((e, ind) => ChannelConfiguration.SelectedContacts[ind])
-                                               .ToArray();
-
-            if (selectedElectrodes.Length == 0)
+            if (selectedContactIndices.Count == 0)
                 return;
 
-            ProbeGroup.SelectElectrodes(selectedElectrodes);
+            ProbeGroup.EnableElectrodes(selectedContactIndices);
             HasChanges = true;
-
-            CheckForExistingChannelPreset();
         }
 
         private void DeselectContacts()
