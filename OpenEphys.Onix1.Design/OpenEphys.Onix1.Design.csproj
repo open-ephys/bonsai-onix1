@@ -10,14 +10,21 @@
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <ForceDesignerDPIUnaware>true</ForceDesignerDPIUnaware>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Bonsai.Design" Version="2.9.0" />
+    <PackageReference Include="Bonsai.Dsp" Version="2.9.0" />
     <PackageReference Include="Bonsai.Design.Visualizers" Version="2.9.0" />
     <PackageReference Include="Bonsai.System.Design" Version="2.9.0" />
+    <PackageReference Include="Hexa.NET.ImGui" Version="2.2.8" />
+    <PackageReference Include="Hexa.NET.ImGui.Backends" Version="1.0.17" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="OpenEphys.ProbeInterface.NET" Version="0.3.0" />
+    <PackageReference Include="OpenCV.Net" Version="3.4.2" />
+    <PackageReference Include="OpenEphys.ProbeInterface.NET" Version="0.5.0" />
+    <PackageReference Include="OpenTK" Version="3.3.3" />
+    <PackageReference Include="OpenTK.GLControl" Version="3.3.3" />
     <PackageReference Include="ZedGraph" Version="5.1.7" />
   </ItemGroup>
 
@@ -43,6 +50,8 @@
   <Target Name="CopyNativeDependencies" AfterTargets="AfterBuild">
     <ItemGroup>
       <NativeDlls Include="$(OutputPath)..\..\OpenEphys.Onix1\$(ArtifactsPivots)\*.dll" />
+      <NativeDlls Include="$(NuGetPackageRoot)hexa.net.imgui.backends\1.0.17\runtimes\win-x64\native\ImGuiImpl.dll" />
+      <NativeDlls Include="$(NuGetPackageRoot)hexa.net.imgui\2.2.8\runtimes\win-x64\native\cimgui.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(NativeDlls)" DestinationFolder="$(OutputPath)" />
   </Target>

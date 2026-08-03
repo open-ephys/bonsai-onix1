@@ -74,7 +74,6 @@ namespace OpenEphys.Onix1
                 var adcOffsets = info.AdcOffsets.ToArray();
                 var probeConfiguration = info.ProbeConfiguration;
                 var orderByDepth = OrderByDepth;
-                var channelMap = info.ProbeGroup.ChannelMap.ToArray();
 
                 var device = info.GetDeviceContext(typeof(NeuropixelsV1));
                 var passthrough = device.GetPassthroughDeviceContext(typeof(DS90UB9x));
@@ -88,7 +87,7 @@ namespace OpenEphys.Onix1
                     var frameCountBuffer = new int[spikeBufferSize * NeuropixelsV1.FramesPerSuperFrame];
                     var hubClockBuffer = new ulong[spikeBufferSize];
                     var clockBuffer = new ulong[spikeBufferSize];
-                    int[,] channelOrder = orderByDepth ? Neuropixels.OrderChannelsByDepth(channelMap, RawToChannel) : RawToChannel;
+                    int[,] channelOrder = orderByDepth ? Neuropixels.OrderChannelsByDepth(info.ProbeGroup, RawToChannel) : RawToChannel;
 
                     var frameObserver = Observer.Create<oni.Frame>(
                         frame =>

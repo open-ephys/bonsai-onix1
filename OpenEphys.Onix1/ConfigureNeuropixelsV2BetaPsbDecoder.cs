@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing.Design;
 using System.IO;
 using System.Xml.Serialization;
+using OpenEphys.ProbeInterface.NET;
 
 namespace OpenEphys.Onix1
 {
@@ -93,7 +94,7 @@ namespace OpenEphys.Onix1
 
             return source.ConfigureAndLatchDevice(context =>
             {
-                NeuropixelsV2eProbeGroup probeGroup = new NeuropixelsV2eQuadShankProbeGroup();
+                NeuropixelsV2ProbeGroup probeGroup = new NeuropixelsV2QuadShankProbeGroup();
 
                 // configure device via the DS90UB9x deserializer device
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
@@ -147,7 +148,11 @@ namespace OpenEphys.Onix1
 
                         if (File.Exists(probeConfiguration.ProbeInterfaceFileName))
                         {
-                            probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfiguration.ProbeInterfaceFileName, typeof(NeuropixelsV2eQuadShankProbeGroup)) as NeuropixelsV2eProbeGroup;
+                            probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(
+                                probeConfiguration.ProbeInterfaceFileName, 
+                                typeof(NeuropixelsV2QuadShankProbeGroup)) as NeuropixelsV2ProbeGroup
+                                ?? throw new InvalidDataException(
+                                    $"Probe interface file '{probeConfiguration.ProbeInterfaceFileName}' did not produce a valid {nameof(NeuropixelsV2ProbeGroup)}.");
                         }
 
                         probeControl.WriteConfiguration(probeConfiguration, probeGroup);
