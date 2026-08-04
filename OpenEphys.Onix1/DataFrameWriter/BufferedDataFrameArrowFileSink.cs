@@ -4,7 +4,8 @@ using Apache.Arrow;
 
 namespace OpenEphys.Onix1.DataFrameWriter
 {
-    class BufferedDataFrameArrowFileSink : ArrowFileSink<BufferedDataFrame>
+    class BufferedDataFrameArrowFileSink<TSource> : ArrowFileSink<TSource, BufferedDataFrame>
+        where TSource : BufferedDataFrame
     {
         readonly TimeSpan timeout;
 
@@ -13,7 +14,7 @@ namespace OpenEphys.Onix1.DataFrameWriter
             this.timeout = timeout;
         }
 
-        protected override ArrowBatchWriter<BufferedDataFrame> CreateWriter(string filename, BufferedDataFrame dataFrame)
+        protected override ArrowBatchWriter<BufferedDataFrame> CreateWriter(string filename, TSource dataFrame)
         {
             var frameType = dataFrame.GetType();
             var members = DataFrameWriterHelper.GetDataMembers(frameType);
@@ -25,7 +26,7 @@ namespace OpenEphys.Onix1.DataFrameWriter
             return new ArrowBatchWriter<BufferedDataFrame>(filename, schema, bufferSize, timeout, createRecordBatch, EnableCompression);
         }
 
-        protected override void Write(ArrowBatchWriter<BufferedDataFrame> writer, BufferedDataFrame input)
+        protected override void Write(ArrowBatchWriter<BufferedDataFrame> writer, TSource input)
         {
             writer.Write(input);
         }
