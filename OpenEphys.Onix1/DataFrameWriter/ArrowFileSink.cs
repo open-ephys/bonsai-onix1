@@ -2,12 +2,7 @@
 
 namespace OpenEphys.Onix1.DataFrameWriter
 {
-    interface IArrowFileSink
-    {
-        bool EnableCompression { get; set; }
-    }
-
-    abstract class ArrowFileSink<TSource, TFrame> : FileSink<TSource, ArrowBatchWriter<TFrame>>, IArrowFileSink
+    abstract class ArrowFileSink<TSource, TFrame> : FileSink<TSource, ArrowBatchWriter<TFrame>>
         where TSource : TFrame
     {
         public bool EnableCompression { get; set; } = false;

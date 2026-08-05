@@ -20,15 +20,7 @@ namespace OpenEphys.Onix1.DataFrameWriter
         /// <summary>
         /// Maximum time before data is flushed to file even if internal buffer is not yet filled.
         /// </summary>
-        public const int SecondsBeforeFlush = 5;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DataFrameWriter"/> class.
-        /// </summary>
-        public DataFrameWriter()
-        {
-            Buffered = true;
-        }
+        const int SecondsBeforeFlush = 5;
 
         /// <summary>
         /// Gets or sets the name of the file on which to write the elements.
@@ -50,13 +42,13 @@ namespace OpenEphys.Onix1.DataFrameWriter
         /// thread in which notifications arrive.
         /// </summary>
         [Description("Indicates whether writing should be buffered.")]
-        public bool Buffered { get; set; }
+        public bool Buffered { get; set; } = true;
 
         /// <summary>
         /// Gets or sets a value indicating whether to overwrite the output file if it already exists.
         /// </summary>
         [Description("Indicates whether to overwrite the output file if it already exists.")]
-        public bool Overwrite { get; set; }
+        public bool Overwrite { get; set; } = false;
 
         /// <summary>
         /// Gets or sets a value indicating whether to enable compression when writing to the Arrow file.
@@ -90,15 +82,14 @@ namespace OpenEphys.Onix1.DataFrameWriter
         {
             var source = arguments.First();
             var elementType = source.Type.GetGenericArguments()[0];
-
-            Type sinkDefinition;
+            string writeMethodName;
             if (typeof(BufferedDataFrame).IsAssignableFrom(elementType))
             {
-                sinkDefinition = typeof(BufferedDataFrameArrowFileSink<>);
+                writeMethodName = nameof(WriteBuffered);
             }
             else if (typeof(DataFrame).IsAssignableFrom(elementType))
             {
-                sinkDefinition = typeof(DataFrameArrowFileSink<>);
+                writeMethodName = nameof(Write);
             }
             else
             {
@@ -107,19 +98,82 @@ namespace OpenEphys.Onix1.DataFrameWriter
                     $"{nameof(BufferedDataFrame)} objects, but the input sequence has element type " +
                     $"'{elementType}'.", this);
             }
+            var instance = Expression.Constant(this);
+            var writeMethod = typeof(DataFrameWriter)
+                .GetMethod(writeMethodName)
+                .MakeGenericMethod(elementType);
+            return Expression.Call(writeMethod, source,
+                Expression.Property(instance, nameof(FileName)),
+                Expression.Property(instance, nameof(Suffix)),
+                Expression.Property(instance, nameof(Buffered)),
+                Expression.Property(instance, nameof(Overwrite)),
+                Expression.Property(instance, nameof(EnableCompression)));
+        }
 
-            var sinkType = sinkDefinition.MakeGenericType(elementType);
-            var timeout = TimeSpan.FromSeconds(SecondsBeforeFlush);
-            var sink = (FileSink)Activator.CreateInstance(sinkType, timeout);
-            sink.FileName = FileName;
-            sink.Suffix = Suffix;
-            sink.Buffered = Buffered;
-            sink.Overwrite = Overwrite;
-            ((IArrowFileSink)sink).EnableCompression = EnableCompression;
+        /// <summary>
+        /// Writes all of the data frames in the sequence to an Apache Arrow file.
+        /// </summary>
+        /// <typeparam name="TSource">The concrete <see cref="DataFrame"/> type in the sequence.</typeparam>
+        /// <param name="source">The sequence of data frames to write.</param>
+        /// <param name="fileName">The name of the file on which to write the elements.</param>
+        /// <param name="suffix">The suffix used to generate file names.</param>
+        /// <param name="buffered">Indicates whether writing should be buffered.</param>
+        /// <param name="overwrite">Indicates whether to overwrite the output file if it already exists.</param>
+        /// <param name="enableCompression">Indicates whether to enable compression when writing to the Arrow file.</param>
+        /// <returns>
+        /// An observable sequence identical to <paramref name="source"/>, including its element type, but where
+        /// there is an additional side effect of writing each frame to an Apache Arrow file.
+        /// </returns>
+        public static IObservable<TSource> Write<TSource>(
+            IObservable<TSource> source,
+            string fileName,
+            PathSuffix suffix = PathSuffix.None,
+            bool buffered = true,
+            bool overwrite = false,
+            bool enableCompression = false)
+            where TSource : DataFrame
+        {
+            return new DataFrameArrowFileSink<TSource>(TimeSpan.FromSeconds(SecondsBeforeFlush))
+            {
+                FileName = fileName,
+                Suffix = suffix,
+                Buffered = buffered,
+                Overwrite = overwrite,
+                EnableCompression = enableCompression
+            }.Process(source);
+        }
 
-            var processMethod = sinkType.GetMethod("Process", new[] { source.Type });
-            var instance = Expression.Constant(sink);
-            return Expression.Call(instance, processMethod, source);
+        /// <summary>
+        /// Writes all of the buffered data frames in the sequence to an Apache Arrow file.
+        /// </summary>
+        /// <typeparam name="TSource">The concrete <see cref="BufferedDataFrame"/> type in the sequence.</typeparam>
+        /// <param name="source">The sequence of buffered data frames to write.</param>
+        /// <param name="fileName">The name of the file on which to write the elements.</param>
+        /// <param name="suffix">The suffix used to generate file names.</param>
+        /// <param name="buffered">Indicates whether writing should be buffered.</param>
+        /// <param name="overwrite">Indicates whether to overwrite the output file if it already exists.</param>
+        /// <param name="enableCompression">Indicates whether to enable compression when writing to the Arrow file.</param>
+        /// <returns>
+        /// An observable sequence identical to <paramref name="source"/>, including its element type, but where
+        /// there is an additional side effect of writing each frame to an Apache Arrow file.
+        /// </returns>
+        public static IObservable<TSource> WriteBuffered<TSource>(
+            IObservable<TSource> source,
+            string fileName,
+            PathSuffix suffix = PathSuffix.None,
+            bool buffered = true,
+            bool overwrite = false,
+            bool enableCompression = false)
+            where TSource : BufferedDataFrame
+        {
+            return new BufferedDataFrameArrowFileSink<TSource>(TimeSpan.FromSeconds(SecondsBeforeFlush))
+            {
+                FileName = fileName,
+                Suffix = suffix,
+                Buffered = buffered,
+                Overwrite = overwrite,
+                EnableCompression = enableCompression
+            }.Process(source);
         }
     }
 }
