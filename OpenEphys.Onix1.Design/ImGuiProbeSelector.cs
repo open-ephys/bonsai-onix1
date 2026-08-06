@@ -181,7 +181,7 @@ namespace OpenEphys.Onix1.Design
         const uint  ColContactDefault   = ImGuiPalette.Grey0x4D;
         const uint  ColContactBlocked   = ImGuiPalette.Black;
         const uint  ColBlockedOutline   = ImGuiPalette.Grey0x77;
-        const uint  ColContactSelBorder = ImGuiPalette.YellowGreen;
+        const uint  ColContactSelBorder = ImGuiPalette.Yellow;
         const uint  ColContactInspectBorder = ImGuiPalette.Grey0x99;
         const float ContactSelBorderWidth = 2f;
         const uint  ColContour          = ImGuiPalette.Grey0x80;
@@ -196,7 +196,7 @@ namespace OpenEphys.Onix1.Design
         const uint  ColGridMinor        = ImGuiPalette.Grey0x30;
         const float RulerMajorTickLen   = 6f;
         const float RulerMinorTickLen   = 3f;
-        const uint  ColDragSelect       = ImGuiPalette.YellowGreen;
+        const uint  ColDragSelect       = ImGuiPalette.Yellow;
         const uint  ColDragDeselect     = ImGuiPalette.Red;
         const float ClickThresholdSq    = 16f;
         static readonly uint ColCoordOverlayBg = ImGuiPalette.WithAlpha(ImGuiPalette.Black, 0xBB);

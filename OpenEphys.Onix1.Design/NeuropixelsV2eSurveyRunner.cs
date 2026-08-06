@@ -246,14 +246,13 @@ namespace OpenEphys.Onix1.Design
             var rawStream = npxData.Generate().Take(framesToCollect);
 
             IObservable<NeuropixelsV2DataFrame> dataStream = recordingFilePath != null
-                ? new DataFrameWriter.DataFrameWriter
-                {
-                      FileName          = recordingFilePath,
-                      Suffix            = Bonsai.IO.PathSuffix.None,
-                      Buffered          = false,
-                      Overwrite         = true,
-                      EnableCompression = true
-                  }.Process(rawStream.Cast<BufferedDataFrame>()).Cast<NeuropixelsV2DataFrame>()
+                ? DataFrameWriter.DataFrameWriter.WriteBuffered(
+                    rawStream, 
+                    recordingFilePath, 
+                    Bonsai.IO.PathSuffix.None, 
+                    buffered: false, 
+                    overwrite: true, 
+                    enableCompression: true)
                 : rawStream;
 
             var ampStream = dataStream.Select(frame => frame.AmplifierData);

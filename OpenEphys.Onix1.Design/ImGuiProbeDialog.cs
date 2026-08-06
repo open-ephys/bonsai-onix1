@@ -32,7 +32,7 @@ namespace OpenEphys.Onix1.Design
 
         // Console log state
         readonly List<LogEntry> log = new();
-        HashSet<int> selectedLogLines = new();
+        readonly HashSet<int> selectedLogLines = new();
         int lastClickedLogIndex = -1;
 
         // Visual constants

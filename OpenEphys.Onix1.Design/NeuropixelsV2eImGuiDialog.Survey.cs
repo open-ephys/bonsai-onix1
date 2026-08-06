@@ -180,7 +180,7 @@ namespace OpenEphys.Onix1.Design
 
             int mi = (int)selectedMetric;
             ImGui.RadioButton("SNR##met", ref mi, (int)SurveyActivityMetric.SNR);
-            Tooltip("Color contacts by signal-to-noise ratio (SNR): the average peak-to-peak amplitude of spikes detected on the contact, divided by the estimated standard deviation of the background signal (noise).");
+            Tooltip("Color contacts by signal-to-noise ratio (SNR): the average peak-to-peak amplitude of spikes detected on the contact (signal), divided by the estimated standard deviation of the background signal (noise).");
             ImGui.SameLine();
             ImGui.RadioButton("Firing Rate (Hz)##met", ref mi, (int)SurveyActivityMetric.FireRate);
             Tooltip("Color contacts by firing rate: the number of spikes detected on the contact per second.");
@@ -191,12 +191,7 @@ namespace OpenEphys.Onix1.Design
             {
                 actRanges[selectedMetric] = (actMin, actMax);
                 selectedMetric = (SurveyActivityMetric)mi;
-                if (actRanges.TryGetValue(selectedMetric, out var saved))
-                {
-                    actMin = saved.min; actMax = saved.max; actRangeInitialized = true;
-                }
-                else
-                    actRangeInitialized = false;
+                actRangeInitialized = false;
             }
 
             ImGui.Spacing();
@@ -204,56 +199,38 @@ namespace OpenEphys.Onix1.Design
             var displayData = CurrentDisplayData();
             if (!actRangeInitialized && displayData != null)
             {
-                actMin = 0f;
-                actMax = ComputeMax(displayData);
+                actDomainMax = displayData.Max() ?? 1f;
+                actDomainMin = displayData.Min() ?? 0f;
+                if (actRanges.TryGetValue(selectedMetric, out var saved)) // attemped to restore last range setting
+                {
+                    actMin = Math.Max(actDomainMin, Math.Min(saved.min, actDomainMax));
+                    actMax = Math.Max(actDomainMin, Math.Min(saved.max, actDomainMax));
+                    if (actMin > actMax) (actMin, actMax) = (actDomainMin, actDomainMax);
+                }
+                else
+                {
+                    actMin = actDomainMin;
+                    actMax = actDomainMax;
+                }
                 actRanges[selectedMetric] = (actMin, actMax);
                 actRangeInitialized = true;
             }
 
-            float avail = ImGui.GetContentRegionAvail().X;
-            var actStyle = ImGui.GetStyle();
-            float labelWMin = ImGui.CalcTextSize("Min").X + actStyle.ItemInnerSpacing.X;
-            float labelWMax = ImGui.CalcTextSize("Max").X + actStyle.ItemInnerSpacing.X;
-            float sliderW = (avail - labelWMin - labelWMax - actStyle.ItemSpacing.X) / 2f;
-            ImGui.SetNextItemWidth(sliderW);
-            ImGui.SliderFloat("Min##act", ref actMin, 0f, actMax);
-            Tooltip("Lower bound of the value range mapped to color; values at or below this appear as the darkest color.");
-            ImGui.SameLine();
-            ImGui.SetNextItemWidth(sliderW);
-            float ceil = displayData != null ? ComputeMax(displayData) : 2f;
-            ImGui.SliderFloat("Max##act", ref actMax, actMin + 0.001f, ceil);
-            Tooltip("Upper bound of the value range mapped to color; values at or above this appear as the brightest color.");
-            ImGui.Spacing();
+            if (displayData == null)
             {
-                var dlc   = ImGui.GetWindowDrawList();
-                var cpos  = ImGui.GetCursorScreenPos();
-                float barH = ImGui.GetFrameHeight();
-                if (avail > 0f)
-                {
-                    uint[] map = Plasma.DefaultMap;
-                    const int N = 32;
-                    for (int s = 0; s < N; s++)
-                    {
-                        int idxL = (s * (map.Length - 1)) / N;
-                        int idxR = ((s + 1) * (map.Length - 1)) / N;
-                        float x0 = cpos.X + avail * s / N;
-                        float x1 = cpos.X + avail * (s + 1) / N;
-                        dlc.AddRectFilledMultiColor(
-                            new Vector2(x0, cpos.Y), new Vector2(x1, cpos.Y + barH),
-                            map[idxL], map[idxR], map[idxR], map[idxL]);
-                    }
-                    const float textPad = 4f;
-                    string minStr = $"{actMin:F1}";
-                    string maxStr = $"{actMax:F1}";
-                    float textH = ImGui.CalcTextSize(minStr).Y;
-                    float ty = cpos.Y + (barH - textH) / 2f;
-                    dlc.AddText(new Vector2(cpos.X + textPad, ty), ImGuiPalette.White, minStr);
-                    float maxW = ImGui.CalcTextSize(maxStr).X;
-                    dlc.AddText(new Vector2(cpos.X + avail - maxW - textPad, ty), ImGuiPalette.Black, maxStr);
-                    ImGui.Dummy(new Vector2(avail, barH));
-                }
-                ImGui.Spacing();
+                ImGui.TextDisabled("No data available for this metric.");
             }
+            else if (ImGuiColormapRangeSlider.Draw(
+                "actrange", Plasma.DefaultMap,
+                actDomainMin, actDomainMax,
+                ref actMin, ref actMax,
+                minHandleTooltip: "Lower bound of the value range mapped to color; values at or below this appear as the darkest color.",
+                maxHandleTooltip: "Upper bound of the value range mapped to color; values at or above this appear as the brightest color."))
+            {
+                actRanges[selectedMetric] = (actMin, actMax);
+            }
+            ImGui.Spacing();
+
             DrawRerunSurveyButton(gainCalSet);
         }
 
