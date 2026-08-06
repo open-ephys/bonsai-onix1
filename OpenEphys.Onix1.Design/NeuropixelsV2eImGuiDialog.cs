@@ -46,6 +46,7 @@ namespace OpenEphys.Onix1.Design
         float timePerBank = 5f;
         SurveyActivityMetric selectedMetric = SurveyActivityMetric.SNR;
         float actMin, actMax = 1f;
+        float actDomainMin, actDomainMax = 1f;
         bool actRangeInitialized;
         readonly Dictionary<SurveyActivityMetric, (float min, float max)> actRanges = new();
         bool recordSurveyData = false;
@@ -72,12 +73,12 @@ namespace OpenEphys.Onix1.Design
         readonly byte[] probeFileBuf = new byte[512];
 
         // Visual constants
-        const uint ColorContactEnabled = ImGuiPalette.GoldenPollen;
-        const uint ColorContactPinned = ImGuiPalette.SteelBlue;
+        const uint ColorContactEnabled = ImGuiPalette.AmberGold;
+        const uint ColorContactPinned = ImGuiPalette.NeonPink;
         const uint ColorContactDisabled = ImGuiPalette.Grey0x4D;
 
-        static readonly Vector4 ColorTextWarning = ImGui.ColorConvertU32ToFloat4(ImGuiPalette.Marigold);
-        static readonly Vector4 ColorTextSuccess = ImGui.ColorConvertU32ToFloat4(ImGuiPalette.MintGreen);
+        static readonly Vector4 ColorTextWarning = ImGui.ColorConvertU32ToFloat4(ImGuiPalette.AmberGold);
+        static readonly Vector4 ColorTextSuccess = ImGui.ColorConvertU32ToFloat4(ImGuiPalette.BrightFern);
 
         /// <inheritdoc/>
         public override event EventHandler OnStateChange
@@ -137,10 +138,10 @@ namespace OpenEphys.Onix1.Design
 
         static uint BankColor(NeuropixelsV2Bank bank) => bank switch
         {
-            NeuropixelsV2Bank.A => ImGuiPalette.DustyGrape,
-            NeuropixelsV2Bank.B => ImGuiPalette.WithAlpha(ImGuiPalette.VibrantCoral, 0x88),
-            NeuropixelsV2Bank.C => ImGuiPalette.DustyGrape,
-            NeuropixelsV2Bank.D => ImGuiPalette.WithAlpha(ImGuiPalette.VibrantCoral, 0x88),
+            NeuropixelsV2Bank.A => ImGuiPalette.AzureBlue,
+            NeuropixelsV2Bank.B => ImGuiPalette.CobaltBlue,
+            NeuropixelsV2Bank.C => ImGuiPalette.AzureBlue,
+            NeuropixelsV2Bank.D => ImGuiPalette.CobaltBlue,
             _ => throw new ArgumentOutOfRangeException(nameof(bank), $"Invalid neuropixelsV2 bank: {bank}"),
         };
 
@@ -396,13 +397,6 @@ namespace OpenEphys.Onix1.Design
             WriteString(driverBuf, driver);
             WriteString(gainCalBuf, configureNode.ProbeConfiguration.GainCalibrationFileName ?? "");
             WriteString(probeFileBuf, configureNode.ProbeConfiguration.ProbeInterfaceFileName  ?? "");
-        }
-
-        static float ComputeMax(float?[] values)
-        {
-            float max = 1f;
-            foreach (var v in values) if (v.HasValue && v.Value > max) max = v.Value;
-            return max;
         }
 
         static void WriteString(byte[] buf, string value)

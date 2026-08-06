@@ -18,16 +18,21 @@
         public const uint Yellow = 0xFF00FFFFu;
 
         // Vibrant
-        public const uint AzureBlue    = 0xFFFF8800u;
         public const uint VibrantCoral = 0xFF5E59FFu;
         public const uint GoldenPollen = 0xFF3ACAFFu;
-        public const uint YellowGreen  = 0xFF26C98Au;
-        public const uint SteelBlue    = 0xFFC48219u;
-        public const uint DustyGrape   = 0xFF934C6Au;
+        public const uint YellowGreen = 0xFF26C98Au;
+        public const uint SteelBlue = 0xFFC48219u;
+        public const uint DustyGrape = 0xFF934C6Au;
 
         // Bright
-        public const uint Marigold     = 0xFF00CCFFu;
-        public const uint MintGreen    = 0xFF66FF66u;
+        public const uint AmberGold = 0xFF0BBEFFu;
+        public const uint BlazeOrange = 0xFF0756FBu;
+        public const uint NeonPink = 0xFF6E00FFu;
+        public const uint BlueViolet = 0xFFEC3883u;
+        public const uint AzureBlue = 0xFFFF863Au;
+        public const uint RoyalAzure = 0xFFE05600u;
+        public const uint CobaltBlue = 0xFFB84600u;
+        public const uint BrightFern = 0xFF12BF29u;
 
         // Greyscale ramp, darkest to lightest.
         public const uint Grey0x30 = 0xFF303030u;
