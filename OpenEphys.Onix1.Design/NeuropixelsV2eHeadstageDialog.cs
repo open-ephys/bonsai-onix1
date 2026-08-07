@@ -1,31 +1,29 @@
-﻿namespace OpenEphys.Onix1.Design
+namespace OpenEphys.Onix1.Design
 {
     /// <summary>
     /// GUI for <see cref="ConfigureHeadstageNeuropixelsV2e"/> and <see
     /// cref="ConfigureHeadstageNeuropixelsV2eBeta"/>. Hosts two <see cref="NeuropixelsV2eImGuiDialog"/>
-    /// instances (ProbeA and ProbeB) and one <see cref="GenericDeviceDialog"/> for the Bno055, each in its
+    /// instances (ProbeA and ProbeB) and one <see cref="ImGuiPropertyPanel"/> for the Bno055, each in its
     /// own tab.
     /// </summary>
-    internal class NeuropixelsV2eHeadstageDialog : HeadstageDialog
+    internal class NeuropixelsV2eHeadstageDialog : ImGuiShellDialog
     {
         /// <summary>Gets the <see cref="NeuropixelsV2eImGuiDialog"/> for ProbeA.</summary>
-        internal NeuropixelsV2eImGuiDialog DialogNeuropixelsV2A =>
-            (NeuropixelsV2eImGuiDialog)GetProbeDialog(0);
+        internal NeuropixelsV2eImGuiDialog DialogNeuropixelsV2A { get; private set; }
 
         /// <summary>Gets the <see cref="NeuropixelsV2eImGuiDialog"/> for ProbeB.</summary>
-        internal NeuropixelsV2eImGuiDialog DialogNeuropixelsV2B =>
-            (NeuropixelsV2eImGuiDialog)GetProbeDialog(1);
+        internal NeuropixelsV2eImGuiDialog DialogNeuropixelsV2B { get; private set; }
 
-        /// <summary>Gets the <see cref="GenericDeviceDialog"/> for the Bno055.</summary>
-        internal GenericDeviceDialog DialogBno055 { get; private set; }
+        /// <summary>Gets the <see cref="ImGuiPropertyPanel"/> for the Bno055.</summary>
+        internal ImGuiPropertyPanel DialogBno055 { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of a <see cref="NeuropixelsV2eHeadstageDialog"/>.
         /// </summary>
         /// <param name="configureHeadstage">Configuration settings for a <see cref="ConfigureHeadstageNeuropixelsV2e"/>.</param>
         public NeuropixelsV2eHeadstageDialog(ConfigureHeadstageNeuropixelsV2e configureHeadstage)
+            : base("Headstage NeuropixelsV2e Configuration")
         {
-            Text = "HeadstageNeuropixels2.0 Configuration";
             InitializeTabs(configureHeadstage.NeuropixelsV2A, configureHeadstage.NeuropixelsV2B, configureHeadstage.Bno055);
         }
 
@@ -34,8 +32,8 @@
         /// </summary>
         /// <param name="configureHeadstage">Configuration settings for a <see cref="ConfigureHeadstageNeuropixelsV2eBeta"/>.</param>
         public NeuropixelsV2eHeadstageDialog(ConfigureHeadstageNeuropixelsV2eBeta configureHeadstage)
+            : base("Headstage NeuropixelsV2e-Beta Configuration")
         {
-            Text = "HeadstageNeuropixels2.0-Beta Configuration";
             InitializeTabs(configureHeadstage.NeuropixelsV2A, configureHeadstage.NeuropixelsV2B, configureHeadstage.Bno055);
         }
 
@@ -44,16 +42,14 @@
             const string nameA = nameof(ConfigureHeadstageNeuropixelsV2e.NeuropixelsV2A);
             const string nameB = nameof(ConfigureHeadstageNeuropixelsV2e.NeuropixelsV2B);
 
-            AddProbeTab(nameA,
-                new NeuropixelsV2eImGuiDialog(neuropixelsV2A, nameA, PortName.PortA, true), // TODO: get port from configureHeadstage somehow
-                old => new NeuropixelsV2eImGuiDialog(old.ConfigureNeuropixelsV2, nameA, PortName.PortA, true));
+            DialogNeuropixelsV2A = new NeuropixelsV2eImGuiDialog(neuropixelsV2A, nameA, PortName.PortA, true); // TODO: get port from configureHeadstage somehow
+            AddTab(nameA, DialogNeuropixelsV2A);
 
-            AddProbeTab(nameB, 
-                new NeuropixelsV2eImGuiDialog(neuropixelsV2B, nameB, PortName.PortA, false),
-                old => new NeuropixelsV2eImGuiDialog(old.ConfigureNeuropixelsV2, nameB, PortName.PortA, false));
+            DialogNeuropixelsV2B = new NeuropixelsV2eImGuiDialog(neuropixelsV2B, nameB, PortName.PortA, false);
+            AddTab(nameB, DialogNeuropixelsV2B);
 
-            DialogBno055 = new GenericDeviceDialog(bno055, true);
-            AddDeviceTab("Bno055", DialogBno055);
+            DialogBno055 = new ImGuiPropertyPanel(bno055, filterDeviceTableProperties: true);
+            AddTab("Bno055", DialogBno055);
         }
     }
 }
