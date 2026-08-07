@@ -63,9 +63,9 @@ namespace OpenEphys.Onix1.Design
             lfpGainIdx   = Array.IndexOf(GainValues, configureNode.ProbeConfiguration.LfpAmplifierGain);
             refIdx       = Array.IndexOf(ReferenceValues, configureNode.ProbeConfiguration.Reference);
 
-            WriteString(gainCalBuf, configureNode.ProbeConfiguration.GainCalibrationFileName ?? "");
-            WriteString(adcCalBuf, configureNode.ProbeConfiguration.AdcCalibrationFileName ?? "");
-            WriteString(probeFileBuf, configureNode.ProbeConfiguration.ProbeInterfaceFileName ?? "");
+            ImGuiControls.WriteString(gainCalBuf, configureNode.ProbeConfiguration.GainCalibrationFileName ?? "");
+            ImGuiControls.WriteString(adcCalBuf, configureNode.ProbeConfiguration.AdcCalibrationFileName ?? "");
+            ImGuiControls.WriteString(probeFileBuf, configureNode.ProbeConfiguration.ProbeInterfaceFileName ?? "");
         }
 
         #endregion
@@ -81,9 +81,6 @@ namespace OpenEphys.Onix1.Design
 
             this.configureNode = configureNode ?? throw new ArgumentNullException(nameof(configureNode));
 
-            Text = "NeuropixelsV1 Configuration";
-            if (!string.IsNullOrEmpty(probeName)) Text += $" — {probeName}";
-
             SetupSelectorCallbacks();
             LoadOrCreateProbeGroup();
             RefreshProbeState();
@@ -95,7 +92,7 @@ namespace OpenEphys.Onix1.Design
             selector.IsBlocked = DefaultIsBlocked;
         }
 
-        #region ImGuiProbeDialog overrides
+        #region ImGuiProbePanel overrides
 
         protected override void DrawPropsPanel()
         {
@@ -122,11 +119,11 @@ namespace OpenEphys.Onix1.Design
             HandleKeyboardShortcuts();
         }
 
-        protected override void OnClosing(FormClosingEventArgs e)
+        public override bool CanClose(DialogResult pendingResult)
         {
-            if (hasChanges && DialogResult != DialogResult.Cancel)
-                if (!PromptSaveOnClose())
-                    e.Cancel = true;
+            if (hasChanges && pendingResult != DialogResult.Cancel)
+                return PromptSaveOnClose();
+            return true;
         }
 
         #endregion
@@ -184,16 +181,16 @@ namespace OpenEphys.Onix1.Design
         {
             float fileTargetW = ComputeFileRowInputWidth();
             string current = getPath() ?? "";
-            WriteString(buf, current);
+            ImGuiControls.WriteString(buf, current);
             ImGui.SetNextItemWidth(fileTargetW);
             unsafe
             {
                 fixed (byte* p = buf)
                     if (ImGui.InputText(id, p, (nuint)buf.Length))
-                        setPath(ReadBuffer(buf));
+                        setPath(ImGuiControls.ReadBuffer(buf));
             }
             if (!string.IsNullOrEmpty(getPath()))
-                Tooltip(getPath());
+                ImGuiControls.Tooltip(getPath());
 
             ImGui.SameLine();
             if (ImGui.Button("Open..." + id))
@@ -204,7 +201,7 @@ namespace OpenEphys.Onix1.Design
                 if (ofd.ShowDialog() == DialogResult.OK)
                     setPath(ofd.FileName);
             }
-            Tooltip(tooltip);
+            ImGuiControls.Tooltip(tooltip);
         }
 
         #endregion
@@ -216,27 +213,27 @@ namespace OpenEphys.Onix1.Design
             ImGui.SetNextItemWidth(ComboboxStartWidthPx);
             if (ImGui.Combo("Spike Gain##spikegain", ref spikeGainIdx, GainNames, GainNames.Length))
                 configureNode.ProbeConfiguration.SpikeAmplifierGain = GainValues[spikeGainIdx];
-            Tooltip("Amplifier gain applied to the spike-band (300 Hz-10 kHz, or DC-10 kHz if the spike filter is off).");
+            ImGuiControls.Tooltip("Amplifier gain applied to the spike-band (300 Hz-10 kHz, or DC-10 kHz if the spike filter is off).");
 
             ImGui.SetNextItemWidth(ComboboxStartWidthPx);
             if (ImGui.Combo("LFP Gain##lfpgain", ref lfpGainIdx, GainNames, GainNames.Length))
                 configureNode.ProbeConfiguration.LfpAmplifierGain = GainValues[lfpGainIdx];
-            Tooltip("Amplifier gain applied to the LFP band (0.5-500 Hz).");
+            ImGuiControls.Tooltip("Amplifier gain applied to the LFP band (0.5-500 Hz).");
 
             ImGui.SetNextItemWidth(ComboboxStartWidthPx);
             if (ImGui.Combo("Reference##ref", ref refIdx, ReferenceNames, ReferenceNames.Length))
                 configureNode.ProbeConfiguration.Reference = ReferenceValues[refIdx];
-            Tooltip("Choose the voltage reference for every recording channel: External or the probe Tip electrode.");
+            ImGuiControls.Tooltip("Choose the voltage reference for every recording channel: External or the probe Tip electrode.");
 
             bool spikeFilter = configureNode.ProbeConfiguration.SpikeFilter;
             if (ImGui.Checkbox("300 Hz spike-band high-pass filter##filter", ref spikeFilter))
                 configureNode.ProbeConfiguration.SpikeFilter = spikeFilter;
-            Tooltip("Activate a 300 Hz high-pass filter on the spike-band data stream.");
+            ImGuiControls.Tooltip("Activate a 300 Hz high-pass filter on the spike-band data stream.");
 
             ImGui.SetNextItemWidth(ComboboxStartWidthPx);
             if (ImGui.Combo("Preset##preset", ref presetIdx, PresetNames, PresetNames.Length))
                 ApplyPreset(PresetValues[presetIdx]);
-            Tooltip("Apply a ready-made channel selection in a single step. Overrides current enabled/pinned contacts.");
+            ImGuiControls.Tooltip("Apply a ready-made channel selection in a single step. Overrides current enabled/pinned contacts.");
         }
 
         void ApplyPreset(NeuropixelsV1ChannelPreset preset)
@@ -253,7 +250,7 @@ namespace OpenEphys.Onix1.Design
         protected override void DrawProbeSpecificContactInfo(IReadOnlyList<int> sel)
         {
             var banks = sel.Select(NeuropixelsV1ProbeGroup.GetBank).Distinct();
-            InfoRow("Bank(s)", banks.Any() ? string.Join(",", banks) : "-");
+            ImGuiControls.InfoRow("Bank(s)", banks.Any() ? string.Join(",", banks) : "-");
         }
     }
 }

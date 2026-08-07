@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Text;
 using System.Windows.Forms;
 using Hexa.NET.ImGui;
 using Newtonsoft.Json;
@@ -17,13 +16,12 @@ namespace OpenEphys.Onix1.Design
     /// display, and keyboard shortcuts common to every Neuropixels probe family. Subclasses supply
     /// probe-specific data access and UI through the abstract/virtual members below.
     /// </summary>
-    internal abstract class ImGuiNeuropixelsDialog : ImGuiProbeDialog
+    internal abstract class ImGuiNeuropixelsDialog : ImGuiProbePanel
     {
         protected readonly string probeName;
         protected IReadOnlyList<Contact> allContacts = Array.Empty<Contact>();
         protected readonly MultiplexedContactState channelState = new();
         protected bool hasChanges;
-        protected EventHandler onStateChange;
         protected readonly byte[] probeFileBuf = new byte[512];
 
         protected const uint ColorContactEnabled = ImGuiPalette.AmberGold;
@@ -32,23 +30,10 @@ namespace OpenEphys.Onix1.Design
         protected const float ComboboxStartWidthPx = 165f;
 
         /// <inheritdoc/>
-        public override event EventHandler OnStateChange
-        {
-            add => onStateChange += value;
-            remove => onStateChange -= value;
-        }
-
-        /// <inheritdoc/>
         public override bool HasChanges
         {
             get => hasChanges;
-            protected set
-            {
-                if (hasChanges == value)
-                    return;
-                hasChanges = value;
-                onStateChange?.Invoke(this, EventArgs.Empty);
-            }
+            protected set => hasChanges = value;
         }
 
         protected ImGuiNeuropixelsDialog(string probeName)
@@ -78,8 +63,8 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         protected abstract string PrimaryCalibrationFileName { get; }
 
-        /// <summary
-        /// >Whether the recorded voltage sign is inverted.
+        /// <summary>
+        /// Whether the recorded voltage sign is inverted.
         /// </summary>
         protected abstract bool InvertPolarity { get; set; }
 
@@ -188,7 +173,7 @@ namespace OpenEphys.Onix1.Design
             bool invert = InvertPolarity;
             if (ImGui.Checkbox("Invert polarity##cfg", ref invert))
                 InvertPolarity = invert;
-            Tooltip("Flip the sign of the recorded voltage, correcting for the inverting amplifier in Neuropixels probes that otherwise makes spikes appear as positive deflections instead of the expected negative ones.");
+            ImGuiControls.Tooltip("Flip the sign of the recorded voltage, correcting for the inverting amplifier in Neuropixels probes that otherwise makes spikes appear as positive deflections instead of the expected negative ones.");
         }
 
         protected void DrawEnablePinButtons()
@@ -197,11 +182,11 @@ namespace OpenEphys.Onix1.Design
 
             if (!anySelected) ImGui.BeginDisabled();
             if (ImGui.Button("Enable (E)##enable")) EnableSelectedContacts();
-            Tooltip("Enable the selected contacts, wiring each one to an available recording channel.",
+            ImGuiControls.Tooltip("Enable the selected contacts, wiring each one to an available recording channel.",
                 "Select at least one contact first.");
             ImGui.SameLine();
             if (ImGui.Button("Enable & Pin (P)##enablepin")) EnableAndPinSelectedContacts();
-            Tooltip("Enable the selected contacts and pin their channel assignment so it survives future preset or probe type changes.",
+            ImGuiControls.Tooltip("Enable the selected contacts and pin their channel assignment so it survives future preset or probe type changes.",
                 "Select at least one contact first.");
             if (!anySelected) ImGui.EndDisabled();
 
@@ -217,7 +202,7 @@ namespace OpenEphys.Onix1.Design
 
             if (!anySelectedPinned) ImGui.BeginDisabled();
             if (ImGui.Button("Unpin (Shift+P)##unpinsel")) UnpinSelectedContacts();
-            Tooltip("Release the pin on the selected contacts' channels, allowing a future preset or probe type change to reassign them.",
+            ImGuiControls.Tooltip("Release the pin on the selected contacts' channels, allowing a future preset or probe type change to reassign them.",
                 "Select a pinned contact first.");
             if (!anySelectedPinned) ImGui.EndDisabled();
 
@@ -226,7 +211,7 @@ namespace OpenEphys.Onix1.Design
             bool noPins = channelState.PinnedChannels.Count == 0;
             if (noPins) ImGui.BeginDisabled();
             if (ImGui.Button("Unpin All##unpinall")) ClearPins();
-            Tooltip("Release every pin on this probe, allowing all channels to be reassigned by a future preset or probe type change.",
+            ImGuiControls.Tooltip("Release every pin on this probe, allowing all channels to be reassigned by a future preset or probe type change.",
                 "No channels are pinned.");
             if (noPins) ImGui.EndDisabled();
         }
@@ -328,17 +313,17 @@ namespace OpenEphys.Onix1.Design
             ImGui.Spacing();
 
             string pf = ProbeConfigurationBase.ProbeInterfaceFileName ?? "";
-            WriteString(probeFileBuf, pf);
+            ImGuiControls.WriteString(probeFileBuf, pf);
             ImGui.SetNextItemWidth(fileTargetW);
             unsafe
             {
                 fixed (byte* p = probeFileBuf)
                     if (ImGui.InputText("##probefile", p, (nuint)probeFileBuf.Length))
-                        ProbeConfigurationBase.ProbeInterfaceFileName = ReadBuffer(probeFileBuf);
+                        ProbeConfigurationBase.ProbeInterfaceFileName = ImGuiControls.ReadBuffer(probeFileBuf);
             }
             if (!string.IsNullOrEmpty(ProbeConfigurationBase.ProbeInterfaceFileName))
             {
-                Tooltip(ProbeConfigurationBase.ProbeInterfaceFileName);
+                ImGuiControls.Tooltip(ProbeConfigurationBase.ProbeInterfaceFileName);
             }
 
             ImGui.SameLine();
@@ -359,19 +344,19 @@ namespace OpenEphys.Onix1.Design
                 if (ofd.ShowDialog() == DialogResult.OK)
                     OnProbeFileNameChanged(ofd.FileName);
             }
-            Tooltip("Open a file browser to load an existing ProbeInterface file that specifies the channel map, contact state, and previous survey results.");
+            ImGuiControls.Tooltip("Open a file browser to load an existing ProbeInterface file that specifies the channel map, contact state, and previous survey results.");
 
             bool canSave = !string.IsNullOrEmpty(ProbeConfigurationBase.ProbeInterfaceFileName);
             string saveLabel = hasChanges ? "Save Changes*##save" : "Save##save";
             if (!canSave) ImGui.BeginDisabled();
             if (ImGui.Button(saveLabel)) SaveProbeGroup();
-            Tooltip("Save the current channel map, contact state, and survey data to the specified ProbeInterface file.",
+            ImGuiControls.Tooltip("Save the current channel map, contact state, and survey data to the specified ProbeInterface file.",
                 "Choose a file with Open or Save As... first.");
             if (!canSave) ImGui.EndDisabled();
             ImGui.SameLine();
             if (ImGui.Button("Save As...##save"))
                 SaveProbeGroupAs();
-            Tooltip("Choose a file path and save the current channel map, contact state, and survey data to a new ProbeInterface file.");
+            ImGuiControls.Tooltip("Choose a file path and save the current channel map, contact state, and survey data to a new ProbeInterface file.");
         }
 
         protected void SaveProbeGroup()
@@ -574,8 +559,8 @@ namespace OpenEphys.Onix1.Design
             ImGui.TextDisabled(usingHover ? "Hovering" : $"{sel.Count} selected");
             ImGui.Spacing();
 
-            InfoRow("Index", IndexList(sel));
-            InfoRow("Channel", ChannelList(sel, channelState));
+            ImGuiControls.InfoRow("Index", IndexList(sel));
+            ImGuiControls.InfoRow("Channel", ChannelList(sel, channelState));
 
             DrawProbeSpecificContactInfo(sel);
 
@@ -589,19 +574,19 @@ namespace OpenEphys.Onix1.Design
                 if (c.PosY < yMin) yMin = c.PosY;
                 if (c.PosY > yMax) yMax = c.PosY;
             }
-            InfoRow("X", xMin == xMax ? $"{xMin:0} um" : $"{xMin:0} to {xMax:0} um");
-            InfoRow("Y", yMin == yMax ? $"{yMin:0} um" : $"{yMin:0} to {yMax:0} um");
+            ImGuiControls.InfoRow("X", xMin == xMax ? $"{xMin:0} um" : $"{xMin:0} to {xMax:0} um");
+            ImGuiControls.InfoRow("Y", yMin == yMax ? $"{yMin:0} um" : $"{yMin:0} to {yMax:0} um");
 
             DrawContactMetrics(sel);
 
             int pinnedCount = sel.Count(i =>
                 channelState.ElectrodeToChannel.TryGetValue(i, out int pch) && channelState.PinnedChannels.Contains(pch));
-            InfoRow("Pinned", pinnedCount == 0 ? "false"
+            ImGuiControls.InfoRow("Pinned", pinnedCount == 0 ? "false"
                 : pinnedCount == sel.Count ? "true"
                 : $"{pinnedCount}/{sel.Count}");
 
             int blockedCount = sel.Count(i => channelState.BlockedContactIndices.Contains(i));
-            InfoRow("Blocked", blockedCount == 0 ? "false"
+            ImGuiControls.InfoRow("Blocked", blockedCount == 0 ? "false"
                 : blockedCount == sel.Count ? "true"
                 : $"{blockedCount}/{sel.Count}");
         }
@@ -627,42 +612,6 @@ namespace OpenEphys.Onix1.Design
 
         #region Misc helpers
 
-        protected static void InfoRow(string label, string value)
-        {
-            ImGui.TextDisabled(label + ":");
-            ImGui.SameLine();
-            ImGui.TextUnformatted(value);
-        }
-
-        // Item ID + timestamp of the most recent click/drag/edit to finish. ImGui's own hover-delay
-        // timer accumulates for as long as the mouse sits on an item, click or no click, so a
-        // control that was already hovered-with-delay before being clicked stays "primed" through
-        // the click and shows its tooltip instantly on release. Tracking this ourselves lets us
-        // force the normal delay to re-elapse after an interaction, regardless of ImGui's own timer.
-        static uint lastDeactivatedItemId;
-        static double lastDeactivatedTime = -1.0;
-
-        protected static void Tooltip(string text, string disabledHint = null)
-        {
-            if (ImGui.IsItemDeactivated())
-            {
-                lastDeactivatedItemId = ImGui.GetItemID();
-                lastDeactivatedTime = ImGui.GetTime();
-            }
-
-            if (ImGui.IsItemActive())
-                return; // don't show tooltips while the user is interacting (e.g. dragging a slider)
-
-            if (ImGui.GetItemID() == lastDeactivatedItemId &&
-                ImGui.GetTime() - lastDeactivatedTime < ImGui.GetStyle().HoverDelayNormal)
-                return; // just interacted with this control; wait out the normal delay again
-
-            if (!ImGui.IsItemHovered(ImGuiHoveredFlags.DelayNormal | ImGuiHoveredFlags.AllowWhenDisabled))
-                return; // only show when hovering for a delay and allow for disabled components as well
-            bool disabled = ((ImGuiItemFlagsPrivate)ImGuiP.GetItemFlags() & ImGuiItemFlagsPrivate.Disabled) != 0;
-            ImGui.SetTooltip(disabled && disabledHint != null ? $"{text}\n({disabledHint})" : text);
-        }
-
         protected static Vector2 ContactSizeUm(Contact c)
         {
             var sp = c.ShapeParams;
@@ -672,22 +621,6 @@ namespace OpenEphys.Onix1.Design
                 ContactShape.Rect   => new Vector2((float)(sp.Width ?? 12.0), (float)(sp.Height ?? sp.Width ?? 12.0)),
                 _                   => new Vector2((float)(sp.Width ?? 12.0), (float)(sp.Width ?? 12.0))
             };
-        }
-
-        protected static void WriteString(byte[] buf, string value)
-        {
-            Array.Clear(buf, 0, buf.Length);
-            if (!string.IsNullOrEmpty(value))
-            {
-                var bytes = Encoding.UTF8.GetBytes(value);
-                Array.Copy(bytes, buf, Math.Min(bytes.Length, buf.Length - 1));
-            }
-        }
-
-        protected static string ReadBuffer(byte[] buf)
-        {
-            int len = Array.IndexOf(buf, (byte)0);
-            return Encoding.UTF8.GetString(buf, 0, len < 0 ? buf.Length : len);
         }
 
         #endregion

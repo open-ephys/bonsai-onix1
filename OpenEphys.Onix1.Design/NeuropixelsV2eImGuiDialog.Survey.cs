@@ -32,23 +32,23 @@ namespace OpenEphys.Onix1.Design
                     ImGui.TextDisabled($"{driver} / slot {hubIndex} / {port}{voltStr}");
                     ImGui.SameLine();
                     if (ImGui.SmallButton("Edit##hwa")) editingHardwareAddr = true;
-                    Tooltip("Edit the hardware address (driver, slot, port) used to run the electrode survey.");
+                    ImGuiControls.Tooltip("Edit the hardware address (driver, slot, port) used to run the electrode survey.");
                 }
                 else
                 {
-                    WriteString(driverBuf, driver);
+                    ImGuiControls.WriteString(driverBuf, driver);
                     ImGui.SetNextItemWidth(100f);
                     unsafe
                     {
                         fixed (byte* p = driverBuf)
-                            if (ImGui.InputText("Driver##srvdrv", p, (nuint)driverBuf.Length)) driver = ReadBuffer(driverBuf);
+                            if (ImGui.InputText("Driver##srvdrv", p, (nuint)driverBuf.Length)) driver = ImGuiControls.ReadBuffer(driverBuf);
                     }
-                    Tooltip("Name of the device driver used to communicate with the ONIX hardware controller this probe is connected to (e.g. \"riffa\" for a PCIe interface).");
+                    ImGuiControls.Tooltip("Name of the device driver used to communicate with the ONIX hardware controller this probe is connected to (e.g. \"riffa\" for a PCIe interface).");
                     ImGui.SameLine();
                     ImGui.SetNextItemWidth(100f);
                     ImGui.InputInt("Slot##srvslot", ref hubIndex);
                     if (hubIndex < 0) hubIndex = 0;
-                    Tooltip("Index of the host interconnect (e.g., PCIe slot) the ONIX hardware controller uses, as enumerated by the operating system.");
+                    ImGuiControls.Tooltip("Index of the host interconnect (e.g., PCIe slot) the ONIX hardware controller uses, as enumerated by the operating system.");
 
                     var portNames = Enum.GetNames(typeof(PortName));
                     int portIdx = Array.IndexOf(portNames, port.ToString());
@@ -56,12 +56,12 @@ namespace OpenEphys.Onix1.Design
                     ImGui.SetNextItemWidth(120f);
                     if (ImGui.Combo("Port##srvport", ref portIdx, portNames, portNames.Length))
                         port = (PortName)Enum.Parse(typeof(PortName), portNames[portIdx]);
-                    Tooltip("Headstage port on the ONIX hardware controller that this probe is physically connected to.");
+                    ImGuiControls.Tooltip("Headstage port on the ONIX hardware controller that this probe is physically connected to.");
 
                     bool overrideV = portVoltage.HasValue;
                     if (ImGui.Checkbox("Override voltage##srvpv", ref overrideV))
                         portVoltage = overrideV ? (double?)5.0 : null;
-                    Tooltip("Manually set the headstage's supply voltage instead of auto-negotiating it.");
+                    ImGuiControls.Tooltip("Manually set the headstage's supply voltage instead of auto-negotiating it.");
                     if (overrideV)
                     {
                         ImGui.SameLine();
@@ -69,46 +69,46 @@ namespace OpenEphys.Onix1.Design
                         ImGui.SetNextItemWidth(90f);
                         if (ImGui.SliderFloat("V##srvpvslider", ref v, 3.0f, 5.5f))
                             portVoltage = Math.Round(v, 1);
-                        Tooltip("Supply voltage to apply to the headstage. Consult the headstage documentation for a safe range before changing this.");
+                        ImGuiControls.Tooltip("Supply voltage to apply to the headstage. Consult the headstage documentation for a safe range before changing this.");
                     }
 
                     ImGui.Spacing();
                     if (ImGui.Button("Apply##hwa")) editingHardwareAddr = false;
-                    Tooltip("Apply the hardware address above and close this editor.");
+                    ImGuiControls.Tooltip("Apply the hardware address above and close this editor.");
                 }
 
                 ImGui.Spacing();
 
                 if (ImGui.Checkbox("Select survey banks (B)##bsm", ref bankSelectMode))
                     selector.ClearSelection();
-                Tooltip("Select whole banks (384 contacts each) instead of individual contacts, to choose which banks the survey sweeps through. Equivalent to pressing B.");
+                ImGuiControls.Tooltip("Select whole banks (384 contacts each) instead of individual contacts, to choose which banks the survey sweeps through. Equivalent to pressing B.");
 
                 ImGui.Spacing();
 
                 bool bpf = useBandpassFilter;
                 if (ImGui.Checkbox("300-6000 Hz bandpass##bpf", ref bpf)) useBandpassFilter = bpf;
-                Tooltip("Band-pass filter the signal to 300-6000 Hz before detecting spikes, removing slow drift and high-frequency noise outside the typical spike frequency band.");
+                ImGuiControls.Tooltip("Band-pass filter the signal to 300-6000 Hz before detecting spikes, removing slow drift and high-frequency noise outside the typical spike frequency band.");
 
                 float thrAvail = ImGui.GetContentRegionAvail().X - ImGui.GetStyle().ItemSpacing.X;
                 ImGui.SetNextItemWidth(thrAvail * 0.75f);
                 ImGui.SliderFloat("##thr", ref spikeThreshold, -500f, 500f, "%.1f uV");
-                Tooltip("Voltage a channel must cross, relative to baseline, to be counted as a spike during the survey.");
+                ImGuiControls.Tooltip("Voltage a channel must cross, relative to baseline, to be counted as a spike during the survey.");
                 ImGui.SameLine();
                 ImGui.SetNextItemWidth(thrAvail * 0.25f - ImGui.CalcTextSize("Threshold").X);
                 ImGui.InputFloat("Threshold##thrinput", ref spikeThreshold, 0f, 0f, "%.1f");
-                Tooltip("Voltage a channel must cross, relative to baseline, to be counted as a spike during the survey.");
+                ImGuiControls.Tooltip("Voltage a channel must cross, relative to baseline, to be counted as a spike during the survey.");
 
                 float tpb = timePerBank;
                 ImGui.SetNextItemWidth(thrAvail * 0.33f);
                 if (ImGui.InputFloat("Time per bank (s)##tpb", ref tpb, 5f, 30f, "%.0f"))
                     timePerBank = Math.Max(2f, Math.Min(300f, tpb));
-                Tooltip("How long to record from each selected bank while sweeping through the survey, in seconds.");
+                ImGuiControls.Tooltip("How long to record from each selected bank while sweeping through the survey, in seconds.");
 
                 bool hasProbeFile = !string.IsNullOrEmpty(configureNode.ProbeConfiguration.ProbeInterfaceFileName)
                                     && System.IO.File.Exists(configureNode.ProbeConfiguration.ProbeInterfaceFileName);
                 if (!hasProbeFile) { recordSurveyData = false; ImGui.BeginDisabled(); }
                 ImGui.Checkbox("Record raw data##recraw", ref recordSurveyData);
-                Tooltip("Save the raw, unfiltered voltage traces collected during the survey to disk, alongside the summary statistics.",
+                ImGuiControls.Tooltip("Save the raw, unfiltered voltage traces collected during the survey to disk, alongside the summary statistics.",
                     "Requires a ProbeInterface file.");
                 if (!hasProbeFile) ImGui.EndDisabled();
 
@@ -142,7 +142,7 @@ namespace OpenEphys.Onix1.Design
         {
             if (survey.IsStale) { ImGui.TextColored(ColorTextWarning, "Survey data is over 24h old."); ImGui.Spacing(); }
             if (ImGui.Button("Start Survey##survey")) StartSurvey();
-            Tooltip("Sweep through the selected banks, recording from each for the configured time and computing per-contact activity statistics (amplitude, noise, firing rate).");
+            ImGuiControls.Tooltip("Sweep through the selected banks, recording from each for the configured time and computing per-contact activity statistics (amplitude, noise, firing rate).");
         }
 
         void DrawSurveyRunning()
@@ -152,7 +152,7 @@ namespace OpenEphys.Onix1.Design
             ImGui.Text($"Collecting...");
             ImGui.Spacing();
             if (ImGui.Button("Cancel##survey")) cts?.Cancel();
-            Tooltip("Stop the electrode survey currently in progress.");
+            ImGuiControls.Tooltip("Stop the electrode survey currently in progress.");
         }
 
         void DrawSurveyCompleted(bool gainCalSet)
@@ -168,7 +168,7 @@ namespace OpenEphys.Onix1.Design
                 ImGui.TextColored(ColorTextWarning, "Survey data is over 24h old.");
 
             ImGui.Checkbox("Show activity colors##actcol", ref showActivityColors);
-            Tooltip("Color each contact on the probe view by its measured activity from the last survey, instead of its enabled/pinned state. Equivalent to pressing A.");
+            ImGuiControls.Tooltip("Color each contact on the probe view by its measured activity from the last survey, instead of its enabled/pinned state. Equivalent to pressing A.");
 
             if (!showActivityColors)
             {
@@ -180,13 +180,13 @@ namespace OpenEphys.Onix1.Design
 
             int mi = (int)selectedMetric;
             ImGui.RadioButton("SNR##met", ref mi, (int)SurveyActivityMetric.SNR);
-            Tooltip("Color contacts by signal-to-noise ratio (SNR): the average peak-to-peak amplitude of spikes detected on the contact (signal), divided by the estimated standard deviation of the background signal (noise).");
+            ImGuiControls.Tooltip("Color contacts by signal-to-noise ratio (SNR): the average peak-to-peak amplitude of spikes detected on the contact (signal), divided by the estimated standard deviation of the background signal (noise).");
             ImGui.SameLine();
             ImGui.RadioButton("Firing Rate (Hz)##met", ref mi, (int)SurveyActivityMetric.FireRate);
-            Tooltip("Color contacts by firing rate: the number of spikes detected on the contact per second.");
+            ImGuiControls.Tooltip("Color contacts by firing rate: the number of spikes detected on the contact per second.");
             ImGui.SameLine();
             ImGui.RadioButton("SNR × Rate##met", ref mi, (int)SurveyActivityMetric.Combined);
-            Tooltip("Color contacts by signal-to-noise ratio (SNR) multiplied by firing rate, favoring contacts with both strong, clean spikes and frequent firing.");
+            ImGuiControls.Tooltip("Color contacts by signal-to-noise ratio (SNR) multiplied by firing rate, favoring contacts with both strong, clean spikes and frequent firing.");
             if ((SurveyActivityMetric)mi != selectedMetric)
             {
                 actRanges[selectedMetric] = (actMin, actMax);
@@ -241,7 +241,7 @@ namespace OpenEphys.Onix1.Design
             if (!gainCalSet) ImGui.EndDisabled();
 
             if (gainCalSet)
-                Tooltip("Run the electrode survey again with the current settings, replacing the previous results.");
+                ImGuiControls.Tooltip("Run the electrode survey again with the current settings, replacing the previous results.");
             else
             {
                 ImGui.SameLine();
@@ -283,13 +283,13 @@ namespace OpenEphys.Onix1.Design
                 if (sel.Count == 1 && sel[0] < data.Length)
                 {
                     var v = data[sel[0]];
-                    InfoRow(label, v.HasValue ? $"{v.Value:F2}" : "—");
+                    ImGuiControls.InfoRow(label, v.HasValue ? $"{v.Value:F2}" : "—");
                 }
                 else
                 {
                     var vals = sel.Where(i => i < data.Length && data[i].HasValue)
                                   .Select(i => data[i].Value).ToArray();
-                    if (vals.Length > 0) InfoRow(label, $"avg {vals.Average():F2} / max {vals.Max():F2}");
+                    if (vals.Length > 0) ImGuiControls.InfoRow(label, $"avg {vals.Average():F2} / max {vals.Max():F2}");
                 }
             }
 

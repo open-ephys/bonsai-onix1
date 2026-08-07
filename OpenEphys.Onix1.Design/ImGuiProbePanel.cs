@@ -1,4 +1,4 @@
-﻿using Hexa.NET.ImGui;
+using Hexa.NET.ImGui;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,16 +8,16 @@ using System.Windows.Forms;
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Abstract Form base for ImGui-rendered probe-configuration dialogs. Owns the GL control, the render
-    /// timer, the three-panel layout (minimap | zoomed view | properties), and an always-present,
-    /// collapsible, vertically resizable bottom panel that is the dialog's console log. Subclasses supply
-    /// the properties panel content via <see cref="DrawPropsPanel"/> and append log lines via
-    /// <see cref="Log"/>.
+    /// Non-Form content base for ImGui-rendered probe-configuration panels: the three-panel layout
+    /// (minimap | zoomed view | properties) and an always-present, collapsible, vertically resizable
+    /// bottom panel that is the panel's console log. Subclasses supply the properties panel content
+    /// via <see cref="DrawPropsPanel"/> and append log lines via <see cref="Log"/>. Hosted by an
+    /// <see cref="ImGuiShellDialog"/>, which owns the actual Form/GL context/render timer.
     /// </summary>
-    internal abstract class ImGuiProbeDialog : Form, IProbeInterfaceDialog
+    internal abstract class ImGuiProbePanel : IImGuiTabPanel
     {
         /// <summary>
-        /// One line of the console log at the bottom of the dialog.
+        /// One line of the console log at the bottom of the panel.
         /// </summary>
         internal struct LogEntry
         {
@@ -25,10 +25,6 @@ namespace OpenEphys.Onix1.Design
             internal string Msg;
             internal bool IsError;
         }
-
-        // GL state and rendering timer
-        readonly ImGuiGLControl glControl;
-        readonly Timer renderTimer;
 
         // Console log state
         readonly List<LogEntry> log = new();
@@ -49,13 +45,13 @@ namespace OpenEphys.Onix1.Design
         float bottomPanelHeight = 200f;
 
         /// <summary>
-        /// Persisted collapsed/expanded state of the bottom panel
-        /// .</summary>
+        /// Persisted collapsed/expanded state of the bottom panel.
+        /// </summary>
         bool bottomPanelOpen = true;
 
         /// <summary>
         /// <see cref="ImGui.GetContentRegionAvail"/>'s Y from the previous frame, used to detect when the
-        /// Form itself was resized (as opposed to the splitter being dragged).
+        /// hosting window itself was resized (as opposed to the splitter being dragged).
         /// </summary>
         float lastAvailY = -1f;
 
@@ -71,7 +67,7 @@ namespace OpenEphys.Onix1.Design
         protected readonly ImGuiProbeSelector selector = new();
 
         /// <summary>
-        /// Pixel width of the props panel on the right side of the dialog.
+        /// Pixel width of the props panel on the right side of the layout.
         /// </summary>
         protected virtual float PropsWidth => 500f;
 
@@ -79,22 +75,6 @@ namespace OpenEphys.Onix1.Design
         /// When false, the selector suppresses drag-select interaction.
         /// </summary>
         protected virtual bool SelectionEnabled => true;
-
-        protected ImGuiProbeDialog()
-        {
-            FormBorderStyle = FormBorderStyle.None;
-            StartPosition = FormStartPosition.Manual;
-
-            glControl = new ImGuiGLControl { Dock = DockStyle.Fill };
-            glControl.Render += RenderFrame;
-            Controls.Add(glControl);
-
-            renderTimer = new Timer { Interval = 16 };
-            renderTimer.Tick += (_, _) => glControl.Invalidate();
-
-            Shown += (_, _) => renderTimer.Start();
-            FormClosing += OnFormClosingHandler;
-        }
 
         /// <summary>
         /// Draw the contents of the right-hand props panel each frame.
@@ -107,39 +87,22 @@ namespace OpenEphys.Onix1.Design
         protected void Log(string message, bool isError = false) =>
             log.Add(new LogEntry { When = DateTimeOffset.UtcNow, Msg = message, IsError = isError });
 
-        /// <summary>
-        /// Called when the form is about to close. Set <c>e.Cancel = true</c> to abort the
-        /// close (the render timer is restarted automatically in that case).
-        /// </summary>
-        protected virtual void OnClosing(FormClosingEventArgs e) { }
+        /// <inheritdoc/>
+        public virtual bool HasChanges { get; protected set; } = false;
 
         /// <inheritdoc/>
-        public virtual bool HasChanges { get => false; protected set { } }
+        public virtual bool CanClose(DialogResult pendingResult) => true;
 
         /// <inheritdoc/>
-        public virtual event EventHandler OnStateChange { add { } remove { } }
-
-        /// <inheritdoc/>
-        public virtual bool ProcessMenuShortcut(Keys keyData) => false;
-
-        void RenderFrame(object sender, EventArgs e)
+        public void Draw()
         {
-            var io = ImGui.GetIO();
-            io.DisplaySize = new Vector2(glControl.Width, glControl.Height);
-
-            ImGui.SetNextWindowPos(Vector2.Zero);
-            ImGui.SetNextWindowSize(io.DisplaySize);
-            ImGui.Begin("##root",
-                ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove |
-                ImGuiWindowFlags.NoScrollbar  | ImGuiWindowFlags.NoScrollWithMouse);
-
             float availY = ImGui.GetContentRegionAvail().Y;
 
             // bottomPanelHeight is authoritative and fixed across resizes; the wrapper fills
             // whatever's left. ResizeY ignores BeginChild's size argument after first use, so an
             // Always-priority SetNextWindowSize is needed to force a correction. But that also
-            // strips ResizeY (disabling the drag grip), so only force it on frames the Form
-            // itself actually resizes, not every frame.
+            // strips ResizeY (disabling the drag grip), so only force it on frames the hosting
+            // window itself actually resizes, not every frame.
             bool formResized = Math.Abs(availY - lastAvailY) > 0.5f;
             lastAvailY = availY;
 
@@ -223,14 +186,6 @@ namespace OpenEphys.Onix1.Design
             }
 
             selector.HandleScrollInput(topOriginScreenY + topH, propsLeftScreenX);
-            ImGui.End();
-        }
-
-        void OnFormClosingHandler(object sender, FormClosingEventArgs e)
-        {
-            renderTimer.Stop();
-            OnClosing(e);
-            if (e.Cancel) renderTimer.Start();
         }
 
         void DrawLog()

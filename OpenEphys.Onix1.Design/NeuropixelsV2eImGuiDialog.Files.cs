@@ -15,18 +15,18 @@ namespace OpenEphys.Onix1.Design
             ImGui.Text("Gain Calibration File");
             ImGui.Spacing();
             string gainCal = configureNode.ProbeConfiguration.GainCalibrationFileName ?? "";
-            WriteString(gainCalBuf, gainCal);
+            ImGuiControls.WriteString(gainCalBuf, gainCal);
             ImGui.SetNextItemWidth(fileTargetW);
             unsafe
             {
                 fixed (byte* p = gainCalBuf)
                     if (ImGui.InputText("##gaincal", p, (nuint)gainCalBuf.Length))
-                        configureNode.ProbeConfiguration.GainCalibrationFileName = ReadBuffer(gainCalBuf);
+                        configureNode.ProbeConfiguration.GainCalibrationFileName = ImGuiControls.ReadBuffer(gainCalBuf);
             }
 
             if (!string.IsNullOrEmpty(configureNode.ProbeConfiguration.GainCalibrationFileName))
             {
-                Tooltip(configureNode.ProbeConfiguration.GainCalibrationFileName);
+                ImGuiControls.Tooltip(configureNode.ProbeConfiguration.GainCalibrationFileName);
             }
 
             ImGui.SameLine();
@@ -45,7 +45,7 @@ namespace OpenEphys.Onix1.Design
                 if (ofd.ShowDialog() == DialogResult.OK)
                     configureNode.ProbeConfiguration.GainCalibrationFileName = ofd.FileName;
             }
-            Tooltip("Open a file browser to choose the gain calibration file for this probe. Required to acquire data from the probe and to perform an electrode survey.");
+            ImGuiControls.Tooltip("Open a file browser to choose the gain calibration file for this probe. Required to acquire data from the probe and to perform an electrode survey.");
         }
     }
 }
