@@ -1,15 +1,15 @@
-﻿namespace OpenEphys.Onix1.Design
+namespace OpenEphys.Onix1.Design
 {
     /// <summary>
     /// GUI for <see cref="ConfigureHeadstageNeuropixelsV1e"/>. Hosts one
-    /// <see cref="NeuropixelsV1Dialog"/> and one <see cref="GenericDeviceDialog"/> for the Bno055,
+    /// <see cref="NeuropixelsV1ImGuiDialog"/> and one <see cref="GenericDeviceDialog"/> for the Bno055,
     /// each in its own tab.
     /// </summary>
     internal class NeuropixelsV1eHeadstageDialog : HeadstageDialog
     {
-        /// <summary>Gets the <see cref="NeuropixelsV1Dialog"/>.</summary>
-        public NeuropixelsV1Dialog DialogNeuropixelsV1e =>
-            (NeuropixelsV1Dialog)GetProbeDialog(0);
+        /// <summary>Gets the <see cref="NeuropixelsV1ImGuiDialog"/>.</summary>
+        public NeuropixelsV1ImGuiDialog DialogNeuropixelsV1e =>
+            (NeuropixelsV1ImGuiDialog)GetProbeDialog(0);
 
         /// <summary>Gets the <see cref="GenericDeviceDialog"/> for the Bno055.</summary>
         public readonly GenericDeviceDialog DialogBno055;
@@ -23,20 +23,11 @@
             Text = "HeadstageNeuropixels1.0e Configuration";
 
             const string probeName = nameof(NeuropixelsV1);
-            var probeDialog = new NeuropixelsV1Dialog(configureHeadstage.NeuropixelsV1, probeName, true);
-            AddProbeTab(probeName, probeDialog, old => RecreateDialog(old, probeName));
+            var probeDialog = new NeuropixelsV1ImGuiDialog(configureHeadstage.NeuropixelsV1, probeName);
+            AddProbeTab(probeName, probeDialog, old => new NeuropixelsV1ImGuiDialog(old.ConfigureNeuropixelsV1, probeName));
 
             DialogBno055 = new GenericDeviceDialog(configureHeadstage.Bno055, true);
             AddDeviceTab("Bno055", DialogBno055);
-        }
-
-        static NeuropixelsV1Dialog RecreateDialog(NeuropixelsV1Dialog old, string probeName)
-        {
-            var newDialog = new NeuropixelsV1Dialog((IConfigureNeuropixelsV1)old.ConfigureNode, probeName, true);
-            newDialog.ProbeConfigurationDialog.ChannelConfiguration.ProbeGroup =
-                old.ProbeConfigurationDialog.ChannelConfiguration.ProbeGroup;
-            newDialog.ProbeConfigurationDialog.ChannelConfiguration.RedrawProbeGroup();
-            return newDialog;
         }
     }
 }

@@ -268,6 +268,38 @@ namespace OpenEphys.Onix1.Design
             return Plasma.DefaultMap[(int)(t * 255f)];
         }
 
+        protected override void DrawContactMetrics(IReadOnlyList<int> sel)
+        {
+            var results = survey.Results;
+            var ampData = results?.ActivityAmplitude;
+            var rateData = results?.ActivityFireRate;
+            var noiseData = results?.Noise;
+            var snrData = results?.Snr;
+            var snrRateData = results?.SnrTimesFireRate;
+
+            void ShowMetric(string label, float?[] data)
+            {
+                if (data == null) return;
+                if (sel.Count == 1 && sel[0] < data.Length)
+                {
+                    var v = data[sel[0]];
+                    InfoRow(label, v.HasValue ? $"{v.Value:F2}" : "—");
+                }
+                else
+                {
+                    var vals = sel.Where(i => i < data.Length && data[i].HasValue)
+                                  .Select(i => data[i].Value).ToArray();
+                    if (vals.Length > 0) InfoRow(label, $"avg {vals.Average():F2} / max {vals.Max():F2}");
+                }
+            }
+
+            ShowMetric("Amplitude (uV)", ampData);
+            ShowMetric("Noise std dev (uV)", noiseData);
+            ShowMetric("SNR", snrData);
+            ShowMetric("Firing rate (Hz)", rateData);
+            ShowMetric("SNR × Firing rate", snrRateData);
+        }
+
         void StartSurvey()
         {
             cts = new CancellationTokenSource();
@@ -289,6 +321,8 @@ namespace OpenEphys.Onix1.Design
                 spikeThreshold, useBandpassFilter, timePerBank, frozenSurveyBanks,
                 recordingFolder, cts.Token);
         }
+
+        protected override void OnSavingProbeGroup() => WriteActivityData();
 
         void WriteActivityData()
         {

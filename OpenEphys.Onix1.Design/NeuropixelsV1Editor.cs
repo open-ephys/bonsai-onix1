@@ -21,11 +21,11 @@ namespace OpenEphys.Onix1.Design
                     var configuration = new ConfigureNeuropixelsV1PsbDecoder();
                     DesignHelper.DeepCopyProperties(configureNeuropixelsV1e, configuration);
 
-                    using var editorDialog = new NeuropixelsV1Dialog(configuration, nameof(NeuropixelsV1));
-
-                    if (editorDialog.ShowDialog() == DialogResult.OK)
+                    using var editorDialog = new NeuropixelsV1ImGuiDialog(configuration, nameof(NeuropixelsV1));
+                    using var shell = new ProbeShellDialog(editorDialog);
+                    if (shell.ShowDialog() == DialogResult.OK)
                     {
-                        DesignHelper.CopyProperties(editorDialog.ConfigureNode, configureNeuropixelsV1e, DesignHelper.PropertiesToIgnore);
+                        DesignHelper.CopyProperties(editorDialog.ConfigureNeuropixelsV1, configureNeuropixelsV1e, DesignHelper.PropertiesToIgnore);
 
                         return true;
                     }
@@ -35,11 +35,11 @@ namespace OpenEphys.Onix1.Design
                     var configuration = new ConfigureNeuropixelsV1f();
                     DesignHelper.DeepCopyProperties(configureNeuropixelsV1f, configuration);
 
-                    using var editorDialog = new NeuropixelsV1Dialog(configuration, nameof(NeuropixelsV1));
-
-                    if (editorDialog.ShowDialog() == DialogResult.OK)
+                    using var editorDialog = new NeuropixelsV1ImGuiDialog(configuration, nameof(NeuropixelsV1));
+                    using var shell = new ProbeShellDialog(editorDialog);
+                    if (shell.ShowDialog() == DialogResult.OK)
                     {
-                        DesignHelper.CopyProperties(editorDialog.ConfigureNode, configureNeuropixelsV1f, DesignHelper.PropertiesToIgnore);
+                        DesignHelper.CopyProperties(editorDialog.ConfigureNeuropixelsV1, configureNeuropixelsV1f, DesignHelper.PropertiesToIgnore);
 
                         return true;
                     }

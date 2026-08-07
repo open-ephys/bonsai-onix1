@@ -28,7 +28,7 @@ namespace OpenEphys.Onix1.Design
                     {
                         DesignHelper.CopyProperties((ConfigurePolledBno055)editorDialog.DialogBno055.Device, configureHeadstage.Bno055, DesignHelper.PropertiesToIgnore);
 
-                        DesignHelper.CopyProperties((ConfigureNeuropixelsV1PsbDecoder)editorDialog.DialogNeuropixelsV1e.ConfigureNode, configureHeadstage.NeuropixelsV1, DesignHelper.PropertiesToIgnore);
+                        DesignHelper.CopyProperties((ConfigureNeuropixelsV1PsbDecoder)editorDialog.DialogNeuropixelsV1e.ConfigureNeuropixelsV1, configureHeadstage.NeuropixelsV1, DesignHelper.PropertiesToIgnore);
 
                         return true;
                     }
