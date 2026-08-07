@@ -3,20 +3,18 @@ namespace OpenEphys.Onix1.Design
     /// <summary>
     /// GUI for <see cref="ConfigureHeadstageNeuropixelsV1f"/>. Hosts two
     /// <see cref="NeuropixelsV1ImGuiDialog"/> instances (ProbeA and ProbeB) and one
-    /// <see cref="GenericDeviceDialog"/> for the Bno055, each in its own tab.
+    /// <see cref="ImGuiPropertyPanel"/> for the Bno055, each in its own tab.
     /// </summary>
-    internal class NeuropixelsV1fHeadstageDialog : HeadstageDialog
+    internal class NeuropixelsV1fHeadstageDialog : ImGuiShellDialog
     {
         /// <summary>Gets the <see cref="NeuropixelsV1ImGuiDialog"/> for ProbeA.</summary>
-        internal NeuropixelsV1ImGuiDialog DialogNeuropixelsV1A =>
-            (NeuropixelsV1ImGuiDialog)GetProbeDialog(0);
+        internal NeuropixelsV1ImGuiDialog DialogNeuropixelsV1A { get; private set; }
 
         /// <summary>Gets the <see cref="NeuropixelsV1ImGuiDialog"/> for ProbeB.</summary>
-        internal NeuropixelsV1ImGuiDialog DialogNeuropixelsV1B =>
-            (NeuropixelsV1ImGuiDialog)GetProbeDialog(1);
+        internal NeuropixelsV1ImGuiDialog DialogNeuropixelsV1B { get; private set; }
 
-        /// <summary>Gets the <see cref="GenericDeviceDialog"/> for the Bno055.</summary>
-        internal readonly GenericDeviceDialog DialogBno055;
+        /// <summary>Gets the <see cref="ImGuiPropertyPanel"/> for the Bno055.</summary>
+        internal ImGuiPropertyPanel DialogBno055 { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of a <see cref="NeuropixelsV1fHeadstageDialog"/>.
@@ -28,20 +26,19 @@ namespace OpenEphys.Onix1.Design
             ConfigureNeuropixelsV1f configureNeuropixelsV1A,
             ConfigureNeuropixelsV1f configureNeuropixelsV1B,
             ConfigureBno055 configureBno055)
+            : base("Headstage NeuropixelsV1f Configuration")
         {
-            Text = "HeadstageNeuropixels1.0f Configuration";
-
             const string nameA = nameof(ConfigureHeadstageNeuropixelsV1f.NeuropixelsV1A);
             const string nameB = nameof(ConfigureHeadstageNeuropixelsV1f.NeuropixelsV1B);
 
-            AddProbeTab(nameA, new NeuropixelsV1ImGuiDialog(configureNeuropixelsV1A, nameA),
-                old => new NeuropixelsV1ImGuiDialog(old.ConfigureNeuropixelsV1, nameA));
+            DialogNeuropixelsV1A = new NeuropixelsV1ImGuiDialog(configureNeuropixelsV1A, nameA);
+            AddTab(nameA, DialogNeuropixelsV1A);
 
-            AddProbeTab(nameB, new NeuropixelsV1ImGuiDialog(configureNeuropixelsV1B, nameB),
-                old => new NeuropixelsV1ImGuiDialog(old.ConfigureNeuropixelsV1, nameB));
+            DialogNeuropixelsV1B = new NeuropixelsV1ImGuiDialog(configureNeuropixelsV1B, nameB);
+            AddTab(nameB, DialogNeuropixelsV1B);
 
-            DialogBno055 = new GenericDeviceDialog(configureBno055, true);
-            AddDeviceTab("Bno055", DialogBno055);
+            DialogBno055 = new ImGuiPropertyPanel(configureBno055, filterDeviceTableProperties: true);
+            AddTab("Bno055", DialogBno055);
         }
     }
 }

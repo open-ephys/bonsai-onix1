@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -17,7 +17,7 @@ namespace OpenEphys.Onix1.Design
             ImGui.SetNextItemWidth(ComboboxStartWidthPx);
             if (ImGui.Combo("Probe Type##probetype", ref newType, NeuropixelsV2ProbeTypes.DisplayNames, NeuropixelsV2ProbeTypes.All.Length))
                 if (newType != probeTypeIdx) TrySwitchProbeType(newType);
-            Tooltip("Choose the physical shank layout of the probe being configured (e.g., single-shank vs. quad-shank).",
+            ImGuiControls.Tooltip("Choose the physical shank layout of the probe being configured (e.g., single-shank vs. quad-shank).",
                 "Not changeable for Beta probes.");
             if (isBeta) ImGui.EndDisabled();
         }
@@ -30,22 +30,22 @@ namespace OpenEphys.Onix1.Design
                 var refValues = probeGroup.GetReferenceEnumValues();
                 configureNode.ProbeConfiguration.Reference = (Enum)refValues.GetValue(refIdx);
             }
-            Tooltip("Choose which electrode serves as the voltage reference for every recording channel.");
+            ImGuiControls.Tooltip("Choose which electrode serves as the voltage reference for every recording channel.");
 
             var presetNames = presets.Select(p => p.ToString()).ToArray();
             ImGui.SetNextItemWidth(ComboboxStartWidthPx);
             if (ImGui.Combo("Preset##preset", ref presetIdx, presetNames, presetNames.Length))
                 ApplyPreset(presets[presetIdx]);
-            Tooltip("Apply a ready-made channel selection in a single step. Note: this overrides all current enabled and/or pinned contacts.");
+            ImGuiControls.Tooltip("Apply a ready-made channel selection in a single step. Note: this overrides all current enabled and/or pinned contacts.");
         }
 
         protected override void DrawProbeSpecificContactInfo(IReadOnlyList<int> sel)
         {
             var shanks = sel.Select(i => probeGroup.GetShank(i)).Distinct();
-            InfoRow("Shank(s)", shanks.Count() == 0 ? "-" : string.Join(",", shanks));
+            ImGuiControls.InfoRow("Shank(s)", shanks.Count() == 0 ? "-" : string.Join(",", shanks));
 
             var banks = sel.Select(i => probeGroup.GetBank(i)).Distinct();
-            InfoRow("Banks(s)", shanks.Count() == 0 ? "-" : string.Join(",", banks));
+            ImGuiControls.InfoRow("Banks(s)", shanks.Count() == 0 ? "-" : string.Join(",", banks));
         }
 
         void ApplyPreset(Enum preset)

@@ -142,9 +142,6 @@ namespace OpenEphys.Onix1.Design
             this.port = port;
             isBeta = configureNode is ConfigureNeuropixelsV2BetaPsbDecoder;
 
-            Text = (isBeta ? "NeuropixelsV2eBeta" : "NeuropixelsV2e") + " Configuration";
-            if (!string.IsNullOrEmpty(probeName)) Text += $" — {probeName}";
-
             SetupSelectorCallbacks();
             LoadOrCreateProbeGroup();
             RefreshProbeState();
@@ -197,9 +194,7 @@ namespace OpenEphys.Onix1.Design
 
         #endregion
 
-        #region ImGuiProbeDialog overrides
-
-        protected override bool SelectionEnabled => true;
+        #region ImGuiProbePanel overrides
 
         protected override void DrawPropsPanel()
         {
@@ -248,12 +243,12 @@ namespace OpenEphys.Onix1.Design
             HandleKeyboardShortcuts();
         }
 
-        protected override void OnClosing(FormClosingEventArgs e)
+        public override bool CanClose(DialogResult pendingResult)
         {
             cts?.Cancel();
-            if (hasChanges && DialogResult != DialogResult.Cancel)
-                if (!PromptSaveOnClose())
-                    e.Cancel = true;
+            if (hasChanges && pendingResult != DialogResult.Cancel)
+                return PromptSaveOnClose();
+            return true;
         }
 
         #endregion
@@ -297,9 +292,9 @@ namespace OpenEphys.Onix1.Design
 
         void WriteBackBufs()
         {
-            WriteString(driverBuf, driver);
-            WriteString(gainCalBuf, configureNode.ProbeConfiguration.GainCalibrationFileName ?? "");
-            WriteString(probeFileBuf, configureNode.ProbeConfiguration.ProbeInterfaceFileName  ?? "");
+            ImGuiControls.WriteString(driverBuf, driver);
+            ImGuiControls.WriteString(gainCalBuf, configureNode.ProbeConfiguration.GainCalibrationFileName ?? "");
+            ImGuiControls.WriteString(probeFileBuf, configureNode.ProbeConfiguration.ProbeInterfaceFileName  ?? "");
         }
 
         #endregion
