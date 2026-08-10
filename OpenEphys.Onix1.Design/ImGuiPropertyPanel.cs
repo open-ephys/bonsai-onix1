@@ -29,7 +29,10 @@ namespace OpenEphys.Onix1.Design
         float? labelColumnWidth;
         float? valueColumnWidth;
 
-        /// <summary>The object being edited. Mirrors <see cref="GenericDeviceDialog.Device"/> for read-back after the shell closes.</summary>
+        /// <summary>
+        /// The object being edited. Mirrors <see cref="GenericDeviceDialog.Device"/> for read-back
+        /// after the shell closes.
+        /// </summary>
         internal object Device => device;
 
         /// <inheritdoc/>

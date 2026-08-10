@@ -26,6 +26,11 @@ namespace OpenEphys.Onix1.Design
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
+                        // Port/PortVoltage live directly on the headstage node, not a sub-device, so they
+                        // must be copied back here too, same as the sub-device properties below.
+                        configureV2eHeadstage.Port = configureNode.Port;
+                        configureV2eHeadstage.PortVoltage = configureNode.PortVoltage;
+
                         DesignHelper.CopyProperties((ConfigurePolledBno055)editorDialog.DialogBno055.Device, configureV2eHeadstage.Bno055, DesignHelper.PropertiesToIgnore);
 
                         DesignHelper.CopyProperties((ConfigureRhd2000PsbDecoderWithMax41400)editorDialog.DialogRhd2000.Device, configureV2eHeadstage.Rhd2000, DesignHelper.PropertiesToIgnore);

@@ -1,11 +1,11 @@
-namespace OpenEphys.Onix1.Design
+﻿namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// GUI for <see cref="ConfigureHeadstageNeuropixelsV2Rhd2000e"/>. Hosts one
-    /// <see cref="NeuropixelsV2eImGuiDialog"/>, one <see cref="ImGuiPropertyPanel"/> for the
-    /// Rhd2000, and one <see cref="ImGuiPropertyPanel"/> for the Bno055, each in its own tab.
+    /// GUI for <see cref="ConfigureHeadstageNeuropixelsV2Rhd2000e"/>. Hosts one <see
+    /// cref="NeuropixelsV2eImGuiDialog"/>, one <see cref="ImGuiPropertyPanel"/> for the Rhd2000, and one <see
+    /// cref="ImGuiPropertyPanel"/> for the Bno055, each in its own tab, plus an electrode-survey side panel.
     /// </summary>
-    internal class NeuropixelsV2Rhd2000eHeadstageDialog : ImGuiShellDialog
+    internal partial class NeuropixelsV2Rhd2000eHeadstageDialog : ImGuiShellDialog
     {
         /// <summary>Gets the <see cref="NeuropixelsV2eImGuiDialog"/>.</summary>
         internal NeuropixelsV2eImGuiDialog DialogNeuropixelsV2 { get; private set; }
@@ -24,7 +24,7 @@ namespace OpenEphys.Onix1.Design
             : base("Headstage NeuropixelsV2/Rhd2000e Configuration")
         {
             const string probeName = nameof(ConfigureHeadstageNeuropixelsV2Rhd2000e.NeuropixelsV2);
-            DialogNeuropixelsV2 = new NeuropixelsV2eImGuiDialog(configureHeadstage.NeuropixelsV2, probeName, PortName.PortA, true); // TODO: Port selection
+            DialogNeuropixelsV2 = new NeuropixelsV2eImGuiDialog(configureHeadstage.NeuropixelsV2, probeName, Log);
             AddTab(probeName, DialogNeuropixelsV2);
 
             DialogRhd2000 = new ImGuiPropertyPanel(configureHeadstage.Rhd2000, filterDeviceTableProperties: true);
@@ -32,6 +32,10 @@ namespace OpenEphys.Onix1.Design
 
             DialogBno055 = new ImGuiPropertyPanel(configureHeadstage.Bno055, filterDeviceTableProperties: true);
             AddTab("Bno055", DialogBno055);
+
+            InitializeSurveyPanel(configureHeadstage.Port,
+                port => configureHeadstage.Port = port,
+                voltage => configureHeadstage.PortVoltage = new AutoPortVoltage(voltage));
         }
     }
 }

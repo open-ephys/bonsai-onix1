@@ -60,7 +60,7 @@ namespace OpenEphys.Onix1.Design
 
         void TrySwitchProbeType(int newTypeIdx)
         {
-            if (hasChanges)
+            if (HasChanges)
             {
                 var r = MessageBox.Show($"Changing probe type will discard unsaved {probeName} changes. Continue?",
                     $"{probeName}: Change Probe Type", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);

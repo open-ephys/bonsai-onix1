@@ -11,10 +11,9 @@ namespace OpenEphys.Onix1.Design
 {
     /// <summary>
     /// ImGui-based configuration dialog for a NeuropixelsV1 probe: gain/reference/filter controls,
-    /// calibration file inputs, probe-interface file I/O, and the channel enable/pin/preset workflow
-    /// shared with NeuropixelsV2e via <see cref="ImGuiNeuropixelsDialog"/>.
+    /// calibration file inputs, probe-interface file I/O, and channel enable/pin/preset.
     /// </summary>
-    internal sealed class NeuropixelsV1ImGuiDialog : ImGuiNeuropixelsDialog
+    internal sealed class NeuropixelsV1ImGuiDialog : ImGuiNeuropixelsDialog<NeuropixelsV1ProbeGroup>
     {
         readonly IConfigureNeuropixelsV1 configureNode;
         NeuropixelsV1ProbeGroup probeGroup;
@@ -38,9 +37,7 @@ namespace OpenEphys.Onix1.Design
 
         #region Base class seams
 
-        protected override SingleProbeGroup ProbeInterfaceGroup => probeGroup;
-
-        protected override IMultiplexedProbeGroup MultiplexedProbeGroup => probeGroup;
+        internal override NeuropixelsV1ProbeGroup ProbeGroup => probeGroup;
 
         protected override IProbeInterfaceConfiguration ProbeConfigurationBase => configureNode.ProbeConfiguration;
 
@@ -73,8 +70,8 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// Initializes a new instance of <see cref="NeuropixelsV1ImGuiDialog"/>.
         /// </summary>
-        public NeuropixelsV1ImGuiDialog(IConfigureNeuropixelsV1 configureNode, string probeName)
-            : base(probeName)
+        public NeuropixelsV1ImGuiDialog(IConfigureNeuropixelsV1 configureNode, string probeName, ImGuiLogConsole log)
+            : base(probeName, log)
         {
             selector.DefaultZoomWindowMicrons = 2000f;
             selector.DefaultScrollYMicrons = 700f;
@@ -121,7 +118,7 @@ namespace OpenEphys.Onix1.Design
 
         public override bool CanClose(DialogResult pendingResult)
         {
-            if (hasChanges && pendingResult != DialogResult.Cancel)
+            if (HasChanges && pendingResult != DialogResult.Cancel)
                 return PromptSaveOnClose();
             return true;
         }

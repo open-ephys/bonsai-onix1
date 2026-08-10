@@ -22,6 +22,22 @@ namespace OpenEphys.Onix1.Design
         readonly Timer renderTimer;
         readonly List<(string Name, IImGuiTabPanel Panel)> tabs = new();
 
+        IImGuiTabPanel sidePanel;
+        float sidePanelWidth;
+        string sidePanelTitle;
+        bool sidePanelCollapsed;
+        const float SidePanelCollapsedWidth = 28f;
+
+        /// <summary>
+        /// Console log. Pass this to relevant sources to feed the log. 
+        /// </summary>
+        internal ImGuiLogConsole Log { get; } = new();
+
+        bool logPanelOpen = true;
+        float logPanelHeight = 200f;
+        float logFooterHeaderHeight = 30f;
+        float lastAvailY = -1f;
+
         /// <summary>
         /// Initializes a new instance of <see cref="ImGuiShellDialog"/>.
         /// </summary>
@@ -83,7 +99,8 @@ namespace OpenEphys.Onix1.Design
             tableLayout.Controls.Add(flowLayout, 0, 1);
             Controls.Add(tableLayout);
 
-            AcceptButton = okButton;
+            // NB: deliberately no AcceptButton -- these dialogs host many ImGui text/numeric inputs, and
+            // pressing Enter to commit one field's value must not also close (and apply) the whole dialog.
             CancelButton = cancelButton;
 
             renderTimer = new Timer { Interval = 16 };
@@ -98,6 +115,20 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         internal void AddTab(string tabName, IImGuiTabPanel panel) => tabs.Add((tabName, panel));
 
+        /// <summary>
+        /// Registers <paramref name="panel"/> as an always-visible, collapsible column to the right of the
+        /// tab group, instead of another tab. At most one side panel is supported.
+        /// </summary>
+        /// <param name="panel">The panel to draw as the side column.</param>
+        /// <param name="width">Pixel width of the side column when expanded.</param>
+        /// <param name="title">Shown inline next to the collapse toggle; omit for no label.</param>
+        internal void SetSidePanel(IImGuiTabPanel panel, float width, string title = null)
+        {
+            sidePanel = panel;
+            sidePanelWidth = width;
+            sidePanelTitle = title;
+        }
+
         void RenderFrame(object sender, EventArgs e)
         {
             var io = ImGui.GetIO();
@@ -109,6 +140,120 @@ namespace OpenEphys.Onix1.Design
                 ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove |
                 ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
 
+            DrawContent();
+
+            ImGui.End();
+        }
+
+        // "Vertical" text. One character per line, centered, e.g. for narrow collapsed label.
+        static void DrawStackedVerticalLabel(string text)
+        {
+            float avail = ImGui.GetContentRegionAvail().X;
+            foreach (char c in text)
+            {
+                float charWidth = ImGui.CalcTextSize(c.ToString()).X;
+                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + Math.Max(0f, (avail - charWidth) * 0.5f));
+                ImGui.TextUnformatted(c.ToString());
+            }
+        }
+
+        // Same resizable/collapsible top-wrapper-plus-bottom-child split ImGuiProbePanel.Draw() uses for
+        // its own per-probe log, just promoted one level up so the bottom log spans under DrawContent()
+        // (tab area + side panel together) instead of a single tab's own content.
+        void DrawContent()
+        {
+            float availY = ImGui.GetContentRegionAvail().Y;
+            bool formResized = Math.Abs(availY - lastAvailY) > 0.5f;
+            lastAvailY = availY;
+
+            var topFlags = logPanelOpen ? ImGuiChildFlags.ResizeY : ImGuiChildFlags.None;
+            string topWrapperId = logPanelOpen ? "##shellTopWrapperExpanded" : "##shellTopWrapperCollapsed";
+            float topTarget;
+
+            
+            if (logPanelOpen)
+            {
+                topTarget = Math.Max(100f, availY - logPanelHeight - logFooterHeaderHeight);
+                if (formResized)
+                    ImGui.SetNextWindowSize(new Vector2(-1, topTarget), ImGuiCond.Always);
+            }
+            else
+            {
+                topTarget = availY - logFooterHeaderHeight;
+            }
+
+
+            ImGui.BeginChild(topWrapperId, new Vector2(-1, topTarget), topFlags,
+                ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
+
+            // Draw main tab area + optional side panel
+            if (sidePanel == null)
+            {
+                DrawTabAsPanelOrTabs();
+            }
+            else 
+            {
+                float avail = ImGui.GetContentRegionAvail().X;
+                float sideWidth = sidePanelCollapsed ? SidePanelCollapsedWidth : sidePanelWidth;
+                float tabsWidth = Math.Max(200f, avail - sideWidth - ImGui.GetStyle().ItemSpacing.X);
+
+                ImGui.BeginChild("##tabArea", new Vector2(tabsWidth, -1));
+                DrawTabAsPanelOrTabs();
+                ImGui.EndChild();
+
+                ImGui.SameLine();
+
+                ImGui.BeginChild("##sidePanel", new Vector2(sideWidth, -1), ImGuiChildFlags.Borders);
+                if (ImGui.Button(sidePanelCollapsed ? "«" : "»"))
+                    sidePanelCollapsed = !sidePanelCollapsed;
+                if (sidePanelTitle != null)
+                {
+                    if (sidePanelCollapsed)
+                        DrawStackedVerticalLabel(sidePanelTitle);
+                    else
+                    {
+                        ImGui.SameLine();
+                        ImGui.TextUnformatted(sidePanelTitle);
+                    }
+                }
+                if (!sidePanelCollapsed)
+                {
+                    ImGui.Spacing();
+                    sidePanel.Draw();
+                }
+                ImGui.EndChild();
+            }
+
+            if (logPanelOpen)
+            {
+                float actualTopH = ImGui.GetWindowSize().Y;
+                logPanelHeight = Math.Max(60f,
+                    Math.Min(availY - logFooterHeaderHeight - 100f, availY - actualTopH - logFooterHeaderHeight));
+            }
+            ImGui.EndChild();
+
+            float footerStartY = ImGui.GetCursorPosY();
+            ImGui.Separator();
+            bool wasOpen = logPanelOpen;
+            if (ImGui.Button(logPanelOpen ? "»" : "«"))
+                logPanelOpen = !logPanelOpen;
+            ImGui.SameLine();
+            ImGui.TextUnformatted("Log");
+            if (wasOpen && !logPanelOpen)
+                Log.ClearSelection();
+
+            logFooterHeaderHeight = ImGui.GetCursorPosY() - footerStartY;
+
+            if (logPanelOpen)
+            {
+                ImGui.BeginChild("##shellLogChild", new Vector2(-1, -1), ImGuiChildFlags.Borders);
+                Log.Draw();
+                ImGui.EndChild();
+            }
+        }
+
+        void DrawTabAsPanelOrTabs()
+        {
             if (tabs.Count == 1) // single device, no need to show tabs
             {
                 tabs[0].Panel.Draw();
@@ -126,8 +271,6 @@ namespace OpenEphys.Onix1.Design
                 }
                 ImGui.EndTabBar();
             }
-
-            ImGui.End();
         }
 
         void ShellClosing(object sender, FormClosingEventArgs e)
@@ -136,7 +279,7 @@ namespace OpenEphys.Onix1.Design
 
             if (DialogResult == DialogResult.Cancel)
             {
-                if (tabs.Any(t => t.Panel.HasChanges))
+                if (tabs.Any(t => t.Panel.HasChanges) || (sidePanel?.HasChanges ?? false))
                     this.HandleTopLevelDialogCancel(ref e, ChannelConfigurationDialog.ProbeConfigurationConfirmMessage);
             }
             else
@@ -149,6 +292,8 @@ namespace OpenEphys.Onix1.Design
                         break;
                     }
                 }
+                if (!e.Cancel && sidePanel != null && !sidePanel.CanClose(DialogResult))
+                    e.Cancel = true;
             }
 
             if (e.Cancel) renderTimer.Start();

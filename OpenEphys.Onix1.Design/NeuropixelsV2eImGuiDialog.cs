@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
-using System.Threading;
 using System.Windows.Forms;
 using Hexa.NET.ImGui;
 using OpenEphys.ProbeInterface.NET;
@@ -17,11 +16,10 @@ namespace OpenEphys.Onix1.Design
     //   .Channels.cs — probe type, channel config UI, contact info, enable/pin actions
     //   .Files.cs — gain cal + probe interface file I/O and close prompt
     //   .Survey.cs — electrode survey UI, log, and activity coloring
-    internal partial class NeuropixelsV2eImGuiDialog : ImGuiNeuropixelsDialog
+    internal partial class NeuropixelsV2eImGuiDialog : ImGuiNeuropixelsDialog<NeuropixelsV2ProbeGroup>
     {
         // Identity
         readonly bool isBeta;
-        readonly bool isProbeA; // TODO: This is a hack. Its headstage level information that this probe level dialog should not care about
 
         // Config node
         readonly IConfigureNeuropixelsV2 configureNode;
@@ -29,29 +27,18 @@ namespace OpenEphys.Onix1.Design
         // Probe state
         NeuropixelsV2ProbeGroup probeGroup;
 
-        // Survey
+        // Survey (execution/hardware config lives on the headstage-level survey panel; this dialog only
+        // owns its own results/status and the activity-view + bank-selection UI that reads/drives them)
         readonly NeuropixelsV2eSurveyState survey = new();
-        CancellationTokenSource cts;
-        float spikeThreshold = -50f;
-        bool useBandpassFilter = true;
-        float timePerBank = 5f;
         SurveyActivityMetric selectedMetric = SurveyActivityMetric.SNR;
         float actMin, actMax = 1f;
         float actDomainMin, actDomainMax = 1f;
         bool actRangeInitialized;
         readonly Dictionary<SurveyActivityMetric, (float min, float max)> actRanges = new();
-        bool recordSurveyData = false;
         bool showActivityColors = false;
         bool bankSelectMode = false;
-        HashSet<(int shank, NeuropixelsV2Bank bank)> surveyBanks  = new();
-        HashSet<(int shank, NeuropixelsV2Bank bank)> pendingBanks = new();
-
-        // Hardware (survey only) // TODO: lift to a headstage level dialog that houses this dialog
-        string driver = "riffa";
-        int hubIndex;
-        PortName port = PortName.PortA;
-        double? portVoltage;
-        bool editingHardwareAddr;
+        readonly HashSet<(int shank, NeuropixelsV2Bank bank)> surveyBanks  = new();
+        readonly HashSet<(int shank, NeuropixelsV2Bank bank)> pendingBanks = new();
 
         // Combo / preset state
         int presetIdx, refIdx, probeTypeIdx;
@@ -59,7 +46,6 @@ namespace OpenEphys.Onix1.Design
         string[] refNames = Array.Empty<string>();
 
         // Input buffers
-        readonly byte[] driverBuf = new byte[64];
         readonly byte[] gainCalBuf = new byte[512];
 
         // Visual constants
@@ -71,11 +57,24 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         internal IConfigureNeuropixelsV2 ConfigureNeuropixelsV2 => configureNode;
 
+        /// <summary>
+        /// This probe's own survey results/status. Written into by the headstage-level survey runner,
+        /// read by this dialog's activity-view UI.
+        /// </summary>
+        internal NeuropixelsV2eSurveyState Survey => survey;
+
+        /// <summary>
+        /// Which (shank, bank) pairs this probe's survey should sweep, as selected via the probe-view
+        /// drag-select mechanism. Read by the headstage-level survey runner.
+        /// </summary>
+        internal HashSet<(int shank, NeuropixelsV2Bank bank)> SurveyBanks => surveyBanks;
+
         #region Base class seams
 
-        protected override SingleProbeGroup ProbeInterfaceGroup => probeGroup;
-
-        protected override IMultiplexedProbeGroup MultiplexedProbeGroup => probeGroup;
+        /// <summary>
+        /// The current probe group. Read by the headstage-level survey runner to enumerate contacts/banks.
+        /// </summary>
+        internal override NeuropixelsV2ProbeGroup ProbeGroup => probeGroup;
 
         protected override IProbeInterfaceConfiguration ProbeConfigurationBase => configureNode.ProbeConfiguration;
 
@@ -122,24 +121,16 @@ namespace OpenEphys.Onix1.Design
         #endregion
 
         /// <summary>
-        /// Opens the dialog for probe A on port A.
+        /// Opens the dialog.
         /// </summary>
-        public NeuropixelsV2eImGuiDialog(IConfigureNeuropixelsV2 configureNode, string probeName, bool isProbeA = true)
-            : this(configureNode, probeName, PortName.PortA, isProbeA) { }
-
-        /// <summary>
-        /// Opens the dialog with an explicit port assignment.
-        /// </summary>
-        public NeuropixelsV2eImGuiDialog(IConfigureNeuropixelsV2 configureNode, string probeName, PortName port, bool isProbeA)
-            : base(probeName)
+        public NeuropixelsV2eImGuiDialog(IConfigureNeuropixelsV2 configureNode, string probeName, ImGuiLogConsole log)
+            : base(probeName, log)
         {
             // NB: start the view at a 2 mm vertical box that extends 300 um below contact 0
             selector.DefaultZoomWindowMicrons = 2000f;
             selector.DefaultScrollYMicrons = 700f;
 
             this.configureNode = configureNode ?? throw new ArgumentNullException(nameof(configureNode));
-            this.isProbeA = isProbeA;
-            this.port = port;
             isBeta = configureNode is ConfigureNeuropixelsV2BetaPsbDecoder;
 
             SetupSelectorCallbacks();
@@ -245,8 +236,7 @@ namespace OpenEphys.Onix1.Design
 
         public override bool CanClose(DialogResult pendingResult)
         {
-            cts?.Cancel();
-            if (hasChanges && pendingResult != DialogResult.Cancel)
+            if (HasChanges && pendingResult != DialogResult.Cancel)
                 return PromptSaveOnClose();
             return true;
         }
@@ -292,7 +282,6 @@ namespace OpenEphys.Onix1.Design
 
         void WriteBackBufs()
         {
-            ImGuiControls.WriteString(driverBuf, driver);
             ImGuiControls.WriteString(gainCalBuf, configureNode.ProbeConfiguration.GainCalibrationFileName ?? "");
             ImGuiControls.WriteString(probeFileBuf, configureNode.ProbeConfiguration.ProbeInterfaceFileName  ?? "");
         }

@@ -21,7 +21,7 @@ namespace OpenEphys.Onix1.Design
             : base("Headstage NeuropixelsV1eConfiguration")
         {
             const string probeName = nameof(NeuropixelsV1);
-            DialogNeuropixelsV1e = new NeuropixelsV1ImGuiDialog(configureHeadstage.NeuropixelsV1, probeName);
+            DialogNeuropixelsV1e = new NeuropixelsV1ImGuiDialog(configureHeadstage.NeuropixelsV1, probeName, Log);
             AddTab(probeName, DialogNeuropixelsV1e);
 
             DialogBno055 = new ImGuiPropertyPanel(configureHeadstage.Bno055, filterDeviceTableProperties: true);

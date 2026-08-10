@@ -200,7 +200,7 @@ namespace OpenEphys.Onix1.Design
         const uint  ColDragDeselect     = ImGuiPalette.Red;
         const float ClickThresholdSq    = 16f;
         static readonly uint ColCoordOverlayBg = ImGuiPalette.WithAlpha(ImGuiPalette.Black, 0xBB);
-        const uint  ColCoordOverlayText = ImGuiPalette.White;
+        const uint  ColBottomInfoText   = ImGuiPalette.White;
         const float GridMarginHPx       = 60f;
         const float GridMarginVPx       = 60f;
         static readonly uint ColContourFill = ImGuiPalette.WithAlpha(ImGuiPalette.Black, 0xBB);
@@ -491,8 +491,8 @@ namespace OpenEphys.Onix1.Design
                     float refBot  = cp.Y + avail.Y - 18f;
                     var bgMin = new Vector2(cp.X + avail.X - sz.X - pad * 3f, refBot - sz.Y - pad);
                     var bgMax = new Vector2(cp.X + avail.X - pad, refBot);
-                    dl.AddRectFilled(bgMin, bgMax, ColCoordOverlayBg, 3f);
-                    dl.AddText(new Vector2(bgMin.X + pad, bgMin.Y + pad), ColCoordOverlayText, coord);
+                    //dl.AddRectFilled(bgMin, bgMax, ColCoordOverlayBg, 3f);
+                    dl.AddText(new Vector2(bgMin.X + pad, bgMin.Y + pad), ColBottomInfoText, coord);
 
                     for (int i = 0; i < contacts.Count; i++)
                     {
@@ -514,8 +514,8 @@ namespace OpenEphys.Onix1.Design
                 float refBot = cp.Y + avail.Y - 18f;
                 var tagMin = new Vector2(cp.X + pad, refBot - tsz.Y - pad);
                 var tagMax = new Vector2(cp.X + pad * 3f + tsz.X, refBot);
-                dl.AddRectFilled(tagMin, tagMax, ColCoordOverlayBg, 3f);
-                dl.AddText(new Vector2(tagMin.X + pad, tagMin.Y + pad / 2f), ImGuiPalette.Yellow, overlayTag);
+                //dl.AddRectFilled(tagMin, tagMax, ColCoordOverlayBg, 3f);
+                dl.AddText(new Vector2(tagMin.X + pad, tagMin.Y + pad / 2f), ColBottomInfoText, overlayTag);
             }
 
             DrawLegend(dl, cp, avail);
@@ -1019,7 +1019,7 @@ namespace OpenEphys.Onix1.Design
                     if (e.DottedOutline)
                         DrawDottedRect(dl, sMin, sMax, ColBlockedOutline);
                 }
-                dl.AddText(new Vector2(x + swatchSz + pad, y), ColCoordOverlayText, e.Label);
+                dl.AddText(new Vector2(x + swatchSz + pad, y), ColBottomInfoText, e.Label);
                 y += rowH;
             }
         }

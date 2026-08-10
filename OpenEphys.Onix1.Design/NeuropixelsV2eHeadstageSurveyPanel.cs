@@ -1,0 +1,287 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Numerics;
+using System.Threading;
+using System.Windows.Forms;
+using Hexa.NET.ImGui;
+
+namespace OpenEphys.Onix1.Design
+{
+    /// <summary>
+    /// Headstage-level side panel for running the electrode-activity survey across one or more probes:
+    /// hardware address, filter/threshold/time-per-bank, which probe(s) to include, and run/cancel/progress.
+    /// Activity *viewing* (coloring, metric selection) stays on each probe's own dialog.
+    /// </summary>
+    internal sealed class NeuropixelsV2eHeadstageSurveyPanel : IImGuiTabPanel
+    {
+        readonly IReadOnlyList<NeuropixeslV2eSurveyTarget> targets;
+        readonly SurveyHeadstageFactory buildHeadstage;
+        readonly Action<PortName> setHeadstagePort;
+        readonly Action<double?> setHeadstagePortVoltage;
+        readonly ImGuiLogConsole log;
+        readonly NeuropixelsSurveyState state = new();
+        readonly byte[] driverBuf = new byte[64];
+        static readonly Vector4 ColorTextSuccess = ImGui.ColorConvertU32ToFloat4(ImGuiPalette.BrightFern);
+        static readonly Vector4 ColorTextError = ImGui.ColorConvertU32ToFloat4(ImGuiPalette.VibrantCoral);
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="NeuropixelsV2eHeadstageSurveyPanel"/>.
+        /// </summary>
+        /// <param name="targets">Every probe this headstage hosts that can be surveyed.</param>
+        /// <param name="buildHeadstage">Builds a fresh headstage of this headstage's own concrete type each survey round.</param>
+        /// <param name="initialPort">Initial hardware-address port, seeded from the headstage's own configured port.</param>
+        /// <param name="setHeadstagePort">
+        /// Writes an edited port back onto the headstage's own configuration node. Changing the port here is
+        /// stating a physical fact about the headstage (which ONIX breakout port it's plugged into), not a
+        /// survey-only parameter -- unlike driver/hub index, which are PC-side connection details with no
+        /// equivalent on the headstage config node.
+        /// </param>
+        /// <param name="setHeadstagePortVoltage">
+        /// Writes an edited voltage override back onto the headstage's own configuration node, for the same
+        /// reason as <paramref name="setHeadstagePort"/>.
+        /// </param>
+        /// <param name="log">The hosting shell's console log.</param>
+        internal NeuropixelsV2eHeadstageSurveyPanel(IReadOnlyList<NeuropixeslV2eSurveyTarget> targets, SurveyHeadstageFactory buildHeadstage,
+            PortName initialPort, Action<PortName> setHeadstagePort, Action<double?> setHeadstagePortVoltage, ImGuiLogConsole log)
+        {
+            this.targets = targets ?? throw new ArgumentNullException(nameof(targets));
+            this.buildHeadstage = buildHeadstage ?? throw new ArgumentNullException(nameof(buildHeadstage));
+            this.setHeadstagePort = setHeadstagePort ?? throw new ArgumentNullException(nameof(setHeadstagePort));
+            this.setHeadstagePortVoltage = setHeadstagePortVoltage ?? throw new ArgumentNullException(nameof(setHeadstagePortVoltage));
+            this.log = log ?? throw new ArgumentNullException(nameof(log));
+            state.Port = initialPort;
+            if (targets.Count == 1) targets[0].Selected = true;
+        }
+
+        /// <inheritdoc/>
+        public bool HasChanges => false; // survey config is transient session UI, not itself file-backed
+
+        /// <inheritdoc/>
+        public bool CanClose(DialogResult pendingResult)
+        {
+            state.Cts?.Cancel();
+            return true;
+        }
+
+        /// <inheritdoc/>
+        public void Draw()
+        {
+            // NB: Do not filter by t.Selected since checkbox is checked a single time at Start() time
+            bool isRunning = targets.Any(t => t.Dialog.Survey.Status == NeuropixelsV2eSurveyStatus.Running);
+
+            // Hardware address and probe selection are captured once, at Start() time. Editing them while
+            // a survey is running would silently have no effect on the run already in progress.
+            if (isRunning) ImGui.BeginDisabled();
+            DrawHardwareAddressSection();
+            if (isRunning) ImGui.EndDisabled();
+            ImGui.Spacing();
+
+            if (isRunning) ImGui.BeginDisabled();
+            DrawProbeSelection();
+            if (isRunning) ImGui.EndDisabled();
+            ImGui.Spacing();
+
+            if (!isRunning)
+            {
+                DrawSurveySettings();
+                ImGui.Spacing();
+            }
+
+            if (isRunning)
+                DrawRunning();
+            else
+                DrawIdle();
+
+            ImGui.Spacing();
+            DrawPerTargetStatus();
+        }
+
+        void DrawHardwareAddressSection()
+        {
+            ImGui.Text("Hardware configuration");
+            ImGui.Spacing();
+
+            if (!state.EditingHardwareAddr)
+            {
+                string voltStr = state.PortVoltage.HasValue ? $" / {state.PortVoltage:0.0}V" : "";
+                ImGui.TextDisabled($"{state.Driver} / slot {state.HubIndex} / {state.Port}{voltStr}");
+                ImGui.SameLine();
+                if (ImGui.SmallButton("Edit##hwa"))
+                {
+                    state.EditingHardwareAddr = true;
+                    ImGuiControls.WriteString(driverBuf, state.Driver);
+                }
+                ImGuiControls.Tooltip("Edit the hardware address (driver, slot, port) used to run the electrode survey.");
+            }
+            else
+            {
+                ImGui.SetNextItemWidth(100f);
+                unsafe
+                {
+                    fixed (byte* p = driverBuf)
+                        if (ImGui.InputText("Driver##srvdrv", p, (nuint)driverBuf.Length))
+                            state.Driver = ImGuiControls.ReadBuffer(driverBuf);
+                }
+                ImGuiControls.Tooltip("Name of the device driver used to communicate with the ONIX hardware controller this headstage is connected to (e.g. \"riffa\" for a PCIe interface).");
+
+                ImGui.SameLine();
+                ImGui.SetNextItemWidth(100f);
+                int hubIndex = state.HubIndex;
+                if (ImGui.InputInt("Slot##srvslot", ref hubIndex))
+                    state.HubIndex = Math.Max(0, hubIndex);
+                ImGuiControls.Tooltip("Index of the host interconnect (e.g., PCIe slot) the ONIX hardware controller uses, as enumerated by the operating system.");
+
+                var portNames = Enum.GetNames(typeof(PortName));
+                int portIdx = Array.IndexOf(portNames, state.Port.ToString());
+                if (portIdx < 0) portIdx = 0;
+                ImGui.SetNextItemWidth(120f);
+                if (ImGui.Combo("Port##srvport", ref portIdx, portNames, portNames.Length))
+                {
+                    state.Port = (PortName)Enum.Parse(typeof(PortName), portNames[portIdx]);
+                    setHeadstagePort(state.Port);
+                }
+                ImGuiControls.Tooltip("Headstage port on the ONIX hardware controller that this headstage is physically connected to. Changing this here also updates the headstage's own port setting.");
+
+                bool overrideV = state.PortVoltage.HasValue;
+                if (ImGui.Checkbox("Override voltage##srvpv", ref overrideV))
+                {
+                    state.PortVoltage = overrideV ? (double?)5.0 : null;
+                    setHeadstagePortVoltage(state.PortVoltage);
+                }
+                ImGuiControls.Tooltip("Manually set the headstage's supply voltage instead of auto-negotiating it.");
+                if (overrideV)
+                {
+                    ImGui.SameLine();
+                    float v = (float)(state.PortVoltage ?? 5.0);
+                    ImGui.SetNextItemWidth(90f);
+                    if (ImGui.SliderFloat("V##srvpvslider", ref v, 3.0f, 5.5f))
+                    {
+                        state.PortVoltage = Math.Round(v, 1);
+                        setHeadstagePortVoltage(state.PortVoltage);
+                    }
+                    ImGuiControls.Tooltip("Supply voltage to apply to the headstage. Consult the headstage documentation for a safe range before changing this. Changing this here also updates the headstage's own voltage setting.");
+                }
+
+                ImGui.Spacing();
+                if (ImGui.Button("Apply##hwa")) state.EditingHardwareAddr = false;
+                ImGuiControls.Tooltip("Apply the hardware address above and close this editor.");
+            }
+        }
+
+        void DrawProbeSelection()
+        {
+            ImGui.Text("Probes to survey");
+            ImGui.Spacing();
+            foreach (var target in targets)
+            {
+                bool hasGainCal = !string.IsNullOrEmpty(target.Dialog.ConfigureNeuropixelsV2.ProbeConfiguration.GainCalibrationFileName);
+                if (!hasGainCal) ImGui.BeginDisabled();
+                bool selected = hasGainCal && target.Selected;
+                if (ImGui.Checkbox($"{target.Label}##survsel", ref selected))
+                    target.Selected = selected;
+                if (!hasGainCal)
+                {
+                    ImGui.EndDisabled();
+                    ImGuiControls.Tooltip("Requires gain calibration file.");
+                }
+            }
+        }
+
+        void DrawSurveySettings()
+        {
+            ImGui.Text("Survey settings");
+            ImGui.Spacing();
+            bool bpf = state.UseBandpassFilter;
+            if (ImGui.Checkbox("300-6000 Hz bandpass##bpf", ref bpf)) state.UseBandpassFilter = bpf;
+            ImGuiControls.Tooltip("Band-pass filter the signal to 300-6000 Hz before detecting spikes, removing slow drift and high-frequency noise outside the typical spike frequency band.");
+
+            float thrAvail = ImGui.GetContentRegionAvail().X - ImGui.GetStyle().ItemSpacing.X;
+            float thr = (float)state.SpikeThreshold;
+            ImGui.SetNextItemWidth(thrAvail * 0.33f);
+            if (ImGui.InputFloat("Spike threshold (uV)##thr", ref thr, 5f, 10f, "%.1f")) state.SpikeThreshold = thr;
+            ImGuiControls.Tooltip("Voltage a channel must cross, relative to baseline, to be counted as a spike during the survey.");
+
+            float tpb = state.TimePerBankSeconds;
+            ImGui.SetNextItemWidth(thrAvail * 0.33f);
+            if (ImGui.InputFloat("Time per bank (s)##tpb", ref tpb, 5f, 30f, "%.0f"))
+                state.TimePerBankSeconds = Math.Max(2f, Math.Min(300f, tpb));
+            ImGuiControls.Tooltip("How long to record from each selected bank while sweeping through the survey, in seconds.");
+
+            bool anySelectedHasProbeFile = targets.Any(t => t.Selected &&
+                !string.IsNullOrEmpty(t.Dialog.ConfigureNeuropixelsV2.ProbeConfiguration.ProbeInterfaceFileName) &&
+                File.Exists(t.Dialog.ConfigureNeuropixelsV2.ProbeConfiguration.ProbeInterfaceFileName));
+            if (!anySelectedHasProbeFile) { state.RecordSurveyData = false; ImGui.BeginDisabled(); }
+            bool rec = state.RecordSurveyData;
+            if (ImGui.Checkbox("Record raw data##recraw", ref rec)) state.RecordSurveyData = rec;
+            ImGuiControls.Tooltip("Save the raw, unfiltered voltage traces collected during the survey to disk, alongside the summary statistics, for each selected probe that has a ProbeInterface file.",
+                "Requires at least one selected probe to have a ProbeInterface file.");
+            if (!anySelectedHasProbeFile) ImGui.EndDisabled();
+        }
+
+        void DrawIdle()
+        {
+            bool anySelected = targets.Any(t => t.Selected);
+            if (!anySelected) ImGui.BeginDisabled();
+            if (ImGui.Button("Start Survey##hssurvey")) StartSurvey();
+            ImGuiControls.Tooltip("Sweep through the selected banks of every checked probe, concurrently, recording from each for the configured time and computing per-contact activity statistics.",
+                "Select at least one probe first.");
+            if (!anySelected) ImGui.EndDisabled();
+        }
+
+        void DrawRunning()
+        {
+            var selected = targets.Where(t => t.Selected).ToList();
+            float avgProgress = selected.Count == 0 ? 0f : selected.Average(t => t.Dialog.Survey.Progress);
+            ImGui.ProgressBar(avgProgress, new Vector2(ImGui.GetContentRegionAvail().X, 0));
+            ImGui.Spacing();
+            ImGui.Text("Collecting...");
+            ImGui.Spacing();
+            if (ImGui.Button("Cancel##hssurvey")) state.Cts?.Cancel();
+            ImGuiControls.Tooltip("Stop the electrode survey currently in progress.");
+        }
+
+        void DrawPerTargetStatus()
+        {
+            foreach (var target in targets)
+            {
+                bool stillRunning = target.Dialog.Survey.Status == NeuropixelsV2eSurveyStatus.Running;
+                if (!target.Selected && !stillRunning) continue;
+                var survey = target.Dialog.Survey;
+                switch (survey.Status)
+                {
+                    case NeuropixelsV2eSurveyStatus.Running:
+                        ImGui.TextUnformatted($"{target.Label}: running ({survey.Progress * 100f:0}%)");
+                        break;
+                    case NeuropixelsV2eSurveyStatus.Completed:
+                        ImGui.TextColored(ColorTextSuccess, $"{target.Label}: complete" +
+                            (survey.CompletedAt.HasValue ? $" ({survey.CompletedAt.Value.ToLocalTime():yyyy-MM-dd HH:mm})" : ""));
+                        break;
+                    case NeuropixelsV2eSurveyStatus.Failed:
+                        // NB: survey.Error is arbitrary exception text and may contain '%', which
+                        // TextColored's printf-style formatting would mangle. Push the color instead.
+                        ImGui.PushStyleColor(ImGuiCol.Text, ColorTextError);
+                        ImGui.TextUnformatted($"{target.Label}: failed - {survey.Error ?? "(unknown)"}");
+                        ImGui.PopStyleColor();
+                        break;
+                    default:
+                        ImGui.TextDisabled($"{target.Label}: idle");
+                        break;
+                }
+            }
+        }
+
+        void StartSurvey()
+        {
+            state.Cts = new CancellationTokenSource();
+            NeuropixelsV2eHeadstageSurveyRunner.Start(
+                buildHeadstage, targets,
+                state.Driver, state.HubIndex, state.Port, state.PortVoltage,
+                state.SpikeThreshold, state.UseBandpassFilter, state.TimePerBankSeconds, state.RecordSurveyData,
+                Log, state.Cts.Token);
+        }
+
+        void Log(string message, bool isError) => log.Log(message, isError);
+    }
+}

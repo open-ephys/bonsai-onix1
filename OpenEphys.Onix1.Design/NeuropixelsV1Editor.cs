@@ -21,8 +21,8 @@ namespace OpenEphys.Onix1.Design
                     var configuration = new ConfigureNeuropixelsV1PsbDecoder();
                     DesignHelper.DeepCopyProperties(configureNeuropixelsV1e, configuration);
 
-                    var editorDialog = new NeuropixelsV1ImGuiDialog(configuration, nameof(NeuropixelsV1));
                     using var shell = new ImGuiShellDialog("NeuropixelsV1 Configuration") { StartPosition = FormStartPosition.CenterScreen };
+                    var editorDialog = new NeuropixelsV1ImGuiDialog(configuration, nameof(NeuropixelsV1), shell.Log);
                     shell.AddTab(nameof(NeuropixelsV1), editorDialog);
                     if (shell.ShowDialog() == DialogResult.OK)
                     {
@@ -36,8 +36,8 @@ namespace OpenEphys.Onix1.Design
                     var configuration = new ConfigureNeuropixelsV1f();
                     DesignHelper.DeepCopyProperties(configureNeuropixelsV1f, configuration);
 
-                    var editorDialog = new NeuropixelsV1ImGuiDialog(configuration, nameof(NeuropixelsV1));
                     using var shell = new ImGuiShellDialog("NeuropixelsV1 Configuration") { StartPosition = FormStartPosition.CenterScreen };
+                    var editorDialog = new NeuropixelsV1ImGuiDialog(configuration, nameof(NeuropixelsV1), shell.Log);
                     shell.AddTab(nameof(NeuropixelsV1), editorDialog);
                     if (shell.ShowDialog() == DialogResult.OK)
                     {
