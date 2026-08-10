@@ -16,42 +16,33 @@ namespace OpenEphys.Onix1.Design
     /// display, and keyboard shortcuts common to every Neuropixels probe family. Subclasses supply
     /// probe-specific data access and UI through the abstract/virtual members below.
     /// </summary>
-    internal abstract class ImGuiNeuropixelsDialog : ImGuiProbePanel
+    internal abstract class ImGuiNeuropixelsDialog<TProbeGroup> : ImGuiProbePanel
+        where TProbeGroup : SingleProbeGroup, IMultiplexedProbeGroup
     {
         protected readonly string probeName;
         protected IReadOnlyList<Contact> allContacts = Array.Empty<Contact>();
         protected readonly MultiplexedContactState channelState = new();
-        protected bool hasChanges;
         protected readonly byte[] probeFileBuf = new byte[512];
-
         protected const uint ColorContactEnabled = ImGuiPalette.AmberGold;
         protected const uint ColorContactPinned = ImGuiPalette.NeonPink;
         protected const uint ColorContactDisabled = ImGuiPalette.Grey0x4D;
         protected const float ComboboxStartWidthPx = 165f;
 
-        /// <inheritdoc/>
-        public override bool HasChanges
-        {
-            get => hasChanges;
-            protected set => hasChanges = value;
-        }
-
-        protected ImGuiNeuropixelsDialog(string probeName)
+        protected ImGuiNeuropixelsDialog(string probeName, ImGuiLogConsole log)
+            : base(log)
         {
             this.probeName = probeName;
         }
 
+        /// <inheritdoc/>
+        public override bool HasChanges { get; protected set; }
+
         #region Seams implemented by probe-specific subclasses
 
         /// <summary>
-        /// The current probe group, upcast to the base ProbeInterface.NET type.
+        /// The current probe group.
         /// </summary>
-        protected abstract SingleProbeGroup ProbeInterfaceGroup { get; }
-
-        /// <summary>
-        /// The current probe group's multiplexed channel-mapping view.
-        /// </summary>
-        protected abstract IMultiplexedProbeGroup MultiplexedProbeGroup { get; }
+        internal abstract TProbeGroup ProbeGroup { get; }
 
         /// <summary>
         /// The probe configuration's ProbeInterface.NET-facing surface.
@@ -125,12 +116,12 @@ namespace OpenEphys.Onix1.Design
 
         protected void RefreshProbeState()
         {
-            allContacts = ProbeInterfaceGroup.Probe.Contacts;
+            allContacts = ProbeGroup.Probe.Contacts;
 
             var contacts = allContacts
                 .Select((c, i) => new ProbeContact(i, new Vector2((float)c.PosX, (float)c.PosY), ContactSizeUm(c)))
                 .ToList();
-            selector.Refresh(ProbeInterfaceGroup, contacts);
+            selector.Refresh(ProbeGroup, contacts);
 
             RebuildMaps();
             BuildPotentialChannelMap();
@@ -143,9 +134,9 @@ namespace OpenEphys.Onix1.Design
 
         #region Channel bookkeeping (wrappers over MultiplexedContactState)
 
-        protected void RebuildMaps() => channelState.RebuildActiveMap(ProbeInterfaceGroup.ChannelMap);
+        protected void RebuildMaps() => channelState.RebuildActiveMap(ProbeGroup.ChannelMap);
 
-        protected void BuildPotentialChannelMap() => channelState.RebuildPotentialMap(allContacts.Count, MultiplexedProbeGroup);
+        protected void BuildPotentialChannelMap() => channelState.RebuildPotentialMap(allContacts.Count, ProbeGroup);
 
         protected void RecomputeBlockedIndices() => channelState.RecomputeBlocked(allContacts.Count);
 
@@ -347,7 +338,7 @@ namespace OpenEphys.Onix1.Design
             ImGuiControls.Tooltip("Open a file browser to load an existing ProbeInterface file that specifies the channel map, contact state, and previous survey results.");
 
             bool canSave = !string.IsNullOrEmpty(ProbeConfigurationBase.ProbeInterfaceFileName);
-            string saveLabel = hasChanges ? "Save Changes*##save" : "Save##save";
+            string saveLabel = HasChanges ? "Save Changes*##save" : "Save##save";
             if (!canSave) ImGui.BeginDisabled();
             if (ImGui.Button(saveLabel)) SaveProbeGroup();
             ImGuiControls.Tooltip("Save the current channel map, contact state, and survey data to the specified ProbeInterface file.",
@@ -367,7 +358,7 @@ namespace OpenEphys.Onix1.Design
             {
                 WritePinnedState();
                 OnSavingProbeGroup();
-                File.WriteAllText(path, JsonConvert.SerializeObject(ProbeInterfaceGroup, Formatting.Indented));
+                File.WriteAllText(path, JsonConvert.SerializeObject(ProbeGroup, Formatting.Indented));
                 Log($"Probeinterface file saved to {path}");
                 HasChanges = false;
             }
@@ -407,12 +398,12 @@ namespace OpenEphys.Onix1.Design
             var pinned = allContacts
                 .Select((c, i) => channelState.ElectrodeToChannel.TryGetValue(i, out int ch) && channelState.PinnedChannels.Contains(ch))
                 .ToArray();
-            ProbeInterfaceGroup.Probe.SetContactAnnotation<bool>("pinned", pinned);
+            ProbeGroup.Probe.SetContactAnnotation<bool>("pinned", pinned);
         }
 
         protected void RestorePinnedState()
         {
-            var pinned = ProbeInterfaceGroup.Probe.GetContactAnnotation<bool>("pinned");
+            var pinned = ProbeGroup.Probe.GetContactAnnotation<bool>("pinned");
             if (pinned == null) return;
             for (int i = 0; i < allContacts.Count && i < pinned.Length; i++)
                 if (pinned[i] && channelState.ElectrodeToChannel.TryGetValue(i, out int ch))
@@ -422,7 +413,7 @@ namespace OpenEphys.Onix1.Design
 
         protected void OnProbeFileNameChanged(string newPath)
         {
-            if (hasChanges)
+            if (HasChanges)
             {
                 var r = MessageBox.Show("Changing the file will discard unsaved changes. Continue?",
                     "Change Probe Interface File", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);

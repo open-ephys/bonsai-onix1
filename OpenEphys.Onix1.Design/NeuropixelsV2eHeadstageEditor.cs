@@ -26,6 +26,11 @@ namespace OpenEphys.Onix1.Design
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
+                        // Port/PortVoltage live directly on the headstage node,so they must be copied back
+                        // here too, same as the sub-device properties below.
+                        configureV2eHeadstage.Port = configureNode.Port;
+                        configureV2eHeadstage.PortVoltage = configureNode.PortVoltage;
+
                         DesignHelper.CopyProperties((ConfigurePolledBno055)editorDialog.DialogBno055.Device, configureV2eHeadstage.Bno055, DesignHelper.PropertiesToIgnore);
 
                         DesignHelper.CopyProperties((ConfigureNeuropixelsV2PsbDecoder)editorDialog.DialogNeuropixelsV2A.ConfigureNeuropixelsV2, configureV2eHeadstage.NeuropixelsV2A, DesignHelper.PropertiesToIgnore);
@@ -44,6 +49,9 @@ namespace OpenEphys.Onix1.Design
 
                     if (editorDialog.ShowDialog() == DialogResult.OK)
                     {
+                        configureV2eBetaHeadstage.Port = configureNode.Port;
+                        configureV2eBetaHeadstage.PortVoltage = configureNode.PortVoltage;
+
                         DesignHelper.CopyProperties((ConfigurePolledBno055)editorDialog.DialogBno055.Device, configureV2eBetaHeadstage.Bno055, DesignHelper.PropertiesToIgnore);
 
                         DesignHelper.CopyProperties((ConfigureNeuropixelsV2BetaPsbDecoder)editorDialog.DialogNeuropixelsV2A.ConfigureNeuropixelsV2, configureV2eBetaHeadstage.NeuropixelsV2A, DesignHelper.PropertiesToIgnore);

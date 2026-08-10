@@ -31,10 +31,10 @@ namespace OpenEphys.Onix1.Design
             const string nameA = nameof(ConfigureHeadstageNeuropixelsV1f.NeuropixelsV1A);
             const string nameB = nameof(ConfigureHeadstageNeuropixelsV1f.NeuropixelsV1B);
 
-            DialogNeuropixelsV1A = new NeuropixelsV1ImGuiDialog(configureNeuropixelsV1A, nameA);
+            DialogNeuropixelsV1A = new NeuropixelsV1ImGuiDialog(configureNeuropixelsV1A, nameA, Log);
             AddTab(nameA, DialogNeuropixelsV1A);
 
-            DialogNeuropixelsV1B = new NeuropixelsV1ImGuiDialog(configureNeuropixelsV1B, nameB);
+            DialogNeuropixelsV1B = new NeuropixelsV1ImGuiDialog(configureNeuropixelsV1B, nameB, Log);
             AddTab(nameB, DialogNeuropixelsV1B);
 
             DialogBno055 = new ImGuiPropertyPanel(configureBno055, filterDeviceTableProperties: true);
