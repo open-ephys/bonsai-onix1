@@ -22,8 +22,8 @@ namespace OpenEphys.Onix1.Design
                     var configureNode = new ConfigureNeuropixelsV2PsbDecoder();
                     DesignHelper.DeepCopyProperties(configureNeuropixelsV2e, configureNode);
 
-                    var editorDialog = new NeuropixelsV2eImGuiDialog(configureNode, nameof(NeuropixelsV2));
                     using var shell = new ImGuiShellDialog("NeuropixelsV2 Configuration") { StartPosition = FormStartPosition.CenterScreen };
+                    var editorDialog = new NeuropixelsV2eImGuiDialog(configureNode, nameof(NeuropixelsV2), shell.Log);
                     shell.AddTab(nameof(NeuropixelsV2), editorDialog);
                     if (shell.ShowDialog() == DialogResult.OK)
                     {
@@ -36,8 +36,8 @@ namespace OpenEphys.Onix1.Design
                     var configureNode = new ConfigureNeuropixelsV2BetaPsbDecoder();
                     DesignHelper.DeepCopyProperties(configureNeuropixelsV2eBeta, configureNode);
 
-                    var editorDialog = new NeuropixelsV2eImGuiDialog(configureNode, nameof(NeuropixelsV2));
                     using var shell = new ImGuiShellDialog("NeuropixelsV2-Beta Configuration") { StartPosition = FormStartPosition.CenterScreen };
+                    var editorDialog = new NeuropixelsV2eImGuiDialog(configureNode, nameof(NeuropixelsV2), shell.Log);
                     shell.AddTab(nameof(NeuropixelsV2), editorDialog);
                     if (shell.ShowDialog() == DialogResult.OK)
                     {
