@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Windows.Forms;
 using Bonsai.Design;
@@ -19,31 +19,19 @@ namespace OpenEphys.Onix1.Design
 
                 if (editorState != null && !editorState.WorkflowRunning && component is ConfigureNeuropixelsV2PsbDecoder configureNeuropixelsV2e)
                 {
-                    var configureNode = new ConfigureNeuropixelsV2PsbDecoder();
-                    DesignHelper.DeepCopyProperties(configureNeuropixelsV2e, configureNode);
-
                     using var shell = new ImGuiShellDialog("NeuropixelsV2 Configuration") { StartPosition = FormStartPosition.CenterScreen };
-                    var editorDialog = new NeuropixelsV2eImGuiDialog(configureNode, nameof(NeuropixelsV2), shell.Log);
+                    var editorDialog = new NeuropixelsV2eImGuiDialog(configureNeuropixelsV2e, nameof(NeuropixelsV2), shell.Log);
                     shell.AddTab(nameof(NeuropixelsV2), editorDialog);
-                    if (shell.ShowDialog() == DialogResult.OK)
-                    {
-                        DesignHelper.CopyProperties(editorDialog.ConfigureNeuropixelsV2, configureNeuropixelsV2e, DesignHelper.PropertiesToIgnore);
-                        return true;
-                    }
+                    shell.ShowDialog();
+                    return true;
                 }
                 else if (editorState != null && !editorState.WorkflowRunning && component is ConfigureNeuropixelsV2BetaPsbDecoder configureNeuropixelsV2eBeta)
                 {
-                    var configureNode = new ConfigureNeuropixelsV2BetaPsbDecoder();
-                    DesignHelper.DeepCopyProperties(configureNeuropixelsV2eBeta, configureNode);
-
                     using var shell = new ImGuiShellDialog("NeuropixelsV2-Beta Configuration") { StartPosition = FormStartPosition.CenterScreen };
-                    var editorDialog = new NeuropixelsV2eImGuiDialog(configureNode, nameof(NeuropixelsV2), shell.Log);
+                    var editorDialog = new NeuropixelsV2eImGuiDialog(configureNeuropixelsV2eBeta, nameof(NeuropixelsV2), shell.Log);
                     shell.AddTab(nameof(NeuropixelsV2), editorDialog);
-                    if (shell.ShowDialog() == DialogResult.OK)
-                    {
-                        DesignHelper.CopyProperties(editorDialog.ConfigureNeuropixelsV2, configureNeuropixelsV2eBeta, DesignHelper.PropertiesToIgnore);
-                        return true;
-                    }
+                    shell.ShowDialog();
+                    return true;
                 }
             }
 

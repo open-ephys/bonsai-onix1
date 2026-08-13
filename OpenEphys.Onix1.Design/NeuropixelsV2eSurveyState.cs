@@ -55,6 +55,11 @@ namespace OpenEphys.Onix1.Design
 
     internal class NeuropixelsV2eSurveyState
     {
+        /// <summary>
+        /// Raised by <see cref="Complete"/> only, i.e. when the survey runner finishes a genuine new run.
+        /// </summary>
+        internal event Action SurveyCompleted;
+
         internal NeuropixelsV2eSurveyStatus Status { get; set; } = NeuropixelsV2eSurveyStatus.Idle;
         internal NeuropixelsV2eSurveyResults Results { get; set; }
         internal float Progress { get; set; }
@@ -62,5 +67,18 @@ namespace OpenEphys.Onix1.Design
         internal DateTimeOffset? CompletedAt { get; set; }
         internal bool IsStale =>
             CompletedAt.HasValue && (DateTimeOffset.Now - CompletedAt.Value).TotalHours > 24;
+
+        /// <summary>
+        /// Records a finished survey round and raises <see cref="SurveyCompleted"/>. Called by the survey
+        /// runner only; restoring previously-saved results sets <see cref="Results"/>/<see cref="Status"/>/
+        /// <see cref="CompletedAt"/> directly instead, so it doesn't raise the event.
+        /// </summary>
+        internal void Complete(NeuropixelsV2eSurveyResults results)
+        {
+            Results = results;
+            Status = NeuropixelsV2eSurveyStatus.Completed;
+            CompletedAt = DateTimeOffset.Now;
+            SurveyCompleted?.Invoke();
+        }
     }
 }

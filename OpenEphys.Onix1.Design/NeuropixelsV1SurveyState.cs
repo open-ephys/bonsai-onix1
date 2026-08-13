@@ -6,11 +6,11 @@ namespace OpenEphys.Onix1.Design
     internal enum NeuropixelsV1SurveyStatus { Idle, Running, Completed, Failed }
 
     /// <summary>
-    /// Immutable per-contact results of a completed survey, together with the parameters that produced
-    /// them. Derived metrics and the bank-set copy are computed/taken at construction, so neither the
-    /// metrics nor the recorded parameters can ever go stale against the data they describe or against
-    /// live, freely-mutable UI state. A null element means the contact was not measured (e.g. its bank
-    /// was excluded from the survey).
+    /// Immutable per-contact results of a completed survey, together with the parameters that produced them.
+    /// Derived metrics and the bank-set copy are computed/taken at construction, so neither the metrics nor
+    /// the recorded parameters can ever go stale against the data they describe or against live,
+    /// freely-mutable UI state. A null element means the contact was not measured (e.g. its bank was excluded
+    /// from the survey).
     /// </summary>
     internal sealed class NeuropixelsV1SurveyResults
     {
@@ -53,6 +53,11 @@ namespace OpenEphys.Onix1.Design
 
     internal class NeuropixelsV1SurveyState
     {
+        /// <summary>
+        /// Raised by <see cref="Complete"/> only, i.e. when the survey runner finishes a genuine new run.
+        /// </summary>
+        internal event Action SurveyCompleted;
+
         internal NeuropixelsV1SurveyStatus Status { get; set; } = NeuropixelsV1SurveyStatus.Idle;
         internal NeuropixelsV1SurveyResults Results { get; set; }
         internal float Progress { get; set; }
@@ -60,5 +65,18 @@ namespace OpenEphys.Onix1.Design
         internal DateTimeOffset? CompletedAt { get; set; }
         internal bool IsStale =>
             CompletedAt.HasValue && (DateTimeOffset.Now - CompletedAt.Value).TotalHours > 24;
+
+        /// <summary>
+        /// Records a finished survey round and raises <see cref="SurveyCompleted"/>. Called by the survey
+        /// runner only; restoring previously-saved results sets <see cref="Results"/>/<see cref="Status"/>/
+        /// <see cref="CompletedAt"/> directly instead, so it doesn't raise the event.
+        /// </summary>
+        internal void Complete(NeuropixelsV1SurveyResults results)
+        {
+            Results = results;
+            Status = NeuropixelsV1SurveyStatus.Completed;
+            CompletedAt = DateTimeOffset.Now;
+            SurveyCompleted?.Invoke();
+        }
     }
 }
