@@ -13,10 +13,23 @@ namespace OpenEphys.Onix1.Design
     /// ImGui-based configuration dialog for a NeuropixelsV1 probe: gain/reference/filter controls,
     /// calibration file inputs, probe-interface file I/O, and channel enable/pin/preset.
     /// </summary>
-    internal sealed class NeuropixelsV1ImGuiDialog : ImGuiNeuropixelsDialog<NeuropixelsV1ProbeGroup>
+    internal partial class NeuropixelsV1ImGuiDialog : ImGuiNeuropixelsDialog<NeuropixelsV1ProbeGroup>
     {
         readonly IConfigureNeuropixelsV1 configureNode;
         NeuropixelsV1ProbeGroup probeGroup;
+
+        // Survey (execution/hardware config lives on the headstage-level survey panel; this dialog only
+        // owns its own results/status and the activity-view + bank-selection UI that reads/drives them)
+        readonly NeuropixelsV1SurveyState survey = new();
+        SurveyActivityMetric selectedMetric = SurveyActivityMetric.SNR;
+        float actMin, actMax = 1f;
+        float actDomainMin, actDomainMax = 1f;
+        bool actRangeInitialized;
+        readonly Dictionary<SurveyActivityMetric, (float min, float max)> actRanges = new();
+        bool showActivityColors = false;
+        bool bankSelectMode = false;
+        readonly HashSet<NeuropixelsV1Bank> surveyBanks = new();
+        readonly HashSet<NeuropixelsV1Bank> pendingBanks = new();
 
         int spikeGainIdx, lfpGainIdx, refIdx, presetIdx;
 
@@ -34,6 +47,18 @@ namespace OpenEphys.Onix1.Design
         /// The configuration node updated by this dialog.
         /// </summary>
         internal IConfigureNeuropixelsV1 ConfigureNeuropixelsV1 => configureNode;
+
+        /// <summary>
+        /// This probe's own survey results/status. Written into by the headstage-level survey runner,
+        /// read by this dialog's activity-view UI.
+        /// </summary>
+        internal NeuropixelsV1SurveyState Survey => survey;
+
+        /// <summary>
+        /// Which banks this probe's survey should sweep, as selected via the probe-view drag-select
+        /// mechanism. Read by the headstage-level survey runner.
+        /// </summary>
+        internal HashSet<NeuropixelsV1Bank> SurveyBanks => surveyBanks;
 
         #region Base class seams
 
@@ -63,6 +88,19 @@ namespace OpenEphys.Onix1.Design
             ImGuiControls.WriteString(gainCalBuf, configureNode.ProbeConfiguration.GainCalibrationFileName ?? "");
             ImGuiControls.WriteString(adcCalBuf, configureNode.ProbeConfiguration.AdcCalibrationFileName ?? "");
             ImGuiControls.WriteString(probeFileBuf, configureNode.ProbeConfiguration.ProbeInterfaceFileName ?? "");
+
+            RestoreActivityData();
+            InitSurveyBanks();
+        }
+
+        protected override void HandleProbeSpecificShortcuts(bool shift)
+        {
+            if (ImGui.IsKeyPressed(ImGuiKey.A, false)) showActivityColors = !showActivityColors;
+            if (ImGui.IsKeyPressed(ImGuiKey.B, false))
+            {
+                bankSelectMode = !bankSelectMode;
+                selector.ClearSelection();
+            }
         }
 
         #endregion
@@ -83,27 +121,81 @@ namespace OpenEphys.Onix1.Design
             RefreshProbeState();
         }
 
+        static uint BankColor(NeuropixelsV1Bank bank) => bank switch
+        {
+            NeuropixelsV1Bank.A => ImGuiPalette.AzureBlue,
+            NeuropixelsV1Bank.B => ImGuiPalette.CobaltBlue,
+            NeuropixelsV1Bank.C => ImGuiPalette.AzureBlue,
+            _ => throw new ArgumentOutOfRangeException(nameof(bank), $"Invalid NeuropixelsV1 bank: {bank}"),
+        };
+
         void SetupSelectorCallbacks()
         {
-            selector.GetFillColor = DefaultContactFillColor;
+            selector.GetFillColor = idx =>
+            {
+                if (bankSelectMode)
+                {
+                    var bank = NeuropixelsV1ProbeGroup.GetBank(idx);
+                    bool pending = pendingBanks.Contains(bank);
+                    bool inSurvey = surveyBanks.Contains(bank);
+                    if (pending) return selector.DragIntent == DragSelectIntent.Remove ? ColorContactDisabled : BankColor(bank);
+                    return inSurvey ? BankColor(bank) : ColorContactDisabled;
+                }
+                var data = CurrentDisplayData();
+                if (showActivityColors && data != null && idx < data.Length) return ActivityColor(data[idx]);
+                return DefaultContactFillColor(idx);
+            };
             selector.IsBlocked = DefaultIsBlocked;
+            selector.SelectionChanged += (_, _) =>
+            {
+                if (!bankSelectMode) return;
+                var pending = new HashSet<NeuropixelsV1Bank>();
+                for (int i = 0; i < selector.DragBoxContacts.Length && i < allContacts.Count; i++)
+                    if (selector.DragBoxContacts[i])
+                        pending.Add(NeuropixelsV1ProbeGroup.GetBank(i));
+                if (pending.Count == 0) return;
+                if (selector.DragIntent == DragSelectIntent.Remove)
+                    surveyBanks.ExceptWith(pending);
+                else
+                    surveyBanks.UnionWith(pending);
+                selector.ClearSelection();
+            };
         }
 
         #region ImGuiProbePanel overrides
 
         protected override void DrawPropsPanel()
         {
-            selector.FillColorOverridesBlocked = false;
-            selector.SelectionSkipsBlocked = true;
-            selector.ModeLabel = "MODE: CHANNEL SELECT";
-            selector.Legend = new LegendEntry[]
+            selector.FillColorOverridesBlocked = bankSelectMode || (showActivityColors && CurrentDisplayData() != null);
+            selector.SelectionSkipsBlocked = !bankSelectMode;
+            selector.ModeLabel = bankSelectMode ? "MODE: BANK SELECT (B to exit)" : "MODE: CHANNEL SELECT";
+            bool actColorsActive = !bankSelectMode && showActivityColors && CurrentDisplayData() != null;
+            selector.Legend = bankSelectMode
+                ? new LegendEntry[]
+                  {
+                      new(ColorContactDisabled, "Excluded from survey"),
+                  }
+                : actColorsActive
+                    ? new LegendEntry[]
+                      {
+                          new(ImGuiProbeSelector.SelectionBorderColor, "Editable selection", OutlineOnly: true),
+                      }
+                    : new LegendEntry[]
+                      {
+                          new(ColorContactPinned, "Enabled & Pinned"),
+                          new(ColorContactEnabled, "Enabled"),
+                          new(ColorContactDisabled, "Disabled"),
+                          new(ImGuiProbeSelector.BlockedFillColor, "Unavailable", DottedOutline: true),
+                          new(ImGuiProbeSelector.SelectionBorderColor, "Editable selection", OutlineOnly: true),
+                      };
+
+            if (bankSelectMode)
             {
-                new(ColorContactPinned, "Enabled & Pinned"),
-                new(ColorContactEnabled, "Enabled"),
-                new(ColorContactDisabled, "Disabled"),
-                new(ImGuiProbeSelector.BlockedFillColor, "Unavailable", DottedOutline: true),
-                new(ImGuiProbeSelector.SelectionBorderColor, "Editable selection", OutlineOnly: true),
-            };
+                pendingBanks.Clear();
+                for (int i = 0; i < selector.DragBoxContacts.Length && i < allContacts.Count; i++)
+                    if (selector.DragBoxContacts[i])
+                        pendingBanks.Add(NeuropixelsV1ProbeGroup.GetBank(i));
+            }
 
             ImGui.Spacing();
             DrawTitleBar();
@@ -111,6 +203,8 @@ namespace OpenEphys.Onix1.Design
             DrawFileSection();
             ImGui.Separator();
             DrawChannelSection();
+            ImGui.Separator();
+            DrawSurveySection();
             ImGui.Separator();
             DrawContactInfo();
             HandleKeyboardShortcuts();
@@ -145,6 +239,13 @@ namespace OpenEphys.Onix1.Design
                 }
             }
             probeGroup = new NeuropixelsV1ProbeGroup();
+        }
+
+        void InitSurveyBanks()
+        {
+            if (surveyBanks.Count > 0) return;
+            for (int i = 0; i < allContacts.Count; i++)
+                surveyBanks.Add(NeuropixelsV1ProbeGroup.GetBank(i));
         }
 
         #endregion

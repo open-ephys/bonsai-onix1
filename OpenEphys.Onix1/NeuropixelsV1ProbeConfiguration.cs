@@ -219,6 +219,6 @@ namespace OpenEphys.Onix1
         /// </remarks>
         [Category(DeviceFactory.ConfigurationCategory)]
         [Description("Invert the polarity of the electrode voltages acquired by the probe.")]
-        public bool InvertPolarity { get; set; }
+        public bool InvertPolarity { get; set; } = true;
     }
 }

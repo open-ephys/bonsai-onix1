@@ -5,7 +5,7 @@ namespace OpenEphys.Onix1.Design
     /// <see cref="NeuropixelsV1ImGuiDialog"/> and one <see cref="ImGuiPropertyPanel"/> for the Bno055,
     /// each in its own tab.
     /// </summary>
-    internal class NeuropixelsV1eHeadstageDialog : ImGuiShellDialog
+    internal partial class NeuropixelsV1eHeadstageDialog : ImGuiShellDialog
     {
         /// <summary>Gets the <see cref="NeuropixelsV1ImGuiDialog"/>.</summary>
         public NeuropixelsV1ImGuiDialog DialogNeuropixelsV1e { get; private set; }
@@ -26,6 +26,10 @@ namespace OpenEphys.Onix1.Design
 
             DialogBno055 = new ImGuiPropertyPanel(configureHeadstage.Bno055, filterDeviceTableProperties: true);
             AddTab("Bno055", DialogBno055);
+
+            InitializeSurveyPanel(configureHeadstage.Port,
+                port => configureHeadstage.Port = port,
+                voltage => configureHeadstage.PortVoltage = new AutoPortVoltage(voltage));
         }
     }
 }
