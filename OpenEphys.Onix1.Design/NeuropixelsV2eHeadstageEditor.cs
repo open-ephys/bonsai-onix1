@@ -19,47 +19,15 @@ namespace OpenEphys.Onix1.Design
 
                 if (editorState != null && !editorState.WorkflowRunning && component is ConfigureHeadstageNeuropixelsV2e configureV2eHeadstage)
                 {
-                    var configureNode = new ConfigureHeadstageNeuropixelsV2e();
-                    DesignHelper.DeepCopyProperties(configureV2eHeadstage, configureNode);
-
-                    using var editorDialog = new NeuropixelsV2eHeadstageDialog(configureNode);
-
-                    if (editorDialog.ShowDialog() == DialogResult.OK)
-                    {
-                        // Port/PortVoltage live directly on the headstage node,so they must be copied back
-                        // here too, same as the sub-device properties below.
-                        configureV2eHeadstage.Port = configureNode.Port;
-                        configureV2eHeadstage.PortVoltage = configureNode.PortVoltage;
-
-                        DesignHelper.CopyProperties((ConfigurePolledBno055)editorDialog.DialogBno055.Device, configureV2eHeadstage.Bno055, DesignHelper.PropertiesToIgnore);
-
-                        DesignHelper.CopyProperties((ConfigureNeuropixelsV2PsbDecoder)editorDialog.DialogNeuropixelsV2A.ConfigureNeuropixelsV2, configureV2eHeadstage.NeuropixelsV2A, DesignHelper.PropertiesToIgnore);
-
-                        DesignHelper.CopyProperties((ConfigureNeuropixelsV2PsbDecoder)editorDialog.DialogNeuropixelsV2B.ConfigureNeuropixelsV2, configureV2eHeadstage.NeuropixelsV2B, DesignHelper.PropertiesToIgnore);
-
-                        return true;
-                    }
+                    using var editorDialog = new NeuropixelsV2eHeadstageDialog(configureV2eHeadstage);
+                    editorDialog.ShowDialog();
+                    return true;
                 }
                 else if (editorState != null && !editorState.WorkflowRunning && component is ConfigureHeadstageNeuropixelsV2eBeta configureV2eBetaHeadstage)
                 {
-                    var configureNode = new ConfigureHeadstageNeuropixelsV2eBeta();
-                    DesignHelper.DeepCopyProperties(configureV2eBetaHeadstage, configureNode);
-
-                    using var editorDialog = new NeuropixelsV2eHeadstageDialog(configureNode);
-
-                    if (editorDialog.ShowDialog() == DialogResult.OK)
-                    {
-                        configureV2eBetaHeadstage.Port = configureNode.Port;
-                        configureV2eBetaHeadstage.PortVoltage = configureNode.PortVoltage;
-
-                        DesignHelper.CopyProperties((ConfigurePolledBno055)editorDialog.DialogBno055.Device, configureV2eBetaHeadstage.Bno055, DesignHelper.PropertiesToIgnore);
-
-                        DesignHelper.CopyProperties((ConfigureNeuropixelsV2BetaPsbDecoder)editorDialog.DialogNeuropixelsV2A.ConfigureNeuropixelsV2, configureV2eBetaHeadstage.NeuropixelsV2A, DesignHelper.PropertiesToIgnore);
-
-                        DesignHelper.CopyProperties((ConfigureNeuropixelsV2BetaPsbDecoder)editorDialog.DialogNeuropixelsV2B.ConfigureNeuropixelsV2, configureV2eBetaHeadstage.NeuropixelsV2B, DesignHelper.PropertiesToIgnore);
-
-                        return true;
-                    }
+                    using var editorDialog = new NeuropixelsV2eHeadstageDialog(configureV2eBetaHeadstage);
+                    editorDialog.ShowDialog();
+                    return true;
                 }
             }
 

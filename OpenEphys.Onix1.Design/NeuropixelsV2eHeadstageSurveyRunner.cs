@@ -180,12 +180,9 @@ namespace OpenEphys.Onix1.Design
 
             static void Complete(TargetRunState state, double spikeThreshold, float timePerBankSeconds)
             {
-                var survey = state.Target.Dialog.Survey;
-                survey.Results = new NeuropixelsV2eSurveyResults(
+                state.Target.Dialog.Survey.Complete(new NeuropixelsV2eSurveyResults(
                     state.AllAmplitude, state.AllFireRate, state.AllNoise,
-                    (float)spikeThreshold, timePerBankSeconds, state.Target.Dialog.SurveyBanks);
-                survey.Status = NeuropixelsV2eSurveyStatus.Completed;
-                survey.CompletedAt = DateTimeOffset.Now;
+                    (float)spikeThreshold, timePerBankSeconds, state.Target.Dialog.SurveyBanks));
             }
 
             double? appliedVoltage = null;

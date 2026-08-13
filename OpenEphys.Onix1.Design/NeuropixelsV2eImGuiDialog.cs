@@ -133,6 +133,8 @@ namespace OpenEphys.Onix1.Design
             this.configureNode = configureNode ?? throw new ArgumentNullException(nameof(configureNode));
             isBeta = configureNode is ConfigureNeuropixelsV2BetaPsbDecoder;
 
+            survey.SurveyCompleted += () => HasChanges = true;
+
             SetupSelectorCallbacks();
             LoadOrCreateProbeGroup();
             RefreshProbeState();
@@ -236,7 +238,7 @@ namespace OpenEphys.Onix1.Design
 
         public override bool CanClose(DialogResult pendingResult)
         {
-            if (HasChanges && pendingResult != DialogResult.Cancel)
+            if (HasChanges)
                 return PromptSaveOnClose();
             return true;
         }
