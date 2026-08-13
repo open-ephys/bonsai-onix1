@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,13 +10,14 @@ using Hexa.NET.ImGui;
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Headstage-level side panel for running the electrode-activity survey across one or more probes:
-    /// hardware address, filter/threshold/time-per-bank, which probe(s) to include, and run/cancel/progress.
-    /// Activity *viewing* (coloring, metric selection) stays on each probe's own dialog.
+    /// Headstage-level side panel for running the electrode-activity survey across one or more
+    /// NeuropixelsV1 probes: hardware address, filter/threshold/time-per-bank, which probe(s) to
+    /// include, and run/cancel/progress. Activity *viewing* (coloring, metric selection) stays on each
+    /// probe's own dialog.
     /// </summary>
-    internal sealed class NeuropixelsV2eHeadstageSurveyPanel : IImGuiTabPanel
+    internal sealed class NeuropixelsV1HeadstageSurveyPanel : IImGuiTabPanel
     {
-        readonly IReadOnlyList<NeuropixeslV2eSurveyTarget> targets;
+        readonly IReadOnlyList<NeuropixelsV1SurveyTarget> targets;
         readonly SurveyHeadstageFactory buildHeadstage;
         readonly Action<PortName> setHeadstagePort;
         readonly Action<double?> setHeadstagePortVoltage;
@@ -27,7 +28,7 @@ namespace OpenEphys.Onix1.Design
         static readonly Vector4 ColorTextError = ImGui.ColorConvertU32ToFloat4(ImGuiPalette.VibrantCoral);
 
         /// <summary>
-        /// Initializes a new instance of <see cref="NeuropixelsV2eHeadstageSurveyPanel"/>.
+        /// Initializes a new instance of <see cref="NeuropixelsV1HeadstageSurveyPanel"/>.
         /// </summary>
         /// <param name="targets">Every probe this headstage hosts that can be surveyed.</param>
         /// <param name="buildHeadstage">Builds a fresh headstage of this headstage's own concrete type each survey round.</param>
@@ -43,7 +44,7 @@ namespace OpenEphys.Onix1.Design
         /// reason as <paramref name="setHeadstagePort"/>.
         /// </param>
         /// <param name="log">The hosting shell's console log.</param>
-        internal NeuropixelsV2eHeadstageSurveyPanel(IReadOnlyList<NeuropixeslV2eSurveyTarget> targets, SurveyHeadstageFactory buildHeadstage,
+        internal NeuropixelsV1HeadstageSurveyPanel(IReadOnlyList<NeuropixelsV1SurveyTarget> targets, SurveyHeadstageFactory buildHeadstage,
             PortName initialPort, Action<PortName> setHeadstagePort, Action<double?> setHeadstagePortVoltage, ImGuiLogConsole log)
         {
             this.targets = targets ?? throw new ArgumentNullException(nameof(targets));
@@ -69,7 +70,7 @@ namespace OpenEphys.Onix1.Design
         public void Draw()
         {
             // NB: Do not filter by t.Selected since checkbox is checked a single time at Start() time
-            bool isRunning = targets.Any(t => t.Dialog.Survey.Status == NeuropixelsV2eSurveyStatus.Running);
+            bool isRunning = targets.Any(t => t.Dialog.Survey.Status == NeuropixelsV1SurveyStatus.Running);
 
             // Hardware address and probe selection are captured once, at Start() time. Editing them while
             // a survey is running would silently have no effect on the run already in progress.
@@ -176,15 +177,16 @@ namespace OpenEphys.Onix1.Design
             ImGui.Spacing();
             foreach (var target in targets)
             {
-                bool hasGainCal = !string.IsNullOrEmpty(target.Dialog.ConfigureNeuropixelsV2.ProbeConfiguration.GainCalibrationFileName);
-                if (!hasGainCal) { target.Selected = false; ImGui.BeginDisabled(); }
-                bool selected = hasGainCal && target.Selected;
+                var pc = target.Dialog.ConfigureNeuropixelsV1.ProbeConfiguration;
+                bool hasCal = !string.IsNullOrEmpty(pc.GainCalibrationFileName) && !string.IsNullOrEmpty(pc.AdcCalibrationFileName);
+                if (!hasCal) { target.Selected = false; ImGui.BeginDisabled(); }
+                bool selected = hasCal && target.Selected;
                 if (ImGui.Checkbox($"{target.Label}##survsel", ref selected))
                     target.Selected = selected;
-                if (!hasGainCal)
+                if (!hasCal)
                 {
                     ImGui.EndDisabled();
-                    ImGuiControls.Tooltip("Requires gain calibration file.");
+                    ImGuiControls.Tooltip("Requires gain and ADC calibration files.");
                 }
             }
         }
@@ -207,8 +209,8 @@ namespace OpenEphys.Onix1.Design
             ImGuiControls.Tooltip("How long to record from each selected bank while sweeping through the survey, in seconds.");
 
             bool anySelectedHasProbeFile = targets.Any(t => t.Selected &&
-                !string.IsNullOrEmpty(t.Dialog.ConfigureNeuropixelsV2.ProbeConfiguration.ProbeInterfaceFileName) &&
-                File.Exists(t.Dialog.ConfigureNeuropixelsV2.ProbeConfiguration.ProbeInterfaceFileName));
+                !string.IsNullOrEmpty(t.Dialog.ConfigureNeuropixelsV1.ProbeConfiguration.ProbeInterfaceFileName) &&
+                File.Exists(t.Dialog.ConfigureNeuropixelsV1.ProbeConfiguration.ProbeInterfaceFileName));
             if (!anySelectedHasProbeFile) { state.RecordSurveyData = false; ImGui.BeginDisabled(); }
             bool rec = state.RecordSurveyData;
             if (ImGui.Checkbox("Record raw data##recraw", ref rec)) state.RecordSurveyData = rec;
@@ -243,19 +245,19 @@ namespace OpenEphys.Onix1.Design
         {
             foreach (var target in targets)
             {
-                bool stillRunning = target.Dialog.Survey.Status == NeuropixelsV2eSurveyStatus.Running;
+                bool stillRunning = target.Dialog.Survey.Status == NeuropixelsV1SurveyStatus.Running;
                 if (!target.Selected && !stillRunning) continue;
                 var survey = target.Dialog.Survey;
                 switch (survey.Status)
                 {
-                    case NeuropixelsV2eSurveyStatus.Running:
+                    case NeuropixelsV1SurveyStatus.Running:
                         ImGui.TextUnformatted($"{target.Label}: running ({survey.Progress * 100f:0}%)");
                         break;
-                    case NeuropixelsV2eSurveyStatus.Completed:
+                    case NeuropixelsV1SurveyStatus.Completed:
                         ImGui.TextColored(ColorTextSuccess, $"{target.Label}: complete" +
                             (survey.CompletedAt.HasValue ? $" ({survey.CompletedAt.Value.ToLocalTime():yyyy-MM-dd HH:mm})" : ""));
                         break;
-                    case NeuropixelsV2eSurveyStatus.Failed:
+                    case NeuropixelsV1SurveyStatus.Failed:
                         // NB: survey.Error is arbitrary exception text and may contain '%', which
                         // TextColored's printf-style formatting would mangle. Push the color instead.
                         ImGui.PushStyleColor(ImGuiCol.Text, ColorTextError);
@@ -272,7 +274,7 @@ namespace OpenEphys.Onix1.Design
         void StartSurvey()
         {
             state.Cts = new CancellationTokenSource();
-            NeuropixelsV2eHeadstageSurveyRunner.Start(
+            NeuropixelsV1HeadstageSurveyRunner.Start(
                 buildHeadstage, targets,
                 state.Driver, state.HubIndex, state.Port, state.PortVoltage,
                 state.SpikeThreshold, state.TimePerBankSeconds, state.RecordSurveyData,
