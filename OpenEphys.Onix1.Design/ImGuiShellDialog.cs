@@ -43,8 +43,7 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         internal ImGuiShellDialog(string title)
         {
-            var resources = new ComponentResourceManager(typeof(HeadstageDialog));
-            Icon = (Icon)resources.GetObject("$this.Icon");
+            Icon = Properties.Resources.OpenEphysIcon;
 
             Text = title;
             ClientSize = new Size(1334, 811);

@@ -35,15 +35,13 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         protected HeadstageDialog()
         {
-            var resources = new ComponentResourceManager(typeof(HeadstageDialog));
-
             AutoScaleDimensions = new SizeF(8F, 16F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1334, 811);
             DoubleBuffered = true;
             Margin = new Padding(3, 2, 3, 2);
             StartPosition = FormStartPosition.CenterParent;
-            Icon = (Icon)resources.GetObject("$this.Icon");
+            Icon = Properties.Resources.OpenEphysIcon;
 
             tabControl = new TabControl
             {
