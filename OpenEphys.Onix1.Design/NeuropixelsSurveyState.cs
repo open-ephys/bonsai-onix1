@@ -14,7 +14,6 @@ namespace OpenEphys.Onix1.Design
         internal double? PortVoltage { get; set; }
         internal bool EditingHardwareAddr { get; set; }
         internal double SpikeThreshold { get; set; } = -50;
-        internal bool UseBandpassFilter { get; set; } = true;
         internal float TimePerBankSeconds { get; set; } = 5f;
         internal bool RecordSurveyData { get; set; }
         internal CancellationTokenSource Cts { get; set; }

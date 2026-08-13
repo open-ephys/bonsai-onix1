@@ -1,15 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Hexa.NET.ImGui;
 
 namespace OpenEphys.Onix1.Design
 {
     // Bank-selection UI, activity-color viewing, and persistence of survey results to annotations.
     // Running/configuring the survey itself is a headstage-level concern -- see
-    // NeuropixelsV2eHeadstageSurveyPanel / NeuropixelsV2eHeadstageSurveyRunner.
-    internal partial class NeuropixelsV2eImGuiDialog
+    // NeuropixelsV1HeadstageSurveyPanel / NeuropixelsV1HeadstageSurveyRunner.
+    internal partial class NeuropixelsV1ImGuiDialog
     {
+        static readonly Vector4 ColorTextWarning = ImGui.ColorConvertU32ToFloat4(ImGuiPalette.AmberGold);
+        static readonly Vector4 ColorTextSuccess = ImGui.ColorConvertU32ToFloat4(ImGuiPalette.BrightFern);
+
         void DrawSurveySection()
         {
             ImGui.Text("Electrode Survey");
@@ -17,24 +21,24 @@ namespace OpenEphys.Onix1.Design
 
             if (ImGui.Checkbox("Select survey banks (B)##bsm", ref bankSelectMode))
                 selector.ClearSelection();
-            ImGuiControls.Tooltip("Select whole banks (384 contacts each) instead of individual contacts, to choose which banks the survey sweeps through. Equivalent to pressing B. Run the survey itself from the headstage panel.");
+            ImGuiControls.Tooltip("Select whole banks instead of individual contacts, to choose which banks the survey sweeps through. Equivalent to pressing B. Run the survey itself from the headstage panel.");
 
             ImGui.Spacing();
 
             switch (survey.Status)
             {
-                case NeuropixelsV2eSurveyStatus.Idle:
+                case NeuropixelsV1SurveyStatus.Idle:
                     ImGui.TextDisabled("No survey data yet. Run a survey from the headstage panel.");
                     break;
-                case NeuropixelsV2eSurveyStatus.Running:
+                case NeuropixelsV1SurveyStatus.Running:
                     showActivityColors = true; // if cancelled or failed, then wont be effective anyway
                     ImGui.TextDisabled("Survey running (see headstage panel for progress).");
                     break;
-                case NeuropixelsV2eSurveyStatus.Completed:
+                case NeuropixelsV1SurveyStatus.Completed:
                     ImGui.Spacing();
                     DrawSurveyCompleted();
                     break;
-                case NeuropixelsV2eSurveyStatus.Failed:
+                case NeuropixelsV1SurveyStatus.Failed:
                     showActivityColors = false;
                     ImGui.TextColored(ColorTextError, "Survey failed:");
                     // NB: TextWrapped (like Text) treats its string as a printf format -- survey.Error is
@@ -190,7 +194,7 @@ namespace OpenEphys.Onix1.Design
             probeGroup.Probe.Annotations.SetAnnotation<float>("survey_spike_threshold_uV", results.SpikeThresholdUv);
             probeGroup.Probe.Annotations.SetAnnotation<float>("survey_time_per_bank", results.TimePerBankSeconds);
             var bankIncluded = allContacts
-                .Select((_, i) => results.SurveyBanks.Contains((probeGroup.GetShank(i), probeGroup.GetBank(i))))
+                .Select((_, i) => results.SurveyBanks.Contains(NeuropixelsV1ProbeGroup.GetBank(i)))
                 .ToArray();
             probeGroup.Probe.SetContactAnnotation<bool>("survey_bank_included", bankIncluded);
         }
@@ -200,7 +204,7 @@ namespace OpenEphys.Onix1.Design
             // code below contains early exits, so make sure we clear the survey state so that nothing old is
             // hanging around
             survey.Results = null;
-            survey.Status = NeuropixelsV2eSurveyStatus.Idle;
+            survey.Status = NeuropixelsV1SurveyStatus.Idle;
             survey.CompletedAt = null;
             survey.Progress = 0f;
             survey.Error = null;
@@ -208,30 +212,30 @@ namespace OpenEphys.Onix1.Design
             actRangeInitialized = false;
             actRanges.Clear();
 
-            var firstProbe = probeGroup.Probe;
-            if (firstProbe == null) return;
+            var probe = probeGroup.Probe;
+            if (probe == null) return;
 
-            var bi = firstProbe.GetContactAnnotation<bool>("survey_bank_included");
+            var bi = probe.GetContactAnnotation<bool>("survey_bank_included");
             if (bi != null && bi.Length > 0)
             {
                 surveyBanks.Clear();
                 for (int i = 0; i < allContacts.Count && i < bi.Length; i++)
                     if (bi[i])
-                        surveyBanks.Add((probeGroup.GetShank(i), probeGroup.GetBank(i)));
+                        surveyBanks.Add(NeuropixelsV1ProbeGroup.GetBank(i));
             }
 
-            DateTimeOffset.TryParse(firstProbe.Annotations.GetAnnotation<string>("survey_datetime"), out var dt);
+            DateTimeOffset.TryParse(probe.Annotations.GetAnnotation<string>("survey_datetime"), out var dt);
 
             // results
-            var ampValues  = firstProbe.GetContactAnnotation<float>("survey_amplitude");
+            var ampValues  = probe.GetContactAnnotation<float>("survey_amplitude");
             if (ampValues == null || ampValues.Length == 0) return;
-            var rateValues = firstProbe.GetContactAnnotation<float>("survey_firerate");
+            var rateValues = probe.GetContactAnnotation<float>("survey_firerate");
             if (rateValues == null || rateValues.Length == 0) return;
-            var noiseArr = firstProbe.GetContactAnnotation<float>("survey_noise");
+            var noiseArr = probe.GetContactAnnotation<float>("survey_noise");
             if (noiseArr == null || noiseArr.Length == 0) return;
 
-            var thr = firstProbe.Annotations.GetAnnotation<float?>("survey_spike_threshold_uV") ?? -50f;
-            var tpb = firstProbe.Annotations.GetAnnotation<float?>("survey_time_per_bank") ?? 5f;
+            var thr = probe.Annotations.GetAnnotation<float?>("survey_spike_threshold_uV") ?? -50f;
+            var tpb = probe.Annotations.GetAnnotation<float?>("survey_time_per_bank") ?? 5f;
 
             var amp   = new float?[allContacts.Count];
             var rate  = new float?[allContacts.Count];
@@ -245,9 +249,9 @@ namespace OpenEphys.Onix1.Design
             for (int i = 0; i < allContacts.Count && i < noiseArr.Length; i++)
                 noise[i] = float.IsNaN(noiseArr[i]) ? (float?)null : noiseArr[i];
 
-            survey.Results = new NeuropixelsV2eSurveyResults(amp, rate, noise, thr, tpb, surveyBanks);
+            survey.Results = new NeuropixelsV1SurveyResults(amp, rate, noise, thr, tpb, surveyBanks);
             survey.CompletedAt = dt;
-            survey.Status = NeuropixelsV2eSurveyStatus.Completed;
+            survey.Status = NeuropixelsV1SurveyStatus.Completed;
         }
     }
 }

@@ -6,7 +6,6 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Bonsai.Dsp;
-using OpenCV.Net;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -14,19 +13,19 @@ namespace OpenEphys.Onix1.Design
     /// One probe a headstage can survey: which dialog owns its state/results, and how to reach its decoder on
     /// a freshly-built headstage of this headstage dialog's own concrete type.
     /// </summary>
-    internal sealed class NeuropixeslV2eSurveyTarget
+    internal sealed class NeuropixelsV1SurveyTarget
     {
         internal string Label { get; }
-        internal NeuropixelsV2eImGuiDialog Dialog { get; }
-        internal Func<MultiDeviceFactory, ConfigureNeuropixelsV2PsbDecoder> SelectDecoder { get; }
+        internal NeuropixelsV1ImGuiDialog Dialog { get; }
+        internal Func<MultiDeviceFactory, ConfigureNeuropixelsV1PsbDecoder> SelectDecoder { get; }
 
         /// <summary>
         /// Whether this target is included in the current/next survey run.
         /// </summary>
         internal bool Selected { get; set; }
 
-        internal NeuropixeslV2eSurveyTarget(string label, NeuropixelsV2eImGuiDialog dialog,
-            Func<MultiDeviceFactory, ConfigureNeuropixelsV2PsbDecoder> selectDecoder)
+        internal NeuropixelsV1SurveyTarget(string label, NeuropixelsV1ImGuiDialog dialog,
+            Func<MultiDeviceFactory, ConfigureNeuropixelsV1PsbDecoder> selectDecoder)
         {
             Label = label;
             Dialog = dialog ?? throw new ArgumentNullException(nameof(dialog));
@@ -35,36 +34,25 @@ namespace OpenEphys.Onix1.Design
     }
 
     /// <summary>
-    /// Builds and returns a fresh headstage (<c>Name</c>/<c>Port</c>/<c>PortVoltage</c> already set) for one
-    /// survey round, together with the <see cref="AutoPortVoltage"/> instance assigned to it (its <c>Applied</c>
-    /// value is only readable after the pipeline built from this headstage has been subscribed to). The runner
-    /// never references a concrete headstage type or decoder property name directly -- only through
-    /// <see cref="NeuropixeslV2eSurveyTarget.SelectDecoder"/>.
+    /// Electrode-activity survey runner for NeuropixelsV1-family headstages. Selected probes are surveyed
+    /// together, sharing one real hardware pipeline per round: round <c>r</c> configures every selected probe
+    /// still having a bank left at index <c>r</c> of its own bank list, and every other decoder on the
+    /// headstage (unselected, or already finished) is explicitly disabled .
     /// </summary>
-    internal delegate (MultiDeviceFactory Headstage, AutoPortVoltage PortVoltage) SurveyHeadstageFactory(
-        PortName port, double? portVoltageOverride);
-
-    /// <summary>
-    /// Concurrent, round-based electrode-activity survey runner shared by every NeuropixelsV2e-family
-    /// headstage dialog. Selected probes are surveyed together, sharing one real hardware pipeline per
-    /// round: round <c>r</c> configures every selected probe still having a bank left at index <c>r</c> of
-    /// its own bank list, and every other decoder on the headstage (unselected, or already finished) is
-    /// explicitly disabled -- a probe that isn't part of a round must never be left enabled by default.
-    /// </summary>
-    internal static class NeuropixelsV2eHeadstageSurveyRunner
+    internal static class NeuropixelsV1HeadstageSurveyRunner
     {
-        internal const string GroupName = "NeuropixelsV2eSurvey";
+        internal const string GroupName = "NeuropixelsV1Survey";
         const int BufferSize = 300;
         const int RetryDelayMs = 1000;
 
-        // NB: If a probe goes silent during survey stream, e.g. its physically unseated), the hardware layer
+        // NB: If a probe goes silent during survey stream, e.g. its physically unseated, the hardware layer
         // doesn't throw, so without this timeout the round's Task.WhenAll waits forever with nothing to catch
         // or retry.
         static readonly TimeSpan DataSilenceTimeout = TimeSpan.FromSeconds(1);
 
         internal static void Start(
             SurveyHeadstageFactory buildHeadstage,
-            IReadOnlyList<NeuropixeslV2eSurveyTarget> targets,
+            IReadOnlyList<NeuropixelsV1SurveyTarget> targets,
             string driver,
             int hubIndex,
             PortName port,
@@ -83,8 +71,8 @@ namespace OpenEphys.Onix1.Design
 
         sealed class TargetRunState
         {
-            internal NeuropixeslV2eSurveyTarget Target;
-            internal List<(int shank, NeuropixelsV2Bank bank)> OrderedBanks;
+            internal NeuropixelsV1SurveyTarget Target;
+            internal List<NeuropixelsV1Bank> OrderedBanks;
             internal int NextIndex;
             internal float?[] AllAmplitude;
             internal float?[] AllFireRate;
@@ -95,11 +83,11 @@ namespace OpenEphys.Onix1.Design
 
         readonly struct RoundTargetPrep
         {
-            internal NeuropixelsV2ProbeGroup BankGroup { get; }
-            internal NeuropixelsV2ProbeConfiguration BankConfig { get; }
+            internal NeuropixelsV1ProbeGroup BankGroup { get; }
+            internal NeuropixelsV1ProbeConfiguration BankConfig { get; }
             internal string RecordingFilePath { get; }
 
-            internal RoundTargetPrep(NeuropixelsV2ProbeGroup bankGroup, NeuropixelsV2ProbeConfiguration bankConfig, string recordingFilePath)
+            internal RoundTargetPrep(NeuropixelsV1ProbeGroup bankGroup, NeuropixelsV1ProbeConfiguration bankConfig, string recordingFilePath)
             {
                 BankGroup = bankGroup;
                 BankConfig = bankConfig;
@@ -109,7 +97,7 @@ namespace OpenEphys.Onix1.Design
 
         static async Task RunAsync(
             SurveyHeadstageFactory buildHeadstage,
-            IReadOnlyList<NeuropixeslV2eSurveyTarget> targets,
+            IReadOnlyList<NeuropixelsV1SurveyTarget> targets,
             string driver,
             int hubIndex,
             PortName port,
@@ -123,33 +111,24 @@ namespace OpenEphys.Onix1.Design
             var selected = targets.Where(t => t.Selected).ToList();
             if (selected.Count == 0) return;
 
-            var states = new Dictionary<NeuropixeslV2eSurveyTarget, TargetRunState>();
+            var states = new Dictionary<NeuropixelsV1SurveyTarget, TargetRunState>();
             foreach (var target in selected)
             {
                 var survey = target.Dialog.Survey;
-                survey.Status = NeuropixelsV2eSurveyStatus.Running;
+                survey.Status = NeuropixelsV1SurveyStatus.Running;
                 survey.Progress = 0f;
                 survey.Error = null;
                 survey.Results = null;
 
                 var probeGroup = target.Dialog.ProbeGroup;
                 int totalContacts = probeGroup.NumberOfContacts;
-                var shanks = Enumerable.Range(0, totalContacts)
-                    .Select(i => probeGroup.GetShank(i))
-                    .Distinct()
-                    .OrderBy(s => s)
-                    .ToList();
-                var bankValues = Enum.GetValues(typeof(NeuropixelsV2Bank)).Cast<NeuropixelsV2Bank>().ToArray();
-                var orderedBanks = new List<(int shank, NeuropixelsV2Bank bank)>();
-                foreach (var shank in shanks)
-                    foreach (var bank in bankValues)
-                        if (target.Dialog.SurveyBanks.Contains((shank, bank)))
-                            orderedBanks.Add((shank, bank));
+                var bankValues = Enum.GetValues(typeof(NeuropixelsV1Bank)).Cast<NeuropixelsV1Bank>().ToArray();
+                var orderedBanks = bankValues.Where(bank => target.Dialog.SurveyBanks.Contains(bank)).ToList();
 
                 string recordingFolder = null;
                 if (recordSurveyData)
                 {
-                    var probeFile = target.Dialog.ConfigureNeuropixelsV2.ProbeConfiguration.ProbeInterfaceFileName;
+                    var probeFile = target.Dialog.ConfigureNeuropixelsV1.ProbeConfiguration.ProbeInterfaceFileName;
                     if (!string.IsNullOrEmpty(probeFile))
                     {
                         var dir = Path.GetDirectoryName(probeFile);
@@ -181,10 +160,10 @@ namespace OpenEphys.Onix1.Design
             static void Complete(TargetRunState state, double spikeThreshold, float timePerBankSeconds)
             {
                 var survey = state.Target.Dialog.Survey;
-                survey.Results = new NeuropixelsV2eSurveyResults(
+                survey.Results = new NeuropixelsV1SurveyResults(
                     state.AllAmplitude, state.AllFireRate, state.AllNoise,
                     (float)spikeThreshold, timePerBankSeconds, state.Target.Dialog.SurveyBanks);
-                survey.Status = NeuropixelsV2eSurveyStatus.Completed;
+                survey.Status = NeuropixelsV1SurveyStatus.Completed;
                 survey.CompletedAt = DateTimeOffset.Now;
             }
 
@@ -198,12 +177,12 @@ namespace OpenEphys.Onix1.Design
                     var roundTargets = states.Values.Where(s => s.NextIndex < s.OrderedBanks.Count).ToList();
                     if (roundTargets.Count == 0) break;
 
-                    var roundPrep = new Dictionary<NeuropixeslV2eSurveyTarget, RoundTargetPrep>();
+                    var roundPrep = new Dictionary<NeuropixelsV1SurveyTarget, RoundTargetPrep>();
                     foreach (var state in roundTargets)
                     {
-                        var (shank, bank) = state.OrderedBanks[state.NextIndex];
-                        var bankGroup = CloneProbeGroup(state.Target.Dialog.ProbeGroup);
-                        bankGroup.SelectBank(shank, bank);
+                        var bank = state.OrderedBanks[state.NextIndex];
+                        var bankGroup = new NeuropixelsV1ProbeGroup(state.Target.Dialog.ProbeGroup);
+                        SelectBankForSurvey(bankGroup, bank);
 
                         if (bankGroup.ChannelMap.Count == 0)
                         {
@@ -214,11 +193,14 @@ namespace OpenEphys.Onix1.Design
                             continue;
                         }
 
-                        var bankConfig = state.Target.Dialog.ConfigureNeuropixelsV2.ProbeConfiguration.Clone();
+                        var bankConfig = new NeuropixelsV1ProbeConfiguration(state.Target.Dialog.ConfigureNeuropixelsV1.ProbeConfiguration)
+                        {
+                            SpikeFilter = true // meaningful spike detection requires this
+                        };
                         string recordingFilePath = null;
                         if (state.RecordingFolder != null)
                         {
-                            var fileBase = $"{DateTime.Now:yyyyMMdd-HHmmss}_{state.Target.Label}_s{shank}_b{bank}";
+                            var fileBase = $"{DateTime.Now:yyyyMMdd-HHmmss}_{state.Target.Label}_b{bank}";
                             recordingFilePath = Path.Combine(state.RecordingFolder, $"{fileBase}.arrow");
                             var piFile = Path.Combine(state.RecordingFolder, $"{fileBase}.json");
                             ProbeInterfaceHelper.SaveExternalProbeInterfaceFile(bankGroup, piFile);
@@ -235,7 +217,7 @@ namespace OpenEphys.Onix1.Design
 
                     if (roundPrep.Count == 0) continue; // everyone active this round was an empty-bank skip
 
-                    Dictionary<NeuropixeslV2eSurveyTarget, (float[] Amplitude, float[] FireRate, float[] Noise)> roundResults = null;
+                    Dictionary<NeuropixelsV1SurveyTarget, (float[] Amplitude, float[] FireRate, float[] Noise)> roundResults = null;
                     for (int attempt = 0; ; attempt++) // only exit via Cancel or break
                     {
                         cancellationToken.ThrowIfCancellationRequested();
@@ -270,8 +252,8 @@ namespace OpenEphys.Onix1.Design
                             state.AllNoise[idx] = stats.Noise[ch];
                         }
 
-                        var (shank, bank) = state.OrderedBanks[state.NextIndex];
-                        log($"{target.Label}: shank {shank}, bank {bank} complete", false);
+                        var bank = state.OrderedBanks[state.NextIndex];
+                        log($"{target.Label}: bank {bank} complete", false);
 
                         state.NextIndex++;
                         ReportProgress(state);
@@ -289,15 +271,15 @@ namespace OpenEphys.Onix1.Design
             catch (OperationCanceledException)
             {
                 foreach (var state in states.Values)
-                    if (state.Target.Dialog.Survey.Status == NeuropixelsV2eSurveyStatus.Running)
-                        state.Target.Dialog.Survey.Status = NeuropixelsV2eSurveyStatus.Idle;
+                    if (state.Target.Dialog.Survey.Status == NeuropixelsV1SurveyStatus.Running)
+                        state.Target.Dialog.Survey.Status = NeuropixelsV1SurveyStatus.Idle;
             }
             catch (Exception ex)
             {
                 foreach (var state in states.Values)
-                    if (state.Target.Dialog.Survey.Status == NeuropixelsV2eSurveyStatus.Running)
+                    if (state.Target.Dialog.Survey.Status == NeuropixelsV1SurveyStatus.Running)
                     {
-                        state.Target.Dialog.Survey.Status = NeuropixelsV2eSurveyStatus.Failed;
+                        state.Target.Dialog.Survey.Status = NeuropixelsV1SurveyStatus.Failed;
                         state.Target.Dialog.Survey.Error = ex.Message;
                     }
             }
@@ -309,10 +291,10 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        static async Task<Dictionary<NeuropixeslV2eSurveyTarget, (float[] Amplitude, float[] FireRate, float[] Noise)>> CollectRoundStatsAsync(
+        static async Task<Dictionary<NeuropixelsV1SurveyTarget, (float[] Amplitude, float[] FireRate, float[] Noise)>> CollectRoundStatsAsync(
             SurveyHeadstageFactory buildHeadstage,
-            IReadOnlyList<NeuropixeslV2eSurveyTarget> allTargets,
-            IReadOnlyDictionary<NeuropixeslV2eSurveyTarget, RoundTargetPrep> roundPrep,
+            IReadOnlyList<NeuropixelsV1SurveyTarget> allTargets,
+            IReadOnlyDictionary<NeuropixelsV1SurveyTarget, RoundTargetPrep> roundPrep,
             string driver,
             int hubIndex,
             PortName port,
@@ -326,7 +308,7 @@ namespace OpenEphys.Onix1.Design
 
             // Every decoder this headstage has must be explicitly touched: enabled + configured if it's
             // active this round, or explicitly disabled otherwise.
-            var active = new List<(NeuropixeslV2eSurveyTarget Target, string DeviceName, string RecordingFilePath)>();
+            var active = new List<(NeuropixelsV1SurveyTarget Target, string DeviceName, NeuropixelsV1Gain SpikeGain, string RecordingFilePath)>();
             foreach (var target in allTargets)
             {
                 var decoder = target.SelectDecoder(headstage);
@@ -334,7 +316,7 @@ namespace OpenEphys.Onix1.Design
                 {
                     decoder.Enable = true;
                     decoder.ProbeConfiguration = prep.BankConfig;
-                    active.Add((target, decoder.DeviceName, prep.RecordingFilePath));
+                    active.Add((target, decoder.DeviceName, prep.BankConfig.SpikeAmplifierGain, prep.RecordingFilePath));
                 }
                 else
                 {
@@ -361,8 +343,8 @@ namespace OpenEphys.Onix1.Design
                 });
 
             var dataSubs = new List<IDisposable>();
-            foreach (var (target, deviceName, recordingFilePath) in active)
-                dataSubs.Add(SubscribeTarget(deviceName, tcsMap[target], spikeThreshold,
+            foreach (var (target, deviceName, spikeGain, recordingFilePath) in active)
+                dataSubs.Add(SubscribeTarget(deviceName, tcsMap[target], spikeGain, spikeThreshold,
                     timePerBankSeconds, recordingFilePath, cancellationToken));
 
             var cancelReg = cancellationToken.Register(() =>
@@ -389,18 +371,19 @@ namespace OpenEphys.Onix1.Design
         static IDisposable SubscribeTarget(
             string deviceName,
             TaskCompletionSource<(float[] Amplitude, float[] FireRate, float[] Noise)> tcs,
+            NeuropixelsV1Gain spikeAmplifierGain,
             double spikeThreshold,
             float timePerBankSeconds,
             string recordingFilePath,
             CancellationToken cancellationToken)
         {
-            var activity = new SpikeActivityAccumulator(NeuropixelsV2.ChannelCount);
+            var activity = new SpikeActivityAccumulator(NeuropixelsV1.ChannelCount);
 
-            var npxData = new NeuropixelsV2eData { DeviceName = deviceName, BufferSize = BufferSize };
-            int framesToCollect = Math.Max(1, (int)Math.Round(timePerBankSeconds * NeuropixelsV2.SamplesPerChannelPerSecond / BufferSize));
+            var npxData = new NeuropixelsV1eData { DeviceName = deviceName, BufferSize = BufferSize };
+            int framesToCollect = Math.Max(1, (int)Math.Round(timePerBankSeconds * NeuropixelsV1.SamplesPerChannelPerSecond / BufferSize));
             var rawStream = npxData.Generate().Take(framesToCollect).Timeout(DataSilenceTimeout);
 
-            IObservable<NeuropixelsV2DataFrame> dataStream = recordingFilePath != null
+            IObservable<NeuropixelsV1DataFrame> dataStream = recordingFilePath != null
                 ? DataFrameWriter.DataFrameWriter.WriteBuffered(
                     rawStream,
                     recordingFilePath,
@@ -410,29 +393,31 @@ namespace OpenEphys.Onix1.Design
                     enableCompression: true)
                 : rawStream;
 
-            var scaled = new NeuropixelsV2Scale { UseCommonMedianReference = true }.Process(dataStream);
-
-            IObservable<Mat> filtered = new Butterworth
+            // NB: Shared (not re-subscribed): scaled has two downstream consumers below (DetectSpikes and the
+            // Zip), and without Publish/RefCount each would independently re-run the frame buffering in
+            // NeuropixelsV1eData.Generate() and the scaling/CMR work in NeuropixelsV1Scale.Process for
+            // every frame.
+            var scaled = new NeuropixelsV1Scale
             {
-                SampleRate  = NeuropixelsV2.SamplesPerChannelPerSecond,
-                Cutoff1     = 300.0,
-                Cutoff2     = 6000.0,
-                FilterType  = FilterType.BandPass,
-                FilterOrder = 2
-            }.Process(scaled).Publish().RefCount();
+                Band = NeuropixelsV1EphysBand.Spike,
+                AmplifierGain = spikeAmplifierGain,
+                UseCommonMedianReference = true
+            }.Process(dataStream).Publish().RefCount();
 
+            // NB: no software bandpass since he spike band is already shaped by hardware (the round's
+            // SpikeFilter bit plus the analog front end's inherent ~10 kHz low-pass).
             var spikeStream = new DetectSpikes
             {
                 Threshold          = new[] { spikeThreshold },
                 Length             = 60,
                 Delay              = 15,
                 WaveformRefinement = SpikeWaveformRefinement.AlignPeaks
-            }.Process(filtered);
+            }.Process(scaled);
 
-            var combined = spikeStream.Zip(filtered, (spikes, filtered) => (spikes, filtered));
+            var combined = spikeStream.Zip(scaled, (spikes, scaled) => (spikes, scaled));
 
             return combined.Subscribe(
-                result => activity.Accumulate(result.filtered, result.spikes),
+                result => activity.Accumulate(result.scaled, result.spikes),
                 ex =>
                 {
                     if (cancellationToken.IsCancellationRequested) tcs.TrySetCanceled();
@@ -445,11 +430,8 @@ namespace OpenEphys.Onix1.Design
                 });
         }
 
-        static NeuropixelsV2ProbeGroup CloneProbeGroup(NeuropixelsV2ProbeGroup source)
-        {
-            if (source is NeuropixelsV2QuadShankProbeGroup quad)
-                return new NeuropixelsV2QuadShankProbeGroup(quad);
-            return new NeuropixelsV2SingleShankProbeGroup((NeuropixelsV2SingleShankProbeGroup)source);
-        }
+        static void SelectBankForSurvey(NeuropixelsV1ProbeGroup group, NeuropixelsV1Bank bank) =>
+            group.EnableElectrodes(Enumerable.Range(0, NeuropixelsV1.ElectrodeCount)
+                .Where(i => NeuropixelsV1ProbeGroup.GetBank(i) == bank));
     }
 }
