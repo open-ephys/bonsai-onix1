@@ -19,8 +19,7 @@ namespace OpenEphys.Onix1.Design
 
                 if (editorState != null && !editorState.WorkflowRunning && component is ConfigureHeadstageNeuropixelsV1e configureHeadstage)
                 {
-                    using var editorDialog = new NeuropixelsV1eHeadstageDialog(configureHeadstage);
-                    editorDialog.ShowDialog();
+                    DesignHelper.ShowDialogWithWaitCursor(() => new NeuropixelsV1eHeadstageDialog(configureHeadstage));
                     return true;
                 }
             }

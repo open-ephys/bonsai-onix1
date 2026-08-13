@@ -136,5 +136,27 @@ namespace OpenEphys.Onix1.Design
 
             return false;
         }
+
+        /// <summary>
+        /// Shows the wait cursor while <paramref name="createDialog"/> constructs the dialog, then shows it
+        /// modally, for dialogs that might take perceptible time to initialize and would otherwise leave the
+        /// parent application looking frozen with no visual feedback. The cursor reverts to normal the moment
+        /// the dialog's window actually appears via a <see cref="Form.Shown"/> event handler.
+        /// </summary>
+        internal static void ShowDialogWithWaitCursor(Func<Form> createDialog)
+        {
+            Cursor.Current = Cursors.WaitCursor;
+            Application.DoEvents(); // let the wait cursor actually repaint before the blocking work below
+            try
+            {
+                using var dialog = createDialog();
+                dialog.Shown += (_, _) => Cursor.Current = Cursors.Default; // revert when Form.Shown fires
+                dialog.ShowDialog();
+            }
+            finally
+            {
+                Cursor.Current = Cursors.Default; // in case anything above throws
+            }
+        }
     }
 }

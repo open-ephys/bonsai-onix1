@@ -19,14 +19,12 @@ namespace OpenEphys.Onix1.Design
 
                 if (editorState != null && !editorState.WorkflowRunning && component is ConfigureHeadstageNeuropixelsV2e configureV2eHeadstage)
                 {
-                    using var editorDialog = new NeuropixelsV2eHeadstageDialog(configureV2eHeadstage);
-                    editorDialog.ShowDialog();
+                    DesignHelper.ShowDialogWithWaitCursor(() => new NeuropixelsV2eHeadstageDialog(configureV2eHeadstage));
                     return true;
                 }
                 else if (editorState != null && !editorState.WorkflowRunning && component is ConfigureHeadstageNeuropixelsV2eBeta configureV2eBetaHeadstage)
                 {
-                    using var editorDialog = new NeuropixelsV2eHeadstageDialog(configureV2eBetaHeadstage);
-                    editorDialog.ShowDialog();
+                    DesignHelper.ShowDialogWithWaitCursor(() => new NeuropixelsV2eHeadstageDialog(configureV2eBetaHeadstage));
                     return true;
                 }
             }
