@@ -19,18 +19,24 @@ namespace OpenEphys.Onix1.Design
 
                 if (editorState != null && !editorState.WorkflowRunning && component is ConfigureNeuropixelsV2PsbDecoder configureNeuropixelsV2e)
                 {
-                    using var shell = new ImGuiShellDialog("NeuropixelsV2 Configuration") { StartPosition = FormStartPosition.CenterScreen };
-                    var editorDialog = new NeuropixelsV2eImGuiDialog(configureNeuropixelsV2e, nameof(NeuropixelsV2), shell.Log);
-                    shell.AddTab(nameof(NeuropixelsV2), editorDialog);
-                    shell.ShowDialog();
+                    DesignHelper.ShowDialogWithWaitCursor(() =>
+                    {
+                        var shell = new ImGuiShellDialog("NeuropixelsV2 Configuration") { StartPosition = FormStartPosition.CenterScreen };
+                        var editorDialog = new NeuropixelsV2eImGuiDialog(configureNeuropixelsV2e, nameof(NeuropixelsV2), shell.Log);
+                        shell.AddTab(nameof(NeuropixelsV2), editorDialog);
+                        return shell;
+                    });
                     return true;
                 }
                 else if (editorState != null && !editorState.WorkflowRunning && component is ConfigureNeuropixelsV2BetaPsbDecoder configureNeuropixelsV2eBeta)
                 {
-                    using var shell = new ImGuiShellDialog("NeuropixelsV2-Beta Configuration") { StartPosition = FormStartPosition.CenterScreen };
-                    var editorDialog = new NeuropixelsV2eImGuiDialog(configureNeuropixelsV2eBeta, nameof(NeuropixelsV2), shell.Log);
-                    shell.AddTab(nameof(NeuropixelsV2), editorDialog);
-                    shell.ShowDialog();
+                    DesignHelper.ShowDialogWithWaitCursor(() =>
+                    {
+                        var shell = new ImGuiShellDialog("NeuropixelsV2-Beta Configuration") { StartPosition = FormStartPosition.CenterScreen };
+                        var editorDialog = new NeuropixelsV2eImGuiDialog(configureNeuropixelsV2eBeta, nameof(NeuropixelsV2), shell.Log);
+                        shell.AddTab(nameof(NeuropixelsV2), editorDialog);
+                        return shell;
+                    });
                     return true;
                 }
             }
