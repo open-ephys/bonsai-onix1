@@ -377,7 +377,7 @@ namespace OpenEphys.Onix1.Design
                 Title           = "Save Probe Interface File As",
                 Filter          = ProbeInterfaceHelper.ProbeInterfaceFileNameFilter,
                 DefaultExt      = "json",
-                FileName        = Path.GetFileName(currentPath.Length > 0 ? currentPath : GetProbeSerialNumber() + ".json"),
+                FileName        = Path.GetFileName(currentPath.Length > 0 ? currentPath : GetDefaultProbeFileBaseName() + ".json"),
                 OverwritePrompt = true,
             };
 
@@ -464,7 +464,7 @@ namespace OpenEphys.Onix1.Design
                 Title      = "Save Probe Interface File",
                 Filter     = ProbeInterfaceHelper.ProbeInterfaceFileNameFilter,
                 DefaultExt = "json",
-                FileName   = GetProbeSerialNumber() + ".json"
+                FileName   = GetDefaultProbeFileBaseName() + ".json"
             };
 
             var calFile = PrimaryCalibrationFileName;
@@ -485,12 +485,16 @@ namespace OpenEphys.Onix1.Design
             return discard == DialogResult.Yes;
         }
 
-        protected string GetProbeSerialNumber()
+        protected string GetDefaultProbeFileBaseName()
         {
             var calFile = PrimaryCalibrationFileName;
-            if (string.IsNullOrEmpty(calFile) || !File.Exists(calFile)) return "probe";
-            try { return File.ReadLines(calFile).FirstOrDefault()?.Trim() ?? "probe"; }
-            catch { return "probe"; }
+            if (string.IsNullOrEmpty(calFile) || !File.Exists(calFile)) return probeName;
+            try
+            {
+                var firstLine = File.ReadLines(calFile).FirstOrDefault()?.Trim();
+                return string.IsNullOrEmpty(firstLine) ? probeName : firstLine;
+            }
+            catch { return probeName; }
         }
 
         #endregion
