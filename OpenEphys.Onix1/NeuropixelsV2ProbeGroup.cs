@@ -1,36 +1,194 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Serialization;
+using Newtonsoft.Json;
 using OpenEphys.ProbeInterface.NET;
 
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Defines a constrained probeInterface compatible probe group for Neuropixels 2.0 and 2.0-beta probes.
+    /// Specifies the bank of electrodes within each shank.
     /// </summary>
-    [XmlInclude(typeof(NeuropixelsV2QuadShankProbeGroup))]
-    [XmlInclude(typeof(NeuropixelsV2SingleShankProbeGroup))]
-    [XmlType(Namespace = Constants.XmlNamespace)]
-    public abstract class NeuropixelsV2ProbeGroup : SingleProbeGroup, IMultiplexedProbeGroup
+    public enum NeuropixelsV2Bank
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="NeuropixelsV2ProbeGroup"/> class from deserialized
-        /// ProbeInterface data.
+        /// Specifies that Bank A is the current bank.
         /// </summary>
-        /// <param name="specification">The ProbeInterface specification string.</param>
-        /// <param name="version">The ProbeInterface version string.</param>
-        /// <param name="probes">The probes deserialized from the ProbeInterface file.</param>
-        public NeuropixelsV2ProbeGroup(string specification, string version, IEnumerable<Probe> probes)
-            : base(specification, version, probes) { }
+        /// <remarks>Bank A is defined as shank index 0 to 383 along each shank.</remarks>
+        A,
+        /// <summary>
+        /// Specifies that Bank B is the current bank.
+        /// </summary>
+        /// <remarks>Bank B is defined as shank index 384 to 767 along each shank.</remarks>
+        B,
+        /// <summary>
+        /// Specifies that Bank C is the current bank.
+        /// </summary>
+        /// <remarks>Bank C is defined as shank index 768 to 1151 along each shank.</remarks>
+        C,
+        /// <summary>
+        /// Specifies that Bank D is the current bank.
+        /// </summary>
+        /// <remarks>
+        /// Bank D is defined as shank index 1152 to 1279 along each shank. Note that Bank D is not a full contingent
+        /// of 384 channels; to compensate for this, electrodes from Bank C (starting at shank index 896) are used to
+        /// generate a full 384 channel map.
+        /// </remarks>
+        D,
+    }
+
+    /// <summary>
+    /// Specifies a predefined electrode selection pattern for a Neuropixels 2.0 probe.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Presets are generated from the shank count of the loaded probe rather than hand-written per
+    /// topology. A single-shank preset (<see cref="Shank"/> is non-null) selects all 384 channels in one
+    /// bank on one shank. An all-shanks preset (<see cref="Shank"/> is null, only possible when there is
+    /// more than one shank) distributes the 384 acquisition channels evenly across every shank, covering
+    /// the same consecutive range of intra-shank electrode indices on each.
+    /// </para>
+    /// </remarks>
+    public readonly record struct NeuropixelsV2ChannelPreset(int? Shank, int WindowStart, string DisplayName)
+    {
+        /// <summary>
+        /// The "no preset" value; applying it leaves the existing channel map unchanged.
+        /// </summary>
+        public static readonly NeuropixelsV2ChannelPreset None = new(null, -1, "None");
+
+        /// <inheritdoc/>
+        public override string ToString() => DisplayName;
+    }
+
+    /// <summary>
+    /// Defines a ProbeInterface-compatible probe group for Neuropixels 2.0 and 2.0-beta probes.
+    /// </summary>
+    /// <remarks>
+    /// Shank count, banks, and reference options are all derived from the loaded probe interface data
+    /// (specifically each contact's <see cref="Contact.ShankId"/>) rather than from a hardcoded,
+    /// per-topology subclass. A file with no shank IDs at all (e.g. a single-shank probe) is treated as
+    /// having exactly one shank.
+    /// </remarks>
+    public class NeuropixelsV2ProbeGroup : SingleProbeGroup, IMultiplexedProbeGroup
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NeuropixelsV2ProbeGroup"/> class using the
+        /// default electrode geometry.
+        /// </summary>
+        public NeuropixelsV2ProbeGroup()
+            : this(ProbeGroupResource.LoadDefault<NeuropixelsV2ProbeGroup>("NP2013.json"))
+        { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NeuropixelsV2ProbeGroup"/> class by copying an
         /// existing probe group.
         /// </summary>
         /// <param name="probeGroup">The probe group to copy.</param>
-        protected NeuropixelsV2ProbeGroup(NeuropixelsV2ProbeGroup probeGroup)
-            : base(probeGroup) { }
+        public NeuropixelsV2ProbeGroup(NeuropixelsV2ProbeGroup probeGroup)
+            : base(probeGroup)
+        {
+            InitializeShankLookup();
+
+            if (base.ChannelMap is null)
+                SelectBank(0, NeuropixelsV2Bank.A);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NeuropixelsV2ProbeGroup"/> class from
+        /// deserialized ProbeInterface data.
+        /// </summary>
+        /// <param name="specification">The ProbeInterface specification string.</param>
+        /// <param name="version">The ProbeInterface version string.</param>
+        /// <param name="probes">The array of probes deserialized from the ProbeInterface file.</param>
+        [JsonConstructor]
+        public NeuropixelsV2ProbeGroup(string specification, string version, Probe[] probes)
+            : base(specification, version, probes)
+        {
+            InitializeShankLookup();
+
+            if (NumberOfContacts != ShankCount * NeuropixelsV2.ElectrodesPerShank)
+            {
+                throw new ArgumentException(
+                    $"Invalid number of contacts; expected a multiple of {NeuropixelsV2.ElectrodesPerShank} " +
+                    $"matching the {ShankCount} shank(s) found in the probe interface data, but found {NumberOfContacts}.");
+            }
+
+            if (base.ChannelMap is null)
+                SelectBank(0, NeuropixelsV2Bank.A);
+        }
+
+        /// <summary>
+        /// Returns the channel map for this probe, mapping each acquisition channel index to its
+        /// active contact index.
+        /// </summary>
+        /// <remarks>
+        /// This property hides <see cref="ProbeGroup.ChannelMap"/>, which is nullable, to enforce the
+        /// invariant that a Neuropixels 2.0 probe group always has a valid channel map after
+        /// construction. If no channel map was present in the deserialized data, bank A of the first
+        /// shank is applied automatically during construction.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">Thrown if the channel map is null.</exception>
+        [JsonIgnore]
+        public new IReadOnlyDictionary<int, int> ChannelMap =>
+            base.ChannelMap ?? throw new InvalidOperationException("Neuropixels probes must have a valid channel map.");
+
+        /// <summary>
+        /// Gets the number of shanks on this probe, derived from the distinct <see cref="Contact.ShankId"/>
+        /// values present in the loaded probe interface data (or 1 if none are present).
+        /// </summary>
+        [JsonIgnore]
+        public int ShankCount { get; private set; }
+
+        int[] shankByContact;
+        int[] intraShankIndexByContact;
+        int[][] contactIndexByShankAndIntraIndex;
+
+        void InitializeShankLookup()
+        {
+            var contacts = Probe.Contacts;
+            int n = contacts.Count;
+            var shankIds = new string[n];
+            for (int i = 0; i < n; i++)
+                shankIds[i] = contacts[i].ShankId;
+
+            List<string> distinctShankIds;
+            if (shankIds.All(id => id is null))
+            {
+                distinctShankIds = new List<string> { "0" };
+            }
+            else
+            {
+                var seen = shankIds.Where(id => id != null).Distinct().ToList();
+                // Prefer numeric order when every id parses as an integer (true for every known IMEC
+                // file); fall back to first-appearance order for third-party files with non-numeric
+                // shank ids.
+                distinctShankIds = seen.All(id => int.TryParse(id, out _))
+                    ? seen.OrderBy(int.Parse).ToList()
+                    : seen;
+            }
+
+            var shankIndexById = new Dictionary<string, int>();
+            for (int i = 0; i < distinctShankIds.Count; i++)
+                shankIndexById[distinctShankIds[i]] = i;
+
+            ShankCount = distinctShankIds.Count;
+
+            shankByContact = new int[n];
+            intraShankIndexByContact = new int[n];
+            var runningCountPerShank = new int[ShankCount];
+            for (int i = 0; i < n; i++)
+            {
+                int shank = shankIndexById[shankIds[i] ?? "0"];
+                shankByContact[i] = shank;
+                intraShankIndexByContact[i] = runningCountPerShank[shank]++;
+            }
+
+            contactIndexByShankAndIntraIndex = new int[ShankCount][];
+            for (int s = 0; s < ShankCount; s++)
+                contactIndexByShankAndIntraIndex[s] = new int[runningCountPerShank[s]];
+            for (int i = 0; i < n; i++)
+                contactIndexByShankAndIntraIndex[shankByContact[i]][intraShankIndexByContact[i]] = i;
+        }
 
         /// <summary>
         /// Returns the zero-based shank index that contains the given contact index.
@@ -38,16 +196,16 @@ namespace OpenEphys.Onix1
         /// <param name="contactIndex">The zero-based contact index across all electrodes on the
         /// probe.</param>
         /// <returns>The zero-based shank index.</returns>
-        public int GetShank(int contactIndex) =>
-            contactIndex / NeuropixelsV2.ElectrodesPerShank;
+        public int GetShank(int contactIndex) => shankByContact[contactIndex];
 
         /// <summary>
         /// Returns the electrode index within its shank for the given contact index.
         /// </summary>
         /// <param name="contactIndex">The zero-based contact index across all electrodes on the probe.</param>
         /// <returns>The zero-based electrode index within the shank.</returns>
-        public int GetIntraShankElectrodeIndex(int contactIndex) =>
-            contactIndex % NeuropixelsV2.ElectrodesPerShank;
+        public int GetIntraShankElectrodeIndex(int contactIndex) => intraShankIndexByContact[contactIndex];
+
+        int GetContactIndex(int shank, int intraShankElectrodeIndex) => contactIndexByShankAndIntraIndex[shank][intraShankElectrodeIndex];
 
         /// <summary>
         /// Returns the bank that contains the given contact index.
@@ -55,14 +213,33 @@ namespace OpenEphys.Onix1
         /// <param name="contactIndex">The zero-based contact index across all electrodes on the probe.</param>
         /// <returns>The <see cref="NeuropixelsV2Bank"/> containing the specified contact.</returns>
         public NeuropixelsV2Bank GetBank(int contactIndex)
-            => (NeuropixelsV2Bank)((contactIndex % NeuropixelsV2.ElectrodesPerShank) / NeuropixelsV2.ChannelCount);
+            => (NeuropixelsV2Bank)(GetIntraShankElectrodeIndex(contactIndex) / NeuropixelsV2.ChannelCount);
 
         /// <summary>
         /// Returns the acquisition channel number for the given contact index.
         /// </summary>
         /// <param name="contactIndex">The zero-based contact index across all electrodes on the probe.</param>
         /// <returns>The acquisition channel number (0 to <see cref="NeuropixelsV2.ChannelCount"/> - 1).</returns>
-        public abstract int GetChannel(int contactIndex);
+        /// <exception cref="NotSupportedException">
+        /// Thrown if <see cref="ShankCount"/> is neither 1 nor 4. The ASIC channel-wiring formula is a
+        /// hardware fact, not something derivable from geometry alone, and is only known/verified for
+        /// these two shank counts.
+        /// </exception>
+        public int GetChannel(int contactIndex)
+        {
+            int shank = GetShank(contactIndex);
+            int intra = GetIntraShankElectrodeIndex(contactIndex);
+
+            return ShankCount switch
+            {
+                1 => GetSingleShankChannelNumber(intra),
+                4 => GetQuadShankChannelNumber(shank, intra),
+                _ => throw new NotSupportedException(
+                    $"Channel wiring for a {ShankCount}-shank Neuropixels 2.0 probe is not known. " +
+                    "Only 1-shank and 4-shank geometries have a verified channel map. Contact IMEC or " +
+                    "the OpenEphys team before adding support for this shank count.")
+            };
+        }
 
         /// <summary>
         /// Wires each contact in <paramref name="contactIndices"/> to its corresponding acquisition channel.
@@ -75,30 +252,172 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Returns an array of all valid reference source values for this probe type.
+        /// Returns every channel preset available for this probe, generated from its shank count.
         /// </summary>
-        /// <returns>An <see cref="Array"/> of the probe-specific reference enum values.</returns>
-        public abstract Array GetReferenceEnumValues();
+        /// <returns>The list of channel presets, starting with <see cref="NeuropixelsV2ChannelPreset.None"/>.</returns>
+        public IReadOnlyList<NeuropixelsV2ChannelPreset> GetChannelPresets()
+        {
+            var presets = new List<NeuropixelsV2ChannelPreset> { NeuropixelsV2ChannelPreset.None };
 
-        /// <summary>
-        /// Returns an array of all available channel preset values for this probe type.
-        /// </summary>
-        /// <returns>An <see cref="Array"/> of the probe-specific channel preset enum values.</returns>
-        public abstract Array GetChannelPresets();
+            var bankStarts = new (string Name, int Start)[]
+            {
+                ("BankA", 0),
+                ("BankB", NeuropixelsV2.ChannelCount),
+                ("BankC", 2 * NeuropixelsV2.ChannelCount),
+                ("BankD", NeuropixelsV2.ElectrodesPerShank - NeuropixelsV2.ChannelCount),
+            };
+
+            for (int s = 0; s < ShankCount; s++)
+            {
+                foreach (var (name, start) in bankStarts)
+                {
+                    var label = ShankCount == 1 ? name : $"Shank{s}{name}";
+                    presets.Add(new NeuropixelsV2ChannelPreset(s, start, label));
+                }
+            }
+
+            if (ShankCount > 1)
+            {
+                int windowWidth = NeuropixelsV2.ChannelCount / ShankCount;
+                for (int start = 0; start + windowWidth <= NeuropixelsV2.ElectrodesPerShank; start += windowWidth)
+                    presets.Add(new NeuropixelsV2ChannelPreset(null, start, $"AllShanks{start}_{start + windowWidth - 1}"));
+            }
+
+            return presets;
+        }
 
         /// <summary>
         /// Configures the channel map to the specified preset.
         /// </summary>
-        /// <param name="preset">The preset enum value to apply. Must be a value from the probe-specific
-        /// channel preset enum returned by <see cref="GetChannelPresets"/>.</param>
-        public abstract void SelectPreset(Enum preset);
+        /// <param name="preset">The preset to apply. Passing <see cref="NeuropixelsV2ChannelPreset.None"/>
+        /// leaves the existing channel map unchanged.</param>
+        public void SelectPreset(NeuropixelsV2ChannelPreset preset)
+        {
+            if (preset == NeuropixelsV2ChannelPreset.None)
+                return;
+
+            if (preset.Shank is int shank)
+            {
+                EnableElectrodes(Enumerable.Range(preset.WindowStart, NeuropixelsV2.ChannelCount)
+                    .Select(intra => GetContactIndex(shank, intra)));
+            }
+            else
+            {
+                int windowWidth = NeuropixelsV2.ChannelCount / ShankCount;
+                var indices = new List<int>(NeuropixelsV2.ChannelCount);
+                for (int s = 0; s < ShankCount; s++)
+                    indices.AddRange(Enumerable.Range(preset.WindowStart, windowWidth).Select(intra => GetContactIndex(s, intra)));
+                EnableElectrodes(indices);
+            }
+        }
 
         /// <summary>
-        /// Configures the channel map for a specific shank and bank by selecting the corresponding preset.
+        /// Configures the channel map for a specific shank and bank.
         /// </summary>
         /// <param name="shank">Zero-based shank index.</param>
         /// <param name="bank">Bank of electrodes to activate on the specified shank.</param>
-        public abstract void SelectBank(int shank, NeuropixelsV2Bank bank);
+        public void SelectBank(int shank, NeuropixelsV2Bank bank)
+        {
+            if (shank < 0 || shank >= ShankCount)
+                throw new ArgumentOutOfRangeException(nameof(shank), $"Probe has {ShankCount} shank(s); got {shank}.");
 
+            int start = bank switch
+            {
+                NeuropixelsV2Bank.A => 0,
+                NeuropixelsV2Bank.B => NeuropixelsV2.ChannelCount,
+                NeuropixelsV2Bank.C => 2 * NeuropixelsV2.ChannelCount,
+                NeuropixelsV2Bank.D => NeuropixelsV2.ElectrodesPerShank - NeuropixelsV2.ChannelCount,
+                _ => throw new ArgumentOutOfRangeException(nameof(bank))
+            };
+
+            EnableElectrodes(Enumerable.Range(start, NeuropixelsV2.ChannelCount).Select(intra => GetContactIndex(shank, intra)));
+        }
+
+        // --- Channel-number mapping: IMEC's ASIC mux-wiring formula. This is a hardware fact, not
+        // geometry, so it stays as verified code rather than being derived from the loaded file. Moved
+        // verbatim from the former NeuropixelsV2SingleShankProbeGroup/NeuropixelsV2QuadShankProbeGroup
+        // classes; only 1-shank and 4-shank layouts have a known/verified formula (see GetChannel).
+
+        const int SingleShankElectrodesPerBlock = 32;
+        const int SingleShankElectrodesPerRow = 2;
+
+        static int GetSingleShankChannelNumber(int intraShankElectrodeIndex)
+        {
+            var bank = (NeuropixelsV2Bank)(intraShankElectrodeIndex / NeuropixelsV2.ChannelCount);
+            int bankIndex = intraShankElectrodeIndex % NeuropixelsV2.ChannelCount;
+            int block = bankIndex / SingleShankElectrodesPerBlock;
+            int row = bankIndex % SingleShankElectrodesPerBlock / SingleShankElectrodesPerRow;
+            int columnIndex = intraShankElectrodeIndex % 2;
+
+            const int MaxBlockValue = 11;
+            const int MaxRowValue = 15;
+
+            if (block > MaxBlockValue || block < 0)
+                throw new ArgumentOutOfRangeException($"Block value out of range [0, {MaxBlockValue}]: {block}");
+            if (row > MaxRowValue || row < 0)
+                throw new ArgumentOutOfRangeException($"Row value out of range [0, {MaxRowValue}]: {row}");
+            if (columnIndex > 1 || columnIndex < 0)
+                throw new ArgumentOutOfRangeException($"Column index out of range [0, 1]: {columnIndex}");
+
+            const int HalfBlock = 16;
+
+            return (bank, columnIndex) switch
+            {
+                (NeuropixelsV2Bank.A, 0) => row * SingleShankElectrodesPerRow + block * SingleShankElectrodesPerBlock,
+                (NeuropixelsV2Bank.A, 1) => row * SingleShankElectrodesPerRow + block * SingleShankElectrodesPerBlock + 1,
+                (NeuropixelsV2Bank.B, 0) => (row * 7 % HalfBlock) * SingleShankElectrodesPerRow + block * SingleShankElectrodesPerBlock,
+                (NeuropixelsV2Bank.B, 1) => ((row * 7 + 4) % HalfBlock) * SingleShankElectrodesPerRow + block * SingleShankElectrodesPerBlock + 1,
+                (NeuropixelsV2Bank.C, 0) => (row * 5 % HalfBlock) * SingleShankElectrodesPerRow + block * SingleShankElectrodesPerBlock,
+                (NeuropixelsV2Bank.C, 1) => ((row * 5 + 8) % HalfBlock) * SingleShankElectrodesPerRow + block * SingleShankElectrodesPerBlock + 1,
+                (NeuropixelsV2Bank.D, 0) => (row * 3 % HalfBlock) * SingleShankElectrodesPerRow + block * SingleShankElectrodesPerBlock,
+                (NeuropixelsV2Bank.D, 1) => ((row * 3 + 12) % HalfBlock) * SingleShankElectrodesPerRow + block * SingleShankElectrodesPerBlock + 1,
+                _ => throw new NotImplementedException($"Invalid {nameof(NeuropixelsV2Bank)} value.")
+            };
+        }
+
+        const int QuadShankElectrodesPerBlock = 48;
+
+        static int GetQuadShankChannelNumber(int shank, int intraShankElectrodeIndex)
+        {
+            int block = (intraShankElectrodeIndex % NeuropixelsV2.ChannelCount) / QuadShankElectrodesPerBlock;
+            int blockIndex = intraShankElectrodeIndex % QuadShankElectrodesPerBlock;
+
+            return (shank, block) switch
+            {
+                (0, 0) => blockIndex + QuadShankElectrodesPerBlock * 0,
+                (0, 1) => blockIndex + QuadShankElectrodesPerBlock * 2,
+                (0, 2) => blockIndex + QuadShankElectrodesPerBlock * 4,
+                (0, 3) => blockIndex + QuadShankElectrodesPerBlock * 6,
+                (0, 4) => blockIndex + QuadShankElectrodesPerBlock * 5,
+                (0, 5) => blockIndex + QuadShankElectrodesPerBlock * 7,
+                (0, 6) => blockIndex + QuadShankElectrodesPerBlock * 1,
+                (0, 7) => blockIndex + QuadShankElectrodesPerBlock * 3,
+                (1, 0) => blockIndex + QuadShankElectrodesPerBlock * 1,
+                (1, 1) => blockIndex + QuadShankElectrodesPerBlock * 3,
+                (1, 2) => blockIndex + QuadShankElectrodesPerBlock * 5,
+                (1, 3) => blockIndex + QuadShankElectrodesPerBlock * 7,
+                (1, 4) => blockIndex + QuadShankElectrodesPerBlock * 4,
+                (1, 5) => blockIndex + QuadShankElectrodesPerBlock * 6,
+                (1, 6) => blockIndex + QuadShankElectrodesPerBlock * 0,
+                (1, 7) => blockIndex + QuadShankElectrodesPerBlock * 2,
+                (2, 0) => blockIndex + QuadShankElectrodesPerBlock * 4,
+                (2, 1) => blockIndex + QuadShankElectrodesPerBlock * 6,
+                (2, 2) => blockIndex + QuadShankElectrodesPerBlock * 0,
+                (2, 3) => blockIndex + QuadShankElectrodesPerBlock * 2,
+                (2, 4) => blockIndex + QuadShankElectrodesPerBlock * 1,
+                (2, 5) => blockIndex + QuadShankElectrodesPerBlock * 3,
+                (2, 6) => blockIndex + QuadShankElectrodesPerBlock * 5,
+                (2, 7) => blockIndex + QuadShankElectrodesPerBlock * 7,
+                (3, 0) => blockIndex + QuadShankElectrodesPerBlock * 5,
+                (3, 1) => blockIndex + QuadShankElectrodesPerBlock * 7,
+                (3, 2) => blockIndex + QuadShankElectrodesPerBlock * 1,
+                (3, 3) => blockIndex + QuadShankElectrodesPerBlock * 3,
+                (3, 4) => blockIndex + QuadShankElectrodesPerBlock * 0,
+                (3, 5) => blockIndex + QuadShankElectrodesPerBlock * 2,
+                (3, 6) => blockIndex + QuadShankElectrodesPerBlock * 4,
+                (3, 7) => blockIndex + QuadShankElectrodesPerBlock * 6,
+                _ => throw new ArgumentOutOfRangeException($"Invalid shank ({shank}) and/or block ({block}) value.")
+            };
+        }
     }
 }

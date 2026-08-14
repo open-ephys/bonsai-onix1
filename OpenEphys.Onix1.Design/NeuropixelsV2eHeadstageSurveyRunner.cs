@@ -442,11 +442,6 @@ namespace OpenEphys.Onix1.Design
                 });
         }
 
-        static NeuropixelsV2ProbeGroup CloneProbeGroup(NeuropixelsV2ProbeGroup source)
-        {
-            if (source is NeuropixelsV2QuadShankProbeGroup quad)
-                return new NeuropixelsV2QuadShankProbeGroup(quad);
-            return new NeuropixelsV2SingleShankProbeGroup((NeuropixelsV2SingleShankProbeGroup)source);
-        }
+        static NeuropixelsV2ProbeGroup CloneProbeGroup(NeuropixelsV2ProbeGroup source) => new(source);
     }
 }

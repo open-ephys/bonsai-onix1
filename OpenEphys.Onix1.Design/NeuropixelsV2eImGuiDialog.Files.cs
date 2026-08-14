@@ -1,13 +1,54 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Windows.Forms;
 using Hexa.NET.ImGui;
 
 namespace OpenEphys.Onix1.Design
 {
-    // Gain calibration file UI. Probe interface file I/O, pinned-state persistence, and the
-    // unsaved-changes close prompt are generic and live in ImGuiNeuropixelsDialog.
+    // Quick-load default geometry buttons and gain calibration file UI. Probe interface file I/O,
+    // pinned-state persistence, and the unsaved-changes close prompt are generic and live in
+    // ImGuiNeuropixelsDialog.
     internal partial class NeuropixelsV2eImGuiDialog
     {
+        void DrawQuickLoadSection()
+        {
+            // Beta probes are quad-shank-only hardware; there is no alternate default to offer.
+            if (isBeta) return;
+
+            ImGui.Text("Load Default Geometry");
+            ImGui.Spacing();
+            if (ImGui.Button("NP2003 (1-shank)##loadnp2003")) QuickLoadDefaultGeometry("NP2003.json", "NP2003");
+            ImGuiControls.Tooltip("Load the bundled single-shank Neuropixels 2.0 probe interface file through the same load path as browsing to any other file.");
+            ImGui.SameLine();
+            if (ImGui.Button("NP2013 (4-shank)##loadnp2013")) QuickLoadDefaultGeometry("NP2013.json", "NP2013");
+            ImGuiControls.Tooltip("Load the bundled quad-shank Neuropixels 2.0 probe interface file through the same load path as browsing to any other file.");
+        }
+
+        void QuickLoadDefaultGeometry(string embeddedResourceName, string displayName)
+        {
+            if (HasChanges)
+            {
+                var r = MessageBox.Show($"Loading the {displayName} default geometry will discard unsaved {probeName} changes. Continue?",
+                    $"{probeName}: Load Default Geometry", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (r == DialogResult.No) return;
+            }
+
+            try
+            {
+                LoadProbeGroupFromJson(ProbeGroupResource.LoadDefaultJson(embeddedResourceName));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to load {displayName} default geometry:\n{ex.Message}", "Load Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            configureNode.ProbeConfiguration.ProbeInterfaceFileName = null;
+            RefreshProbeState();
+            Log($"Loaded {displayName} default probeinterface geometry");
+            HasChanges = true;
+        }
+
         protected override void DrawCalibrationFileSection()
         {
             float fileTargetW = ComputeFileRowInputWidth();

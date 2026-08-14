@@ -1,42 +1,46 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
 using Hexa.NET.ImGui;
 
 namespace OpenEphys.Onix1.Design
 {
-    // Probe-type selection, channel configuration UI, contact info, and the enable/pin/unpin actions that
-    // mutate the channel selection.
+    // Channel configuration UI, contact info, and the enable/pin/unpin actions that mutate the
+    // channel selection.
     internal partial class NeuropixelsV2eImGuiDialog
     {
-        void DrawProbeTypeSection()
-        {
-            if (isBeta) ImGui.BeginDisabled();
-            int newType = probeTypeIdx;
-            ImGui.SetNextItemWidth(ComboboxStartWidthPx);
-            if (ImGui.Combo("Probe Type##probetype", ref newType, NeuropixelsV2ProbeTypes.DisplayNames, NeuropixelsV2ProbeTypes.All.Length))
-                if (newType != probeTypeIdx) TrySwitchProbeType(newType);
-            ImGuiControls.Tooltip("Choose the physical shank layout of the probe being configured (e.g., single-shank vs. quad-shank).",
-                "Not changeable for Beta probes.");
-            if (isBeta) ImGui.EndDisabled();
-        }
-
         protected override void DrawProbeSpecificChannelControls()
         {
             ImGui.SetNextItemWidth(ComboboxStartWidthPx);
-            if (ImGui.Combo("Reference##ref", ref refIdx, refNames, refNames.Length))
-            {
-                var refValues = probeGroup.GetReferenceEnumValues();
-                configureNode.ProbeConfiguration.Reference = (Enum)refValues.GetValue(refIdx);
-            }
+            if (ImGui.Combo("Reference##ref", ref refIdx, ReferenceNames, ReferenceNames.Length))
+                configureNode.ProbeConfiguration.Reference = ReferenceValues[refIdx];
             ImGuiControls.Tooltip("Choose which electrode serves as the voltage reference for every recording channel.");
+
+            if (configureNode.ProbeConfiguration.Reference == NeuropixelsV2ReferenceSource.Tip)
+                DrawTipReferenceShankCheckboxes();
 
             var presetNames = presets.Select(p => p.ToString()).ToArray();
             ImGui.SetNextItemWidth(ComboboxStartWidthPx);
             if (ImGui.Combo("Preset##preset", ref presetIdx, presetNames, presetNames.Length))
                 ApplyPreset(presets[presetIdx]);
             ImGuiControls.Tooltip("Apply a ready-made channel selection in a single step. Note: this overrides all current enabled and/or pinned contacts.");
+        }
+
+        void DrawTipReferenceShankCheckboxes()
+        {
+            ImGui.Indent();
+            var tipShanks = configureNode.ProbeConfiguration.TipReferenceShanks;
+            for (int s = 0; s < probeGroup.ShankCount; s++)
+            {
+                bool selected = tipShanks.Contains(s);
+                if (ImGui.Checkbox($"Shank {s}##tipshank{s}", ref selected))
+                {
+                    if (selected) tipShanks.Add(s);
+                    else tipShanks.Remove(s);
+                }
+                if (s < probeGroup.ShankCount - 1) ImGui.SameLine();
+            }
+            ImGuiControls.Tooltip("Choose which shank(s) contribute their tip structure to the reference. Selecting more than one shorts them together, which is sometimes desirable.");
+            ImGui.Unindent();
         }
 
         protected override void DrawProbeSpecificContactInfo(IReadOnlyList<int> sel)
@@ -48,36 +52,13 @@ namespace OpenEphys.Onix1.Design
             ImGuiControls.InfoRow("Banks(s)", shanks.Count() == 0 ? "-" : string.Join(",", banks));
         }
 
-        void ApplyPreset(Enum preset)
+        void ApplyPreset(NeuropixelsV2ChannelPreset preset)
         {
-            if (preset.ToString() == "None") return;
+            if (preset == NeuropixelsV2ChannelPreset.None) return;
             probeGroup.SelectPreset(preset);
             RebuildMaps();
             ClearPins();
             selector.ClearSelection();
-            HasChanges = true;
-        }
-
-        void TrySwitchProbeType(int newTypeIdx)
-        {
-            if (HasChanges)
-            {
-                var r = MessageBox.Show($"Changing probe type will discard unsaved {probeName} changes. Continue?",
-                    $"{probeName}: Change Probe Type", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-                if (r == DialogResult.No)
-                { probeTypeIdx = Array.FindIndex(NeuropixelsV2ProbeTypes.All, e => e.MatchesProbeGroup(probeGroup)); return; }
-            }
-            var entry = NeuropixelsV2ProbeTypes.All[newTypeIdx];
-            var newCfg = entry.CreateConfiguration();
-            newCfg.InvertPolarity = configureNode.ProbeConfiguration.InvertPolarity;
-            newCfg.GainCalibrationFileName = configureNode.ProbeConfiguration.GainCalibrationFileName;
-            newCfg.ProbeInterfaceFileName = configureNode.ProbeConfiguration.ProbeInterfaceFileName;
-            probeGroup = entry.CreateGroup();
-            probeTypeIdx = newTypeIdx;
-            configureNode.ProbeConfiguration = newCfg;
-            ClearPins();
-            SetupSelectorCallbacks();
-            RefreshProbeState();
             HasChanges = true;
         }
     }
