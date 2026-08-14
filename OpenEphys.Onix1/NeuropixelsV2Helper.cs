@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 
 namespace OpenEphys.Onix1
@@ -6,7 +7,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Static helper class for NeuropixelsV2 methods.
     /// </summary>
-    public class NeuropixelsV2Helper
+    internal class NeuropixelsV2Helper
     {
         /// <summary>
         /// Tries to parse the gain calibration file.
@@ -23,7 +24,7 @@ namespace OpenEphys.Onix1
         /// </remarks>
         /// <param name="gainCalibrationFile">String containing the path to the gain calibration file.</param>
         /// <returns><see cref="NeuropixelsV2GainCorrection"/> object that contains the gain correction value. This object is null if the file was not successfully parsed.</returns>
-        public static NeuropixelsV2GainCorrection? TryParseGainCalibrationFile(string gainCalibrationFile)
+        internal static NeuropixelsV2GainCorrection? TryParseGainCalibrationFile(string gainCalibrationFile)
         {
             if (!File.Exists(gainCalibrationFile)) return null;
 
@@ -56,6 +57,28 @@ namespace OpenEphys.Onix1
                         .Distinct();
 
             return gains.Count() == 1 ? new(serialNumber, gains.First()) : null;
+        }
+
+        /// <summary>
+        /// Checks that a probe part number matches the model name annotation carried by the loaded
+        /// probe interface data.
+        /// </summary>
+        /// <param name="partNumber">The probe part number to check.</param>
+        /// <param name="probeGroup">The loaded probe group whose model name annotation should be
+        /// checked against <paramref name="partNumber"/>.</param>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="partNumber"/> is null or
+        /// empty, or if it does not match the probe interface file's model name annotation.</exception>
+        internal static void ValidateProbePartNumber(string partNumber, NeuropixelsV2ProbeGroup probeGroup)
+        {
+            if (string.IsNullOrEmpty(partNumber))
+                throw new ArgumentException("A probe part number must be provided.", nameof(partNumber));
+
+            var modelName = probeGroup.Probe.Annotations.ModelName;
+            if (!string.Equals(partNumber, modelName, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException($"Probe part number ({partNumber}) does not match the probe " +
+                    $"interface file's model name ({modelName}).");
+            }
         }
     }
 }

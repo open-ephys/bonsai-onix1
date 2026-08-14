@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Text;
 using System.Windows.Forms;
 using Hexa.NET.ImGui;
+using Newtonsoft.Json;
 using OpenEphys.ProbeInterface.NET;
 
 namespace OpenEphys.Onix1.Design
@@ -41,9 +42,10 @@ namespace OpenEphys.Onix1.Design
         readonly HashSet<(int shank, NeuropixelsV2Bank bank)> pendingBanks = new();
 
         // Combo / preset state
-        int presetIdx, refIdx, probeTypeIdx;
-        Enum[] presets = Array.Empty<Enum>();
-        string[] refNames = Array.Empty<string>();
+        int presetIdx, refIdx;
+        NeuropixelsV2ChannelPreset[] presets = Array.Empty<NeuropixelsV2ChannelPreset>();
+        static readonly NeuropixelsV2ReferenceSource[] ReferenceValues = (NeuropixelsV2ReferenceSource[])Enum.GetValues(typeof(NeuropixelsV2ReferenceSource));
+        static readonly string[] ReferenceNames = Enum.GetNames(typeof(NeuropixelsV2ReferenceSource));
 
         // Input buffers
         readonly byte[] gainCalBuf = new byte[512];
@@ -88,15 +90,19 @@ namespace OpenEphys.Onix1.Design
 
         protected override void EnableElectrodes(IEnumerable<int> contactIndices) => probeGroup.EnableElectrodes(contactIndices);
 
-        protected override void ReplaceProbeGroupFromFile(string path) =>
-            probeGroup = NeuropixelsV2ProbeTypes.All[probeTypeIdx].DeserializeGroup(File.ReadAllText(path));
+        protected override void ReplaceProbeGroupFromFile(string path) => LoadProbeGroupFromJson(File.ReadAllText(path));
+
+        void LoadProbeGroupFromJson(string json) =>
+            probeGroup = JsonConvert.DeserializeObject<NeuropixelsV2ProbeGroup>(json)
+                ?? throw new InvalidDataException("The probe interface data did not produce a valid probe group.");
 
         protected override void OnProbeGroupRefreshed()
         {
-            presets = probeGroup.GetChannelPresets().Cast<Enum>().ToArray();
-            presetIdx = Array.FindIndex(presets, p => p.ToString() == "None");
-            refNames = probeGroup.GetReferenceEnumValues().Cast<object>().Select(r => r.ToString()).ToArray();
-            refIdx = Math.Max(0, Array.IndexOf(refNames, configureNode.ProbeConfiguration.Reference?.ToString() ?? ""));
+            presets = probeGroup.GetChannelPresets().ToArray();
+            presetIdx = Array.FindIndex(presets, p => p == NeuropixelsV2ChannelPreset.None);
+
+            refIdx = Math.Max(0, Array.IndexOf(ReferenceValues, configureNode.ProbeConfiguration.Reference));
+            configureNode.ProbeConfiguration.TipReferenceShanks.RemoveAll(s => s < 0 || s >= probeGroup.ShankCount);
 
             RestoreActivityData();
             InitSurveyBanks();
@@ -105,7 +111,7 @@ namespace OpenEphys.Onix1.Design
 
         protected override void OnContactsEnabled()
         {
-            presetIdx = Array.FindIndex(presets, p => p.ToString() == "None");
+            presetIdx = Array.FindIndex(presets, p => p == NeuropixelsV2ChannelPreset.None);
         }
 
         protected override void HandleProbeSpecificShortcuts(bool shift)
@@ -224,7 +230,7 @@ namespace OpenEphys.Onix1.Design
 
             ImGui.Spacing();
             DrawTitleBar();
-            DrawProbeTypeSection();
+            DrawQuickLoadSection();
             ImGui.Separator();
             DrawFileSection();
             ImGui.Separator();
@@ -250,16 +256,11 @@ namespace OpenEphys.Onix1.Design
         void LoadOrCreateProbeGroup()
         {
             var pc = configureNode.ProbeConfiguration;
-            probeTypeIdx = Array.FindIndex(NeuropixelsV2ProbeTypes.All, e => e.MatchesProbeConfiguration(pc));
-            if (probeTypeIdx < 0) probeTypeIdx = 0;
-
-            var entry = NeuropixelsV2ProbeTypes.All[probeTypeIdx];
-
             if (!string.IsNullOrEmpty(pc.ProbeInterfaceFileName))
             {
                 try
                 {
-                    probeGroup = entry.DeserializeGroup(File.ReadAllText(pc.ProbeInterfaceFileName));
+                    LoadProbeGroupFromJson(File.ReadAllText(pc.ProbeInterfaceFileName));
                     Log($"Loaded probeinterface file {pc.ProbeInterfaceFileName}");
                     return;
                 }
@@ -268,7 +269,7 @@ namespace OpenEphys.Onix1.Design
                     Log($"Error loading probeinterface file {pc.ProbeInterfaceFileName}: {ex.Message}", true);
                 }
             }
-            probeGroup = entry.CreateGroup();
+            probeGroup = new NeuropixelsV2ProbeGroup();
         }
 
         void InitSurveyBanks()
