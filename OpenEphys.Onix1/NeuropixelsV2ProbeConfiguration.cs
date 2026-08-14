@@ -1,51 +1,17 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
-using System.Xml;
 using System.Xml.Serialization;
 using Bonsai;
-using Newtonsoft.Json;
 
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Specifies the bank of electrodes within each shank.
-    /// </summary>
-    public enum NeuropixelsV2Bank
-    {
-        /// <summary>
-        /// Specifies that Bank A is the current bank.
-        /// </summary>
-        /// <remarks>Bank A is defined as shank index 0 to 383 along each shank.</remarks>
-        A,
-        /// <summary>
-        /// Specifies that Bank B is the current bank.
-        /// </summary>
-        /// <remarks>Bank B is defined as shank index 384 to 767 along each shank.</remarks>
-        B,
-        /// <summary>
-        /// Specifies that Bank C is the current bank.
-        /// </summary>
-        /// <remarks>Bank C is defined as shank index 768 to 1151 along each shank.</remarks>
-        C,
-        /// <summary>
-        /// Specifies that Bank D is the current bank.
-        /// </summary>
-        /// <remarks>
-        /// Bank D is defined as shank index 1152 to 1279 along each shank. Note that Bank D is not a full contingent
-        /// of 384 channels; to compensate for this, electrodes from Bank C (starting at shank index 896) are used to
-        /// generate a full 384 channel map.
-        /// </remarks>
-        D,
-    }
-
-    /// <summary>
     /// Defines a configuration for Neuropixels 2.0 and 2.0-beta probes.
     /// </summary>
-    [XmlInclude(typeof(NeuropixelsV2QuadShankProbeConfiguration))]
-    [XmlInclude(typeof(NeuropixelsV2SingleShankProbeConfiguration))]
     [XmlType(Namespace = Constants.XmlNamespace)]
-    public abstract class NeuropixelsV2ProbeConfiguration : IProbeInterfaceConfiguration
+    public class NeuropixelsV2ProbeConfiguration : IProbeInterfaceConfiguration
     {
         /// <summary>
         /// Gets or sets a value determining if the polarity of the electrode voltages acquired by the probe
@@ -87,22 +53,22 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets the reference for all electrodes.
         /// </summary>
-        [XmlIgnore]
-        [JsonIgnore]
+        /// <remarks>
+        /// External and Ground are not shank-specific. When set to <see cref="NeuropixelsV2ReferenceSource.Tip"/>,
+        /// which shanks actually contribute to the reference is given by <see cref="TipReferenceShanks"/>.
+        /// </remarks>
         [Category(DeviceFactory.ConfigurationCategory)]
         [Description("Defines the reference for the probe.")]
-        public abstract Enum Reference { get; set; }
+        public NeuropixelsV2ReferenceSource Reference { get; set; } = NeuropixelsV2ReferenceSource.External;
 
         /// <summary>
-        /// Gets or sets the serialized reference value.
+        /// Gets or sets the set of shanks whose tip electrodes are shorted together to form the
+        /// reference. Only meaningful when <see cref="Reference"/> is
+        /// <see cref="NeuropixelsV2ReferenceSource.Tip"/>; unused otherwise.
         /// </summary>
-        /// <remarks>
-        /// Ensures that XML serialization can occur for the generic Enum type <see cref="Reference"/>.
-        /// </remarks>
-        [XmlElement(nameof(Reference))]
-        [Browsable(false)]
-        [Externalizable(false)]
-        public abstract string ReferenceSerialized { get; set; }
+        [Category(DeviceFactory.ConfigurationCategory)]
+        [Description("The shanks whose tip electrodes form the reference, when Reference is Tip.")]
+        public List<int> TipReferenceShanks { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the file path where the ProbeInterface configuration will be saved.
@@ -116,22 +82,72 @@ namespace OpenEphys.Onix1
         const int ReferencePixelCount = 4;
         const int DummyRegisterCount = 4;
 
-        private protected const int RegistersPerShank = NeuropixelsV2.ElectrodesPerShank + ReferencePixelCount + DummyRegisterCount;
+        const int RegistersPerShank = NeuropixelsV2.ElectrodesPerShank + ReferencePixelCount + DummyRegisterCount;
 
-        private protected const int ShiftRegisterBitExternalElectrode0 = 1285;
-        private protected const int ShiftRegisterBitExternalElectrode1 = 2;
+        const int ShiftRegisterBitExternalElectrode0 = 1285;
+        const int ShiftRegisterBitExternalElectrode1 = 2;
 
-        private protected const int ShiftRegisterBitTipElectrode0 = 644;
-        private protected const int ShiftRegisterBitTipElectrode1 = 643;
+        const int ShiftRegisterBitTipElectrode0 = 644;
+        const int ShiftRegisterBitTipElectrode1 = 643;
 
-        internal abstract BitArray[] CreateShankBits(Enum reference);
+        internal NeuropixelsV2ProbeConfiguration Clone() => new()
+        {
+            Reference = Reference,
+            TipReferenceShanks = new List<int>(TipReferenceShanks),
+            InvertPolarity = InvertPolarity,
+            GainCalibrationFileName = GainCalibrationFileName,
+            ProbeInterfaceFileName = ProbeInterfaceFileName,
+        };
 
-        internal abstract int GetReferenceBit(Enum reference);
+        /// <summary>
+        /// Builds the per-shank reference shift-register bits for a probe with the given shank count.
+        /// </summary>
+        /// <param name="shankCount">The number of shanks on the probe this configuration is being applied
+        /// to.</param>
+        internal BitArray[] CreateShankBits(int shankCount)
+        {
+            var shankBits = new BitArray[shankCount];
+            for (int s = 0; s < shankCount; s++)
+                shankBits[s] = new BitArray(RegistersPerShank, false);
 
-        internal abstract bool IsGroundReference();
+            if (Reference == NeuropixelsV2ReferenceSource.Tip)
+            {
+                if (TipReferenceShanks.Count == 0)
+                    throw new InvalidOperationException("Reference is set to Tip, but no shanks are selected in TipReferenceShanks.");
 
-        internal abstract NeuropixelsV2ProbeConfiguration Clone();
+                foreach (var shank in TipReferenceShanks)
+                {
+                    if (shank < 0 || shank >= shankCount)
+                    {
+                        throw new InvalidOperationException(
+                            $"TipReferenceShanks contains shank index {shank}, which is out of range for a " +
+                            $"{shankCount}-shank probe.");
+                    }
 
-        internal abstract Type GetProbeGroupType();
+                    shankBits[shank][ShiftRegisterBitTipElectrode1] = true;
+                    shankBits[shank][ShiftRegisterBitTipElectrode0] = true;
+                }
+            }
+            else if (Reference == NeuropixelsV2ReferenceSource.External)
+            {
+                for (int s = 0; s < shankCount; s++)
+                {
+                    shankBits[s][ShiftRegisterBitExternalElectrode1] = true;
+                    shankBits[s][ShiftRegisterBitExternalElectrode0] = true;
+                }
+            }
+
+            return shankBits;
+        }
+
+        internal int GetReferenceBit() => Reference switch
+        {
+            NeuropixelsV2ReferenceSource.External => 1,
+            NeuropixelsV2ReferenceSource.Tip => 2,
+            NeuropixelsV2ReferenceSource.Ground => 3,
+            _ => throw new InvalidOperationException("Invalid reference.")
+        };
+
+        internal bool IsGroundReference() => Reference == NeuropixelsV2ReferenceSource.Ground;
     }
 }

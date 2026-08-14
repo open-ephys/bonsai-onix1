@@ -22,12 +22,25 @@ namespace OpenEphys.Onix1
             WriteShiftRegister(NeuropixelsV2Beta.SR_CHAIN6, baseBits[1]);
 
             var shankBits = NeuropixelsV2.GenerateShankBits(probe, probeGroup);
-            WriteShiftRegister(NeuropixelsV2Beta.SR_CHAIN1, shankBits[0]);
-            WriteShiftRegister(NeuropixelsV2Beta.SR_CHAIN2, shankBits[1]);
-            WriteShiftRegister(NeuropixelsV2Beta.SR_CHAIN3, shankBits[2]);
-            WriteShiftRegister(NeuropixelsV2Beta.SR_CHAIN4, shankBits[3]);
+
+            if (shankBits.Length < 1 || shankBits.Length > ShankChains.Length)
+            {
+                throw new InvalidOperationException(
+                    $"Attempted to write an invalid probe configuration: {shankBits.Length} shank(s), but " +
+                    $"the register map only defines {ShankChains.Length} shank shift-register chains.");
+            }
+
+            for (int shank = 0; shank < shankBits.Length; shank++)
+                WriteShiftRegister(ShankChains[shank], shankBits[shank]);
         }
 
+        static readonly uint[] ShankChains =
+        {
+            NeuropixelsV2Beta.SR_CHAIN1,
+            NeuropixelsV2Beta.SR_CHAIN2,
+            NeuropixelsV2Beta.SR_CHAIN3,
+            NeuropixelsV2Beta.SR_CHAIN4,
+        };
 
         void WriteShiftRegister(uint srAddress, BitArray data)
         {
@@ -58,10 +71,10 @@ namespace OpenEphys.Onix1
 
         static string ShankName(uint shiftRegisterAddress) => shiftRegisterAddress switch
         {
-            NeuropixelsV2Beta.SR_CHAIN1 => "Shank 1",
-            NeuropixelsV2Beta.SR_CHAIN2 => "Shank 2",
-            NeuropixelsV2Beta.SR_CHAIN3 => "Shank 3",
-            NeuropixelsV2Beta.SR_CHAIN4 => "Shank 4",
+            NeuropixelsV2Beta.SR_CHAIN1 => "Shank 0",
+            NeuropixelsV2Beta.SR_CHAIN2 => "Shank 1",
+            NeuropixelsV2Beta.SR_CHAIN3 => "Shank 2",
+            NeuropixelsV2Beta.SR_CHAIN4 => "Shank 3",
             _ => throw new InvalidOperationException("Shift register address is not valid."),
         };
     }

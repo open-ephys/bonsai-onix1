@@ -57,7 +57,7 @@ namespace OpenEphys.Onix1
 
         internal static BitArray[] GenerateShankBits(NeuropixelsV2ProbeConfiguration probe, NeuropixelsV2ProbeGroup probeGroup)
         {
-            BitArray[] shankBits = probe.CreateShankBits(probe.Reference);
+            BitArray[] shankBits = probe.CreateShankBits(probeGroup.ShankCount);
 
             const int PixelOffset = (ElectrodesPerShank - 1) / 2;
             const int ReferencePixelOffset = 3;
@@ -86,7 +86,7 @@ namespace OpenEphys.Onix1
                 new(ChannelCount * BaseBitsPerChannel / 2, false)
             };
 
-            var referenceBit = probe.GetReferenceBit(probe.Reference);
+            var referenceBit = probe.GetReferenceBit();
 
             for (int i = 0; i < ChannelCount; i++)
             {
@@ -128,6 +128,26 @@ namespace OpenEphys.Onix1
     enum NeuropixelsV2Status : uint
     {
         SR_OK = 1 << 7 // Indicates the SR chain comparison is OK
+    }
+
+    /// <summary>
+    /// Specifies which reference a Neuropixels 2.0 probe's electrodes are referred to.
+    /// </summary>
+    public enum NeuropixelsV2ReferenceSource
+    {
+        /// <summary>
+        /// Specifies that the External reference will be used.
+        /// </summary>
+        External,
+        /// <summary>
+        /// Specifies that the tip reference will be used. The shanks contributing to it are given by
+        /// <see cref="NeuropixelsV2ProbeConfiguration.TipReferenceShanks"/>.
+        /// </summary>
+        Tip,
+        /// <summary>
+        /// Specifies that the Ground reference will be used.
+        /// </summary>
+        Ground
     }
 }
 

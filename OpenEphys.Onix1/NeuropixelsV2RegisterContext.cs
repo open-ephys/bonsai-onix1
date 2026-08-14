@@ -23,22 +23,24 @@ namespace OpenEphys.Onix1
 
             var shankBits = NeuropixelsV2.GenerateShankBits(probe, probeGroup);
 
-            if (shankBits.Length == 1)
+            if (shankBits.Length < 1 || shankBits.Length > ShankChains.Length)
             {
-                WriteShiftRegister(NeuropixelsV2.SR_CHAIN1, shankBits[0]);
+                throw new InvalidOperationException(
+                    $"Attempted to write an invalid probe configuration: {shankBits.Length} shank(s), but " +
+                    $"the register map only defines {ShankChains.Length} shank shift-register chains.");
             }
-            else if (shankBits.Length == 4)
-            {
-                WriteShiftRegister(NeuropixelsV2.SR_CHAIN1, shankBits[0]);
-                WriteShiftRegister(NeuropixelsV2.SR_CHAIN2, shankBits[1]);
-                WriteShiftRegister(NeuropixelsV2.SR_CHAIN3, shankBits[2]);
-                WriteShiftRegister(NeuropixelsV2.SR_CHAIN4, shankBits[3]);
-            }
-            else
-            {
-                throw new InvalidOperationException("Attempted to write invalid probe configuration.");
-            }
+
+            for (int shank = 0; shank < shankBits.Length; shank++)
+                WriteShiftRegister(ShankChains[shank], shankBits[shank]);
         }
+
+        static readonly uint[] ShankChains =
+        {
+            NeuropixelsV2.SR_CHAIN1,
+            NeuropixelsV2.SR_CHAIN2,
+            NeuropixelsV2.SR_CHAIN3,
+            NeuropixelsV2.SR_CHAIN4,
+        };
 
         void WriteShiftRegister(uint srAddress, BitArray data)
         {
@@ -69,10 +71,10 @@ namespace OpenEphys.Onix1
 
         static string ShankName(uint shiftRegisterAddress) => shiftRegisterAddress switch
         {
-            NeuropixelsV2.SR_CHAIN1 => "Shank 1",
-            NeuropixelsV2.SR_CHAIN2 => "Shank 2",
-            NeuropixelsV2.SR_CHAIN3 => "Shank 3",
-            NeuropixelsV2.SR_CHAIN4 => "Shank 4",
+            NeuropixelsV2.SR_CHAIN1 => "Shank 0",
+            NeuropixelsV2.SR_CHAIN2 => "Shank 1",
+            NeuropixelsV2.SR_CHAIN3 => "Shank 2",
+            NeuropixelsV2.SR_CHAIN4 => "Shank 3",
             _ => throw new InvalidOperationException("Shift register address is not valid."),
         };
     }
