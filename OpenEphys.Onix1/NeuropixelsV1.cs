@@ -19,6 +19,20 @@ namespace OpenEphys.Onix1
         public const int ElectrodeCount = 960;
         public const int FrameWords = 40;
 
+        // Internal reference electrode: exists once per bank (contact index bank*ChannelCount +
+        // 191, i.e. 191/575/959) and is never a normal recordable site, regardless of bank.
+        // Confirmed against IMEC's own API source: probe_selectElectrode rejects channel 191
+        // unconditionally, with the error message "selection of reference electrode 191/575/959
+        // not allowed".
+        public const int InternalReferenceChannel = 191;
+
+        /// <summary>
+        /// Returns true if the given contact index is an internal reference electrode
+        /// (191/575/959), which cannot be wired to a recording channel on any bank.
+        /// </summary>
+        public static bool IsInternalReferenceContact(int contactIndex) =>
+            contactIndex % ChannelCount == InternalReferenceChannel;
+
         // unmanaged registers
         public const uint OP_MODE = 0X00;
         public const uint REC_MOD = 0X01;
@@ -44,14 +58,13 @@ namespace OpenEphys.Onix1
             const int ShankBitExt2 = 2;
             const int ShankBitTip1 = 484;
             const int ShankBitTip2 = 483;
-            const int InternalReferenceChannel = 191;
 
             var shankBits = new BitArray(ShankConfigurationBitCount);
 
             foreach (var kvp in probeGroup.ChannelMap)
             {
                 int contactIdx = kvp.Value;
-                if (contactIdx == InternalReferenceChannel) continue;
+                if (IsInternalReferenceContact(contactIdx)) continue;
 
                 int bitIndex = contactIdx % 2 == 0 ?
                         485 + (contactIdx / 2) : // even electrode
