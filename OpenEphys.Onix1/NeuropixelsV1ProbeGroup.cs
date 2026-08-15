@@ -87,11 +87,18 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Wires each contact in <paramref name="contactIndices"/> to its corresponding acquisition channel.
         /// </summary>
+        /// <remarks>
+        /// Internal reference contacts (see <see cref="NeuropixelsV1.IsInternalReferenceContact"/>)
+        /// are silently skipped: they are never wired to a recording channel on any bank.
+        /// </remarks>
         /// <param name="contactIndices">The contact indices to enable.</param>
         public void EnableElectrodes(IEnumerable<int> contactIndices)
         {
             foreach (int contactIdx in contactIndices)
+            {
+                if (NeuropixelsV1.IsInternalReferenceContact(contactIdx)) continue;
                 ChannelWiring.WireChannel(this, 0, contactIdx, GetChannel(contactIdx));
+            }
         }
 
         /// <summary>
