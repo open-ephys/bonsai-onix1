@@ -201,8 +201,8 @@ namespace OpenEphys.Onix1
             for (int a = 0; a < AdcCount; a++)
             {
                 groups[a] = new int[ChannelsPerAdc];
-                for (int i = 0; i < ChannelsPerAdc; i++)
-                    groups[a][i] = a + i * AdcCount;
+                for (int frame = 0; frame < ChannelsPerAdc; frame++)
+                    groups[a][frame] = (a / 2) * 24 + (a % 2) + frame * 2;
             }
             return groups;
         }
