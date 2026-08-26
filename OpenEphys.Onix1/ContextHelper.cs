@@ -5,8 +5,50 @@ using oni;
 
 namespace OpenEphys.Onix1
 {
+    /// <summary>
+    /// Specifies how strictly hardware validation checks are enforced.
+    /// </summary>
+    public enum ValidationStrictness
+    {
+        /// <summary>
+        /// All validation checks throw an exception on failure.
+        /// </summary>
+        Strict,
+
+        /// <summary>
+        /// The default set of validation checks throw an exception on failure. Some checks that are
+        /// considered non-critical only produce a warning.
+        /// </summary>
+        Normal,
+
+        /// <summary>
+        /// Validation checks produce a warning instead of throwing an exception on failure.
+        /// </summary>
+        Permissive
+    }
+
     static class ContextHelper
     {
+        /// <summary>
+        /// Enforces a validation check according to the current <see cref="ValidationStrictness"/>.
+        /// </summary>
+        /// <param name="current">The validation strictness currently in effect.</param>
+        /// <param name="relaxedAt">The strictness level at which this check stops being fatal.</param>
+        /// <param name="exception">The exception describing the validation failure. Thrown if <paramref
+        /// name="current"/> is stricter than <paramref name="relaxedAt"/>, otherwise its message is printed
+        /// as a warning.</param>
+        public static void Validate(ValidationStrictness current, ValidationStrictness relaxedAt, Exception exception)
+        {
+            if (current >= relaxedAt)
+            {
+                Console.Error.WriteLine($"Warning: {exception.Message}");
+            }
+            else
+            {
+                throw exception;
+            }
+        }
+
         public static DeviceContext GetDeviceContext(this ContextTask context, uint address, Type expectedType)
         {
             if (!context.DeviceTable.TryGetValue(address, out Device device))

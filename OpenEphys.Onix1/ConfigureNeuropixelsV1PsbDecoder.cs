@@ -10,6 +10,12 @@ namespace OpenEphys.Onix1
     /// <remarks>
     /// This is a low-level device that is only useful within the context of an appropriate <see
     /// cref="MultiDeviceFactory"/>, e.g. <see cref="ConfigureHeadstageNeuropixelsV1e"/>.
+    /// <para>
+    /// After each base shift register write, the probe's status is checked to confirm the write succeeded,
+    /// which otherwise indicates that the probe's base ASIC may be damaged. A failed check throws an
+    /// exception unless <see cref="ContextTask.Strictness"/> is <see cref="ValidationStrictness.Permissive"/>,
+    /// in which case a warning is produced instead and configuration proceeds.
+    /// </para>
     /// </remarks>
     [Description("Configures a parallel serial bus decoder for a NeuropixelsV1 probe.")]
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV1Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]

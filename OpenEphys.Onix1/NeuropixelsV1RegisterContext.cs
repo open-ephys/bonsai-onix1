@@ -15,58 +15,72 @@ namespace OpenEphys.Onix1
         const uint ShiftRegisterSuccess = 1 << 7;
 
         readonly NeuropixelsV1Adc[] Adcs = new NeuropixelsV1Adc[NeuropixelsV1.AdcCount];
-        readonly BitArray ShankConfig; 
+        readonly BitArray ShankConfig;
         readonly BitArray[] BaseConfigs;
+
+        readonly ValidationStrictness strictness;
 
         public NeuropixelsV1RegisterContext(DeviceContext deviceContext, uint i2cAddress, ulong probeSerialNumber,
             NeuropixelsV1ProbeConfiguration probeConfiguration, NeuropixelsV1eProbeGroup probeGroup)
             : base(deviceContext, i2cAddress)
         {
-            if (!File.Exists(probeConfiguration.GainCalibrationFileName))
-            {
-                throw new ArgumentException($"A gain calibration file must be specified for the probe with serial number " +
-                    $"{probeSerialNumber}");
-            }
-            
+            strictness = deviceContext.Context.Strictness;
+
+            NeuropixelsV1AdcCalibration? adcCalibration = null;
             if (!File.Exists(probeConfiguration.AdcCalibrationFileName))
             {
-                throw new ArgumentException($"An ADC calibration file must be specified for the probe with serial number " +
-                    $"{probeSerialNumber}");
+                ContextHelper.Validate(strictness, ValidationStrictness.Permissive, new ArgumentException(
+                    $"No ADC calibration file was specified for the probe with serial number {probeSerialNumber}."));
             }
-
-            var adcCalibration = NeuropixelsV1Helper.TryParseAdcCalibrationFile(probeConfiguration.AdcCalibrationFileName);
-
-            if (!adcCalibration.HasValue)
+            else
             {
-                throw new ArgumentException($"The calibration file \"{probeConfiguration.AdcCalibrationFileName}\" has an invalid format.");
+                adcCalibration = NeuropixelsV1Helper.TryParseAdcCalibrationFile(probeConfiguration.AdcCalibrationFileName);
+
+                if (!adcCalibration.HasValue)
+                {
+                    throw new ArgumentException(
+                        $"The calibration file \"{probeConfiguration.AdcCalibrationFileName}\" has an invalid format.");
+                }
+                else if (adcCalibration.Value.SerialNumber != probeSerialNumber)
+                {
+                    ContextHelper.Validate(strictness, ValidationStrictness.Permissive, new ArgumentException(
+                        $"The probe serial number ({probeSerialNumber}) does not " +
+                        $"match the ADC calibration file serial number ({adcCalibration.Value.SerialNumber})."));
+                    adcCalibration = null;
+                }
             }
 
-            if (adcCalibration.Value.SerialNumber != probeSerialNumber)
+            NeuropixelsV1eGainCorrection? gainCorrection = null;
+            if (!File.Exists(probeConfiguration.GainCalibrationFileName))
             {
-                throw new ArgumentException($"The probe serial number ({probeSerialNumber}) does not " +
-                    $"match the ADC calibration file serial number ({adcCalibration.Value.SerialNumber}).");
+                ContextHelper.Validate(strictness, ValidationStrictness.Permissive, new ArgumentException(
+                    $"No gain calibration file was specified for the probe with serial number {probeSerialNumber}."));
             }
-
-            var gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(probeConfiguration.GainCalibrationFileName, 
-                probeConfiguration.SpikeAmplifierGain, probeConfiguration.LfpAmplifierGain, NeuropixelsV1.ElectrodeCount);
-
-            if (!gainCorrection.HasValue)
+            else
             {
-                throw new ArgumentException($"The calibration file \"{probeConfiguration.GainCalibrationFileName}\" has an invalid format.");
+                gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(probeConfiguration.GainCalibrationFileName,
+                    probeConfiguration.SpikeAmplifierGain, probeConfiguration.LfpAmplifierGain, NeuropixelsV1.ElectrodeCount);
+
+                if (!gainCorrection.HasValue)
+                {
+                    throw new ArgumentException(
+                        $"The calibration file \"{probeConfiguration.GainCalibrationFileName}\" has an invalid format.");
+                }
+                else if (gainCorrection.Value.SerialNumber != probeSerialNumber)
+                {
+                    ContextHelper.Validate(strictness, ValidationStrictness.Permissive, new ArgumentException(
+                        $"The probe serial number ({probeSerialNumber}) does not " +
+                        $"match the gain calibration file serial number ({gainCorrection.Value.SerialNumber})."));
+                    gainCorrection = null;
+                }
             }
 
-            if (gainCorrection.Value.SerialNumber != probeSerialNumber)
-            {
-                throw new ArgumentException($"The probe serial number ({probeSerialNumber}) does not " +
-                    $"match the gain calibration file serial number ({gainCorrection.Value.SerialNumber}).");
-            }
+            ApGainCorrection = gainCorrection?.ApGainCorrectionFactor ?? 1.0;
+            LfpGainCorrection = gainCorrection?.LfpGainCorrectionFactor ?? 1.0;
 
-            ApGainCorrection = gainCorrection.Value.ApGainCorrectionFactor;
-            LfpGainCorrection = gainCorrection.Value.LfpGainCorrectionFactor;
-
-            Adcs = adcCalibration.Value.Adcs;
-            AdcThresholds = Adcs.ToList().Select(a => (ushort)a.Threshold).ToArray();
-            AdcOffsets = Adcs.ToList().Select(a => (ushort)a.Offset).ToArray();
+            Adcs = adcCalibration?.Adcs ?? Enumerable.Range(0, NeuropixelsV1.AdcCount).Select(_ => new NeuropixelsV1Adc()).ToArray();
+            AdcThresholds = Adcs.Select(a => (ushort)a.Threshold).ToArray();
+            AdcOffsets = Adcs.Select(a => (ushort)a.Offset).ToArray();
 
             // Create Configuration bit arrays
             ShankConfig = NeuropixelsV1.MakeShankBits(probeConfiguration, probeGroup);
@@ -130,7 +144,8 @@ namespace OpenEphys.Onix1
 
                 if (ReadByte(NeuropixelsV1.STATUS) != ShiftRegisterSuccess)
                 {
-                    throw new InvalidOperationException($"Shift register {srAddress} status check failed.");
+                     ContextHelper.Validate(strictness, ValidationStrictness.Permissive, new InvalidOperationException(
+                        $"Shift register 0x{srAddress:X2} status check failed."));
                 }
             }
         }

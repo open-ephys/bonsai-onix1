@@ -5,14 +5,18 @@ namespace OpenEphys.Onix1
 {
     class NeuropixelsV2eBetaRegisterContext : I2CRegisterContext
     {
-        public NeuropixelsV2eBetaRegisterContext(I2CRegisterContext other, uint i2cAddress)
+        readonly ValidationStrictness strictness;
+
+        public NeuropixelsV2eBetaRegisterContext(I2CRegisterContext other, uint i2cAddress, ValidationStrictness strictness)
             : base(other, i2cAddress)
         {
+            this.strictness = strictness;
         }
 
-        public NeuropixelsV2eBetaRegisterContext(DeviceContext deviceContext, uint i2cAddress)
+        public NeuropixelsV2eBetaRegisterContext(DeviceContext deviceContext, uint i2cAddress, ValidationStrictness strictness)
             : base(deviceContext, i2cAddress)
         {
+            this.strictness = strictness;
         }
 
         public void WriteConfiguration(NeuropixelsV2ProbeConfiguration probe, NeuropixelsV2eProbeGroup probeGroup)
@@ -51,8 +55,16 @@ namespace OpenEphys.Onix1
 
             if (ReadByte(NeuropixelsV2.STATUS) != (uint)NeuropixelsV2Status.SR_OK)
             {
-                Console.Error.WriteLine($"Warning: shift register 0x{srAddress:X2} status check failed. " +
-                    $"{ShankName(srAddress)} may be damaged.");
+                if (srAddress == NeuropixelsV2Beta.SR_CHAIN5 || srAddress == NeuropixelsV2Beta.SR_CHAIN6)
+                {
+                    ContextHelper.Validate(strictness, ValidationStrictness.Permissive, new InvalidOperationException(
+                        $"Shift register 0x{srAddress:X2} status check failed."));
+                }
+                else
+                {
+                    ContextHelper.Validate(strictness, ValidationStrictness.Normal, new InvalidOperationException(
+                        $"Shift register 0x{srAddress:X2} status check failed. {ShankName(srAddress)} may be damaged."));
+                }
             }
         }
 

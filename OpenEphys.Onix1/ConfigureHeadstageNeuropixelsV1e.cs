@@ -22,6 +22,12 @@ namespace OpenEphys.Onix1
     /// </description></item>
     /// <item><description>A BNO055 9-axis IMU for real-time, 3D orientation tracking.</description></item>
     /// </list>
+    /// <para>
+    /// Upon configuration, the headstage's EEPROM is read to confirm that it matches the expected headstage
+    /// type and meets a minimum hardware revision. If either check fails, an exception is thrown unless <see
+    /// cref="ContextTask.Strictness"/> is <see cref="ValidationStrictness.Permissive"/>, in which case a
+    /// warning is produced instead and configuration proceeds.
+    /// </para>
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV1eHeadstageEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a NeuropixelsV1e headstage.")]
@@ -229,7 +235,7 @@ namespace OpenEphys.Onix1
             DS90UB9x.Set933I2CRate(device, 400e3);
 
             // read and validate headstage EEPROM
-            ValidateHeadstage(new HeadstageEeprom(device));
+            ValidateHeadstage(device.Context.Strictness, new HeadstageEeprom(device));
 
             if (EnableLed)
             {
@@ -239,18 +245,18 @@ namespace OpenEphys.Onix1
             ResetProbe(serializer);
         }
 
-        void ValidateHeadstage(HeadstageEeprom metadata)
+        void ValidateHeadstage(ValidationStrictness strictness, HeadstageEeprom metadata)
         {
             if (metadata.Id != HeadstageId)
             {
-                throw new InvalidOperationException(
-                    $"Expected a Headstage-NeuropixelsV1.0e but found '{metadata.Name}' (ID: {metadata.Id}).");
+                ContextHelper.Validate(strictness, ValidationStrictness.Permissive, new InvalidOperationException(
+                    $"Expected a Headstage-NeuropixelsV1.0e but found '{metadata.Name}' (ID: {metadata.Id})."));
             }
 
             if (metadata.Revision < MinimumRevision)
             {
-                throw new InvalidOperationException(
-                    $"Headstage version {MinimumRevision} is required but version {metadata.Revision} was detected.");
+                ContextHelper.Validate(strictness, ValidationStrictness.Permissive, new InvalidOperationException(
+                    $"Headstage version {MinimumRevision} is required but version {metadata.Revision} was detected."));
             }
         }
         static void TurnOnLed(I2CRegisterContext serializer)

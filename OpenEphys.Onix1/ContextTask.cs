@@ -181,6 +181,16 @@ namespace OpenEphys.Onix1
         /// </remarks>
         public Dictionary<uint, oni.Device> DeviceTable { get; private set; }
 
+
+        /// <summary>
+        /// Gets the strictness with which hardware validation checks are enforced.
+        /// </summary>
+        /// <remarks>
+        /// This value is set using the <see cref="ConfigureValidationStrictness"/> operator. The value of this
+        /// property is <see cref="ValidationStrictness.Normal"/> by default.
+        /// </remarks>
+        public ValidationStrictness Strictness { get; internal set; } = ValidationStrictness.Normal;
+
         internal IObservable<IGroupedObservable<uint, oni.Frame>> GroupedFrames => groupedFrames;
 
         /// <summary>
@@ -397,7 +407,7 @@ namespace OpenEphys.Onix1
                             while (!collectFramesToken.IsCancellationRequested)
                             {
                                 // NB: This is a blocking call and there is no safe way to terminate it
-                                // other than ending the process. For this reason, it is the job of the 
+                                // other than ending the process. For this reason, it is the job of the
                                 // hardware to provide enough data (e.g. through a HeartbeatDevice") for
                                 // this call to return.
                                 oni.Frame frame;

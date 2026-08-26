@@ -12,6 +12,15 @@ namespace OpenEphys.Onix1
     /// <remarks>
     /// This is a low-level device that is only useful within the context of an appropriate <see
     /// cref="MultiDeviceFactory"/>, e.g. <see cref="ConfigureHeadstageNeuropixelsV2e"/>.
+    /// <para>
+    /// After each shift register write, the probe's status is checked to confirm the write succeeded. A
+    /// failure on one of the four shank registers indicates that the corresponding shank may be damaged, and
+    /// produces a warning unless <see cref="ContextTask.Strictness"/> is <see
+    /// cref="ValidationStrictness.Strict"/>, in which case an exception is thrown instead and configuration
+    /// is aborted. A failure on one of the two base registers indicates that the probe's base ASIC may be
+    /// damaged, and throws an exception unless <see cref="ContextTask.Strictness"/> is <see
+    /// cref="ValidationStrictness.Permissive"/>.
+    /// </para>
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a parallel serial bus decoder for a Neuropixels V2 probe.")]
@@ -83,7 +92,7 @@ namespace OpenEphys.Onix1
 
                 // configure probe streaming
                 NeuropixelsV2GainCorrection? gainCorrection = null;
-                var probeControl = new NeuropixelsV2RegisterContext(device, NeuropixelsV2.ProbeAddress);
+                var probeControl = new NeuropixelsV2RegisterContext(device, NeuropixelsV2.ProbeAddress, context.Strictness);
 
                 // check for probe being present
                 if (probeMetadata.ProbeSerialNumber != null)
@@ -97,21 +106,26 @@ namespace OpenEphys.Onix1
 
                         if (!File.Exists(probeConfiguration.GainCalibrationFileName))
                         {
-                            throw new ArgumentException($"A gain calibration file must be specified for the probe with serial number " +
-                                $"{probeMetadata.ProbeSerialNumber}");
+                            ContextHelper.Validate(context.Strictness, ValidationStrictness.Permissive, new ArgumentException(
+                                $"No gain calibration file was specified for the probe with serial number " +
+                                $"{probeMetadata.ProbeSerialNumber}."));
                         }
-
-                        gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(probeConfiguration.GainCalibrationFileName);
-
-                        if (!gainCorrection.HasValue)
+                        else
                         {
-                            throw new ArgumentException($"The calibration file \"{probeConfiguration.GainCalibrationFileName}\" has an invalid format.");
-                        }
+                            gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(probeConfiguration.GainCalibrationFileName);
 
-                        if (gainCorrection.Value.SerialNumber != probeMetadata.ProbeSerialNumber)
-                        {
-                            throw new ArgumentException($"The probe serial number ({probeMetadata.ProbeSerialNumber}) does not " +
-                                $"match the gain calibration file serial number: {gainCorrection.Value.SerialNumber}.");
+                            if (!gainCorrection.HasValue)
+                            {
+                                throw new ArgumentException(
+                                    $"The calibration file \"{probeConfiguration.GainCalibrationFileName}\" has an invalid format.");
+                            }
+                            else if (gainCorrection.Value.SerialNumber != probeMetadata.ProbeSerialNumber)
+                            {
+                                ContextHelper.Validate(context.Strictness, ValidationStrictness.Permissive, new ArgumentException(
+                                    $"The probe serial number ({probeMetadata.ProbeSerialNumber}) does not " +
+                                    $"match the gain calibration file serial number: {gainCorrection.Value.SerialNumber}."));
+                                gainCorrection = null;
+                            }
                         }
 
                         if (File.Exists(probeConfiguration.ProbeInterfaceFileName))
