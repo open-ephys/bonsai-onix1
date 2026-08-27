@@ -19,19 +19,16 @@ namespace OpenEphys.Onix1
         public const int ElectrodeCount = 960;
         public const int FrameWords = 40;
 
-        // Internal reference electrode: exists once per bank (contact index bank*ChannelCount +
-        // 191, i.e. 191/575/959) and is never a normal recordable site, regardless of bank.
-        // Confirmed against IMEC's own API source: probe_selectElectrode rejects channel 191
-        // unconditionally, with the error message "selection of reference electrode 191/575/959
-        // not allowed".
-        public const int InternalReferenceChannel = 191;
+        // NB: Internal reference electrode: exists once per bank (contact index bank*ChannelCount +
+        // 191, e.g. 191/575/959) and is never a normal recordable site.
+        public const int InternalReferenceContact = 191;
 
         /// <summary>
         /// Returns true if the given contact index is an internal reference electrode
         /// (191/575/959), which cannot be wired to a recording channel on any bank.
         /// </summary>
         public static bool IsInternalReferenceContact(int contactIndex) =>
-            contactIndex % ChannelCount == InternalReferenceChannel;
+            contactIndex % ChannelCount == InternalReferenceContact;
 
         // unmanaged registers
         public const uint OP_MODE = 0X00;
@@ -51,40 +48,39 @@ namespace OpenEphys.Onix1
         public const uint SR_LENGTH1 = 0X10;
         public const uint SOFT_RESET = 0X11;
 
+        /// <summary>
+        /// Computes the shank configuration shift-register bit layout for a probe with the given
+        /// electrode count.
+        /// </summary>
+        /// <remarks>
+        /// See <see cref="NeuropixelsV1ShankRegisterLayout"/> for the layout formula.
+        /// </remarks>
+        /// <param name="electrodeCount">The total number of electrodes on the probe.</param>
+        internal static NeuropixelsV1ShankRegisterLayout MakeShankRegisterLayout(int electrodeCount) =>
+            new(electrodeCount);
+
         internal static BitArray MakeShankBits(NeuropixelsV1ProbeConfiguration configuration, NeuropixelsV1ProbeGroup probeGroup)
         {
-            const int ShankConfigurationBitCount = 968;
-            const int ShankBitExt1 = 965;
-            const int ShankBitExt2 = 2;
-            const int ShankBitTip1 = 484;
-            const int ShankBitTip2 = 483;
+            var layout = MakeShankRegisterLayout(probeGroup.Variant.ShankRegisterElectrodeCount);
+            var shankBits = new BitArray(layout.RegisterBits);
 
-            var shankBits = new BitArray(ShankConfigurationBitCount);
+            probeGroup.SetShankConfigurationBits(layout, shankBits);
 
-            foreach (var kvp in probeGroup.ChannelMap)
-            {
-                int contactIdx = kvp.Value;
-                if (IsInternalReferenceContact(contactIdx)) continue;
-
-                int bitIndex = contactIdx % 2 == 0 ?
-                        485 + (contactIdx / 2) : // even electrode
-                        482 - (contactIdx / 2);  // odd electrode
-
-                shankBits[bitIndex] = true;
-            }
-
+            // Reference bits: not variant-specific, so they stay here rather
+            // than being duplicated into every SetShankConfigurationBits
+            // override.
             switch (configuration.Reference)
             {
                 case NeuropixelsV1ReferenceSource.External:
                     {
-                        shankBits[ShankBitExt1] = true;
-                        shankBits[ShankBitExt2] = true;
+                        shankBits[layout.Ext1] = true;
+                        shankBits[layout.Ext2] = true;
                         break;
                     }
                 case NeuropixelsV1ReferenceSource.Tip:
                     {
-                        shankBits[ShankBitTip1] = true;
-                        shankBits[ShankBitTip2] = true;
+                        shankBits[layout.Tip1] = true;
+                        shankBits[layout.Tip2] = true;
                         break;
                     }
             }
@@ -228,6 +224,47 @@ namespace OpenEphys.Onix1
             {
             }
         }
+    }
+
+    /// <summary>
+    /// Shank configuration shift-register bit layout for a given electrode count.
+    /// </summary>
+    /// <remarks>
+    /// A linear formula in terms of <c>H = electrodeCount / 2</c>: <c>RegisterBits =
+    /// electrodeCount + 8</c>, <c>Ext2 = 2</c>, <c>Tip2 = H + 3</c>, <c>Tip1 = H + 4</c>,
+    /// <c>Ext1 = electrodeCount + 5</c>. See <see cref="GetElectrodeBitIndex"/> for the
+    /// per-contact bit formula. Confirmed for electrode counts other than the standard
+    /// 960-electrode probe as well, including <c>Ext1</c>/<c>Ext2</c>/<c>Tip1</c>/<c>Tip2</c>.
+    /// </remarks>
+    readonly struct NeuropixelsV1ShankRegisterLayout
+    {
+        public int RegisterBits { get; }
+        public int Ext1 { get; }
+        public int Ext2 { get; }
+        public int Tip1 { get; }
+        public int Tip2 { get; }
+
+        readonly int halfElectrodeCount;
+
+        public NeuropixelsV1ShankRegisterLayout(int electrodeCount)
+        {
+            halfElectrodeCount = electrodeCount / 2;
+            RegisterBits = electrodeCount + 8;
+            Ext1 = electrodeCount + 5;
+            Ext2 = 2;
+            Tip1 = halfElectrodeCount + 4;
+            Tip2 = halfElectrodeCount + 3;
+        }
+
+        /// <summary>
+        /// Returns the shift-register bit index for the given contact index: <c>H + 5 +
+        /// contactIndex / 2</c> for an even contact, <c>H + 2 - contactIndex / 2</c> for an odd
+        /// one (<c>H = electrodeCount / 2</c>). See the type remarks for the formula's derivation.
+        /// </summary>
+        public int GetElectrodeBitIndex(int contactIndex) =>
+            contactIndex % 2 == 0
+                ? halfElectrodeCount + 5 + contactIndex / 2  // even electrode
+                : halfElectrodeCount + 2 - contactIndex / 2; // odd electrode
     }
 
     [Flags]

@@ -66,12 +66,13 @@ namespace OpenEphys.Onix1
             var probeConfiguration = new NeuropixelsV1ProbeConfiguration(ProbeConfiguration);
             return source.ConfigureAndLatchDevice(context =>
             {
-                NeuropixelsV1ProbeGroup probeGroup = new();
+                // default to contact-based muxing, but allow group-based as well.
+                NeuropixelsV1ProbeGroup probeGroup = new NeuropixelsV1ChannelToContactProbeGroup();
 
                 if (File.Exists(probeConfiguration.ProbeInterfaceFileName))
                 {
                     probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(
-                        probeConfiguration.ProbeInterfaceFileName, 
+                        probeConfiguration.ProbeInterfaceFileName,
                         typeof(NeuropixelsV1ProbeGroup)) as NeuropixelsV1ProbeGroup
                         ?? throw new InvalidDataException(
                             $"Probe interface file '{probeConfiguration.ProbeInterfaceFileName}' did not produce a valid {nameof(NeuropixelsV1ProbeGroup)}.");
@@ -90,6 +91,7 @@ namespace OpenEphys.Onix1
 
                 // read probe metadata
                 var probeMetadata = new NeuropixelsV1eMetadata(device);
+                NeuropixelsV1Helper.ValidateProbePartNumber(probeMetadata.ProbePartNumber, probeGroup);
 
                 // program shift registers
                 var probeControl = new NeuropixelsV1RegisterContext(device, NeuropixelsV1.ProbeI2CAddress,

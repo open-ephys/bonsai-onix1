@@ -38,8 +38,8 @@ namespace OpenEphys.Onix1.Design
         readonly Dictionary<SurveyActivityMetric, (float min, float max)> actRanges = new();
         bool showActivityColors = false;
         bool bankSelectMode = false;
-        readonly HashSet<(int shank, NeuropixelsV2Bank bank)> surveyBanks  = new();
-        readonly HashSet<(int shank, NeuropixelsV2Bank bank)> pendingBanks = new();
+        readonly HashSet<(int shank, int bank)> surveyBanks  = new();
+        readonly HashSet<(int shank, int bank)> pendingBanks = new();
 
         // Combo / preset state
         int presetIdx, refIdx;
@@ -69,7 +69,7 @@ namespace OpenEphys.Onix1.Design
         /// Which (shank, bank) pairs this probe's survey should sweep, as selected via the probe-view
         /// drag-select mechanism. Read by the headstage-level survey runner.
         /// </summary>
-        internal HashSet<(int shank, NeuropixelsV2Bank bank)> SurveyBanks => surveyBanks;
+        internal HashSet<(int shank, int bank)> SurveyBanks => surveyBanks;
 
         #region Base class seams
 
@@ -148,14 +148,7 @@ namespace OpenEphys.Onix1.Design
 
         #region Selector callback wiring
 
-        static uint BankColor(NeuropixelsV2Bank bank) => bank switch
-        {
-            NeuropixelsV2Bank.A => ImGuiPalette.AzureBlue,
-            NeuropixelsV2Bank.B => ImGuiPalette.CobaltBlue,
-            NeuropixelsV2Bank.C => ImGuiPalette.AzureBlue,
-            NeuropixelsV2Bank.D => ImGuiPalette.CobaltBlue,
-            _ => throw new ArgumentOutOfRangeException(nameof(bank), $"Invalid neuropixelsV2 bank: {bank}"),
-        };
+        static uint BankColor(int bankIndex) => bankIndex % 2 == 0 ? ImGuiPalette.AzureBlue : ImGuiPalette.CobaltBlue;
 
         void SetupSelectorCallbacks()
         {
@@ -178,7 +171,7 @@ namespace OpenEphys.Onix1.Design
             selector.SelectionChanged += (_, _) =>
             {
                 if (!bankSelectMode) return;
-                var pending = new HashSet<(int, NeuropixelsV2Bank)>();
+                var pending = new HashSet<(int, int)>();
                 for (int i = 0; i < selector.DragBoxContacts.Length && i < allContacts.Count; i++)
                     if (selector.DragBoxContacts[i])
                         pending.Add((probeGroup.GetShank(i), probeGroup.GetBank(i)));

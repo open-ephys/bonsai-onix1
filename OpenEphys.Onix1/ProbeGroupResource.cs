@@ -30,5 +30,26 @@ namespace OpenEphys.Onix1
             using var reader = new StreamReader(stream);
             return reader.ReadToEnd();
         }
+
+        /// <summary>
+        /// Reads an embedded resource as a flat array of little-endian <see cref="ushort"/> values.
+        /// </summary>
+        internal static ushort[] LoadUInt16Array(string resourceFileName)
+        {
+            var name = $"OpenEphys.Onix1.Resources.{resourceFileName}";
+            using var stream = Assembly.GetManifestResourceStream(name)
+                ?? throw new InvalidOperationException($"Missing embedded resource: {name}");
+            using var reader = new BinaryReader(stream);
+
+            var bytes = reader.ReadBytes((int)stream.Length);
+            if (bytes.Length % 2 != 0)
+                throw new InvalidOperationException($"Embedded resource '{name}' has an odd byte length; expected 16-bit values.");
+
+            var values = new ushort[bytes.Length / 2];
+            for (int i = 0; i < values.Length; i++)
+                values[i] = BitConverter.ToUInt16(bytes, i * 2);
+
+            return values;
+        }
     }
 }
