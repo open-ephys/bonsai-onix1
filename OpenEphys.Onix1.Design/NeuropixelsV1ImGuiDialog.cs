@@ -28,17 +28,25 @@ namespace OpenEphys.Onix1.Design
         readonly Dictionary<SurveyActivityMetric, (float min, float max)> actRanges = new();
         bool showActivityColors = false;
         bool bankSelectMode = false;
-        readonly HashSet<NeuropixelsV1Bank> surveyBanks = new();
-        readonly HashSet<NeuropixelsV1Bank> pendingBanks = new();
+        readonly HashSet<int> surveyBanks = new();
+        readonly HashSet<int> pendingBanks = new();
 
-        int spikeGainIdx, lfpGainIdx, refIdx, presetIdx;
+        int spikeGainIdx, lfpGainIdx, refIdx, presetIdx, columnPatternIdx;
+        NeuropixelsV1ChannelPreset[] presets = Array.Empty<NeuropixelsV1ChannelPreset>();
 
         static readonly string[] GainNames = Enum.GetNames(typeof(NeuropixelsV1Gain));
         static readonly NeuropixelsV1Gain[] GainValues = (NeuropixelsV1Gain[])Enum.GetValues(typeof(NeuropixelsV1Gain));
         static readonly string[] ReferenceNames = Enum.GetNames(typeof(NeuropixelsV1ReferenceSource));
         static readonly NeuropixelsV1ReferenceSource[] ReferenceValues = (NeuropixelsV1ReferenceSource[])Enum.GetValues(typeof(NeuropixelsV1ReferenceSource));
-        static readonly string[] PresetNames = Enum.GetNames(typeof(NeuropixelsV1ChannelPreset));
-        static readonly NeuropixelsV1ChannelPreset[] PresetValues = (NeuropixelsV1ChannelPreset[])Enum.GetValues(typeof(NeuropixelsV1ChannelPreset));
+        static readonly NeuropixelsV1ColumnPattern[] ColumnPatternValues = (NeuropixelsV1ColumnPattern[])Enum.GetValues(typeof(NeuropixelsV1ColumnPattern));
+        static readonly string[] ColumnPatternNames = ColumnPatternValues.Select(ColumnPatternDisplayName).ToArray();
+
+        // "All", or "Inner (1, 3, 4, 6)"/"Outer (0, 2, 5, 7)". Reads the same active-column sets
+        // NeuropixelsV1ProbeGroup.IsColumnEnabled uses, so the label can't drift from the actual behavior.
+        static string ColumnPatternDisplayName(NeuropixelsV1ColumnPattern pattern) =>
+            NeuropixelsV1VariantRegistry.Np1110ActiveColumnsByPattern.TryGetValue(pattern, out var columns)
+                ? $"{pattern} ({string.Join(", ", columns)})"
+                : pattern.ToString(); // All
 
         readonly byte[] gainCalBuf = new byte[512];
         readonly byte[] adcCalBuf = new byte[512];
@@ -58,7 +66,7 @@ namespace OpenEphys.Onix1.Design
         /// Which banks this probe's survey should sweep, as selected via the probe-view drag-select
         /// mechanism. Read by the headstage-level survey runner.
         /// </summary>
-        internal HashSet<NeuropixelsV1Bank> SurveyBanks => surveyBanks;
+        internal HashSet<int> SurveyBanks => surveyBanks;
 
         #region Base class seams
 
@@ -74,16 +82,87 @@ namespace OpenEphys.Onix1.Design
             set => configureNode.ProbeConfiguration.InvertPolarity = value;
         }
 
-        protected override void EnableElectrodes(IEnumerable<int> contactIndices) => probeGroup.EnableElectrodes(contactIndices);
+        // Enabling a contact enables the whole channel group it belongs to: every distinct (channel
+        // group, bank) pair implied by the given contacts is selected via SelectElectrodeGroup, which
+        // replaces that group's prior bank selection with just the bank(s) touched by this call. 
+        // A single contact selects one bank, a selection spanning two complementary (normal + row-
+        // crossed) contacts of the same group selects both banks (zig-zag) in one action.
+        protected override void EnableElectrodes(IEnumerable<int> contactIndices)
+        {
+            if (probeGroup is NeuropixelsV1ChannelToContactProbeGroup contactProbe)
+            {
+                contactProbe.EnableElectrodes(contactIndices);
+                return;
+            }
+
+            var channelGroupProbe = (NeuropixelsV1ChannelToGroupProbeGroup)probeGroup;
+
+            var banksByGroup = new Dictionary<int, HashSet<int>>();
+            foreach (var contactIdx in contactIndices)
+            {
+                int group = channelGroupProbe.GetChannelGroup(contactIdx);
+                int bank = NeuropixelsV1ProbeGroup.GetBank(contactIdx);
+                if (!banksByGroup.TryGetValue(group, out var banks))
+                    banksByGroup[group] = banks = new HashSet<int>();
+                banks.Add(bank);
+            }
+
+            foreach (var entry in banksByGroup)
+            {
+                int group = entry.Key;
+                var banks = entry.Value;
+
+                // A pinned bank is immutable: it's never silently dropped by a new enable action, only by
+                // explicitly unpinning it first. Any *unpinned* existing bank for this group remains fair
+                // game to be replaced by whatever this gesture selects (confirmed "replace with this gesture"
+                // semantics). Without this, selecting the complementary row-crossed bank for a zig-zag pair
+                // would evict the already-pinned bank instead of joining it.
+                foreach (var existingBank in channelGroupProbe.GetSelectedBanks(group))
+                {
+                    if (channelGroupProbe.GetSurvivingChannels(group, existingBank).Any(ch => channelState.PinnedChannels.Contains(ch)))
+                        banks.Add(existingBank);
+                }
+
+                try
+                {
+                    channelGroupProbe.SelectElectrodeGroup(group, banks.ToArray());
+                }
+                catch (ArgumentException ex)
+                {
+                    Log($"Could not enable channel group {group}: {ex.Message}", true);
+                }
+            }
+        }
+
+        // A pinned contact protects whatever its own bank currently produces for its channel group, not the
+        // group's full 16-channel set. Under Inner/Outer, a single bank only surviving-drives 8 of a group's
+        // 16 channels; the other 8 are exactly what the complementary row-crossed bank supplies for a second
+        // bank selection (zig-zag). Pinning all 16 would make that second bank's candidate contacts look like
+        // they collide with a pin nothing is actively producing, blocking the very thing Inner/Outer 2-bank
+        // selection exists for. 
+        protected override IEnumerable<int> GetChannelsToPin(int contactIndex, int channel) =>
+            probeGroup is NeuropixelsV1ChannelToGroupProbeGroup channelGroupProbe
+                ? channelGroupProbe.GetSurvivingChannels(channelGroupProbe.GetChannelGroup(contactIndex), NeuropixelsV1ProbeGroup.GetBank(contactIndex))
+                : base.GetChannelsToPin(contactIndex, channel);
 
         protected override void ReplaceProbeGroupFromFile(string path) =>
-            probeGroup = JsonConvert.DeserializeObject<NeuropixelsV1ProbeGroup>(File.ReadAllText(path)) ?? new NeuropixelsV1ProbeGroup();
+            probeGroup = JsonConvert.DeserializeObject<NeuropixelsV1ProbeGroup>(File.ReadAllText(path), new NeuropixelsV1ProbeGroupConverter()) ?? new NeuropixelsV1ChannelToContactProbeGroup();
 
         protected override void OnProbeGroupRefreshed()
         {
+            // TODO: GetChannelPresets/SelectPreset only exist on NeuropixelsV1ChannelToContactProbeGroup. We need to generalize.
+            presets = probeGroup is NeuropixelsV1ChannelToContactProbeGroup contactProbe
+                ? contactProbe.GetChannelPresets().ToArray()
+                : Array.Empty<NeuropixelsV1ChannelPreset>();
+            presetIdx = Array.FindIndex(presets, p => p == NeuropixelsV1ChannelPreset.None);
+
+            columnPatternIdx = probeGroup is NeuropixelsV1ChannelToGroupProbeGroup channelGroupProbe
+                ? Array.IndexOf(ColumnPatternValues, channelGroupProbe.ColumnPattern)
+                : 0;
+
             spikeGainIdx = Array.IndexOf(GainValues, configureNode.ProbeConfiguration.SpikeAmplifierGain);
-            lfpGainIdx   = Array.IndexOf(GainValues, configureNode.ProbeConfiguration.LfpAmplifierGain);
-            refIdx       = Array.IndexOf(ReferenceValues, configureNode.ProbeConfiguration.Reference);
+            lfpGainIdx  = Array.IndexOf(GainValues, configureNode.ProbeConfiguration.LfpAmplifierGain);
+            refIdx = Array.IndexOf(ReferenceValues, configureNode.ProbeConfiguration.Reference);
 
             ImGuiControls.WriteString(gainCalBuf, configureNode.ProbeConfiguration.GainCalibrationFileName ?? "");
             ImGuiControls.WriteString(adcCalBuf, configureNode.ProbeConfiguration.AdcCalibrationFileName ?? "");
@@ -91,6 +170,11 @@ namespace OpenEphys.Onix1.Design
 
             RestoreActivityData();
             InitSurveyBanks();
+        }
+
+        protected override void OnContactsEnabled()
+        {
+            presetIdx = Array.FindIndex(presets, p => p == NeuropixelsV1ChannelPreset.None);
         }
 
         protected override void HandleProbeSpecificShortcuts(bool shift)
@@ -123,13 +207,7 @@ namespace OpenEphys.Onix1.Design
             RefreshProbeState();
         }
 
-        static uint BankColor(NeuropixelsV1Bank bank) => bank switch
-        {
-            NeuropixelsV1Bank.A => ImGuiPalette.AzureBlue,
-            NeuropixelsV1Bank.B => ImGuiPalette.CobaltBlue,
-            NeuropixelsV1Bank.C => ImGuiPalette.AzureBlue,
-            _ => throw new ArgumentOutOfRangeException(nameof(bank), $"Invalid NeuropixelsV1 bank: {bank}"),
-        };
+        static uint BankColor(int bankIndex) => bankIndex % 2 == 0 ? ImGuiPalette.AzureBlue : ImGuiPalette.CobaltBlue;
 
         void SetupSelectorCallbacks()
         {
@@ -147,11 +225,16 @@ namespace OpenEphys.Onix1.Design
                 if (showActivityColors && data != null && idx < data.Length) return ActivityColor(data[idx]);
                 return DefaultContactFillColor(idx);
             };
-            selector.IsBlocked = DefaultIsBlocked;
+
+            // On variants with per-channel-group bank selection, a contact on a column disabled by the
+            // current ColumnPattern is blocked too. It can't be enabled or pinned, in addition to the
+            // ordinary pin-collision blocking every variant already gets from DefaultIsBlocked.
+            selector.IsBlocked = idx => DefaultIsBlocked(idx) ||
+                (probeGroup is NeuropixelsV1ChannelToGroupProbeGroup channelGroupProbe && !channelGroupProbe.IsColumnEnabled(idx));
             selector.SelectionChanged += (_, _) =>
             {
                 if (!bankSelectMode) return;
-                var pending = new HashSet<NeuropixelsV1Bank>();
+                var pending = new HashSet<int>();
                 for (int i = 0; i < selector.DragBoxContacts.Length && i < allContacts.Count; i++)
                     if (selector.DragBoxContacts[i])
                         pending.Add(NeuropixelsV1ProbeGroup.GetBank(i));
@@ -230,8 +313,8 @@ namespace OpenEphys.Onix1.Design
             {
                 try
                 {
-                    probeGroup = JsonConvert.DeserializeObject<NeuropixelsV1ProbeGroup>(File.ReadAllText(pc.ProbeInterfaceFileName))
-                                 ?? new NeuropixelsV1ProbeGroup();
+                    probeGroup = JsonConvert.DeserializeObject<NeuropixelsV1ProbeGroup>(File.ReadAllText(pc.ProbeInterfaceFileName), new NeuropixelsV1ProbeGroupConverter())
+                                 ?? new NeuropixelsV1ChannelToContactProbeGroup();
                     Log($"Loaded probeinterface file {pc.ProbeInterfaceFileName}");
                     return;
                 }
@@ -240,7 +323,7 @@ namespace OpenEphys.Onix1.Design
                     Log($"Error loading probeinterface file {pc.ProbeInterfaceFileName}: {ex.Message}", true);
                 }
             }
-            probeGroup = new NeuropixelsV1ProbeGroup();
+            probeGroup = new NeuropixelsV1ChannelToContactProbeGroup();
         }
 
         void InitSurveyBanks()
@@ -330,18 +413,52 @@ namespace OpenEphys.Onix1.Design
                 configureNode.ProbeConfiguration.SpikeFilter = spikeFilter;
             ImGuiControls.Tooltip("Activate a 300 Hz high-pass filter on the spike-band data stream.");
 
-            ImGui.SetNextItemWidth(ComboboxStartWidthPx);
-            if (ImGui.Combo("Preset##preset", ref presetIdx, PresetNames, PresetNames.Length))
-                ApplyPreset(PresetValues[presetIdx]);
-            ImGuiControls.Tooltip("Apply a ready-made channel selection in a single step. Overrides current enabled/pinned contacts.");
+            if (probeGroup is NeuropixelsV1ChannelToContactProbeGroup)
+            {
+                var presetNames = presets.Select(p => p.ToString()).ToArray();
+                ImGui.SetNextItemWidth(ComboboxStartWidthPx);
+                if (ImGui.Combo("Preset##preset", ref presetIdx, presetNames, presetNames.Length))
+                    ApplyPreset(presets[presetIdx]);
+                ImGuiControls.Tooltip("Apply a ready-made channel selection in a single step. Overrides current enabled/pinned contacts.");
+            }
+            else
+            {
+                ImGui.SetNextItemWidth(ComboboxStartWidthPx);
+                if (ImGui.Combo("Column Mode##columnmode", ref columnPatternIdx, ColumnPatternNames, ColumnPatternNames.Length))
+                    ApplyColumnPattern(ColumnPatternValues[columnPatternIdx]);
+                ImGuiControls.Tooltip("Which physical columns are enabled. Contacts on disabled columns are blocked: they cannot be enabled or pinned.");
+            }
         }
 
         void ApplyPreset(NeuropixelsV1ChannelPreset preset)
         {
-            probeGroup.SelectPreset(preset);
+            if (preset == NeuropixelsV1ChannelPreset.None) return;
+            ((NeuropixelsV1ChannelToContactProbeGroup)probeGroup).SelectPreset(preset);
             RebuildMaps();
             ClearPins();
             selector.ClearSelection();
+            HasChanges = true;
+        }
+
+        void ApplyColumnPattern(NeuropixelsV1ColumnPattern pattern)
+        {
+            var channelGroupProbe = (NeuropixelsV1ChannelToGroupProbeGroup)probeGroup;
+            var previous = channelGroupProbe.ColumnPattern;
+            if (pattern == previous) return;
+
+            try
+            {
+                channelGroupProbe.ColumnPattern = pattern;
+            }
+            catch (InvalidOperationException ex)
+            {
+                Log($"Could not switch column mode to {pattern}: {ex.Message}", true);
+                columnPatternIdx = Array.IndexOf(ColumnPatternValues, previous);
+                return;
+            }
+
+            RebuildMaps();
+            RecomputeBlockedIndices();
             HasChanges = true;
         }
 
@@ -349,8 +466,14 @@ namespace OpenEphys.Onix1.Design
 
         protected override void DrawProbeSpecificContactInfo(IReadOnlyList<int> sel)
         {
-            var banks = sel.Select(NeuropixelsV1ProbeGroup.GetBank).Distinct();
+            var banks = sel.Select(NeuropixelsV1ProbeGroup.GetBank).Distinct().Select(Neuropixels.BankDisplayName);
             ImGuiControls.InfoRow("Bank(s)", banks.Any() ? string.Join(",", banks) : "-");
+
+            if (probeGroup is NeuropixelsV1ChannelToGroupProbeGroup channelGroupProbe)
+            {
+                var groups = sel.Select(channelGroupProbe.GetChannelGroup).Distinct().OrderBy(g => g);
+                ImGuiControls.InfoRow("Channel Group(s)", groups.Any() ? string.Join(",", groups) : "-");
+            }
         }
     }
 }

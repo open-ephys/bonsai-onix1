@@ -4,32 +4,6 @@ using Bonsai;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Specifies the bank of electrodes within each shank.
-    /// </summary>
-    public enum NeuropixelsV1Bank
-    {
-        /// <summary>
-        /// Specifies that Bank A is the current bank.
-        /// </summary>
-        /// <remarks>Bank A is defined as shank index 0 to 383 along each shank.</remarks>
-        A = 0,
-        /// <summary>
-        /// Specifies that Bank B is the current bank.
-        /// </summary>
-        /// <remarks>Bank B is defined as shank index 384 to 767 along each shank.</remarks>
-        B,
-        /// <summary>
-        /// Specifies that Bank C is the current bank.
-        /// </summary>
-        /// <remarks>
-        /// Bank C is defined as shank index 768 to 960 along each shank. Note that Bank C is not a full contingent
-        /// of 384 channels; to compensate for this, electrodes from Bank B (starting at shank index 576) are used to
-        /// generate a full 384 channel map.
-        /// </remarks>
-        C
-    }
-
-    /// <summary>
     /// Defines a configuration for NeuropixelsV1.
     /// </summary>
     public class NeuropixelsV1ProbeConfiguration : IProbeInterfaceConfiguration

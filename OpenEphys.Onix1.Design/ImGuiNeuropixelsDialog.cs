@@ -65,6 +65,17 @@ namespace OpenEphys.Onix1.Design
         protected abstract void EnableElectrodes(IEnumerable<int> contactIndices);
 
         /// <summary>
+        /// Returns every channel that pinning <paramref name="contactIndex"/> (currently wired to
+        /// <paramref name="channel"/>) should pin. Defaults to just <paramref name="channel"/> itself.
+        /// </summary>
+        /// <remarks>
+        /// Overridden where pinning operates at a coarser granularity than a single contact -- e.g. NP1110's
+        /// channel groups, where a pinned contact's whole group (all 16 channels) should be protected, not
+        /// just the one channel that contact happens to occupy.
+        /// </remarks>
+        protected virtual IEnumerable<int> GetChannelsToPin(int contactIndex, int channel) => new[] { channel };
+
+        /// <summary>
         /// Replaces the current probe group by deserializing a probe-interface file at <paramref name="path"/>.
         /// </summary>
         protected abstract void ReplaceProbeGroupFromFile(string path);
@@ -249,7 +260,8 @@ namespace OpenEphys.Onix1.Design
 
             foreach (int idx in candidateIndices)
                 if (channelState.ElectrodeToChannel.TryGetValue(idx, out int ch))
-                    channelState.PinnedChannels.Add(ch);
+                    foreach (var pinChannel in GetChannelsToPin(idx, ch))
+                        channelState.PinnedChannels.Add(pinChannel);
 
             RecomputeBlockedIndices();
             OnContactsEnabled();
@@ -262,8 +274,10 @@ namespace OpenEphys.Onix1.Design
             for (int i = 0; i < selector.SelectedContacts.Length && i < allContacts.Count; i++)
             {
                 if (!selector.SelectedContacts[i]) continue;
-                if (channelState.ElectrodeToChannel.TryGetValue(i, out int ch) && channelState.PinnedChannels.Remove(ch))
-                    any = true;
+                if (!channelState.ElectrodeToChannel.TryGetValue(i, out int ch)) continue;
+                foreach (var pinChannel in GetChannelsToPin(i, ch))
+                    if (channelState.PinnedChannels.Remove(pinChannel))
+                        any = true;
             }
             if (any) RecomputeBlockedIndices();
         }

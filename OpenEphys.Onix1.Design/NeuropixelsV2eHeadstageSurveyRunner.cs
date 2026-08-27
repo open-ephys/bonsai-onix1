@@ -84,7 +84,7 @@ namespace OpenEphys.Onix1.Design
         sealed class TargetRunState
         {
             internal NeuropixeslV2eSurveyTarget Target;
-            internal List<(int shank, NeuropixelsV2Bank bank)> OrderedBanks;
+            internal List<(int shank, int bank)> OrderedBanks;
             internal int NextIndex;
             internal float?[] AllAmplitude;
             internal float?[] AllFireRate;
@@ -139,10 +139,9 @@ namespace OpenEphys.Onix1.Design
                     .Distinct()
                     .OrderBy(s => s)
                     .ToList();
-                var bankValues = Enum.GetValues(typeof(NeuropixelsV2Bank)).Cast<NeuropixelsV2Bank>().ToArray();
-                var orderedBanks = new List<(int shank, NeuropixelsV2Bank bank)>();
+                var orderedBanks = new List<(int shank, int bank)>();
                 foreach (var shank in shanks)
-                    foreach (var bank in bankValues)
+                    for (int bank = 0; bank < probeGroup.BankCount; bank++)
                         if (target.Dialog.SurveyBanks.Contains((shank, bank)))
                             orderedBanks.Add((shank, bank));
 
@@ -215,7 +214,7 @@ namespace OpenEphys.Onix1.Design
                         string recordingFilePath = null;
                         if (state.RecordingFolder != null)
                         {
-                            var fileBase = $"{DateTime.Now:yyyyMMdd-HHmmss}_{state.Target.Label}_s{shank}_b{bank}";
+                            var fileBase = $"{DateTime.Now:yyyyMMdd-HHmmss}_{state.Target.Label}_s{shank}_b{Neuropixels.BankDisplayName(bank)}";
                             recordingFilePath = Path.Combine(state.RecordingFolder, $"{fileBase}.arrow");
                             var piFile = Path.Combine(state.RecordingFolder, $"{fileBase}.json");
                             ProbeInterfaceHelper.SaveExternalProbeInterfaceFile(bankGroup, piFile);
@@ -268,7 +267,7 @@ namespace OpenEphys.Onix1.Design
                         }
 
                         var (shank, bank) = state.OrderedBanks[state.NextIndex];
-                        log($"{target.Label}: shank {shank}, bank {bank} complete", false);
+                        log($"{target.Label}: shank {shank}, bank {Neuropixels.BankDisplayName(bank)} complete", false);
 
                         state.NextIndex++;
                         ReportProgress(state);

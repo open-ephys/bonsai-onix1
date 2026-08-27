@@ -7,7 +7,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Static helper class for NeuropixelsV2 methods.
     /// </summary>
-    internal class NeuropixelsV2Helper
+    static class NeuropixelsV2Helper
     {
         /// <summary>
         /// Tries to parse the gain calibration file.

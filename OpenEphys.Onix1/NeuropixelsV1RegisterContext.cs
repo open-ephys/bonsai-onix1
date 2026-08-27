@@ -100,7 +100,7 @@ namespace OpenEphys.Onix1
         public void WriteConfiguration()
         {
             // shank configuration
-            // NB: no read check because of ASIC bug that is documented in IMEC-API comments
+            // NB: no read check, because of an ASIC bug affecting this register
             var shankBytes = BitHelper.ToBitReversedBytes(ShankConfig);
 
             WriteByte(NeuropixelsV1.SR_LENGTH1, (uint)shankBytes.Length % 0x100);

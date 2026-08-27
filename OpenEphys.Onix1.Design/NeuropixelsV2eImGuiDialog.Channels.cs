@@ -48,7 +48,7 @@ namespace OpenEphys.Onix1.Design
             var shanks = sel.Select(i => probeGroup.GetShank(i)).Distinct();
             ImGuiControls.InfoRow("Shank(s)", shanks.Count() == 0 ? "-" : string.Join(",", shanks));
 
-            var banks = sel.Select(i => probeGroup.GetBank(i)).Distinct();
+            var banks = sel.Select(i => probeGroup.GetBank(i)).Distinct().Select(Neuropixels.BankDisplayName);
             ImGuiControls.InfoRow("Banks(s)", shanks.Count() == 0 ? "-" : string.Join(",", banks));
         }
 

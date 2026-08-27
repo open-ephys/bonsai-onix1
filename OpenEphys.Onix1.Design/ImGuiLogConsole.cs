@@ -59,13 +59,6 @@ namespace OpenEphys.Onix1.Design
 
                 int start = Math.Max(0, log.Count - 200);
 
-                // Hover should look like the same muted fill used for a selected line (not the
-                // theme's default bright-blue hover); a white outline distinguishes "hovering"
-                // from "selected" instead.
-                var mutedSelectColor = ImGui.GetStyle().Colors[(int)ImGuiCol.Header];
-                ImGui.PushStyleColor(ImGuiCol.HeaderHovered, mutedSelectColor);
-                ImGui.PushStyleColor(ImGuiCol.HeaderActive, mutedSelectColor);
-
                 for (int i = start; i < log.Count; i++)
                 {
                     var entry = log[i];
@@ -135,8 +128,6 @@ namespace OpenEphys.Onix1.Design
                     }
                     else ImGui.TextUnformatted(entry.Msg);
                 }
-
-                ImGui.PopStyleColor(2);
 
                 if (wasAtBottom)
                     ImGui.SetScrollHereY(1.0f);

@@ -72,7 +72,7 @@ namespace OpenEphys.Onix1.Design
         sealed class TargetRunState
         {
             internal NeuropixelsV1SurveyTarget Target;
-            internal List<NeuropixelsV1Bank> OrderedBanks;
+            internal List<int> OrderedBanks;
             internal int NextIndex;
             internal float?[] AllAmplitude;
             internal float?[] AllFireRate;
@@ -122,8 +122,8 @@ namespace OpenEphys.Onix1.Design
 
                 var probeGroup = target.Dialog.ProbeGroup;
                 int totalContacts = probeGroup.NumberOfContacts;
-                var bankValues = Enum.GetValues(typeof(NeuropixelsV1Bank)).Cast<NeuropixelsV1Bank>().ToArray();
-                var orderedBanks = bankValues.Where(bank => target.Dialog.SurveyBanks.Contains(bank)).ToList();
+                var orderedBanks = Enumerable.Range(0, probeGroup.BankCount)
+                    .Where(bank => target.Dialog.SurveyBanks.Contains(bank)).ToList();
 
                 string recordingFolder = null;
                 if (recordSurveyData)
@@ -178,8 +178,11 @@ namespace OpenEphys.Onix1.Design
                     foreach (var state in roundTargets)
                     {
                         var bank = state.OrderedBanks[state.NextIndex];
-                        var bankGroup = new NeuropixelsV1ProbeGroup(state.Target.Dialog.ProbeGroup);
-                        SelectBankForSurvey(bankGroup, bank);
+                        // TODO: Surveying is only implemented for per-contact variants (channel-group
+                        // variants like NP1110 aren't wired into survey targeting yet); the cast is the
+                        // same boundary the old NotSupportedException from SelectBank used to enforce.
+                        var bankGroup = (NeuropixelsV1ChannelToContactProbeGroup)state.Target.Dialog.ProbeGroup.Clone();
+                        bankGroup.SelectBank(bank);
 
                         if (bankGroup.ChannelMap.Count == 0)
                         {
@@ -197,7 +200,7 @@ namespace OpenEphys.Onix1.Design
                         string recordingFilePath = null;
                         if (state.RecordingFolder != null)
                         {
-                            var fileBase = $"{DateTime.Now:yyyyMMdd-HHmmss}_{state.Target.Label}_b{bank}";
+                            var fileBase = $"{DateTime.Now:yyyyMMdd-HHmmss}_{state.Target.Label}_b{Neuropixels.BankDisplayName(bank)}";
                             recordingFilePath = Path.Combine(state.RecordingFolder, $"{fileBase}.arrow");
                             var piFile = Path.Combine(state.RecordingFolder, $"{fileBase}.json");
                             ProbeInterfaceHelper.SaveExternalProbeInterfaceFile(bankGroup, piFile);
@@ -250,7 +253,7 @@ namespace OpenEphys.Onix1.Design
                         }
 
                         var bank = state.OrderedBanks[state.NextIndex];
-                        log($"{target.Label}: bank {bank} complete", false);
+                        log($"{target.Label}: bank {Neuropixels.BankDisplayName(bank)} complete", false);
 
                         state.NextIndex++;
                         ReportProgress(state);
@@ -427,8 +430,5 @@ namespace OpenEphys.Onix1.Design
                 });
         }
 
-        static void SelectBankForSurvey(NeuropixelsV1ProbeGroup group, NeuropixelsV1Bank bank) =>
-            group.EnableElectrodes(Enumerable.Range(0, NeuropixelsV1.ElectrodeCount)
-                .Where(i => NeuropixelsV1ProbeGroup.GetBank(i) == bank));
     }
 }
