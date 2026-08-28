@@ -40,10 +40,5 @@ namespace OpenEphys.Onix1
         {
             _context.Write(_device.Address, data);
         }
-
-        public void Write(IntPtr data, int dataSize)
-        {
-            _context.Write(_device.Address, data, dataSize);
-        }
     }
 }
