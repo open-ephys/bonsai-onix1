@@ -7,6 +7,12 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Configures a Nric1384 bioacquisition chip.
     /// </summary>
+    /// <remarks>
+    /// After each base shift register write, the chip's status is checked to confirm the write succeeded,
+    /// which otherwise indicates that the chip's base ASIC may be damaged. A failed check throws an
+    /// exception unless <see cref="ContextTask.ValidationLevel"/> is <see cref="ValidationLevel.Permissive"/>,
+    /// in which case a warning is produced instead and configuration proceeds.
+    /// </remarks>
     public class ConfigureNric1384 : SingleDeviceFactory
     {
         /// <summary>
@@ -70,9 +76,16 @@ namespace OpenEphys.Onix1
         /// across chips. Therefore, using the correct gain calibration file is mandatory to create standardized recordings.
         /// </para>
         /// <para>
-        /// Calibration files are chip-specific and not interchangeable across chips. Calibration files must contain the 
-        /// serial number of the corresponding chip on their first line of text. If you have lost track of a calibration 
+        /// Calibration files are chip-specific and not interchangeable across chips. Calibration files must contain the
+        /// serial number of the corresponding chip on their first line of text. If you have lost track of a calibration
         /// file for your chip, email IMEC at neuropixels.info@imec.be with the chip serial number to retrieve a new copy.
+        /// </para>
+        /// <para>
+        /// If this file is missing, or its serial number does not match <see cref="AdcCalibrationFile"/>, an
+        /// exception is thrown unless <see cref="ContextTask.ValidationLevel"/> is <see
+        /// cref="ValidationLevel.Permissive"/>, in which case the chip is configured without gain
+        /// correction instead. A file that cannot be parsed always throws an exception, regardless of <see
+        /// cref="ContextTask.ValidationLevel"/>.
         /// </para>
         /// </remarks>
         [Category(ConfigurationCategory)]
@@ -92,9 +105,16 @@ namespace OpenEphys.Onix1
         /// for the chip to operate correctly. 
         /// </para>
         /// <para>
-        /// Calibration files are chip-specific and not interchangeable across chips. Calibration files must contain the 
-        /// serial number of the corresponding chip on their first line of text. If you have lost track of a calibration 
+        /// Calibration files are chip-specific and not interchangeable across chips. Calibration files must contain the
+        /// serial number of the corresponding chip on their first line of text. If you have lost track of a calibration
         /// file for your chip, email IMEC at neuropixels.info@imec.be with the chip serial number to retrieve a new copy.
+        /// </para>
+        /// <para>
+        /// If this file is missing, or its serial number does not match <see cref="GainCalibrationFile"/>, an
+        /// exception is thrown unless <see cref="ContextTask.ValidationLevel"/> is <see
+        /// cref="ValidationLevel.Permissive"/>, in which case the chip is configured with default,
+        /// uncalibrated ADC settings instead. A file that cannot be parsed always throws an exception,
+        /// regardless of <see cref="ContextTask.ValidationLevel"/>.
         /// </para>
         /// </remarks>
         [Category(ConfigurationCategory)]

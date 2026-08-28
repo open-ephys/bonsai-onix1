@@ -48,6 +48,40 @@ namespace OpenEphys.Onix1
         public int Index { get; set; } = ContextTask.DefaultIndex;
 
         /// <summary>
+        /// Sets the hardware validation level of the <see cref="ContextTask"/>.
+        /// </summary>
+        /// <remarks>
+        /// Downstream configuration operators may validate the hardware they configure before allowing
+        /// acquisition to proceed. This property controls how failures of those checks are treated, making it
+        /// possible to relax them for debugging or prototyping.
+        /// <para>
+        /// Relaxing the validation level does not change what data is acquired, only whether unmet preconditions
+        /// are treated as fatal. Data acquired under a relaxed strictness therefore cannot be assumed to be
+        /// correct.
+        /// </para>
+        /// <para>
+        /// Which checks exist, and which validation levels relax them, varies by configuration operator. See
+        /// the documentation of the specific operator or property being configured for details.
+        /// </para>
+        /// <para>
+        /// A <see cref="ValidationLevel.Permissive"/> setting is never saved: it is intended to be a
+        /// deliberate, per-session choice rather than something a saved workflow can silently carry forward,
+        /// so a workflow always reopens with validation at least at its <see cref="ValidationLevel.Normal"/>
+        /// default.
+        /// </para>
+        /// </remarks>
+        [Description("Specifies how strictly hardware validation checks are enforced.")]
+        [Category(DeviceFactory.ConfigurationCategory)]
+        public ValidationLevel ValidationLevel { get; set; } = ValidationLevel.Normal;
+
+        /// <summary>
+        /// Prevents a <see cref="ValidationLevel.Permissive"/> setting from being saved.
+        /// </summary>
+        /// <returns>False if <see cref="ValidationLevel"/> is <see cref="ValidationLevel.Permissive"/>, true otherwise.</returns>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool ShouldSerializeValidationLevel() => ValidationLevel != ValidationLevel.Permissive;
+
+        /// <summary>
         /// Generates a sequence that creates a new <see cref="ContextTask"/> object.
         /// </summary>
         /// <returns>
@@ -60,7 +94,8 @@ namespace OpenEphys.Onix1
             {
                 var driver = Driver;
                 var index = Index;
-                var context = new ContextTask(driver, index);
+                var validationLevel = ValidationLevel;
+                var context = new ContextTask(driver, index, validationLevel);
                 try
                 {
                     observer.OnNext(context);

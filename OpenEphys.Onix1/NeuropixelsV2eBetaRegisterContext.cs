@@ -51,8 +51,16 @@ namespace OpenEphys.Onix1
 
             if (ReadByte(NeuropixelsV2.STATUS) != (uint)NeuropixelsV2Status.SR_OK)
             {
-                Console.Error.WriteLine($"Warning: shift register 0x{srAddress:X2} status check failed. " +
-                    $"{ShankName(srAddress)} may be damaged.");
+                if (srAddress == NeuropixelsV2Beta.SR_CHAIN5 || srAddress == NeuropixelsV2Beta.SR_CHAIN6)
+                {
+                    ContextHelper.Validate(ValidationLevel.Permissive, new InvalidOperationException(
+                        $"Shift register 0x{srAddress:X2} status check failed."));
+                }
+                else
+                {
+                    ContextHelper.Validate(ValidationLevel.Normal, new InvalidOperationException(
+                        $"Shift register 0x{srAddress:X2} status check failed. {ShankName(srAddress)} may be damaged."));
+                }
             }
         }
 

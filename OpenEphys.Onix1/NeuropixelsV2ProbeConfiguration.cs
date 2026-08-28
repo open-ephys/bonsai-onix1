@@ -77,6 +77,11 @@ namespace OpenEphys.Onix1
         /// serial number of the corresponding probe on their first line of text. If you have lost track of a calibration
         /// file for your probe, email IMEC at neuropixels.info@imec.be with the probe serial number to retrieve a new copy.
         /// </para>
+        /// <para>
+        /// If this file is missing, or does not match the connected probe's serial number, an exception is
+        /// thrown unless <see cref="ContextTask.ValidationLevel"/> is <see cref="ValidationLevel.Permissive"/>,
+        /// in which case the probe is configured without gain correction instead.
+        /// </para>
         /// </remarks>
         [Category(DeviceFactory.ConfigurationCategory)]
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]

@@ -75,6 +75,8 @@ namespace OpenEphys.Onix1
         readonly string contextDriver = DefaultDriver;
         readonly int contextIndex = DefaultIndex;
 
+        readonly ValidationLevel ValidationLevel;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ContextTask"/> class.
         /// </summary>
@@ -85,12 +87,15 @@ namespace OpenEphys.Onix1
         /// Device Driver Translator. A value of -1 will attempt to open the default hardware index and is
         /// useful if there is only a single ONI controller managed by the specified <paramref name="driver"/>
         /// in the host computer.</param>
-        internal ContextTask(string driver, int index)
+        /// <param name="validationLevel">The <see cref="Onix1.ValidationLevel"/> applied during hardware
+        /// interaction within this task.</param>
+        internal ContextTask(string driver, int index, ValidationLevel validationLevel = ValidationLevel.Normal)
         {
             groupedFrames = frameReceived.GroupBy(frame => frame.DeviceAddress).Replay();
             groupedFrames.Connect();
             contextDriver = driver;
             contextIndex = index;
+            ValidationLevel = validationLevel;
             ctx = new oni.Context(contextDriver, contextIndex);
             Initialize();
             var (major, _) = GenericHelper.GetFirmwareVersionComponents(GetHub(0).FirmwareVersion);
@@ -265,10 +270,14 @@ namespace OpenEphys.Onix1
             var deviceConfigureAndLatchAction = Interlocked.Exchange(ref ConfigureAndLatchDeviceEvent, null);
             var deviceConfigureDirectAction = Interlocked.Exchange(ref ConfigureDirectDeviceEvent, null);
             var disposable = new StackDisposable();
-            ConfigureAndLatch(disposable, controllerConfigureAndLatchAction);
-            ConfigureAndLatch(disposable, linkConfigureAndLatchAction);
-            ConfigureAndLatch(disposable, deviceConfigureAndLatchAction);
-            ConfigureDirect(disposable, deviceConfigureDirectAction); // NB: This should be called after all latching actions
+
+            using (ValidationScope.Enter(ValidationLevel)) // NB: makes Level available to code with no ContextTask reference via ValidationScope.Level
+            {
+                ConfigureAndLatch(disposable, controllerConfigureAndLatchAction);
+                ConfigureAndLatch(disposable, linkConfigureAndLatchAction);
+                ConfigureAndLatch(disposable, deviceConfigureAndLatchAction);
+                ConfigureDirect(disposable, deviceConfigureDirectAction); // NB: This should be called after all latching actions
+            }
             return disposable;
         }
 
@@ -397,7 +406,7 @@ namespace OpenEphys.Onix1
                             while (!collectFramesToken.IsCancellationRequested)
                             {
                                 // NB: This is a blocking call and there is no safe way to terminate it
-                                // other than ending the process. For this reason, it is the job of the 
+                                // other than ending the process. For this reason, it is the job of the
                                 // hardware to provide enough data (e.g. through a HeartbeatDevice") for
                                 // this call to return.
                                 oni.Frame frame;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.IO;
+using System.Linq;
 
 namespace OpenEphys.Onix1
 {
@@ -26,38 +27,50 @@ namespace OpenEphys.Onix1
 
             device = deviceContext;
 
-            if (!File.Exists(gainCalibrationFile))
-            {
-                throw new ArgumentException("A gain calibration file must be specified for the Nric1384 chip.");
-            }
-
+            NeuropixelsV1AdcCalibration? adcCalibration = null;
             if (!File.Exists(adcCalibrationFile))
             {
-                throw new ArgumentException("An ADC calibration file must be specified for the Nric1384 chip.");
+                ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
+                    "No ADC calibration file was specified for the Nric1384 chip."));
             }
-
-            var adcCalibration = NeuropixelsV1Helper.TryParseAdcCalibrationFile(adcCalibrationFile);
-
-            if (!adcCalibration.HasValue)
+            else
             {
-                throw new ArgumentException($"The calibration file \"{adcCalibrationFile}\" is invalid.");
+                adcCalibration = NeuropixelsV1Helper.TryParseAdcCalibrationFile(adcCalibrationFile);
+
+                if (!adcCalibration.HasValue)
+                {
+                    throw new ArgumentException($"The calibration file \"{adcCalibrationFile}\" is invalid.");
+                }
             }
 
-            var gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(gainCalibrationFile,apGain, lfpGain, Nric1384.ElectrodeCount);
-
-            if (!gainCorrection.HasValue)
+            NeuropixelsV1eGainCorrection? gainCorrection = null;
+            if (!File.Exists(gainCalibrationFile))
             {
-                throw new ArgumentException($"The calibration file \"{gainCalibrationFile}\" is invalid.");
+                ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
+                    "No gain calibration file was specified for the Nric1384 chip."));
             }
-
-            if (adcCalibration.Value.SerialNumber != gainCorrection.Value.SerialNumber)
+            else
             {
-                throw new ArgumentException($"The ADC calibration file's serial number ({adcCalibration.Value.SerialNumber}) " +
-                    $"does not match the gain calibration file's serial number ({gainCorrection.Value.SerialNumber}).");
+                gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(gainCalibrationFile, apGain, lfpGain, Nric1384.ElectrodeCount);
+
+                if (!gainCorrection.HasValue)
+                {
+                    throw new ArgumentException($"The calibration file \"{gainCalibrationFile}\" is invalid.");
+                }
             }
 
-            ApGainCorrection = gainCorrection.Value.ApGainCorrectionFactor;
-            LfpGainCorrection = gainCorrection.Value.LfpGainCorrectionFactor;
+            if (adcCalibration.HasValue && gainCorrection.HasValue &&
+                adcCalibration.Value.SerialNumber != gainCorrection.Value.SerialNumber)
+            {
+                ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
+                    $"The ADC calibration file's serial number ({adcCalibration.Value.SerialNumber}) " +
+                    $"does not match the gain calibration file's serial number ({gainCorrection.Value.SerialNumber})."));
+                adcCalibration = null;
+                gainCorrection = null;
+            }
+
+            ApGainCorrection = gainCorrection?.ApGainCorrectionFactor ?? 1.0;
+            LfpGainCorrection = gainCorrection?.LfpGainCorrectionFactor ?? 1.0;
 
             // create shift-register bit arrays
             for (int i = 0; i < NeuropixelsV1.ChannelCount; i++)
@@ -90,7 +103,7 @@ namespace OpenEphys.Onix1
 
             }
 
-            Adcs = adcCalibration.Value.Adcs;
+            Adcs = adcCalibration?.Adcs ?? Enumerable.Range(0, NeuropixelsV1.AdcCount).Select(_ => new NeuropixelsV1Adc()).ToArray();
 
             int k = 0;
             foreach (var adc in Adcs)
@@ -205,7 +218,8 @@ namespace OpenEphys.Onix1
 
                 if (ReadByte(Nric1384.STATUS) != ShiftRegisterSuccess)
                 {
-                    throw new InvalidOperationException($"Shift register {srAddress} status check failed.");
+                    ContextHelper.Validate(ValidationLevel.Permissive, new InvalidOperationException(
+                        $"Shift register {srAddress} status check failed."));
                 }
             }
 
