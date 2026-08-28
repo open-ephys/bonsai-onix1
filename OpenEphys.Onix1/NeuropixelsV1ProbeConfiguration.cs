@@ -153,8 +153,8 @@ namespace OpenEphys.Onix1
         /// </para>
         /// <para>
         /// If this file is missing, or does not match the connected probe's serial number, an exception is
-        /// thrown unless <see cref="ContextTask.Strictness"/> is <see
-        /// cref="ValidationStrictness.Permissive"/>, in which case the probe is configured without gain
+        /// thrown unless <see cref="ContextTask.ValidationLevel"/> is <see
+        /// cref="ValidationLevel.Permissive"/>, in which case the probe is configured without gain
         /// correction instead.
         /// </para>
         /// </remarks>
@@ -182,8 +182,8 @@ namespace OpenEphys.Onix1
         /// </para>
         /// <para>
         /// If this file is missing, or does not match the connected probe's serial number, an exception is
-        /// thrown unless <see cref="ContextTask.Strictness"/> is <see
-        /// cref="ValidationStrictness.Permissive"/>, in which case the probe is configured with default,
+        /// thrown unless <see cref="ContextTask.ValidationLevel"/> is <see
+        /// cref="ValidationLevel.Permissive"/>, in which case the probe is configured with default,
         /// uncalibrated ADC settings instead.
         /// </para>
         /// </remarks>

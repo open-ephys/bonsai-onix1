@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using System.Reactive.Disposables;
+using System.Threading;
 using oni;
 
 namespace OpenEphys.Onix1
@@ -8,7 +10,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Specifies how strictly hardware validation checks are enforced.
     /// </summary>
-    public enum ValidationStrictness
+    public enum ValidationLevel
     {
         /// <summary>
         /// All validation checks throw an exception on failure.
@@ -27,19 +29,46 @@ namespace OpenEphys.Onix1
         Permissive
     }
 
+    /// <summary>
+    /// Holds the <see cref="ValidationLevel"/> in effect for whatever configuration action is
+    /// currently running, so deeply-nested code (e.g. a register context with no <see cref="ContextTask"/>
+    /// reference) can consult it without threading a value through every constructor.
+    /// </summary>
+    static class ValidationScope
+    {
+        static readonly AsyncLocal<ValidationLevel?> current = new();
+
+        /// <summary>
+        /// Gets the <see cref="ValidationLevel"/> established by the innermost enclosing <see
+        /// cref="Enter"/> scope, or <see cref="ValidationLevel.Normal"/> if none is active.
+        /// </summary>
+        public static ValidationLevel Level => current.Value ?? ValidationLevel.Normal;
+
+        /// <summary>
+        /// Establishes <paramref name="validationLevel"/> as <see cref="Level"/> until the returned <see
+        /// cref="IDisposable"/> is disposed, restoring whatever was in effect before.
+        /// </summary>
+        public static IDisposable Enter(ValidationLevel validationLevel)
+        {
+            var previous = current.Value;
+            current.Value = validationLevel;
+            return Disposable.Create(() => current.Value = previous);
+        }
+    }
+
     static class ContextHelper
     {
         /// <summary>
-        /// Enforces a validation check according to the current <see cref="ValidationStrictness"/>.
+        /// Enforces a validation check according to <see cref="ValidationScope.Level"/>.
         /// </summary>
-        /// <param name="current">The validation strictness currently in effect.</param>
-        /// <param name="relaxedAt">The strictness level at which this check stops being fatal.</param>
-        /// <param name="exception">The exception describing the validation failure. Thrown if <paramref
-        /// name="current"/> is stricter than <paramref name="relaxedAt"/>, otherwise its message is printed
-        /// as a warning.</param>
-        public static void Validate(ValidationStrictness current, ValidationStrictness relaxedAt, Exception exception)
+        /// <param name="relaxedAt">The <see cref="ValidationLevel"/> level at which this check stops being
+        /// fatal.</param>
+        /// <param name="exception">The exception describing the validation failure. Thrown if <see
+        /// cref="ValidationScope.Level"/> is stricter than <paramref name="relaxedAt"/>, otherwise its
+        /// message is printed as a warning.</param>
+        public static void Validate(ValidationLevel relaxedAt, Exception exception)
         {
-            if (current >= relaxedAt)
+            if (ValidationScope.Level >= relaxedAt)
             {
                 Console.Error.WriteLine($"Warning: {exception.Message}");
             }

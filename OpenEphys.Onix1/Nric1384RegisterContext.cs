@@ -17,7 +17,6 @@ namespace OpenEphys.Onix1
         const uint ShiftRegisterSuccess = 1 << 7;
 
         readonly DeviceContext device;
-        readonly ValidationStrictness strictness;
 
         readonly BitArray[] BaseConfigs = { new(BaseConfigurationBitCount, false),   // Ch 0, 2, 4, ...
                                             new(BaseConfigurationBitCount, false) }; // Ch 1, 3, 5, ...
@@ -27,12 +26,11 @@ namespace OpenEphys.Onix1
         {
 
             device = deviceContext;
-            strictness = deviceContext.Context.Strictness;
 
             NeuropixelsV1AdcCalibration? adcCalibration = null;
             if (!File.Exists(adcCalibrationFile))
             {
-                ContextHelper.Validate(strictness, ValidationStrictness.Permissive, new ArgumentException(
+                ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
                     "No ADC calibration file was specified for the Nric1384 chip."));
             }
             else
@@ -48,7 +46,7 @@ namespace OpenEphys.Onix1
             NeuropixelsV1eGainCorrection? gainCorrection = null;
             if (!File.Exists(gainCalibrationFile))
             {
-                ContextHelper.Validate(strictness, ValidationStrictness.Permissive, new ArgumentException(
+                ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
                     "No gain calibration file was specified for the Nric1384 chip."));
             }
             else
@@ -64,7 +62,7 @@ namespace OpenEphys.Onix1
             if (adcCalibration.HasValue && gainCorrection.HasValue &&
                 adcCalibration.Value.SerialNumber != gainCorrection.Value.SerialNumber)
             {
-                ContextHelper.Validate(strictness, ValidationStrictness.Permissive, new ArgumentException(
+                ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
                     $"The ADC calibration file's serial number ({adcCalibration.Value.SerialNumber}) " +
                     $"does not match the gain calibration file's serial number ({gainCorrection.Value.SerialNumber})."));
                 adcCalibration = null;
@@ -220,7 +218,7 @@ namespace OpenEphys.Onix1
 
                 if (ReadByte(Nric1384.STATUS) != ShiftRegisterSuccess)
                 {
-                    ContextHelper.Validate(strictness, ValidationStrictness.Permissive, new InvalidOperationException(
+                    ContextHelper.Validate(ValidationLevel.Permissive, new InvalidOperationException(
                         $"Shift register {srAddress} status check failed."));
                 }
             }

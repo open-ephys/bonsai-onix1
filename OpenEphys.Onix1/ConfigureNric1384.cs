@@ -10,7 +10,7 @@ namespace OpenEphys.Onix1
     /// <remarks>
     /// After each base shift register write, the chip's status is checked to confirm the write succeeded,
     /// which otherwise indicates that the chip's base ASIC may be damaged. A failed check throws an
-    /// exception unless <see cref="ContextTask.Strictness"/> is <see cref="ValidationStrictness.Permissive"/>,
+    /// exception unless <see cref="ContextTask.ValidationLevel"/> is <see cref="ValidationLevel.Permissive"/>,
     /// in which case a warning is produced instead and configuration proceeds.
     /// </remarks>
     public class ConfigureNric1384 : SingleDeviceFactory
@@ -82,10 +82,10 @@ namespace OpenEphys.Onix1
         /// </para>
         /// <para>
         /// If this file is missing, or its serial number does not match <see cref="AdcCalibrationFile"/>, an
-        /// exception is thrown unless <see cref="ContextTask.Strictness"/> is <see
-        /// cref="ValidationStrictness.Permissive"/>, in which case the chip is configured without gain
+        /// exception is thrown unless <see cref="ContextTask.ValidationLevel"/> is <see
+        /// cref="ValidationLevel.Permissive"/>, in which case the chip is configured without gain
         /// correction instead. A file that cannot be parsed always throws an exception, regardless of <see
-        /// cref="ContextTask.Strictness"/>.
+        /// cref="ContextTask.ValidationLevel"/>.
         /// </para>
         /// </remarks>
         [Category(ConfigurationCategory)]
@@ -111,10 +111,10 @@ namespace OpenEphys.Onix1
         /// </para>
         /// <para>
         /// If this file is missing, or its serial number does not match <see cref="GainCalibrationFile"/>, an
-        /// exception is thrown unless <see cref="ContextTask.Strictness"/> is <see
-        /// cref="ValidationStrictness.Permissive"/>, in which case the chip is configured with default,
+        /// exception is thrown unless <see cref="ContextTask.ValidationLevel"/> is <see
+        /// cref="ValidationLevel.Permissive"/>, in which case the chip is configured with default,
         /// uncalibrated ADC settings instead. A file that cannot be parsed always throws an exception,
-        /// regardless of <see cref="ContextTask.Strictness"/>.
+        /// regardless of <see cref="ContextTask.ValidationLevel"/>.
         /// </para>
         /// </remarks>
         [Category(ConfigurationCategory)]

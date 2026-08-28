@@ -18,18 +18,14 @@ namespace OpenEphys.Onix1
         readonly BitArray ShankConfig;
         readonly BitArray[] BaseConfigs;
 
-        readonly ValidationStrictness strictness;
-
         public NeuropixelsV1RegisterContext(DeviceContext deviceContext, uint i2cAddress, ulong probeSerialNumber,
             NeuropixelsV1ProbeConfiguration probeConfiguration, NeuropixelsV1eProbeGroup probeGroup)
             : base(deviceContext, i2cAddress)
         {
-            strictness = deviceContext.Context.Strictness;
-
             NeuropixelsV1AdcCalibration? adcCalibration = null;
             if (!File.Exists(probeConfiguration.AdcCalibrationFileName))
             {
-                ContextHelper.Validate(strictness, ValidationStrictness.Permissive, new ArgumentException(
+                ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
                     $"No ADC calibration file was specified for the probe with serial number {probeSerialNumber}."));
             }
             else
@@ -43,7 +39,7 @@ namespace OpenEphys.Onix1
                 }
                 else if (adcCalibration.Value.SerialNumber != probeSerialNumber)
                 {
-                    ContextHelper.Validate(strictness, ValidationStrictness.Permissive, new ArgumentException(
+                    ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
                         $"The probe serial number ({probeSerialNumber}) does not " +
                         $"match the ADC calibration file serial number ({adcCalibration.Value.SerialNumber})."));
                     adcCalibration = null;
@@ -53,7 +49,7 @@ namespace OpenEphys.Onix1
             NeuropixelsV1eGainCorrection? gainCorrection = null;
             if (!File.Exists(probeConfiguration.GainCalibrationFileName))
             {
-                ContextHelper.Validate(strictness, ValidationStrictness.Permissive, new ArgumentException(
+                ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
                     $"No gain calibration file was specified for the probe with serial number {probeSerialNumber}."));
             }
             else
@@ -68,7 +64,7 @@ namespace OpenEphys.Onix1
                 }
                 else if (gainCorrection.Value.SerialNumber != probeSerialNumber)
                 {
-                    ContextHelper.Validate(strictness, ValidationStrictness.Permissive, new ArgumentException(
+                    ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
                         $"The probe serial number ({probeSerialNumber}) does not " +
                         $"match the gain calibration file serial number ({gainCorrection.Value.SerialNumber})."));
                     gainCorrection = null;
@@ -144,7 +140,7 @@ namespace OpenEphys.Onix1
 
                 if (ReadByte(NeuropixelsV1.STATUS) != ShiftRegisterSuccess)
                 {
-                     ContextHelper.Validate(strictness, ValidationStrictness.Permissive, new InvalidOperationException(
+                    ContextHelper.Validate(ValidationLevel.Permissive, new InvalidOperationException(
                         $"Shift register 0x{srAddress:X2} status check failed."));
                 }
             }

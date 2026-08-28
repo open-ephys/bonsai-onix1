@@ -13,8 +13,9 @@ namespace OpenEphys.Onix1
     /// <para>
     /// After each base shift register write, the probe's status is checked to confirm the write succeeded,
     /// which otherwise indicates that the probe's base ASIC may be damaged. A failed check throws an
-    /// exception unless <see cref="ContextTask.Strictness"/> is <see cref="ValidationStrictness.Permissive"/>,
-    /// in which case a warning is produced instead and configuration proceeds.
+    /// exception unless <see cref="ContextTask.ValidationLevel"/> is <see
+    /// cref="ValidationLevel.Permissive"/>, in which case a warning is produced instead and configuration
+    /// proceeds.
     /// </para>
     /// </remarks>
     [Description("Configures a parallel serial bus decoder for a NeuropixelsV1 probe.")]

@@ -9,13 +9,14 @@ namespace OpenEphys.Onix1
     /// Configures a NeuropixelsV1 device attached to an ONIX NeuropixelsV1f headstage.
     /// </summary>
     /// <remarks>
-    /// This configuration operator can be linked to a data IO operator, such as <see cref="NeuropixelsV1fData"/>,
-    /// using a shared <c>DeviceName</c>.
+    /// This configuration operator can be linked to a data IO operator, such as <see
+    /// cref="NeuropixelsV1fData"/>, using a shared <c>DeviceName</c>.
     /// <para>
     /// After each base shift register write, the probe's status is checked to confirm the write succeeded,
     /// which otherwise indicates that the probe's base ASIC may be damaged. A failed check throws an
-    /// exception unless <see cref="ContextTask.Strictness"/> is <see cref="ValidationStrictness.Permissive"/>,
-    /// in which case a warning is produced instead and configuration proceeds.
+    /// exception unless <see cref="ContextTask.ValidationLevel"/> is <see
+    /// cref="ValidationLevel.Permissive"/>, in which case a warning is produced instead and configuration
+    /// proceeds.
     /// </para>
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV1Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]

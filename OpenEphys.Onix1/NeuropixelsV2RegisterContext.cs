@@ -5,18 +5,14 @@ namespace OpenEphys.Onix1
 {
     class NeuropixelsV2RegisterContext : I2CRegisterContext
     {
-        readonly ValidationStrictness strictness;
-
-        public NeuropixelsV2RegisterContext(I2CRegisterContext other, uint i2cAddress, ValidationStrictness strictness)
+        public NeuropixelsV2RegisterContext(I2CRegisterContext other, uint i2cAddress)
             : base(other, i2cAddress)
         {
-            this.strictness = strictness;
         }
 
-        public NeuropixelsV2RegisterContext(DeviceContext deviceContext, uint i2cAddress, ValidationStrictness strictness)
+        public NeuropixelsV2RegisterContext(DeviceContext deviceContext, uint i2cAddress)
             : base(deviceContext, i2cAddress)
         {
-            this.strictness = strictness;
         }
 
         public void WriteConfiguration(NeuropixelsV2ProbeConfiguration probe, NeuropixelsV2eProbeGroup probeGroup)
@@ -68,12 +64,12 @@ namespace OpenEphys.Onix1
             {
                 if (srAddress == NeuropixelsV2.SR_CHAIN5 || srAddress == NeuropixelsV2.SR_CHAIN6)
                 {
-                    ContextHelper.Validate(strictness, ValidationStrictness.Permissive, new InvalidOperationException(
+                    ContextHelper.Validate(ValidationLevel.Permissive, new InvalidOperationException(
                         $"Shift register 0x{srAddress:X2} status check failed."));
                 }
                 else
                 {
-                    ContextHelper.Validate(strictness, ValidationStrictness.Normal, new InvalidOperationException(
+                    ContextHelper.Validate(ValidationLevel.Normal, new InvalidOperationException(
                         $"Shift register 0x{srAddress:X2} status check failed. {ShankName(srAddress)} may be damaged."));
                 }
             }

@@ -15,11 +15,11 @@ namespace OpenEphys.Onix1
     /// <para>
     /// After each shift register write, the probe's status is checked to confirm the write succeeded. A
     /// failure on one of the four shank registers indicates that the corresponding shank may be damaged, and
-    /// produces a warning unless <see cref="ContextTask.Strictness"/> is <see
-    /// cref="ValidationStrictness.Strict"/>, in which case an exception is thrown instead and configuration
-    /// is aborted. A failure on one of the two base registers indicates that the probe's base ASIC may be
-    /// damaged, and throws an exception unless <see cref="ContextTask.Strictness"/> is <see
-    /// cref="ValidationStrictness.Permissive"/>.
+    /// produces a warning unless <see cref="ContextTask.ValidationLevel"/> is <see
+    /// cref="ValidationLevel.Strict"/>, in which case an exception is thrown instead and configuration is
+    /// aborted. A failure on one of the two base registers indicates that the probe's base ASIC may be
+    /// damaged, and throws an exception unless <see cref="ContextTask.ValidationLevel"/> is <see
+    /// cref="ValidationLevel.Permissive"/>.
     /// </para>
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
@@ -104,7 +104,7 @@ namespace OpenEphys.Onix1
                 var probeMetadata = new NeuropixelsV2eBetaMetadata(serializer);
 
                 NeuropixelsV2GainCorrection? gainCorrection = null;
-                var probeControl = new NeuropixelsV2eBetaRegisterContext(device, NeuropixelsV2Beta.ProbeAddress, context.Strictness);
+                var probeControl = new NeuropixelsV2eBetaRegisterContext(device, NeuropixelsV2Beta.ProbeAddress);
 
                 if (probeMetadata.ProbeSerialNumber != null)
                 {
@@ -123,7 +123,7 @@ namespace OpenEphys.Onix1
 
                         if (!File.Exists(probeConfiguration.GainCalibrationFileName))
                         {
-                            ContextHelper.Validate(context.Strictness, ValidationStrictness.Permissive, new ArgumentException(
+                            ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
                                 $"No gain calibration file was specified for the probe with serial number " +
                                 $"{probeMetadata.ProbeSerialNumber}."));
                         }
@@ -138,7 +138,7 @@ namespace OpenEphys.Onix1
                             }
                             else if (gainCorrection.Value.SerialNumber != probeMetadata.ProbeSerialNumber)
                             {
-                                ContextHelper.Validate(context.Strictness, ValidationStrictness.Permissive, new ArgumentException(
+                                ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
                                     $"The probe serial number ({probeMetadata.ProbeSerialNumber}) does not " +
                                     $"match the gain calibration file serial number: {gainCorrection.Value.SerialNumber}."));
                                 gainCorrection = null;

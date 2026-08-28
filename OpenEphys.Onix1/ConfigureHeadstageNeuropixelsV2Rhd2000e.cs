@@ -11,8 +11,8 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// The NeuropixelsV2/Rhd2000 Hybrid Headstage is a 1.0g serialized, multifunction headstage that combines
-    /// an Intan RHD2000 bioamplifier chip with an IMEC Neuropixels V2 probe. It provides the
-    /// following features:
+    /// an Intan RHD2000 bioamplifier chip with an IMEC Neuropixels V2 probe. It provides the following
+    /// features:
     /// <list type="bullet">
     /// <item><description>Support for an IMEC Neuropixels 2.0 probe, which features:</description></item>
     /// <list type="bullet">
@@ -32,10 +32,10 @@ namespace OpenEphys.Onix1
     /// Upon configuration, the headstage's EEPROM is read to identify which Rhd2000 chip variant is present
     /// and to confirm a minimum hardware revision. Because the identified chip variant determines which
     /// register map is used to configure the hardware, an unrecognized chip variant always throws an
-    /// exception, regardless of <see cref="ContextTask.Strictness"/>. If the hardware revision check fails,
-    /// an exception is thrown unless <see cref="ContextTask.Strictness"/> is <see
-    /// cref="ValidationStrictness.Permissive"/>, in which case a warning is produced instead and
-    /// configuration proceeds.
+    /// exception, regardless of <see cref="ContextTask.ValidationLevel"/>. If the hardware revision check
+    /// fails, an exception is thrown unless <see cref="ContextTask.ValidationLevel"/> is <see
+    /// cref="ValidationLevel.Permissive"/>, in which case a warning is produced instead and configuration
+    /// proceeds.
     /// </para>
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV2Rhd2000eHeadstageEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
@@ -215,7 +215,7 @@ namespace OpenEphys.Onix1
 
             // read and validate headstage EEPROM
             var metadata = new HeadstageEeprom(device);
-            Rhd2000Chip = ValidateHeadstage(device.Context.Strictness, metadata);
+            Rhd2000Chip = ValidateHeadstage(metadata);
 
             // initialize headstage hardware
             var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
@@ -224,9 +224,9 @@ namespace OpenEphys.Onix1
             ResetProbe(serializer);
         }
 
-        Rhd2000ChipId ValidateHeadstage(ValidationStrictness strictness, HeadstageEeprom metadata)
+        Rhd2000ChipId ValidateHeadstage(HeadstageEeprom metadata)
         {
-            // NB: unlike other headstage EEPROM checks, this one is never relaxed by ValidationStrictness: the
+            // NB: unlike other headstage EEPROM checks, this one is never relaxed by ValidationLevel: the
             // chip ID selects which register map to use, and there is no safe default to fall back on if
             // it doesn't match a known variant.
             var chip = metadata.Id switch
@@ -239,7 +239,7 @@ namespace OpenEphys.Onix1
 
             if (metadata.Revision < MinimumRevision)
             {
-                ContextHelper.Validate(strictness, ValidationStrictness.Permissive, new InvalidOperationException(
+                ContextHelper.Validate(ValidationLevel.Permissive, new InvalidOperationException(
                     $"Headstage version {MinimumRevision} is required but version {metadata.Revision} was detected."));
             }
 

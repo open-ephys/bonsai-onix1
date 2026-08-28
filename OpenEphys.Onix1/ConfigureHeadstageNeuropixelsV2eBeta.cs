@@ -25,7 +25,7 @@ namespace OpenEphys.Onix1
     /// <para>
     /// Upon configuration, the headstage's EEPROM is read to confirm that it matches the expected headstage
     /// type and meets a minimum hardware revision. If either check fails, an exception is thrown unless <see
-    /// cref="ContextTask.Strictness"/> is <see cref="ValidationStrictness.Permissive"/>, in which case a
+    /// cref="ContextTask.ValidationLevel"/> is <see cref="ValidationLevel.Permissive"/>, in which case a
     /// warning is produced instead and configuration proceeds.
     /// </para>
     /// </remarks>
@@ -228,7 +228,7 @@ namespace OpenEphys.Onix1
             DS90UB9x.Set933I2CRate(device, 400e3);
 
             // read and validate headstage EEPROM
-            ValidateHeadstage(device.Context.Strictness, new HeadstageEeprom(device));
+            ValidateHeadstage(new HeadstageEeprom(device));
 
             if (EnableLed)
             {
@@ -238,17 +238,17 @@ namespace OpenEphys.Onix1
             ResetProbes(serializer);
         }
 
-        void ValidateHeadstage(ValidationStrictness strictness, HeadstageEeprom metadata)
+        void ValidateHeadstage(HeadstageEeprom metadata)
         {
             if (metadata.Id != HeadstageId)
             {
-                ContextHelper.Validate(strictness, ValidationStrictness.Permissive, new InvalidOperationException(
+                ContextHelper.Validate(ValidationLevel.Permissive, new InvalidOperationException(
                     $"Expected Headstage-NeuropixelsV2.0e-Beta but found '{metadata.Name}' (ID: {metadata.Id})."));
             }
 
             if (metadata.Revision < MinimumRevision)
             {
-                ContextHelper.Validate(strictness, ValidationStrictness.Permissive, new InvalidOperationException(
+                ContextHelper.Validate(ValidationLevel.Permissive, new InvalidOperationException(
                     $"Headstage version {MinimumRevision} is required but version {metadata.Revision} was detected."));
             }
         }
