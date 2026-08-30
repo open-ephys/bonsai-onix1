@@ -95,13 +95,13 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// True if individual contacts cannot be independently wired to channels on this variant, and
         /// electrode selection must instead go through per-channel-group bank selection (see <see
-        /// cref="NeuropixelsV1ChannelToGroupProbeGroup.SelectElectrodeGroup"/>).
+        /// cref="NeuropixelsV1ChannelGroupProbeGroup.SelectElectrodeGroup"/>).
         /// </summary>
         /// <remarks>
         /// True only for UHD Switchable (NP1110). Determines which concrete <see
         /// cref="NeuropixelsV1ProbeGroup"/> subtype a probe deserializes to (<see
         /// cref="NeuropixelsV1ProbeGroupConverter"/>): variants with this set become <see
-        /// cref="NeuropixelsV1ChannelToGroupProbeGroup"/>, which doesn't expose the ordinary per-contact API
+        /// cref="NeuropixelsV1ChannelGroupProbeGroup"/>, which doesn't expose the ordinary per-contact API
         /// (<c>EnableElectrodes</c>, <c>SelectBank</c>, <c>SelectPreset</c>, <c>GetChannelPresets</c>) at
         /// all. NB: the atom of selection is a 16-contact channel-group tile, not a single contact, so those
         /// operations are a compile-time error for this variant rather than a runtime one.
@@ -177,7 +177,7 @@ namespace OpenEphys.Onix1
 
         /// <summary>
         /// The number of channel groups on the UHD Switchable probe (NP1110). See <see
-        /// cref="NeuropixelsV1ChannelToGroupProbeGroup.SelectElectrodeGroup"/>.
+        /// cref="NeuropixelsV1ChannelGroupProbeGroup.SelectElectrodeGroup"/>.
         /// </summary>
         internal const int Np1110ChannelGroupCount = 24;
 
@@ -328,14 +328,14 @@ namespace OpenEphys.Onix1
             // (RegisterBits/H/Ext/Tip positions via MakeShankRegisterLayout), not per-contact bit placement.
             //
             // hasColumnSelectionSwitch: true. Column selection (Inner/Outer/All) is exposed as a feature, via
-            // NeuropixelsV1ChannelToGroupProbeGroup.ColumnPattern, see NeuropixelsV1.MakeShankBits.
+            // NeuropixelsV1ChannelGroupProbeGroup.ColumnPattern, see NeuropixelsV1.MakeShankBits.
             //
             // hasChannelGroupSelection: true. Individual contacts cannot be independently wired to channels
             // on this probe; the atom of selection is a channel group (see
             // Np1110ChannelGroupChannels/Np1110GroupBankRegisterIndex above). Also determines which concrete
             // NeuropixelsV1ProbeGroup subtype this variant deserializes to, see
             // NeuropixelsV1ProbeGroupConverter and
-            // NeuropixelsV1ChannelToGroupProbeGroup.SelectElectrodeGroup.
+            // NeuropixelsV1ChannelGroupProbeGroup.SelectElectrodeGroup.
             (new[] { "NP1110" },
                 new NeuropixelsV1Variant(6144, UhdSwitchableChannel, hasInternalReferenceElectrode: false,
                     shankRegisterElectrodeCount: NeuropixelsV1.ChannelCount,

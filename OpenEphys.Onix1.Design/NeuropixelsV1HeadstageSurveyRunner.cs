@@ -178,10 +178,7 @@ namespace OpenEphys.Onix1.Design
                     foreach (var state in roundTargets)
                     {
                         var bank = state.OrderedBanks[state.NextIndex];
-                        // TODO: Surveying is only implemented for per-contact variants (channel-group
-                        // variants like NP1110 aren't wired into survey targeting yet); the cast is the
-                        // same boundary the old NotSupportedException from SelectBank used to enforce.
-                        var bankGroup = (NeuropixelsV1ChannelToContactProbeGroup)state.Target.Dialog.ProbeGroup.Clone();
+                        var bankGroup = state.Target.Dialog.ProbeGroup.Clone();
                         bankGroup.SelectBank(bank);
 
                         if (bankGroup.ChannelMap.Count == 0)

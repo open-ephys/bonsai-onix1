@@ -207,6 +207,8 @@ namespace OpenEphys.Onix1.Design
             showActivityColors = false;
             actRangeInitialized = false;
             actRanges.Clear();
+            surveyBanks.Clear();
+            pendingBanks.Clear();
 
             var firstProbe = probeGroup.Probe;
             if (firstProbe == null) return;
