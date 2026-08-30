@@ -12,7 +12,7 @@ namespace OpenEphys.Onix1
     /// Json.NET's default parameterized-constructor matching can only construct a concrete type, and which
     /// concrete <see cref="NeuropixelsV1ProbeGroup"/> subtype is correct (<see
     /// cref="NeuropixelsV1ChannelToContactProbeGroup"/> or <see
-    /// cref="NeuropixelsV1ChannelToGroupProbeGroup"/>) depends on the part number recorded in the data itself
+    /// cref="NeuropixelsV1ChannelGroupProbeGroup"/>) depends on the part number recorded in the data itself
     /// (<c>probes[0].annotations.model_name</c>, resolved the same way <see
     /// cref="NeuropixelsV1VariantRegistry.Resolve"/> already does). This converter reads just that field,
     /// resolves the variant, and delegates to normal deserialization against whichever concrete type is
@@ -48,7 +48,7 @@ namespace OpenEphys.Onix1
 
             var variant = NeuropixelsV1VariantRegistry.Resolve(modelName);
             Type concreteType = variant.HasChannelGroupSelection
-                ? typeof(NeuropixelsV1ChannelToGroupProbeGroup)
+                ? typeof(NeuropixelsV1ChannelGroupProbeGroup)
                 : typeof(NeuropixelsV1ChannelToContactProbeGroup);
 
             return jObject.ToObject(concreteType, serializer);

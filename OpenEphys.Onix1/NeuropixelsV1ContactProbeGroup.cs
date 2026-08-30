@@ -46,7 +46,7 @@ namespace OpenEphys.Onix1
             if (Variant.HasChannelGroupSelection)
                 throw new ArgumentException(
                     $"{Probe.Annotations.ModelName} requires per-channel-group bank selection; use " +
-                    $"{nameof(NeuropixelsV1ChannelToGroupProbeGroup)} instead.");
+                    $"{nameof(NeuropixelsV1ChannelGroupProbeGroup)} instead.");
 
             if (!HasChannelMap)
                 SelectBank(0);
@@ -132,7 +132,7 @@ namespace OpenEphys.Onix1
         /// Configures the channel map to a specific bank, addressed by index.
         /// </summary>
         /// <param name="bankIndex">The zero-based bank index.</param>
-        public void SelectBank(int bankIndex) => EnableElectrodes(GetBankContactIndices(bankIndex));
+        public override void SelectBank(int bankIndex) => EnableElectrodes(GetBankContactIndices(bankIndex));
 
         /// <summary>
         /// Returns the contact indices belonging to the given bank.

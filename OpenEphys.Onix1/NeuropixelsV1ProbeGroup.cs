@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1
     /// Contact selection and channel mapping differs by variant in a way that can't be expressed as a single,
     /// uniform API (see <see cref="NeuropixelsV1Variant.HasChannelGroupSelection"/>). Most variants select
     /// per contact (<see cref="NeuropixelsV1ChannelToContactProbeGroup"/>), while UHD Switchable selects per
-    /// channel group (<see cref="NeuropixelsV1ChannelToGroupProbeGroup"/>). This base holds what's common to
+    /// channel group (<see cref="NeuropixelsV1ChannelGroupProbeGroup"/>). This base holds what's common to
     /// both: geometry, the resolved <see cref="Variant"/>, and the channel map. 
     /// </para>
     /// <para>
@@ -73,6 +73,12 @@ namespace OpenEphys.Onix1
         /// <param name="shankBits">The register bits, sized to <paramref name="layout"/>. Modified in
         /// place.</param>
         internal abstract void SetShankConfigurationBits(NeuropixelsV1ShankRegisterLayout layout, BitArray shankBits);
+
+        /// <summary>
+        /// Selects bank <paramref name="bank"/> for the whole probe, replacing the existing channel map.
+        /// </summary>
+        /// <param name="bank">The zero-based bank index.</param>
+        public abstract void SelectBank(int bank);
 
         /// <summary>
         /// Returns the channel map for this probe, mapping each acquisition channel index to its active

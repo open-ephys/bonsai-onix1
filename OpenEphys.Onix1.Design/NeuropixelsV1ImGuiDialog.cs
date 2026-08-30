@@ -95,7 +95,7 @@ namespace OpenEphys.Onix1.Design
                 return;
             }
 
-            var channelGroupProbe = (NeuropixelsV1ChannelToGroupProbeGroup)probeGroup;
+            var channelGroupProbe = (NeuropixelsV1ChannelGroupProbeGroup)probeGroup;
 
             var banksByGroup = new Dictionary<int, HashSet<int>>();
             foreach (var contactIdx in contactIndices)
@@ -141,7 +141,7 @@ namespace OpenEphys.Onix1.Design
         // they collide with a pin nothing is actively producing, blocking the very thing Inner/Outer 2-bank
         // selection exists for. 
         protected override IEnumerable<int> GetChannelsToPin(int contactIndex, int channel) =>
-            probeGroup is NeuropixelsV1ChannelToGroupProbeGroup channelGroupProbe
+            probeGroup is NeuropixelsV1ChannelGroupProbeGroup channelGroupProbe
                 ? channelGroupProbe.GetSurvivingChannels(channelGroupProbe.GetChannelGroup(contactIndex), NeuropixelsV1ProbeGroup.GetBank(contactIndex))
                 : base.GetChannelsToPin(contactIndex, channel);
 
@@ -156,7 +156,7 @@ namespace OpenEphys.Onix1.Design
                 : Array.Empty<NeuropixelsV1ChannelPreset>();
             presetIdx = Array.FindIndex(presets, p => p == NeuropixelsV1ChannelPreset.None);
 
-            columnPatternIdx = probeGroup is NeuropixelsV1ChannelToGroupProbeGroup channelGroupProbe
+            columnPatternIdx = probeGroup is NeuropixelsV1ChannelGroupProbeGroup channelGroupProbe
                 ? Array.IndexOf(ColumnPatternValues, channelGroupProbe.ColumnPattern)
                 : 0;
 
@@ -230,7 +230,7 @@ namespace OpenEphys.Onix1.Design
             // current ColumnPattern is blocked too. It can't be enabled or pinned, in addition to the
             // ordinary pin-collision blocking every variant already gets from DefaultIsBlocked.
             selector.IsBlocked = idx => DefaultIsBlocked(idx) ||
-                (probeGroup is NeuropixelsV1ChannelToGroupProbeGroup channelGroupProbe && !channelGroupProbe.IsColumnEnabled(idx));
+                (probeGroup is NeuropixelsV1ChannelGroupProbeGroup channelGroupProbe && !channelGroupProbe.IsColumnEnabled(idx));
             selector.SelectionChanged += (_, _) =>
             {
                 if (!bankSelectMode) return;
@@ -442,7 +442,7 @@ namespace OpenEphys.Onix1.Design
 
         void ApplyColumnPattern(NeuropixelsV1ColumnPattern pattern)
         {
-            var channelGroupProbe = (NeuropixelsV1ChannelToGroupProbeGroup)probeGroup;
+            var channelGroupProbe = (NeuropixelsV1ChannelGroupProbeGroup)probeGroup;
             var previous = channelGroupProbe.ColumnPattern;
             if (pattern == previous) return;
 
@@ -469,7 +469,7 @@ namespace OpenEphys.Onix1.Design
             var banks = sel.Select(NeuropixelsV1ProbeGroup.GetBank).Distinct().Select(Neuropixels.BankDisplayName);
             ImGuiControls.InfoRow("Bank(s)", banks.Any() ? string.Join(",", banks) : "-");
 
-            if (probeGroup is NeuropixelsV1ChannelToGroupProbeGroup channelGroupProbe)
+            if (probeGroup is NeuropixelsV1ChannelGroupProbeGroup channelGroupProbe)
             {
                 var groups = sel.Select(channelGroupProbe.GetChannelGroup).Distinct().OrderBy(g => g);
                 ImGuiControls.InfoRow("Channel Group(s)", groups.Any() ? string.Join(",", groups) : "-");

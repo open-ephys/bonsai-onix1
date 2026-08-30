@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1
     /// Individual contacts cannot be independently wired to channels on this probe; the atom of selection and
     /// mapping is a multi-contact, multi-channel tile.
     /// </remarks>
-    public sealed class NeuropixelsV1ChannelToGroupProbeGroup : NeuropixelsV1ProbeGroup
+    public sealed class NeuropixelsV1ChannelGroupProbeGroup : NeuropixelsV1ProbeGroup
     {
         /// <summary>
         /// Per-channel-group selected banks (0, 1, or 2 of 16), indexed by channel group (0-23).
@@ -35,11 +35,11 @@ namespace OpenEphys.Onix1
         internal const string ColumnPatternAnnotationKey = "column_pattern";
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="NeuropixelsV1ChannelToGroupProbeGroup"/> class by
+        /// Initializes a new instance of the <see cref="NeuropixelsV1ChannelGroupProbeGroup"/> class by
         /// copying an existing probe group.
         /// </summary>
         /// <param name="probeGroup">The probe group to copy.</param>
-        public NeuropixelsV1ChannelToGroupProbeGroup(NeuropixelsV1ChannelToGroupProbeGroup probeGroup)
+        public NeuropixelsV1ChannelGroupProbeGroup(NeuropixelsV1ChannelGroupProbeGroup probeGroup)
             : base(probeGroup)
         {
             columnPattern = probeGroup.columnPattern;
@@ -48,14 +48,14 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="NeuropixelsV1ChannelToGroupProbeGroup"/> class from
+        /// Initializes a new instance of the <see cref="NeuropixelsV1ChannelGroupProbeGroup"/> class from
         /// deserialized ProbeInterface data.
         /// </summary>
         /// <param name="specification">The ProbeInterface specification string.</param>
         /// <param name="version">The ProbeInterface version string.</param>
         /// <param name="probes">The array of probes deserialized from the ProbeInterface file.</param>
         [JsonConstructor]
-        public NeuropixelsV1ChannelToGroupProbeGroup(string specification, string version, Probe[] probes)
+        public NeuropixelsV1ChannelGroupProbeGroup(string specification, string version, Probe[] probes)
             : base(specification, version, probes)
         {
             if (!Variant.HasChannelGroupSelection)
@@ -80,7 +80,7 @@ namespace OpenEphys.Onix1
             }
         }
 
-        internal override NeuropixelsV1ProbeGroup Clone() => new NeuropixelsV1ChannelToGroupProbeGroup(this);
+        internal override NeuropixelsV1ProbeGroup Clone() => new NeuropixelsV1ChannelGroupProbeGroup(this);
 
         /// <remarks>
         /// The register's 384 non-reference bits are one per (channel group, bank) tile here, not
@@ -239,6 +239,20 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
+        /// Selects bank <paramref name="bank"/> for every channel group on the probe at once, replacing
+        /// each group's existing selection, and resets <see cref="ColumnPattern"/> to
+        /// <see cref="NeuropixelsV1ColumnPattern.All"/>.
+        /// </summary>
+        /// <param name="bank">The zero-based bank index.</param>
+        public override void SelectBank(int bank)
+        {
+            for (int channelGroup = 0; channelGroup < NeuropixelsV1VariantRegistry.Np1110ChannelGroupCount; channelGroup++)
+                SelectElectrodeGroup(channelGroup, bank);
+
+            ColumnPattern = NeuropixelsV1ColumnPattern.All;
+        }
+
+        /// <summary>
         /// Returns the bank(s) currently selected for <paramref name="channelGroup"/> (0, 1, or 2 of 16).
         /// Used by <see cref="NeuropixelsV1.MakeShankBits"/> to generate the shank configuration register.
         /// </summary>
@@ -331,8 +345,8 @@ namespace OpenEphys.Onix1
     }
 
     /// <summary>
-    /// Specifies which physical columns are enabled on a <see cref="NeuropixelsV1ChannelToGroupProbeGroup"/>
-    /// (currently just UHD Switchable, NP1110). See <see cref="NeuropixelsV1ChannelToGroupProbeGroup.ColumnPattern"/>.
+    /// Specifies which physical columns are enabled on a <see cref="NeuropixelsV1ChannelGroupProbeGroup"/>
+    /// (currently just UHD Switchable, NP1110). See <see cref="NeuropixelsV1ChannelGroupProbeGroup.ColumnPattern"/>.
     /// </summary>
     public enum NeuropixelsV1ColumnPattern
     {
