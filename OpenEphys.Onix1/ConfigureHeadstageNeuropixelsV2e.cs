@@ -148,6 +148,8 @@ namespace OpenEphys.Onix1
     {
         readonly Version MinimumRevision = new(1, 0);
         const uint HeadstageId = 8;
+        const int AnalogSwitchSettleTimeMilliseconds = 20;
+        const int AnalogSupplySettleTimeMilliseconds = 500;
 
         // Headstage-specific constants
         const byte GPO10SupplyMask = 1 << 3; // Used to turn on VDDA analog supply
@@ -192,11 +194,11 @@ namespace OpenEphys.Onix1
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID1, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias1, alias);
 
-            alias = NeuropixelsV2.ProbeAddress << 1;
+            alias = NeuropixelsV2.ProbeI2CAddress << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID2, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias2, alias);
 
-            alias = NeuropixelsV2.FlexEEPROMAddress << 1;
+            alias = NeuropixelsV2.FlexEepromI2CAddress << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID3, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias3, alias);
 
@@ -247,19 +249,19 @@ namespace OpenEphys.Onix1
         internal static void SelectProbeA(I2CRegisterContext serializer)
         {
             serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, ProbeASelected);
-            Thread.Sleep(20);
+            Thread.Sleep(AnalogSwitchSettleTimeMilliseconds);
         }
 
         internal static void SelectProbeB(I2CRegisterContext serializer)
         {
             serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, ProbeBSelected);
-            Thread.Sleep(20);
+            Thread.Sleep(AnalogSwitchSettleTimeMilliseconds);
         }
 
         internal static void DeselectProbes(I2CRegisterContext serializer)
         {
             serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, NoProbeSelected);
-            Thread.Sleep(20);
+            Thread.Sleep(AnalogSwitchSettleTimeMilliseconds);
         }
 
         static void EnableProbeSupply(I2CRegisterContext serializer)
@@ -267,7 +269,7 @@ namespace OpenEphys.Onix1
             var gpo10Config = serializer.ReadByte((uint)DS90UB933SerializerI2CRegister.Gpio10);
             gpo10Config |= GPO10SupplyMask;
             serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, gpo10Config);
-            Thread.Sleep(20);
+            Thread.Sleep(AnalogSupplySettleTimeMilliseconds);
         }
 
         static void ResetProbes(I2CRegisterContext serializer)

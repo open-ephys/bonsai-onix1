@@ -152,7 +152,7 @@ namespace OpenEphys.Onix1
                         probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfiguration.ProbeInterfaceFileName, typeof(NeuropixelsV1eProbeGroup)) as NeuropixelsV1eProbeGroup;
                     }
 
-                    var probeControl = new NeuropixelsV1fRegisterContext(device, probeConfiguration, probeGroup);
+                    var probeControl = new NeuropixelsV1fRegisterContext(device, deviceName, probeConfiguration, probeGroup);
                     probeControl.InitializeProbe();
                     probeControl.WriteShiftRegisters();
                 }

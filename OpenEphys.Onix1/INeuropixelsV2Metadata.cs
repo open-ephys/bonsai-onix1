@@ -4,7 +4,7 @@
     {
         public string ProbePartNumber { get; }
 
-        public ulong? ProbeSerialNumber { get; }
+        public ulong ProbeSerialNumber { get; }
 
         public string FlexPartNumber { get; }
 
