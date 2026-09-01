@@ -3,10 +3,11 @@ using System.ComponentModel;
 using System.Reactive.Disposables;
 using System.Reflection;
 using System.Threading;
+using oni;
 
 namespace OpenEphys.Onix1
 {
-    internal abstract class ConfigurePortController : SingleDeviceFactory
+    internal abstract class ConfigurePortController : OnixSingleDeviceFactory
     {
         public ConfigurePortController(Type deviceType)
             : base(deviceType)
@@ -43,7 +44,7 @@ namespace OpenEphys.Onix1
             return CheckLinkState(device);
         }
 
-        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
+        public override IObservable<OnixContextTask> Process(IObservable<OnixContextTask> source)
         {
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;

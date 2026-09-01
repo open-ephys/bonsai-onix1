@@ -8,6 +8,6 @@ namespace OpenEphys.Onix1
 
         Type DeviceType { get; }
 
-        IObservable<ContextTask> Process(IObservable<ContextTask> source);
+        IObservable<TContext> Process<TContext>(IObservable<TContext> source) where TContext : ContextTask;
     }
 }

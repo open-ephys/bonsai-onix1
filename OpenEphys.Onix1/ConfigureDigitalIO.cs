@@ -94,13 +94,13 @@ namespace OpenEphys.Onix1
         /// This will schedule digital IO hardware configuration actions that can be applied by a <see
         /// cref="StartAcquisition"/> object prior to data collection.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that hold configuration
+        /// <param name="source">A sequence of <see cref="OnixContextTask"/> instances that hold configuration
         /// actions.</param>
         /// <returns>
         /// The original sequence modified by adding additional configuration actions required to configure a
         /// digital IO device.
         /// </returns>
-        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
+        public override IObservable<TContext> Process<TContext>(IObservable<TContext> source)
         {
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;

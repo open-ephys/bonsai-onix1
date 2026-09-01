@@ -91,12 +91,12 @@ namespace OpenEphys.Onix1
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
         /// prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="ContextTask"/> that holds all configuration actions.</param>
+        /// <param name="source">A sequence of <see cref="OnixContextTask"/> that holds all configuration actions.</param>
         /// <returns>
         /// The original sequence with the side effect of an additional configuration action to configure
         /// aN Rhs2116 Trigger device.
         /// </returns>
-        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
+        public override IObservable<TContext> Process<TContext>(IObservable<TContext> source)
         {
             var enable = Enable;
             var triggerSource = TriggerSource;

@@ -40,7 +40,8 @@ namespace OpenEphys.Onix1
             return new DeviceContext(deviceInfo.Context, device);
         }
 
-        public static DeviceContext GetPassthroughDeviceContext(this ContextTask context, uint address, Type expectedType)
+        // TODO: Maybe we should split the two passthrough-related methods into a different helper file
+        public static DeviceContext GetPassthroughDeviceContext(this OnixContextTask context, uint address, Type expectedType)
         {
             var passthroughDeviceAddress = context.GetPassthroughDeviceAddress(address);
             return GetDeviceContext(context, passthroughDeviceAddress, expectedType);
@@ -48,7 +49,8 @@ namespace OpenEphys.Onix1
 
         public static DeviceContext GetPassthroughDeviceContext(this DeviceContext device, Type expectedType)
         {
-            return GetPassthroughDeviceContext(device.Context, device.Address, expectedType);
+            var ctx = (device.Context as Onix1.OnixContextTask) ?? throw new NotSupportedException("Passthough is only supported by onix1 library classes");
+            return GetPassthroughDeviceContext(ctx, device.Address, expectedType);
         }
 
         static int GetDeviceID(Type deviceType)

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Runtime.Remoting.Messaging;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,9 +32,9 @@ namespace OpenEphys.Onix1
     /// cref="ContextTask"/> forms a complete interface for all hardware interaction within the library: all
     /// physical interaction with the ONIX system ultimately passes through this class.</strong>
     /// </remarks>
-    public class ContextTask : IDisposable
+    public abstract class ContextTask : IDisposable
     {
-        readonly oni.Context ctx;
+        protected readonly oni.Context ctx;
 
         /// <summary>
         /// Maximum amount of frames the reading queue will hold. If the queue fills or the read thread is not
@@ -76,6 +77,11 @@ namespace OpenEphys.Onix1
         readonly int contextIndex = DefaultIndex;
 
         /// <summary>
+        /// Performs implementation-specific runtime checks after context creation
+        /// </summary>
+        protected virtual void ContextCreationChecks() { }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ContextTask"/> class.
         /// </summary>
         /// <param name="driver"> A string specifying the device driver used to control hardware. </param>
@@ -93,13 +99,7 @@ namespace OpenEphys.Onix1
             contextIndex = index;
             ctx = new oni.Context(contextDriver, contextIndex);
             Initialize();
-            var (major, _) = GenericHelper.GetFirmwareVersionComponents(GetHub(0).FirmwareVersion);
-            if (major != 2)
-            {
-                throw new NotSupportedException("This library requires version 2.x of the ONIX firmware. "
-                    + "Please perform a firmware update to use this library. Instructions can be found at "
-                    + "https://open-ephys.github.io/onix-docs/Hardware%20Guide/PCIe%20Controller/updating-gateware.html");
-            }
+            ContextCreationChecks();
         }
 
         private void Initialize()
@@ -314,6 +314,17 @@ namespace OpenEphys.Onix1
             }
         }
 
+        /// <summary>
+        /// Performs implementation-specific check to determine
+        /// if clock reset should be issued by the <see cref="oni.Context.Start"/> call
+        /// or as a indpendent <see cref="oni.Context.ResetFrameClock"/> call
+        /// </summary>
+        /// <returns>True if independent reset is to be performed, false otherwise</returns>
+        protected virtual bool IndependentFrameClockReset()
+        {
+            return false;
+        }
+
         internal Task StartAsync(int blockReadSize, int blockWriteSize, CancellationToken cancellationToken = default)
         {
             lock (disposeLock)
@@ -341,16 +352,15 @@ namespace OpenEphys.Onix1
 
                         // TODO: Stuff related to sync mode is 100% ONIX, not ONI. Therefore, in the long term,
                         // another place to do this separation might be needed
-                        int address = ctx.HardwareAddress;
-                        int mode = (address & 0x00FF0000) >> 16;
-                        if (mode == 0) // Standalone mode
-                        {
-                            ctx.Start(true);
-                        }
-                        else // If synchronized mode, reset counter independently
+                        
+                        if (IndependentFrameClockReset()) 
                         {
                             ctx.ResetFrameClock();
                             ctx.Start(false);
+                        }
+                        else 
+                        {
+                            ctx.Start(true);
                         }
 
                     }
@@ -509,13 +519,6 @@ namespace OpenEphys.Onix1
         /// <inheritdoc cref = "StartAcquisition.WriteSize"/>
         public int BlockWriteSize => ctx.BlockWriteSize;
 
-        // Port A and Port B each have a bit in PORTFUNC
-        internal PassthroughState HubState
-        {
-            get => (PassthroughState)ctx.GetCustomOption((int)oni.ONIXOption.PORTFUNC);
-            set => ctx.SetCustomOption((int)oni.ONIXOption.PORTFUNC, (int)value);
-        }
-
         // NB: This is for actions that require synchronized register access and might
         // be called asynchronously with context dispose
         internal void EnsureContext(Action action)
@@ -578,19 +581,6 @@ namespace OpenEphys.Onix1
         }
 
         internal oni.Hub GetHub(uint deviceAddress) => ctx.GetHub(deviceAddress);
-
-        internal uint GetPassthroughDeviceAddress(uint deviceAddress)
-        {
-            var hubAddress = (deviceAddress & 0xFF00u) >> 8;
-            if (hubAddress == 0)
-            {
-                throw new ArgumentException(
-                    "Device addresses on hub zero cannot be used to create passthrough devices.",
-                    nameof(deviceAddress));
-            }
-
-            return hubAddress + 7;
-        }
 
         #endregion
 

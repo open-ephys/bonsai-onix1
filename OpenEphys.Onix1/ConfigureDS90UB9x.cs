@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace OpenEphys.Onix1
 {
-    internal abstract class ConfigureDS90UB9x : SingleDeviceFactory
+    internal abstract class ConfigureDS90UB9x : OnixSingleDeviceFactory
     {
         public ConfigureDS90UB9x(Type deviceType)
             : base(deviceType)
@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1
 
         private protected abstract IDisposable ShutdownSerdes(DeviceContext device);
 
-        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
+        public override IObservable<OnixContextTask> Process(IObservable<OnixContextTask> source)
         {
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;

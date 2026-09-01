@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1
     /// such as <see cref="PolledBno055Data"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Configures a PolledBno055 device.")]
-    public class ConfigurePolledBno055 : SingleDeviceFactory
+    public class ConfigurePolledBno055 : OnixSingleDeviceFactory
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigurePolledBno055"/> class.
@@ -68,12 +68,12 @@ namespace OpenEphys.Onix1
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
         /// prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="ContextTask"/> that holds all configuration actions.</param>
+        /// <param name="source">A sequence of <see cref="OnixContextTask"/> that holds all configuration actions.</param>
         /// <returns>
         /// The original sequence with the side effect of an additional configuration action to configure
         /// a PolledBno055 device.
         /// </returns>
-        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
+        public override IObservable<OnixContextTask> Process(IObservable<OnixContextTask> source)
         {
             var enable = Enable;
             var deviceName = DeviceName;
@@ -115,7 +115,7 @@ namespace OpenEphys.Onix1
 
     class PolledBno055DeviceInfo : DeviceInfo
     {
-        public PolledBno055DeviceInfo(ContextTask context, Type deviceType, uint deviceAddress, bool enable)
+        public PolledBno055DeviceInfo(OnixContextTask context, Type deviceType, uint deviceAddress, bool enable)
             : base(context, deviceType, deviceAddress)
         {
             Enable = enable;

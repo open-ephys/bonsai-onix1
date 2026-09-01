@@ -13,7 +13,7 @@ namespace OpenEphys.Onix1
     /// </remarks>
     [Description("Configures a parallel serial bus decoder for a NeuropixelsV1 probe.")]
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV1Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
-    public class ConfigureNeuropixelsV1PsbDecoder : SingleDeviceFactory, IConfigureNeuropixelsV1
+    public class ConfigureNeuropixelsV1PsbDecoder : OnixSingleDeviceFactory, IConfigureNeuropixelsV1
     {
 
         /// <summary>
@@ -46,12 +46,12 @@ namespace OpenEphys.Onix1
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
         /// prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="ContextTask"/> that holds all configuration actions.</param>
+        /// <param name="source">A sequence of <see cref="OnixContextTask"/> that holds all configuration actions.</param>
         /// <returns>
         /// The original sequence with the side effect of an additional configuration action to configure
         /// a NeuropixelsV1 device.
         /// </returns>
-        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
+        public override IObservable<OnixContextTask> Process(IObservable<OnixContextTask> source)
         {
             var enable = Enable;
             var deviceName = DeviceName;
