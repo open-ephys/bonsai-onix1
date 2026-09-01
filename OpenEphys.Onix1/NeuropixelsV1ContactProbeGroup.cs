@@ -10,22 +10,22 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// A <see cref="NeuropixelsV1ProbeGroup"/> whose contacts can be channel mapped individually.
     /// </summary>
-    public sealed class NeuropixelsV1ChannelToContactProbeGroup : NeuropixelsV1ProbeGroup
+    public sealed class NeuropixelsV1ContactProbeGroup : NeuropixelsV1ProbeGroup
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="NeuropixelsV1ChannelToContactProbeGroup"/> class using the
+        /// Initializes a new instance of the <see cref="NeuropixelsV1ContactProbeGroup"/> class using the
         /// default electrode geometry.
         /// </summary>
-        public NeuropixelsV1ChannelToContactProbeGroup()
-            : this(ProbeGroupResource.LoadDefault<NeuropixelsV1ChannelToContactProbeGroup>("NP1000.json"))
+        public NeuropixelsV1ContactProbeGroup()
+            : this(ProbeGroupResource.LoadDefault<NeuropixelsV1ContactProbeGroup>("NP1000.json"))
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="NeuropixelsV1ChannelToContactProbeGroup"/> class by
+        /// Initializes a new instance of the <see cref="NeuropixelsV1ContactProbeGroup"/> class by
         /// copying an existing probe group.
         /// </summary>
         /// <param name="probeGroup">The probe group to copy.</param>
-        public NeuropixelsV1ChannelToContactProbeGroup(NeuropixelsV1ChannelToContactProbeGroup probeGroup)
+        public NeuropixelsV1ContactProbeGroup(NeuropixelsV1ContactProbeGroup probeGroup)
             : base(probeGroup)
         {
             if (!HasChannelMap)
@@ -33,26 +33,26 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="NeuropixelsV1ChannelToContactProbeGroup"/> class from
+        /// Initializes a new instance of the <see cref="NeuropixelsV1ContactProbeGroup"/> class from
         /// deserialized ProbeInterface data.
         /// </summary>
         /// <param name="specification">The ProbeInterface specification string.</param>
         /// <param name="version">The ProbeInterface version string.</param>
         /// <param name="probes">The array of probes deserialized from the ProbeInterface file.</param>
         [JsonConstructor]
-        public NeuropixelsV1ChannelToContactProbeGroup(string specification, string version, Probe[] probes)
+        internal NeuropixelsV1ContactProbeGroup(string specification, string version, Probe[] probes)
             : base(specification, version, probes)
         {
             if (Variant.HasChannelGroupSelection)
                 throw new ArgumentException(
                     $"{Probe.Annotations.ModelName} requires per-channel-group bank selection; use " +
-                    $"{nameof(NeuropixelsV1ChannelGroupProbeGroup)} instead.");
+                    $"{nameof(NeuropixelsNP1110ProbeGroup)} instead.");
 
             if (!HasChannelMap)
                 SelectBank(0);
         }
 
-        internal override NeuropixelsV1ProbeGroup Clone() => new NeuropixelsV1ChannelToContactProbeGroup(this);
+        internal override NeuropixelsV1ProbeGroup Clone() => new NeuropixelsV1ContactProbeGroup(this);
 
         internal override void SetShankConfigurationBits(NeuropixelsV1ShankRegisterLayout layout, BitArray shankBits)
         {
@@ -85,47 +85,108 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Returns every channel preset available for this probe, generated from its variant.
+        /// Returns every preset available for this probe, generated from its variant.
         /// </summary>
         /// <remarks>
-        /// Always includes one preset per bank. <c>SingleColumn</c>/<c>Tetrodes</c> are appended only when
-        /// <see cref="NeuropixelsV1Variant.SupportsColumnAndTetrodePresets"/> is true for this probe's <see
-        /// cref="NeuropixelsV1ProbeGroup.Variant"/>. NB: they are a site-layout pattern, not meaningful for
-        /// every probe with a matching bank count.
+        /// Always includes "Full" (every channel at the same relative bank). <c>SingleColumn</c>/
+        /// <c>Tetrodes</c> are appended only when <see cref="NeuropixelsV1Variant.SupportsColumnAndTetrodePresets"/>
+        /// is true for this probe's <see cref="NeuropixelsV1ProbeGroup.Variant"/>; <c>SingleColumn
+        /// (Option 1)</c>/<c>(Option 2)</c> only when <see
+        /// cref="NeuropixelsV1Variant.SupportsLeftRightColumnPresets"/> is. NB: these are site-layout
+        /// patterns, not meaningful for every probe with a matching bank count.
         /// </remarks>
-        /// <returns>The list of channel presets, starting with <see
-        /// cref="NeuropixelsV1ChannelPreset.None"/>.</returns>
-        public IReadOnlyList<NeuropixelsV1ChannelPreset> GetChannelPresets()
+        /// <returns>The list of presets, starting with <see cref="NeuropixelsV1Preset.None"/>.</returns>
+        public override IReadOnlyList<NeuropixelsV1Preset> GetPresets()
         {
-            var presets = new List<NeuropixelsV1ChannelPreset> { NeuropixelsV1ChannelPreset.None };
-
-            presets.AddRange(Enumerable.Range(0, BankCount)
-                .Select(bankIndex => new NeuropixelsV1ChannelPreset(
-                    $"Bank{Neuropixels.BankDisplayName(bankIndex)}",
-                    pg => pg.GetBankContactIndices(bankIndex))));
+            var presets = new List<NeuropixelsV1Preset>
+            {
+                NeuropixelsV1Preset.None,
+                new("Full", Enumerable.Repeat(0, NeuropixelsV1.ChannelCount).ToArray(), null),
+            };
 
             if (Variant.SupportsColumnAndTetrodePresets)
             {
-                presets.Add(new NeuropixelsV1ChannelPreset("SingleColumn", pg => Enumerable.Range(0, pg.NumberOfContacts)
-                    .Where(i => (i % 2 == 0 && GetBank(i) == 0) || (i % 2 == 1 && GetBank(i) == 1))));
-                presets.Add(new NeuropixelsV1ChannelPreset("Tetrodes", pg => Enumerable.Range(0, pg.NumberOfContacts)
-                    .Where(i => (i % 8 < 4 && GetBank(i) == 0) || (i % 8 > 3 && GetBank(i) == 1))));
+                presets.Add(new NeuropixelsV1Preset("SingleColumn",
+                    Enumerable.Range(0, NeuropixelsV1.ChannelCount).Select(c => c % 2).ToArray(), null, UnitsPerBank: 2));
+                presets.Add(new NeuropixelsV1Preset("Tetrodes",
+                    Enumerable.Range(0, NeuropixelsV1.ChannelCount).Select(c => c % 8 < 4 ? 0 : 1).ToArray(), null, UnitsPerBank: 2));
+            }
+
+            if (Variant.SupportsLeftRightColumnPresets)
+            {
+                presets.Add(new NeuropixelsV1Preset("SingleColumn (Option 1)",
+                    Enumerable.Range(0, NeuropixelsV1.ChannelCount).Select(c => c % 2).ToArray(), null));
+                presets.Add(new NeuropixelsV1Preset("SingleColumn (Option 2)",
+                    Enumerable.Range(0, NeuropixelsV1.ChannelCount).Select(c => 1 - c % 2).ToArray(), null));
             }
 
             return presets;
         }
 
         /// <summary>
-        /// Configures the channel map to the specified preset.
+        /// Applies <paramref name="preset"/> at <paramref name="offset"/> banks from the tip, replacing
+        /// the existing channel map.
         /// </summary>
-        /// <param name="preset">The preset to apply. Passing <see cref="NeuropixelsV1ChannelPreset.None"/>
+        /// <remarks>
+        /// "Full" applied at offset <c>N</c> reproduces <see cref="SelectBank"/> exactly.
+        /// <para>
+        /// A channel's own relative bank (<see cref="NeuropixelsV1Preset.RelativeBanks"/>) and the
+        /// channel-half split forced by the wiring formula (see <see
+        /// cref="NeuropixelsV1Preset.UnitsPerBank"/>) are combined into one virtual index -- relative
+        /// bank as the high-order component, half as the low-order one -- so that every distinct
+        /// (relative bank, half) pair gets its own position along a single offset axis. Advancing
+        /// <paramref name="offset"/> then always means: whichever pair is currently least advanced
+        /// leaps forward by a full cycle (covering every pair once), the same way every other bank
+        /// leapfrogs in this codebase, just counted in half-bank units when <see
+        /// cref="NeuropixelsV1Preset.UnitsPerBank"/> is 2. At offset 0 this reduces to plain <see
+        /// cref="NeuropixelsV1Preset.RelativeBanks"/>, since nothing has advanced yet.
+        /// </para>
+        /// </remarks>
+        /// <param name="preset">The preset to apply. Passing <see cref="NeuropixelsV1Preset.None"/>
         /// leaves the existing channel map unchanged.</param>
-        public void SelectPreset(NeuropixelsV1ChannelPreset preset)
+        /// <param name="offset">The tip offset, in <see cref="NeuropixelsV1Preset.UnitsPerBank"/>-sized
+        /// steps, by which the whole preset pattern is shifted deeper.</param>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="preset"/> is not
+        /// <see cref="NeuropixelsV1Preset.None"/> and its widest relative bank exceeds this probe's
+        /// bank range even at offset 0. Thrown before any state is changed.</exception>
+        public override void SelectPreset(NeuropixelsV1Preset preset, int offset)
         {
-            if (preset == NeuropixelsV1ChannelPreset.None)
+            if (preset == NeuropixelsV1Preset.None)
                 return;
 
-            EnableElectrodes(preset.ContactSelector(this));
+            int maxOffset = MaxOffset(preset);
+            if (maxOffset < 0)
+                throw new ArgumentException(
+                    $"Preset '{preset.DisplayName}' cannot be applied to this probe: its widest relative " +
+                    $"bank exceeds the probe's {Variant.BankCount} bank(s), even at offset 0.", nameof(preset));
+
+            int clampedOffset = Math.Max(0, Math.Min(offset, maxOffset));
+            int unitsPerBank = preset.UnitsPerBank;
+            int distinctBankValues = preset.RelativeBanks.Max() + 1;
+            int totalVirtualUnits = unitsPerBank * distinctBankValues;
+            int channelsPerUnit = NeuropixelsV1.ChannelCount / unitsPerBank;
+
+            var contactForBank = new Dictionary<int, IReadOnlyDictionary<int, int>>();
+            var contactsToEnable = new List<int>(NeuropixelsV1.ChannelCount);
+
+            for (int channel = 0; channel < NeuropixelsV1.ChannelCount; channel++)
+            {
+                int unit = channel / channelsPerUnit;
+                int nativeVirtual = unitsPerBank * preset.RelativeBanks[channel] + unit;
+                int leaps = clampedOffset > nativeVirtual
+                    ? (clampedOffset - nativeVirtual + totalVirtualUnits - 1) / totalVirtualUnits
+                    : 0;
+                int bank = (nativeVirtual + totalVirtualUnits * leaps) / unitsPerBank;
+
+                if (!contactForBank.TryGetValue(bank, out var channelToContact))
+                {
+                    channelToContact = GetBankContactIndices(bank).ToDictionary(GetChannel, contact => contact);
+                    contactForBank[bank] = channelToContact;
+                }
+                contactsToEnable.Add(channelToContact[channel]);
+            }
+
+            EnableElectrodes(contactsToEnable);
         }
 
         /// <summary>
@@ -152,19 +213,5 @@ namespace OpenEphys.Onix1
                 Neuropixels.BankWindowStart(bankIndex, Variant.ElectrodeCount, NeuropixelsV1.ChannelCount),
                 NeuropixelsV1.ChannelCount);
         }
-    }
-
-    /// <summary>
-    /// Specifies a predefined electrode selection pattern for a Neuropixels 1.0 probe.
-    /// </summary>
-    public readonly record struct NeuropixelsV1ChannelPreset(string DisplayName, Func<NeuropixelsV1ChannelToContactProbeGroup, IEnumerable<int>> ContactSelector)
-    {
-        /// <summary>
-        /// The "no preset" value; applying it leaves the existing channel map unchanged.
-        /// </summary>
-        public static readonly NeuropixelsV1ChannelPreset None = new("None", _ => Enumerable.Empty<int>());
-
-        /// <inheritdoc/>
-        public override string ToString() => DisplayName;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace OpenEphys.Onix1
 {
@@ -21,7 +22,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// The number of 384-contact banks on this variant, computed as <c>ceil(ElectrodeCount /
         /// ChannelCount)</c>. The last bank's window is right-aligned against the end of the probe's
-        /// electrodes (see <see cref="NeuropixelsV1ChannelToContactProbeGroup.SelectBank"/>) rather than
+        /// electrodes (see <see cref="NeuropixelsV1ContactProbeGroup.SelectBank"/>) rather than
         /// being a full 384 contacts, exactly like the existing standard-NP1.0 <c>BankC</c> preset already
         /// does.
         /// </summary>
@@ -48,8 +49,8 @@ namespace OpenEphys.Onix1
         public bool HasInternalReferenceElectrode { get; }
 
         /// <summary>
-        /// True if this variant's site layout supports the <c>SingleColumn</c>/<c>Tetrodes</c> channel
-        /// presets (see <see cref="NeuropixelsV1ChannelToContactProbeGroup.GetChannelPresets"/>).
+        /// True if this variant's site layout supports the <c>SingleColumn</c>/<c>Tetrodes</c>
+        /// presets (see <see cref="NeuropixelsV1ContactProbeGroup.GetPresets"/>).
         /// </summary>
         /// <remarks>
         /// A site-layout fact, independent of <see cref="BankCount"/>: a variant can have exactly 3 banks
@@ -57,6 +58,20 @@ namespace OpenEphys.Onix1
         /// set explicitly per variant rather than derived from any other field.
         /// </remarks>
         public bool SupportsColumnAndTetrodePresets { get; }
+
+        /// <summary>
+        /// True if this variant's site layout supports the <c>SingleColumn (Option 1)</c>/
+        /// <c>SingleColumn (Option 2)</c> presets (see <see
+        /// cref="NeuropixelsV1ContactProbeGroup.GetPresets"/>).
+        /// </summary>
+        /// <remarks>
+        /// True for variants with a fixed two-column layout (like NP2.0's): every row has a contact at
+        /// the same two x-positions, so a channel's column is tied to its parity alone and never changes
+        /// across banks, unlike <see cref="SupportsColumnAndTetrodePresets"/>'s staggered checkerboard
+        /// layout where columns alternate by row. A site-layout fact, independent of <see
+        /// cref="BankCount"/> and mutually exclusive with <see cref="SupportsColumnAndTetrodePresets"/>.
+        /// </remarks>
+        public bool SupportsLeftRightColumnPresets { get; }
 
         /// <summary>
         /// The electrode count used to size and lay out the shank configuration shift register (see <see
@@ -95,16 +110,16 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// True if individual contacts cannot be independently wired to channels on this variant, and
         /// electrode selection must instead go through per-channel-group bank selection (see <see
-        /// cref="NeuropixelsV1ChannelGroupProbeGroup.SelectElectrodeGroup"/>).
+        /// cref="NeuropixelsNP1110ProbeGroup.SelectElectrodeGroup"/>).
         /// </summary>
         /// <remarks>
         /// True only for UHD Switchable (NP1110). Determines which concrete <see
         /// cref="NeuropixelsV1ProbeGroup"/> subtype a probe deserializes to (<see
         /// cref="NeuropixelsV1ProbeGroupConverter"/>): variants with this set become <see
-        /// cref="NeuropixelsV1ChannelGroupProbeGroup"/>, which doesn't expose the ordinary per-contact API
-        /// (<c>EnableElectrodes</c>, <c>SelectBank</c>, <c>SelectPreset</c>, <c>GetChannelPresets</c>) at
-        /// all. NB: the atom of selection is a 16-contact channel-group tile, not a single contact, so those
-        /// operations are a compile-time error for this variant rather than a runtime one.
+        /// cref="NeuropixelsNP1110ProbeGroup"/>, which doesn't expose the ordinary per-contact API
+        /// (<c>EnableElectrodes</c>, <c>SelectBank</c>) at all. NB: the atom of selection is a 16-contact
+        /// channel-group tile, not a single contact, so those operations are a compile-time error for
+        /// this variant rather than a runtime one.
         /// </remarks>
         public bool HasChannelGroupSelection { get; }
 
@@ -113,6 +128,7 @@ namespace OpenEphys.Onix1
             Func<int, int> getChannel,
             bool hasInternalReferenceElectrode = true,
             bool supportsColumnAndTetrodePresets = false,
+            bool supportsLeftRightColumnPresets = false,
             int? shankRegisterElectrodeCount = null,
             Func<int, int> shankRegisterPosition = null,
             bool hasColumnSelectionSwitch = false,
@@ -123,6 +139,7 @@ namespace OpenEphys.Onix1
             GetChannel = getChannel;
             HasInternalReferenceElectrode = hasInternalReferenceElectrode;
             SupportsColumnAndTetrodePresets = supportsColumnAndTetrodePresets;
+            SupportsLeftRightColumnPresets = supportsLeftRightColumnPresets;
             ShankRegisterElectrodeCount = shankRegisterElectrodeCount ?? electrodeCount;
             ShankRegisterPosition = shankRegisterPosition ?? (contactIndex => contactIndex);
             HasColumnSelectionSwitch = hasColumnSelectionSwitch;
@@ -177,7 +194,7 @@ namespace OpenEphys.Onix1
 
         /// <summary>
         /// The number of channel groups on the UHD Switchable probe (NP1110). See <see
-        /// cref="NeuropixelsV1ChannelGroupProbeGroup.SelectElectrodeGroup"/>.
+        /// cref="NeuropixelsNP1110ProbeGroup.SelectElectrodeGroup"/>.
         /// </summary>
         internal const int Np1110ChannelGroupCount = 24;
 
@@ -257,6 +274,34 @@ namespace OpenEphys.Onix1
             21, 47, 69, 95, 117, 143, 165, 191, 213, 239, 261, 287, 309, 335, 357, 383,
         };
 
+        // Each array holds one relative bank offset per channel group (24 entries), zero-based (the
+        // preset's own minimum value is 0). Extracted directly from user-built example probe interface
+        // files by loading them and reading back each channel group's selected bank(s); not derived from
+        // a formula. Under Inner/Outer, every group additionally gets its relative bank's +4 zig-zag
+        // complement (see NeuropixelsNP1110ProbeGroup.SelectPreset).
+        static int[] RepeatToChannelGroupCount(params int[] cycle) =>
+            Enumerable.Range(0, Np1110ChannelGroupCount).Select(g => cycle[g % cycle.Length]).ToArray();
+
+        /// <summary>
+        /// Named electrode-selection patterns available on the UHD Switchable probe (NP1110).
+        /// </summary>
+        internal static readonly IReadOnlyList<NeuropixelsV1Preset> Np1110Presets = new[]
+        {
+            // Every channel group at the same bank: the whole-probe equivalent of a single flat bank
+            // (see NeuropixelsNP1110ProbeGroup.SelectBank, which this pattern's offset=N
+            // application reproduces exactly).
+            new NeuropixelsV1Preset("Full",
+                RepeatToChannelGroupCount(0), NeuropixelsV1ColumnPattern.All),
+            new NeuropixelsV1Preset("Linear (columns 0 & 7)",
+                RepeatToChannelGroupCount(0, 2, 1, 3), NeuropixelsV1ColumnPattern.Outer),
+            new NeuropixelsV1Preset("Linear (columns 3 & 4)",
+                RepeatToChannelGroupCount(1, 3, 0, 2), NeuropixelsV1ColumnPattern.Inner),
+            new NeuropixelsV1Preset("Linear (columns 0, 2, 6, & 7)",
+                RepeatToChannelGroupCount(0, 0, 1, 1), NeuropixelsV1ColumnPattern.All),
+            new NeuropixelsV1Preset("Linear (columns 2-5)",
+                RepeatToChannelGroupCount(1, 1, 0, 0), NeuropixelsV1ColumnPattern.All),
+        };
+
         // Standard NP1.0's EEPROM reports old-style strings, while the bundled probe interface file's
         // model_name annotation is the modern "NP1000". Every other family reports the modern NPxxxx string
         // on both sides and needs no such bridging.
@@ -277,9 +322,7 @@ namespace OpenEphys.Onix1
             //       supportsColumnAndTetrodePresets: true)),
             //
             // (Opto's geometry is confirmed identical to standard NP1.0's, so supportsColumnAndTetrodePresets
-            // should be true once this is enabled.)
-            //
-            // NB: what's missing is hardware, not data. Opto requires a separate optical-signal muxing path,
+            // should be true once this is enabled.) However, opto requires a separate optical-signal muxing path,
             // unrelated to the electrical channel mapping above, that this codebase has not implemented.
             // Registering the part number here would let a user select "NP1300"/"NP1400" as if the probe were
             // fully supported, when only the electrical half is. Leave commented out until the optical muxing
@@ -289,6 +332,10 @@ namespace OpenEphys.Onix1
             // The different part numbers within each electrode-count group are staggered/linear/"Sapiens"
             // site-layout variants; geometry differs between them (carried by the loaded probe interface
             // file, not this registry), but the electrode count and channel formula are identical.
+            // supportsColumnAndTetrodePresets is true only for the staggered (checkerboard) part numbers in
+            // each group -- the same site layout as standard NP1.0. The linear ones in the 4416-electrode
+            // group have a two-column layout like NP2.0's rather than a checkerboard (see the comment
+            // below NP1030/NP1031); "Sapiens" part numbers have neither, hence false as well.
             //
             // NB: the last bank in the 4416-electrode group is a half-populated window that reuses contacts
             // from the previous bank, the same mechanism as standard NP1.0's BankC, which is exactly what
@@ -296,17 +343,24 @@ namespace OpenEphys.Onix1
             //
             // Register-width/bit-position scaling (see NeuropixelsV1.MakeShankRegisterLayout) is confirmed
             // for both the 2496- and 4416-electrode groups.
-            (new[] { "NP1010", "NP1011", "NP1012", "NP1013", "NP1014", "NP1015", "NP1016", "NP1017" },
+            (new[] { "NP1010", "NP1011", "NP1012", "NP1013", "NP1014" },
+                new NeuropixelsV1Variant(960, ModuloChannel, supportsColumnAndTetrodePresets: true)),
+            (new[] { "NP1015", "NP1016", "NP1017" },
                 new NeuropixelsV1Variant(960, ModuloChannel)),
-            (new[] { "NP1020", "NP1021", "NP1022" },
+            (new[] { "NP1020", "NP1021" },
+                new NeuropixelsV1Variant(2496, ModuloChannel, supportsColumnAndTetrodePresets: true)),
+            (new[] { "NP1022" },
                 new NeuropixelsV1Variant(2496, ModuloChannel)),
 
-            // NP1040/NP1041/NP1042/NP1050/NP1051: confirmed identical to NP1030-NP1033. Same ASIC and
-            // 4416-electrode count, differing only in mechanical properties (electrode geometry/layout, shank
-            // thickness, tube/cap packaging), not electrically. The channel formula and register-layout
-            // scaling (see MakeShankRegisterLayout) are both confirmed for this electrode count/ASIC.
-            (new[] { "NP1030", "NP1031", "NP1032", "NP1033", "NP1040", "NP1041", "NP1042", "NP1050", "NP1051" },
-                new NeuropixelsV1Variant(4416, ModuloChannel)),
+            // NP1032/NP1033 and NP1040/NP1041/NP1042/NP1050/NP1051 share a two-column site layout, not
+            // standard NP1.0's staggered checkerboard): every row has a contact at the same two x-positions,
+            // so a channel's column is tied to its parity alone and never changes across banks. That's what
+            // SingleColumn (Option 1)/(Option 2) assume -- see supportsLeftRightColumnPresets and
+            // NeuropixelsV1ContactProbeGroup.GetPresets.
+            (new[] { "NP1030", "NP1031" },
+                new NeuropixelsV1Variant(4416, ModuloChannel, supportsColumnAndTetrodePresets: true)),
+            (new[] { "NP1032", "NP1033", "NP1040", "NP1041", "NP1042", "NP1050", "NP1051" },
+                new NeuropixelsV1Variant(4416, ModuloChannel, supportsLeftRightColumnPresets: true)),
 
             // UHD Fixed: 384 electrodes, 1:1 identity channel wiring (no muxing, single bank). Unlike every
             // family above, no electrode (including 191) is an internal reference: every contact is an
@@ -328,14 +382,14 @@ namespace OpenEphys.Onix1
             // (RegisterBits/H/Ext/Tip positions via MakeShankRegisterLayout), not per-contact bit placement.
             //
             // hasColumnSelectionSwitch: true. Column selection (Inner/Outer/All) is exposed as a feature, via
-            // NeuropixelsV1ChannelGroupProbeGroup.ColumnPattern, see NeuropixelsV1.MakeShankBits.
+            // NeuropixelsNP1110ProbeGroup.ColumnPattern, see NeuropixelsV1.MakeShankBits.
             //
             // hasChannelGroupSelection: true. Individual contacts cannot be independently wired to channels
             // on this probe; the atom of selection is a channel group (see
             // Np1110ChannelGroupChannels/Np1110GroupBankRegisterIndex above). Also determines which concrete
             // NeuropixelsV1ProbeGroup subtype this variant deserializes to, see
             // NeuropixelsV1ProbeGroupConverter and
-            // NeuropixelsV1ChannelGroupProbeGroup.SelectElectrodeGroup.
+            // NeuropixelsNP1110ProbeGroup.SelectElectrodeGroup.
             (new[] { "NP1110" },
                 new NeuropixelsV1Variant(6144, UhdSwitchableChannel, hasInternalReferenceElectrode: false,
                     shankRegisterElectrodeCount: NeuropixelsV1.ChannelCount,

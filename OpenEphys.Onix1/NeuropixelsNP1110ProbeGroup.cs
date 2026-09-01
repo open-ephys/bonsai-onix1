@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1
     /// Individual contacts cannot be independently wired to channels on this probe; the atom of selection and
     /// mapping is a multi-contact, multi-channel tile.
     /// </remarks>
-    public sealed class NeuropixelsV1ChannelGroupProbeGroup : NeuropixelsV1ProbeGroup
+    public sealed class NeuropixelsNP1110ProbeGroup : NeuropixelsV1ProbeGroup
     {
         /// <summary>
         /// Per-channel-group selected banks (0, 1, or 2 of 16), indexed by channel group (0-23).
@@ -35,11 +35,11 @@ namespace OpenEphys.Onix1
         internal const string ColumnPatternAnnotationKey = "column_pattern";
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="NeuropixelsV1ChannelGroupProbeGroup"/> class by
+        /// Initializes a new instance of the <see cref="NeuropixelsNP1110ProbeGroup"/> class by
         /// copying an existing probe group.
         /// </summary>
         /// <param name="probeGroup">The probe group to copy.</param>
-        public NeuropixelsV1ChannelGroupProbeGroup(NeuropixelsV1ChannelGroupProbeGroup probeGroup)
+        public NeuropixelsNP1110ProbeGroup(NeuropixelsNP1110ProbeGroup probeGroup)
             : base(probeGroup)
         {
             columnPattern = probeGroup.columnPattern;
@@ -48,20 +48,20 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="NeuropixelsV1ChannelGroupProbeGroup"/> class from
+        /// Initializes a new instance of the <see cref="NeuropixelsNP1110ProbeGroup"/> class from
         /// deserialized ProbeInterface data.
         /// </summary>
         /// <param name="specification">The ProbeInterface specification string.</param>
         /// <param name="version">The ProbeInterface version string.</param>
         /// <param name="probes">The array of probes deserialized from the ProbeInterface file.</param>
         [JsonConstructor]
-        public NeuropixelsV1ChannelGroupProbeGroup(string specification, string version, Probe[] probes)
+        internal NeuropixelsNP1110ProbeGroup(string specification, string version, Probe[] probes)
             : base(specification, version, probes)
         {
             if (!Variant.HasChannelGroupSelection)
                 throw new ArgumentException(
                     $"{Probe.Annotations.ModelName} does not support per-channel-group bank selection; use " +
-                    $"{nameof(NeuropixelsV1ChannelToContactProbeGroup)} instead.");
+                    $"{nameof(NeuropixelsV1ContactProbeGroup)} instead.");
 
             var savedPattern = Probe.Annotations.GetAnnotation<string>(ColumnPatternAnnotationKey);
             columnPattern = !string.IsNullOrEmpty(savedPattern) &&
@@ -80,13 +80,13 @@ namespace OpenEphys.Onix1
             }
         }
 
-        internal override NeuropixelsV1ProbeGroup Clone() => new NeuropixelsV1ChannelGroupProbeGroup(this);
+        internal override NeuropixelsV1ProbeGroup Clone() => new NeuropixelsNP1110ProbeGroup(this);
 
         /// <remarks>
         /// The register's 384 non-reference bits are one per (channel group, bank) tile here, not
         /// one per channel. NB: <see cref="NeuropixelsV1ProbeGroup.ChannelMap"/>/
         /// <see cref="NeuropixelsV1Variant.ShankRegisterPosition"/> (the path
-        /// <see cref="NeuropixelsV1ChannelToContactProbeGroup"/> uses) don't apply here. See
+        /// <see cref="NeuropixelsV1ContactProbeGroup"/> uses) don't apply here. See
         /// <see cref="NeuropixelsV1VariantRegistry.Np1110GroupBankRegisterIndex"/>.
         /// <c>EN_A</c>/<c>EN_B</c> reflect <see cref="ColumnPattern"/>: Inner = (1,0),
         /// Outer = (0,1), All = (1,1).
@@ -253,6 +253,84 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
+        /// Returns every preset available for this probe: "Full" plus the named linear patterns
+        /// registered for this variant.
+        /// </summary>
+        /// <returns>The list of presets, starting with <see cref="NeuropixelsV1Preset.None"/>.</returns>
+        public override IReadOnlyList<NeuropixelsV1Preset> GetPresets()
+        {
+            var presets = new List<NeuropixelsV1Preset> { NeuropixelsV1Preset.None };
+            presets.AddRange(NeuropixelsV1VariantRegistry.Np1110Presets);
+            return presets;
+        }
+
+        /// <summary>
+        /// Applies <paramref name="preset"/> at <paramref name="offset"/> banks from the tip, replacing
+        /// the existing channel map and setting <see cref="ColumnPattern"/> to
+        /// <see cref="NeuropixelsV1Preset.RequiredColumnPattern"/>.
+        /// </summary>
+        /// <remarks>
+        /// <paramref name="offset"/> is clamped to <see cref="NeuropixelsV1ProbeGroup.MaxOffset"/> rather
+        /// than rejected. Under a <see cref="NeuropixelsV1Preset.RequiredColumnPattern"/> other than
+        /// <see cref="NeuropixelsV1ColumnPattern.All"/>, each channel group additionally gets its
+        /// preset entry's +4 zig-zag complement.
+        /// <para>
+        /// A channel group's selected bank(s) cannot simply be <paramref name="offset"/> plus its
+        /// <see cref="NeuropixelsV1Preset.RelativeBanks"/> entry: which physical column a channel
+        /// group's contacts land on depends on the bank's value modulo the preset's number of distinct
+        /// relative-bank values (<c>D</c>, e.g. 4 for the two Inner/Outer linear presets, 2 for the two
+        /// All-pattern linear presets), so a group can only move in leaps of <c>D</c> banks without
+        /// drifting onto the wrong column. At offset 0 every one of the <c>D</c> possible bank values
+        /// (0..D-1, plus each one's own +4 partner where applicable) is already claimed by some group, so
+        /// shifting the whole pattern one bank deeper means advancing whichever group is currently
+        /// shallowest by a full leap of <c>D</c>, vacating its old (now-shallowest) bank and extending the
+        /// window by one new (deepest) bank -- the same net effect as a plain +1 shift of the whole
+        /// window, applied per group in units its column can tolerate.
+        /// </para>
+        /// </remarks>
+        /// <param name="preset">The preset to apply. Passing <see cref="NeuropixelsV1Preset.None"/>
+        /// leaves the existing channel map unchanged.</param>
+        /// <param name="offset">The tip offset, in banks, by which the whole preset pattern is shifted
+        /// deeper.</param>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="preset"/> is not
+        /// <see cref="NeuropixelsV1Preset.None"/> and its widest relative bank exceeds this probe's
+        /// bank range even at offset 0. Thrown before any state is changed.</exception>
+        public override void SelectPreset(NeuropixelsV1Preset preset, int offset)
+        {
+            if (preset == NeuropixelsV1Preset.None)
+                return;
+
+            int maxOffset = MaxOffset(preset);
+            if (maxOffset < 0)
+                throw new ArgumentException(
+                    $"Preset '{preset.DisplayName}' cannot be applied to this probe: its widest relative " +
+                    $"bank exceeds the probe's {Variant.BankCount} bank(s), even at offset 0.", nameof(preset));
+
+            int clampedOffset = Math.Max(0, Math.Min(offset, maxOffset));
+            bool needsPartner = preset.RequiredColumnPattern.HasValue &&
+                preset.RequiredColumnPattern != NeuropixelsV1ColumnPattern.All;
+            int distinctBankValues = preset.RelativeBanks.Max() + 1;
+
+            for (int channelGroup = 0; channelGroup < NeuropixelsV1VariantRegistry.Np1110ChannelGroupCount; channelGroup++)
+                SelectElectrodeGroup(channelGroup);
+
+            ColumnPattern = preset.RequiredColumnPattern ?? NeuropixelsV1ColumnPattern.All;
+
+            for (int channelGroup = 0; channelGroup < preset.RelativeBanks.Count; channelGroup++)
+            {
+                int nativeBank = preset.RelativeBanks[channelGroup];
+                int leaps = clampedOffset > nativeBank
+                    ? (clampedOffset - nativeBank + distinctBankValues - 1) / distinctBankValues
+                    : 0;
+                int bank = nativeBank + distinctBankValues * leaps;
+                if (needsPartner)
+                    SelectElectrodeGroup(channelGroup, bank, bank + 4);
+                else
+                    SelectElectrodeGroup(channelGroup, bank);
+            }
+        }
+
+        /// <summary>
         /// Returns the bank(s) currently selected for <paramref name="channelGroup"/> (0, 1, or 2 of 16).
         /// Used by <see cref="NeuropixelsV1.MakeShankBits"/> to generate the shank configuration register.
         /// </summary>
@@ -345,8 +423,8 @@ namespace OpenEphys.Onix1
     }
 
     /// <summary>
-    /// Specifies which physical columns are enabled on a <see cref="NeuropixelsV1ChannelGroupProbeGroup"/>
-    /// (currently just UHD Switchable, NP1110). See <see cref="NeuropixelsV1ChannelGroupProbeGroup.ColumnPattern"/>.
+    /// Specifies which physical columns are enabled on a <see cref="NeuropixelsNP1110ProbeGroup"/>
+    /// (currently just UHD Switchable, NP1110). See <see cref="NeuropixelsNP1110ProbeGroup.ColumnPattern"/>.
     /// </summary>
     public enum NeuropixelsV1ColumnPattern
     {
