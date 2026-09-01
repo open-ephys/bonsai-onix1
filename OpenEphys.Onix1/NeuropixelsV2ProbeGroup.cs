@@ -15,7 +15,7 @@ namespace OpenEphys.Onix1
     /// per-topology subclass. A file with no shank IDs at all (e.g. a single-shank probe) is treated as
     /// having exactly one shank.
     /// </remarks>
-    public class NeuropixelsV2ProbeGroup : SingleProbeGroup, IMultiplexedProbeGroup
+    public sealed class NeuropixelsV2ProbeGroup : SingleProbeGroup, IMultiplexedProbeGroup
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="NeuropixelsV2ProbeGroup"/> class using the
@@ -48,7 +48,7 @@ namespace OpenEphys.Onix1
         /// <param name="version">The ProbeInterface version string.</param>
         /// <param name="probes">The array of probes deserialized from the ProbeInterface file.</param>
         [JsonConstructor]
-        public NeuropixelsV2ProbeGroup(string specification, string version, Probe[] probes)
+        internal NeuropixelsV2ProbeGroup(string specification, string version, Probe[] probes)
             : base(specification, version, probes)
         {
             InitializeShankLookup();

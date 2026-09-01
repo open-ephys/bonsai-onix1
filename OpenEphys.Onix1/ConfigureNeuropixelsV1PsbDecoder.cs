@@ -67,7 +67,7 @@ namespace OpenEphys.Onix1
             return source.ConfigureAndLatchDevice(context =>
             {
                 // default to contact-based muxing, but allow group-based as well.
-                NeuropixelsV1ProbeGroup probeGroup = new NeuropixelsV1ChannelToContactProbeGroup();
+                NeuropixelsV1ProbeGroup probeGroup = new NeuropixelsV1ContactProbeGroup();
 
                 if (File.Exists(probeConfiguration.ProbeInterfaceFileName))
                 {
