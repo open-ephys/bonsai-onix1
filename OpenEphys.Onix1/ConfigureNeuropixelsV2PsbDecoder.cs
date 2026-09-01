@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing.Design;
 using System.IO;
 using System.Xml.Serialization;
+using Bonsai.Reactive;
 
 namespace OpenEphys.Onix1
 {
@@ -86,82 +87,72 @@ namespace OpenEphys.Onix1
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
                 var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
 
-                // read probe metadata
-                SelectProbe(serializer);
-                var probeMetadata = new NeuropixelsV2Metadata(serializer);
-
-                // configure probe streaming
                 NeuropixelsV2GainCorrection? gainCorrection = null;
-                var probeControl = new NeuropixelsV2RegisterContext(device, NeuropixelsV2.ProbeAddress);
 
-                // check for probe being present
-                if (probeMetadata.ProbeSerialNumber != null)
+                if (enable)
                 {
-                    if (enable)
+                    // NB: the DS90UB9x supports multiple streams and we don't want to overwrite other
+                    // streams' enable state. Therefore the else clause does not contain the inverse of
+                    // this call
+                    device.WriteRegister(DS90UB9x.ENABLE, 1u);
+
+                    // configure probe streaming
+                    var probeControl = new NeuropixelsV2RegisterContext(device, NeuropixelsV2.ProbeI2CAddress);
+
+                    // read probe metadata
+                    SelectProbe(serializer);
+                    var probeMetadata = new NeuropixelsV2Metadata(device, deviceName);
+
+                    if (!File.Exists(probeConfiguration.GainCalibrationFileName))
                     {
-                        // NB: the DS90UB9x supports multiple streams and we don't want to overwrite other
-                        // streams' enable state. Therefore the else clause does not contain the inverse of
-                        // this call
-                        device.WriteRegister(DS90UB9x.ENABLE, 1u);
-
-                        if (!File.Exists(probeConfiguration.GainCalibrationFileName))
-                        {
-                            ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
-                                $"No gain calibration file was specified for the probe with serial number " +
-                                $"{probeMetadata.ProbeSerialNumber}."));
-                        }
-                        else
-                        {
-                            gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(probeConfiguration.GainCalibrationFileName);
-
-                            if (!gainCorrection.HasValue)
-                            {
-                                throw new ArgumentException(
-                                    $"The calibration file \"{probeConfiguration.GainCalibrationFileName}\" has an invalid format.");
-                            }
-                            else if (gainCorrection.Value.SerialNumber != probeMetadata.ProbeSerialNumber)
-                            {
-                                ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
-                                    $"The probe serial number ({probeMetadata.ProbeSerialNumber}) does not " +
-                                    $"match the gain calibration file serial number: {gainCorrection.Value.SerialNumber}."));
-                                gainCorrection = null;
-                            }
-                        }
-
-                        if (File.Exists(probeConfiguration.ProbeInterfaceFileName))
-                        {
-                            probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfiguration.ProbeInterfaceFileName, probeConfiguration.GetProbeGroupType()) as NeuropixelsV2eProbeGroup;
-                        }
-
-                        // configure base and shank
-                        probeControl.WriteConfiguration(probeConfiguration, probeGroup);
-
-                        // write super sync bits into ASIC
-                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC11, 0b00011000);
-                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC10, 0b01100001);
-                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC9, 0b10000110);
-                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC8, 0b00011000);
-                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC7, 0b01100001);
-                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC6, 0b10000110);
-                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC5, 0b00011000);
-                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC4, 0b01100001);
-                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC3, 0b10000110);
-                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC2, 0b00011000);
-                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC1, 0b01100001);
-                        probeControl.WriteByte(NeuropixelsV2.SUPERSYNC0, 0b10111001);
-
-                        // activate recording mode on NP
-                        probeControl.WriteByte(NeuropixelsV2.OP_MODE, 0b0100_0000);
-
+                        ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
+                            $"No gain calibration file was specified for the probe with serial number " +
+                            $"{probeMetadata.ProbeSerialNumber}."));
                     }
                     else
                     {
-                        // power down the probe
-                        probeControl.WriteByte(NeuropixelsV2.OP_MODE, 0b1000_0000);
+                        gainCorrection = NeuropixelsV2Helper.TryParseGainCalibrationFile(probeConfiguration.GainCalibrationFileName);
+
+                        if (!gainCorrection.HasValue)
+                        {
+                            throw new ArgumentException(
+                                $"The calibration file \"{probeConfiguration.GainCalibrationFileName}\" has an invalid format.");
+                        }
+                        else if (gainCorrection.Value.SerialNumber != probeMetadata.ProbeSerialNumber)
+                        {
+                            ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
+                                $"The probe serial number ({probeMetadata.ProbeSerialNumber}) does not " +
+                                $"match the gain calibration file serial number: {gainCorrection.Value.SerialNumber}."));
+                        }
                     }
+
+                    if (File.Exists(probeConfiguration.ProbeInterfaceFileName))
+                    {
+                        probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfiguration.ProbeInterfaceFileName, probeConfiguration.GetProbeGroupType()) as NeuropixelsV2eProbeGroup;
+                    }
+
+                    // configure base and shank
+                    probeControl.WriteConfiguration(probeConfiguration, probeGroup);
+
+                    // write super sync bits into ASIC
+                    probeControl.WriteByte(NeuropixelsV2.SUPERSYNC11, 0b00011000);
+                    probeControl.WriteByte(NeuropixelsV2.SUPERSYNC10, 0b01100001);
+                    probeControl.WriteByte(NeuropixelsV2.SUPERSYNC9, 0b10000110);
+                    probeControl.WriteByte(NeuropixelsV2.SUPERSYNC8, 0b00011000);
+                    probeControl.WriteByte(NeuropixelsV2.SUPERSYNC7, 0b01100001);
+                    probeControl.WriteByte(NeuropixelsV2.SUPERSYNC6, 0b10000110);
+                    probeControl.WriteByte(NeuropixelsV2.SUPERSYNC5, 0b00011000);
+                    probeControl.WriteByte(NeuropixelsV2.SUPERSYNC4, 0b01100001);
+                    probeControl.WriteByte(NeuropixelsV2.SUPERSYNC3, 0b10000110);
+                    probeControl.WriteByte(NeuropixelsV2.SUPERSYNC2, 0b00011000);
+                    probeControl.WriteByte(NeuropixelsV2.SUPERSYNC1, 0b01100001);
+                    probeControl.WriteByte(NeuropixelsV2.SUPERSYNC0, 0b10111001);
+
+                    // activate recording mode on NP
+                    probeControl.WriteByte(NeuropixelsV2.OP_MODE, 0b0100_0000);
                 }
 
-                // disconnect i2c bus from both probes to prevent digital interference during acquisition
+                // ensure disconnect from i2c bus from both probes to prevent digital interference during acquisition
                 DeselectProbe(serializer);
 
                 var deviceInfo = new NeuropixelsV2PsbDecoderDeviceInfo(context, DeviceType, deviceAddress, streamIndex, gainCorrection?.GainCorrectionFactor ?? 1.0, probeConfiguration, probeGroup);

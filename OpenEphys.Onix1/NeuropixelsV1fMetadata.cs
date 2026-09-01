@@ -10,7 +10,7 @@ namespace OpenEphys.Onix1
         const uint OFFSET_FLEXPN = 20;
         const uint OFFSET_PROBEPN = 40;
 
-        public NeuropixelsV1fMetadata(DeviceContext deviceContext)
+        public NeuropixelsV1fMetadata(DeviceContext deviceContext, string deviceName)
             : base(deviceContext, NeuropixelsV1.FlexEepromI2CAddress)
         {
             try
@@ -24,8 +24,8 @@ namespace OpenEphys.Onix1
             }
             catch (oni.ONIException ex)
             {
-                throw new InvalidOperationException("Could not communicate with probe at address " + deviceContext.Address + " . Ensure that the " +
-                    "flex connection is properly seated.", ex);
+                throw new InvalidOperationException($"Could not communicate with probe \"{deviceName}\". Check that the flex cable is " +
+                    "properly seated. If this probe is not in use, set its Enable property to false.", ex);
             }
         }
 
