@@ -73,6 +73,10 @@ namespace OpenEphys.Onix1
         readonly object regLock = new();
         readonly object disposeLock = new();
 
+        // Context pause management
+        readonly ManualResetEventSlim contextResume = new ManualResetEventSlim(true);
+        TaskCompletionSource<bool> contextPause = null;
+
         readonly string contextDriver = DefaultDriver;
         readonly int contextIndex = DefaultIndex;
 
@@ -124,6 +128,49 @@ namespace OpenEphys.Onix1
                             Initialize();
                         }
                 }
+        }
+
+
+        internal async Task PauseAcquisition()
+        {
+            if (acquisition.IsCompleted)
+            {
+                throw new InvalidOperationException("Running state can only be set after acquisition has started");
+            }
+            if (!contextResume.IsSet) return;
+            contextResume.Reset();
+
+            var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            Interlocked.Exchange(ref contextPause, tcs);
+            await tcs.Task;
+            ctx.Stop();
+        }
+
+        internal void ResumeAcquisition(bool resetClock)
+        {
+            if (acquisition.IsCompleted)
+            {
+                throw new InvalidOperationException("Running state can only be set after acquisition has started");
+            }
+            if (contextResume.IsSet) return;
+            if (resetClock)
+            {
+                if (IndependentFrameClockReset())
+                {
+                    ctx.ResetFrameClock();
+                    ctx.Start(false);
+                }
+                else
+                {
+                    ctx.Start(true);
+                }
+            }
+            else
+            {
+                ctx.Start(false);
+            }
+            contextResume.Set();
+
         }
 
         /// <summary>
@@ -399,6 +446,7 @@ namespace OpenEphys.Onix1
                     collectFramesCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                     var collectFramesToken = collectFramesCancellation.Token;
                     var frameQueue = new BlockingCollection<oni.Frame>(MaxQueuedFrames);
+                    contextResume.Set();
 
                     readFrames = Task.Factory.StartNew(() =>
                     {
@@ -406,6 +454,12 @@ namespace OpenEphys.Onix1
                         {
                             while (!collectFramesToken.IsCancellationRequested)
                             {
+                                var tcs = Interlocked.Exchange(ref contextPause, null);
+                                if (tcs != null)
+                                {
+                                    tcs.TrySetResult(true);
+                                    contextResume.Wait(collectFramesToken);
+                                }
                                 // NB: This is a blocking call and there is no safe way to terminate it
                                 // other than ending the process. For this reason, it is the job of the 
                                 // hardware to provide enough data (e.g. through a HeartbeatDevice") for
