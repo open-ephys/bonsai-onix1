@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Reflection;
 
 namespace OpenEphys.Onix1
@@ -17,17 +18,16 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Reads the raw JSON text of an embedded default probe-interface resource, without
-        /// deserializing it. Exposed (via <c>InternalsVisibleTo</c>) so design-time quick-load UI can
-        /// route a bundled default through the exact same deserialization path used for a
-        /// user-browsed file.
+        /// Reads and decompresses the raw JSON text of a gzip-compressed embedded default
+        /// probe-interface resource, without deserializing it.
         /// </summary>
         internal static string LoadDefaultJson(string defaultProbeInterfaceFileName)
         {
             var name = $"OpenEphys.Onix1.Resources.{defaultProbeInterfaceFileName}";
             using var stream = Assembly.GetManifestResourceStream(name)
                 ?? throw new InvalidOperationException($"Missing embedded resource: {name}");
-            using var reader = new StreamReader(stream);
+            using var gzip = new GZipStream(stream, CompressionMode.Decompress);
+            using var reader = new StreamReader(gzip);
             return reader.ReadToEnd();
         }
 

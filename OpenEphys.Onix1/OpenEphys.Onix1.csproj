@@ -23,14 +23,86 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Resources\NP1000.json" />
     <EmbeddedResource Include="Resources\NP1110ChannelOrder.bin" />
-    <EmbeddedResource Include="Resources\NP2003.json" />
-    <EmbeddedResource Include="Resources\NP2013.json" />
-    <EmbeddedResource Include="Resources\OEHSRHS2116.json" />
   </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="OpenEphys.Onix1.Design" />
+    <InternalsVisibleTo Include="OpenEphys.Onix1.Tests" />
   </ItemGroup>
+
+  <!--
+    Default ProbeInterface JSON resources are gzipped down to a small fraction
+    of their raw size Compressing them at build time, rather than committing
+    pre-compressed .gz files, keeps the plaintext .json under Resources.
+    ProbeGroupResource.
+  -->
+  <ItemGroup>
+    <ProbeInterfaceJsonSource Include="Resources\NP1000.json" />
+    <ProbeInterfaceJsonSource Include="Resources\NP1110.json" />
+    <ProbeInterfaceJsonSource Include="Resources\NP2003.json" />
+    <ProbeInterfaceJsonSource Include="Resources\NP2013.json" />
+    <ProbeInterfaceJsonSource Include="Resources\OEHSRHS2116.json" />
+  </ItemGroup>
+
+  <UsingTask
+    TaskName="GZipCompress"
+    TaskFactory="RoslynCodeTaskFactory"
+    AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <SourceFile ParameterType="System.String" Required="true" />
+      <DestinationFile ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.IO.Compression" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+Directory.CreateDirectory(Path.GetDirectoryName(DestinationFile));
+using (var input = File.OpenRead(SourceFile))
+using (var output = File.Create(DestinationFile))
+using (var gzip = new GZipStream(output, CompressionLevel.Optimal))
+{
+    input.CopyTo(gzip);
+}
+]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <!--
+    Inputs/Outputs transformed directly from the same source item (the standard MSBuild
+    "compile per file" idiom) make this incremental per-item: MSBuild only re-invokes
+    GZipCompress for a source .json newer than its own (already-computed) .gz output,
+    skipping the rest on every build where the source hasn't changed.
+  -->
+  <Target Name="CompressProbeInterfaceResources"
+          BeforeTargets="AssignTargetPaths"
+          Inputs="@(ProbeInterfaceJsonSource)"
+          Outputs="@(ProbeInterfaceJsonSource->'$(IntermediateOutputPath)Resources\%(Filename)%(Extension).gz')">
+    <GZipCompress
+      SourceFile="%(ProbeInterfaceJsonSource.Identity)"
+      DestinationFile="$(IntermediateOutputPath)Resources\%(ProbeInterfaceJsonSource.Filename)%(ProbeInterfaceJsonSource.Extension).gz" />
+  </Target>
+
+  <!--
+    A separate, unconditional target: EmbeddedResource must be registered on every build
+    (referencing whichever .gz files exist on disk, freshly regenerated or not), not only when
+    CompressProbeInterfaceResources's own Inputs/Outputs check decides its body needs to run.
+
+    LogicalName is spelled out against %(ProbeInterfaceJsonSource.*) explicitly, not the bare
+    %(Filename)/%(Extension) shorthand: metadata on an Include="@(X->'...')" transform batches
+    against the source item X, so the bare form would (correctly, if confusingly) resolve to
+    X's own Filename/Extension ("NP1000"/".json"), not the transformed .gz path's. The upshot is
+    the embedded logical name stays plain "....json", matching what ProbeGroupResource's existing
+    lookup name already expects unchanged, even though the bytes behind it are gzip compressed;
+    only LoadDefaultJson's own decompression step needs to know that.
+  -->
+  <Target Name="AddCompressedProbeInterfaceResources" BeforeTargets="AssignTargetPaths" DependsOnTargets="CompressProbeInterfaceResources">
+    <ItemGroup>
+      <EmbeddedResource Include="@(ProbeInterfaceJsonSource->'$(IntermediateOutputPath)Resources\%(Filename)%(Extension).gz')">
+        <LogicalName>OpenEphys.Onix1.Resources.%(ProbeInterfaceJsonSource.Filename)%(ProbeInterfaceJsonSource.Extension)</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
 </Project>
