@@ -167,7 +167,8 @@ namespace OpenEphys.Onix1
 
                 var deviceInfo = new NeuropixelsV2BetaPsbDecoderDeviceInfo(
                     context, DeviceType, deviceAddress, streamIndex,
-                    gainCorrection?.GainCorrectionFactor ?? 1.0, probeConfiguration, probeGroup);
+                    gainCorrection?.GainCorrectionFactor ?? 1.0, probeConfiguration, probeGroup,
+                    probeMetadata.ProbePartNumber, probeMetadata.ProbeSerialNumber);
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
         }

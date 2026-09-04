@@ -46,7 +46,6 @@ namespace OpenEphys.Onix1
                     ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
                         $"The probe serial number ({metaData.ProbeSerialNumber}) does not " +
                         $"match the ADC calibration file serial number ({adcCalibration.Value.SerialNumber})."));
-                    adcCalibration = null;
                 }
             }
 
@@ -70,7 +69,6 @@ namespace OpenEphys.Onix1
                     ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
                         $"The probe serial number ({metaData.ProbeSerialNumber}) does not " +
                         $"match the gain calibration file serial number ({gainCorrection.Value.SerialNumber})."));
-                    gainCorrection = null;
                 }
             }
 

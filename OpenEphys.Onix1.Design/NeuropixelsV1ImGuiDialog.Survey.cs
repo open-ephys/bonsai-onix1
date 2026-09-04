@@ -8,7 +8,7 @@ namespace OpenEphys.Onix1.Design
 {
     // Bank-selection UI, activity-color viewing, and persistence of survey results to annotations.
     // Running/configuring the survey itself is a headstage-level concern -- see
-    // NeuropixelsV1HeadstageSurveyPanel / NeuropixelsV1HeadstageSurveyRunner.
+    // NeuropixelsV1HeadstageControlPanel / NeuropixelsV1HeadstageSurveyRunner.
     internal partial class NeuropixelsV1ImGuiDialog
     {
         static readonly Vector4 ColorTextWarning = ImGui.ColorConvertU32ToFloat4(ImGuiPalette.AmberGold);

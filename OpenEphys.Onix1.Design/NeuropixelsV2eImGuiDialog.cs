@@ -28,9 +28,13 @@ namespace OpenEphys.Onix1.Design
         // Probe state
         NeuropixelsV2ProbeGroup probeGroup;
 
-        // Survey (execution/hardware config lives on the headstage-level survey panel; this dialog only
+        // Survey (execution/hardware config lives on the headstage-level control panel; this dialog only
         // owns its own results/status and the activity-view + bank-selection UI that reads/drives them)
         readonly NeuropixelsV2eSurveyState survey = new();
+
+        // Scan (execution/hardware config lives on the headstage-level control panel; this dialog only
+        // owns its own result/status)
+        readonly NeuropixelsV1ScanState scan = new();
         SurveyActivityMetric selectedMetric = SurveyActivityMetric.SNR;
         float actMin, actMax = 1f;
         float actDomainMin, actDomainMax = 1f;
@@ -64,6 +68,12 @@ namespace OpenEphys.Onix1.Design
         /// read by this dialog's activity-view UI.
         /// </summary>
         internal NeuropixelsV2eSurveyState Survey => survey;
+
+        /// <summary>
+        /// This probe's own headstage-scan result/status. Written into by the headstage-level scan runner,
+        /// read by this dialog's control panel and calibration-file UI.
+        /// </summary>
+        internal NeuropixelsV1ScanState Scan => scan;
 
         /// <summary>
         /// Which (shank, bank) pairs this probe's survey should sweep, as selected via the probe-view
@@ -107,6 +117,7 @@ namespace OpenEphys.Onix1.Design
             RestoreActivityData();
             InitSurveyBanks();
             WriteBackBufs();
+            CheckScannedPartNumberAgainstLoadedFile();
         }
 
         protected override void OnContactsEnabled()
@@ -140,6 +151,7 @@ namespace OpenEphys.Onix1.Design
             isBeta = configureNode is ConfigureNeuropixelsV2BetaPsbDecoder;
 
             survey.SurveyCompleted += () => HasChanges = true;
+            scan.ScanCompleted += OnScanCompleted;
 
             SetupSelectorCallbacks();
             LoadOrCreateProbeGroup();

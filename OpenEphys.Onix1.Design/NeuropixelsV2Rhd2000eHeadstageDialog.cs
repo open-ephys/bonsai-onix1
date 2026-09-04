@@ -33,7 +33,7 @@
             DialogBno055 = new ImGuiPropertyPanel(configureHeadstage.Bno055, filterDeviceTableProperties: true);
             AddTab("Bno055", DialogBno055);
 
-            InitializeSurveyPanel(configureHeadstage.Port,
+            InitializeControlPanel(configureHeadstage.Port,
                 port => configureHeadstage.Port = port,
                 voltage => configureHeadstage.PortVoltage = new AutoPortVoltage(voltage));
         }

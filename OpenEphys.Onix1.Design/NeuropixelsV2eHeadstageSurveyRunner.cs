@@ -338,23 +338,18 @@ namespace OpenEphys.Onix1.Design
                 }
             }
 
-            var pipeline = new StartAcquisition().Process(
-                headstage.Process(new CreateContext { Driver = driver, Index = hubIndex }.Generate()));
-
             var tcsMap = active.ToDictionary(a => a.Target,
                 _ => new TaskCompletionSource<(float[] Amplitude, float[] FireRate, float[] Noise)>(
                     TaskCreationOptions.RunContinuationsAsynchronously));
 
-            var pipelineSub = pipeline.Subscribe(
-                _ => { },
-                ex =>
+            var pipelineSub = HeadstageConnection.Configure(headstage, driver, hubIndex, ex =>
+            {
+                foreach (var tcs in tcsMap.Values)
                 {
-                    foreach (var tcs in tcsMap.Values)
-                    {
-                        if (cancellationToken.IsCancellationRequested) tcs.TrySetCanceled();
-                        else tcs.TrySetException(ex);
-                    }
-                });
+                    if (cancellationToken.IsCancellationRequested) tcs.TrySetCanceled();
+                    else tcs.TrySetException(ex);
+                }
+            });
 
             var dataSubs = new List<IDisposable>();
             foreach (var (target, deviceName, recordingFilePath) in active)

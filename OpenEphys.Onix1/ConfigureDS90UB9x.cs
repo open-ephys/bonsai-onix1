@@ -16,7 +16,6 @@ namespace OpenEphys.Onix1
 
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
-            var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
 
             return source.ConfigureAndLatchDevice(context =>

@@ -18,9 +18,13 @@ namespace OpenEphys.Onix1.Design
         readonly IConfigureNeuropixelsV1 configureNode;
         NeuropixelsV1ProbeGroup probeGroup;
 
-        // Survey (execution/hardware config lives on the headstage-level survey panel; this dialog only
+        // Survey (execution/hardware config lives on the headstage-level control panel; this dialog only
         // owns its own results/status and the activity-view + bank-selection UI that reads/drives them)
         readonly NeuropixelsV1SurveyState survey = new();
+
+        // Scan (execution/hardware config lives on the headstage-level control panel; this dialog only
+        // owns its own result/status)
+        readonly NeuropixelsV1ScanState scan = new();
         SurveyActivityMetric selectedMetric = SurveyActivityMetric.SNR;
         float actMin, actMax = 1f;
         float actDomainMin, actDomainMax = 1f;
@@ -61,6 +65,12 @@ namespace OpenEphys.Onix1.Design
         /// read by this dialog's activity-view UI.
         /// </summary>
         internal NeuropixelsV1SurveyState Survey => survey;
+
+        /// <summary>
+        /// This probe's own headstage-scan result/status. Written into by the headstage-level scan runner,
+        /// read by this dialog's control panel and calibration-file UI.
+        /// </summary>
+        internal NeuropixelsV1ScanState Scan => scan;
 
         /// <summary>
         /// Which banks this probe's survey should sweep, as selected via the probe-view drag-select
@@ -170,6 +180,7 @@ namespace OpenEphys.Onix1.Design
 
             RestoreActivityData();
             InitSurveyBanks();
+            CheckScannedPartNumberAgainstLoadedFile();
         }
 
         protected override void OnContactsEnabled()
@@ -202,6 +213,7 @@ namespace OpenEphys.Onix1.Design
             this.configureNode = configureNode ?? throw new ArgumentNullException(nameof(configureNode));
 
             survey.SurveyCompleted += () => HasChanges = true;
+            scan.ScanCompleted += OnScanCompleted;
 
             SetupSelectorCallbacks();
             LoadOrCreateProbeGroup();
@@ -345,6 +357,7 @@ namespace OpenEphys.Onix1.Design
             DrawCalFileRow(gainCalBuf, "##gaincal",
                 () => configureNode.ProbeConfiguration.GainCalibrationFileName,
                 v => configureNode.ProbeConfiguration.GainCalibrationFileName = v,
+                "_gainCalValues.csv",
                 "Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv|All files (*.*)|*.*",
                 "Select Gain Calibration File",
                 "Path to the gain calibration file for this probe. Required to acquire data from the probe.");
@@ -355,13 +368,14 @@ namespace OpenEphys.Onix1.Design
             DrawCalFileRow(adcCalBuf, "##adccal",
                 () => configureNode.ProbeConfiguration.AdcCalibrationFileName,
                 v => configureNode.ProbeConfiguration.AdcCalibrationFileName = v,
+                "_ADCCalibration.csv",
                 "ADC calibration files (*_ADCCalibration.csv)|*_ADCCalibration.csv|All files (*.*)|*.*",
                 "Select ADC Calibration File",
                 "Path to the ADC calibration file for this probe. Required to acquire data from the probe.");
         }
 
         void DrawCalFileRow(byte[] buf, string id, Func<string> getPath, Action<string> setPath,
-            string filter, string dialogTitle, string tooltip)
+            string fileSuffix, string filter, string dialogTitle, string tooltip)
         {
             float fileTargetW = ComputeFileRowInputWidth();
             string current = getPath() ?? "";
@@ -380,6 +394,12 @@ namespace OpenEphys.Onix1.Design
             if (ImGui.Button("Open..." + id))
             {
                 using var ofd = new OpenFileDialog { Title = dialogTitle, Filter = filter };
+                if (scan.SerialNumber.HasValue)
+                {
+                    var pattern = $"{scan.SerialNumber}*{fileSuffix}";
+                    ofd.Filter = $"This probe's files ({pattern})|{pattern}|{filter}";
+                    ofd.FilterIndex = 1;
+                }
                 if (!string.IsNullOrEmpty(current) && File.Exists(current))
                     ofd.InitialDirectory = Path.GetDirectoryName(current);
                 if (ofd.ShowDialog() == DialogResult.OK)

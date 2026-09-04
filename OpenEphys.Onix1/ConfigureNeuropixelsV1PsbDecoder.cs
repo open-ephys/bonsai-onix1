@@ -69,38 +69,42 @@ namespace OpenEphys.Onix1
                 // default to contact-based muxing, but allow group-based as well.
                 NeuropixelsV1ProbeGroup probeGroup = new NeuropixelsV1ContactProbeGroup();
 
-                if (File.Exists(probeConfiguration.ProbeInterfaceFileName))
-                {
-                    probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(
-                        probeConfiguration.ProbeInterfaceFileName,
-                        typeof(NeuropixelsV1ProbeGroup)) as NeuropixelsV1ProbeGroup
-                        ?? throw new InvalidDataException(
-                            $"Probe interface file '{probeConfiguration.ProbeInterfaceFileName}' did not produce a valid {nameof(NeuropixelsV1ProbeGroup)}.");
-                }
-
                 // configure device via the DS90UB9x deserializer device
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
                 var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
+
+                // read probe metadata
+                var probeMetadata = new NeuropixelsV1eMetadata(device);
+
+                NeuropixelsV1RegisterContext probeControl = null;
 
                 // NB: the DS90UB9x supports multiple streams and we don't want to overwrite other streams'
                 // enable state
                 if (enable)
                 {
                     device.WriteRegister(DS90UB9x.ENABLE, 1u);
+
+                    if (File.Exists(probeConfiguration.ProbeInterfaceFileName))
+                    {
+                        probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(
+                            probeConfiguration.ProbeInterfaceFileName,
+                            typeof(NeuropixelsV1ProbeGroup)) as NeuropixelsV1ProbeGroup
+                            ?? throw new InvalidDataException(
+                                $"Probe interface file '{probeConfiguration.ProbeInterfaceFileName}' did not produce a valid {nameof(NeuropixelsV1ProbeGroup)}.");
+                    }
+
+                    NeuropixelsV1Helper.ValidateProbePartNumber(probeMetadata.ProbePartNumber, probeGroup);
+
+                    // program shift registers
+                    probeControl = new NeuropixelsV1RegisterContext(device, NeuropixelsV1.ProbeI2CAddress,
+                        probeMetadata.ProbeSerialNumber, probeConfiguration, probeGroup);
+                    probeControl.InitializeProbe();
+                    probeControl.WriteConfiguration();
+                    probeControl.StartAcquisition();
                 }
 
-                // read probe metadata
-                var probeMetadata = new NeuropixelsV1eMetadata(device);
-                NeuropixelsV1Helper.ValidateProbePartNumber(probeMetadata.ProbePartNumber, probeGroup);
-
-                // program shift registers
-                var probeControl = new NeuropixelsV1RegisterContext(device, NeuropixelsV1.ProbeI2CAddress,
-                    probeMetadata.ProbeSerialNumber, probeConfiguration, probeGroup);
-                probeControl.InitializeProbe();
-                probeControl.WriteConfiguration();
-                probeControl.StartAcquisition();
-
-                var deviceInfo = new NeuropixelsV1PsbDecoderDeviceInfo(context, DeviceType, deviceAddress, probeControl, probeConfiguration, probeGroup);
+                var deviceInfo = new NeuropixelsV1PsbDecoderDeviceInfo(context, DeviceType, deviceAddress, probeControl,
+                    probeConfiguration, probeGroup, probeMetadata.ProbePartNumber, probeMetadata.ProbeSerialNumber);
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
         }
