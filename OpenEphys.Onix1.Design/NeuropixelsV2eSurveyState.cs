@@ -70,8 +70,8 @@ namespace OpenEphys.Onix1.Design
 
         /// <summary>
         /// Records a finished survey round and raises <see cref="SurveyCompleted"/>. Called by the survey
-        /// runner only; restoring previously-saved results sets <see cref="Results"/>/<see cref="Status"/>/
-        /// <see cref="CompletedAt"/> directly instead, so it doesn't raise the event.
+        /// runner only; restoring previously-saved results uses <see cref="Restore"/> instead, which
+        /// doesn't raise the event.
         /// </summary>
         internal void Complete(NeuropixelsV2eSurveyResults results)
         {
@@ -79,6 +79,17 @@ namespace OpenEphys.Onix1.Design
             Status = NeuropixelsV2eSurveyStatus.Completed;
             CompletedAt = DateTimeOffset.Now;
             SurveyCompleted?.Invoke();
+        }
+
+        /// <summary>
+        /// Reverts to a prior result snapshot instead of recording a new run. <paramref name="results"/>
+        /// may be <c>null</c>, reverting to having none.
+        /// </summary>
+        internal void Restore(NeuropixelsV2eSurveyResults results, DateTimeOffset? completedAt)
+        {
+            Results = results;
+            CompletedAt = completedAt;
+            Status = results != null ? NeuropixelsV2eSurveyStatus.Completed : NeuropixelsV2eSurveyStatus.Idle;
         }
     }
 }
