@@ -124,12 +124,20 @@ namespace OpenEphys.Onix1.Design
                 int group = entry.Key;
                 var banks = entry.Value;
 
+                // Every touched bank is already selected for this group, so this gesture asks for nothing
+                // new here: leave the group's selection untouched. Without this, re-enabling a selection of
+                // already-enabled contacts (e.g. to pin them) would fall through to the replace logic below
+                // and silently evict a sibling bank the selection didn't happen to touch.
+                var existingBanks = channelGroupProbe.GetSelectedBanks(group);
+                if (banks.All(existingBanks.Contains))
+                    continue;
+
                 // A pinned bank is immutable: it's never silently dropped by a new enable action, only by
                 // explicitly unpinning it first. Any *unpinned* existing bank for this group remains fair
                 // game to be replaced by whatever this gesture selects (confirmed "replace with this gesture"
                 // semantics). Without this, selecting the complementary row-crossed bank for a zig-zag pair
                 // would evict the already-pinned bank instead of joining it.
-                foreach (var existingBank in channelGroupProbe.GetSelectedBanks(group))
+                foreach (var existingBank in existingBanks)
                 {
                     if (channelGroupProbe.GetSurvivingChannels(group, existingBank).Any(ch => channelState.PinnedChannels.Contains(ch)))
                         banks.Add(existingBank);
