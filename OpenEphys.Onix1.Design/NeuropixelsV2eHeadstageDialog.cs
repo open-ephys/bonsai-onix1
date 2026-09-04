@@ -25,7 +25,7 @@
             : base("Headstage NeuropixelsV2e Configuration")
         {
             InitializeTabs(configureHeadstage.NeuropixelsV2A, configureHeadstage.NeuropixelsV2B, configureHeadstage.Bno055);
-            InitializeSurveyPanel(configureHeadstage.Port,
+            InitializeControlPanel(configureHeadstage.Port,
                 port => configureHeadstage.Port = port,
                 voltage => configureHeadstage.PortVoltage = new AutoPortVoltage(voltage));
         }
@@ -38,7 +38,7 @@
             : base("Headstage NeuropixelsV2e-Beta Configuration")
         {
             InitializeTabs(configureHeadstage.NeuropixelsV2A, configureHeadstage.NeuropixelsV2B, configureHeadstage.Bno055);
-            InitializeSurveyPanel(configureHeadstage.Port,
+            InitializeControlPanel(configureHeadstage.Port,
                 port => configureHeadstage.Port = port,
                 voltage => configureHeadstage.PortVoltage = new AutoPortVoltage(voltage));
         }

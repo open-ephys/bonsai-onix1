@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,11 +10,12 @@ using Hexa.NET.ImGui;
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Headstage-level side panel for running the electrode-activity survey across one or more probes:
-    /// hardware address, filter/threshold/time-per-bank, which probe(s) to include, and run/cancel/progress.
-    /// Activity *viewing* (coloring, metric selection) stays on each probe's own dialog.
+    /// Headstage-level side panel shared by every NeuropixelsV2e-family headstage: hardware address, a
+    /// probe-identity scan, and running the electrode-activity survey across one or more probes
+    /// (filter/threshold/time-per-bank, which probe(s) to include, run/cancel/progress). Activity *viewing*
+    /// (coloring, metric selection) stays on each probe's own dialog.
     /// </summary>
-    internal sealed class NeuropixelsV2eHeadstageSurveyPanel : IImGuiTabPanel
+    internal sealed class NeuropixelsV2eHeadstageControlPanel : IImGuiTabPanel
     {
         readonly IReadOnlyList<NeuropixeslV2eSurveyTarget> targets;
         readonly SurveyHeadstageFactory buildHeadstage;
@@ -27,15 +28,15 @@ namespace OpenEphys.Onix1.Design
         static readonly Vector4 ColorTextError = ImGui.ColorConvertU32ToFloat4(ImGuiPalette.VibrantCoral);
 
         /// <summary>
-        /// Initializes a new instance of <see cref="NeuropixelsV2eHeadstageSurveyPanel"/>.
+        /// Initializes a new instance of <see cref="NeuropixelsV2eHeadstageControlPanel"/>.
         /// </summary>
-        /// <param name="targets">Every probe this headstage hosts that can be surveyed.</param>
-        /// <param name="buildHeadstage">Builds a fresh headstage of this headstage's own concrete type each survey round.</param>
+        /// <param name="targets">Every probe this headstage hosts that can be scanned/surveyed.</param>
+        /// <param name="buildHeadstage">Builds a fresh headstage of this headstage's own concrete type each scan/survey round.</param>
         /// <param name="initialPort">Initial hardware-address port, seeded from the headstage's own configured port.</param>
         /// <param name="setHeadstagePort">
         /// Writes an edited port back onto the headstage's own configuration node. Changing the port here is
         /// stating a physical fact about the headstage (which ONIX breakout port it's plugged into), not a
-        /// survey-only parameter -- unlike driver/hub index, which are PC-side connection details with no
+        /// survey-only parameter: unlike driver/hub index, which are PC-side connection details with no
         /// equivalent on the headstage config node.
         /// </param>
         /// <param name="setHeadstagePortVoltage">
@@ -43,7 +44,7 @@ namespace OpenEphys.Onix1.Design
         /// reason as <paramref name="setHeadstagePort"/>.
         /// </param>
         /// <param name="log">The hosting shell's console log.</param>
-        internal NeuropixelsV2eHeadstageSurveyPanel(IReadOnlyList<NeuropixeslV2eSurveyTarget> targets, SurveyHeadstageFactory buildHeadstage,
+        internal NeuropixelsV2eHeadstageControlPanel(IReadOnlyList<NeuropixeslV2eSurveyTarget> targets, SurveyHeadstageFactory buildHeadstage,
             PortName initialPort, Action<PortName> setHeadstagePort, Action<double?> setHeadstagePortVoltage, ImGuiLogConsole log)
         {
             this.targets = targets ?? throw new ArgumentNullException(nameof(targets));
@@ -56,7 +57,7 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <inheritdoc/>
-        public bool HasChanges => false; // survey config is transient session UI, not itself file-backed
+        public bool HasChanges => false; // scan/survey config is transient session UI, not itself file-backed
 
         /// <inheritdoc/>
         public bool CanClose(DialogResult pendingResult)
@@ -68,31 +69,38 @@ namespace OpenEphys.Onix1.Design
         /// <inheritdoc/>
         public void Draw()
         {
+            bool isScanning = targets.Any(t => t.Dialog.Scan.Status == NeuropixelsV1ScanStatus.Running);
             // NB: Do not filter by t.Selected since checkbox is checked a single time at Start() time
-            bool isRunning = targets.Any(t => t.Dialog.Survey.Status == NeuropixelsV2eSurveyStatus.Running);
+            bool isSurveying = targets.Any(t => t.Dialog.Survey.Status == NeuropixelsV2eSurveyStatus.Running);
+            bool hardwareBusy = isScanning || isSurveying;
 
             // Hardware address and probe selection are captured once, at Start() time. Editing them while
-            // a survey is running would silently have no effect on the run already in progress.
-            if (isRunning) ImGui.BeginDisabled();
+            // a scan or survey is running would silently have no effect on the run already in progress.
+            if (hardwareBusy) ImGui.BeginDisabled();
             DrawHardwareAddressSection();
-            if (isRunning) ImGui.EndDisabled();
+            if (hardwareBusy) ImGui.EndDisabled();
             ImGui.Spacing();
 
-            if (isRunning) ImGui.BeginDisabled();
+            ImGui.Separator();
+            DrawScanSection(isScanning, blockedBySurvey: isSurveying);
+            ImGui.Spacing();
+
+            ImGui.Separator();
+            if (isSurveying) ImGui.BeginDisabled();
             DrawProbeSelection();
-            if (isRunning) ImGui.EndDisabled();
+            if (isSurveying) ImGui.EndDisabled();
             ImGui.Spacing();
 
-            if (!isRunning)
+            if (!isSurveying)
             {
                 DrawSurveySettings();
                 ImGui.Spacing();
             }
 
-            if (isRunning)
+            if (isSurveying)
                 DrawRunning();
             else
-                DrawIdle();
+                DrawIdle(blockedByScan: isScanning);
 
             ImGui.Spacing();
             DrawPerTargetStatus();
@@ -113,7 +121,7 @@ namespace OpenEphys.Onix1.Design
                     state.EditingHardwareAddr = true;
                     ImGuiControls.WriteString(driverBuf, state.Driver);
                 }
-                ImGuiControls.Tooltip("Edit the hardware address (driver, slot, port) used to run the electrode survey.");
+                ImGuiControls.Tooltip("Edit the hardware address (driver, slot, port) used to scan for probes and run the electrode survey.");
             }
             else
             {
@@ -170,6 +178,48 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
+        void DrawScanSection(bool isScanning, bool blockedBySurvey)
+        {
+            ImGui.Text("Probe Scan");
+            ImGui.Spacing();
+
+            if (isScanning)
+            {
+                if (ImGui.Button("Cancel##hsscan")) state.Cts?.Cancel();
+                ImGuiControls.Tooltip("Stop the probe identity scan currently in progress.");
+            }
+            else
+            {
+                if (blockedBySurvey) ImGui.BeginDisabled();
+                if (ImGui.Button("Start Scan##hsscan")) StartScan();
+                ImGuiControls.Tooltip("Read each probe's part number and serial number directly from its EEPROM, and confirm the correct headstage is attached, without configuring or streaming from any probe.",
+                    "A survey is currently running.");
+                if (blockedBySurvey) ImGui.EndDisabled();
+            }
+
+            foreach (var target in targets)
+            {
+                var scan = target.Dialog.Scan;
+                switch (scan.Status)
+                {
+                    case NeuropixelsV1ScanStatus.Running:
+                        ImGui.TextUnformatted($"{target.Label}: scanning...");
+                        break;
+                    case NeuropixelsV1ScanStatus.Detected:
+                        ImGui.TextColored(ColorTextSuccess, target.Label);
+                        ImGuiControls.InfoRow("Part No.", scan.PartNumber);
+                        ImGuiControls.InfoRow("SN", scan.SerialNumber.ToString());
+                        break;
+                    case NeuropixelsV1ScanStatus.NotDetected:
+                        ImGui.TextDisabled($"{target.Label}: not detected");
+                        break;
+                    default:
+                        ImGui.TextDisabled($"{target.Label}: not scanned");
+                        break;
+                }
+            }
+        }
+
         void DrawProbeSelection()
         {
             ImGui.Text("Probes to survey");
@@ -191,7 +241,7 @@ namespace OpenEphys.Onix1.Design
 
         void DrawSurveySettings()
         {
-            ImGui.Text("Survey settings");
+            ImGui.Text("Electrode Activity Survey");
             ImGui.Spacing();
 
             float thrAvail = ImGui.GetContentRegionAvail().X - ImGui.GetStyle().ItemSpacing.X;
@@ -217,14 +267,15 @@ namespace OpenEphys.Onix1.Design
             if (!anySelectedHasProbeFile) ImGui.EndDisabled();
         }
 
-        void DrawIdle()
+        void DrawIdle(bool blockedByScan)
         {
             bool anySelected = targets.Any(t => t.Selected);
-            if (!anySelected) ImGui.BeginDisabled();
+            bool disabled = !anySelected || blockedByScan;
+            if (disabled) ImGui.BeginDisabled();
             if (ImGui.Button("Start Survey##hssurvey")) StartSurvey();
             ImGuiControls.Tooltip("Sweep through the selected banks of every checked probe, concurrently, recording from each for the configured time and computing per-contact activity statistics.",
-                "Select at least one probe first.");
-            if (!anySelected) ImGui.EndDisabled();
+                blockedByScan ? "A probe identity scan is currently running." : "Select at least one probe first.");
+            if (disabled) ImGui.EndDisabled();
         }
 
         void DrawRunning()
@@ -267,6 +318,15 @@ namespace OpenEphys.Onix1.Design
                         break;
                 }
             }
+        }
+
+        void StartScan()
+        {
+            state.Cts = new CancellationTokenSource();
+            NeuropixelsV2eHeadstageScanRunner.Start(
+                buildHeadstage, targets,
+                state.Driver, state.HubIndex, state.Port, state.PortVoltage,
+                Log, state.Cts.Token);
         }
 
         void StartSurvey()

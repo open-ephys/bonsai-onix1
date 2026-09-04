@@ -120,7 +120,6 @@ namespace OpenEphys.Onix1
                                 ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
                                     $"The probe serial number ({probeMetadata.ProbeSerialNumber}) does not " +
                                     $"match the gain calibration file serial number: {gainCorrection.Value.SerialNumber}."));
-                                gainCorrection = null;
                             }
                         }
 
@@ -166,7 +165,8 @@ namespace OpenEphys.Onix1
                 // disconnect i2c bus from both probes to prevent digital interference during acquisition
                 DeselectProbe(serializer);
 
-                var deviceInfo = new NeuropixelsV2PsbDecoderDeviceInfo(context, DeviceType, deviceAddress, streamIndex, gainCorrection?.GainCorrectionFactor ?? 1.0, probeConfiguration, probeGroup);
+                var deviceInfo = new NeuropixelsV2PsbDecoderDeviceInfo(context, DeviceType, deviceAddress, streamIndex, gainCorrection?.GainCorrectionFactor ?? 1.0,
+                    probeConfiguration, probeGroup, probeMetadata.ProbePartNumber, probeMetadata.ProbeSerialNumber);
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
         }

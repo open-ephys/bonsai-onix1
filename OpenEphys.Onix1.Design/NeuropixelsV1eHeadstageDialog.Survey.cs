@@ -8,7 +8,7 @@ namespace OpenEphys.Onix1.Design
     {
         const float SurveyPanelWidth = 340f;
 
-        void InitializeSurveyPanel(PortName initialPort, Action<PortName> setHeadstagePort, Action<double?> setHeadstagePortVoltage)
+        void InitializeControlPanel(PortName initialPort, Action<PortName> setHeadstagePort, Action<double?> setHeadstagePortVoltage)
         {
             var targets = new List<NeuropixelsV1SurveyTarget>
             {
@@ -16,8 +16,8 @@ namespace OpenEphys.Onix1.Design
                     hs => ((ConfigureHeadstageNeuropixelsV1e)hs).NeuropixelsV1),
             };
 
-            var panel = new NeuropixelsV1HeadstageSurveyPanel(targets, BuildSurveyHeadstage, initialPort, setHeadstagePort, setHeadstagePortVoltage, Log);
-            SetSidePanel(panel, SurveyPanelWidth, "Electrode survey");
+            var panel = new NeuropixelsV1HeadstageControlPanel(targets, BuildSurveyHeadstage, initialPort, setHeadstagePort, setHeadstagePortVoltage, Log);
+            SetSidePanel(panel, SurveyPanelWidth, "Headstage Control");
             ClientSize = new Size(ClientSize.Width + (int)SurveyPanelWidth, ClientSize.Height);
         }
 

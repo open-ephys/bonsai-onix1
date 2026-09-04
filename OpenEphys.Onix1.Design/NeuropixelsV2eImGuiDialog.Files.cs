@@ -80,6 +80,13 @@ namespace OpenEphys.Onix1.Design
                     Filter = "Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv|All files (*.*)|*.*"
                 };
 
+                if (scan.SerialNumber.HasValue)
+                {
+                    var pattern = $"{scan.SerialNumber}*_gainCalValues.csv";
+                    ofd.Filter = $"This probe's files ({pattern})|{pattern}|{ofd.Filter}";
+                    ofd.FilterIndex = 1;
+                }
+
                 if (!string.IsNullOrEmpty(gainCal) && File.Exists(gainCal))
                     ofd.InitialDirectory = Path.GetDirectoryName(gainCal);
 
