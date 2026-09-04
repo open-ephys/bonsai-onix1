@@ -57,6 +57,7 @@ namespace OpenEphys.Onix1.Design
         const int BufferSize = 300;
         const int RetryDelayMs = 1000;
 
+
         // NB: If a probe goes silent during survey stream, e.g. its physically unseated), the hardware layer
         // doesn't throw, so without this timeout the round's Task.WhenAll waits forever with nothing to catch
         // or retry.
@@ -342,7 +343,8 @@ namespace OpenEphys.Onix1.Design
                 _ => new TaskCompletionSource<(float[] Amplitude, float[] FireRate, float[] Noise)>(
                     TaskCreationOptions.RunContinuationsAsynchronously));
 
-            var pipelineSub = HeadstageConnection.Configure(headstage, driver, hubIndex, ex =>
+            const int ReadSizePerProbe = 2048;
+            var pipelineSub = HeadstageConnection.Configure(headstage, driver, hubIndex, ReadSizePerProbe * active.Count, ex =>
             {
                 foreach (var tcs in tcsMap.Values)
                 {

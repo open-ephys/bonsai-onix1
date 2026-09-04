@@ -320,12 +320,13 @@ namespace OpenEphys.Onix1.Design
                     decoder.Enable = false;
                 }
             }
-
             var tcsMap = active.ToDictionary(a => a.Target,
                 _ => new TaskCompletionSource<(float[] Amplitude, float[] FireRate, float[] Noise)>(
                     TaskCreationOptions.RunContinuationsAsynchronously));
 
-            var pipelineSub = HeadstageConnection.Configure(headstage, driver, hubIndex, ex =>
+
+            const int ReadSizePerProbe = 2048;
+            var pipelineSub = HeadstageConnection.Configure(headstage, driver, hubIndex, active.Count * ReadSizePerProbe, ex =>
             {
                 foreach (var tcs in tcsMap.Values)
                 {
