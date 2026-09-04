@@ -17,7 +17,11 @@ namespace OpenEphys.Onix1
                 {
                     errors.Add(args.ErrorContext.Error.Message);
                     args.ErrorContext.Handled = true;
-                }
+                },
+
+                // NB: Resolves NeuropixelsV1ProbeGroup's concrete runtime type when deserializing through
+                // NeuropixelsV1ProbeGroup.
+                Converters = { new NeuropixelsV1ProbeGroupConverter() },
             };
 
             try

@@ -7,7 +7,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Static helper class for NeuropixelsV1.
     /// </summary>
-    public static class NeuropixelsV1Helper
+    static class NeuropixelsV1Helper
     {
         internal const int NumberOfGainFactors = 8;
         internal const int NumberOfAdcParameters = 8;
@@ -28,7 +28,7 @@ namespace OpenEphys.Onix1
         /// </remarks>
         /// <param name="adcCalibrationFile">String defining the path to the ADC calibration file.</param>
         /// <returns><see cref="NeuropixelsV1AdcCalibration"/> object that contains the ADC calibration values. This object is null if the file was not successfully parsed.</returns>
-        public static NeuropixelsV1AdcCalibration? TryParseAdcCalibrationFile(string adcCalibrationFile)
+        internal static NeuropixelsV1AdcCalibration? TryParseAdcCalibrationFile(string adcCalibrationFile)
         {
             if (!File.Exists(adcCalibrationFile)) return null;
 
@@ -100,7 +100,7 @@ namespace OpenEphys.Onix1
         /// <param name="lfpGain">Current <see cref="NeuropixelsV1Gain"/> for the LFP data.</param>
         /// <param name="electrodeCount">Number of electrodes expected in the calibration file.</param>
         /// <returns><see cref="NeuropixelsV1eGainCorrection"/> object that contains the AP and LFP gain correction values. This object is null if the file was not successfully parsed.</returns>
-        public static NeuropixelsV1eGainCorrection? TryParseGainCalibrationFile(string gainCalibrationFile, NeuropixelsV1Gain apGain, NeuropixelsV1Gain lfpGain, int electrodeCount)
+        internal static NeuropixelsV1eGainCorrection? TryParseGainCalibrationFile(string gainCalibrationFile, NeuropixelsV1Gain apGain, NeuropixelsV1Gain lfpGain, int electrodeCount)
         {
             if (!File.Exists(gainCalibrationFile)) return null;
 
@@ -170,96 +170,33 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Returns the ADC values and serial number from an ADC calibration file for a specific probe.
+        /// Checks that a probe part number resolves to the same variant as the model name annotation carried
+        /// by the loaded probe interface data.
         /// </summary>
-        /// <param name="file">Incoming <see cref="StreamReader"/> that is reading from the ADC calibration file.</param>
-        /// <returns>Array of <see cref="NeuropixelsV1Adc"/> values.</returns>
-        /// <exception cref="ArgumentException"></exception>
-        /// <exception cref="InvalidOperationException"></exception>
-        [Obsolete("Use TryParseAdcCalibrationFile instead for better validation and parsing.")]
-        public static NeuropixelsV1AdcCalibration ParseAdcCalibrationFile(StreamReader file)
+        /// <remarks>
+        /// Both strings are resolved through <see cref="NeuropixelsV1VariantRegistry"/> rather than compared
+        /// directly, since some part since standard NP1.0 probes can report old-style EEPROM string (e.g.
+        /// <c>PRB_1_4_0480_1</c>) that differs from the probe interface file's modern <c>NP1000</c> model
+        /// name annotation.
+        /// </remarks>
+        /// <param name="partNumber">The probe part number to check.</param>
+        /// <param name="probeGroup">The loaded probe group whose model name annotation should be checked
+        /// against <paramref name="partNumber"/>.</param>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="partNumber"/> is null or empty, or
+        /// if it resolves to a different variant than the probe interface file's model name
+        /// annotation.</exception>
+        /// <exception cref="NotSupportedException">Thrown if <paramref name="partNumber"/> is not a
+        /// recognized Neuropixels 1.0 part number.</exception>
+        internal static void ValidateProbePartNumber(string partNumber, NeuropixelsV1ProbeGroup probeGroup)
         {
-            // TODO: "file" input argument should either be a FileStream or a path string. StreamReader is to
-            // general because cal data is always provided in a file and this function call expects to start
-            // from the beginning of the stream. This will require a change in the public API.
+            var eepromVariant = NeuropixelsV1VariantRegistry.Resolve(partNumber);
+            var fileVariant = NeuropixelsV1VariantRegistry.Resolve(probeGroup.Probe.Annotations.ModelName);
 
-            if (file == null || file.EndOfStream)
+            if (!ReferenceEquals(eepromVariant, fileVariant))
             {
-                throw new ArgumentException("Incoming stream reader is not pointing to a valid ADC calibration file.");
+                throw new ArgumentException($"Probe part number ({partNumber}) does not match the probe " +
+                    $"interface file's model name ({probeGroup.Probe.Annotations.ModelName}).");
             }
-
-            string path = (file.BaseStream as FileStream)?.Name;
-
-            if (!ulong.TryParse(file.ReadLine(), out ulong adcSerialNumber))
-            {
-                throw new ArgumentException($"The calibration file {path} specified is " +
-                    $"incorrectly formatted.");
-            }
-
-            var adcs = new NeuropixelsV1Adc[NeuropixelsV1.AdcCount];
-
-            for (var i = 0; i < NeuropixelsV1.AdcCount; i++)
-            {
-                var adcCal = file.ReadLine().Split(',').Skip(1);
-                if (adcCal.Count() != NumberOfAdcParameters)
-                {
-                    throw new InvalidOperationException("Incorrectly formatted ADC calibration file.");
-                }
-
-                adcs[i] = new NeuropixelsV1Adc
-                {
-                    CompP = int.Parse(adcCal.ElementAt(0)),
-                    CompN = int.Parse(adcCal.ElementAt(1)),
-                    Slope = int.Parse(adcCal.ElementAt(2)),
-                    Coarse = int.Parse(adcCal.ElementAt(3)),
-                    Fine = int.Parse(adcCal.ElementAt(4)),
-                    Cfix = int.Parse(adcCal.ElementAt(5)),
-                    Offset = int.Parse(adcCal.ElementAt(6)),
-                    Threshold = int.Parse(adcCal.ElementAt(7))
-                };
-            }
-
-            return new(adcSerialNumber, adcs);
-        }
-
-        /// <summary>
-        /// Returns the <see cref="NeuropixelsV1eGainCorrection"/> values from a gain calibration file for a specific probe at the given gain for each stream.
-        /// </summary>
-        /// <param name="file">Incoming <see cref="StreamReader"/> that is reading from the gain calibration file.</param>
-        /// <param name="apGain">Current AP gain.</param>
-        /// <param name="lfpGain">Current LFP gain.</param>
-        /// <returns><see cref="NeuropixelsV1eGainCorrection"/>.</returns>
-        /// <exception cref="ArgumentException"></exception>
-        /// <exception cref="InvalidOperationException"></exception>
-        [Obsolete("Use TryParseGainCalibrationFile instead for better validation and parsing.")]
-        public static NeuropixelsV1eGainCorrection ParseGainCalibrationFile(StreamReader file, NeuropixelsV1Gain apGain, NeuropixelsV1Gain lfpGain)
-        {
-            // TODO: "file" input argument should either be a FileStream or a path string. StreamReader is to
-            // general because cal data is always provided in a file and this function call expects to start
-            // from the beginning of the stream. This will require a change in the public API.
-
-            if (file == null || file.EndOfStream)
-            {
-                throw new ArgumentException("Incoming stream reader is not pointing to a valid gain calibration file.");
-            }
-
-            string path = (file.BaseStream as FileStream)?.Name;
-
-            if (!ulong.TryParse(file.ReadLine(), out ulong serialNumber))
-            {
-                throw new ArgumentException($"The calibration file {path} specified is " +
-                    $"incorrectly formatted.");
-            }
-
-            var gainCorrections = file.ReadLine().Split(',').Skip(1);
-
-            if (gainCorrections.Count() != 2 * NumberOfGainFactors)
-                throw new InvalidOperationException("Incorrectly formatted gain correction calibration file.");
-
-            var ap = double.Parse(gainCorrections.ElementAt(Array.IndexOf(Enum.GetValues(typeof(NeuropixelsV1Gain)), apGain)));
-            var lfp = double.Parse(gainCorrections.ElementAt(Array.IndexOf(Enum.GetValues(typeof(NeuropixelsV1Gain)), lfpGain) + 8));
-
-            return new NeuropixelsV1eGainCorrection(serialNumber, ap, lfp);
         }
     }
 }

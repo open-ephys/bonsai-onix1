@@ -7,21 +7,28 @@ namespace OpenEphys.Onix1
         public NeuropixelsV2BetaPsbDecoderDeviceInfo(
             ContextTask context, Type deviceType, uint deviceAddress,
             ushort streamIndex, double gainCorrection,
-            NeuropixelsV2ProbeConfiguration probeConfiguration, NeuropixelsV2eProbeGroup probeGroup)
+            NeuropixelsV2ProbeConfiguration probeConfiguration, NeuropixelsV2ProbeGroup probeGroup,
+            string probePartNumber, ulong? probeSerialNumber)
             : base(context, deviceType, deviceAddress)
         {
             StreamIndex = streamIndex;
             GainCorrection = gainCorrection;
             ProbeConfiguration = probeConfiguration;
             ProbeGroup = probeGroup;
+            ProbePartNumber = probePartNumber;
+            ProbeSerialNumber = probeSerialNumber;
         }
 
         public ushort StreamIndex { get; }
 
         public double GainCorrection { get; }
 
-        public NeuropixelsV2eProbeGroup ProbeGroup { get; }
+        public NeuropixelsV2ProbeGroup ProbeGroup { get; }
 
         public NeuropixelsV2ProbeConfiguration ProbeConfiguration { get; }
+
+        public string ProbePartNumber { get; }
+
+        public ulong? ProbeSerialNumber { get; }
     }
 }

@@ -10,20 +10,52 @@
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <ForceDesignerDPIUnaware>true</ForceDesignerDPIUnaware>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Bonsai.Design" Version="2.9.0" />
+    <PackageReference Include="Bonsai.Dsp" Version="2.9.0" />
     <PackageReference Include="Bonsai.Design.Visualizers" Version="2.9.0" />
     <PackageReference Include="Bonsai.System.Design" Version="2.9.0" />
+    <PackageReference Include="clroni" Version="6.3.0" />
+    <PackageReference Include="Hexa.NET.ImGui" Version="2.2.9" GeneratePathProperty="true" />
+    <PackageReference Include="Hexa.NET.ImGui.Backends" Version="1.0.18" GeneratePathProperty="true" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="OpenEphys.ProbeInterface.NET" Version="0.3.0" />
+    <PackageReference Include="OpenCV.Net" Version="3.4.2" />
+    <PackageReference Include="OpenEphys.ProbeInterface.NET" Version="0.5.0" />
+    <PackageReference Include="OpenTK" Version="3.3.3" />
+    <PackageReference Include="OpenTK.GLControl" Version="3.3.3" />
     <PackageReference Include="ZedGraph" Version="5.1.7" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\OpenEphys.Onix1\OpenEphys.Onix1.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- NB: pinned for compile-time version floors only. RemoveHostProvidedRuntimeAssemblies
+         below strips the deployed copies at build time. -->
+    <PackageReference Include="System.Memory" Version="4.6.3" />
+    <PackageReference Include="System.Buffers" Version="4.6.1" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.6.1" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
+  </ItemGroup>
+
+  <!-- NB: Bonsai.exe already embeds its own copy of these assemblies. A second standalone copy
+       in this project's output directory creates two distinct assembly identities for the same
+       simple name/version, which breaks type identity for calls crossing between them (observed
+       with Span<T>, defined in System.Memory). This deletes the deployed copies after build so
+       the process uses Bonsai's copy at runtime. -->
+  <Target Name="RemoveHostProvidedRuntimeAssemblies" AfterTargets="CopyNativeDependencies">
+    <ItemGroup>
+      <HostProvidedRuntimeAssemblies Include="$(OutputPath)System.Memory.dll" />
+      <HostProvidedRuntimeAssemblies Include="$(OutputPath)System.Buffers.dll" />
+      <HostProvidedRuntimeAssemblies Include="$(OutputPath)System.Numerics.Vectors.dll" />
+      <HostProvidedRuntimeAssemblies Include="$(OutputPath)System.Runtime.CompilerServices.Unsafe.dll" />
+    </ItemGroup>
+    <Delete Files="@(HostProvidedRuntimeAssemblies)" TreatErrorsAsWarnings="true" />
+  </Target>
 
   <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">
@@ -42,7 +74,8 @@
 
   <Target Name="CopyNativeDependencies" AfterTargets="AfterBuild">
     <ItemGroup>
-      <NativeDlls Include="$(OutputPath)..\..\OpenEphys.Onix1\$(ArtifactsPivots)\*.dll" />
+      <NativeDlls Include="$(PkgHexa_NET_ImGui_Backends)\runtimes\win-x64\native\ImGuiImpl.dll" />
+      <NativeDlls Include="$(PkgHexa_NET_ImGui)\runtimes\win-x64\native\cimgui.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(NativeDlls)" DestinationFolder="$(OutputPath)" />
   </Target>

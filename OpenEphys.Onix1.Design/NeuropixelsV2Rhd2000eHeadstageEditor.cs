@@ -19,21 +19,8 @@ namespace OpenEphys.Onix1.Design
 
                 if (editorState != null && !editorState.WorkflowRunning && component is ConfigureHeadstageNeuropixelsV2Rhd2000e configureV2eHeadstage)
                 {
-                    var configureNode = new ConfigureHeadstageNeuropixelsV2Rhd2000e();
-                    DesignHelper.DeepCopyProperties(configureV2eHeadstage, configureNode);
-
-                    using var editorDialog = new NeuropixelsV2Rhd2000eHeadstageDialog(configureNode);
-
-                    if (editorDialog.ShowDialog() == DialogResult.OK)
-                    {
-                        DesignHelper.CopyProperties((ConfigurePolledBno055)editorDialog.DialogBno055.Device, configureV2eHeadstage.Bno055, DesignHelper.PropertiesToIgnore);
-
-                        DesignHelper.CopyProperties((ConfigureRhd2000PsbDecoderWithMax41400)editorDialog.DialogRhd2000.Device, configureV2eHeadstage.Rhd2000, DesignHelper.PropertiesToIgnore);
-
-                        DesignHelper.CopyProperties((ConfigureNeuropixelsV2PsbDecoder)editorDialog.DialogNeuropixelsV2.ConfigureNeuropixelsV2, configureV2eHeadstage.NeuropixelsV2, DesignHelper.PropertiesToIgnore);
-
-                        return true;
-                    }
+                    DesignHelper.ShowDialogWithWaitCursor(() => new NeuropixelsV2Rhd2000eHeadstageDialog(configureV2eHeadstage));
+                    return true;
                 }
             }
 

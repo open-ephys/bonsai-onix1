@@ -15,34 +15,28 @@ namespace OpenEphys.Onix1.Design
         {
             if (provider != null)
             {
-                var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));  
+                var editorState = (IWorkflowEditorState)provider.GetService(typeof(IWorkflowEditorState));
                 if (editorState != null && !editorState.WorkflowRunning && component is ConfigureNeuropixelsV1PsbDecoder configureNeuropixelsV1e)
                 {
-                    var configuration = new ConfigureNeuropixelsV1PsbDecoder();
-                    DesignHelper.DeepCopyProperties(configureNeuropixelsV1e, configuration);
-
-                    using var editorDialog = new NeuropixelsV1Dialog(configuration, nameof(NeuropixelsV1));
-
-                    if (editorDialog.ShowDialog() == DialogResult.OK)
+                    DesignHelper.ShowDialogWithWaitCursor(() =>
                     {
-                        DesignHelper.CopyProperties(editorDialog.ConfigureNode, configureNeuropixelsV1e, DesignHelper.PropertiesToIgnore);
-
-                        return true;
-                    }
+                        var shell = new ImGuiShellDialog("NeuropixelsV1 Configuration") { StartPosition = FormStartPosition.CenterScreen };
+                        var editorDialog = new NeuropixelsV1ImGuiDialog(configureNeuropixelsV1e, nameof(NeuropixelsV1), shell.Log);
+                        shell.AddTab(nameof(NeuropixelsV1), editorDialog);
+                        return shell;
+                    });
+                    return true;
                 }
                 else if (editorState != null && !editorState.WorkflowRunning && component is ConfigureNeuropixelsV1f configureNeuropixelsV1f)
                 {
-                    var configuration = new ConfigureNeuropixelsV1f();
-                    DesignHelper.DeepCopyProperties(configureNeuropixelsV1f, configuration);
-
-                    using var editorDialog = new NeuropixelsV1Dialog(configuration, nameof(NeuropixelsV1));
-
-                    if (editorDialog.ShowDialog() == DialogResult.OK)
+                    DesignHelper.ShowDialogWithWaitCursor(() =>
                     {
-                        DesignHelper.CopyProperties(editorDialog.ConfigureNode, configureNeuropixelsV1f, DesignHelper.PropertiesToIgnore);
-
-                        return true;
-                    }
+                        var shell = new ImGuiShellDialog("NeuropixelsV1 Configuration") { StartPosition = FormStartPosition.CenterScreen };
+                        var editorDialog = new NeuropixelsV1ImGuiDialog(configureNeuropixelsV1f, nameof(NeuropixelsV1), shell.Log);
+                        shell.AddTab(nameof(NeuropixelsV1), editorDialog);
+                        return shell;
+                    });
+                    return true;
                 }
             }
 
