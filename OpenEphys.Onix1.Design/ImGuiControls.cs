@@ -61,5 +61,29 @@ namespace OpenEphys.Onix1.Design
             int len = Array.IndexOf(buf, (byte)0);
             return Encoding.UTF8.GetString(buf, 0, len < 0 ? buf.Length : len);
         }
+
+        public enum ModalChoice { Pending, Accepted, Declined }
+
+        /// <summary>
+        /// Draws the modal popup identified by <paramref name="id"/> if it's currently open (via
+        /// <see cref="ImGui.OpenPopup(string)"/>), showing <paramref name="message"/> above an accept/decline
+        /// button pair. Call every frame regardless of whether the popup is open; it draws nothing otherwise.
+        /// </summary>
+        public static ModalChoice ConfirmModal(string id, string message, string acceptLabel = "Continue", string declineLabel = "Cancel")
+        {
+            var choice = ModalChoice.Pending;
+            if (ImGui.BeginPopupModal(id, ImGuiWindowFlags.AlwaysAutoResize))
+            {
+                ImGui.PushTextWrapPos(ImGui.GetFontSize() * 25f);
+                ImGui.TextUnformatted(message);
+                ImGui.PopTextWrapPos();
+                ImGui.Spacing();
+                if (ImGui.Button(acceptLabel)) { choice = ModalChoice.Accepted; ImGui.CloseCurrentPopup(); }
+                ImGui.SameLine();
+                if (ImGui.Button(declineLabel)) { choice = ModalChoice.Declined; ImGui.CloseCurrentPopup(); }
+                ImGui.EndPopup();
+            }
+            return choice;
+        }
     }
 }

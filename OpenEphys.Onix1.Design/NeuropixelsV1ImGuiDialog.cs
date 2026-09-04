@@ -37,6 +37,8 @@ namespace OpenEphys.Onix1.Design
 
         int spikeGainIdx, lfpGainIdx, refIdx, presetIdx, columnPatternIdx, presetOffset;
         NeuropixelsV1Preset[] presets = Array.Empty<NeuropixelsV1Preset>();
+        NeuropixelsV1ColumnPattern? pendingColumnPattern;
+        const string ColumnPatternConflictPopupId = "Reset probe for column mode?";
 
         static readonly string[] GainNames = Enum.GetNames(typeof(NeuropixelsV1Gain));
         static readonly NeuropixelsV1Gain[] GainValues = (NeuropixelsV1Gain[])Enum.GetValues(typeof(NeuropixelsV1Gain));
@@ -456,6 +458,8 @@ namespace OpenEphys.Onix1.Design
                 if (ImGui.Combo("Column Mode##columnmode", ref columnPatternIdx, ColumnPatternNames, ColumnPatternNames.Length))
                     ApplyColumnPattern(ColumnPatternValues[columnPatternIdx]);
                 ImGuiControls.Tooltip("Which physical columns are enabled. Contacts on disabled columns are blocked: they cannot be enabled or pinned.");
+
+                DrawColumnPatternConflictPopup();
             }
         }
 
@@ -494,10 +498,11 @@ namespace OpenEphys.Onix1.Design
             {
                 channelGroupProbe.ColumnPattern = pattern;
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
-                Log($"Could not switch column mode to {pattern}: {ex.Message}", true);
                 columnPatternIdx = Array.IndexOf(ColumnPatternValues, previous);
+                pendingColumnPattern = pattern;
+                ImGui.OpenPopup(ColumnPatternConflictPopupId);
                 return;
             }
 
@@ -506,6 +511,36 @@ namespace OpenEphys.Onix1.Design
             RebuildMaps();
             RecomputeBlockedIndices();
             HasChanges = true;
+        }
+
+        // Every column mode has at least one registered preset that already produces a conflict-free
+        // selection for it (see NeuropixelsV1VariantRegistry.Np1110Presets); where more than one does
+        // (every "All" preset), the first one registered is the plainest (a single flat bank across
+        // the whole probe) and is used as the default.
+        static NeuropixelsV1Preset DefaultPresetFor(NeuropixelsV1ColumnPattern pattern) =>
+            NeuropixelsV1VariantRegistry.Np1110Presets.First(p => p.RequiredColumnPattern == pattern);
+
+        void DrawColumnPatternConflictPopup()
+        {
+            if (!pendingColumnPattern.HasValue) return;
+            var pattern = pendingColumnPattern.Value;
+            var defaultPreset = DefaultPresetFor(pattern);
+
+            var choice = ImGuiControls.ConfirmModal(ColumnPatternConflictPopupId,
+                $"The current electrode selection can't be represented under {pattern} column mode. " +
+                $"Continuing will reset the probe to its default {pattern} selection, \"{defaultPreset.DisplayName}\".",
+                acceptLabel: "Reset and Continue");
+
+            if (choice == ImGuiControls.ModalChoice.Pending) return;
+
+            if (choice == ImGuiControls.ModalChoice.Accepted)
+            {
+                presetIdx = Array.IndexOf(presets, defaultPreset);
+                presetOffset = 0;
+                ApplyPreset(defaultPreset);
+            }
+
+            pendingColumnPattern = null;
         }
 
         #endregion
