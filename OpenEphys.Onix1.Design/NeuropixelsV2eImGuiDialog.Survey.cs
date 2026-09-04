@@ -199,9 +199,7 @@ namespace OpenEphys.Onix1.Design
         {
             // code below contains early exits, so make sure we clear the survey state so that nothing old is
             // hanging around
-            survey.Results = null;
-            survey.Status = NeuropixelsV2eSurveyStatus.Idle;
-            survey.CompletedAt = null;
+            survey.Restore(null, null);
             survey.Progress = 0f;
             survey.Error = null;
             showActivityColors = false;
@@ -247,9 +245,7 @@ namespace OpenEphys.Onix1.Design
             for (int i = 0; i < allContacts.Count && i < noiseArr.Length; i++)
                 noise[i] = float.IsNaN(noiseArr[i]) ? (float?)null : noiseArr[i];
 
-            survey.Results = new NeuropixelsV2eSurveyResults(amp, rate, noise, thr, tpb, surveyBanks);
-            survey.CompletedAt = dt;
-            survey.Status = NeuropixelsV2eSurveyStatus.Completed;
+            survey.Restore(new NeuropixelsV2eSurveyResults(amp, rate, noise, thr, tpb, surveyBanks), dt);
         }
     }
 }

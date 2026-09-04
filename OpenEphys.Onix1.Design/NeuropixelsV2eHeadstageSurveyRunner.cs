@@ -92,6 +92,8 @@ namespace OpenEphys.Onix1.Design
             internal float?[] AllNoise;
             internal string RecordingFolder;
             internal string TempProbeFile;
+            internal NeuropixelsV2eSurveyResults PreviousResults;
+            internal DateTimeOffset? PreviousCompletedAt;
         }
 
         readonly struct RoundTargetPrep
@@ -128,6 +130,8 @@ namespace OpenEphys.Onix1.Design
             foreach (var target in selected)
             {
                 var survey = target.Dialog.Survey;
+                var previousResults = survey.Results;
+                var previousCompletedAt = survey.CompletedAt;
                 survey.Status = NeuropixelsV2eSurveyStatus.Running;
                 survey.Progress = 0f;
                 survey.Error = null;
@@ -169,6 +173,8 @@ namespace OpenEphys.Onix1.Design
                     AllNoise = new float?[totalContacts],
                     RecordingFolder = recordingFolder,
                     TempProbeFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".json"),
+                    PreviousResults = previousResults,
+                    PreviousCompletedAt = previousCompletedAt,
                 };
             }
 
@@ -287,15 +293,23 @@ namespace OpenEphys.Onix1.Design
             {
                 foreach (var state in states.Values)
                     if (state.Target.Dialog.Survey.Status == NeuropixelsV2eSurveyStatus.Running)
-                        state.Target.Dialog.Survey.Status = NeuropixelsV2eSurveyStatus.Idle;
+                        state.Target.Dialog.Survey.Restore(state.PreviousResults, state.PreviousCompletedAt);
             }
             catch (Exception ex)
             {
                 foreach (var state in states.Values)
                     if (state.Target.Dialog.Survey.Status == NeuropixelsV2eSurveyStatus.Running)
                     {
-                        state.Target.Dialog.Survey.Status = NeuropixelsV2eSurveyStatus.Failed;
-                        state.Target.Dialog.Survey.Error = ex.Message;
+                        if (state.PreviousResults != null)
+                        {
+                            log($"{state.Target.Label}: survey failed [{ex.GetType().Name}]: {ex.Message}. Restored previous results.", true);
+                            state.Target.Dialog.Survey.Restore(state.PreviousResults, state.PreviousCompletedAt);
+                        }
+                        else
+                        {
+                            state.Target.Dialog.Survey.Status = NeuropixelsV2eSurveyStatus.Failed;
+                            state.Target.Dialog.Survey.Error = ex.Message;
+                        }
                     }
             }
             finally
