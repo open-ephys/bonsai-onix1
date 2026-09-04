@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
@@ -59,7 +59,8 @@ namespace OpenEphys.Onix1.Design
                 Exception scanException = null;
                 var resolved = new List<(NeuropixelsV1SurveyTarget Target, string PartNumber, ulong SerialNumber)>();
 
-                var pipelineSub = HeadstageConnection.Configure(headstage, driver, hubIndex, ex => scanException = ex);
+                const int ReadSize = 1200;  // Minimal for NeuropixeslV1eHeadstage
+                var pipelineSub = HeadstageConnection.Configure(headstage, driver, hubIndex, ReadSize, ex => scanException = ex);
 
                 try
                 {
