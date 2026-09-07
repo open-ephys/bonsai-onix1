@@ -66,9 +66,6 @@ namespace OpenEphys.Onix1
             var probeConfiguration = new NeuropixelsV1ProbeConfiguration(ProbeConfiguration);
             return source.ConfigureAndLatchDevice(context =>
             {
-                // default to contact-based muxing, but allow group-based as well.
-                NeuropixelsV1ProbeGroup probeGroup = new NeuropixelsV1ContactProbeGroup();
-
                 // configure device via the DS90UB9x deserializer device
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
                 var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
@@ -76,6 +73,7 @@ namespace OpenEphys.Onix1
                 // read probe metadata
                 var probeMetadata = new NeuropixelsV1eMetadata(device);
 
+                NeuropixelsV1ProbeGroup probeGroup = null;
                 NeuropixelsV1RegisterContext probeControl = null;
 
                 // NB: the DS90UB9x supports multiple streams and we don't want to overwrite other streams'
@@ -84,14 +82,15 @@ namespace OpenEphys.Onix1
                 {
                     device.WriteRegister(DS90UB9x.ENABLE, 1u);
 
-                    if (File.Exists(probeConfiguration.ProbeInterfaceFileName))
-                    {
-                        probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(
-                            probeConfiguration.ProbeInterfaceFileName,
-                            typeof(NeuropixelsV1ProbeGroup)) as NeuropixelsV1ProbeGroup
-                            ?? throw new InvalidDataException(
-                                $"Probe interface file '{probeConfiguration.ProbeInterfaceFileName}' did not produce a valid {nameof(NeuropixelsV1ProbeGroup)}.");
-                    }
+                    if (!File.Exists(probeConfiguration.ProbeInterfaceFileName))
+                        throw new ArgumentException(
+                            $"A probe interface file must be provided o define the channel map for '{deviceName}'.");
+
+                    probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(
+                        probeConfiguration.ProbeInterfaceFileName,
+                        typeof(NeuropixelsV1ProbeGroup)) as NeuropixelsV1ProbeGroup
+                        ?? throw new InvalidDataException(
+                            $"Probe interface file '{probeConfiguration.ProbeInterfaceFileName}' did not produce a valid {nameof(NeuropixelsV1ProbeGroup)}.");
 
                     NeuropixelsV1Helper.ValidateProbePartNumber(probeMetadata.ProbePartNumber, probeGroup);
 

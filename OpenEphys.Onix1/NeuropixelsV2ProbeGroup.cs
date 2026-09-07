@@ -18,14 +18,6 @@ namespace OpenEphys.Onix1
     public sealed class NeuropixelsV2ProbeGroup : SingleProbeGroup, IMultiplexedProbeGroup
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="NeuropixelsV2ProbeGroup"/> class using the
-        /// default electrode geometry.
-        /// </summary>
-        public NeuropixelsV2ProbeGroup()
-            : this(ProbeGroupResource.LoadDefault<NeuropixelsV2ProbeGroup>("NP2013.json"))
-        { }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="NeuropixelsV2ProbeGroup"/> class by copying an
         /// existing probe group.
         /// </summary>
@@ -53,6 +45,8 @@ namespace OpenEphys.Onix1
         {
             InitializeShankLookup();
 
+            Variant = NeuropixelsV2VariantRegistry.Resolve(Probe.Annotations.ModelName);
+
             if (NumberOfContacts != ShankCount * NeuropixelsV2.ElectrodesPerShank)
             {
                 throw new ArgumentException(
@@ -60,7 +54,6 @@ namespace OpenEphys.Onix1
                     $"matching the {ShankCount} shank(s) found in the probe interface data, but found {NumberOfContacts}.");
             }
 
-            Variant = NeuropixelsV2VariantRegistry.Resolve(Probe.Annotations.ModelName);
             if (Variant.ShankCount != ShankCount)
             {
                 throw new ArgumentException(

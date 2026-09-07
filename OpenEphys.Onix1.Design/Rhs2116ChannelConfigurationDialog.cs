@@ -40,7 +40,7 @@ namespace OpenEphys.Onix1.Design
 
         internal override ProbeGroup DefaultChannelLayout()
         {
-            return ProbeGroupResource.LoadDefault<ProbeGroup>("OEHSRHS2116.json");
+            return DesignResource.LoadDefault<ProbeGroup>("OEHSRHS2116.json");
         }
 
         internal override void SelectedContactChanged()

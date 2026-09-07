@@ -92,8 +92,6 @@ namespace OpenEphys.Onix1
 
             return source.ConfigureAndLatchDevice(context =>
             {
-                NeuropixelsV2ProbeGroup probeGroup = new();
-
                 // configure device via the DS90UB9x deserializer device
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
                 var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
@@ -102,6 +100,7 @@ namespace OpenEphys.Onix1
                 SelectProbe(serializer);
                 var probeMetadata = new NeuropixelsV2eBetaMetadata(serializer);
 
+                NeuropixelsV2ProbeGroup probeGroup = null;
                 NeuropixelsV2GainCorrection? gainCorrection = null;
                 var probeControl = new NeuropixelsV2eBetaRegisterContext(device, NeuropixelsV2Beta.ProbeAddress);
 
@@ -144,14 +143,15 @@ namespace OpenEphys.Onix1
                             }
                         }
 
-                        if (File.Exists(probeConfiguration.ProbeInterfaceFileName))
-                        {
-                            probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(
-                                probeConfiguration.ProbeInterfaceFileName,
-                                typeof(NeuropixelsV2ProbeGroup)) as NeuropixelsV2ProbeGroup
-                                ?? throw new InvalidDataException(
-                                    $"Probe interface file '{probeConfiguration.ProbeInterfaceFileName}' did not produce a valid {nameof(NeuropixelsV2ProbeGroup)}.");
-                        }
+                        if (!File.Exists(probeConfiguration.ProbeInterfaceFileName))
+                            throw new ArgumentException(
+                                $"A probe interface file must be provided to define the channel map for '{deviceName}'.");
+
+                        probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(
+                            probeConfiguration.ProbeInterfaceFileName,
+                            typeof(NeuropixelsV2ProbeGroup)) as NeuropixelsV2ProbeGroup
+                            ?? throw new InvalidDataException(
+                                $"Probe interface file '{probeConfiguration.ProbeInterfaceFileName}' did not produce a valid {nameof(NeuropixelsV2ProbeGroup)}.");
 
                         NeuropixelsV2Helper.ValidateProbePartNumber(probeMetadata.ProbePartNumber, probeGroup);
 

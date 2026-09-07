@@ -13,14 +13,6 @@ namespace OpenEphys.Onix1
     public sealed class NeuropixelsV1ContactProbeGroup : NeuropixelsV1ProbeGroup
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="NeuropixelsV1ContactProbeGroup"/> class using the
-        /// default electrode geometry.
-        /// </summary>
-        public NeuropixelsV1ContactProbeGroup()
-            : this(ProbeGroupResource.LoadDefault<NeuropixelsV1ContactProbeGroup>("NP1000.json"))
-        { }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="NeuropixelsV1ContactProbeGroup"/> class by
         /// copying an existing probe group.
         /// </summary>
