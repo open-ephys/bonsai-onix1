@@ -76,9 +76,15 @@ namespace OpenEphys.Onix1.Design
         protected virtual IEnumerable<int> GetChannelsToPin(int contactIndex, int channel) => new[] { channel };
 
         /// <summary>
-        /// Replaces the current probe group by deserializing a probe-interface file at <paramref name="path"/>.
+        /// Replaces the current probe group by deserializing probe-interface <paramref name="json"/>.
         /// </summary>
-        protected abstract void ReplaceProbeGroupFromFile(string path);
+        protected abstract void ReplaceProbeGroupFromJson(string json);
+
+        /// <summary>
+        /// The bundled default probe-interface geometries this probe family offers to quick-load, in
+        /// display order. Empty hides the title bar's quick-load combo entirely.
+        /// </summary>
+        protected abstract IReadOnlyList<DefaultGeometryOption> DefaultGeometryOptions { get; }
 
         /// <summary>
         /// Draws whatever calibration-file input(s) this probe family needs.
@@ -303,6 +309,78 @@ namespace OpenEphys.Onix1.Design
             DrawProbeInterfaceFileSection();
         }
 
+        /// <summary>
+        /// One bundled default geometry offered by <see cref="DefaultGeometryOptions"/>: the embedded
+        /// probe-interface JSON resource to load, and its display name in the quick-load dropdown.
+        /// </summary>
+        protected readonly struct DefaultGeometryOption
+        {
+            internal string ResourceName { get; }
+            internal string DisplayName { get; }
+
+            internal DefaultGeometryOption(string resourceName, string displayName)
+            {
+                ResourceName = resourceName;
+                DisplayName = displayName;
+            }
+        }
+
+
+        protected void DrawTitleBar()
+        {
+            ImGui.AlignTextToFramePadding();
+            ImGui.TextDisabled(probeName);
+            ImGui.SameLine();
+
+            var modelName = ProbeGroup.Probe.Annotations.ModelName;
+            ImGui.AlignTextToFramePadding();
+            ImGui.TextUnformatted(string.IsNullOrEmpty(modelName) ? "(no probe loaded)" : modelName);
+
+            var description = ProbeGroup.Probe.Annotations.GetAnnotation<string>("description");
+            if (!string.IsNullOrEmpty(description))
+                ImGuiControls.Tooltip(description);
+
+            var options = DefaultGeometryOptions;
+            if (options.Count == 0) return;
+
+            ImGui.SameLine();
+            ImGui.SetCursorPosX(ImGui.GetCursorPosX() + ImGui.GetContentRegionAvail().X - ComboboxStartWidthPx);
+            ImGui.SetNextItemWidth(ComboboxStartWidthPx);
+            if (ImGui.BeginCombo("##defaultgeometry", "Select a probe..."))
+            {
+                foreach (var option in options)
+                    if (ImGui.Selectable(option.DisplayName))
+                        QuickLoadDefaultGeometry(option);
+                ImGui.EndCombo();
+            }
+            ImGuiControls.Tooltip("Load the electrode layout for this probe model. Replaces the current channel map, contact state, and survey data.");
+        }
+
+        void QuickLoadDefaultGeometry(DefaultGeometryOption option)
+        {
+            if (HasChanges)
+            {
+                var r = MessageBox.Show($"Loading {option.DisplayName} will discard unsaved {probeName} changes. Continue?",
+                    $"{probeName}: Load Default Probe", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (r == DialogResult.No) return;
+            }
+
+            try
+            {
+                ReplaceProbeGroupFromJson(DesignResource.LoadDefaultJson(option.ResourceName));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to load {option.DisplayName}:\n{ex.Message}", "Load Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            ProbeConfigurationBase.ProbeInterfaceFileName = null;
+            RefreshProbeState();
+            Log($"Loaded default probe {option.DisplayName}");
+            HasChanges = true;
+        }
+
         /// <summary>Width for a file-path InputText that leaves room for a same-line "Open..." button.</summary>
         protected static float ComputeFileRowInputWidth()
         {
@@ -439,7 +517,7 @@ namespace OpenEphys.Onix1.Design
 
             try
             {
-                ReplaceProbeGroupFromFile(newPath);
+                ReplaceProbeGroupFromJson(File.ReadAllText(newPath));
             }
             catch (Exception ex)
             {
@@ -539,10 +617,6 @@ namespace OpenEphys.Onix1.Design
 
         #region Contact info
 
-        protected void DrawTitleBar()
-        {
-            ImGui.TextDisabled(probeName);
-        }
 
         protected void DrawContactInfo()
         {

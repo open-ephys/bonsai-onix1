@@ -165,8 +165,30 @@ namespace OpenEphys.Onix1.Design
                 ? channelGroupProbe.GetSurvivingChannels(channelGroupProbe.GetChannelGroup(contactIndex), NeuropixelsV1ProbeGroup.GetBank(contactIndex))
                 : base.GetChannelsToPin(contactIndex, channel);
 
-        protected override void ReplaceProbeGroupFromFile(string path) =>
-            probeGroup = JsonConvert.DeserializeObject<NeuropixelsV1ProbeGroup>(File.ReadAllText(path), new NeuropixelsV1ProbeGroupConverter()) ?? new NeuropixelsV1ContactProbeGroup();
+        protected override void ReplaceProbeGroupFromJson(string json) =>
+            probeGroup = JsonConvert.DeserializeObject<NeuropixelsV1ProbeGroup>(json, new NeuropixelsV1ProbeGroupConverter())
+                ?? throw new InvalidDataException("The probe interface data did not produce a valid probe group.");
+
+        // Canonical part number per distinct geometry: aliases that are the same physical probe (a
+        // packaging/coating variant, e.g. NP1001's cap) are left out
+        static readonly IReadOnlyList<DefaultGeometryOption> V1DefaultGeometryOptions = new[]
+        {
+            new DefaultGeometryOption("NP1000.json", "NP1000 (Standard)"),
+            new DefaultGeometryOption("NP1010.json", "NP1010 (NHP Short Staggered)"),
+            new DefaultGeometryOption("NP1015.json", "NP1015 (NHP Short Linear)"),
+            new DefaultGeometryOption("NP1020.json", "NP1020 (NHP Medium Staggered)"),
+            new DefaultGeometryOption("NP1022.json", "NP1022 (NHP Medium Linear)"),
+            new DefaultGeometryOption("NP1030.json", "NP1030 (NHP Long Staggered)"),
+            new DefaultGeometryOption("NP1032.json", "NP1032 (NHP Long Linear)"),
+            new DefaultGeometryOption("NP1100.json", "NP1100 (UHD1 Passive)"),
+            new DefaultGeometryOption("NP1110.json", "NP1110 (UHD Switchable)"),
+            new DefaultGeometryOption("NP1120.json", "NP1120 (UHD3 Type 1)"),
+            new DefaultGeometryOption("NP1121.json", "NP1121 (UHD3 Type 2)"),
+            new DefaultGeometryOption("NP1122.json", "NP1122 (UHD3 Type 3)"),
+            new DefaultGeometryOption("NP1123.json", "NP1123 (UHD3 Type 4)"),
+        };
+
+        protected override IReadOnlyList<DefaultGeometryOption> DefaultGeometryOptions => V1DefaultGeometryOptions;
 
         protected override void OnProbeGroupRefreshed()
         {
@@ -336,8 +358,7 @@ namespace OpenEphys.Onix1.Design
             {
                 try
                 {
-                    probeGroup = JsonConvert.DeserializeObject<NeuropixelsV1ProbeGroup>(File.ReadAllText(pc.ProbeInterfaceFileName), new NeuropixelsV1ProbeGroupConverter())
-                                 ?? new NeuropixelsV1ContactProbeGroup();
+                    ReplaceProbeGroupFromJson(File.ReadAllText(pc.ProbeInterfaceFileName));
                     Log($"Loaded probeinterface file {pc.ProbeInterfaceFileName}");
                     return;
                 }
@@ -346,7 +367,10 @@ namespace OpenEphys.Onix1.Design
                     Log($"Error loading probeinterface file {pc.ProbeInterfaceFileName}: {ex.Message}", true);
                 }
             }
-            probeGroup = new NeuropixelsV1ContactProbeGroup();
+
+            // No file configured (or it failed to load): start from the standard NP1.0 probe as a
+            // reasonable default to edit from.
+            ReplaceProbeGroupFromJson(DesignResource.LoadDefaultJson("NP1000.json"));
         }
 
         void InitSurveyBanks()

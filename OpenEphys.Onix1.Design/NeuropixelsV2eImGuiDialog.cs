@@ -100,9 +100,7 @@ namespace OpenEphys.Onix1.Design
 
         protected override void EnableElectrodes(IEnumerable<int> contactIndices) => probeGroup.EnableElectrodes(contactIndices);
 
-        protected override void ReplaceProbeGroupFromFile(string path) => LoadProbeGroupFromJson(File.ReadAllText(path));
-
-        void LoadProbeGroupFromJson(string json) =>
+        protected override void ReplaceProbeGroupFromJson(string json) =>
             probeGroup = JsonConvert.DeserializeObject<NeuropixelsV2ProbeGroup>(json)
                 ?? throw new InvalidDataException("The probe interface data did not produce a valid probe group.");
 
@@ -235,7 +233,6 @@ namespace OpenEphys.Onix1.Design
 
             ImGui.Spacing();
             DrawTitleBar();
-            DrawQuickLoadSection();
             ImGui.Separator();
             DrawFileSection();
             ImGui.Separator();
@@ -265,7 +262,7 @@ namespace OpenEphys.Onix1.Design
             {
                 try
                 {
-                    LoadProbeGroupFromJson(File.ReadAllText(pc.ProbeInterfaceFileName));
+                    ReplaceProbeGroupFromJson(File.ReadAllText(pc.ProbeInterfaceFileName));
                     Log($"Loaded probeinterface file {pc.ProbeInterfaceFileName}");
                     return;
                 }
@@ -274,7 +271,9 @@ namespace OpenEphys.Onix1.Design
                     Log($"Error loading probeinterface file {pc.ProbeInterfaceFileName}: {ex.Message}", true);
                 }
             }
-            probeGroup = new NeuropixelsV2ProbeGroup();
+            // No file configured (or it failed to load): start from the quad-shank probe, the more
+            // prevalent NeuropixelsV2e configuration in the field, as a reasonable default to edit from.
+            ReplaceProbeGroupFromJson(DesignResource.LoadDefaultJson("NP2013.json"));
         }
 
         void InitSurveyBanks()
