@@ -1,8 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Drawing.Design;
 using System.IO;
-using System.Xml.Serialization;
 
 namespace OpenEphys.Onix1
 {
@@ -42,7 +40,7 @@ namespace OpenEphys.Onix1
         /// Gets or sets the device enable state.
         /// </summary>
         /// <remarks>
-        /// If set to true, <see cref="NeuropixelsV2eData"/> will produce data. If set to false, 
+        /// If set to true, <see cref="NeuropixelsV2eData"/> will produce data. If set to false,
         /// <see cref="NeuropixelsV2eData"/> will not produce data.
         /// </remarks>
         [Category(ConfigurationCategory)]
@@ -52,11 +50,9 @@ namespace OpenEphys.Onix1
         /// <inheritdoc/>
         [Category(ConfigurationCategory)]
         [Description("Probe configuration.")]
-        [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
-        [XmlElement(nameof(ProbeConfiguration), typeof(NeuropixelsV2QuadShankProbeConfiguration))] // NB: Needed for backward compatibility; TODO: remove in 1.0.0
         [TypeConverter(typeof(GenericPropertyConverter))]
-        public NeuropixelsV2ProbeConfiguration ProbeConfiguration { get; set; } 
-            = new NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2QuadShankReference.External);
+        public NeuropixelsV2ProbeConfiguration ProbeConfiguration { get; set; }
+            = new NeuropixelsV2ProbeConfiguration { Reference = NeuropixelsV2ReferenceSource.External };
 
         /// <summary>
         /// Configures a Neuropixels V2 device.
@@ -80,7 +76,6 @@ namespace OpenEphys.Onix1
 
             return source.ConfigureAndLatchDevice(context =>
             {
-                NeuropixelsV2eProbeGroup probeGroup = new NeuropixelsV2eQuadShankProbeGroup();
 
                 // configure device via the DS90UB9x deserializer device
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
@@ -90,7 +85,7 @@ namespace OpenEphys.Onix1
                 SelectProbe(serializer);
                 var probeMetadata = new NeuropixelsV2Metadata(serializer);
 
-                // configure probe streaming
+                NeuropixelsV2ProbeGroup probeGroup = null;
                 NeuropixelsV2GainCorrection? gainCorrection = null;
                 var probeControl = new NeuropixelsV2RegisterContext(device, NeuropixelsV2.ProbeAddress);
 
@@ -124,14 +119,20 @@ namespace OpenEphys.Onix1
                                 ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
                                     $"The probe serial number ({probeMetadata.ProbeSerialNumber}) does not " +
                                     $"match the gain calibration file serial number: {gainCorrection.Value.SerialNumber}."));
-                                gainCorrection = null;
                             }
                         }
 
-                        if (File.Exists(probeConfiguration.ProbeInterfaceFileName))
-                        {
-                            probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfiguration.ProbeInterfaceFileName, probeConfiguration.GetProbeGroupType()) as NeuropixelsV2eProbeGroup;
-                        }
+                        if (!File.Exists(probeConfiguration.ProbeInterfaceFileName))
+                            throw new ArgumentException(
+                                $"A probe interface file must be provided to define the channel map for '{deviceName}'.");
+
+                        probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(
+                            probeConfiguration.ProbeInterfaceFileName,
+                            typeof(NeuropixelsV2ProbeGroup)) as NeuropixelsV2ProbeGroup
+                            ?? throw new InvalidDataException(
+                                $"Probe interface file '{probeConfiguration.ProbeInterfaceFileName}' did not produce a valid {nameof(NeuropixelsV2ProbeGroup)}.");
+
+                        NeuropixelsV2Helper.ValidateProbePartNumber(probeMetadata.ProbePartNumber, probeGroup);
 
                         // configure base and shank
                         probeControl.WriteConfiguration(probeConfiguration, probeGroup);
@@ -164,7 +165,8 @@ namespace OpenEphys.Onix1
                 // disconnect i2c bus from both probes to prevent digital interference during acquisition
                 DeselectProbe(serializer);
 
-                var deviceInfo = new NeuropixelsV2PsbDecoderDeviceInfo(context, DeviceType, deviceAddress, streamIndex, gainCorrection?.GainCorrectionFactor ?? 1.0, probeConfiguration, probeGroup);
+                var deviceInfo = new NeuropixelsV2PsbDecoderDeviceInfo(context, DeviceType, deviceAddress, streamIndex, gainCorrection?.GainCorrectionFactor ?? 1.0,
+                    probeConfiguration, probeGroup, probeMetadata.ProbePartNumber, probeMetadata.ProbeSerialNumber);
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
         }

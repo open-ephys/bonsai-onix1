@@ -150,6 +150,7 @@ namespace OpenEphys.Onix1
                     {
                         voltage += VoltageOffset;
                         SetVoltage(device, voltage);
+                        Thread.Sleep(350); // NB: Worst case rising edge to Enable assert for TPS383x. Ensures probe is powered before proceeding
                         return CheckLinkState(device);
                     }
                 }

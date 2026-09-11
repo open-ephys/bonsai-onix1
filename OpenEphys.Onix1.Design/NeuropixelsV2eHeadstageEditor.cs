@@ -19,39 +19,13 @@ namespace OpenEphys.Onix1.Design
 
                 if (editorState != null && !editorState.WorkflowRunning && component is ConfigureHeadstageNeuropixelsV2e configureV2eHeadstage)
                 {
-                    var configureNode = new ConfigureHeadstageNeuropixelsV2e();
-                    DesignHelper.DeepCopyProperties(configureV2eHeadstage, configureNode);
-
-                    using var editorDialog = new NeuropixelsV2eHeadstageDialog(configureNode);
-
-                    if (editorDialog.ShowDialog() == DialogResult.OK)
-                    {
-                        DesignHelper.CopyProperties((ConfigurePolledBno055)editorDialog.DialogBno055.Device, configureV2eHeadstage.Bno055, DesignHelper.PropertiesToIgnore);
-
-                        DesignHelper.CopyProperties((ConfigureNeuropixelsV2PsbDecoder)editorDialog.DialogNeuropixelsV2A.ConfigureNeuropixelsV2, configureV2eHeadstage.NeuropixelsV2A, DesignHelper.PropertiesToIgnore);
-
-                        DesignHelper.CopyProperties((ConfigureNeuropixelsV2PsbDecoder)editorDialog.DialogNeuropixelsV2B.ConfigureNeuropixelsV2, configureV2eHeadstage.NeuropixelsV2B, DesignHelper.PropertiesToIgnore);
-
-                        return true;
-                    }
+                    DesignHelper.ShowDialogWithWaitCursor(() => new NeuropixelsV2eHeadstageDialog(configureV2eHeadstage));
+                    return true;
                 }
                 else if (editorState != null && !editorState.WorkflowRunning && component is ConfigureHeadstageNeuropixelsV2eBeta configureV2eBetaHeadstage)
                 {
-                    var configureNode = new ConfigureHeadstageNeuropixelsV2eBeta();
-                    DesignHelper.DeepCopyProperties(configureV2eBetaHeadstage, configureNode);
-
-                    using var editorDialog = new NeuropixelsV2eHeadstageDialog(configureNode);
-
-                    if (editorDialog.ShowDialog() == DialogResult.OK)
-                    {
-                        DesignHelper.CopyProperties((ConfigurePolledBno055)editorDialog.DialogBno055.Device, configureV2eBetaHeadstage.Bno055, DesignHelper.PropertiesToIgnore);
-
-                        DesignHelper.CopyProperties((ConfigureNeuropixelsV2BetaPsbDecoder)editorDialog.DialogNeuropixelsV2A.ConfigureNeuropixelsV2, configureV2eBetaHeadstage.NeuropixelsV2A, DesignHelper.PropertiesToIgnore);
-
-                        DesignHelper.CopyProperties((ConfigureNeuropixelsV2BetaPsbDecoder)editorDialog.DialogNeuropixelsV2B.ConfigureNeuropixelsV2, configureV2eBetaHeadstage.NeuropixelsV2B, DesignHelper.PropertiesToIgnore);
-
-                        return true;
-                    }
+                    DesignHelper.ShowDialogWithWaitCursor(() => new NeuropixelsV2eHeadstageDialog(configureV2eBetaHeadstage));
+                    return true;
                 }
             }
 

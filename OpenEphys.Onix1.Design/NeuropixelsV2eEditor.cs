@@ -19,31 +19,25 @@ namespace OpenEphys.Onix1.Design
 
                 if (editorState != null && !editorState.WorkflowRunning && component is ConfigureNeuropixelsV2PsbDecoder configureNeuropixelsV2e)
                 {
-                    var configureNode = new ConfigureNeuropixelsV2PsbDecoder();
-                    DesignHelper.DeepCopyProperties(configureNeuropixelsV2e, configureNode);
-
-                    using var editorDialog = new NeuropixelsV2eDialog(configureNode, nameof(NeuropixelsV2));
-
-                    if (editorDialog.ShowDialog() == DialogResult.OK)
+                    DesignHelper.ShowDialogWithWaitCursor(() =>
                     {
-                        DesignHelper.CopyProperties(editorDialog.ConfigureNeuropixelsV2, configureNeuropixelsV2e, DesignHelper.PropertiesToIgnore);
-
-                        return true;
-                    }
+                        var shell = new ImGuiShellDialog("NeuropixelsV2 Configuration") { StartPosition = FormStartPosition.CenterScreen };
+                        var editorDialog = new NeuropixelsV2eImGuiDialog(configureNeuropixelsV2e, nameof(NeuropixelsV2), shell.Log);
+                        shell.AddTab(nameof(NeuropixelsV2), editorDialog);
+                        return shell;
+                    });
+                    return true;
                 }
                 else if (editorState != null && !editorState.WorkflowRunning && component is ConfigureNeuropixelsV2BetaPsbDecoder configureNeuropixelsV2eBeta)
                 {
-                    var configureNode = new ConfigureNeuropixelsV2BetaPsbDecoder();
-                    DesignHelper.DeepCopyProperties(configureNeuropixelsV2eBeta, configureNode);
-
-                    using var editorDialog = new NeuropixelsV2eDialog(configureNode, nameof(NeuropixelsV2));
-
-                    if (editorDialog.ShowDialog() == DialogResult.OK)
+                    DesignHelper.ShowDialogWithWaitCursor(() =>
                     {
-                        DesignHelper.CopyProperties(editorDialog.ConfigureNeuropixelsV2, configureNeuropixelsV2eBeta, DesignHelper.PropertiesToIgnore);
-
-                        return true;
-                    }
+                        var shell = new ImGuiShellDialog("NeuropixelsV2-Beta Configuration") { StartPosition = FormStartPosition.CenterScreen };
+                        var editorDialog = new NeuropixelsV2eImGuiDialog(configureNeuropixelsV2eBeta, nameof(NeuropixelsV2), shell.Log);
+                        shell.AddTab(nameof(NeuropixelsV2), editorDialog);
+                        return shell;
+                    });
+                    return true;
                 }
             }
 

@@ -152,10 +152,7 @@ namespace OpenEphys.Onix1.Design
             return false;
         }
 
-        internal virtual void HighlightInvalidChannels()
-        {
-            throw new NotImplementedException();
-        }
+        internal virtual void HighlightInvalidChannels() { }
 
         internal virtual PointPairList[] CreateStimulusWaveforms()
         {
