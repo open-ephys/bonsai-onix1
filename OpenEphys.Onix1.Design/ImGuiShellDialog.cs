@@ -68,7 +68,7 @@ namespace OpenEphys.Onix1.Design
         internal void AddTab(string tabName, IImGuiTabPanel panel) => tabs.Add((tabName, panel));
 
         /// <summary>
-        /// Registers <paramref name="panel"/> as an always-visible, collapsible column to the right of the
+        /// Registers <paramref name="panel"/> as an always-visible, collapsible column to the left of the
         /// tab group, instead of another tab. At most one side panel is supported.
         /// </summary>
         /// <param name="panel">The panel to draw as the side column.</param>
@@ -143,25 +143,19 @@ namespace OpenEphys.Onix1.Design
             {
                 DrawTabAsPanelOrTabs();
             }
-            else 
+            else
             {
                 float avail = ImGui.GetContentRegionAvail().X;
                 float sideWidth = sidePanelCollapsed ? SidePanelCollapsedWidth : sidePanelWidth;
                 float tabsWidth = Math.Max(200f, avail - sideWidth - ImGui.GetStyle().ItemSpacing.X);
 
-                ImGui.BeginChild("##tabArea", new Vector2(tabsWidth, -1));
-                DrawTabAsPanelOrTabs();
-                ImGui.EndChild();
-
-                ImGui.SameLine();
-
                 ImGui.BeginChild("##sidePanel", new Vector2(sideWidth, -1), ImGuiChildFlags.Borders);
-                if (ImGui.Button(sidePanelCollapsed ? "«" : "»"))
+                if (ImGui.Button(sidePanelCollapsed ? "»" : "«"))
                     sidePanelCollapsed = !sidePanelCollapsed;
                 if (sidePanelTitle != null)
                 {
                     if (sidePanelCollapsed)
-                        DrawStackedVerticalLabel(sidePanelTitle);
+                        DrawStackedVerticalLabel(sidePanelTitle.ToUpper());
                     else
                     {
                         ImGui.SameLine();
@@ -173,6 +167,12 @@ namespace OpenEphys.Onix1.Design
                     ImGui.Spacing();
                     sidePanel.Draw();
                 }
+                ImGui.EndChild();
+
+                ImGui.SameLine();
+
+                ImGui.BeginChild("##tabArea", new Vector2(tabsWidth, -1));
+                DrawTabAsPanelOrTabs();
                 ImGui.EndChild();
             }
 
