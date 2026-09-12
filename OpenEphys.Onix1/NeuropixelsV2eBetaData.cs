@@ -37,18 +37,6 @@ namespace OpenEphys.Onix1
         public int BufferSize { get; set; } = 30;
 
         /// <summary>
-        /// Gets or sets a boolean value that controls if the channels are ordered by depth.
-        /// </summary>
-        /// <remarks>
-        /// If <see cref="OrderByDepth"/> is false, then channels are ordered from 0 to 383.
-        /// If <see cref="OrderByDepth"/> is true, then channels are ordered based on the depth
-        /// of the electrodes.
-        /// </remarks>
-        [Description("Determines if the channels are returned ordered by depth.")]
-        [Category(DeviceFactory.ConfigurationCategory)]
-        public bool OrderByDepth { get; set; } = false;
-
-        /// <summary>
         /// Generates a sequence of <see cref="NeuropixelsV2BetaDataFrame"/> objects.
         /// </summary>
         /// <returns>A sequence of <see cref="NeuropixelsV2BetaDataFrame"/> objects.</returns>
@@ -60,7 +48,6 @@ namespace OpenEphys.Onix1
                 var info = (NeuropixelsV2BetaPsbDecoderDeviceInfo)deviceInfo;
                 var gainCorrection = info.GainCorrection;
                 var streamIndex = info.StreamIndex;
-                var orderByDepth = OrderByDepth;
                 var invertPolarity = info.ProbeConfiguration.InvertPolarity;
 
                 var device = info.GetDeviceContext(typeof(NeuropixelsV2Beta));
@@ -76,13 +63,12 @@ namespace OpenEphys.Onix1
                     var frameCounter = new int[NeuropixelsV2Beta.FramesPerSuperFrame * bufferSize];
                     var hubClockBuffer = new ulong[bufferSize];
                     var clockBuffer = new ulong[bufferSize];
-                    int[,] channelOrder = orderByDepth ? Neuropixels.OrderChannelsByDepth(info.ProbeGroup, RawToChannel) : RawToChannel;
 
                     var frameObserver = Observer.Create<oni.Frame>(
                         frame =>
                         {
                             var payload = (NeuropixelsV2eBetaPayload*)frame.Data.ToPointer();
-                            CopyAmplifierBuffer(payload->SuperFrame, amplifierBuffer, frameCounter, sampleIndex, gainCorrection, invertPolarity, channelOrder);
+                            CopyAmplifierBuffer(payload->SuperFrame, amplifierBuffer, frameCounter, sampleIndex, gainCorrection, invertPolarity, RawToChannel);
                             hubClockBuffer[sampleIndex] = payload->HubClock;
                             clockBuffer[sampleIndex] = frame.Clock;
                             if (++sampleIndex >= bufferSize)
