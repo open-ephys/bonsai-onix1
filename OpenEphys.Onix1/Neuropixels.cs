@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using OpenCV.Net;
-using OpenEphys.ProbeInterface.NET;
 
 namespace OpenEphys.Onix1
 {
@@ -11,65 +10,6 @@ namespace OpenEphys.Onix1
     /// </summary>
     static class Neuropixels
     {
-        /// <summary>
-        /// Reorders a raw-to-channel index mapping so that channels are numbered by increasing depth
-        /// (primary) and lateral position (secondary).
-        /// </summary>
-        /// <param name="probe">
-        /// A probeinterface probe group containing the channel map and spatial contact informatiion.
-        /// </param>
-        /// <param name="rawToChannel">
-        /// A 2-D array [ADC index, frame index] mapping raw data positions to channel numbers, as produced by
-        /// the probe decoder.
-        /// </param>
-        /// <returns>
-        /// A new 2-D array with the same dimensions as <paramref name="rawToChannel"/> in which the values
-        /// are reassigned so that channel 0 corresponds to the contact nearest the probe tip and channel
-        /// indices increase toward the surface.
-        /// </returns>
-        internal static int[,] OrderChannelsByDepth(
-            SingleProbeGroup probe,
-            int[,] rawToChannel)
-        {
-            int adcIndices = rawToChannel.GetLength(0);
-            int frameIndices = rawToChannel.GetLength(1);
-
-            // NB: Create reverse lookup table where the channel number is used to find the ADC index / frame index
-            var channelToDataIndex = new Dictionary<int, (int adcIndex, int frameIndex)>();
-            for (int adc = 0; adc < adcIndices; adc++)
-            {
-                for (int frame = 0; frame < frameIndices; frame++)
-                {
-                    channelToDataIndex[rawToChannel[adc, frame]] = (adc, frame);
-                }
-            }
-
-            var spatiallyOrderedChannels = probe.ChannelMap
-                .Select(x => new KeyValuePair<int, Contact>(x.Key, probe.Probe.Contacts[x.Value]))
-                .OrderBy(x => x.Value.PosY)
-                .ThenBy(x => x.Value.PosX)
-                .Select(x => x.Key);
-
-
-            // NB: Populate the array with the spatially ordered channel indices by grabbing the original ADC index /
-            //     frame index for that electrode channel number, and writing the new channel number at that index.
-            //     Example:
-            //       rawToChannel        = [0, 2, 4; 1, 3, 5] // Channels are in one column, in order 0 -> 2 -> 4 -> 1 -> 3 -> 5
-            //       spatialRawToChannel = [0, 1, 2; 3, 4, 5]
-            //
-            //       Now, channel 2 is at index 1 in the data frame, channel 4 is index 2, channel 1 is index 3, etc.
-            var spatialRawToChannel = new int[adcIndices, frameIndices];
-            int index = 0;
-
-            foreach (var c in spatiallyOrderedChannels)
-            {
-                var (origAdcIndex, origFrameIndex) = channelToDataIndex[c];
-                spatialRawToChannel[origAdcIndex, origFrameIndex] = index++;
-            }
-
-            return spatialRawToChannel;
-        }
-
         /// <summary>
         /// Applies per-ADC group common median referencing (CMR) in-place to a <see cref="Depth.F32"/>
         /// matrix.
