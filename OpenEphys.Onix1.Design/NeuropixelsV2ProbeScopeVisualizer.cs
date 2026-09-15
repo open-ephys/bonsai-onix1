@@ -30,9 +30,10 @@ namespace OpenEphys.Onix1.Design
     /// schematic and live waveform viewer can be opened.
     /// </summary>
     [TypeVisualizer(typeof(NeuropixelsV2ProbeScopeVisualizer))]
-    [WorkflowElementCategory(ElementCategory.Sink)]
     [Description("Displays an interactive probe schematic beside live waveforms for a NeuropixelsV2 probe.")]
-    public class NeuropixelsV2ProbeScopeBuilder : ProbeScopeBuilder<NeuropixelsV2DataFrame>
+    public class NeuropixelsV2ProbeScope : Sink<NeuropixelsV2DataFrame>
     {
+        /// <inheritdoc/>
+        public override IObservable<NeuropixelsV2DataFrame> Process(IObservable<NeuropixelsV2DataFrame> source) => source;
     }
 }
