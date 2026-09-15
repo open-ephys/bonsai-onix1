@@ -7,10 +7,6 @@ using System.Numerics;
 
 namespace OpenEphys.Onix1.Design
 {
-    /// <summary>
-    /// Minimal contact descriptor passed from the owning dialog to the probe selector.
-    /// </summary>
-    internal readonly record struct ProbeContact(int Index, Vector2 Position, Vector2 SizeUm);
 
     /// <summary>
     /// One entry in the mode legend.
@@ -89,6 +85,22 @@ namespace OpenEphys.Onix1.Design
         public bool SelectionSkipsBlocked { get; set; } = true;
 
         /// <summary>
+        /// When false, <see cref="DrawZoomedView"/> omits the grid lines and their millimetre axis
+        /// labels, and reclaims the margins those labels reserve.
+        /// </summary>
+        /// <remarks>
+        /// Those margins are a fixed pixel width per side, so in a narrow pane they consume most of
+        /// the available width and leave little room for the probe itself.
+        /// </remarks>
+        public bool ShowGrid { get; set; } = true;
+
+        /// <summary>
+        /// When false, <see cref="DrawZoomedView"/> omits the millimetre coordinate readout that
+        /// tracks the cursor.
+        /// </summary>
+        public bool ShowCoordinateReadout { get; set; } = true;
+
+        /// <summary>
         /// Mode label rendered in the lower-left of the zoomed view.
         /// </summary>
         public string ModeLabel { get; set; } = string.Empty;
@@ -147,9 +159,15 @@ namespace OpenEphys.Onix1.Design
         internal float? DefaultScrollYMicrons = null;
 
         /// <summary>
-        /// Default major extent of the zoom window in microns.
+        /// Default major extent of the zoom window in microns. If null, defaults to the full vertical extent
+        /// of the probe.
         /// </summary>
-        internal float DefaultZoomWindowMicrons = 1000f;
+        internal float? DefaultZoomWindowMicrons = 1000f;
+
+        /// <summary>
+        /// A contact's index, position and extent in microns, as this component draws it.
+        /// </summary>
+        readonly record struct ProbeContact(int Index, Vector2 Position, Vector2 SizeUm);
 
         // probe state
         ProbeGroup probeGroup;
@@ -206,17 +224,40 @@ namespace OpenEphys.Onix1.Design
         static readonly uint ColContourFill = ImGuiPalette.WithAlpha(ImGuiPalette.Black, 0xBB);
 
         /// <summary>
-        /// Loads a new probe group and contact list. Expands the internal probe bounds from
-        /// each contact's full extent (position ± SizeUm/2) plus the planar contour vertices,
-        /// resets the selection array, and centers the scroll position.
+        /// Projects probeinterface contacts onto the position and extent this component draws with,
+        /// resolving each contact's extent from whichever shape parameters its
+        /// <see cref="ContactShape"/> uses.
         /// </summary>
-        /// <param name="probeGroup">The probe group providing the planar contour.</param>
-        /// <param name="contacts">
-        /// Ordered list of contacts to display, each carrying its own position and size in
-        /// microns. Selection indices are aligned to this list.
-        /// </param>
-        public void Refresh(ProbeGroup probeGroup, IReadOnlyList<ProbeContact> contacts)
+        static IReadOnlyList<ProbeContact> CreateContacts(IReadOnlyList<Contact> contacts)
         {
+            var result = new ProbeContact[contacts.Count];
+            for (int i = 0; i < contacts.Count; i++)
+            {
+                var c = contacts[i];
+                var sp = c.ShapeParams;
+                var size = c.Shape switch
+                {
+                    ContactShape.Circle => new Vector2((float)(sp.Radius ?? 6.0) * 2f, (float)(sp.Radius ?? 6.0) * 2f),
+                    ContactShape.Rect => new Vector2((float)(sp.Width ?? 12.0), (float)(sp.Height ?? sp.Width ?? 12.0)),
+                    _ => new Vector2((float)(sp.Width ?? 12.0), (float)(sp.Width ?? 12.0))
+                };
+                result[i] = new ProbeContact(i, new Vector2((float)c.PosX, (float)c.PosY), size);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Loads a new probe group. Expands the internal probe bounds from each contact's full
+        /// extent (position ± SizeUm/2) plus the planar contour vertices, resets the selection
+        /// array, and centers the scroll position. Selection indices align with the probe's
+        /// contact order.
+        /// </summary>
+        /// <param name="probeGroup">The probe group to display, or null to clear.</param>
+        public void Refresh(SingleProbeGroup probeGroup)
+        {
+            var contacts = probeGroup is null
+                ? Array.Empty<ProbeContact>()
+                : CreateContacts(probeGroup.Probe.Contacts);
             this.probeGroup = probeGroup;
             this.contacts = contacts;
             SelectedContacts = new bool[contacts.Count];
@@ -251,7 +292,7 @@ namespace OpenEphys.Onix1.Design
                 }
             }
 
-            zoomWindowUm = DefaultZoomWindowMicrons;
+            zoomWindowUm = DefaultZoomWindowMicrons ?? Math.Max(50f, probeYMax - probeYMin);
             scrollYMicrons = DefaultScrollYMicrons ?? (probeYMin + probeYMax) / 2f;
             ClampScroll();
             scrollXMicrons = DefaultScrollXMicrons ?? (probeXMin + probeXMax) / 2f;
@@ -391,13 +432,18 @@ namespace OpenEphys.Onix1.Design
             float viewTop  = cp.Y + (avail.Y - drawH) / 2f;
             float viewBot  = viewTop + drawH;
 
-            float gridLeft  = cp.X + GridMarginHPx;
-            float gridRight = cp.X + avail.X - GridMarginHPx;
-            float gridTop   = cp.Y + GridMarginVPx;
-            float gridBot   = cp.Y + avail.Y - GridMarginVPx;
+            float marginH = ShowGrid ? GridMarginHPx : 0f;
+            float marginV = ShowGrid ? GridMarginVPx : 0f;
+            float gridLeft  = cp.X + marginH;
+            float gridRight = cp.X + avail.X - marginH;
+            float gridTop   = cp.Y + marginV;
+            float gridBot   = cp.Y + avail.Y - marginV;
 
-            DrawGridLines(dl, gridLeft, gridRight, gridTop, gridBot,
-                viewLeft, viewBot, xLow, yLow, scaleXY);
+            if (ShowGrid)
+            {
+                DrawGridLines(dl, gridLeft, gridRight, gridTop, gridBot,
+                    viewLeft, viewBot, xLow, yLow, scaleXY);
+            }
 
             ImGui.PushClipRect(new Vector2(gridLeft, gridTop), new Vector2(gridRight, gridBot), true);
 
@@ -462,8 +508,11 @@ namespace OpenEphys.Onix1.Design
 
             ImGui.PopClipRect();
 
-            DrawGridLabels(dl, cp.X, cp.X + avail.X, cp.Y, cp.Y + avail.Y,
-                gridLeft, gridRight, gridTop, gridBot, viewLeft, viewBot, xLow, yLow, scaleXY);
+            if (ShowGrid)
+            {
+                DrawGridLabels(dl, cp.X, cp.X + avail.X, cp.Y, cp.Y + avail.Y,
+                    gridLeft, gridRight, gridTop, gridBot, viewLeft, viewBot, xLow, yLow, scaleXY);
+            }
 
             if (!ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.R, false))
             {
@@ -485,14 +534,16 @@ namespace OpenEphys.Onix1.Design
 
                 if (inCanvas)
                 {
-                    string coord = $"({mousePx / 1000f:0.00} mm, {mousePy / 1000f:0.00} mm)";
-                    var sz  = ImGui.CalcTextSize(coord);
-                    const float pad = 5f;
-                    float refBot  = cp.Y + avail.Y - 18f;
-                    var bgMin = new Vector2(cp.X + avail.X - sz.X - pad * 3f, refBot - sz.Y - pad);
-                    var bgMax = new Vector2(cp.X + avail.X - pad, refBot);
-                    //dl.AddRectFilled(bgMin, bgMax, ColCoordOverlayBg, 3f);
-                    dl.AddText(new Vector2(bgMin.X + pad, bgMin.Y + pad), ColBottomInfoText, coord);
+                    if (ShowCoordinateReadout)
+                    {
+                        string coord = $"({mousePx / 1000f:0.00} mm, {mousePy / 1000f:0.00} mm)";
+                        var sz  = ImGui.CalcTextSize(coord);
+                        const float pad = 5f;
+                        float refBot  = cp.Y + avail.Y - 18f;
+                        var bgMin = new Vector2(cp.X + avail.X - sz.X - pad * 3f, refBot - sz.Y - pad);
+                        var bgMax = new Vector2(cp.X + avail.X - pad, refBot);
+                        dl.AddText(new Vector2(bgMin.X + pad, bgMin.Y + pad), ColBottomInfoText, coord);
+                    }
 
                     for (int i = 0; i < contacts.Count; i++)
                     {
@@ -514,7 +565,6 @@ namespace OpenEphys.Onix1.Design
                 float refBot = cp.Y + avail.Y - 18f;
                 var tagMin = new Vector2(cp.X + pad, refBot - tsz.Y - pad);
                 var tagMax = new Vector2(cp.X + pad * 3f + tsz.X, refBot);
-                //dl.AddRectFilled(tagMin, tagMax, ColCoordOverlayBg, 3f);
                 dl.AddText(new Vector2(tagMin.X + pad, tagMin.Y + pad / 2f), ColBottomInfoText, overlayTag);
             }
 
