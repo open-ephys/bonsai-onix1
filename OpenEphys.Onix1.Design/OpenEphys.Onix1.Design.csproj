@@ -21,6 +21,8 @@
     <PackageReference Include="clroni" Version="6.3.0" />
     <PackageReference Include="Hexa.NET.ImGui" Version="2.2.9" GeneratePathProperty="true" />
     <PackageReference Include="Hexa.NET.ImGui.Backends" Version="1.0.18" GeneratePathProperty="true" />
+    <PackageReference Include="Hexa.NET.ImPlot" Version="2.2.9" GeneratePathProperty="true" />
+    <PackageReference Include="Hexa.NET.Utilities" Version="2.2.9" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="OpenCV.Net" Version="3.4.2" />
     <PackageReference Include="OpenEphys.ProbeInterface.NET" Version="0.5.0" />
@@ -80,6 +82,7 @@
     <ItemGroup>
       <NativeDlls Include="$(PkgHexa_NET_ImGui_Backends)\runtimes\win-x64\native\ImGuiImpl.dll" />
       <NativeDlls Include="$(PkgHexa_NET_ImGui)\runtimes\win-x64\native\cimgui.dll" />
+      <NativeDlls Include="$(PkgHexa_NET_ImPlot)\runtimes\win-x64\native\cimplot.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(NativeDlls)" DestinationFolder="$(OutputPath)" />
   </Target>
