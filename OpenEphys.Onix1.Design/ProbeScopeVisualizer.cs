@@ -1,34 +1,41 @@
-﻿using Bonsai;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
+using System.Windows.Forms;
+using Bonsai;
 using Bonsai.Dag;
 using Bonsai.Design;
 using Bonsai.Expressions;
 using Hexa.NET.ImGui;
 using OpenCV.Net;
 using OpenEphys.ProbeInterface.NET;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Reactive.Subjects;
-using System.Windows.Forms;
 
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// One selectable band of a probe: a display name, the band sample rate, and how to turn the raw frame
-    /// sequence into a sequence of microvolt matrices.
+    /// One selectable band of a probe: a short display name, a description of its passband for the
+    /// dropdown, the band sample rate, how to turn the raw frame sequence into a sequence of microvolt
+    /// matrices, and optionally a filter that defines the band.
     /// </summary>
     internal sealed record ProbeScopeBand<TFrame>(
         string Name,
+        string Description,
         int SampleRate,
-        Func<IObservable<TFrame>, IObservable<Mat>> Scale);
+        Func<IObservable<TFrame>, IObservable<Mat>> Scale, // NB: Convert to uV
+        Func<IObservable<Mat>, IObservable<Mat>> Filter = null // NB: optional filter that can be used to define the band
+        );
 
     /// <summary>
     /// Everything a <see cref="ProbeScopeVisualizer{TFrame}"/> needs from a resolved device: the probe
-    /// geometry and the bands available for display.
+    /// geometry, the ADC channel groups common median referencing operates within, and the bands
+    /// available for display.
     /// </summary>
     internal sealed record ProbeScopeSource<TFrame>(
         SingleProbeGroup ProbeGroup,
+        int[][] AdcChannelGroups,
         IReadOnlyList<ProbeScopeBand<TFrame>> Bands);
 
     /// <summary>
@@ -37,8 +44,8 @@ namespace OpenEphys.Onix1.Design
     /// and how to turn its <see cref="DeviceInfo"/> into geometry and bands.
     /// </summary>
     /// <remarks>
-    /// The visualizer opens on a <see cref="ProbeScopeBuilder{TFrame}"/> node that must sit directly
-    /// downstream of the data operator. The device is resolved once the first frame arrives, since data
+    /// The visualizer opens on a pass-through sink node that must sit directly downstream of the data
+    /// operator. The device is resolved once the first frame arrives, since data
     /// flowing proves the configuration operator has registered it.
     /// </remarks>
     /// <typeparam name="TFrame">The data frame type the scope displays.</typeparam>
@@ -168,18 +175,26 @@ namespace OpenEphys.Onix1.Design
             source = CreateSource(deviceInfo);
 
             selector.Refresh(source.ProbeGroup);
-            waveform.Bands = source.Bands.Select(b => b.Name).ToList();
-            BindScale();
+            waveform.Bands = source.Bands.Select(b => (b.Name, b.Description)).ToList();
+            BindSelectedBand();
         }
 
-        void BindScale()
+        void BindSelectedBand()
         {
             scaleSubscription?.Dispose();
             waveform.ResetBuffers();
             boundBand = waveform.SelectedBand;
 
             var band = source.Bands[boundBand];
-            scaleSubscription = band.Scale(frames).Subscribe(data => waveform.Update(data, band.SampleRate));
+            var groups = source.AdcChannelGroups;
+
+            var scaled = band.Scale(frames)
+                .Select(data => waveform.UseCommonMedianReference ? Neuropixels.ApplyCmrF32(data, groups) : data);
+
+            if (band.Filter is not null)
+                scaled = band.Filter(scaled);
+
+            scaleSubscription = scaled.Subscribe(data => waveform.Update(data, band.SampleRate));
         }
 
         void RenderFrame(object sender, EventArgs e)
@@ -225,7 +240,7 @@ namespace OpenEphys.Onix1.Design
             ImGui.End();
 
             if (source is not null && waveform.SelectedBand != boundBand)
-                BindScale();
+                BindSelectedBand();
         }
 
         /// <inheritdoc/>

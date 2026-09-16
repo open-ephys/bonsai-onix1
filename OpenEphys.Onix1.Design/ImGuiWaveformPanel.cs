@@ -42,7 +42,7 @@ namespace OpenEphys.Onix1.Design
 
         int sampleRate = 30000;
         int channelHeight = 20;
-        int maxSamplesPerChannel = 1920; 
+        int maxSamplesPerChannel = 1920;
         double timebase = 2.0;
         int colorGrouping = 1;
 
@@ -52,9 +52,11 @@ namespace OpenEphys.Onix1.Design
         double vMax;
 
         /// <summary>
-        /// The bands this probe offers, in display order. The owner sets this once.
+        /// The bands this probe offers, in display order, as a short name and a description of the
+        /// passband. The closed combo shows the name; the open list shows both. The owner sets this once.
         /// </summary>
-        public IReadOnlyList<string> Bands { get; set; } = Array.Empty<string>();
+        public IReadOnlyList<(string Name, string Description)> Bands { get; set; } =
+            Array.Empty<(string, string)>();
 
         /// <summary>
         /// Index into <see cref="Bands"/> of the band currently being drawn.
@@ -65,6 +67,12 @@ namespace OpenEphys.Onix1.Design
         /// Unit shown beside the amplitude range control.
         /// </summary>
         public string RangeLabel { get; set; }
+
+        /// <summary>
+        /// Whether per-ADC common median referencing is applied to the displayed signal. Read by the
+        /// owner on every frame, so it takes effect immediately.
+        /// </summary>
+        public bool UseCommonMedianReference { get; set; }
 
         /// <summary>
         /// Supplies one block of samples for the selected band. Rebuilds the decimation buffers whenever the
@@ -165,7 +173,7 @@ namespace OpenEphys.Onix1.Design
         void BandCombo()
         {
             var singleBand = Bands.Count <= 1;
-            var preview = SelectedBand >= 0 && SelectedBand < Bands.Count ? Bands[SelectedBand] : string.Empty;
+            var preview = SelectedBand >= 0 && SelectedBand < Bands.Count ? Bands[SelectedBand].Name : string.Empty;
 
             if (singleBand) ImGui.BeginDisabled();
             if (ImGui.BeginCombo("##band", preview))
@@ -173,7 +181,8 @@ namespace OpenEphys.Onix1.Design
                 for (int i = 0; i < Bands.Count; i++)
                 {
                     var isSelected = i == SelectedBand;
-                    if (ImGui.Selectable(Bands[i], isSelected) && !isSelected)
+                    var (name, description) = Bands[i];
+                    if (ImGui.Selectable($"{name}: {description}", isSelected) && !isSelected)
                         SelectedBand = i;
                     if (isSelected)
                         ImGui.SetItemDefaultFocus();
@@ -197,6 +206,10 @@ namespace OpenEphys.Onix1.Design
                     ImGui.TableNextColumn();
                     ImGui.Text("Band");
                     BandCombo();
+                    ImGui.SameLine();
+                    var cmr = UseCommonMedianReference;
+                    if (ImGui.Checkbox("Apply CMR", ref cmr))
+                        UseCommonMedianReference = cmr;
                     ImGui.EndTable();
                 }
 

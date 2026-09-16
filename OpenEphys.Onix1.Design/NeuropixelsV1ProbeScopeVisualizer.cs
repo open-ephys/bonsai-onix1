@@ -1,11 +1,15 @@
 ﻿using Bonsai;
+using Bonsai.Dsp;
+using OpenCV.Net;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Probe scope for a NeuropixelsV1 probe, offering the spike and LFP bands.
+    /// Probe scope for a NeuropixelsV1 probe. Offers the hardware spike and LFP bands, plus a wideband
+    /// view and a software spike band when the probe's spike filter is off.
     /// </summary>
     public class NeuropixelsV1ProbeScopeVisualizer : ProbeScopeVisualizer<NeuropixelsV1DataFrame>
     {
@@ -23,21 +27,45 @@ namespace OpenEphys.Onix1.Design
             const int spikeRate = NeuropixelsV1.SamplesPerChannelPerSecond;
             const int lfpRate = NeuropixelsV1.SamplesPerChannelPerSecond / NeuropixelsV1.FramesPerRoundRobin;
 
-            return new(v1.ProbeGroup, new[]
+            IObservable<Mat> ScaleSpike(IObservable<NeuropixelsV1DataFrame> frames) =>
+                new NeuropixelsV1Scale
+                {
+                    Band = NeuropixelsV1EphysBand.Spike,
+                    AmplifierGain = configuration.SpikeAmplifierGain
+                }.Process(frames);
+
+            IObservable<Mat> ScaleLfp(IObservable<NeuropixelsV1DataFrame> frames) =>
+                new NeuropixelsV1Scale
+                {
+                    Band = NeuropixelsV1EphysBand.Lfp,
+                    AmplifierGain = configuration.LfpAmplifierGain
+                }.Process(frames);
+
+            var bands = new List<ProbeScopeBand<NeuropixelsV1DataFrame>>();
+
+            // NB: with the hardware spike filter off, the spike stream is wideband, so it is offered as
+            // such and a software spike band is carved out of it, as for NeuropixelsV2.
+            if (configuration.SpikeFilter)
             {
-                new ProbeScopeBand<NeuropixelsV1DataFrame>("Spike", spikeRate, frames =>
-                    new NeuropixelsV1Scale
+                bands.Add(new("Spike", "300 Hz to 9 kHz", spikeRate, ScaleSpike));
+            }
+            else
+            {
+                bands.Add(new("Wideband", "0.2 Hz to 9 kHz", spikeRate, ScaleSpike));
+                bands.Add(new("Spike", "300 Hz to 9 kHz", spikeRate, ScaleSpike,
+                    scaled => new Butterworth
                     {
-                        Band = NeuropixelsV1EphysBand.Spike,
-                        AmplifierGain = configuration.SpikeAmplifierGain
-                    }.Process(frames)),
-                new ProbeScopeBand<NeuropixelsV1DataFrame>("LFP", lfpRate, frames =>
-                    new NeuropixelsV1Scale
-                    {
-                        Band = NeuropixelsV1EphysBand.Lfp,
-                        AmplifierGain = configuration.LfpAmplifierGain
-                    }.Process(frames)),
-            });
+                        SampleRate = spikeRate,
+                        Cutoff1 = 300.0,
+                        Cutoff2 = 9000.0,
+                        FilterType = FilterType.BandPass,
+                        FilterOrder = 2
+                    }.Process(scaled)));
+            }
+
+            bands.Add(new("LFP", "0.2 Hz to 500 Hz", lfpRate, ScaleLfp));
+
+            return new(v1.ProbeGroup, NeuropixelsV1.AdcChannelGroups(), bands);
         }
     }
 
