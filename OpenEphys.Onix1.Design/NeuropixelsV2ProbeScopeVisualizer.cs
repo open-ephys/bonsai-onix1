@@ -1,4 +1,6 @@
 ﻿using Bonsai;
+using Bonsai.Dsp;
+using OpenCV.Net;
 using System;
 using System.ComponentModel;
 
@@ -17,10 +19,30 @@ namespace OpenEphys.Onix1.Design
             if (info is not NeuropixelsV2PsbDecoderDeviceInfo v2)
                 throw new InvalidOperationException($"{info.DeviceType.Name} is not a NeuropixelsV2 probe this scope can display.");
 
-            return new(v2.ProbeGroup, new[]
+            const int sampleRate = NeuropixelsV2.SamplesPerChannelPerSecond;
+            static IObservable<Mat> Scale(IObservable<NeuropixelsV2DataFrame> frames) =>
+                new NeuropixelsV2Scale().Process(frames);
+
+            return new(v2.ProbeGroup, NeuropixelsV2.AdcChannelGroups(), new[]
             {
-                new ProbeScopeBand<NeuropixelsV2DataFrame>("Wideband", NeuropixelsV2.SamplesPerChannelPerSecond,
-                    frames => new NeuropixelsV2Scale().Process(frames)),
+                new ProbeScopeBand<NeuropixelsV2DataFrame>("Wideband", "0.5 Hz to 10 kHz", sampleRate, Scale),
+                new ProbeScopeBand<NeuropixelsV2DataFrame>("Spike", "300 Hz to 9 kHz", sampleRate, Scale,
+                    scaled => new Butterworth
+                    {
+                        SampleRate = sampleRate,
+                        Cutoff1 = 300.0,
+                        Cutoff2 = 9000.0,
+                        FilterType = FilterType.BandPass,
+                        FilterOrder = 2
+                    }.Process(scaled)),
+                new ProbeScopeBand<NeuropixelsV2DataFrame>("LFP", "0.5 Hz to 500 Hz", sampleRate, Scale,
+                    scaled => new Butterworth
+                    {
+                        SampleRate = sampleRate,
+                        Cutoff1 = 500.0,
+                        FilterType = FilterType.LowPass,
+                        FilterOrder = 2
+                    }.Process(scaled)),
             });
         }
     }
