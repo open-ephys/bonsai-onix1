@@ -34,22 +34,28 @@ namespace OpenEphys.Onix1.Design
             0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 10.0, 20.0
         };
 
+        static readonly double[] StandardRanges =
+        {
+            50, 100, 200, 500, 1000, 2000
+        };
+
         Decimator decimatorMin;
         Decimator decimatorMax;
         Mat timeRange;
         Mat minSnap;
         Mat maxSnap;
 
+        Mat rowOffsets;
+        Mat displayMin;
+        Mat displayMax;
+        double timeSpan;
+
         int sampleRate = 30000;
         int channelHeight = 20;
         int maxSamplesPerChannel = 1920;
         double timebase = 2.0;
+        double rangeAmplitude = 500;
         int colorGrouping = 1;
-
-        bool useFixedRange;
-        float rangeAmplitude;
-        double vMin;
-        double vMax;
 
         /// <summary>
         /// The bands this probe offers, in display order, as a short name and a description of the
@@ -95,10 +101,24 @@ namespace OpenEphys.Onix1.Design
                 timeRange?.Dispose();
                 decimatorMin?.Dispose();
                 decimatorMax?.Dispose();
+                rowOffsets?.Dispose();
+                displayMin?.Dispose();
+                displayMax?.Dispose();
                 decimatorMin = new Decimator(data, columns, samplesPerBin, ReduceOperation.Min);
                 decimatorMax = new Decimator(data, columns, samplesPerBin, ReduceOperation.Max);
                 timeRange = new Mat(1, columns, Depth.F32, 1);
                 CV.Range(timeRange, 0, (double)columns * samplesPerBin / sampleRate);
+                timeSpan = (double)(columns - 1) * samplesPerBin / sampleRate;
+
+                rowOffsets = new Mat(data.Rows, columns, Depth.F32, 1);
+                for (int i = 0; i < data.Rows; i++)
+                {
+                    using var row = rowOffsets.GetRow(i);
+                    row.Set(Scalar.All(-i));
+                }
+
+                displayMin = new Mat(data.Rows, columns, Depth.F32, 1);
+                displayMax = new Mat(data.Rows, columns, Depth.F32, 1);
             }
 
             decimatorMin.Process(data);
@@ -134,18 +154,24 @@ namespace OpenEphys.Onix1.Design
             decimatorMax?.Dispose();
             minSnap?.Dispose();
             maxSnap?.Dispose();
+            rowOffsets?.Dispose();
+            displayMin?.Dispose();
+            displayMax?.Dispose();
             timeRange = null;
             decimatorMin = null;
             decimatorMax = null;
             minSnap = null;
             maxSnap = null;
+            rowOffsets = null;
+            displayMin = null;
+            displayMax = null;
         }
 
         bool InputDoubleCombo(string label, ref double value, double[] comboItems)
         {
             var changed = false;
             var editValue = value;
-            ImGui.InputDouble(label, ref editValue, "%.2g");
+            ImGui.InputDouble(label, ref editValue, "%g");
             if (changed = ImGui.IsItemDeactivatedAfterEdit())
                 value = editValue;
             ImGui.SameLine(0, 0);
@@ -156,7 +182,7 @@ namespace OpenEphys.Onix1.Design
                 for (int i = 0; i < comboItems.Length; i++)
                 {
                     var isSelected = value == comboItems[i];
-                    if (ImGui.Selectable(comboItems[i].ToString("G2"), isSelected))
+                    if (ImGui.Selectable(comboItems[i].ToString("G"), isSelected))
                     {
                         value = comboItems[i];
                         changed = true;
@@ -218,7 +244,11 @@ namespace OpenEphys.Onix1.Design
                 {
                     ImGui.TableNextColumn();
                     ImGui.Text("Timebase (s)");
+                    // NB: a paused snapshot holds decimated data at one bin width, so its timebase
+                    // cannot change until the display resumes.
+                    ImGui.BeginDisabled(minSnap is not null);
                     InputDoubleCombo("##timebase", ref timebase, StandardTimeBases);
+                    ImGui.EndDisabled();
                     ImGui.EndTable();
                 }
 
@@ -242,26 +272,9 @@ namespace OpenEphys.Onix1.Design
                 {
                     ImGui.TableNextColumn();
                     var rangeInputLabel = string.IsNullOrEmpty(RangeLabel) ? "Range" : $"Range ({RangeLabel})";
-
-                    // NB: the logarithmic curve is computed from the limit range, so the bounds are
-                    // stretched to cover as much scale as a 32-bit float allows.
                     ImGui.Text(rangeInputLabel);
-                    ImGui.BeginDisabled(!useFixedRange);
-                    if (ImGui.DragFloat(
-                        "##range",
-                        ref rangeAmplitude,
-                        vSpeed: 1e30f,
-                        vMin: 0,
-                        vMax: 1e35f,
-                        format: "%.3g",
-                        ImGuiSliderFlags.Logarithmic))
-                    {
-                        UpdateRangeLimits();
-                    }
-                    ImGui.EndDisabled();
-
-                    ImGui.SameLine(0);
-                    ImGui.Checkbox("##autofit", ref useFixedRange);
+                    if (InputDoubleCombo("##range", ref rangeAmplitude, StandardRanges))
+                        rangeAmplitude = Math.Max(1, rangeAmplitude);
                     ImGui.EndTable();
                 }
 
@@ -306,24 +319,36 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        void UpdateRangeLimits()
-        {
-            vMin = -rangeAmplitude / 2;
-            vMax = rangeAmplitude / 2;
-        }
-
+        /// <summary>
+        /// Draws every channel into one plot whose y axis is in channel units: channel <c>i</c> is
+        /// centred at <c>-i</c> with +/- range / 2 mapped to +/- 0.5, so a trace that exceeds its range
+        /// runs into the neighbouring channels' bands instead of being clipped at a row edge.
+        /// </summary>
+        /// <remarks>
+        /// The decimated buffers are transformed into those units each frame as
+        /// <c>data / range + rowOffsets</c>, where <c>rowOffsets</c> is the constant <c>-i</c> term, one
+        /// row per channel. Only the channels inside the table's visible scroll range are submitted.
+        /// </remarks>
+        /// <param name="minBuffer">Per-bin minima, one row per channel.</param>
+        /// <param name="maxBuffer">Per-bin maxima, one row per channel.</param>
         unsafe void WaveformPlot(Mat minBuffer, Mat maxBuffer)
         {
-            minBuffer.GetRawData(out IntPtr minPtr, out int minStep, out Size minShape);
-            maxBuffer.GetRawData(out IntPtr maxPtr, out int maxStep, out Size maxShape);
-            timeRange.GetRawData(out IntPtr timeRangePtr, out int timeRangeStep, out Size _);
-            ImPlot.PushStyleVar(ImPlotStyleVar.FitPadding, new Vector2(0, 0.1f));
+            CV.AddWeighted(minBuffer, 1 / rangeAmplitude, rowOffsets, 1, 0, displayMin);
+            CV.AddWeighted(maxBuffer, 1 / rangeAmplitude, rowOffsets, 1, 0, displayMax);
+            displayMin.GetRawData(out IntPtr minPtr, out int minStep, out Size minShape);
+            displayMax.GetRawData(out IntPtr maxPtr, out int maxStep, out Size _);
+            timeRange.GetRawData(out IntPtr timeRangePtr, out int _, out Size _);
+            var rows = minShape.Height;
+            var columns = minShape.Width;
+
             ImPlot.PushStyleVar(ImPlotStyleVar.Padding, new Vector2(0, 0));
             ImPlot.PushStyleVar(ImPlotStyleVar.BorderSize, 0);
+            ImPlot.PushStyleVar(ImPlotStyleVar.FillAlpha, 0.25f);
 
             var tableFlags = ImGuiTableFlags.NoSavedSettings | ImGuiTableFlags.ScrollY;
-            var dataPlotFlags = ImPlotFlags.CanvasOnly | ImPlotFlags.NoFrame;
-            var axesFlags = ImPlotAxisFlags.NoHighlight | ImPlotAxisFlags.NoInitialFit | ImPlotAxisFlags.AutoFit;
+            var timePlotFlags = ImPlotFlags.CanvasOnly | ImPlotFlags.NoFrame;
+            var dataPlotFlags = timePlotFlags | ImPlotFlags.NoInputs;
+            var axesFlags = ImPlotAxisFlags.NoHighlight;
             var bareAxesFlags = axesFlags | ImPlotAxisFlags.NoDecorations;
 
             if (ImGui.BeginTable("##table", 2, tableFlags, new Vector2(-1, -1)))
@@ -335,53 +360,65 @@ namespace OpenEphys.Onix1.Design
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();
                 var timeLabel = "Time";
-                var cursorPosY = ImGui.GetCursorPosY();
-                ImGui.SetCursorPosY(cursorPosY + TimeChannelHeight / 2);
+                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + TimeChannelHeight / 2);
                 ImGui.Text(timeLabel);
                 ImGui.TableNextColumn();
-                if (ImPlot.BeginPlot(timeLabel, new(-1, TimeChannelHeight), dataPlotFlags))
+                if (ImPlot.BeginPlot(timeLabel, new(-1, TimeChannelHeight), timePlotFlags))
                 {
                     ImPlot.SetupAxes(string.Empty, string.Empty, axesFlags, bareAxesFlags);
-                    ImPlot.PlotInfLines(string.Empty, (float*)timeRangePtr, minShape.Width);
+                    ImPlot.SetupAxisLimits(ImAxis.X1, 0, timeSpan, ImPlotCond.Always);
+                    ImPlot.PlotInfLines(string.Empty, (float*)timeRangePtr, columns);
                     ImPlot.EndPlot();
                 }
 
-                for (int i = 0; i < minShape.Height; i++)
+                // NB: only the channels inside the table's visible scroll range are labelled and
+                // plotted. The row is one plot rows * channelHeight tall, so a channel's band starts
+                // at i * channelHeight below the row.
+                ImGui.TableNextRow();
+                ImGui.TableNextColumn();
+                var rowTop = ImGui.GetCursorScreenPos().Y;
+                var windowTop = ImGui.GetWindowPos().Y;
+                var windowBottom = windowTop + ImGui.GetWindowSize().Y;
+                var firstVisible = Math.Max(0, (int)Math.Floor((windowTop - rowTop) / channelHeight));
+                var lastVisible = Math.Min(rows, (int)Math.Ceiling((windowBottom - rowTop) / channelHeight));
+
+                var labelBuffer = stackalloc byte[32];
+                var channelLabel = new StrBuilder(labelBuffer, 32);
+                var labelTop = ImGui.GetCursorPosY();
+                for (int i = firstVisible; i < lastVisible; i++)
                 {
-                    var labelBuffer = stackalloc byte[32];
-                    var channelLabel = new StrBuilder(labelBuffer, 32);
                     channelLabel.Reset();
                     channelLabel.Append("CH");
                     channelLabel.Append(i);
                     channelLabel.End();
-
-                    var channelColor = ImPlot.GetColormapColor(i / colorGrouping);
-                    ImGui.TableNextRow();
-                    ImGui.TableNextColumn();
-                    cursorPosY = ImGui.GetCursorPosY();
-                    ImGui.SetCursorPosY(cursorPosY + channelHeight / 2 - 5);
+                    ImGui.SetCursorPosY(labelTop + i * channelHeight + channelHeight / 2 - 5);
                     ImGui.Text(channelLabel);
-                    ImGui.TableNextColumn();
-                    if (ImPlot.BeginPlot(channelLabel, new(-1, channelHeight), dataPlotFlags))
-                    {
-                        ImPlot.PushStyleColor(ImPlotCol.Line, channelColor);
-                        ImPlot.SetupAxes(string.Empty, channelLabel, bareAxesFlags, bareAxesFlags);
-                        if (useFixedRange)
-                            ImPlot.SetupAxisLimits(ImAxis.Y1, vMin, vMax, ImPlotCond.Always);
+                }
 
+                ImGui.TableNextColumn();
+                if (ImPlot.BeginPlot("##channels", new(-1, rows * channelHeight), dataPlotFlags))
+                {
+                    ImPlot.SetupAxes(string.Empty, string.Empty, bareAxesFlags, bareAxesFlags);
+                    ImPlot.SetupAxisLimits(ImAxis.X1, 0, timeSpan, ImPlotCond.Always);
+                    ImPlot.SetupAxisLimits(ImAxis.Y1, -(rows - 1) - 0.5, 0.5, ImPlotCond.Always);
+                    for (int i = firstVisible; i < lastVisible; i++)
+                    {
                         var minLinePtr = (float*)((byte*)minPtr + i * minStep);
                         var maxLinePtr = (float*)((byte*)maxPtr + i * maxStep);
-                        ImPlot.PlotShaded(string.Empty, (float*)timeRangePtr, minLinePtr, maxLinePtr, minShape.Width);
-                        ImPlot.PlotLine(string.Empty, (float*)timeRangePtr, minLinePtr, minShape.Width);
-                        ImPlot.PlotLine(string.Empty, (float*)timeRangePtr, maxLinePtr, maxShape.Width);
-                        ImPlot.PopStyleColor();
-                        ImPlot.EndPlot();
+                        var channelColor = ImPlot.GetColormapColor(i / colorGrouping);
+                        ImPlot.PushStyleColor(ImPlotCol.Line, channelColor);
+                        ImPlot.PushStyleColor(ImPlotCol.Fill, channelColor);
+                        ImPlot.PlotShaded(string.Empty, (float*)timeRangePtr, minLinePtr, maxLinePtr, columns);
+                        ImPlot.PlotLine(string.Empty, (float*)timeRangePtr, minLinePtr, columns);
+                        ImPlot.PlotLine(string.Empty, (float*)timeRangePtr, maxLinePtr, columns);
+                        ImPlot.PopStyleColor(2);
                     }
+                    ImPlot.EndPlot();
                 }
                 ImGui.EndTable();
             }
 
-            ImPlot.PopStyleVar();
+            ImPlot.PopStyleVar(3);
         }
 
         /// <inheritdoc/>
