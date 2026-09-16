@@ -49,9 +49,6 @@ namespace OpenEphys.Onix1
         /// </summary>
         const int QueueTimeoutMilliseconds = 200;
 
-        internal const string DefaultDriver = "riffa";
-        internal const int DefaultIndex = 0;
-
         // NB: Decouple OnNext() from hardware reads
         bool disposed;
         Task readFrames;
@@ -73,8 +70,8 @@ namespace OpenEphys.Onix1
         readonly object regLock = new();
         readonly object disposeLock = new();
 
-        readonly string contextDriver = DefaultDriver;
-        readonly int contextIndex = DefaultIndex;
+        readonly string contextDriver;
+        readonly int contextIndex;
 
         readonly ValidationLevel ValidationLevel;
 

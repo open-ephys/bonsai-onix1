@@ -10,7 +10,11 @@ namespace OpenEphys.Onix1
     public class OnixContextTask : ContextTask
     {
         /// <inheritdoc/>
-        internal OnixContextTask(string driver, int index) : base(driver, index) { }
+        internal OnixContextTask(string driver, int index, ValidationLevel validationLevel) 
+            : base(driver, index, validationLevel) { }
+
+        internal const string DefaultDriver = "riffa";
+        internal const int DefaultIndex = 0;
 
         /// <inheritdoc/>
         protected override void ContextCreationChecks()
