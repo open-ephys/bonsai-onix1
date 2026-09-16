@@ -197,7 +197,7 @@ namespace OpenEphys.Onix1
             return groupedFrames.Where(deviceFrames => deviceFrames.Key == deviceAddress).Merge();
         }
 
-        void AssertConfigurationContext()
+        protected void AssertConfigurationContext()
         {
             if (disposed)
             {
@@ -548,7 +548,11 @@ namespace OpenEphys.Onix1
             }
         }
 
-        private oni.Frame ReadFrame()
+        /// <summary>
+        /// Reads a single <see cref="oni.Frame"/> from the controller 
+        /// </summary>
+        /// <returns>The <see cref="oni.Frame"/> read from the controller.</returns>
+        protected oni.Frame ReadFrame()
         {
             lock (readLock)
             {
