@@ -22,6 +22,12 @@ namespace OpenEphys.Onix1
     /// </description></item>
     /// <item><description>A BNO055 9-axis IMU for real-time, 3D orientation tracking.</description></item>
     /// </list>
+    /// <para>
+    /// Upon configuration, the headstage's EEPROM is read to confirm that it matches the expected headstage
+    /// type and meets a minimum hardware revision. If either check fails, an exception is thrown unless <see
+    /// cref="ContextTask.ValidationLevel"/> is <see cref="ValidationLevel.Permissive"/>, in which case a
+    /// warning is produced instead and configuration proceeds.
+    /// </para>
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eHeadstageEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a NeuropixelsV2e headstage.")]
@@ -93,8 +99,8 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <remarks>
         /// If a port voltage is defined this will override the automated voltage discovery and applies
-        /// the specified voltage to the headstage. To enable automated voltage discovery, leave this field 
-        /// empty. Warning: This device requires 3.0V to 5.5V for proper operation. Voltages higher than 5.5V can 
+        /// the specified voltage to the headstage. To enable automated voltage discovery, leave this field
+        /// empty. Warning: This device requires 3.0V to 5.5V for proper operation. Voltages higher than 5.5V can
         /// damage the headstage
         /// </remarks>
         [Description("If defined, overrides automated voltage discovery and applies " +
@@ -117,7 +123,7 @@ namespace OpenEphys.Onix1
             Bno055.DeviceName = GetFullDeviceName(Bno055.DeviceType.Name);
         }
 
-        private protected override void PrepareDevices() 
+        private protected override void PrepareDevices()
         {
             NeuropixelsV2A.StreamIndex = 0;
             NeuropixelsV2A.SelectProbe = serializer => ConfigureHeadstageNeuropixelsV2eDS90UB9x.SelectProbeA(serializer);
@@ -159,7 +165,7 @@ namespace OpenEphys.Onix1
         override private protected void ConfigureSerdes(DeviceContext device)
         {
             // default to disabled and let individual instances re-enable
-            device.WriteRegister(DS90UB9x.ENABLE, 0); 
+            device.WriteRegister(DS90UB9x.ENABLE, 0);
 
             // configure deserializer trigger mode
             device.WriteRegister(DS90UB9x.TRIGGEROFF, 0);
@@ -217,14 +223,14 @@ namespace OpenEphys.Onix1
         {
             if (metadata.Id != HeadstageId)
             {
-                throw new InvalidOperationException(
-                    $"Expected a Headstage-NeuropixelsV2.0e but found '{metadata.Name}' (ID: {metadata.Id}).");
+                ContextHelper.Validate(ValidationLevel.Permissive, new InvalidOperationException(
+                    $"Expected a Headstage-NeuropixelsV2.0e but found '{metadata.Name}' (ID: {metadata.Id})."));
             }
 
             if (metadata.Revision < MinimumRevision)
             {
-                throw new InvalidOperationException(
-                    $"Headstage version {MinimumRevision} is required but version {metadata.Revision} was detected.");
+                ContextHelper.Validate(ValidationLevel.Permissive, new InvalidOperationException(
+                    $"Headstage version {MinimumRevision} is required but version {metadata.Revision} was detected."));
             }
         }
 
