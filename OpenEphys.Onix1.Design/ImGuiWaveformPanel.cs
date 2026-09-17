@@ -34,6 +34,7 @@ namespace OpenEphys.Onix1.Design
         const float SweepCursorWeight = 1;
         const uint ColGraticule = ImGuiPalette.Grey0x88;
         const float GraticuleWeight = 1;
+        static readonly uint ColLabelHover = ImGuiPalette.WithAlpha(ImGuiPalette.White, 0x1C);
 
         static readonly double[] StandardTimeBases =
         {
@@ -64,6 +65,10 @@ namespace OpenEphys.Onix1.Design
         bool? dragHidden;
         int dragAnchor;
         bool dragLeftAnchor;
+
+        int expandedChannel = -1;
+        float collapsedScroll;
+        bool restoreScroll;
 
         readonly string[] divisionLabels = new string[TimeDivisions + 1];
         double labeledTimebase = double.NaN;
@@ -353,7 +358,7 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// Lays out the label column and the plot, with every channel in one plot whose y axis is in
         /// channel units: channel <c>i</c> is centered at <c>-i</c> with +/- range / 2 mapped to
-        /// +/- 0.5, so a trace that exceeds its range runs into the neighboring channels' bands
+        /// +/- 0.5, so a trace that exceeds its range runs into the neighboring channels' rows
         /// instead of being clipped at a row edge.
         /// </summary>
         /// <remarks>
@@ -366,6 +371,7 @@ namespace OpenEphys.Onix1.Design
         void WaveformPlot(Mat minBuffer, Mat maxBuffer)
         {
             var rows = minBuffer.Rows;
+            var labelDigits = DigitCount(rows - 1);
 
             ImPlot.PushStyleVar(ImPlotStyleVar.Padding, new Vector2(0, 0));
             ImPlot.PushStyleVar(ImPlotStyleVar.BorderSize, 0);
@@ -381,36 +387,30 @@ namespace OpenEphys.Onix1.Design
             var plotX = 0f;
             var plotWidth = 0f;
 
-            // NB: channel numbers are zero-padded to the width of the largest so the label column,
-            // and with it the plot, keeps one width whichever channels are scrolled into view.
-            var labelDigits = DigitCount(rows - 1);
-            var labelWidth = ImGui.CalcTextSize("CH").X + labelDigits * ImGui.CalcTextSize("0").X;
-
             if (ImGui.BeginTable("##table", 2, tableFlags, new Vector2(-1, tableHeight)))
             {
-                ImGui.TableSetupColumn(string.Empty, ImGuiTableColumnFlags.WidthFixed, labelWidth);
+                ImGui.TableSetupColumn(string.Empty, ImGuiTableColumnFlags.WidthFixed, LabelColumnWidth(labelDigits));
                 ImGui.TableSetupColumn(string.Empty);
+                RestoreScrollIfPending();
 
-                // NB: the row is one plot rows * channelHeight tall, so channel i's band starts
-                // i * channelHeight below the row top.
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();
-                var rowTop = ImGui.GetCursorScreenPos().Y;
-                var firstVisible = Math.Max(0, (int)Math.Floor((plotTop - rowTop) / channelHeight));
-                var lastVisible = Math.Min(rows, (int)Math.Ceiling((plotBottom - rowTop) / channelHeight));
-                ChannelLabels(firstVisible, lastVisible, labelDigits);
+                var layout = LayoutRows(rows, plotTop, plotBottom, ImGui.GetCursorScreenPos().Y);
+                var hovered = HoveredChannel(layout);
+                ChannelLabels(layout, labelDigits, hovered);
+                HandleChannelInput(hovered);
 
                 // NB: with no padding, border or decorations the plot area is the item rect, so
                 // its extent is known before the plot is drawn.
                 ImGui.TableNextColumn();
                 plotX = ImGui.GetCursorScreenPos().X;
                 plotWidth = ImGui.GetContentRegionAvail().X;
-                if (ImPlot.BeginPlot("##channels", new(plotWidth, rows * channelHeight), plotFlags))
+                if (ImPlot.BeginPlot("##channels", new(plotWidth, layout.Height), plotFlags))
                 {
                     ImPlot.SetupAxes(string.Empty, string.Empty, axesFlags, axesFlags);
                     ImPlot.SetupAxisLimits(ImAxis.X1, 0, timeSpan, ImPlotCond.Always);
-                    ImPlot.SetupAxisLimits(ImAxis.Y1, -(rows - 1) - 0.5, 0.5, ImPlotCond.Always);
-                    PlotTraces(minBuffer, maxBuffer, firstVisible, lastVisible);
+                    ImPlot.SetupAxisLimits(ImAxis.Y1, -(layout.LastRow - 1) - 0.5, -layout.FirstRow + 0.5, ImPlotCond.Always);
+                    PlotTraces(minBuffer, maxBuffer, layout.FirstVisible, layout.LastVisible);
                     PlotSweepCursor();
                     ImPlot.EndPlot();
 
@@ -427,19 +427,95 @@ namespace OpenEphys.Onix1.Design
                 DrawGraticules(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom);
         }
 
-        unsafe void ChannelLabels(int first, int last, int labelDigits)
+        /// <summary>
+        /// The rows the plot spans this frame and where they fall on screen: every channel at
+        /// <c>channelHeight</c>, or the expanded channel alone filling the visible height.
+        /// </summary>
+        readonly struct RowLayout
+        {
+            public readonly int FirstRow;
+            public readonly int LastRow;
+            public readonly float RowHeight;
+            public readonly float Top;
+            public readonly float Bottom;
+            public readonly float Origin;
+
+            public RowLayout(int firstRow, int lastRow, float rowHeight, float top, float bottom, float origin)
+            {
+                FirstRow = firstRow;
+                LastRow = lastRow;
+                RowHeight = rowHeight;
+                Top = top;
+                Bottom = bottom;
+                Origin = origin;
+            }
+
+            public float Height => (LastRow - FirstRow) * RowHeight;
+            public int FirstVisible => Math.Max(FirstRow, ChannelAt(Top));
+            public int LastVisible => Math.Min(LastRow, FirstRow + (int)Math.Ceiling((Bottom - Origin) / RowHeight));
+            public float RowTop(int channel) => Origin + (channel - FirstRow) * RowHeight;
+            public int ChannelAt(float y) => FirstRow + (int)Math.Floor((y - Origin) / RowHeight);
+        }
+
+        RowLayout LayoutRows(int rows, float top, float bottom, float origin)
+        {
+            if (expandedChannel >= rows)
+                Collapse();
+
+            return expandedChannel >= 0
+                ? new RowLayout(expandedChannel, expandedChannel + 1, bottom - top, top, bottom, origin)
+                : new RowLayout(0, rows, channelHeight, top, bottom, origin);
+        }
+
+        // NB: the channel under the mouse is found from its y anywhere across the label column and
+        // the plot, so a trace can be acted on where it is looked at.
+        static int HoveredChannel(in RowLayout layout)
+        {
+            var mouse = ImGui.GetMousePos();
+            var left = ImGui.GetCursorScreenPos().X;
+            var right = ImGui.GetWindowPos().X + ImGui.GetWindowSize().X;
+            if (ImGui.GetScrollMaxY() > 0)
+                right -= ImGui.GetStyle().ScrollbarSize;
+
+            if (!ImGui.IsWindowHovered() ||
+                mouse.X < left || mouse.X >= right ||
+                mouse.Y < layout.Top || mouse.Y >= layout.Bottom)
+            {
+                return -1;
+            }
+
+            var channel = layout.ChannelAt(mouse.Y);
+            return channel >= layout.FirstRow && channel < layout.LastRow ? channel : -1;
+        }
+
+        // NB: channel numbers are zero-padded to the width of the largest so the label column, and
+        // with it the plot, keeps one width whichever channels are scrolled into view.
+        static float LabelColumnWidth(int labelDigits) =>
+            ImGui.CalcTextSize("CH").X + labelDigits * ImGui.CalcTextSize("0").X;
+
+        // NB: the scroll clamps to zero while one band fills the table, so the position from
+        // before the expand is put back on collapse.
+        void RestoreScrollIfPending()
+        {
+            if (restoreScroll)
+            {
+                ImGui.SetScrollY(collapsedScroll);
+                restoreScroll = false;
+            }
+        }
+
+        unsafe void ChannelLabels(in RowLayout layout, int labelDigits, int hovered)
         {
             var labelBuffer = stackalloc byte[32];
             var label = new StrBuilder(labelBuffer, 32);
             var labelTop = ImGui.GetCursorPosY();
-            var labelSize = new Vector2(0, channelHeight);
-            if (!ImGui.IsMouseDown(ImGuiMouseButton.Left))
-                dragHidden = null;
+            var textOffset = (layout.RowHeight - ImGui.GetTextLineHeight()) / 2;
+            var left = ImGui.GetCursorScreenPos().X;
+            var right = left + ImGui.GetContentRegionAvail().X;
+            var draw = ImGui.GetWindowDrawList();
 
-            ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0, 0.5f));
-            for (int i = first; i < last; i++)
+            for (int i = layout.FirstVisible; i < layout.LastVisible; i++)
             {
-
                 label.Reset();
                 label.Append("CH");
                 for (var n = DigitCount(i); n < labelDigits; n++)
@@ -447,18 +523,18 @@ namespace OpenEphys.Onix1.Design
                 label.Append(i);
                 label.End();
 
+                if (i == hovered)
+                {
+                    var rowTop = layout.RowTop(i);
+                    draw.AddRectFilled(new Vector2(left, rowTop), new Vector2(right, rowTop + layout.RowHeight), ColLabelHover);
+                }
+
                 var hidden = channelHidden[i];
                 if (hidden) ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled));
-                ImGui.SetCursorPosY(labelTop + i * channelHeight);
-                ImGui.Selectable(label, false, ImGuiSelectableFlags.None, labelSize);
+                ImGui.SetCursorPosY(labelTop + (i - layout.FirstRow) * layout.RowHeight + textOffset);
+                ImGui.Text(label);
                 if (hidden) ImGui.PopStyleColor();
-
-                // NB: the pressed selectable holds ImGui's active id, so hover on the others has
-                // to be allowed past it for a drag to reach them.
-                if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByActiveItem))
-                    HandleLabelInput(i);
             }
-            ImGui.PopStyleVar();
         }
 
         static int DigitCount(int value)
@@ -469,10 +545,25 @@ namespace OpenEphys.Onix1.Design
             return digits;
         }
 
-        void HandleLabelInput(int channel)
+        void HandleChannelInput(int channel)
         {
+            if (!ImGui.IsMouseDown(ImGuiMouseButton.Left))
+                dragHidden = null;
+            if (channel < 0)
+                return;
+
+            if (ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
+            {
+                if (expandedChannel >= 0) Collapse();
+                else Expand(channel);
+                return;
+            }
+
+            if (expandedChannel >= 0)
+                return;
+
             var rows = channelHidden.Length;
-            if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+            if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && ImGui.GetIO().KeyShift)
             {
                 Array.Copy(channelHidden, dragOriginal, rows);
                 dragHidden = !channelHidden[channel];
@@ -492,6 +583,18 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
+        void Expand(int channel)
+        {
+            collapsedScroll = ImGui.GetScrollY();
+            expandedChannel = channel;
+        }
+
+        void Collapse()
+        {
+            expandedChannel = -1;
+            restoreScroll = true;
+        }
+
         /// <summary>
         /// Transforms the decimated buffers into channel units as <c>data / range + rowOffsets</c>,
         /// where <c>rowOffsets</c> is the constant <c>-i</c> term, one row per channel, and plots
@@ -508,7 +611,7 @@ namespace OpenEphys.Onix1.Design
 
             for (int i = first; i < last; i++)
             {
-                if (channelHidden[i])
+                if (channelHidden[i] && i != expandedChannel)
                     continue;
 
                 var minLinePtr = (float*)((byte*)minPtr + i * minStep);
