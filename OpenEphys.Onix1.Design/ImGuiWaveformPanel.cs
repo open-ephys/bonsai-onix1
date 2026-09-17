@@ -27,7 +27,13 @@ namespace OpenEphys.Onix1.Design
     {
         const float TextBoxWidth = 80;
         const int MinChannelHeight = 10;
-        const int TimeChannelHeight = 25;
+        const int TimeDivisions = 10;
+
+        // visual constants
+        const uint ColSweepCursor = ImGuiPalette.Yellow;
+        const float SweepCursorWeight = 1;
+        const uint ColGraticule = ImGuiPalette.Grey0x88;
+        const float GraticuleWeight = 1;
 
         static readonly double[] StandardTimeBases =
         {
@@ -44,11 +50,14 @@ namespace OpenEphys.Onix1.Design
         Mat timeRange;
         Mat minSnap;
         Mat maxSnap;
+        int sweepHeadSnap;
 
         Mat rowOffsets;
         Mat displayMin;
         Mat displayMax;
         double timeSpan;
+        readonly string[] divisionLabels = new string[TimeDivisions + 1];
+        double labeledTimebase = double.NaN;
 
         int sampleRate = 30000;
         int channelHeight = 20;
@@ -298,6 +307,7 @@ namespace OpenEphys.Onix1.Design
                     {
                         minSnap = decimatorMin.Buffer.Clone();
                         maxSnap = decimatorMax.Buffer.Clone();
+                        sweepHeadSnap = decimatorMin.Cursor;
                     }
                 }
 
@@ -321,13 +331,20 @@ namespace OpenEphys.Onix1.Design
 
         /// <summary>
         /// Draws every channel into one plot whose y axis is in channel units: channel <c>i</c> is
-        /// centred at <c>-i</c> with +/- range / 2 mapped to +/- 0.5, so a trace that exceeds its range
-        /// runs into the neighbouring channels' bands instead of being clipped at a row edge.
+        /// centered at <c>-i</c> with +/- range / 2 mapped to +/- 0.5, so a trace that exceeds its range
+        /// runs into the neighboring channels' bands instead of being clipped at a row edge.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// The decimated buffers are transformed into those units each frame as
         /// <c>data / range + rowOffsets</c>, where <c>rowOffsets</c> is the constant <c>-i</c> term, one
-        /// row per channel. Only the channels inside the table's visible scroll range are submitted.
+        /// row per channel.
+        /// </para>
+        /// <para>
+        /// The graticules are drawn into this window's draw list rather than as plot decorations so
+        /// they stay put while the channels scroll; the plot background is cleared so they show
+        /// through it.
+        /// </para>
         /// </remarks>
         /// <param name="minBuffer">Per-bin minima, one row per channel.</param>
         /// <param name="maxBuffer">Per-bin maxima, one row per channel.</param>
@@ -344,43 +361,36 @@ namespace OpenEphys.Onix1.Design
             ImPlot.PushStyleVar(ImPlotStyleVar.Padding, new Vector2(0, 0));
             ImPlot.PushStyleVar(ImPlotStyleVar.BorderSize, 0);
             ImPlot.PushStyleVar(ImPlotStyleVar.FillAlpha, 0.25f);
+            ImPlot.PushStyleColor(ImPlotCol.Bg, Vector4.Zero);
 
+            var plotFlags = ImPlotFlags.CanvasOnly | ImPlotFlags.NoFrame | ImPlotFlags.NoInputs;
+            var axesFlags = ImPlotAxisFlags.NoHighlight | ImPlotAxisFlags.NoDecorations;
             var tableFlags = ImGuiTableFlags.NoSavedSettings | ImGuiTableFlags.ScrollY;
-            var timePlotFlags = ImPlotFlags.CanvasOnly | ImPlotFlags.NoFrame;
-            var dataPlotFlags = timePlotFlags | ImPlotFlags.NoInputs;
-            var axesFlags = ImPlotAxisFlags.NoHighlight;
-            var bareAxesFlags = axesFlags | ImPlotAxisFlags.NoDecorations;
+            var tableHeight = -(ImGui.GetTextLineHeight() + ImGui.GetStyle().ItemSpacing.Y);
+            var paperTop = ImGui.GetCursorScreenPos().Y;
+            var paperBottom = paperTop + ImGui.GetContentRegionAvail().Y + tableHeight;
+            var plotX = 0f;
+            var plotWidth = 0f;
 
-            if (ImGui.BeginTable("##table", 2, tableFlags, new Vector2(-1, -1)))
+            // NB: channel numbers are zero-padded to the width of the largest so the label column,
+            // and with it the plot, keeps one width whichever channels are scrolled into view.
+            var labelDigits = 1;
+            for (var n = rows - 1; n >= 10; n /= 10)
+                labelDigits++;
+            var labelWidth = ImGui.CalcTextSize("CH").X + labelDigits * ImGui.CalcTextSize("0").X;
+
+            if (ImGui.BeginTable("##table", 2, tableFlags, new Vector2(-1, tableHeight)))
             {
-                ImGui.TableSetupColumn(string.Empty, ImGuiTableColumnFlags.WidthFixed, 10);
+                ImGui.TableSetupColumn(string.Empty, ImGuiTableColumnFlags.WidthFixed, labelWidth);
                 ImGui.TableSetupColumn(string.Empty);
-                ImGui.TableSetupScrollFreeze(0, 1);
 
-                ImGui.TableNextRow();
-                ImGui.TableNextColumn();
-                var timeLabel = "Time";
-                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + TimeChannelHeight / 2);
-                ImGui.Text(timeLabel);
-                ImGui.TableNextColumn();
-                if (ImPlot.BeginPlot(timeLabel, new(-1, TimeChannelHeight), timePlotFlags))
-                {
-                    ImPlot.SetupAxes(string.Empty, string.Empty, axesFlags, bareAxesFlags);
-                    ImPlot.SetupAxisLimits(ImAxis.X1, 0, timeSpan, ImPlotCond.Always);
-                    ImPlot.PlotInfLines(string.Empty, (float*)timeRangePtr, columns);
-                    ImPlot.EndPlot();
-                }
-
-                // NB: only the channels inside the table's visible scroll range are labelled and
-                // plotted. The row is one plot rows * channelHeight tall, so a channel's band starts
-                // at i * channelHeight below the row.
+                // NB: the row is one plot rows * channelHeight tall, so channel i's band starts
+                // i * channelHeight below the row top.
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();
                 var rowTop = ImGui.GetCursorScreenPos().Y;
-                var windowTop = ImGui.GetWindowPos().Y;
-                var windowBottom = windowTop + ImGui.GetWindowSize().Y;
-                var firstVisible = Math.Max(0, (int)Math.Floor((windowTop - rowTop) / channelHeight));
-                var lastVisible = Math.Min(rows, (int)Math.Ceiling((windowBottom - rowTop) / channelHeight));
+                var firstVisible = Math.Max(0, (int)Math.Floor((paperTop - rowTop) / channelHeight));
+                var lastVisible = Math.Min(rows, (int)Math.Ceiling((paperBottom - rowTop) / channelHeight));
 
                 var labelBuffer = stackalloc byte[32];
                 var channelLabel = new StrBuilder(labelBuffer, 32);
@@ -389,16 +399,25 @@ namespace OpenEphys.Onix1.Design
                 {
                     channelLabel.Reset();
                     channelLabel.Append("CH");
+                    var digits = 1;
+                    for (var n = i; n >= 10; n /= 10)
+                        digits++;
+                    for (; digits < labelDigits; digits++)
+                        channelLabel.Append('0');
                     channelLabel.Append(i);
                     channelLabel.End();
                     ImGui.SetCursorPosY(labelTop + i * channelHeight + channelHeight / 2 - 5);
                     ImGui.Text(channelLabel);
                 }
 
+                // NB: with no padding, border or decorations the plot area is the item rect, so
+                // its extent is known before the plot is drawn.
                 ImGui.TableNextColumn();
-                if (ImPlot.BeginPlot("##channels", new(-1, rows * channelHeight), dataPlotFlags))
+                plotX = ImGui.GetCursorScreenPos().X;
+                plotWidth = ImGui.GetContentRegionAvail().X;
+                if (ImPlot.BeginPlot("##channels", new(plotWidth, rows * channelHeight), plotFlags))
                 {
-                    ImPlot.SetupAxes(string.Empty, string.Empty, bareAxesFlags, bareAxesFlags);
+                    ImPlot.SetupAxes(string.Empty, string.Empty, axesFlags, axesFlags);
                     ImPlot.SetupAxisLimits(ImAxis.X1, 0, timeSpan, ImPlotCond.Always);
                     ImPlot.SetupAxisLimits(ImAxis.Y1, -(rows - 1) - 0.5, 0.5, ImPlotCond.Always);
                     for (int i = firstVisible; i < lastVisible; i++)
@@ -413,12 +432,71 @@ namespace OpenEphys.Onix1.Design
                         ImPlot.PlotLine(string.Empty, (float*)timeRangePtr, maxLinePtr, columns);
                         ImPlot.PopStyleColor(2);
                     }
+
+                    var sweepHead = minSnap is not null ? sweepHeadSnap : decimatorMin.Cursor;
+                    double sweepTime = ((float*)timeRangePtr)[sweepHead];
+                    ImPlot.PushStyleColor(ImPlotCol.Line, ImGui.ColorConvertU32ToFloat4(ColSweepCursor));
+                    ImPlot.PushStyleVar(ImPlotStyleVar.LineWeight, SweepCursorWeight);
+                    ImPlot.PlotInfLines(string.Empty, &sweepTime, 1);
+                    ImPlot.PopStyleVar();
+                    ImPlot.PopStyleColor();
                     ImPlot.EndPlot();
+
+                    // NB: drawn after the plot so it lies over the traces
+                    DrawFrame(ImGui.GetWindowDrawList(), plotX, plotWidth, paperTop, paperBottom);
                 }
                 ImGui.EndTable();
             }
 
+            ImPlot.PopStyleColor();
             ImPlot.PopStyleVar(3);
+
+            if (plotWidth > 0)
+                DrawGraticules(ImGui.GetWindowDrawList(), plotX, plotWidth, paperTop, paperBottom);
+        }
+
+        // NB: the paper is built from filled rects on whole pixels. AddLine and AddRect offset
+        // their coordinates by half a pixel and anti-alias, which puts a 1 px frame one pixel
+        // inside its extent and gives thicker lines a grey halo.
+        static void DrawFrame(ImDrawListPtr draw, float left, float width, float top, float bottom)
+        {
+            var l = MathF.Floor(left);
+            var r = MathF.Floor(left + width);
+            var t = MathF.Floor(top);
+            var b = MathF.Floor(bottom);
+            var w = GraticuleWeight;
+            draw.AddRectFilled(new Vector2(l, t), new Vector2(r, t + w), ColGraticule);
+            draw.AddRectFilled(new Vector2(l, b - w), new Vector2(r, b), ColGraticule);
+            draw.AddRectFilled(new Vector2(l, t), new Vector2(l + w, b), ColGraticule);
+            draw.AddRectFilled(new Vector2(r - w, t), new Vector2(r, b), ColGraticule);
+        }
+
+        void DrawGraticules(ImDrawListPtr draw, float left, float width, float top, float bottom)
+        {
+            var t = MathF.Floor(top) + GraticuleWeight;
+            var b = MathF.Floor(bottom) - GraticuleWeight;
+            var textColor = ImGui.GetColorU32(ImGuiCol.Text);
+            var labelY = bottom + ImGui.GetStyle().ItemSpacing.Y;
+
+            if (labeledTimebase != timebase)
+            {
+                for (int d = 0; d <= TimeDivisions; d++)
+                    divisionLabels[d] = $"{d * timebase / TimeDivisions:g} s";
+                labeledTimebase = timebase;
+            }
+
+            for (int d = 0; d <= TimeDivisions; d++)
+            {
+                var x = left + d * width / TimeDivisions;
+                if (d > 0 && d < TimeDivisions)
+                {
+                    var l = MathF.Floor(x);
+                    draw.AddRectFilled(new Vector2(l, t), new Vector2(l + GraticuleWeight, b), ColGraticule);
+                }
+
+                var label = divisionLabels[d];
+                draw.AddText(new Vector2(x - ImGui.CalcTextSize(label).X / 2, labelY), textColor, label);
+            }
         }
 
         /// <inheritdoc/>

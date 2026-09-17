@@ -15,13 +15,10 @@ namespace OpenEphys.Onix1.Design
     internal sealed class Decimator : IDisposable
     {
         int carry;
-        int outputIndex;
+        int writeIndex;
         int inputIndex;
-        readonly Mat buffer;
         readonly Mat carryBuffer;
         readonly Mat conversionBuffer;
-        readonly int downsampleFactor;
-        readonly Depth inputDepth;
         readonly ReduceOperation reduceOp;
 
         public Decimator(Mat input, int length, int factor, ReduceOperation reduceOperation)
@@ -32,23 +29,25 @@ namespace OpenEphys.Onix1.Design
             if (factor < 1)
                 throw new ArgumentOutOfRangeException(nameof(factor));
 
-            outputIndex = 0;
-            downsampleFactor = factor;
-            inputDepth = input.Depth;
-            carry = downsampleFactor;
+            writeIndex = 0;
+            DownsampleFactor = factor;
+            InputDepth = input.Depth;
+            carry = DownsampleFactor;
             carryBuffer = new Mat(input.Rows, 1, Depth.F32, input.Channels);
-            buffer = new Mat(input.Rows, length, Depth.F32, input.Channels);
-            buffer.Set(Scalar.All(double.NaN));
+            Buffer = new Mat(input.Rows, length, Depth.F32, input.Channels);
+            Buffer.Set(Scalar.All(double.NaN));
             reduceOp = reduceOperation;
-            if (inputDepth != Depth.F32)
+            if (InputDepth != Depth.F32)
                 conversionBuffer = new Mat(input.Size, Depth.F32, input.Channels);
         }
 
-        public Mat Buffer => buffer;
+        public Mat Buffer { get; }
 
-        public int DownsampleFactor => downsampleFactor;
+        public int Cursor => writeIndex;
 
-        public Depth InputDepth => inputDepth;
+        public int DownsampleFactor { get; }
+
+        public Depth InputDepth { get; }
 
         public void Process(Mat input)
         {
@@ -64,8 +63,8 @@ namespace OpenEphys.Onix1.Design
                 var inputRect = new Rect(inputIndex, 0, inputSamples, input.Rows);
 
                 using var inputBuffer = input.GetSubRect(inputRect);
-                using var outputBuffer = buffer.GetCol(outputIndex);
-                if (carry < downsampleFactor)
+                using var outputBuffer = Buffer.GetCol(writeIndex);
+                if (carry < DownsampleFactor)
                 {
                     CV.Reduce(inputBuffer, carryBuffer, 1, reduceOp);
                     switch (reduceOp)
@@ -87,11 +86,11 @@ namespace OpenEphys.Onix1.Design
                 carry -= inputSamples;
                 if (carry <= 0)
                 {
-                    outputIndex = (outputIndex + 1) % buffer.Cols;
-                    carry = downsampleFactor;
+                    writeIndex = (writeIndex + 1) % Buffer.Cols;
+                    carry = DownsampleFactor;
                 }
 
-                outputIndex = outputIndex % buffer.Cols;
+                writeIndex = writeIndex % Buffer.Cols;
             }
 
             inputIndex -= input.Cols;
@@ -99,7 +98,7 @@ namespace OpenEphys.Onix1.Design
 
         public void Dispose()
         {
-            buffer.Dispose();
+            Buffer.Dispose();
             carryBuffer.Dispose();
             conversionBuffer?.Dispose();
         }
