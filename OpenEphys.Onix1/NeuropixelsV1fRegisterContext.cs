@@ -21,7 +21,7 @@ namespace OpenEphys.Onix1
         readonly BitArray ShankConfig;
         readonly BitArray[] BaseConfigs;
 
-        public NeuropixelsV1fRegisterContext(DeviceContext deviceContext, NeuropixelsV1ProbeConfiguration configuration, NeuropixelsV1eProbeGroup probeGroup)
+        public NeuropixelsV1fRegisterContext(DeviceContext deviceContext, NeuropixelsV1ProbeConfiguration configuration, NeuropixelsV1ProbeGroup probeGroup)
             : base(deviceContext, NeuropixelsV1.ProbeI2CAddress)
         {
             device = deviceContext;
@@ -46,7 +46,6 @@ namespace OpenEphys.Onix1
                     ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
                         $"The probe serial number ({metaData.ProbeSerialNumber}) does not " +
                         $"match the ADC calibration file serial number ({adcCalibration.Value.SerialNumber})."));
-                    adcCalibration = null;
                 }
             }
 
@@ -70,7 +69,6 @@ namespace OpenEphys.Onix1
                     ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
                         $"The probe serial number ({metaData.ProbeSerialNumber}) does not " +
                         $"match the gain calibration file serial number ({gainCorrection.Value.SerialNumber})."));
-                    gainCorrection = null;
                 }
             }
 
@@ -112,7 +110,7 @@ namespace OpenEphys.Onix1
         internal void WriteShiftRegisters()
         {
             // shank configuration
-            // NB: no read check because of ASIC bug that is documented in IMEC-API comments
+            // NB: no read check, because of an ASIC bug affecting this register
             var shankBytes = BitHelper.ToBitReversedBytes(ShankConfig);
 
             WriteByte(NeuropixelsV1f.SR_LENGTH1, (uint)shankBytes.Length % 0x100);

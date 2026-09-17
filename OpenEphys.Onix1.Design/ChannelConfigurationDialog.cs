@@ -162,7 +162,7 @@ namespace OpenEphys.Onix1.Design
 
             foreach (var pane in zedGraphChannels.MasterPane.PaneList)
             {
-                pane.Chart.Fill = new Fill(Color.WhiteSmoke);
+                pane.Chart.Fill = new Fill(CanvasBackground);
             }
         }
 
@@ -364,7 +364,7 @@ namespace OpenEphys.Onix1.Design
         {
             var newProbeGroup = LoadConfigurationFile(fileName);
 
-            if (newProbeGroup != null && ValidateProbeGroup(newProbeGroup))
+            if (newProbeGroup != null)
             {
                 ProbeGroup = newProbeGroup;
                 RedrawProbeGroup();
@@ -463,28 +463,6 @@ namespace OpenEphys.Onix1.Design
             return false;
         }
 
-        internal bool ValidateProbeGroup(ProbeGroup newConfiguration)
-        {
-            if (newConfiguration == null)
-            {
-                return false;
-            }
-
-            if (ProbeGroup.NumberOfContacts == newConfiguration.NumberOfContacts)
-            {
-                newConfiguration.Validate();
-
-                return true;
-            }
-            else
-            {
-                MessageBox.Show($"Error: Number of contacts does not match; expected {ProbeGroup.NumberOfContacts} contacts" +
-                    $", but found {newConfiguration.NumberOfContacts} contacts", "Contact Number Mismatch");
-
-                return false;
-            }
-        }
-
         internal ProbeGroup LoadConfigurationFile(string fileName)
         {
             // NB: This method is called from an open dialog; throwing an exception without handling it would close the dialog.
@@ -542,10 +520,12 @@ namespace OpenEphys.Onix1.Design
             {
                 if (probe == null || probe.ProbePlanarContour == null) continue;
 
-                PointD[] planarContours = ConvertFloatArrayToPointD(probe.ProbePlanarContour);
-                PolyObj contour = new(planarContours, Color.LightGray, Color.White)
+                var planarContours = Array.ConvertAll(probe.ProbePlanarContour, p => new PointD(p[0], p[1]));
+
+                PolyObj contour = new(planarContours, ProbeContourBorder, ProbeContourFill)
                 {
-                    ZOrder = ZOrder.C_BehindChartBorder
+                    ZOrder = ZOrder.C_BehindChartBorder,
+                    Border = { Width = ContactBorderWidth }
                 };
 
                 zedGraphChannels.GraphPane.GraphObjList.Add(contour);
@@ -607,15 +587,15 @@ namespace OpenEphys.Onix1.Design
             if (ProbeGroup == null)
                 return;
 
-            for (int probeNumber = 0; probeNumber < ProbeGroup.Probes.Count(); probeNumber++)
+            for (int probeNumber = 0; probeNumber < ProbeGroup.NumberOfProbes; probeNumber++)
             {
                 var probe = ProbeGroup.Probes.ElementAt(probeNumber);
 
-                const int borderWidth = 3;
+                const int borderWidth = ContactBorderWidth;
 
-                for (int j = 0; j < probe.ContactPositions.Length; j++)
+                for (int j = 0; j < probe.NumberOfContacts; j++)
                 {
-                    Contact contact = probe.GetContact(j);
+                    Contact contact = probe.Contacts[j];
 
                     BoxObj contactObj;
 
@@ -623,24 +603,24 @@ namespace OpenEphys.Onix1.Design
                     {
                         var size = contact.ShapeParams.Radius.Value * 2;
 
-                        if (contactSize == 0.0f) contactSize = contact.ShapeParams.Radius.Value;
+                        if (contactSize == 0.0f) contactSize = (float)contact.ShapeParams.Radius.Value;
 
-                        contactObj = new EllipseObj(contact.PosX - size / 2, contact.PosY + size / 2, size, size, SelectedContactBorder, DisabledContactFill)
+                        contactObj = new EllipseObj(contact.PosX - size / 2, contact.PosY + size / 2, size, size, ContactBorder, DisabledContactFill)
                         {
                             ZOrder = ZOrder.B_BehindLegend,
-                            Tag = new ContactTag(probeNumber, contact.Index)
+                            Tag = new ContactTag(probeNumber, j)
                         };
                     }
                     else if (contact.Shape.Equals(ContactShape.Square))
                     {
                         var size = contact.ShapeParams.Width.Value;
 
-                        if (contactSize == 0.0f) contactSize = size / 2;
+                        if (contactSize == 0.0f) contactSize = (float)(size / 2);
 
-                        contactObj = new BoxObj(contact.PosX - size / 2, contact.PosY + size / 2, size, size, SelectedContactBorder, DisabledContactFill)
+                        contactObj = new BoxObj(contact.PosX - size / 2, contact.PosY + size / 2, size, size, ContactBorder, DisabledContactFill)
                         {
                             ZOrder = ZOrder.B_BehindLegend,
-                            Tag = new ContactTag(probeNumber, contact.Index)
+                            Tag = new ContactTag(probeNumber, j)
                         };
                     }
                     else if (contact.Shape.Equals(ContactShape.Rect))
@@ -648,12 +628,12 @@ namespace OpenEphys.Onix1.Design
                         var width = contact.ShapeParams.Width.Value;
                         var height = contact.ShapeParams.Height.Value;
 
-                        if (contactSize == 0.0f) contactSize = width >= height ? width / 2 : height / 2;
+                        if (contactSize == 0.0f) contactSize = (float)(width >= height ? width / 2 : height / 2);
 
-                        contactObj = new BoxObj(contact.PosX - width / 2, contact.PosY + height / 2, width, height, SelectedContactBorder, DisabledContactFill)
+                        contactObj = new BoxObj(contact.PosX - width / 2, contact.PosY + height / 2, width, height, ContactBorder, DisabledContactFill)
                         {
                             ZOrder = ZOrder.B_BehindLegend,
-                            Tag = new ContactTag(probeNumber, contact.Index)
+                            Tag = new ContactTag(probeNumber, j)
                         };
                     }
                     else
@@ -663,7 +643,7 @@ namespace OpenEphys.Onix1.Design
                     }
 
                     contactObj.Border.Width = borderWidth;
-                    contactObj.Border.IsVisible = false;
+                    contactObj.Border.IsVisible = true;
                     contactObj.Location.AlignV = AlignV.Center;
                     contactObj.Location.AlignH = AlignH.Center;
 
@@ -672,8 +652,14 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        internal readonly Color DisabledContactFill = Color.LightGray;
-        internal readonly Color EnabledContactFill = Color.DarkBlue;
+        const int ContactBorderWidth = 3;
+
+        internal readonly Color CanvasBackground = Color.FromArgb(0xf8, 0xf9, 0xfa);
+        internal readonly Color ProbeContourFill = Color.FromArgb(0xc8, 0xcc, 0xd4);
+        internal readonly Color ProbeContourBorder = Color.Black;
+        internal readonly Color ContactBorder = Color.Black;
+        internal readonly Color DisabledContactFill = Color.FromArgb(0x8c, 0x96, 0xa8);
+        internal readonly Color EnabledContactFill = Color.FromArgb(0xd4, 0xaf, 0x37);
         internal readonly Color ReferenceContactFill = Color.Black;
 
         internal virtual void HighlightEnabledContacts()
@@ -691,18 +677,19 @@ namespace OpenEphys.Onix1.Design
                 contact.Fill.Color = DisabledContactFill;
             }
 
-            int previousNumberOfChannels = 0;
+            int previousNumberOfContacts = 0;
 
-            foreach (var probe in ProbeGroup.Probes)
+            for (int i = 0; i < ProbeGroup.NumberOfProbes; i++)
             {
-                var indices = probe.DeviceChannelIndices;
+                var probe = ProbeGroup.Probes.ElementAt(i);
+                int contactCount = probe.NumberOfContacts;
 
                 var contactsToEnable = contactObjects
-                                       .Skip(previousNumberOfChannels)
-                                       .Take(indices.Length)
-                                       .Where((c, ind) => indices[ind] != -1);
+                                       .Skip(previousNumberOfContacts)
+                                       .Take(contactCount)
+                                       .Where((c, ind) => ProbeGroup.TryGetMappedChannel(i, ind, out int _));
 
-                previousNumberOfChannels += indices.Length;
+                previousNumberOfContacts += contactCount;
 
                 foreach (var contact in contactsToEnable)
                 {
@@ -738,7 +725,7 @@ namespace OpenEphys.Onix1.Design
         }
 
         internal readonly Color DeselectedContactBorder = Color.LightGray;
-        internal readonly Color SelectedContactBorder = Color.YellowGreen;
+        internal readonly Color SelectedContactBorder = Color.HotPink;
 
         internal virtual void HighlightSelectedContacts()
         {
@@ -746,30 +733,22 @@ namespace OpenEphys.Onix1.Design
                 return;
 
             var contactObjects = zedGraphChannels.GraphPane.GraphObjList.OfType<BoxObj>()
-                                                                        .Where(c => c is not PolyObj);
+                                                                        .Where(c => c is not PolyObj)
+                                                                        .ToList();
 
-            var selectedContacts = contactObjects.Where(c => c.Border.IsVisible);
-
-            foreach (var contact in selectedContacts)
+            foreach (var contact in contactObjects)
             {
-                contact.Border.IsVisible = false;
+                contact.Border.Color = ContactBorder;
             }
 
-            var contactsToSelect = contactObjects.Where((c, ind) => SelectedContacts[ind]);
-
-            if (!contactsToSelect.Any())
+            foreach (var contact in contactObjects.Where((c, ind) => SelectedContacts[ind]))
             {
-                return;
-            }
-
-            foreach (var contact in contactsToSelect)
-            {
-                contact.Border.IsVisible = true;
+                contact.Border.Color = SelectedContactBorder;
             }
         }
 
-        internal readonly Color DisabledContactTextColor = Color.Gray;
-        internal readonly Color EnabledContactTextColor = Color.White;
+        internal readonly Color DisabledContactTextColor = Color.Black;
+        internal readonly Color EnabledContactTextColor = Color.Black;
 
         internal virtual void UpdateContactLabels()
         {
@@ -785,29 +764,32 @@ namespace OpenEphys.Onix1.Design
 
             int probeNumber = 0;
             int indexOffset = 0;
+            var channelMap = ProbeGroup.ChannelMap;
 
-            foreach (var probe in ProbeGroup.Probes)
+            for (int i = 0; i < ProbeGroup.NumberOfProbes; i++)
             {
-                var indices = probe.DeviceChannelIndices;
-                var positions = probe.ContactPositions;
+                var probe = ProbeGroup.Probes.ElementAt(i);
+                int contactCount = probe.NumberOfContacts;
 
-                for (int i = 0; i < indices.Length; i++)
+                for (int j = 0; j < contactCount; j++)
                 {
-                    TextObj textObj = new(ContactString(indices[i], i + indexOffset), positions[i][0], positions[i][1], CoordType.AxisXYScale, AlignH.Center, AlignV.Center)
+                    var c = probe.Contacts[j];
+                    var channelActive = ProbeGroup.TryGetMappedChannel(i, j, out int deviceChannel); 
+                    TextObj textObj = new(ContactString(deviceChannel, j + indexOffset), c.PosX, c.PosY, CoordType.AxisXYScale, AlignH.Center, AlignV.Center)
                     {
                         ZOrder = ZOrder.A_InFront,
-                        Tag = new ContactTag(probeNumber, i)
+                        Tag = new ContactTag(probeNumber,j)
                     };
 
                     SetTextObj(textObj);
 
-                    textObj.FontSpec.FontColor = indices[i] == -1 ? DisabledContactTextColor : EnabledContactTextColor;
+                    textObj.FontSpec.FontColor = channelActive ? DisabledContactTextColor : EnabledContactTextColor;
 
                     zedGraphChannels.GraphPane.GraphObjList.Add(textObj);
                 }
 
                 probeNumber++;
-                indexOffset += indices.Length;
+                indexOffset += contactCount;
             }
         }
 
@@ -969,25 +951,6 @@ namespace OpenEphys.Onix1.Design
         {
             return graphObjs.OfType<PolyObj>()
                             .Max(obj => { return obj.Points.Max(p => p.Y); });
-        }
-
-        /// <summary>
-        /// Converts a two-dimensional <see cref="float"/> array into an array of <see cref="PointD"/>
-        /// objects. Assumes that the float array is ordered so that the first index of each pair is 
-        /// the X position, and the second index is the Y position.
-        /// </summary>
-        /// <param name="floats">Two-dimensional array of <see cref="float"/> values</param>
-        /// <returns></returns>
-        public static PointD[] ConvertFloatArrayToPointD(float[][] floats)
-        {
-            PointD[] pointD = new PointD[floats.Length];
-
-            for (int i = 0; i < floats.Length; i++)
-            {
-                pointD[i] = new PointD(floats[i][0], floats[i][1]);
-            }
-
-            return pointD;
         }
 
         static void InitializeZedGraphControl(ZedGraphControl zedGraph)
@@ -1506,17 +1469,7 @@ namespace OpenEphys.Onix1.Design
 
         internal static bool HasContactAnnotations(ProbeGroup probeGroup)
         {
-            foreach (var probe in probeGroup.Probes)
-            {
-                if (probe.ContactAnnotations != null
-                    && probe.ContactAnnotations.Annotations != null
-                    && probe.ContactAnnotations.Annotations.Length > 0)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return probeGroup.Probes.Select(p => p.ContactAnnotationKeys.Count() > 0).Any();
         }
 
         private void ButtonResetZoom_Click(object sender, EventArgs e)

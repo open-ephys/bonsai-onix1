@@ -1,5 +1,5 @@
 ﻿using System;
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using OpenCV.Net;
 using OpenEphys.ProbeInterface.NET;
@@ -11,25 +11,45 @@ namespace OpenEphys.Onix1
     /// </summary>
     static class Neuropixels
     {
-        internal static int[,] OrderChannelsByDepth(Electrode[] channelMap, int[,] rawToChannel)
+        /// <summary>
+        /// Reorders a raw-to-channel index mapping so that channels are numbered by increasing depth
+        /// (primary) and lateral position (secondary).
+        /// </summary>
+        /// <param name="probe">
+        /// A probeinterface probe group containing the channel map and spatial contact informatiion.
+        /// </param>
+        /// <param name="rawToChannel">
+        /// A 2-D array [ADC index, frame index] mapping raw data positions to channel numbers, as produced by
+        /// the probe decoder.
+        /// </param>
+        /// <returns>
+        /// A new 2-D array with the same dimensions as <paramref name="rawToChannel"/> in which the values
+        /// are reassigned so that channel 0 corresponds to the contact nearest the probe tip and channel
+        /// indices increase toward the surface.
+        /// </returns>
+        internal static int[,] OrderChannelsByDepth(
+            SingleProbeGroup probe,
+            int[,] rawToChannel)
         {
             int adcIndices = rawToChannel.GetLength(0);
             int frameIndices = rawToChannel.GetLength(1);
 
             // NB: Create reverse lookup table where the channel number is used to find the ADC index / frame index
-            var channelToPosition = new Dictionary<int, (int adcIndex, int frameIndex)>();
+            var channelToDataIndex = new Dictionary<int, (int adcIndex, int frameIndex)>();
             for (int adc = 0; adc < adcIndices; adc++)
             {
                 for (int frame = 0; frame < frameIndices; frame++)
                 {
-                    channelToPosition[rawToChannel[adc, frame]] = (adc, frame);
+                    channelToDataIndex[rawToChannel[adc, frame]] = (adc, frame);
                 }
             }
 
-            var spatiallyOrdered = channelMap
-                .OrderBy(x => x.Position.Y)
-                .ThenBy(x => x.Position.X)
-                .ToArray();
+            var spatiallyOrderedChannels = probe.ChannelMap
+                .Select(x => new KeyValuePair<int, Contact>(x.Key, probe.Probe.Contacts[x.Value]))
+                .OrderBy(x => x.Value.PosY)
+                .ThenBy(x => x.Value.PosX)
+                .Select(x => x.Key);
+
 
             // NB: Populate the array with the spatially ordered channel indices by grabbing the original ADC index /
             //     frame index for that electrode channel number, and writing the new channel number at that index.
@@ -41,20 +61,19 @@ namespace OpenEphys.Onix1
             var spatialRawToChannel = new int[adcIndices, frameIndices];
             int index = 0;
 
-            foreach (var e in spatiallyOrdered)
+            foreach (var c in spatiallyOrderedChannels)
             {
-                var (origAdcIndex, origFrameIndex) = channelToPosition[e.Channel];
-
+                var (origAdcIndex, origFrameIndex) = channelToDataIndex[c];
                 spatialRawToChannel[origAdcIndex, origFrameIndex] = index++;
             }
 
             return spatialRawToChannel;
         }
 
-    /// <summary>
+        /// <summary>
         /// Applies per-ADC group common median referencing (CMR) in-place to a <see cref="Depth.F32"/>
         /// matrix.
-    /// </summary>
+        /// </summary>
         /// <remarks>
         /// For each ADC group and each time sample, the group median is computed and subtracted from every
         /// channel in that group.
@@ -85,7 +104,7 @@ namespace OpenEphys.Onix1
             {
                 var tmp = new float[group.Length];
                 for (int t = 0; t < samples; t++)
-    {
+                {
                     for (int g = 0; g < group.Length; g++)
                         tmp[g] = *(float*)(ptr + group[g] * step + t * sizeof(float));
 
@@ -101,6 +120,53 @@ namespace OpenEphys.Onix1
             }
 
             return input;
+        }
+
+        /// <summary>
+        /// Returns the starting contact index of the <paramref name="bankWidth"/>-wide window for bank
+        /// <paramref name="bankIndex"/>, right-aligned against <paramref name="totalElectrodes"/> for the
+        /// last bank rather than starting a full <paramref name="bankWidth"/> past the previous one.
+        /// </summary>
+        /// <remarks>
+        /// Shared by both Neuropixels 1.0 (<see cref="NeuropixelsV1ProbeGroup"/>) and 2.0
+        /// (<see cref="NeuropixelsV2ProbeGroup"/>): both ASICs read out a fixed-width channel window per
+        /// bank, and the last bank on any probe whose electrode count isn't an exact multiple of that
+        /// width reuses electrodes from the previous bank to fill out a full window, rather than being
+        /// partially populated.
+        /// </remarks>
+        /// <param name="bankIndex">The zero-based bank index.</param>
+        /// <param name="totalElectrodes">The total number of electrodes on the probe (or per shank).</param>
+        /// <param name="bankWidth">The number of contacts in a full bank window.</param>
+        internal static int BankWindowStart(int bankIndex, int totalElectrodes, int bankWidth) =>
+            Math.Min(bankIndex * bankWidth, totalElectrodes - bankWidth);
+
+        static readonly char[] SkipLetters = { 'I', 'O', 'Q', 'S', 'X', 'Z' };
+
+        /// <summary>
+        /// Returns the display letter for a zero-based bank index (0 → "A", 1 → "B", ...).
+        /// </summary>
+        /// <remarks>
+        /// Skips I, O, Q, S, X, Z (standard JEDEC/IPC convention). Handles double-letter rows (AA, AB, ...)
+        /// once you exceed 20 rows, same way spreadsheet columns roll over
+        /// </remarks>
+        /// <param name="bankIndex">The zero-based bank index.</param>
+        internal static string BankDisplayName(int bankIndex) // 0-based
+        {
+            var valid = new List<char>();
+            for (char c = 'A'; c <= 'Z'; c++)
+                if (!SkipLetters.Contains(c)) valid.Add(c);
+
+            int n = valid.Count; // 20
+            int idx = bankIndex;
+            string label = "";
+
+            do
+            {
+                label = valid[idx % n] + label;
+                idx = idx / n - 1;
+            } while (idx >= 0);
+
+            return label;
         }
     }
 }

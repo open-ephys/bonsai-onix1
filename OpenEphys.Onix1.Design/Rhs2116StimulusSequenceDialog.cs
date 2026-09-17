@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using System.Xml;
 using ZedGraph;
 
 namespace OpenEphys.Onix1.Design
@@ -185,40 +187,64 @@ namespace OpenEphys.Onix1.Design
 
         internal override void HighlightInvalidChannels()
         {
-            if (ChannelDialog == null)
-            {
-                return;
-            }
+            if (ChannelDialog == null) return;
+
+            if (ChannelDialog.ProbeGroup.ChannelMap == null) return;
+
+            const string invalidMarker = "InvalidMarker";
+            const double extentFactor = 1.2;
+
+            ChannelDialog.zedGraphChannels.GraphPane.GraphObjList.RemoveAll(
+                obj => obj is LineObj && invalidMarker.Equals(obj.Tag));
 
             var contactObjects = ChannelDialog.zedGraphChannels.GraphPane.GraphObjList
                                  .OfType<BoxObj>()
-                                 .Where(c => c is not PolyObj);
+                                 .Where(c => c is not PolyObj)
+                                 .ToList();
+
 
             foreach (var contact in contactObjects)
             {
-                if (contact.Tag is ContactTag contactTag)
+                if (contact.Tag is not ContactTag contactTag) continue;
+
+                int contactIndex = contactTag.ProbeIndex == 0
+                    ? contactTag.ContactIndex
+                    : contactTag.ContactIndex + ChannelDialog.ProbeGroup.Probes
+                        .Take(contactTag.ProbeIndex)
+                        .Aggregate(0, (total, next) => total + next.NumberOfContacts);
+
+                if (!ChannelDialog.ProbeGroup.TryGetMappedChannel(0, contactIndex, out int channel)) continue; // TODO: Implicit assumption of single probe in group
+
+                if (!Sequence.Stimuli[channel].IsValid())
                 {
-                    var contactIndex = contactTag.ProbeIndex == 0
-                                ? contactTag.ContactIndex
-                                : contactTag.ContactIndex + ChannelDialog.ProbeGroup.Probes
-                                                            .Take(contactTag.ProbeIndex)
-                                                            .Aggregate(0, (total, next) => total + next.NumberOfContacts);
+                    double cx = contact.Location.X + contact.Location.Width / 2;
+                    double cy = contact.Location.Y - contact.Location.Height / 2;
+                    double r = contact.Location.Width / 2 * extentFactor;
 
-                    if (!Sequence.Stimuli[contactIndex].IsValid())
+                    var line1 = new LineObj(Color.Red, cx - r, cy + r, cx + r, cy - r)
                     {
-                        contact.Fill.Color = Color.Red;
+                        ZOrder = ZOrder.A_InFront,
+                        Tag = invalidMarker
+                    };
+                    line1.Line.Width = 3f;
 
-                        if (contact.Border.Color != ChannelDialog.SelectedContactBorder)
-                            contact.Border.Color = Color.Red;
-                    }
+                    var line2 = new LineObj(Color.Red, cx + r, cy + r, cx - r, cy - r)
+                    {
+                        ZOrder = ZOrder.A_InFront,
+                        Tag = invalidMarker
+                    };
+                    line2.Line.Width = 2f;
+
+                    ChannelDialog.zedGraphChannels.GraphPane.GraphObjList.Add(line1);
+                    ChannelDialog.zedGraphChannels.GraphPane.GraphObjList.Add(line2);
                 }
             }
 
             foreach (var waveform in GetWaveformCurves())
             {
-                int waveformIndex = int.Parse(waveform.Label.Text.ToLowerInvariant().TrimStart('c', 'h'));
+                int channel = int.Parse(waveform.Label.Text.ToLowerInvariant().TrimStart('c', 'h'));
 
-                if (!Sequence.Stimuli[waveformIndex].IsValid())
+                if (!Sequence.Stimuli[channel].IsValid())
                 {
                     waveform.Color = Color.Red;
                 }
@@ -279,7 +305,8 @@ namespace OpenEphys.Onix1.Design
                 return waveforms;
             }
 
-            bool plotAllContacts = ChannelDialog.SelectedContacts.All(x => x == false);
+            bool[] selectedChannels = GetSelectedChannels();
+            bool plotAllContacts = selectedChannels.All(x => !x);
 
             var peakToPeak = GetPeakToPeakAmplitudeInMicroAmps() * ChannelScale;
 
@@ -287,7 +314,7 @@ namespace OpenEphys.Onix1.Design
             {
                 var channelOffset = -peakToPeak * i;
 
-                if (ChannelDialog.SelectedContacts[i] || plotAllContacts)
+                if (selectedChannels[i] || plotAllContacts)
                 {
                     waveforms[i] = CreateStimulusWaveform(Sequence.Stimuli[i], channelOffset, peakToPeak);
                 }
@@ -298,6 +325,22 @@ namespace OpenEphys.Onix1.Design
             }
 
             return waveforms;
+        }
+
+        private bool[] GetSelectedChannels()
+        {
+            var channelMap = ChannelDialog?.ProbeGroup.ChannelMap;
+            var probe0ChannelMap = channelMap.Where(x => x.Value.ProbeIndex == 0).Select(x => new KeyValuePair<int, int>(x.Key, x.Value.ContactIndex)); // TODO: hack
+            bool[] selected = new bool[NumberOfChannels];
+            if (channelMap == null) return selected;
+            foreach (var kvp in probe0ChannelMap)
+            {
+                int deviceChannel = kvp.Key;
+                int contactIndex = kvp.Value;
+                if (deviceChannel >= 0 && deviceChannel < selected.Length)
+                    selected[deviceChannel] = ChannelDialog.SelectedContacts[contactIndex];
+            }
+            return selected;
         }
 
         internal override void SetStatusValidity()
@@ -395,6 +438,7 @@ namespace OpenEphys.Onix1.Design
 
         void ButtonAddPulses_Click(object sender, EventArgs e)
         {
+            var selectedChannels = GetSelectedChannels();
             var stimuli = Sequence.Stimuli
                             .Select((s, ind) => { return (Index: ind, Stimulus: s); })
                             .Where(s => s.Stimulus.Valid
@@ -402,7 +446,7 @@ namespace OpenEphys.Onix1.Design
                                             || s.Stimulus.CathodicAmplitudeSteps != 0
                                             || (s.Stimulus.AnodicAmplitudeSteps == 0 && RequestedAnodicAmplitudeuA[s.Index] != 0.0)
                                             || (s.Stimulus.CathodicAmplitudeSteps == 0 && RequestedCathodicAmplitudeuA[s.Index] != 0.0))
-                                        && !ChannelDialog.SelectedContacts[s.Index])
+                                        && !selectedChannels[s.Index])
                             .Select(s =>
                             {
                                 GetSampleFromAmplitude(RequestedAnodicAmplitudeuA[s.Index], out var requestedAnodicSteps);
@@ -479,57 +523,57 @@ namespace OpenEphys.Onix1.Design
 
             SetTableDataSource();
 
-            for (int i = 0; i < ChannelDialog.SelectedContacts.Length; i++)
+            for (int ch = 0; ch < NumberOfChannels; ch++)
             {
-                if (ChannelDialog.SelectedContacts[i])
+                if (selectedChannels[ch])
                 {
                     if (StimulusSequenceOptions.textboxDelay.Tag != null)
                     {
-                        Sequence.Stimuli[i].DelaySamples = (uint)StimulusSequenceOptions.textboxDelay.Tag;
+                        Sequence.Stimuli[ch].DelaySamples = (uint)StimulusSequenceOptions.textboxDelay.Tag;
                     }
 
                     if (StimulusSequenceOptions.textboxAmplitudeAnodicRequested.Tag != null)
                     {
-                        RequestedAnodicAmplitudeuA[i] = (double)StimulusSequenceOptions.textboxAmplitudeAnodicRequested.Tag;
+                        RequestedAnodicAmplitudeuA[ch] = (double)StimulusSequenceOptions.textboxAmplitudeAnodicRequested.Tag;
                     }
 
                     if (StimulusSequenceOptions.textboxAmplitudeAnodic.Tag != null)
                     {
-                        Sequence.Stimuli[i].AnodicAmplitudeSteps = (byte)StimulusSequenceOptions.textboxAmplitudeAnodic.Tag;
+                        Sequence.Stimuli[ch].AnodicAmplitudeSteps = (byte)StimulusSequenceOptions.textboxAmplitudeAnodic.Tag;
                     }
 
                     if (StimulusSequenceOptions.textboxPulseWidthAnodic.Tag != null)
                     {
-                        Sequence.Stimuli[i].AnodicWidthSamples = (uint)StimulusSequenceOptions.textboxPulseWidthAnodic.Tag;
+                        Sequence.Stimuli[ch].AnodicWidthSamples = (uint)StimulusSequenceOptions.textboxPulseWidthAnodic.Tag;
                     }
 
                     if (StimulusSequenceOptions.textboxInterPulseInterval.Tag != null)
                     {
-                        Sequence.Stimuli[i].DwellSamples = (uint)StimulusSequenceOptions.textboxInterPulseInterval.Tag;
+                        Sequence.Stimuli[ch].DwellSamples = (uint)StimulusSequenceOptions.textboxInterPulseInterval.Tag;
                     }
 
                     if (StimulusSequenceOptions.textboxAmplitudeCathodicRequested.Tag != null)
                     {
-                        RequestedCathodicAmplitudeuA[i] = (double)StimulusSequenceOptions.textboxAmplitudeCathodicRequested.Tag;
+                        RequestedCathodicAmplitudeuA[ch] = (double)StimulusSequenceOptions.textboxAmplitudeCathodicRequested.Tag;
                     }
 
                     if (StimulusSequenceOptions.textboxAmplitudeCathodic.Tag != null)
                     {
-                        Sequence.Stimuli[i].CathodicAmplitudeSteps = (byte)StimulusSequenceOptions.textboxAmplitudeCathodic.Tag;
+                        Sequence.Stimuli[ch].CathodicAmplitudeSteps = (byte)StimulusSequenceOptions.textboxAmplitudeCathodic.Tag;
                     }
 
                     if (StimulusSequenceOptions.textboxPulseWidthCathodic.Tag != null)
                     {
-                        Sequence.Stimuli[i].CathodicWidthSamples = (uint)StimulusSequenceOptions.textboxPulseWidthCathodic.Tag;
+                        Sequence.Stimuli[ch].CathodicWidthSamples = (uint)StimulusSequenceOptions.textboxPulseWidthCathodic.Tag;
                     }
 
                     if (StimulusSequenceOptions.textboxInterStimulusInterval.Tag != null)
                     {
-                        Sequence.Stimuli[i].InterStimulusIntervalSamples = (uint)StimulusSequenceOptions.textboxInterStimulusInterval.Tag;
+                        Sequence.Stimuli[ch].InterStimulusIntervalSamples = (uint)StimulusSequenceOptions.textboxInterStimulusInterval.Tag;
                     }
 
-                    Sequence.Stimuli[i].NumberOfStimuli = (uint)StimulusSequenceOptions.numericUpDownNumberOfPulses.Value;
-                    Sequence.Stimuli[i].AnodicFirst = StimulusSequenceOptions.checkBoxAnodicFirst.Checked;
+                    Sequence.Stimuli[ch].NumberOfStimuli = (uint)StimulusSequenceOptions.numericUpDownNumberOfPulses.Value;
+                    Sequence.Stimuli[ch].AnodicFirst = StimulusSequenceOptions.checkBoxAnodicFirst.Checked;
                 }
             }
 
@@ -593,13 +637,14 @@ namespace OpenEphys.Onix1.Design
 
         void ButtonClearPulses_Click(object sender, EventArgs e)
         {
-            for (int i = 0; i < ChannelDialog.SelectedContacts.Length; i++)
+            bool[] selectedChannels = GetSelectedChannels();
+            for (int ch = 0; ch < NumberOfChannels; ch++)
             {
-                if (ChannelDialog.SelectedContacts[i])
+                if (selectedChannels[ch])
                 {
-                    Sequence.Stimuli[i].Clear();
-                    RequestedAnodicAmplitudeuA[i] = 0.0;
-                    RequestedCathodicAmplitudeuA[i] = 0.0;
+                    Sequence.Stimuli[ch].Clear();
+                    RequestedAnodicAmplitudeuA[ch] = 0.0;
+                    RequestedCathodicAmplitudeuA[ch] = 0.0;
                 }
             }
 
@@ -611,17 +656,14 @@ namespace OpenEphys.Onix1.Design
 
         void ButtonReadPulses_Click(object sender, EventArgs e)
         {
-            if (ChannelDialog.SelectedContacts.Count(x => x) != 1)
+            bool[] selectedChannels = GetSelectedChannels();
+            if (selectedChannels.Count(x => x) != 1)
             {
                 MessageBox.Show("Please choose a single contact to read from.");
                 return;
             }
 
-            var index = ChannelDialog.SelectedContacts
-                        .Select((s, ind) => { return (Selected: s, Ind: ind); })
-                        .Where(c => c.Selected)
-                        .Select(c => c.Ind)
-                        .First();
+            var index = Enumerable.Range(0, NumberOfChannels).First(ch => selectedChannels[ch]);
 
             if (Sequence.Stimuli[index].AnodicAmplitudeSteps == Sequence.Stimuli[index].CathodicAmplitudeSteps &&
                 Sequence.Stimuli[index].AnodicWidthSamples == Sequence.Stimuli[index].CathodicWidthSamples)
@@ -990,19 +1032,16 @@ namespace OpenEphys.Onix1.Design
 
         private void AddDeviceChannelIndexToGridRow()
         {
-            if (ChannelDialog == null || ChannelDialog.ProbeGroup.NumberOfContacts != NumberOfChannels)
+            if (ChannelDialog == null)
                 return;
 
-            var deviceChannelIndices = ChannelDialog.ProbeGroup.GetDeviceChannelIndices();
+            var channelMap = ChannelDialog.ProbeGroup.ChannelMap;
+            if (channelMap == null) return;
 
-            for (int i = 0; i < deviceChannelIndices.Count(); i++)
+            foreach (var key in channelMap.Keys)
             {
-                var index = deviceChannelIndices.ElementAt(i);
-
-                if (index != -1)
-                {
-                    dataGridViewStimulusTable.Rows[index].HeaderCell.Value = index.ToString();
-                }
+                if (key < dataGridViewStimulusTable.Rows.Count) 
+                    dataGridViewStimulusTable.Rows[key].HeaderCell.Value = key.ToString();
             }
         }
     }
