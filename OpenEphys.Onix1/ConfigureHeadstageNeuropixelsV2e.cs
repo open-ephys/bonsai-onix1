@@ -207,7 +207,10 @@ namespace OpenEphys.Onix1
             var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
             ShutdownProbes(serializer); // ensure probes are powered down and deselected before starting
             DeselectProbes(serializer);
-            EnableProbeSupply(serializer);
+            EnableProbeSupply(serializer); // NB: can disturb rails enough that one should assume uninitentional Bno055 reset
+
+            // worst case Bno055 startup time
+            Thread.Sleep(400);
 
             // set I2C clock rate to ~400 kHz
             DS90UB9x.Set933I2CRate(device, 400e3);
