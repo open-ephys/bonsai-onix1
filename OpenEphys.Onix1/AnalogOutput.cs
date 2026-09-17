@@ -105,12 +105,12 @@ namespace OpenEphys.Onix1
                         outputBuffer = scaleBuffer;
                     }
 
-                    var dataSize = outputBuffer.Step * outputBuffer.Rows;
-
                     // twos-complement to offset binary
                     const short Mask = -32768;
-                    CV.XorS(outputBuffer, new Scalar(Mask, 0, 0), outputBuffer);
-                    device.Write(outputBuffer.Data, dataSize);
+                    short[] dataArray = new short[outputBuffer.Rows];
+                    Mat mat = Mat.CreateMatHeader(dataArray, outputBuffer.Rows, outputBuffer.Cols, outputBuffer.Depth, 1);
+                    CV.XorS(outputBuffer, new Scalar(Mask, 0, 0), mat);
+                    device.Write(dataArray);
                 });
             });
         }
