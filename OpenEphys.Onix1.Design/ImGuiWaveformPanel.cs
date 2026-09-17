@@ -58,6 +58,11 @@ namespace OpenEphys.Onix1.Design
         double timeSpan;
         readonly string[] divisionLabels = new string[TimeDivisions + 1];
         double labeledTimebase = double.NaN;
+        bool[] channelHidden = Array.Empty<bool>();
+        bool[] paintOriginal = Array.Empty<bool>();
+        bool? paintHidden;
+        int paintAnchor;
+        bool paintLeftAnchor;
 
         int sampleRate = 30000;
         int channelHeight = 20;
@@ -128,6 +133,11 @@ namespace OpenEphys.Onix1.Design
 
                 displayMin = new Mat(data.Rows, columns, Depth.F32, 1);
                 displayMax = new Mat(data.Rows, columns, Depth.F32, 1);
+                if (channelHidden.Length != data.Rows)
+                {
+                    channelHidden = new bool[data.Rows];
+                    paintOriginal = new bool[data.Rows];
+                }
             }
 
             decimatorMin.Process(data);
@@ -367,8 +377,8 @@ namespace OpenEphys.Onix1.Design
             var axesFlags = ImPlotAxisFlags.NoHighlight | ImPlotAxisFlags.NoDecorations;
             var tableFlags = ImGuiTableFlags.NoSavedSettings | ImGuiTableFlags.ScrollY;
             var tableHeight = -(ImGui.GetTextLineHeight() + ImGui.GetStyle().ItemSpacing.Y);
-            var paperTop = ImGui.GetCursorScreenPos().Y;
-            var paperBottom = paperTop + ImGui.GetContentRegionAvail().Y + tableHeight;
+            var plotTop = ImGui.GetCursorScreenPos().Y;
+            var plotBottom = plotTop + ImGui.GetContentRegionAvail().Y + tableHeight;
             var plotX = 0f;
             var plotWidth = 0f;
 
@@ -389,12 +399,18 @@ namespace OpenEphys.Onix1.Design
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();
                 var rowTop = ImGui.GetCursorScreenPos().Y;
-                var firstVisible = Math.Max(0, (int)Math.Floor((paperTop - rowTop) / channelHeight));
-                var lastVisible = Math.Min(rows, (int)Math.Ceiling((paperBottom - rowTop) / channelHeight));
+                var firstVisible = Math.Max(0, (int)Math.Floor((plotTop - rowTop) / channelHeight));
+                var lastVisible = Math.Min(rows, (int)Math.Ceiling((plotBottom - rowTop) / channelHeight));
 
+                // NB: the pressed selectable holds ImGui's active id, so hover on the others has to
+                // be allowed past it for a drag to reach them.
                 var labelBuffer = stackalloc byte[32];
                 var channelLabel = new StrBuilder(labelBuffer, 32);
                 var labelTop = ImGui.GetCursorPosY();
+                var labelSize = new Vector2(0, channelHeight);
+                if (!ImGui.IsMouseDown(ImGuiMouseButton.Left))
+                    paintHidden = null;
+                ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0, 0.5f));
                 for (int i = firstVisible; i < lastVisible; i++)
                 {
                     channelLabel.Reset();
@@ -406,9 +422,36 @@ namespace OpenEphys.Onix1.Design
                         channelLabel.Append('0');
                     channelLabel.Append(i);
                     channelLabel.End();
-                    ImGui.SetCursorPosY(labelTop + i * channelHeight + channelHeight / 2 - 5);
-                    ImGui.Text(channelLabel);
+
+                    var hidden = channelHidden[i];
+                    if (hidden) ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled));
+                    ImGui.SetCursorPosY(labelTop + i * channelHeight);
+                    ImGui.Selectable(channelLabel, false, ImGuiSelectableFlags.None, labelSize);
+                    if (hidden) ImGui.PopStyleColor();
+
+                    if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByActiveItem))
+                    {
+                        if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+                        {
+                            Array.Copy(channelHidden, paintOriginal, rows);
+                            paintHidden = !hidden;
+                            paintAnchor = i;
+                            paintLeftAnchor = false;
+                        }
+
+                        // NB: a drag that comes back to the pressed channel undoes it too, unlike
+                        // a click that never left it.
+                        if (paintHidden is bool paint)
+                        {
+                            paintLeftAnchor |= i != paintAnchor;
+                            var lo = Math.Min(paintAnchor, i);
+                            var hi = paintLeftAnchor && i == paintAnchor ? lo - 1 : Math.Max(paintAnchor, i);
+                            for (int c = 0; c < rows; c++)
+                                channelHidden[c] = c >= lo && c <= hi ? paint : paintOriginal[c];
+                        }
+                    }
                 }
+                ImGui.PopStyleVar();
 
                 // NB: with no padding, border or decorations the plot area is the item rect, so
                 // its extent is known before the plot is drawn.
@@ -422,6 +465,9 @@ namespace OpenEphys.Onix1.Design
                     ImPlot.SetupAxisLimits(ImAxis.Y1, -(rows - 1) - 0.5, 0.5, ImPlotCond.Always);
                     for (int i = firstVisible; i < lastVisible; i++)
                     {
+                        if (channelHidden[i])
+                            continue;
+
                         var minLinePtr = (float*)((byte*)minPtr + i * minStep);
                         var maxLinePtr = (float*)((byte*)maxPtr + i * maxStep);
                         var channelColor = ImPlot.GetColormapColor(i / colorGrouping);
@@ -443,7 +489,7 @@ namespace OpenEphys.Onix1.Design
                     ImPlot.EndPlot();
 
                     // NB: drawn after the plot so it lies over the traces
-                    DrawFrame(ImGui.GetWindowDrawList(), plotX, plotWidth, paperTop, paperBottom);
+                    DrawFrame(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom);
                 }
                 ImGui.EndTable();
             }
@@ -452,12 +498,12 @@ namespace OpenEphys.Onix1.Design
             ImPlot.PopStyleVar(3);
 
             if (plotWidth > 0)
-                DrawGraticules(ImGui.GetWindowDrawList(), plotX, plotWidth, paperTop, paperBottom);
+                DrawGraticules(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom);
         }
 
-        // NB: the paper is built from filled rects on whole pixels. AddLine and AddRect offset
-        // their coordinates by half a pixel and anti-alias, which puts a 1 px frame one pixel
-        // inside its extent and gives thicker lines a grey halo.
+        // NB: the frame and graticules are filled rects on whole pixels. AddLine and AddRect
+        // offset their coordinates by half a pixel and anti-alias, which puts a 1 px frame one
+        // pixel inside its extent and gives thicker lines a grey halo.
         static void DrawFrame(ImDrawListPtr draw, float left, float width, float top, float bottom)
         {
             var l = MathF.Floor(left);
