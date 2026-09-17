@@ -215,13 +215,13 @@ namespace OpenEphys.Onix1
         /// <see cref="StartAcquisition"/> object prior to data collection.
         /// </remarks>
         /// <param name="source">
-        /// The sequence of <see cref="ContextTask"/> objects on which to apply the analog IO configuration.
+        /// The sequence of <see cref="OnixContextTask"/> objects on which to apply the analog IO configuration.
         /// </param>
         /// <returns>
-        /// A sequence of <see cref="ContextTask"/> objects that is identical to <paramref name="source"/>
-        /// in which each <see cref="ContextTask"/> has been instructed to apply the analog IO configuration.
+        /// A sequence of <see cref="OnixContextTask"/> objects that is identical to <paramref name="source"/>
+        /// in which each <see cref="OnixContextTask"/> has been instructed to apply the analog IO configuration.
         /// </returns>
-        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
+        public override IObservable<TContext> Process<TContext>(IObservable<TContext> source)
         {
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;

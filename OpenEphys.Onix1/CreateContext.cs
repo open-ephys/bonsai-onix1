@@ -6,7 +6,7 @@ using System.Reactive.Linq;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Creates a <see cref="ContextTask"/> that orchestrates data acquisition for an ONIX system.
+    /// Creates a <see cref="OnixContextTask"/> that orchestrates data acquisition for an ONIX system.
     /// </summary>
     /// <remarks>
     /// ONIX is built on top of the <see href="https://open-ephys.github.io/ONI/">Open Neuro Interface
@@ -31,7 +31,7 @@ namespace OpenEphys.Onix1
         [Description("Specifies the device driver used to communicate with hardware.")]
         [Category(DeviceFactory.ConfigurationCategory)]
         [TypeConverter(typeof(ContextDriverConverter))]
-        public string Driver { get; set; } = ContextTask.DefaultDriver;
+        public string Driver { get; set; } = OnixContextTask.DefaultDriver;
 
         /// <summary>
         /// Gets or sets the index of the host interconnect between the ONI controller and host computer.
@@ -45,7 +45,7 @@ namespace OpenEphys.Onix1
         /// </remarks>
         [Description("The index of the host interconnect between the ONI controller and host computer.")]
         [Category(DeviceFactory.ConfigurationCategory)]
-        public int Index { get; set; } = ContextTask.DefaultIndex;
+        public int Index { get; set; } = OnixContextTask.DefaultIndex;
 
         /// <summary>
         /// Sets the hardware validation level of the <see cref="ContextTask"/>.
@@ -82,20 +82,20 @@ namespace OpenEphys.Onix1
         public bool ShouldSerializeValidationLevel() => ValidationLevel != ValidationLevel.Permissive;
 
         /// <summary>
-        /// Generates a sequence that creates a new <see cref="ContextTask"/> object.
+        /// Generates a sequence that creates a new <see cref="OnixContextTask"/> object.
         /// </summary>
         /// <returns>
-        /// A sequence containing a single instance of the <see cref="ContextTask"/> class. Cancelling the
+        /// A sequence containing a single instance of the <see cref="OnixContextTask"/> class. Cancelling the
         /// sequence will dispose of the created context.
         /// </returns>
-        public IObservable<ContextTask> Generate()
+        public IObservable<OnixContextTask> Generate()
         {
-            return Observable.Create<ContextTask>(observer =>
+            return Observable.Create<OnixContextTask>(observer =>
             {
                 var driver = Driver;
                 var index = Index;
                 var validationLevel = ValidationLevel;
-                var context = new ContextTask(driver, index, validationLevel);
+                var context = new OnixContextTask(driver, index, validationLevel);
                 try
                 {
                     observer.OnNext(context);

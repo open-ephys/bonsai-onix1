@@ -7,48 +7,48 @@ namespace OpenEphys.Onix1
 {
     internal static class ObservableExtensions
     {
-        public static IObservable<ContextTask> ConfigureAndLatchController(this IObservable<ContextTask> source, Func<ContextTask, IDisposable> configure)
+        public static IObservable<TContext> ConfigureAndLatchController<TContext>(this IObservable<TContext> source, Func<TContext, IDisposable> configure) where TContext : ContextTask
         {
-            return source.ConfigureContext((context, action) => context.ConfigureAndLatchController(action), configure);
+            return source.ConfigureContext((context, action) => context.ConfigureAndLatchController(ctx => action((TContext)ctx)), configure);
         }
 
-        public static IObservable<ContextTask> ConfigureAndLatchLink(this IObservable<ContextTask> source, Func<ContextTask, IDisposable> configure)
+        public static IObservable<TContext> ConfigureAndLatchLink<TContext>(this IObservable<TContext> source, Func<TContext, IDisposable> configure) where TContext : ContextTask
         {
-            return source.ConfigureContext((context, action) => context.ConfigureAndLatchLink(action), configure);
+            return source.ConfigureContext((context, action) => context.ConfigureAndLatchLink(ctx => action((TContext)ctx)), configure);
         }
 
-        public static IObservable<ContextTask> ConfigureAndLatchDevice(this IObservable<ContextTask> source, Func<ContextTask, IDisposable> configure)
+        public static IObservable<TContext> ConfigureAndLatchDevice<TContext>(this IObservable<TContext> source, Func<TContext, IDisposable> configure) where TContext : ContextTask
         {
-            return source.ConfigureContext((context, action) => context.ConfigureAndLatchDevice(action), configure);
+            return source.ConfigureContext((context, action) => context.ConfigureAndLatchDevice(ctx => action((TContext)ctx)), configure);
         }
 
-        public static IObservable<ContextTask> ConfigureAndLatchDevice(this IObservable<ContextTask> source, Func<ContextTask, IObserver<ContextTask>, IDisposable> configure)
+        public static IObservable<TContext> ConfigureAndLatchDevice<TContext>(this IObservable<TContext> source, Func<TContext, IObserver<TContext>, IDisposable> configure) where TContext : ContextTask
         {
-            return Observable.Create<ContextTask>(observer => source
+            return Observable.Create<TContext>(observer => source
                 .ConfigureAndLatchDevice(context => configure(context, observer))
                 .SubscribeSafe(observer));
         }
 
-        public static IObservable<ContextTask> ConfigureDirectDevice(this IObservable<ContextTask> source, Func<ContextTask, IDisposable> configure)
+        public static IObservable<TContext> ConfigureDirectDevice<TContext>(this IObservable<TContext> source, Func<TContext, IDisposable> configure) where TContext : ContextTask
         {
-            return source.ConfigureContext((context, action) => context.ConfigureDirectDevice(action), configure);
+            return source.ConfigureContext((context, action) => context.ConfigureDirectDevice(ctx => action((TContext)ctx)), configure);
         }
 
-        public static IObservable<ContextTask> ConfigureDirectDevice(this IObservable<ContextTask> source, Func<ContextTask, IObserver<ContextTask>, IDisposable> configure)
+        public static IObservable<TContext> ConfigureDirectDevice<TContext>(this IObservable<TContext> source, Func<TContext, IObserver<TContext>, IDisposable> configure) where TContext : ContextTask
         {
-            return Observable.Create<ContextTask>(observer => source
+            return Observable.Create<TContext>(observer => source
                 .ConfigureDirectDevice(context => configure(context, observer))
                 .SubscribeSafe(observer));
         }
 
-        static IObservable<ContextTask> ConfigureContext(
-            this IObservable<ContextTask> source,
-            Action<ContextTask, Func<ContextTask, IDisposable>> configureContext,
-            Func<ContextTask, IDisposable> configure)
+        static IObservable<TContext> ConfigureContext<TContext>(
+            this IObservable<TContext> source,
+            Action<TContext, Func<TContext, IDisposable>> configureContext,
+            Func<TContext, IDisposable> configure) where TContext : ContextTask
         {
-            return Observable.Create<ContextTask>(observer =>
+            return Observable.Create<TContext>(observer =>
             {
-                var contextObserver = Observer.Create<ContextTask>(
+                var contextObserver = Observer.Create<TContext>(
                     context =>
                     {
                         configureContext(context, ctx =>

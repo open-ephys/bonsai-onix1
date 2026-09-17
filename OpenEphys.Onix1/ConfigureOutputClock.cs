@@ -12,7 +12,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// The output clock provides a 3.3V logic level, 50 Ohm output impedance, frequency divided copy
-    /// of the <see cref="ContextTask.AcquisitionClockHz">Acquisition Clock</see> that is used to generate
+    /// of the <see cref="OnixContextTask.AcquisitionClockHz">Acquisition Clock</see> that is used to generate
     /// <see cref="DataFrame.Clock"/> values for all data streams within an ONIX system. This clock runs at a
     /// user defined rate, duty cycle, and start delay. It can be used to drive external hardware or can be
     /// logged by external recording systems for post-hoc synchronization with ONIX data.
@@ -54,7 +54,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <remarks>
         /// Valid values are between 0.1 Hz and 10 MHz. The output clock high and low times must each be an
-        /// integer multiple of the <see cref="ContextTask.AcquisitionClockHz">Acquisition Clock</see>
+        /// integer multiple of the <see cref="OnixContextTask.AcquisitionClockHz">Acquisition Clock</see>
         /// frequency. Therefore, the true clock frequency will be set to a value that is as close as possible
         /// to the requested setting while respecting this constraint. The value as actualized in hardware is
         /// reported by <see cref="OutputClockHardwareParameters"/>.
@@ -76,7 +76,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <remarks>
         /// Valid values are between 10% and 90%. The output clock high and low times must each be an integer
-        /// multiple of the <see cref="ContextTask.AcquisitionClockHz">Acquisition Clock</see> frequency.
+        /// multiple of the <see cref="OnixContextTask.AcquisitionClockHz">Acquisition Clock</see> frequency.
         /// Therefore, the true duty cycle will be set to a value that is as close as possible to the
         /// requested setting while respecting this constraint. The value as actualized in hardware is
         /// reported by <see cref="OutputClockHardwareParameters"/>.
@@ -107,7 +107,7 @@ namespace OpenEphys.Onix1
         /// </para>
         /// <para>
         /// The delay must be an integer multiple of the <see
-        /// cref="ContextTask.AcquisitionClockHz">Acquisition Clock</see> frequency. Therefore, the true delay
+        /// cref="OnixContextTask.AcquisitionClockHz">Acquisition Clock</see> frequency. Therefore, the true delay
         /// cycle will be set to a value that is as close as possible to the requested setting while
         /// respecting this constraint. The value as actualized in hardware is reported by <see
         /// cref="OutputClockHardwareParameters"/>.
@@ -125,11 +125,11 @@ namespace OpenEphys.Onix1
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/>
         /// instance prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that holds configuration
+        /// <param name="source">A sequence of <see cref="OnixContextTask"/> instances that holds configuration
         /// actions.</param>
         /// <returns>The original sequence modified by adding additional configuration actions required to
         /// configure a clock output device./></returns>
-        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
+        public override IObservable<TContext> Process<TContext>(IObservable<TContext> source)
         {
             var clkFreqHz = Frequency;
             var dutyCycle = DutyCycle;
@@ -203,15 +203,15 @@ namespace OpenEphys.Onix1
     /// <param name="Delay">Gets the exact clock delay as actualized by the clock synthesizer in
     /// seconds.</param>
     /// <param name="PeriodTicks">Gets the exact clock period as actualized by the clock synthesizer in units
-    /// of ticks of the <see cref="ContextTask.AcquisitionClockHz">Acquisition Clock</see>.</param>
+    /// of ticks of the <see cref="OnixContextTask.AcquisitionClockHz">Acquisition Clock</see>.</param>
     /// <param name="HighTicks">Gets the exact clock high time per period as actualized by the clock
-    /// synthesizer in units of ticks of the <see cref="ContextTask.AcquisitionClockHz">Acquisition
+    /// synthesizer in units of ticks of the <see cref="OnixContextTask.AcquisitionClockHz">Acquisition
     /// Clock</see>.</param>
     /// <param name="LowTicks">Gets the exact clock low time per period as actualized by the clock synthesizer
-    /// in units of ticks of the <see cref="ContextTask.AcquisitionClockHz">Acquisition
+    /// in units of ticks of the <see cref="OnixContextTask.AcquisitionClockHz">Acquisition
     /// Clock</see>.</param>
     /// <param name="DelayTicks">Gets the exact clock delay as actualized by the clock synthesizer in units of
-    /// ticks of the <see cref="ContextTask.AcquisitionClockHz">Acquisition Clock</see>.</param>
+    /// ticks of the <see cref="OnixContextTask.AcquisitionClockHz">Acquisition Clock</see>.</param>
     public readonly record struct OutputClockParameters(double Frequency,
         double DutyCycle, double Delay, uint PeriodTicks, uint HighTicks, uint LowTicks, uint DelayTicks);
 

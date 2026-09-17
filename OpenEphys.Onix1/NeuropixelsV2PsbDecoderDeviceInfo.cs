@@ -4,7 +4,7 @@ namespace OpenEphys.Onix1
 {
     class NeuropixelsV2PsbDecoderDeviceInfo : DeviceInfo
     {
-        public NeuropixelsV2PsbDecoderDeviceInfo(ContextTask context, Type deviceType, uint deviceAddress, ushort streamIndex, double gainCorrection, NeuropixelsV2ProbeConfiguration probeConfiguration, NeuropixelsV2eProbeGroup probeGroup)
+        public NeuropixelsV2PsbDecoderDeviceInfo(OnixContextTask context, Type deviceType, uint deviceAddress, ushort streamIndex, double gainCorrection, NeuropixelsV2ProbeConfiguration probeConfiguration, NeuropixelsV2eProbeGroup probeGroup)
             : base(context, deviceType, deviceAddress)
         {
             StreamIndex = streamIndex;

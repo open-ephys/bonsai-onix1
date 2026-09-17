@@ -109,7 +109,7 @@ namespace OpenEphys.Onix1
                     {
                         var names = (from level in callContext
                                      from element in SelectContextElements(level)
-                                     let factory = ExpressionBuilder.GetWorkflowElement(element) as DeviceFactory
+                                     let factory = ExpressionBuilder.GetWorkflowElement(element) as IDeviceCollection
                                      where factory != null
                                      from device in factory.GetDevices()
                                      where ContextHelper.CheckDeviceType(device.DeviceType,targetType)

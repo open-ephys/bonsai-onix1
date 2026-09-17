@@ -11,7 +11,7 @@ namespace OpenEphys.Onix1
         {
             if (destinationType == typeof(string))
             {
-                var device = (SingleDeviceFactory)value;
+                var device = (IAddressableDevice)value;
                 return $"Address: {device.DeviceAddress}";
             }
 

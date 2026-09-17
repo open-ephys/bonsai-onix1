@@ -1,47 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
+using System.Reactive.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using Bonsai;
 
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Provides an abstract base class for all device configuration operators.
-    /// </summary>
-    /// <remarks>
-    /// ONI devices usually require a specific sequence of configuration and parameterization
-    /// steps before they can be interacted with. The <see cref="DeviceFactory"/> provides
-    /// a modular abstraction for flexible assembly and sequencing of both single and multi-
-    /// device configuration.
-    /// </remarks>
-    [WorkflowElementCategory(ElementCategory.Sink)]
-    [Combinator]
-    public abstract class DeviceFactory : IDeviceCollection
-    {
-        internal const string ConfigurationCategory = "Configuration";
-        internal const string AcquisitionCategory = "Acquisition";
-
-        IEnumerable<IDeviceConfiguration> IDeviceCollection.GetDevices() => GetDevices();
-        internal abstract IEnumerable<IDeviceConfiguration> GetDevices();
-
-        public abstract IObservable<TContext> Process<TContext>(IObservable<TContext> source) where TContext : ContextTask;
-    }
-
-    /// <summary>
     /// Abstract base for configuration operators responsible for registering a single device within the
-    /// internal device manager.
+    /// internal device manager. This is restricted to onix-specific devices which use <see cref="OnixContextTask"/>
     /// </summary>
     /// <remarks>
     /// ONI devices usually require a specific sequence of configuration and parameterization steps before
-    /// they can be interacted with. The <see cref="SingleDeviceFactory"/> provides a modular abstraction
+    /// they can be interacted with. The <see cref="OnixSingleDeviceFactory"/> provides a modular abstraction
     /// allowing flexible assembly and sequencing of of all device-specific configuration code.
     /// </remarks>
-    public abstract class SingleDeviceFactory : DeviceFactory, IDeviceConfiguration, IAddressableDevice
+    [WorkflowElementCategory(ElementCategory.Sink)]
+    [Combinator]
+    public abstract class OnixSingleDeviceFactory : IDeviceCollection, IDeviceConfiguration, IAddressableDevice
     {
-        internal const string DeviceNameDescription = "The unique device name.";
-        internal const string DeviceAddressDescription = "The device address.";
-
-        internal SingleDeviceFactory(Type deviceType)
+        internal const string DeviceNameDescription = SingleDeviceFactory.DeviceNameDescription;
+        internal const string DeviceAddressDescription = SingleDeviceFactory.DeviceAddressDescription;
+        internal const string ConfigurationCategory = SingleDeviceFactory.ConfigurationCategory;
+        internal const string AcquisitionCategory = SingleDeviceFactory.AcquisitionCategory;
+        internal OnixSingleDeviceFactory(Type deviceType)
         {
             DeviceType = deviceType ?? throw new ArgumentNullException(nameof(deviceType));
         }
@@ -87,10 +72,23 @@ namespace OpenEphys.Onix1
         /// </remarks>
         [Browsable(false)]
         public Type DeviceType { get; }
-
-        internal override IEnumerable<IDeviceConfiguration> GetDevices()
+        IEnumerable<IDeviceConfiguration> IDeviceCollection.GetDevices()
         {
             yield return this;
+        }
+
+        public abstract IObservable<OnixContextTask> Process(IObservable<OnixContextTask> context);
+
+        IObservable<TContext> IDeviceConfiguration.Process<TContext>(IObservable<TContext> context)
+        {
+            // NB : This should never happen, this would mean an issue in the internal library
+            if (!typeof(TContext).IsAssignableFrom(typeof(OnixContextTask)) && !typeof(OnixContextTask).IsAssignableFrom(typeof(TContext)))
+            {
+                throw new InvalidCastException($"Cannot cast {typeof(TContext).Name} to {nameof(OnixContextTask)}");
+            }
+            var onixContext = context.Cast<OnixContextTask>();
+            var result = Process(onixContext);
+            return (IObservable<TContext>)result;
         }
     }
 }

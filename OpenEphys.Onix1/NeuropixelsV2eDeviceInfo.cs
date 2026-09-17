@@ -4,7 +4,7 @@ namespace OpenEphys.Onix1
 {
     class NeuropixelsV2eDeviceInfo : DeviceInfo
     {
-        public NeuropixelsV2eDeviceInfo(ContextTask context, Type deviceType, uint deviceAddress, double? gainCorrectionA, double? gainCorrectionB, INeuropixelsV2Metadata probeMetadataA, INeuropixelsV2Metadata probeMetadataB, NeuropixelsV2ProbeConfiguration probeConfigurationA, NeuropixelsV2ProbeConfiguration probeConfigurationB, NeuropixelsV2eProbeGroup probeGroupA, NeuropixelsV2eProbeGroup probeGroupB)
+        public NeuropixelsV2eDeviceInfo(OnixContextTask context, Type deviceType, uint deviceAddress, double? gainCorrectionA, double? gainCorrectionB, INeuropixelsV2Metadata probeMetadataA, INeuropixelsV2Metadata probeMetadataB, NeuropixelsV2ProbeConfiguration probeConfigurationA, NeuropixelsV2ProbeConfiguration probeConfigurationB, NeuropixelsV2eProbeGroup probeGroupA, NeuropixelsV2eProbeGroup probeGroupB)
             : base(context, deviceType, deviceAddress)
         {
             GainCorrectionA = gainCorrectionA;

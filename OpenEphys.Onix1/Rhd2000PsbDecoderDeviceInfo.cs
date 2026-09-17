@@ -4,7 +4,7 @@ namespace OpenEphys.Onix1
 {
     class Rhd2000PsbDecoderDeviceInfo : DeviceInfo
     {
-        public Rhd2000PsbDecoderDeviceInfo(ContextTask context, Type deviceType, uint deviceAddress, ushort streamIndex, int ephysChannelCount)
+        public Rhd2000PsbDecoderDeviceInfo(OnixContextTask context, Type deviceType, uint deviceAddress, ushort streamIndex, int ephysChannelCount)
             : base(context, deviceType, deviceAddress)
         {
             StreamIndex = streamIndex;

@@ -11,7 +11,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Configures the camera on a UCLA Miniscope V4.
     /// </summary>
-    public class ConfigureUclaMiniscopeV4Camera : SingleDeviceFactory
+    public class ConfigureUclaMiniscopeV4Camera : OnixSingleDeviceFactory
     {
         readonly BehaviorSubject<double> ledBrightness = new(0);
         readonly BehaviorSubject<UclaMiniscopeV4SensorGain> sensorGain = new(UclaMiniscopeV4SensorGain.Low);
@@ -129,13 +129,13 @@ namespace OpenEphys.Onix1
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
         /// prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that holds all
+        /// <param name="source">A sequence of <see cref="OnixContextTask"/> instances that holds all
         /// configuration actions.</param>
         /// <returns>
-        /// The original sequence but with each <see cref="ContextTask"/> instance now containing
+        /// The original sequence but with each <see cref="OnixContextTask"/> instance now containing
         /// configuration actions required to use the Miniscope's camera.
         /// </returns>
-        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
+        public override IObservable<OnixContextTask> Process(IObservable<OnixContextTask> source)
         {
             var enable = Enable;
             var deviceName = DeviceName;
