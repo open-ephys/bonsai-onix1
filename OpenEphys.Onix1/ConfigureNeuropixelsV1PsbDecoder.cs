@@ -85,7 +85,7 @@ namespace OpenEphys.Onix1
                 }
 
                 // read probe metadata
-                var probeMetadata = new NeuropixelsV1eMetadata(device);
+                var probeMetadata = new NeuropixelsV1eMetadata(device, deviceName);
 
                 // program shift registers
                 var probeControl = new NeuropixelsV1RegisterContext(device, NeuropixelsV1.ProbeI2CAddress,

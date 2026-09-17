@@ -5,8 +5,8 @@ namespace OpenEphys.Onix1
 {
     static class NeuropixelsV2
     {
-        public const int ProbeAddress = 0x10;
-        public const int FlexEEPROMAddress = 0x50;
+        public const int ProbeI2CAddress = 0x10;
+        public const int FlexEepromI2CAddress = 0x50;
 
         public const int SamplesPerChannelPerSecond = 30_000;
 

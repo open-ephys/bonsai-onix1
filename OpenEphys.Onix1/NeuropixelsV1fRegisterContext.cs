@@ -21,11 +21,11 @@ namespace OpenEphys.Onix1
         readonly BitArray ShankConfig;
         readonly BitArray[] BaseConfigs;
 
-        public NeuropixelsV1fRegisterContext(DeviceContext deviceContext, NeuropixelsV1ProbeConfiguration configuration, NeuropixelsV1eProbeGroup probeGroup)
+        public NeuropixelsV1fRegisterContext(DeviceContext deviceContext, string deviceName, NeuropixelsV1ProbeConfiguration configuration, NeuropixelsV1eProbeGroup probeGroup)
             : base(deviceContext, NeuropixelsV1.ProbeI2CAddress)
         {
             device = deviceContext;
-            var metaData = new NeuropixelsV1fMetadata(device);
+            var metaData = new NeuropixelsV1fMetadata(device, deviceName);
 
             NeuropixelsV1AdcCalibration? adcCalibration = null;
             if (!File.Exists(configuration.AdcCalibrationFileName))

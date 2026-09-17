@@ -99,14 +99,9 @@ namespace OpenEphys.Onix1
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
                 var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
 
-                // read probe metadata
-                SelectProbe(serializer);
-                var probeMetadata = new NeuropixelsV2eBetaMetadata(serializer);
-
                 NeuropixelsV2GainCorrection? gainCorrection = null;
-                var probeControl = new NeuropixelsV2eBetaRegisterContext(device, NeuropixelsV2Beta.ProbeAddress);
 
-                if (probeMetadata.ProbeSerialNumber != null)
+                if (enable)
                 {
                     if (probeConfiguration.IsGroundReference())
                     {
@@ -115,11 +110,15 @@ namespace OpenEphys.Onix1
                             "Please select a different reference.");
                     }
 
-                    if (enable)
-                    {
-                        // NB: the DS90UB9x supports multiple streams and we don't want to overwrite other
-                        // streams' enable state. So, only enable, do not disable.
-                        device.WriteRegister(DS90UB9x.ENABLE, 1u);
+                    // read probe metadata
+                    SelectProbe(serializer);
+                    var probeMetadata = new NeuropixelsV2eBetaMetadata(device, deviceName);
+
+                    var probeControl = new NeuropixelsV2eBetaRegisterContext(device, NeuropixelsV2Beta.ProbeAddress);
+
+                    // NB: the DS90UB9x supports multiple streams and we don't want to overwrite other
+                    // streams' enable state. So, only enable, do not disable.
+                    device.WriteRegister(DS90UB9x.ENABLE, 1u);
 
                         if (!File.Exists(probeConfiguration.GainCalibrationFileName))
                         {
@@ -141,21 +140,19 @@ namespace OpenEphys.Onix1
                                 ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
                                     $"The probe serial number ({probeMetadata.ProbeSerialNumber}) does not " +
                                     $"match the gain calibration file serial number: {gainCorrection.Value.SerialNumber}."));
-                                gainCorrection = null;
                             }
                         }
 
-                        if (File.Exists(probeConfiguration.ProbeInterfaceFileName))
-                        {
-                            probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfiguration.ProbeInterfaceFileName, typeof(NeuropixelsV2eQuadShankProbeGroup)) as NeuropixelsV2eProbeGroup;
-                        }
-
-                        probeControl.WriteConfiguration(probeConfiguration, probeGroup);
-
-                        // configure probe streaming
-                        probeControl.WriteByte(NeuropixelsV2Beta.OP_MODE, 0b0100_0000);
-                        probeControl.WriteByte(NeuropixelsV2Beta.ADC_CONFIG, 0b0000_1000);
+                    if (File.Exists(probeConfiguration.ProbeInterfaceFileName))
+                    {
+                        probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfiguration.ProbeInterfaceFileName, typeof(NeuropixelsV2eQuadShankProbeGroup)) as NeuropixelsV2eProbeGroup;
                     }
+
+                    probeControl.WriteConfiguration(probeConfiguration, probeGroup);
+
+                    // configure probe streaming
+                    probeControl.WriteByte(NeuropixelsV2Beta.OP_MODE, 0b0100_0000);
+                    probeControl.WriteByte(NeuropixelsV2Beta.ADC_CONFIG, 0b0000_1000);
                 }
 
                 SyncProbes(serializer);
