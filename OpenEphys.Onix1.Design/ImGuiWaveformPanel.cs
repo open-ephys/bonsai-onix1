@@ -218,9 +218,13 @@ namespace OpenEphys.Onix1.Design
             ImGui.TableNextRow();
             ImGui.PushItemWidth(TextBoxWidth);
 
+            var paused = minSnap is not null;
+
             if (BeginMenuColumn("Band"))
             {
+                ImGui.BeginDisabled(paused); // NB: changing would cause buffer refresh and unpause
                 BandCombo();
+                ImGui.EndDisabled();
                 ImGui.SameLine();
                 var cmr = UseCommonMedianReference;
                 if (ImGui.Checkbox("Apply CMR", ref cmr))
@@ -230,9 +234,7 @@ namespace OpenEphys.Onix1.Design
 
             if (BeginMenuColumn("Timebase (s)"))
             {
-                // NB: a paused snapshot holds decimated data at one bin width, so its timebase
-                // cannot change until the display resumes.
-                ImGui.BeginDisabled(minSnap is not null);
+                ImGui.BeginDisabled(paused); // NB: changing would cause buffer refresh and unpause
                 InputDoubleCombo("##timebase", ref timebase, StandardTimeBases);
                 ImGui.EndDisabled();
                 EndMenuColumn();
