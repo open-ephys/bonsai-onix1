@@ -28,6 +28,13 @@ namespace OpenEphys.Onix1.Design
         const float TextBoxWidth = 80;
         const int MinChannelHeight = 10;
         const int TimeDivisions = 10;
+        const int PaletteSteps = 16;
+
+        enum ColorPalette
+        {
+            OpenEphysGui,
+            Custom,
+        }
 
         // visual constants
         const uint ColSweepCursor = ImGuiPalette.Yellow;
@@ -77,7 +84,10 @@ namespace OpenEphys.Onix1.Design
         int maxSamplesPerChannel = 1920;
         double timebase = 2.0;
         double rangeAmplitude = 500;
+        bool colorGroupingEnabled;
         int colorGrouping = 1;
+        ColorPalette palette = ColorPalette.OpenEphysGui;
+        Vector3 customColor = new(140 / 255f, 219 / 255f, 142 / 255f); // suggested default: a soft green
 
         /// <summary>
         /// The bands this probe offers, in display order, as a short name and a description of the
@@ -202,7 +212,7 @@ namespace OpenEphys.Onix1.Design
 
         void MenuWidgets()
         {
-            if (!ImGui.BeginTable("##menu", columns: 6, ImGuiTableFlags.NoSavedSettings))
+            if (!ImGui.BeginTable("##menu", columns: 7, ImGuiTableFlags.NoSavedSettings))
                 return;
 
             ImGui.TableNextRow();
@@ -251,10 +261,25 @@ namespace OpenEphys.Onix1.Design
             ImGui.TableNextColumn();
             PauseButton();
 
-            if (BeginMenuColumn("Colour Groups"))
+            if (BeginMenuColumn("Palette"))
             {
+                PaletteCombo();
+                if (palette == ColorPalette.Custom)
+                {
+                    ImGui.SameLine();
+                    ImGui.ColorEdit3("##customColor", ref customColor, ImGuiColorEditFlags.NoInputs);
+                }
+                EndMenuColumn();
+            }
+
+            if (BeginMenuColumn("Color Groups"))
+            {
+                ImGui.Checkbox("##colorGroupingEnabled", ref colorGroupingEnabled);
+                ImGui.SameLine();
+                ImGui.BeginDisabled(!colorGroupingEnabled);
                 if (ImGui.InputInt("##colorGrouping", ref colorGrouping))
                     colorGrouping = Math.Max(1, colorGrouping);
+                ImGui.EndDisabled();
                 EndMenuColumn();
             }
 
@@ -324,6 +349,54 @@ namespace OpenEphys.Onix1.Design
                 ImGui.EndCombo();
             }
             if (singleBand) ImGui.EndDisabled();
+        }
+
+        void PaletteCombo()
+        {
+            var preview = palette == ColorPalette.OpenEphysGui ? "Open Ephys GUI" : "Custom";
+            if (ImGui.BeginCombo("##palette", preview))
+            {
+                if (ImGui.Selectable("Open Ephys GUI", palette == ColorPalette.OpenEphysGui))
+                    palette = ColorPalette.OpenEphysGui;
+                if (palette == ColorPalette.OpenEphysGui)
+                    ImGui.SetItemDefaultFocus();
+
+                if (ImGui.Selectable("Custom", palette == ColorPalette.Custom))
+                    palette = ColorPalette.Custom;
+                if (palette == ColorPalette.Custom)
+                    ImGui.SetItemDefaultFocus();
+
+                ImGui.EndCombo();
+            }
+        }
+
+        /// <summary>
+        /// The color for channel group <paramref name="group"/> under the selected <see
+        /// cref="palette"/>.
+        /// </summary>
+        /// <remarks>
+        /// In <see cref="ColorPalette.Custom"/>, groups are variants of the one picked hue, spread
+        /// across <see cref="PaletteSteps"/> saturation/value combinations rather than assigned in
+        /// order, so that consecutive groups land far apart in the ramp instead of a barely
+        /// different neighboring shade — group 0 is always the picked color unmodified, which is
+        /// also what a single-group plot gets.
+        /// </remarks>
+        Vector4 GroupColor(int group)
+        {
+            if (palette == ColorPalette.OpenEphysGui)
+                return ImGui.ColorConvertU32ToFloat4(ImGuiPalette.OpenEphysGuiLfp[group % ImGuiPalette.OpenEphysGuiLfp.Length]);
+
+            float hue = 0, saturation = 0, value = 0;
+            ImGui.ColorConvertRGBtoHSV(customColor.X, customColor.Y, customColor.Z, ref hue, ref saturation, ref value);
+
+            var step = group * 7 % PaletteSteps;
+            var fraction = step / (float)(PaletteSteps - 1);
+            saturation = Math.Min(1f, saturation + 0.4f * fraction);
+            value *= 1f - 0.6f * fraction;
+
+            float r = 0, g = 0, b = 0;
+            ImGui.ColorConvertHSVtoRGB(hue, saturation, value, ref r, ref g, ref b);
+            return new Vector4(r, g, b, 1f);
         }
 
         void PauseButton()
@@ -616,7 +689,10 @@ namespace OpenEphys.Onix1.Design
 
                 var minLinePtr = (float*)((byte*)minPtr + i * minStep);
                 var maxLinePtr = (float*)((byte*)maxPtr + i * maxStep);
-                var channelColor = ImPlot.GetColormapColor(i / colorGrouping);
+                var group = colorGroupingEnabled
+                    ? i / colorGrouping
+                    : palette == ColorPalette.OpenEphysGui ? i : 0;
+                var channelColor = GroupColor(group);
                 ImPlot.PushStyleColor(ImPlotCol.Line, channelColor);
                 ImPlot.PushStyleColor(ImPlotCol.Fill, channelColor);
                 ImPlot.PlotShaded(string.Empty, (float*)timeRangePtr, minLinePtr, maxLinePtr, columns);
