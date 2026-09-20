@@ -41,7 +41,7 @@ namespace OpenEphys.Onix1.Design
         const float SweepCursorWeight = 1;
         const uint ColGraticule = ImGuiPalette.Grey0x88;
         const float GraticuleWeight = 1;
-        static readonly uint ColLabelHover = ImGuiPalette.WithAlpha(ImGuiPalette.White, 0x1C);
+        static readonly uint ColLabelHover = ImGuiPalette.WithAlpha(ImGuiPalette.White, 0x25);
 
         static readonly double[] StandardTimeBases =
         {
@@ -50,7 +50,7 @@ namespace OpenEphys.Onix1.Design
 
         static readonly double[] StandardRanges =
         {
-            50, 100, 200, 500, 1000, 2000
+            50, 100, 250, 500, 1000, 2500, 5000, 10000
         };
 
         Decimator decimatorMin;
@@ -76,6 +76,11 @@ namespace OpenEphys.Onix1.Design
         int expandedChannel = -1;
         float collapsedScroll;
         bool restoreScroll;
+
+        int heightDragStart = -1;
+        float heightDragMouseY;
+        float heightDragPivot;
+        float heightDragScroll;
 
         readonly string[] divisionLabels = new string[TimeDivisions + 1];
         double labeledTimebase = double.NaN;
@@ -474,6 +479,7 @@ namespace OpenEphys.Onix1.Design
                 var hovered = HoveredChannel(layout);
                 ChannelLabels(layout, labelDigits, hovered);
                 HandleChannelInput(hovered);
+                HandleZoomInput(layout);
 
                 // NB: with no padding, border or decorations the plot area is the item rect, so
                 // its extent is known before the plot is drawn.
@@ -656,6 +662,79 @@ namespace OpenEphys.Onix1.Design
                 for (int c = 0; c < rows; c++)
                     channelHidden[c] = c >= lo && c <= hi ? paint : dragOriginal[c];
             }
+        }
+
+        // NB: ImGui keeps Ctrl+wheel for its own font zoom, which is off, and turns Shift+wheel into
+        // horizontal scroll, which the table cannot do, so neither moves anything and both are free
+        // to use here. Alt+wheel is plain scroll to ImGui and would scroll the channels.
+        void HandleZoomInput(in RowLayout layout)
+        {
+            var io = ImGui.GetIO();
+            var mouse = ImGui.GetMousePos();
+
+            if (heightDragStart >= 0 && !ImGui.IsMouseDown(ImGuiMouseButton.Left))
+                heightDragStart = -1;
+
+            if (expandedChannel >= 0 || !ImGui.IsWindowHovered() && heightDragStart < 0)
+                return;
+
+            if (io.MouseWheel != 0 && io.KeyCtrl && heightDragStart < 0)
+            {
+                var step = io.MouseWheel > 0 ? 2 : -2;
+                if (channelHeight > 100)
+                    step *= 3;
+                var pivot = (mouse.Y - layout.Origin) / layout.RowHeight;
+                SetChannelHeight(channelHeight + step, channelHeight, pivot, ImGui.GetScrollY(), layout);
+            }
+            else if (io.MouseWheel != 0 && io.KeyShift)
+            {
+                StepRange(io.MouseWheel > 0 ? 1 : -1);
+            }
+
+            if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && io.KeyCtrl && ImGui.IsWindowHovered())
+            {
+                heightDragStart = channelHeight;
+                heightDragMouseY = mouse.Y;
+                heightDragPivot = (mouse.Y - layout.Origin) / layout.RowHeight;
+                heightDragScroll = ImGui.GetScrollY();
+            }
+
+            if (heightDragStart >= 0)
+            {
+                var delta = (int)Math.Round(-0.2f * (mouse.Y - heightDragMouseY));
+                if (heightDragStart > 100)
+                    delta *= 3;
+                SetChannelHeight(heightDragStart + delta, heightDragStart, heightDragPivot, heightDragScroll, layout);
+            }
+        }
+
+        // NB: the channel that was under the pointer when the gesture began is kept at the same
+        // screen position by moving the scroll with the height change.
+        void SetChannelHeight(int height, int baseHeight, float pivot, float baseScroll, in RowLayout layout)
+        {
+            height = Math.Max(MinChannelHeight, Math.Min((int)(layout.Bottom - layout.Top), height));
+            if (height == channelHeight)
+                return;
+
+            channelHeight = height;
+            ImGui.SetScrollY(baseScroll + pivot * (height - baseHeight));
+        }
+
+        void StepRange(int direction)
+        {
+            var i = Array.BinarySearch(StandardRanges, rangeAmplitude);
+            if (i < 0)
+            {
+                i = ~i;
+                if (direction < 0)
+                    i--;
+            }
+            else
+            {
+                i += direction;
+            }
+
+            rangeAmplitude = StandardRanges[Math.Max(0, Math.Min(StandardRanges.Length - 1, i))];
         }
 
         void Expand(int channel)

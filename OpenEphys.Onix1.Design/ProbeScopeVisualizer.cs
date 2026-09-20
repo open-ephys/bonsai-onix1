@@ -98,6 +98,7 @@ namespace OpenEphys.Onix1.Design
                 Size = new System.Drawing.Size(1100, 620),
                 Dock = DockStyle.Fill
             };
+            canvas.HoverKeys.Add(Keys.Space);
             canvas.Render += RenderFrame;
 
             renderTimer = new System.Windows.Forms.Timer { Interval = 16 };
