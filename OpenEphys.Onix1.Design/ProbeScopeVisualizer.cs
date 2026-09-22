@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -39,6 +40,35 @@ namespace OpenEphys.Onix1.Design
         IReadOnlyList<ProbeScopeBand<TFrame>> Bands);
 
     /// <summary>
+    /// Provides the pass-through node a <see cref="ProbeScopeVisualizer{TFrame}"/> opens on, and the
+    /// settings that belong to the workflow rather than to one viewing session.
+    /// </summary>
+    /// <typeparam name="TFrame">The data frame type the scope displays.</typeparam>
+    public abstract class ProbeScope<TFrame> : Sink<TFrame>
+    {
+        /// <summary>
+        /// Gets or sets the number of seconds of data retained behind the display.
+        /// </summary>
+        /// <remarks>
+        /// While the scope is paused, the view can be moved back through this much of what has already
+        /// been shown and redrawn at any timebase. What a second costs, and how many of them a probe is
+        /// willing to spend memory on, is answered by <see cref="HistoryBytes"/>.
+        /// </remarks>
+        [Description("The number of seconds of data retained behind the display, which a paused view can " +
+            "be moved back through. Longer histories cost proportionally more memory.")]
+        public double HistorySeconds { get; set; } = 10;
+
+        /// <summary>
+        /// What <see cref="HistorySeconds"/> costs on this probe, which only a concrete scope can say,
+        /// knowing its own channel count and fastest band, and how much memory is reasonable to spend.
+        /// </summary>
+        internal abstract long HistoryBytes { get; }
+
+        /// <inheritdoc/>
+        public override IObservable<TFrame> Process(IObservable<TFrame> source) => source;
+    }
+
+    /// <summary>
     /// Provides a type visualizer that shows a probe schematic beside a live multi-channel waveform viewer
     /// for a streaming probe. Subclasses supply how to read the device name off the upstream data operator
     /// and how to turn its <see cref="DeviceInfo"/> into geometry and bands.
@@ -54,8 +84,9 @@ namespace OpenEphys.Onix1.Design
         const float ProbePaneWidth = 260f;
         const float CollapsedPaneWidth = 28f;
 
-        readonly ImGuiWaveformPanel waveform = new();
         readonly ImGuiProbeSelector selector = new();
+
+        ImGuiWaveformPanel waveform;
 
         ImPlotGLControl canvas;
         System.Windows.Forms.Timer renderTimer;
@@ -79,6 +110,11 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         private protected abstract ProbeScopeSource<TFrame> CreateSource(DeviceInfo info);
 
+        /// <summary>
+        /// Unit the bands produce, shown beside the amplitude range control.
+        /// </summary>
+        private protected abstract string RangeLabel { get; }
+
         /// <inheritdoc/>
         public override void Load(IServiceProvider provider)
         {
@@ -86,7 +122,8 @@ namespace OpenEphys.Onix1.Design
             var workflowBuilder = (WorkflowBuilder)provider.GetService(typeof(WorkflowBuilder));
             deviceName = FindUpstreamDeviceName(workflowBuilder?.Workflow, context.Source);
 
-            waveform.RangeLabel = "µV";
+            var node = (ProbeScope<TFrame>)ExpressionBuilder.GetWorkflowElement(context.Source);
+            waveform = new(node.HistoryBytes) { RangeLabel = this.RangeLabel };
             selector.ShowGrid = false;
             selector.ShowCoordinateReadout = false;
             selector.DefaultZoomWindowMicrons = null;
@@ -99,6 +136,10 @@ namespace OpenEphys.Onix1.Design
                 Dock = DockStyle.Fill
             };
             canvas.HoverKeys.Add(Keys.Space);
+            canvas.HoverKeys.Add(Keys.W);
+            canvas.HoverKeys.Add(Keys.A);
+            canvas.HoverKeys.Add(Keys.S);
+            canvas.HoverKeys.Add(Keys.D);
             canvas.Render += RenderFrame;
 
             renderTimer = new System.Windows.Forms.Timer { Interval = 16 };
@@ -251,12 +292,13 @@ namespace OpenEphys.Onix1.Design
             renderTimer?.Dispose();
             scaleSubscription?.Dispose();
             frames?.Dispose();
-            waveform.Dispose();
+            waveform?.Dispose();
             canvas?.Dispose();
 
             renderTimer = null;
             scaleSubscription = null;
             frames = null;
+            waveform = null;
             canvas = null;
             source = null;
             boundBand = -1;

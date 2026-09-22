@@ -87,13 +87,28 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        // NB: ImGui keeps Ctrl+wheel for its own font zoom, which is off, and turns Shift+wheel into
-        // horizontal scroll, which the table cannot do, so neither moves anything and both are free
-        // to use here. Alt+wheel is plain scroll to ImGui and would scroll the channels.
+        // NB: an unclaimed wheel scrolls the channels, and ImGui applies that before this runs, so a
+        // gesture that took the wheel back would show a frame of the wrong scroll. Shift avoids it by
+        // making the wheel horizontal, which the table cannot do, and so do the modifier sets built on
+        // Shift; Ctrl alone is claimed by ImGui's own font zoom. Those are the three used here.
         void HandleZoomInput(in RowLayout layout)
         {
             var io = ImGui.GetIO();
             var mouse = ImGui.GetMousePos();
+
+            // NB: the keys and the panning wheel are handled ahead of the rest because they answer
+            // wherever the pointer is within the pane, as the pause key does, and apply to an expanded
+            // channel as well. Scrolling has to be asked for inside the table that owns it.
+            if (ImGui.IsKeyPressed(ImGuiKey.W))
+                ImGui.SetScrollY(ImGui.GetScrollY() - layout.RowHeight);
+            else if (ImGui.IsKeyPressed(ImGuiKey.S))
+                ImGui.SetScrollY(ImGui.GetScrollY() + layout.RowHeight);
+
+            if (io.MouseWheel != 0 && io.KeyCtrl && io.KeyShift && ImGui.IsWindowHovered())
+            {
+                Pan(Math.Sign(io.MouseWheel) * (WindowSamples / TimeDivisions));
+                return;
+            }
 
             if (heightDragStart >= 0 && !ImGui.IsMouseDown(ImGuiMouseButton.Left))
                 heightDragStart = -1;

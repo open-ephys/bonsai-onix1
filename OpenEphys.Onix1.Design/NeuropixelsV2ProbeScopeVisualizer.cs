@@ -14,6 +14,9 @@ namespace OpenEphys.Onix1.Design
         private protected override string DeviceNameOf(object upstreamOperator) =>
             upstreamOperator is NeuropixelsV2eData data ? data.DeviceName : null;
 
+        /// <inheritdoc/>
+        private protected override string RangeLabel => "uV";
+
         private protected override ProbeScopeSource<NeuropixelsV2DataFrame> CreateSource(DeviceInfo info)
         {
             if (info is not NeuropixelsV2PsbDecoderDeviceInfo v2)
@@ -53,9 +56,15 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     [TypeVisualizer(typeof(NeuropixelsV2ProbeScopeVisualizer))]
     [Description("Displays an interactive probe schematic beside live waveforms for a NeuropixelsV2 probe.")]
-    public class NeuropixelsV2ProbeScope : Sink<NeuropixelsV2DataFrame>
+    public class NeuropixelsV2ProbeScope : ProbeScope<NeuropixelsV2DataFrame>
     {
+        const double MaxHistorySeconds = 10;
+
         /// <inheritdoc/>
-        public override IObservable<NeuropixelsV2DataFrame> Process(IObservable<NeuropixelsV2DataFrame> source) => source;
+        internal override long HistoryBytes =>
+            (long)(Math.Min(HistorySeconds, MaxHistorySeconds)
+                * NeuropixelsV2.SamplesPerChannelPerSecond
+                * NeuropixelsV2.ChannelCount
+                * sizeof(float));
     }
 }

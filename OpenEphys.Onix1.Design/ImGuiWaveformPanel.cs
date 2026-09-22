@@ -25,19 +25,36 @@ namespace OpenEphys.Onix1.Design
     /// </remarks>
     internal sealed partial class ImGuiWaveformPanel : IDisposable
     {
-        Decimator decimatorMin;
-        Decimator decimatorMax;
+        readonly long historyBytes;
+
+        /// <param name="historyBytes">
+        /// Memory to spend on the history behind the display. The owner has already turned the seconds
+        /// the user asked for into bytes, knowing its own channel count and fastest band; the seconds
+        /// this buys fall back out of it once the channel count of the incoming data is known.
+        /// </param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="historyBytes"/> is less than or equal to zero, leaving no history to move a
+        /// paused view through.
+        /// </exception>
+        public ImGuiWaveformPanel(long historyBytes)
+        {
+            if (historyBytes <= 0)
+                throw new ArgumentOutOfRangeException(nameof(historyBytes));
+
+            this.historyBytes = historyBytes;
+        }
+
+        Decimator waveformMinDecimator;
+        Decimator waveformMaxDecimator;
         Mat timeRange;
         double timeSpan;
         int sampleRate = 30000;
 
-        Mat minSnap;
-        Mat maxSnap;
-        int sweepHeadSnap;
-
         Mat rowOffsets;
-        Mat displayMin;
-        Mat displayMax;
+        Mat scaledWaveformMin;
+        Mat scaledWaveformMax;
+
+        WaveformHistory history;
 
         bool[] channelHidden = Array.Empty<bool>();
         bool[] dragOriginal = Array.Empty<bool>();
@@ -72,32 +89,39 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         public bool UseCommonMedianReference { get; set; }
 
+
         /// <summary>
         /// Supplies one block of samples for the selected band. Rebuilds the decimation buffers whenever the
         /// channel count, element depth or bin width no longer matches the input.
         /// </summary>
         /// <param name="data">Channel-by-sample matrix, one row per channel.</param>
         /// <param name="bandSampleRate">Sample rate of the selected band, in Hz.</param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="bandSampleRate"/> is less than one, which leaves timebase without a normalizing unit.
+        /// </exception>
         public void Update(Mat data, int bandSampleRate)
         {
+            if (bandSampleRate < 1)
+                throw new ArgumentOutOfRangeException(nameof(bandSampleRate));
+
             sampleRate = bandSampleRate;
             var totalSamples = Math.Max(1, (int)(timebase * sampleRate));
             var samplesPerBin = (totalSamples + maxSamplesPerChannel - 1) / maxSamplesPerChannel;
             var columns = totalSamples / samplesPerBin;
             if (timeRange is null ||
-                decimatorMin.Buffer.Rows != data.Rows ||        // # channels
-                decimatorMin.Buffer.Cols != columns ||          // # downsamples
-                decimatorMin.InputDepth != data.Depth ||        // inner type
-                decimatorMin.DownsampleFactor != samplesPerBin) // factor to map totalSamples -> # downsamples
+                waveformMinDecimator.Buffer.Rows != data.Rows ||        // # channels
+                waveformMinDecimator.Buffer.Cols != columns ||          // # downsamples
+                waveformMinDecimator.InputDepth != data.Depth ||        // inner type
+                waveformMinDecimator.DownsampleFactor != samplesPerBin) // factor to map totalSamples -> # downsamples
             {
                 timeRange?.Dispose();
-                decimatorMin?.Dispose();
-                decimatorMax?.Dispose();
+                waveformMinDecimator?.Dispose();
+                waveformMaxDecimator?.Dispose();
                 rowOffsets?.Dispose();
-                displayMin?.Dispose();
-                displayMax?.Dispose();
-                decimatorMin = new Decimator(data, columns, samplesPerBin, ReduceOperation.Min);
-                decimatorMax = new Decimator(data, columns, samplesPerBin, ReduceOperation.Max);
+                scaledWaveformMin?.Dispose();
+                scaledWaveformMax?.Dispose();
+                waveformMinDecimator = new Decimator(data, columns, samplesPerBin, ReduceOperation.Min);
+                waveformMaxDecimator = new Decimator(data, columns, samplesPerBin, ReduceOperation.Max);
                 timeRange = new Mat(1, columns, Depth.F32, 1);
                 CV.Range(timeRange, 0, (double)columns * samplesPerBin / sampleRate);
                 timeSpan = (double)(columns - 1) * samplesPerBin / sampleRate;
@@ -109,8 +133,8 @@ namespace OpenEphys.Onix1.Design
                     row.Set(Scalar.All(-i));
                 }
 
-                displayMin = new Mat(data.Rows, columns, Depth.F32, 1);
-                displayMax = new Mat(data.Rows, columns, Depth.F32, 1);
+                scaledWaveformMin = new Mat(data.Rows, columns, Depth.F32, 1);
+                scaledWaveformMax = new Mat(data.Rows, columns, Depth.F32, 1);
                 if (channelHidden.Length != data.Rows)
                 {
                     channelHidden = new bool[data.Rows];
@@ -118,8 +142,20 @@ namespace OpenEphys.Onix1.Design
                 }
             }
 
-            decimatorMin.Process(data);
-            decimatorMax.Process(data);
+            var budgetSamples = historyBytes / (data.Rows * sizeof(float));
+            var capacity = (int)Math.Max(1, Math.Min(int.MaxValue, budgetSamples));
+            if (history is null || history.Rows != data.Rows || history.Capacity != capacity)
+            {
+                history?.Dispose();
+                history = new WaveformHistory(data.Rows, capacity);
+                RebuildTimeBases(capacity / (double)sampleRate);
+            }
+
+            waveformMinDecimator.Process(data);
+            waveformMaxDecimator.Process(data);
+
+            if (!Paused)
+                history.Write(data);
         }
 
         /// <summary>
@@ -131,7 +167,8 @@ namespace OpenEphys.Onix1.Design
             if (timeRange is not null)
             {
                 ImGui.BeginChild("##data");
-                WaveformPlot(minSnap ?? decimatorMin.Buffer, maxSnap ?? decimatorMax.Buffer);
+                var (waveformMin, waveformMax) = DisplayEnvelope();
+                WaveformPlot(waveformMin, waveformMax);
                 ImGui.EndChild();
             }
         }
@@ -147,21 +184,20 @@ namespace OpenEphys.Onix1.Design
         public void ResetBuffers()
         {
             timeRange?.Dispose();
-            decimatorMin?.Dispose();
-            decimatorMax?.Dispose();
-            minSnap?.Dispose();
-            maxSnap?.Dispose();
+            waveformMinDecimator?.Dispose();
+            waveformMaxDecimator?.Dispose();
             rowOffsets?.Dispose();
-            displayMin?.Dispose();
-            displayMax?.Dispose();
+            scaledWaveformMin?.Dispose();
+            scaledWaveformMax?.Dispose();
+            history?.Dispose();
+            DisposeHistoryView();
             timeRange = null;
-            decimatorMin = null;
-            decimatorMax = null;
-            minSnap = null;
-            maxSnap = null;
+            waveformMinDecimator = null;
+            waveformMaxDecimator = null;
             rowOffsets = null;
-            displayMin = null;
-            displayMax = null;
+            scaledWaveformMin = null;
+            scaledWaveformMax = null;
+            history = null;
         }
 
         /// <inheritdoc/>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using Hexa.NET.ImGui;
 
@@ -16,15 +17,37 @@ namespace OpenEphys.Onix1.Design
             Custom,
         }
 
-        static readonly double[] StandardTimeBases =
-        {
-            0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 10.0, 20.0
-        };
-
         static readonly double[] StandardRanges =
         {
             50, 100, 250, 500, 1000, 2500, 5000, 10000
         };
+
+        const double ShortestTimeBase = 0.01;
+        static readonly double[] TimeBaseSteps = { 1.0, 2.5, 5.0 };
+        double[] standardTimeBases = { ShortestTimeBase };
+
+        void RebuildTimeBases(double historySeconds)
+        {
+            var ladder = new List<double>();
+            var nextDecade = true;
+            for (var decade = ShortestTimeBase; nextDecade; decade *= 10)
+            {
+                foreach (var step in TimeBaseSteps)
+                {
+                    var span = decade * step;
+                    if (span > historySeconds && ladder.Count > 0) // NB: ladder.Count > 0 -> shortest span is always offered
+                    {
+                        nextDecade = false;
+                        break;
+                    }
+
+                    ladder.Add(span);
+                }
+            }
+
+            standardTimeBases = ladder.ToArray();
+            timebase = Math.Min(timebase, standardTimeBases[standardTimeBases.Length - 1]);
+        }
 
         bool colorGroupingEnabled;
         int colorGrouping = 1;
@@ -39,7 +62,7 @@ namespace OpenEphys.Onix1.Design
             ImGui.TableNextRow();
             ImGui.PushItemWidth(TextBoxWidth);
 
-            var paused = minSnap is not null;
+            var paused = Paused;
 
             if (BeginMenuColumn("Band"))
             {
@@ -56,7 +79,7 @@ namespace OpenEphys.Onix1.Design
             if (BeginMenuColumn("Timebase (s)"))
             {
                 ImGui.BeginDisabled(paused); // NB: changing would cause buffer refresh and unpause
-                InputDoubleCombo("##timebase", ref timebase, StandardTimeBases);
+                InputDoubleCombo("##timebase", ref timebase, standardTimeBases);
                 ImGui.EndDisabled();
                 EndMenuColumn();
             }
@@ -224,7 +247,7 @@ namespace OpenEphys.Onix1.Design
 
         void PauseButton()
         {
-            var paused = minSnap is not null;
+            var paused = Paused;
             if (paused)
                 ImGui.PushStyleColor(ImGuiCol.Button, ImGui.GetColorU32(ImGuiCol.ButtonActive));
 

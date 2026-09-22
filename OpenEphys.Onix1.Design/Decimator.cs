@@ -49,6 +49,16 @@ namespace OpenEphys.Onix1.Design
 
         public Depth InputDepth { get; }
 
+        /// <summary>
+        /// Reduces a block of samples into <see cref="Buffer"/>, continuing from the column the previous call
+        /// left off at.
+        /// </summary>
+        /// <remarks>
+        /// A single call of exactly <c>Buffer.Cols * DownsampleFactor</c> samples after a <see cref="Reset"/>
+        /// therefore fills every column once and leaves <see cref="Cursor"/> back at zero, which is how a
+        /// whole window is reduced without a second implementation of the binning.
+        /// </remarks>
+        /// <param name="input">Channel-by-sample matrix to reduce.</param>
         public void Process(Mat input)
         {
             if (conversionBuffer is not null)
@@ -94,6 +104,18 @@ namespace OpenEphys.Onix1.Design
             }
 
             inputIndex -= input.Cols;
+        }
+
+        /// <summary>
+        /// Returns this instance to its state at construction: <see cref="Cursor"/> back at zero and <see
+        /// cref="Buffer"/> empty, so that unfilled columns plot as a gap rather than as stale data.
+        /// </summary>
+        public void Reset()
+        {
+            writeIndex = 0;
+            inputIndex = 0;
+            carry = DownsampleFactor;
+            Buffer.Set(Scalar.All(double.NaN));
         }
 
         public void Dispose()

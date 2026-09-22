@@ -21,21 +21,6 @@ namespace OpenEphys.Onix1.Design
         readonly string[] divisionLabels = new string[TimeDivisions + 1];
         double labeledTimebase = double.NaN;
 
-        void TogglePause()
-        {
-            if (minSnap is not null)
-            {
-                minSnap = null;
-                maxSnap = null;
-            }
-            else if (decimatorMin is not null)
-            {
-                minSnap = decimatorMin.Buffer.Clone();
-                maxSnap = decimatorMax.Buffer.Clone();
-                sweepHeadSnap = decimatorMin.Cursor;
-            }
-        }
-
         /// <summary>
         /// Lays out the label column and the plot, with every channel in one plot whose y axis is in
         /// channel units: channel <c>i</c> is centered at <c>-i</c> with +/- range / 2 mapped to
@@ -47,11 +32,11 @@ namespace OpenEphys.Onix1.Design
         /// they stay put while the channels scroll; the plot background is cleared so they show
         /// through it.
         /// </remarks>
-        /// <param name="minBuffer">Per-bin minima, one row per channel.</param>
-        /// <param name="maxBuffer">Per-bin maxima, one row per channel.</param>
-        void WaveformPlot(Mat minBuffer, Mat maxBuffer)
+        /// <param name="waveformMin">Per-bin minima, one row per channel.</param>
+        /// <param name="waveformMax">Per-bin maxima, one row per channel.</param>
+        void WaveformPlot(Mat waveformMin, Mat waveformMax)
         {
-            var rows = minBuffer.Rows;
+            var rows = waveformMin.Rows;
             var labelDigits = DigitCount(rows - 1);
 
             ImPlot.PushStyleVar(ImPlotStyleVar.Padding, new Vector2(0, 0));
@@ -92,7 +77,7 @@ namespace OpenEphys.Onix1.Design
                     ImPlot.SetupAxes(string.Empty, string.Empty, axesFlags, axesFlags);
                     ImPlot.SetupAxisLimits(ImAxis.X1, 0, timeSpan, ImPlotCond.Always);
                     ImPlot.SetupAxisLimits(ImAxis.Y1, -(layout.LastRow - 1) - 0.5, -layout.FirstRow + 0.5, ImPlotCond.Always);
-                    PlotTraces(minBuffer, maxBuffer, layout.FirstVisible, layout.LastVisible);
+                    PlotTraces(waveformMin, waveformMax, layout.FirstVisible, layout.LastVisible);
                     PlotSweepCursor();
                     ImPlot.EndPlot();
 
@@ -106,7 +91,10 @@ namespace OpenEphys.Onix1.Design
             ImPlot.PopStyleVar(3);
 
             if (plotWidth > 0)
+            {
                 DrawGraticules(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom);
+                HandlePanInput(plotX, plotWidth, plotBottom + ImGui.GetStyle().ItemSpacing.Y);
+            }
         }
 
         /// <summary>
@@ -200,12 +188,12 @@ namespace OpenEphys.Onix1.Design
         /// where <c>rowOffsets</c> is the constant <c>-i</c> term, one row per channel, and plots
         /// the visible rows.
         /// </summary>
-        unsafe void PlotTraces(Mat minBuffer, Mat maxBuffer, int first, int last)
+        unsafe void PlotTraces(Mat waveformMin, Mat waveformMax, int first, int last)
         {
-            CV.AddWeighted(minBuffer, 1 / rangeAmplitude, rowOffsets, 1, 0, displayMin);
-            CV.AddWeighted(maxBuffer, 1 / rangeAmplitude, rowOffsets, 1, 0, displayMax);
-            displayMin.GetRawData(out IntPtr minPtr, out int minStep, out Size shape);
-            displayMax.GetRawData(out IntPtr maxPtr, out int maxStep, out Size _);
+            CV.AddWeighted(waveformMin, 1 / rangeAmplitude, rowOffsets, 1, 0, scaledWaveformMin);
+            CV.AddWeighted(waveformMax, 1 / rangeAmplitude, rowOffsets, 1, 0, scaledWaveformMax);
+            scaledWaveformMin.GetRawData(out IntPtr minPtr, out int minStep, out Size shape);
+            scaledWaveformMax.GetRawData(out IntPtr maxPtr, out int maxStep, out Size _);
             timeRange.GetRawData(out IntPtr timeRangePtr, out int _, out Size _);
             var columns = shape.Width;
 
@@ -229,10 +217,17 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
+        /// <summary>
+        /// Marks the column being written, or the column the pause instant fell at, which slides right
+        /// and off the plot as a paused view is moved back through history.
+        /// </summary>
         unsafe void PlotSweepCursor()
         {
+            var sweepHead = Panned ? PannedCursorColumn : Paused ? pausedCursor : waveformMinDecimator.Cursor;
+            if (sweepHead < 0 || sweepHead >= waveformMinDecimator.Buffer.Cols)
+                return;
+
             timeRange.GetRawData(out IntPtr timeRangePtr, out int _, out Size _);
-            var sweepHead = minSnap is not null ? sweepHeadSnap : decimatorMin.Cursor;
             double sweepTime = ((float*)timeRangePtr)[sweepHead];
             ImPlot.PushStyleColor(ImPlotCol.Line, ImGui.ColorConvertU32ToFloat4(ColSweepCursor));
             ImPlot.PushStyleVar(ImPlotStyleVar.LineWeight, SweepCursorWeight);
