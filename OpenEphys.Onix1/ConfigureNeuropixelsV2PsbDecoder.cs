@@ -83,14 +83,18 @@ namespace OpenEphys.Onix1
 
                 // read probe metadata
                 SelectProbe(serializer);
-                var probeMetadata = new NeuropixelsV2Metadata(serializer);
+                var probePresent = new NeuropixelsV2FlexEeprom(serializer).TryRead(out var probeMetadata);
+
+                if (enable && !probePresent)
+                {
+                    throw Neuropixels.ProbeNotFoundException(deviceName);
+                }
 
                 NeuropixelsV2ProbeGroup probeGroup = null;
                 NeuropixelsV2GainCorrection? gainCorrection = null;
-                var probeControl = new NeuropixelsV2RegisterContext(device, NeuropixelsV2.ProbeAddress);
+                var probeControl = new NeuropixelsV2RegisterContext(device, NeuropixelsV2.ProbeI2CAddress);
 
-                // check for probe being present
-                if (probeMetadata.ProbeSerialNumber != null)
+                if (probePresent)
                 {
                     if (enable)
                     {
@@ -166,7 +170,8 @@ namespace OpenEphys.Onix1
                 DeselectProbe(serializer);
 
                 var deviceInfo = new NeuropixelsV2PsbDecoderDeviceInfo(context, DeviceType, deviceAddress, streamIndex, gainCorrection?.GainCorrectionFactor ?? 1.0,
-                    probeConfiguration, probeGroup, probeMetadata.ProbePartNumber, probeMetadata.ProbeSerialNumber);
+                    probeConfiguration, probeGroup,
+                    probeMetadata?.ProbePartNumber, probeMetadata?.ProbeSerialNumber);
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
         }

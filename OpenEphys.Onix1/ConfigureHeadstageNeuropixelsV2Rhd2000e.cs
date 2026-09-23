@@ -190,11 +190,11 @@ namespace OpenEphys.Onix1
             // configure deserializer I2C aliases
             var deserializer = new I2CRegisterContext(device, DS90UB9x.DES_ADDR);
 
-            uint alias = NeuropixelsV2.ProbeAddress << 1;
+            uint alias = NeuropixelsV2.ProbeI2CAddress << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID1, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias1, alias);
 
-            alias = NeuropixelsV2.FlexEEPROMAddress << 1;
+            alias = NeuropixelsV2.FlexEepromI2CAddress << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID2, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias2, alias);
 

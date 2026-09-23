@@ -5,7 +5,7 @@ namespace OpenEphys.Onix1
     class NeuropixelsV1PsbDecoderDeviceInfo : DeviceInfo
     {
         public NeuropixelsV1PsbDecoderDeviceInfo(ContextTask context, Type deviceType, uint deviceAddress, NeuropixelsV1RegisterContext probeControl,
-            NeuropixelsV1ProbeConfiguration probeConfiguration, NeuropixelsV1ProbeGroup probeGroup, string probePartNumber, ulong probeSerialNumber)
+            NeuropixelsV1ProbeConfiguration probeConfiguration, NeuropixelsV1ProbeGroup probeGroup, string probePartNumber, ulong? probeSerialNumber)
             : base(context, deviceType, deviceAddress)
         {
             ApGainCorrection = probeControl?.ApGainCorrection ?? 1.0;
@@ -25,6 +25,6 @@ namespace OpenEphys.Onix1
         public NeuropixelsV1ProbeConfiguration ProbeConfiguration { get; }
         public NeuropixelsV1ProbeGroup ProbeGroup { get; }
         public string ProbePartNumber { get; }
-        public ulong ProbeSerialNumber { get; }
+        public ulong? ProbeSerialNumber { get; }
     }
 }

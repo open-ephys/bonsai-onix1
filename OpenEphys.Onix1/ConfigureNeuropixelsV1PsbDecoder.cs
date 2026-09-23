@@ -71,7 +71,12 @@ namespace OpenEphys.Onix1
                 var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
 
                 // read probe metadata
-                var probeMetadata = new NeuropixelsV1eMetadata(device);
+                var probePresent = new NeuropixelsV1FlexEeprom(device).TryRead(out var probeMetadata);
+
+                if (enable && !probePresent)
+                {
+                    throw Neuropixels.ProbeNotFoundException(deviceName);
+                }
 
                 NeuropixelsV1ProbeGroup probeGroup = null;
                 NeuropixelsV1RegisterContext probeControl = null;
@@ -103,7 +108,7 @@ namespace OpenEphys.Onix1
                 }
 
                 var deviceInfo = new NeuropixelsV1PsbDecoderDeviceInfo(context, DeviceType, deviceAddress, probeControl,
-                    probeConfiguration, probeGroup, probeMetadata.ProbePartNumber, probeMetadata.ProbeSerialNumber);
+                    probeConfiguration, probeGroup, probeMetadata?.ProbePartNumber, probeMetadata?.ProbeSerialNumber);
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
         }

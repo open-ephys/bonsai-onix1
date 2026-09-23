@@ -192,11 +192,11 @@ namespace OpenEphys.Onix1
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID1, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias1, alias);
 
-            alias = NeuropixelsV2.ProbeAddress << 1;
+            alias = NeuropixelsV2.ProbeI2CAddress << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID2, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias2, alias);
 
-            alias = NeuropixelsV2.FlexEEPROMAddress << 1;
+            alias = NeuropixelsV2.FlexEepromI2CAddress << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID3, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias3, alias);
 

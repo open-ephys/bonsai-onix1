@@ -140,6 +140,14 @@ namespace OpenEphys.Onix1
         internal static int BankWindowStart(int bankIndex, int totalElectrodes, int bankWidth) =>
             Math.Min(bankIndex * bankWidth, totalElectrodes - bankWidth);
 
+        /// <summary>
+        /// Creates the exception thrown when an enabled probe's flex EEPROM cannot be read.
+        /// </summary>
+        /// <param name="deviceName">The name of the probe's device.</param>
+        internal static InvalidOperationException ProbeNotFoundException(string deviceName) =>
+            new($"Could not communicate with probe \"{deviceName}\". Check that the flex cable is " +
+                "properly seated. If this probe is not in use, set its Enable property to false.");
+
         static readonly char[] SkipLetters = { 'I', 'O', 'Q', 'S', 'X', 'Z' };
 
         /// <summary>
