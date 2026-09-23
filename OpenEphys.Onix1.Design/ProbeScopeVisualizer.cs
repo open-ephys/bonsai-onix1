@@ -140,7 +140,7 @@ namespace OpenEphys.Onix1.Design
             waveform = new(node.HistoryBytes) { RangeLabel = this.RangeLabel };
             selector.ShowGrid = false;
             selector.ShowCoordinateReadout = false;
-            selector.DefaultZoomWindowMicrons = null;
+            selector.DefaultZoomWindowFraction = 1f;
 
             selection = new BehaviorSubject<int>(0);
             scheduler = new EventLoopScheduler();

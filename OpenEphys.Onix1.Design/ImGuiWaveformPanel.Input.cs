@@ -110,6 +110,10 @@ namespace OpenEphys.Onix1.Design
                 return;
             }
 
+            // NB: range scales works on expanded channel, so it must go before early return due to expandedChannel >= 0
+            if (io.MouseWheel != 0 && io.KeyShift && ImGui.IsWindowHovered())
+                StepRange(io.MouseWheel > 0 ? 1 : -1);
+
             if (heightDragStart >= 0 && !ImGui.IsMouseDown(ImGuiMouseButton.Left))
                 heightDragStart = -1;
 
@@ -123,10 +127,6 @@ namespace OpenEphys.Onix1.Design
                     step *= 3;
                 var pivot = (mouse.Y - layout.Origin) / layout.RowHeight;
                 SetChannelHeight(channelHeight + step, channelHeight, pivot, ImGui.GetScrollY(), layout);
-            }
-            else if (io.MouseWheel != 0 && io.KeyShift)
-            {
-                StepRange(io.MouseWheel > 0 ? 1 : -1);
             }
 
             if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && io.KeyCtrl && ImGui.IsWindowHovered())

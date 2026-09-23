@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Numerics;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImPlot;
@@ -61,7 +61,8 @@ namespace OpenEphys.Onix1.Design
 
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();
-                var layout = LayoutRows(rows, plotTop, plotBottom, ImGui.GetCursorScreenPos().Y);
+                var layout = LayoutRows(rows, plotTop, plotBottom, ImGui.GetCursorScreenPos().Y,
+                    ImGui.GetContentRegionAvail().Y);
                 var hovered = HoveredChannel(layout);
                 ChannelLabels(layout, labelDigits, hovered);
                 HandleChannelInput(hovered);
@@ -127,13 +128,13 @@ namespace OpenEphys.Onix1.Design
             public int ChannelAt(float y) => FirstRow + (int)Math.Floor((y - Origin) / RowHeight);
         }
 
-        RowLayout LayoutRows(int rows, float top, float bottom, float origin)
+        RowLayout LayoutRows(int rows, float top, float bottom, float origin, float available)
         {
             if (expandedChannel >= rows)
                 Collapse();
 
             return expandedChannel >= 0
-                ? new RowLayout(expandedChannel, expandedChannel + 1, bottom - top, top, bottom, origin)
+                ? new RowLayout(expandedChannel, expandedChannel + 1, available, top, bottom, origin)
                 : new RowLayout(0, rows, channelHeight, top, bottom, origin);
         }
 

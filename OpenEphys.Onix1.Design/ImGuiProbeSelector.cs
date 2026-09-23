@@ -85,8 +85,8 @@ namespace OpenEphys.Onix1.Design
         public bool SelectionSkipsBlocked { get; set; } = true;
 
         /// <summary>
-        /// When false, <see cref="DrawZoomedView"/> omits the grid lines and their millimetre axis
-        /// labels, and reclaims the margins those labels reserve.
+        /// When false, <see cref="DrawZoomedView"/> omits the grid lines and their axis labels, and
+        /// reclaims the margins those labels reserve.
         /// </summary>
         /// <remarks>
         /// Those margins are a fixed pixel width per side, so in a narrow pane they consume most of
@@ -95,8 +95,8 @@ namespace OpenEphys.Onix1.Design
         public bool ShowGrid { get; set; } = true;
 
         /// <summary>
-        /// When false, <see cref="DrawZoomedView"/> omits the millimetre coordinate readout that
-        /// tracks the cursor.
+        /// When false, <see cref="DrawZoomedView"/> omits the coordinate readout that tracks the
+        /// cursor.
         /// </summary>
         public bool ShowCoordinateReadout { get; set; } = true;
 
@@ -146,28 +146,45 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         public const float MinimapPaddingPx = 8f;
 
+        // NB: spans enough decades to serve a file written in millimetres as well as one in
+        // micrometres. The pixel thresholds pick the interval; the unit never enters into it.
+        static readonly float[] TickCandidates =
+        {
+            0.01f, 0.02f, 0.05f, 0.1f, 0.2f, 0.5f, 1f, 2f, 5f, 10f, 20f, 50f,
+            100f, 200f, 500f, 1000f, 2000f, 5000f, 10000f, 20000f, 50000f, 100000f
+        };
+
+        const float MajorTickSpacingPx = 60f;
+        const float MinorTickSpacingPx = 8f;
+
         /// <summary>
         /// Default horizontal position of the center of the zoom window on the probe in microns. If null,
         /// defaults to geometic center of probe.
         /// </summary>
-        internal float? DefaultScrollXMicrons = null;
+        internal float? DefaultScrollX = null;
 
         /// <summary>
         /// Default vertical position of the center of the zoom window on the probe in microns. If null,
         /// defaults to geometic center of probe.
         /// </summary>
-        internal float? DefaultScrollYMicrons = null;
+        internal float? DefaultScrollY = null;
 
         /// <summary>
-        /// Default major extent of the zoom window in microns. If null, defaults to the full vertical extent
-        /// of the probe.
+        /// Default major extent of the zoom window, in whatever unit the probe file is written in. If
+        /// null, <see cref="DefaultZoomWindowFraction"/> decides it instead.
         /// </summary>
-        internal float? DefaultZoomWindowMicrons = 1000f;
+        internal float? DefaultZoomWindow = null;
+
+        /// <summary>
+        /// Default major extent of the zoom window as a fraction of the probe's larger extent, used
+        /// when <see cref="DefaultZoomWindow"/> is null. One opens the view on the whole probe.
+        /// </summary>
+        internal float DefaultZoomWindowFraction = 0.1f;
 
         /// <summary>
         /// A contact's index, position and extent in microns, as this component draws it.
         /// </summary>
-        readonly record struct ProbeContact(int Index, Vector2 Position, Vector2 SizeUm);
+        readonly record struct ProbeContact(int Index, Vector2 Position, Vector2 Size);
 
         // probe state
         ProbeGroup probeGroup;
@@ -177,9 +194,9 @@ namespace OpenEphys.Onix1.Design
         float probeXMin, probeXMax, probeYMin, probeYMax;
 
         // scroll / zoom
-        float scrollYMicrons, scrollXMicrons; // Defaulted to half probe width
-        float zoomWindowUm; // defines the major axis length of the zoom window.
-        float effectiveXWindowUm;
+        float scrollY, scrollX; // Defaulted to half probe width
+        float zoomWindow; // defines the major axis length of the zoom window.
+        float effectiveXWindow;
 
         // drag-select state machine
         bool isDragging, dragHadShift, dragHadCtrl;
@@ -192,6 +209,11 @@ namespace OpenEphys.Onix1.Design
         Vector2 middlePanLastPos;
 
         // ruler tool
+        // NB: si_units is a label, not a scale. The coordinates in the file are self consistent
+        // and are drawn normalized against the probe bounds, so the unit is only ever used to say
+        // what the tick and readout numbers mean.
+        string units = "um";
+
         readonly ImGuiProbeRuler ruler = new();
         bool rulerMode;
 
@@ -237,9 +259,9 @@ namespace OpenEphys.Onix1.Design
                 var sp = c.ShapeParams;
                 var size = c.Shape switch
                 {
-                    ContactShape.Circle => new Vector2((float)(sp.Radius ?? 6.0) * 2f, (float)(sp.Radius ?? 6.0) * 2f),
-                    ContactShape.Rect => new Vector2((float)(sp.Width ?? 12.0), (float)(sp.Height ?? sp.Width ?? 12.0)),
-                    _ => new Vector2((float)(sp.Width ?? 12.0), (float)(sp.Width ?? 12.0))
+                    ContactShape.Circle => new Vector2((float)(sp.Radius.Value * 2), (float)(sp.Radius.Value * 2)),
+                    ContactShape.Rect => new Vector2((float)sp.Width.Value, (float)sp.Height.Value),
+                    _ => new Vector2((float)sp.Width.Value, (float)sp.Width.Value)
                 };
                 result[i] = new ProbeContact(i, new Vector2((float)c.PosX, (float)c.PosY), size);
             }
@@ -248,7 +270,7 @@ namespace OpenEphys.Onix1.Design
 
         /// <summary>
         /// Loads a new probe group. Expands the internal probe bounds from each contact's full
-        /// extent (position ± SizeUm/2) plus the planar contour vertices, resets the selection
+        /// extent (position ± Size/2) plus the planar contour vertices, resets the selection
         /// array, and centers the scroll position. Selection indices align with the probe's
         /// contact order.
         /// </summary>
@@ -265,7 +287,8 @@ namespace OpenEphys.Onix1.Design
             InspectedContacts = new bool[contacts.Count];
             preDragSelection = new bool[contacts.Count];
             preDragInspected = new bool[contacts.Count];
-            ruler.Units = probeGroup?.Probes.FirstOrDefault()?.SiUnits.ToString() ?? "um";
+            units = probeGroup?.Probes.FirstOrDefault()?.SiUnits.ToString() ?? "um";
+            ruler.Units = units;
 
             probeXMin = probeXMax = probeYMin = probeYMax = 0f;
             bool init = false;
@@ -279,8 +302,8 @@ namespace OpenEphys.Onix1.Design
             // Expand by full contact extents so edge contacts are not clipped.
             foreach (var c in contacts)
             {
-                Expand(c.Position.X - c.SizeUm.X / 2f, c.Position.Y - c.SizeUm.Y / 2f);
-                Expand(c.Position.X + c.SizeUm.X / 2f, c.Position.Y + c.SizeUm.Y / 2f);
+                Expand(c.Position.X - c.Size.X / 2f, c.Position.Y - c.Size.Y / 2f);
+                Expand(c.Position.X + c.Size.X / 2f, c.Position.Y + c.Size.Y / 2f);
             }
 
             if (probeGroup != null)
@@ -292,12 +315,14 @@ namespace OpenEphys.Onix1.Design
                 }
             }
 
-            zoomWindowUm = DefaultZoomWindowMicrons ?? Math.Max(50f, probeYMax - probeYMin);
-            scrollYMicrons = DefaultScrollYMicrons ?? (probeYMin + probeYMax) / 2f;
+            var probeExtent = Math.Max(probeXMax - probeXMin, probeYMax - probeYMin);
+            zoomWindow = DefaultZoomWindow
+                ?? (probeExtent > 0 ? DefaultZoomWindowFraction * probeExtent : 1f);
+            scrollY = DefaultScrollY ?? (probeYMin + probeYMax) / 2f;
             ClampScroll();
-            scrollXMicrons = DefaultScrollXMicrons ?? (probeXMin + probeXMax) / 2f;
+            scrollX = DefaultScrollX ?? (probeXMin + probeXMax) / 2f;
             var (mxMin, mxMax, _, _) = GetMmBounds();
-            effectiveXWindowUm = mxMax - mxMin;
+            effectiveXWindow = mxMax - mxMin;
         }
 
         /// <summary>
@@ -308,16 +333,16 @@ namespace OpenEphys.Onix1.Design
         public float ComputeMinimapColumnWidth(float availH, float displayWidth)
         {
             if (contacts.Count == 0) return RulerColumnWidthPx + 24f;
-            float probeHUm = probeYMax - probeYMin;
-            float probeWUm = probeXMax - probeXMin;
+            float probeH = probeYMax - probeYMin;
+            float probeW = probeXMax - probeXMin;
             float mmH = availH - MinimapPaddingPx * 2f;
-            float scale = mmH > 0 ? mmH / probeHUm : 0.01f;
-            float contactW = Math.Max(24f, probeWUm * scale + 8f);
+            float scale = mmH > 0 ? mmH / probeH : 0.01f;
+            float contactW = Math.Max(24f, probeW * scale + 8f);
             return RulerColumnWidthPx + Math.Min(contactW * 1.33f, displayWidth * 0.24f);
         }
 
         /// <summary>
-        /// Updates <c>effectiveXWindowUm</c> to match the aspect ratio of the zoomed view panel.
+        /// Updates <c>effectiveXWindow</c> to match the aspect ratio of the zoomed view panel.
         /// Must be called once per frame after the zoomed panel width is known, before
         /// <see cref="DrawMinimap"/> or <see cref="DrawZoomedView"/>.
         /// </summary>
@@ -325,8 +350,8 @@ namespace OpenEphys.Onix1.Design
         {
             var (mxMin, mxMax, _, _) = GetMmBounds();
             float mmTotalW = mxMax - mxMin;
-            effectiveXWindowUm = availH > 0 && zoomedW > 0
-                ? Math.Min(mmTotalW, zoomWindowUm * zoomedW / availH)
+            effectiveXWindow = availH > 0 && zoomedW > 0
+                ? Math.Min(mmTotalW, zoomWindow * zoomedW / availH)
                 : mmTotalW;
             ClampScrollX();
         }
@@ -366,7 +391,7 @@ namespace OpenEphys.Onix1.Design
             // probeYMin/Max already include contact half-extents, so no adjustment needed here.
             float rulerTop = viewTop + (mmYMax - probeYMax) * scale;
             float rulerBot = viewTop + (mmYMax - probeYMin) * scale;
-            DrawDepthRuler(dl, contactLeft - 2f, rulerTop, rulerBot, probeYMin, probeYMax);
+            DrawDepthRuler(dl, contactLeft - 2f, rulerTop, rulerBot, probeYMin, probeYMax, units);
 
             if (probeGroup != null)
                 foreach (var probe in probeGroup.Probes)
@@ -375,19 +400,19 @@ namespace OpenEphys.Onix1.Design
             for (int i = 0; i < contacts.Count; i++)
             {
                 var c  = contacts[i];
-                float ew = Math.Max(1f, c.SizeUm.X * scale);
-                float eh = Math.Max(1f, c.SizeUm.Y * scale);
+                float ew = Math.Max(1f, c.Size.X * scale);
+                float eh = Math.Max(1f, c.Size.Y * scale);
                 float sx = contactLeft + (c.Position.X - mmXMin) * scale - ew / 2f;
                 float sy = viewTop     + (mmYMax - c.Position.Y) * scale - eh / 2f;
                 dl.AddRectFilled(new Vector2(sx, sy), new Vector2(sx + ew, sy + eh), GetFillColor(c.Index));
             }
 
-            float yHalf    = zoomWindowUm / 2f;
-            float xHalf    = effectiveXWindowUm / 2f;
-            float boxTop   = Clamp(viewTop + (mmYMax - (scrollYMicrons + yHalf)) * scale, viewTop, viewBot);
-            float boxBot   = Clamp(viewTop + (mmYMax - (scrollYMicrons - yHalf)) * scale, viewTop, viewBot);
-            float boxLeft  = Clamp(contactLeft + (scrollXMicrons - xHalf - mmXMin) * scale, contactLeft, contactLeft + rendW);
-            float boxRight = Clamp(contactLeft + (scrollXMicrons + xHalf - mmXMin) * scale, contactLeft, contactLeft + rendW);
+            float yHalf    = zoomWindow / 2f;
+            float xHalf    = effectiveXWindow / 2f;
+            float boxTop   = Clamp(viewTop + (mmYMax - (scrollY + yHalf)) * scale, viewTop, viewBot);
+            float boxBot   = Clamp(viewTop + (mmYMax - (scrollY - yHalf)) * scale, viewTop, viewBot);
+            float boxLeft  = Clamp(contactLeft + (scrollX - xHalf - mmXMin) * scale, contactLeft, contactLeft + rendW);
+            float boxRight = Clamp(contactLeft + (scrollX + xHalf - mmXMin) * scale, contactLeft, contactLeft + rendW);
             dl.AddRectFilled(new Vector2(boxLeft, boxTop), new Vector2(boxRight, boxBot), ColZoomBoxFill);
             dl.AddRect(new Vector2(boxLeft, boxTop), new Vector2(boxRight, boxBot), ColZoomBoxBorder);
 
@@ -396,8 +421,8 @@ namespace OpenEphys.Onix1.Design
             if (ImGui.IsItemActive())
             {
                 var mmp = ImGui.GetMousePos();
-                scrollYMicrons = mmYMax - (mmp.Y - viewTop)     / mmH   * mmTotalH;
-                scrollXMicrons = mmXMin + (mmp.X - contactLeft) / rendW * mmTotalW;
+                scrollY = mmYMax - (mmp.Y - viewTop)     / mmH   * mmTotalH;
+                scrollX = mmXMin + (mmp.X - contactLeft) / rendW * mmTotalW;
                 ClampScroll(); ClampScrollX();
             }
 
@@ -416,15 +441,15 @@ namespace OpenEphys.Onix1.Design
 
             HoveredContactIndex = -1;
 
-            float xLow = scrollXMicrons - effectiveXWindowUm / 2f;
-            float yLow = scrollYMicrons - zoomWindowUm       / 2f;
+            float xLow = scrollX - effectiveXWindow / 2f;
+            float yLow = scrollY - zoomWindow       / 2f;
 
             var avail  = ImGui.GetContentRegionAvail();
             float zW   = avail.X;
-            float scaleXY = effectiveXWindowUm > 0 && zoomWindowUm > 0
-                ? Math.Min(zW / effectiveXWindowUm, avail.Y / zoomWindowUm) : 1f;
-            float drawW = effectiveXWindowUm * scaleXY;
-            float drawH = zoomWindowUm       * scaleXY;
+            float scaleXY = effectiveXWindow > 0 && zoomWindow > 0
+                ? Math.Min(zW / effectiveXWindow, avail.Y / zoomWindow) : 1f;
+            float drawW = effectiveXWindow * scaleXY;
+            float drawH = zoomWindow       * scaleXY;
 
             var dl = ImGui.GetWindowDrawList();
             var cp = ImGui.GetCursorScreenPos();
@@ -439,10 +464,14 @@ namespace OpenEphys.Onix1.Design
             float gridTop   = cp.Y + marginV;
             float gridBot   = cp.Y + avail.Y - marginV;
 
+            // NB: lines and labels are drawn in separate passes but are one grid, so the interval is
+            // chosen once here rather than derived twice from scaleXY and relied on to agree.
+            var (gridMajor, gridMinor) = TickIntervals(scaleXY, ShowGrid);
+
             if (ShowGrid)
             {
                 DrawGridLines(dl, gridLeft, gridRight, gridTop, gridBot,
-                    viewLeft, viewBot, xLow, yLow, scaleXY);
+                    viewLeft, viewBot, xLow, yLow, scaleXY, gridMajor, gridMinor);
             }
 
             ImGui.PushClipRect(new Vector2(gridLeft, gridTop), new Vector2(gridRight, gridBot), true);
@@ -458,13 +487,13 @@ namespace OpenEphys.Onix1.Design
             for (int i = 0; i < contacts.Count; i++)
             {
                 var c = contacts[i];
-                if (c.Position.Y + c.SizeUm.Y / 2f < yLow ||
-                    c.Position.Y - c.SizeUm.Y / 2f > yLow + zoomWindowUm) continue;
-                if (c.Position.X + c.SizeUm.X / 2f < xLow ||
-                    c.Position.X - c.SizeUm.X / 2f > xLow + effectiveXWindowUm) continue;
+                if (c.Position.Y + c.Size.Y / 2f < yLow ||
+                    c.Position.Y - c.Size.Y / 2f > yLow + zoomWindow) continue;
+                if (c.Position.X + c.Size.X / 2f < xLow ||
+                    c.Position.X - c.Size.X / 2f > xLow + effectiveXWindow) continue;
 
-                float rendEW = Math.Max(2f, c.SizeUm.X * scaleXY);
-                float rendEH = Math.Max(2f, c.SizeUm.Y * scaleXY);
+                float rendEW = Math.Max(2f, c.Size.X * scaleXY);
+                float rendEH = Math.Max(2f, c.Size.Y * scaleXY);
                 float sx = viewLeft + (c.Position.X - xLow) * scaleXY - rendEW / 2f;
                 float sy = viewBot  - (c.Position.Y - yLow) * scaleXY - rendEH / 2f;
                 var rMin = new Vector2(sx, sy);
@@ -498,8 +527,8 @@ namespace OpenEphys.Onix1.Design
                 if (ImGui.IsMouseDown(ImGuiMouseButton.Middle))
                 {
                     var mp = ImGui.GetMousePos();
-                    scrollXMicrons -= (mp.X - middlePanLastPos.X) / scaleXY;
-                    scrollYMicrons += (mp.Y - middlePanLastPos.Y) / scaleXY;
+                    scrollX -= (mp.X - middlePanLastPos.X) / scaleXY;
+                    scrollY += (mp.Y - middlePanLastPos.Y) / scaleXY;
                     ClampScroll(); ClampScrollX();
                     middlePanLastPos = mp;
                 }
@@ -511,7 +540,8 @@ namespace OpenEphys.Onix1.Design
             if (ShowGrid)
             {
                 DrawGridLabels(dl, cp.X, cp.X + avail.X, cp.Y, cp.Y + avail.Y,
-                    gridLeft, gridRight, gridTop, gridBot, viewLeft, viewBot, xLow, yLow, scaleXY);
+                    gridLeft, gridRight, gridTop, gridBot, viewLeft, viewBot, xLow, yLow, scaleXY, units,
+                    gridMajor);
             }
 
             if (!ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.R, false))
@@ -536,7 +566,7 @@ namespace OpenEphys.Onix1.Design
                 {
                     if (ShowCoordinateReadout)
                     {
-                        string coord = $"({mousePx / 1000f:0.00} mm, {mousePy / 1000f:0.00} mm)";
+                        string coord = $"({mousePx:0.##} {units}, {mousePy:0.##} {units})";
                         var sz  = ImGui.CalcTextSize(coord);
                         const float pad = 5f;
                         float refBot  = cp.Y + avail.Y - 18f;
@@ -548,7 +578,7 @@ namespace OpenEphys.Onix1.Design
                     for (int i = 0; i < contacts.Count; i++)
                     {
                         var c = contacts[i];
-                        float hw = c.SizeUm.X / 2f, hh = c.SizeUm.Y / 2f;
+                        float hw = c.Size.X / 2f, hh = c.Size.Y / 2f;
                         if (mousePx >= c.Position.X - hw && mousePx <= c.Position.X + hw &&
                             mousePy >= c.Position.Y - hh && mousePy <= c.Position.Y + hh)
                         { HoveredContactIndex = i; break; }
@@ -593,17 +623,17 @@ namespace OpenEphys.Onix1.Design
             if (ctrl)
             {
                 float factor = io.MouseWheel > 0f ? 0.85f : 1.15f;
-                zoomWindowUm = Math.Max(50f, Math.Min(mmYMax - mmYMin, zoomWindowUm * factor));
+                zoomWindow = Math.Max(50f, Math.Min(mmYMax - mmYMin, zoomWindow * factor));
                 ClampScroll(); ClampScrollX();
             }
             else if (shift)
             {
-                scrollXMicrons -= io.MouseWheel * effectiveXWindowUm * 0.1f;
+                scrollX -= io.MouseWheel * effectiveXWindow * 0.1f;
                 ClampScrollX();
             }
             else
             {
-                scrollYMicrons += io.MouseWheel * zoomWindowUm * 0.1f;
+                scrollY += io.MouseWheel * zoomWindow * 0.1f;
                 ClampScroll();
             }
         }
@@ -622,17 +652,17 @@ namespace OpenEphys.Onix1.Design
         void ClampScroll()
         {
             var (_, _, lo, hi) = GetMmBounds();
-            float half = zoomWindowUm / 2f;
-            if (lo + half > hi - half) { scrollYMicrons = (lo + hi) / 2f; return; }
-            scrollYMicrons = Clamp(scrollYMicrons, lo + half, hi - half);
+            float half = zoomWindow / 2f;
+            if (lo + half > hi - half) { scrollY = (lo + hi) / 2f; return; }
+            scrollY = Clamp(scrollY, lo + half, hi - half);
         }
 
         void ClampScrollX()
         {
             var (lo, hi, _, _) = GetMmBounds();
-            float half = effectiveXWindowUm / 2f;
-            if (lo + half > hi - half) { scrollXMicrons = (lo + hi) / 2f; return; }
-            scrollXMicrons = Clamp(scrollXMicrons, lo + half, hi - half);
+            float half = effectiveXWindow / 2f;
+            if (lo + half > hi - half) { scrollX = (lo + hi) / 2f; return; }
+            scrollX = Clamp(scrollX, lo + half, hi - half);
         }
 
         static float Clamp(float v, float lo, float hi) => v < lo ? lo : v > hi ? hi : v;
@@ -734,7 +764,7 @@ namespace OpenEphys.Onix1.Design
             for (int i = 0; i < contacts.Count; i++)
             {
                 var c = contacts[i];
-                float hw = c.SizeUm.X / 2f, hh = c.SizeUm.Y / 2f;
+                float hw = c.Size.X / 2f, hh = c.Size.Y / 2f;
                 if (cx < c.Position.X - hw || cx > c.Position.X + hw ||
                     cy < c.Position.Y - hh || cy > c.Position.Y + hh) continue;
 
@@ -755,8 +785,8 @@ namespace OpenEphys.Onix1.Design
             {
                 if (skipBlocked && IsBlocked(contacts[i].Index)) continue;
                 var c = contacts[i];
-                if (c.Position.X + c.SizeUm.X / 2f >= minX && c.Position.X - c.SizeUm.X / 2f <= maxX &&
-                    c.Position.Y + c.SizeUm.Y / 2f >= minY && c.Position.Y - c.SizeUm.Y / 2f <= maxY)
+                if (c.Position.X + c.Size.X / 2f >= minX && c.Position.X - c.Size.X / 2f <= maxX &&
+                    c.Position.Y + c.Size.Y / 2f >= minY && c.Position.Y - c.Size.Y / 2f <= maxY)
                     target[i] = value;
             }
         }
@@ -794,57 +824,41 @@ namespace OpenEphys.Onix1.Design
         }
 
         static void DrawDepthRuler(ImDrawListPtr dl, float rightX, float viewTop, float viewBot,
-            float yMinUm, float yMaxUm, float gridLeft = -1f, float gridRight = -1f,
-            bool rightSide = false, float yLabelBaseUm = 0f)
+            float yMin, float yMax, string units, float gridLeft = -1f, float gridRight = -1f,
+            bool rightSide = false, float yLabelBase = 0f)
         {
             float pxH = viewBot - viewTop;
-            float rangeUm = yMaxUm - yMinUm;
-            if (pxH <= 0 || rangeUm <= 0) return;
+            float range = yMax - yMin;
+            if (pxH <= 0 || range <= 0) return;
 
-            float pxPerUm = pxH / rangeUm;
-            float pxPerMm = pxPerUm * 1000f;
+            float pxPerUnit = pxH / range;
             bool hasGrid = gridLeft >= 0f && gridRight > gridLeft;
 
             dl.AddLine(new Vector2(rightX, viewTop), new Vector2(rightX, viewBot), ColRulerAxis);
 
-            float[] majorCands = { 0.1f, 0.2f, 0.5f, 1f, 2f, 5f, 10f, 20f, 50f, 100f };
-            float majorMm = majorCands[majorCands.Length - 1];
-            foreach (var c in majorCands) { if (c * pxPerMm >= 60f) { majorMm = c; break; } }
-            float majorUm = majorMm * 1000f;
+            var (major, minor) = TickIntervals(pxPerUnit, hasGrid);
 
-            float minorMm = -1f;
-            if (hasGrid)
+            if (minor > 0f)
             {
-                float[] minorCands = { 0.01f, 0.02f, 0.05f, 0.1f, 0.2f, 0.5f };
-                foreach (var c in minorCands)
+                float first = (float)(Math.Ceiling((double)yMin / minor) * minor);
+                for (float y = first; y <= yMax + 1f; y += minor)
                 {
-                    if (c >= majorMm) break;
-                    if (c * pxPerMm >= 8f) { minorMm = c; break; }
-                }
-            }
-
-            if (minorMm > 0f)
-            {
-                float minorUm = minorMm * 1000f;
-                float first = (float)(Math.Ceiling((double)yMinUm / minorUm) * minorUm);
-                for (float yUm = first; yUm <= yMaxUm + 1f; yUm += minorUm)
-                {
-                    float sy = viewBot - (yUm - yMinUm) * pxPerUm;
+                    float sy = viewBot - (y - yMin) * pxPerUnit;
                     if (rightSide) dl.AddLine(new Vector2(rightX, sy), new Vector2(rightX + RulerMinorTickLen, sy), ColRulerAxis);
                     else           dl.AddLine(new Vector2(rightX - RulerMinorTickLen, sy), new Vector2(rightX, sy), ColRulerAxis);
                     if (hasGrid) DrawDottedHLine(dl, gridLeft, gridRight, sy, ColGridMinor);
                 }
             }
 
-            float firstMaj = (float)(Math.Ceiling((double)yMinUm / majorUm) * majorUm);
-            for (float yUm = firstMaj; yUm <= yMaxUm + 1f; yUm += majorUm)
+            float firstMaj = (float)(Math.Ceiling((double)yMin / major) * major);
+            for (float y = firstMaj; y <= yMax + 1f; y += major)
             {
-                float sy = viewBot - (yUm - yMinUm) * pxPerUm;
+                float sy = viewBot - (y - yMin) * pxPerUnit;
                 if (rightSide) dl.AddLine(new Vector2(rightX, sy), new Vector2(rightX + RulerMajorTickLen, sy), ColRulerMajorTick);
                 else           dl.AddLine(new Vector2(rightX - RulerMajorTickLen, sy), new Vector2(rightX, sy), ColRulerMajorTick);
                 if (hasGrid)
                     dl.AddLine(new Vector2(gridLeft, sy), new Vector2(gridRight, sy), ColGridMajor);
-                string lbl = FormatMm((yUm - yLabelBaseUm) / 1000f, majorMm);
+                string lbl = FormatInterval(y - yLabelBase, major, units);
                 var tsz = ImGui.CalcTextSize(lbl);
                 float lblX = rightSide ? rightX + 8f : rightX - 8f - tsz.X;
                 dl.AddText(new Vector2(lblX, sy - tsz.Y / 2f), ColRulerLabel, lbl);
@@ -853,44 +867,30 @@ namespace OpenEphys.Onix1.Design
 
         static void DrawGridLines(ImDrawListPtr dl,
             float lineLeft, float lineRight, float lineTop, float lineBot,
-            float viewLeft, float viewBot, float xLow, float yLow, float scaleXY)
+            float viewLeft, float viewBot, float xLow, float yLow, float scaleXY,
+            float major, float minor)
         {
             if (scaleXY <= 0) return;
-            float pxPerMm = scaleXY * 1000f;
-
-            float[] majorCands = { 0.1f, 0.2f, 0.5f, 1f, 2f, 5f, 10f, 20f, 50f, 100f };
-            float majorMm = majorCands[majorCands.Length - 1];
-            foreach (var c in majorCands) { if (c * pxPerMm >= 60f) { majorMm = c; break; } }
-            float majorUm = majorMm * 1000f;
-
-            float[] minorCands = { 0.01f, 0.02f, 0.05f, 0.1f, 0.2f, 0.5f };
-            float minorMm = -1f;
-            foreach (var c in minorCands)
-            {
-                if (c >= majorMm) break;
-                if (c * pxPerMm >= 8f) { minorMm = c; break; }
-            }
 
             // Y (horizontal) grid lines
             float yMinV = yLow + (viewBot - lineBot) / scaleXY;
             float yMaxV = yLow + (viewBot - lineTop) / scaleXY;
 
-            if (minorMm > 0f)
+            if (minor > 0f)
             {
-                float minorUm = minorMm * 1000f;
-                float first = (float)(Math.Ceiling((double)yMinV / minorUm) * minorUm);
-                for (float yUm = first; yUm <= yMaxV + 1f; yUm += minorUm)
+                float first = (float)(Math.Ceiling((double)yMinV / minor) * minor);
+                for (float y = first; y <= yMaxV + 1f; y += minor)
                 {
-                    float sy = viewBot - (yUm - yLow) * scaleXY;
+                    float sy = viewBot - (y - yLow) * scaleXY;
                     if (sy < lineTop - 1f || sy > lineBot + 1f) continue;
                     DrawDottedHLine(dl, lineLeft, lineRight, sy, ColGridMinor);
                 }
             }
             {
-                float first = (float)(Math.Ceiling((double)yMinV / majorUm) * majorUm);
-                for (float yUm = first; yUm <= yMaxV + 1f; yUm += majorUm)
+                float first = (float)(Math.Ceiling((double)yMinV / major) * major);
+                for (float y = first; y <= yMaxV + 1f; y += major)
                 {
-                    float sy = viewBot - (yUm - yLow) * scaleXY;
+                    float sy = viewBot - (y - yLow) * scaleXY;
                     if (sy < lineTop - 1f || sy > lineBot + 1f) continue;
                     dl.AddLine(new Vector2(lineLeft, sy), new Vector2(lineRight, sy), ColGridMajor);
                 }
@@ -900,22 +900,21 @@ namespace OpenEphys.Onix1.Design
             float xMinV = xLow + (lineLeft  - viewLeft) / scaleXY;
             float xMaxV = xLow + (lineRight - viewLeft) / scaleXY;
 
-            if (minorMm > 0f)
+            if (minor > 0f)
             {
-                float minorUm = minorMm * 1000f;
-                float first = (float)(Math.Ceiling((double)xMinV / minorUm) * minorUm);
-                for (float xUm = first; xUm <= xMaxV + 1f; xUm += minorUm)
+                float first = (float)(Math.Ceiling((double)xMinV / minor) * minor);
+                for (float x = first; x <= xMaxV + 1f; x += minor)
                 {
-                    float sx = viewLeft + (xUm - xLow) * scaleXY;
+                    float sx = viewLeft + (x - xLow) * scaleXY;
                     if (sx < lineLeft - 1f || sx > lineRight + 1f) continue;
                     DrawDottedVLine(dl, sx, lineTop, lineBot, ColGridMinor);
                 }
             }
             {
-                float first = (float)(Math.Ceiling((double)xMinV / majorUm) * majorUm);
-                for (float xUm = first; xUm <= xMaxV + 1f; xUm += majorUm)
+                float first = (float)(Math.Ceiling((double)xMinV / major) * major);
+                for (float x = first; x <= xMaxV + 1f; x += major)
                 {
-                    float sx = viewLeft + (xUm - xLow) * scaleXY;
+                    float sx = viewLeft + (x - xLow) * scaleXY;
                     if (sx < lineLeft - 1f || sx > lineRight + 1f) continue;
                     dl.AddLine(new Vector2(sx, lineTop), new Vector2(sx, lineBot), ColGridMajor);
                 }
@@ -925,26 +924,21 @@ namespace OpenEphys.Onix1.Design
         static void DrawGridLabels(ImDrawListPtr dl,
             float lblLeft, float lblRight, float lblTop, float lblBot,
             float lineLeft, float lineRight, float lineTop, float lineBot,
-            float viewLeft, float viewBot, float xLow, float yLow, float scaleXY)
+            float viewLeft, float viewBot, float xLow, float yLow, float scaleXY, string units,
+            float major)
         {
             if (scaleXY <= 0) return;
-            float pxPerMm = scaleXY * 1000f;
-
-            float[] majorCands = { 0.1f, 0.2f, 0.5f, 1f, 2f, 5f, 10f, 20f, 50f, 100f };
-            float majorMm = majorCands[majorCands.Length - 1];
-            foreach (var c in majorCands) { if (c * pxPerMm >= 60f) { majorMm = c; break; } }
-            float majorUm = majorMm * 1000f;
 
             // Y (horizontal) labels
             float yMinV = yLow + (viewBot - lineBot) / scaleXY;
             float yMaxV = yLow + (viewBot - lineTop) / scaleXY;
             {
-                float first = (float)(Math.Ceiling((double)yMinV / majorUm) * majorUm);
-                for (float yUm = first; yUm <= yMaxV + 1f; yUm += majorUm)
+                float first = (float)(Math.Ceiling((double)yMinV / major) * major);
+                for (float y = first; y <= yMaxV + 1f; y += major)
                 {
-                    float sy = viewBot - (yUm - yLow) * scaleXY;
+                    float sy = viewBot - (y - yLow) * scaleXY;
                     if (sy < lineTop - 1f || sy > lineBot + 1f) continue;
-                    string lbl = FormatMm(yUm / 1000f, majorMm);
+                    string lbl = FormatInterval(y, major, units);
                     var tsz = ImGui.CalcTextSize(lbl);
                     DrawGridLabel(dl, lbl, tsz, lblLeft  + 8f,         sy - tsz.Y / 2f);
                     DrawGridLabel(dl, lbl, tsz, lblRight - tsz.X - 8f, sy - tsz.Y / 2f);
@@ -955,12 +949,12 @@ namespace OpenEphys.Onix1.Design
             float xMinV = xLow + (lineLeft  - viewLeft) / scaleXY;
             float xMaxV = xLow + (lineRight - viewLeft) / scaleXY;
             {
-                float first = (float)(Math.Ceiling((double)xMinV / majorUm) * majorUm);
-                for (float xUm = first; xUm <= xMaxV + 1f; xUm += majorUm)
+                float first = (float)(Math.Ceiling((double)xMinV / major) * major);
+                for (float x = first; x <= xMaxV + 1f; x += major)
                 {
-                    float sx = viewLeft + (xUm - xLow) * scaleXY;
+                    float sx = viewLeft + (x - xLow) * scaleXY;
                     if (sx < lineLeft - 1f || sx > lineRight + 1f) continue;
-                    string lbl = FormatMm(xUm / 1000f, majorMm);
+                    string lbl = FormatInterval(x, major, units);
                     var tsz = ImGui.CalcTextSize(lbl);
                     DrawGridLabel(dl, lbl, tsz, sx - tsz.X / 2f, lineTop - tsz.Y - 5f);
                     DrawGridLabel(dl, lbl, tsz, sx - tsz.X / 2f, lineBot + 5f);
@@ -1022,11 +1016,31 @@ namespace OpenEphys.Onix1.Design
             dl.AddText(new Vector2(x, y), ColRulerLabel, lbl);
         }
 
-        static string FormatMm(float mm, float intervalMm)
+        static (float Major, float Minor) TickIntervals(float pxPerUnit, bool withMinor)
         {
-            if (intervalMm >= 1f)   return $"{mm:0}mm";
-            if (intervalMm >= 0.1f) return $"{mm:0.0}mm";
-            return $"{mm:0.00}mm";
+            var major = TickCandidates[TickCandidates.Length - 1];
+            foreach (var c in TickCandidates)
+            {
+                if (c * pxPerUnit >= MajorTickSpacingPx) { major = c; break; }
+            }
+
+            var minor = -1f;
+            if (withMinor)
+            {
+                foreach (var c in TickCandidates)
+                {
+                    if (c >= major) break;
+                    if (c * pxPerUnit >= MinorTickSpacingPx) { minor = c; break; }
+                }
+            }
+
+            return (major, minor);
+        }
+
+        static string FormatInterval(float value, float interval, string units)
+        {
+            var decimals = interval >= 1f ? 0 : Math.Min(6, (int)Math.Ceiling(-Math.Log10(interval)));
+            return value.ToString("F" + decimals) + units;
         }
 
         void DrawLegend(ImDrawListPtr dl, Vector2 cp, Vector2 avail)

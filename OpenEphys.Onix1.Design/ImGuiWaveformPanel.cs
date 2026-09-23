@@ -116,10 +116,23 @@ namespace OpenEphys.Onix1.Design
             // NB: the history converts sample offsets to time with a single factor, so it cannot hold
             // two rates. A change of band that keeps the rate is left alone: what the history holds is
             // what was displayed, seams included.
-            if (bandSampleRate != sampleRate)
-                history?.Clear();
-
+            var historyInvalid = bandSampleRate != sampleRate;
             sampleRate = bandSampleRate;
+            var budgetSamples = historyBytes / (data.Rows * sizeof(float));
+            var capacity = (int)Math.Max(1, Math.Min(int.MaxValue, budgetSamples));
+            if (history is null || history.Rows != data.Rows || history.Capacity != capacity)
+            {
+                history?.Dispose();
+                history = new WaveformHistory(data.Rows, capacity);
+                historyInvalid = true;
+            }
+
+            if (historyInvalid)
+            {
+                history.Clear();
+                RebuildTimeBases(capacity / (double)sampleRate);
+            }
+
             var totalSamples = Math.Max(1, (int)(timebase * sampleRate));
             var samplesPerBin = (totalSamples + maxSamplesPerChannel - 1) / maxSamplesPerChannel;
             var columns = totalSamples / samplesPerBin;
@@ -155,15 +168,6 @@ namespace OpenEphys.Onix1.Design
                     channelHidden = new bool[data.Rows];
                     dragOriginal = new bool[data.Rows];
                 }
-            }
-
-            var budgetSamples = historyBytes / (data.Rows * sizeof(float));
-            var capacity = (int)Math.Max(1, Math.Min(int.MaxValue, budgetSamples));
-            if (history is null || history.Rows != data.Rows || history.Capacity != capacity)
-            {
-                history?.Dispose();
-                history = new WaveformHistory(data.Rows, capacity);
-                RebuildTimeBases(capacity / (double)sampleRate);
             }
 
             waveformMinDecimator.Process(data);

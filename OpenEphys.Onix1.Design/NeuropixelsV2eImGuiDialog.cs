@@ -142,8 +142,8 @@ namespace OpenEphys.Onix1.Design
             : base(probeName, log)
         {
             // NB: start the view at a 2 mm vertical box that extends 300 um below contact 0
-            selector.DefaultZoomWindowMicrons = 2000f;
-            selector.DefaultScrollYMicrons = 700f;
+            selector.DefaultZoomWindow = 2000f;
+            selector.DefaultScrollY = 700f;
 
             this.configureNode = configureNode ?? throw new ArgumentNullException(nameof(configureNode));
             isBeta = configureNode is ConfigureNeuropixelsV2BetaPsbDecoder;
