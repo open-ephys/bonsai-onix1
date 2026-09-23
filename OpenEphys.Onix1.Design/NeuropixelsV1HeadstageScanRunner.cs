@@ -57,7 +57,7 @@ namespace OpenEphys.Onix1.Design
                     target.SelectDecoder(headstage).Enable = false;
 
                 Exception scanException = null;
-                var resolved = new List<(NeuropixelsV1SurveyTarget Target, string PartNumber, ulong SerialNumber)>();
+                var resolved = new List<(NeuropixelsV1SurveyTarget Target, string PartNumber, ulong? SerialNumber)>();
 
                 const int ReadSize = 1200;  // Minimal for NeuropixeslV1eHeadstage
                 var pipelineSub = HeadstageConnection.Configure(headstage, driver, hubIndex, ReadSize, ex => scanException = ex);
@@ -68,7 +68,7 @@ namespace OpenEphys.Onix1.Design
                     {
                         var decoder = target.SelectDecoder(headstage);
                         var info = TryGetDeviceInfo<NeuropixelsV1PsbDecoderDeviceInfo>(decoder.DeviceName);
-                        if (info != null)
+                        if (info != null && info.ProbeSerialNumber.HasValue)
                             resolved.Add((target, info.ProbePartNumber, info.ProbeSerialNumber));
                     }
                 }

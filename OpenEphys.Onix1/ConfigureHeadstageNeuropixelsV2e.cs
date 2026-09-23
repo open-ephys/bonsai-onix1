@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Reactive.Disposables;
 using System.Threading;
 
@@ -147,7 +148,9 @@ namespace OpenEphys.Onix1
     class ConfigureHeadstageNeuropixelsV2eDS90UB9x : ConfigureDS90UB9x
     {
         readonly Version MinimumRevision = new(1, 0);
-        const uint HeadstageId = 8;
+        readonly uint[] HeadstageIds = { 8, 13 }; // e and elp variants, respectively
+        const int AnalogSwitchSettleTimeMilliseconds = 20;
+        const int AnalogSupplySettleTimeMilliseconds = 500;
 
         // Headstage-specific constants
         const byte GPO10SupplyMask = 1 << 3; // Used to turn on VDDA analog supply
@@ -192,11 +195,11 @@ namespace OpenEphys.Onix1
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID1, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias1, alias);
 
-            alias = NeuropixelsV2.ProbeAddress << 1;
+            alias = NeuropixelsV2.ProbeI2CAddress << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID2, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias2, alias);
 
-            alias = NeuropixelsV2.FlexEEPROMAddress << 1;
+            alias = NeuropixelsV2.FlexEepromI2CAddress << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID3, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias3, alias);
 
@@ -207,10 +210,10 @@ namespace OpenEphys.Onix1
             var serializer = new I2CRegisterContext(device, DS90UB9x.SER_ADDR);
             ShutdownProbes(serializer); // ensure probes are powered down and deselected before starting
             DeselectProbes(serializer);
-            EnableProbeSupply(serializer); // NB: can disturb rails enough that one should assume uninitentional Bno055 reset
 
-            // worst case Bno055 startup time
-            Thread.Sleep(400);
+            // NB: can disturb rails enough that one should assume uninitentional Bno055 reset. Bno055 has 400
+            // msec worst case startup time.
+            EnableProbeSupply(serializer); 
 
             // set I2C clock rate to ~400 kHz
             DS90UB9x.Set933I2CRate(device, 400e3);
@@ -224,10 +227,10 @@ namespace OpenEphys.Onix1
 
         void ValidateHeadstage(HeadstageEeprom metadata)
         {
-            if (metadata.Id != HeadstageId)
+            if (!HeadstageIds.Contains(metadata.Id))
             {
                 ContextHelper.Validate(ValidationLevel.Permissive, new InvalidOperationException(
-                    $"Expected a Headstage-NeuropixelsV2.0e but found '{metadata.Name}' (ID: {metadata.Id})."));
+                    $"Expected a Headstage-NeuropixelsV2.0e/lp but found '{metadata.Name}' (ID: {metadata.Id})."));
             }
 
             if (metadata.Revision < MinimumRevision)
@@ -250,19 +253,19 @@ namespace OpenEphys.Onix1
         internal static void SelectProbeA(I2CRegisterContext serializer)
         {
             serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, ProbeASelected);
-            Thread.Sleep(20);
+            Thread.Sleep(AnalogSwitchSettleTimeMilliseconds);
         }
 
         internal static void SelectProbeB(I2CRegisterContext serializer)
         {
             serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, ProbeBSelected);
-            Thread.Sleep(20);
+            Thread.Sleep(AnalogSwitchSettleTimeMilliseconds);
         }
 
         internal static void DeselectProbes(I2CRegisterContext serializer)
         {
             serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, NoProbeSelected);
-            Thread.Sleep(20);
+            Thread.Sleep(AnalogSwitchSettleTimeMilliseconds);
         }
 
         static void EnableProbeSupply(I2CRegisterContext serializer)
@@ -270,7 +273,7 @@ namespace OpenEphys.Onix1
             var gpo10Config = serializer.ReadByte((uint)DS90UB933SerializerI2CRegister.Gpio10);
             gpo10Config |= GPO10SupplyMask;
             serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, gpo10Config);
-            Thread.Sleep(20);
+            Thread.Sleep(AnalogSupplySettleTimeMilliseconds);
         }
 
         static void ResetProbes(I2CRegisterContext serializer)

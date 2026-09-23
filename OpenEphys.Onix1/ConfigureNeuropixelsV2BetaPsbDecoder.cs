@@ -98,23 +98,28 @@ namespace OpenEphys.Onix1
 
                 // read probe metadata
                 SelectProbe(serializer);
-                var probeMetadata = new NeuropixelsV2eBetaMetadata(serializer);
+                var probePresent = new NeuropixelsV2eBetaFlexEeprom(serializer).TryRead(out var probeMetadata);
+
+                if (enable && !probePresent)
+                {
+                    throw Neuropixels.ProbeNotFoundException(deviceName);
+                }
 
                 NeuropixelsV2ProbeGroup probeGroup = null;
                 NeuropixelsV2GainCorrection? gainCorrection = null;
                 var probeControl = new NeuropixelsV2eBetaRegisterContext(device, NeuropixelsV2Beta.ProbeAddress);
 
-                if (probeMetadata.ProbeSerialNumber != null)
+                if (probePresent)
                 {
-                    if (probeConfiguration.IsGroundReference())
-                    {
-                        throw new InvalidOperationException(
-                            "Neuropixels 2.0-Beta probes do not provide a Ground reference selection. " +
-                            "Please select a different reference.");
-                    }
-
                     if (enable)
                     {
+                        if (probeConfiguration.IsGroundReference())
+                        {
+                            throw new InvalidOperationException(
+                                "Neuropixels 2.0-Beta probes do not provide a Ground reference selection. " +
+                                "Please select a different reference.");
+                        }
+
                         // NB: the DS90UB9x supports multiple streams and we don't want to overwrite other
                         // streams' enable state. So, only enable, do not disable.
                         device.WriteRegister(DS90UB9x.ENABLE, 1u);
@@ -168,7 +173,7 @@ namespace OpenEphys.Onix1
                 var deviceInfo = new NeuropixelsV2BetaPsbDecoderDeviceInfo(
                     context, DeviceType, deviceAddress, streamIndex,
                     gainCorrection?.GainCorrectionFactor ?? 1.0, probeConfiguration, probeGroup,
-                    probeMetadata.ProbePartNumber, probeMetadata.ProbeSerialNumber);
+                    probeMetadata?.ProbePartNumber, probeMetadata?.ProbeSerialNumber);
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });
         }
