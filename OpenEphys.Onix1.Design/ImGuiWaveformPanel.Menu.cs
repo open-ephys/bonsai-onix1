@@ -68,11 +68,14 @@ namespace OpenEphys.Onix1.Design
             {
                 ImGui.BeginDisabled(paused); // NB: changing would cause buffer refresh and unpause
                 BandCombo();
-                ImGui.EndDisabled();
                 ImGui.SameLine();
                 var cmr = UseCommonMedianReference;
                 if (ImGui.Checkbox("Apply CMR", ref cmr))
+                {
                     UseCommonMedianReference = cmr;
+                    SelectionRevision++;
+                }
+                ImGui.EndDisabled();
                 EndMenuColumn();
             }
 
@@ -188,7 +191,10 @@ namespace OpenEphys.Onix1.Design
                     var isSelected = i == SelectedBand;
                     var (name, description) = Bands[i];
                     if (ImGui.Selectable($"{name}: {description}", isSelected) && !isSelected)
+                    {
                         SelectedBand = i;
+                        SelectionRevision++;
+                    }
                     if (isSelected)
                         ImGui.SetItemDefaultFocus();
                 }

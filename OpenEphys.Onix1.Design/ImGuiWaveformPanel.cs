@@ -84,10 +84,19 @@ namespace OpenEphys.Onix1.Design
         public string RangeLabel { get; set; }
 
         /// <summary>
-        /// Whether per-ADC common median referencing is applied to the displayed signal. Read by the
-        /// owner on every frame, so it takes effect immediately.
+        /// Whether per-ADC common median referencing is applied to the displayed signal.
         /// </summary>
-        public bool UseCommonMedianReference { get; set; }
+        public bool UseCommonMedianReference { get; private set; }
+
+        // TODO: this reconstructs the change notification the widgets already return. SelectedBand and
+        // UseCommonMedianReference are stored here but consumed by the owner, which therefore has to
+        // poll for them. Both belong on the probe-aware panel that the split will add, next to the
+        // widgets that set them, and this goes away with them.
+        /// <summary>
+        /// Increments whenever a control changes which signal the panel is being asked to display, so
+        /// that the owner can rebind its source without knowing which control changed.
+        /// </summary>
+        public int SelectionRevision { get; private set; }
 
 
         /// <summary>
@@ -103,6 +112,12 @@ namespace OpenEphys.Onix1.Design
         {
             if (bandSampleRate < 1)
                 throw new ArgumentOutOfRangeException(nameof(bandSampleRate));
+
+            // NB: the history converts sample offsets to time with a single factor, so it cannot hold
+            // two rates. A change of band that keeps the rate is left alone: what the history holds is
+            // what was displayed, seams included.
+            if (bandSampleRate != sampleRate)
+                history?.Clear();
 
             sampleRate = bandSampleRate;
             var totalSamples = Math.Max(1, (int)(timebase * sampleRate));

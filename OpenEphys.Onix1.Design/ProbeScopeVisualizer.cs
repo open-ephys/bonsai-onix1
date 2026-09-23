@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows.Forms;
@@ -18,26 +19,23 @@ namespace OpenEphys.Onix1.Design
 {
     /// <summary>
     /// One selectable band of a probe: a short display name, a description of its passband for the
-    /// dropdown, the band sample rate, how to turn the raw frame sequence into a sequence of microvolt
-    /// matrices, and optionally a filter that defines the band.
+    /// dropdown, and the rate at which that band produces samples. How the band is actually computed is
+    /// <see cref="ProbeScopeVisualizer{TFrame}.ProcessBand"/>, which only a concrete scope can answer.
     /// </summary>
-    internal sealed record ProbeScopeBand<TFrame>(
-        string Name,
-        string Description,
-        int SampleRate,
-        Func<IObservable<TFrame>, IObservable<Mat>> Scale, // NB: Convert to uV
-        Func<IObservable<Mat>, IObservable<Mat>> Filter = null // NB: optional filter that can be used to define the band
-        );
+    internal sealed record ProbeScopeBand(string Name, string Description, int SampleRate);
 
     /// <summary>
     /// Everything a <see cref="ProbeScopeVisualizer{TFrame}"/> needs from a resolved device: the probe
-    /// geometry, the ADC channel groups common median referencing operates within, and the bands
-    /// available for display.
+    /// geometry and the bands available for display.
     /// </summary>
-    internal sealed record ProbeScopeSource<TFrame>(
+    internal sealed record ProbeScopeSource(
         SingleProbeGroup ProbeGroup,
-        int[][] AdcChannelGroups,
-        IReadOnlyList<ProbeScopeBand<TFrame>> Bands);
+        IReadOnlyList<ProbeScopeBand> Bands);
+
+    /// <summary>
+    /// One block of band output on its way to the display, with the rate of the band that produced it.
+    /// </summary>
+    internal sealed record ProbeScopeSample(Mat Data, int SampleRate);
 
     /// <summary>
     /// Provides the pass-through node a <see cref="ProbeScopeVisualizer{TFrame}"/> opens on, and the
@@ -90,13 +88,19 @@ namespace OpenEphys.Onix1.Design
 
         ImPlotGLControl canvas;
         System.Windows.Forms.Timer renderTimer;
-        Subject<TFrame> frames;
-        IDisposable scaleSubscription;
+        BehaviorSubject<int> selection;
+        EventLoopScheduler scheduler;
 
         string deviceName;
         bool probePaneCollapsed;
-        ProbeScopeSource<TFrame> source;
-        int boundBand = -1;
+        ProbeScopeSource source;
+        int boundSelection;
+
+        /// <summary>
+        /// The panel this visualizer draws into, so that a concrete scope can read the controls that
+        /// belong to it.
+        /// </summary>
+        private protected ImGuiWaveformPanel Waveform => waveform;
 
         /// <summary>
         /// Returns the device name declared on <paramref name="upstreamOperator"/>, or null if
@@ -108,7 +112,17 @@ namespace OpenEphys.Onix1.Design
         /// Builds the geometry and bands for a resolved device. Throw to report a device this
         /// scope cannot display.
         /// </summary>
-        private protected abstract ProbeScopeSource<TFrame> CreateSource(DeviceInfo info);
+        private protected abstract ProbeScopeSource CreateSource(DeviceInfo info);
+
+        /// <summary>
+        /// Builds the sequence displayed for the band at <paramref name="band"/> in the list returned by
+        /// <see cref="CreateSource"/>, in the unit named by <see cref="RangeLabel"/>.
+        /// </summary>
+        /// <remarks>
+        /// Called again whenever <see cref="ImGuiWaveformPanel.SelectionRevision"/> moves, so an
+        /// implementation reads whatever panel controls it owns here rather than closing over them.
+        /// </remarks>
+        private protected abstract IObservable<Mat> ProcessBand(int band, IObservable<TFrame> frames);
 
         /// <summary>
         /// Unit the bands produce, shown beside the amplitude range control.
@@ -128,7 +142,8 @@ namespace OpenEphys.Onix1.Design
             selector.ShowCoordinateReadout = false;
             selector.DefaultZoomWindowMicrons = null;
 
-            frames = new Subject<TFrame>();
+            selection = new BehaviorSubject<int>(0);
+            scheduler = new EventLoopScheduler();
 
             canvas = new ImPlotGLControl
             {
@@ -202,41 +217,60 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <inheritdoc/>
-        public override void Show(object value)
+        public override IObservable<object> Visualize(IObservable<IObservable<object>> source, IServiceProvider provider)
         {
-            if (source is null)
-                Initialize();
-
-            frames.OnNext((TFrame)value);
+            return base.Visualize(source.Select(BindBands), provider);
         }
 
-        void Initialize()
+        IObservable<object> BindBands(IObservable<object> frames)
+        {
+            // NB: BufferedVisualizer forwards to Show under the lock its producer takes to append,
+            // so without this hop the acquisition thread waits on the UI thread once a tick. It must
+            // be one ordered thread: the band filters carry state across blocks.
+            return frames
+                .Cast<TFrame>()
+                .ObserveOn(scheduler)
+                // NB: GetDevice throws until the configuration operator has registered, which
+                // nothing orders before the visualizer subscribes. A frame arriving proves it has.
+                .Publish(shared => shared
+                    .Take(1)
+                    .Select(_ => ResolveSource())
+                    .SelectMany(probe => Observable.Return<object>(probe)
+                        .Concat(selection.Select(_ => BandOutput(probe, shared)).Switch())));
+        }
+
+        ProbeScopeSource ResolveSource()
         {
             DeviceInfo deviceInfo = null;
             using (DeviceManager.GetDevice(deviceName).Subscribe(info => deviceInfo = info)) { }
-            source = CreateSource(deviceInfo);
-
-            selector.Refresh(source.ProbeGroup);
-            waveform.Bands = source.Bands.Select(b => (b.Name, b.Description)).ToList();
-            BindSelectedBand();
+            return CreateSource(deviceInfo);
         }
 
-        void BindSelectedBand()
+        IObservable<object> BandOutput(ProbeScopeSource probe, IObservable<TFrame> frames)
         {
-            scaleSubscription?.Dispose();
-            waveform.ResetBuffers();
-            boundBand = waveform.SelectedBand;
+            var band = waveform.SelectedBand;
+            var sampleRate = probe.Bands[band].SampleRate;
+            return ProcessBand(band, frames)
+                .Select(data => (object)new ProbeScopeSample(data, sampleRate));
+        }
 
-            var band = source.Bands[boundBand];
-            var groups = source.AdcChannelGroups;
+        /// <inheritdoc/>
+        /// <remarks>
+        /// The resolved source arrives through the same sequence as the samples so that it is
+        /// applied on the UI thread, in order, ahead of anything that depends on it.
+        /// </remarks>
+        public override void Show(object value)
+        {
+            if (value is ProbeScopeSource probe)
+            {
+                source = probe;
+                selector.Refresh(probe.ProbeGroup);
+                waveform.Bands = probe.Bands.Select(b => (b.Name, b.Description)).ToList();
+                return;
+            }
 
-            var scaled = band.Scale(frames)
-                .Select(data => waveform.UseCommonMedianReference ? Neuropixels.ApplyCmrF32(data, groups) : data);
-
-            if (band.Filter is not null)
-                scaled = band.Filter(scaled);
-
-            scaleSubscription = scaled.Subscribe(data => waveform.Update(data, band.SampleRate));
+            var sample = (ProbeScopeSample)value;
+            waveform.Update(sample.Data, sample.SampleRate);
         }
 
         void RenderFrame(object sender, EventArgs e)
@@ -281,8 +315,11 @@ namespace OpenEphys.Onix1.Design
 
             ImGui.End();
 
-            if (source is not null && waveform.SelectedBand != boundBand)
-                BindSelectedBand();
+            if (source is not null && waveform.SelectionRevision != boundSelection)
+            {
+                boundSelection = waveform.SelectionRevision;
+                selection.OnNext(boundSelection);
+            }
         }
 
         /// <inheritdoc/>
@@ -290,18 +327,18 @@ namespace OpenEphys.Onix1.Design
         {
             renderTimer?.Stop();
             renderTimer?.Dispose();
-            scaleSubscription?.Dispose();
-            frames?.Dispose();
+            selection?.Dispose();
+            scheduler?.Dispose();
             waveform?.Dispose();
             canvas?.Dispose();
 
             renderTimer = null;
-            scaleSubscription = null;
-            frames = null;
+            selection = null;
+            scheduler = null;
             waveform = null;
             canvas = null;
             source = null;
-            boundBand = -1;
+            boundSelection = 0;
         }
     }
 }
