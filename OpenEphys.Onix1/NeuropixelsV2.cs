@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1
         public const int AdcBits = 12;
         public const int AdcMidpoint = 1 << (AdcBits - 1);
         public const int BaseBitsPerChannel = 4;
-        public const int ElectrodePerShank = 1280;
+        public const int ElectrodesPerShank = 1280;
 
         public const int FramesPerSuperFrame = 16;
         public const int AdcsPerProbe = 24;
@@ -55,21 +55,24 @@ namespace OpenEphys.Onix1
         public const uint PROBE_ID = 0x1E;
         public const uint SOFT_RESET = 0x1F;
 
-        internal static BitArray[] GenerateShankBits(NeuropixelsV2ProbeConfiguration probe, NeuropixelsV2eProbeGroup probeGroup)
+        internal static BitArray[] GenerateShankBits(NeuropixelsV2ProbeConfiguration probe, NeuropixelsV2ProbeGroup probeGroup)
         {
-            BitArray[] shankBits = probe.CreateShankBits(probe.Reference);
+            BitArray[] shankBits = probe.CreateShankBits(probeGroup.ShankCount);
 
-            const int PixelOffset = (ElectrodePerShank - 1) / 2;
+            const int PixelOffset = (ElectrodesPerShank - 1) / 2;
             const int ReferencePixelOffset = 3;
-            foreach (var c in probeGroup.ChannelMap)
+            foreach (var kvp in probeGroup.ChannelMap)
             {
-                var baseIndex = c.IntraShankElectrodeIndex % 2;
-                var pixelIndex = c.IntraShankElectrodeIndex / 2;
+                int contactIdx = kvp.Value;
+                int shank = probeGroup.GetShank(contactIdx);
+                int intraShankIdx = probeGroup.GetIntraShankElectrodeIndex(contactIdx);
+                var baseIndex = intraShankIdx % 2;
+                var pixelIndex = intraShankIdx / 2;
                 pixelIndex = baseIndex == 0
                     ? pixelIndex + PixelOffset + 2 * ReferencePixelOffset
                     : PixelOffset - pixelIndex + ReferencePixelOffset;
 
-                shankBits[c.Shank][pixelIndex] = true;
+                shankBits[shank][pixelIndex] = true;
             }
 
             return shankBits;
@@ -83,7 +86,7 @@ namespace OpenEphys.Onix1
                 new(ChannelCount * BaseBitsPerChannel / 2, false)
             };
 
-            var referenceBit = probe.GetReferenceBit(probe.Reference);
+            var referenceBit = probe.GetReferenceBit();
 
             for (int i = 0; i < ChannelCount; i++)
             {
@@ -112,7 +115,7 @@ namespace OpenEphys.Onix1
             return groups;
         }
 
-        internal class NameConverter : DeviceNameConverter
+    internal class NameConverter : DeviceNameConverter
         {
             public NameConverter()
                 : base(typeof(NeuropixelsV2))
@@ -125,6 +128,26 @@ namespace OpenEphys.Onix1
     enum NeuropixelsV2Status : uint
     {
         SR_OK = 1 << 7 // Indicates the SR chain comparison is OK
+    }
+
+    /// <summary>
+    /// Specifies which reference a Neuropixels 2.0 probe's electrodes are referred to.
+    /// </summary>
+    public enum NeuropixelsV2ReferenceSource
+    {
+        /// <summary>
+        /// Specifies that the External reference will be used.
+        /// </summary>
+        External,
+        /// <summary>
+        /// Specifies that the tip reference will be used. The shanks contributing to it are given by
+        /// <see cref="NeuropixelsV2ProbeConfiguration.TipReferenceShanks"/>.
+        /// </summary>
+        Tip,
+        /// <summary>
+        /// Specifies that the Ground reference will be used.
+        /// </summary>
+        Ground
     }
 }
 

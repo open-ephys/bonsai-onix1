@@ -1,0 +1,71 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Windows.Forms;
+using Hexa.NET.ImGui;
+
+namespace OpenEphys.Onix1.Design
+{
+    // Quick-load default geometry dropdown and gain calibration file UI. Probe interface file I/O,
+    // pinned-state persistence, and the unsaved-changes close prompt are generic and live in
+    // ImGuiNeuropixelsDialog.
+    internal partial class NeuropixelsV2eImGuiDialog
+    {
+        static readonly IReadOnlyList<DefaultGeometryOption> SingleAndQuadShankOptions = new[]
+        {
+            new DefaultGeometryOption("NP2003.json", "NP2003 (1-shank)"),
+            new DefaultGeometryOption("NP2013.json", "NP2013 (4-shank)"),
+        };
+
+        // Beta probes are quad-shank-only hardware; there is no alternate default to offer.
+        protected override IReadOnlyList<DefaultGeometryOption> DefaultGeometryOptions =>
+            isBeta ? Array.Empty<DefaultGeometryOption>() : SingleAndQuadShankOptions;
+
+        protected override void DrawCalibrationFileSection()
+        {
+            float fileTargetW = ComputeFileRowInputWidth();
+
+            ImGui.Text("Gain Calibration File");
+            ImGui.Spacing();
+            string gainCal = configureNode.ProbeConfiguration.GainCalibrationFileName ?? "";
+            ImGuiControls.WriteString(gainCalBuf, gainCal);
+            ImGui.SetNextItemWidth(fileTargetW);
+            unsafe
+            {
+                fixed (byte* p = gainCalBuf)
+                    if (ImGui.InputText("##gaincal", p, (nuint)gainCalBuf.Length))
+                        configureNode.ProbeConfiguration.GainCalibrationFileName = ImGuiControls.ReadBuffer(gainCalBuf);
+            }
+
+            if (!string.IsNullOrEmpty(configureNode.ProbeConfiguration.GainCalibrationFileName))
+            {
+                ImGuiControls.Tooltip(configureNode.ProbeConfiguration.GainCalibrationFileName);
+            }
+
+            ImGui.SameLine();
+
+            if (ImGui.Button("Open...##gaincal"))
+            {
+                using var ofd = new OpenFileDialog
+                {
+                    Title = "Select Gain Calibration File",
+                    Filter = "Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv|All files (*.*)|*.*"
+                };
+
+                if (scan.SerialNumber.HasValue)
+                {
+                    var pattern = $"{scan.SerialNumber}*_gainCalValues.csv";
+                    ofd.Filter = $"This probe's files ({pattern})|{pattern}|{ofd.Filter}";
+                    ofd.FilterIndex = 1;
+                }
+
+                if (!string.IsNullOrEmpty(gainCal) && File.Exists(gainCal))
+                    ofd.InitialDirectory = Path.GetDirectoryName(gainCal);
+
+                if (ofd.ShowDialog() == DialogResult.OK)
+                    configureNode.ProbeConfiguration.GainCalibrationFileName = ofd.FileName;
+            }
+            ImGuiControls.Tooltip("Open a file browser to choose the gain calibration file for this probe. Required to acquire data from the probe and to perform an electrode survey.");
+        }
+    }
+}

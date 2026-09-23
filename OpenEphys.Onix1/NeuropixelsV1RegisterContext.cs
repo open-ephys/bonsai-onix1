@@ -19,7 +19,7 @@ namespace OpenEphys.Onix1
         readonly BitArray[] BaseConfigs;
 
         public NeuropixelsV1RegisterContext(DeviceContext deviceContext, uint i2cAddress, ulong probeSerialNumber,
-            NeuropixelsV1ProbeConfiguration probeConfiguration, NeuropixelsV1eProbeGroup probeGroup)
+            NeuropixelsV1ProbeConfiguration probeConfiguration, NeuropixelsV1ProbeGroup probeGroup)
             : base(deviceContext, i2cAddress)
         {
             NeuropixelsV1AdcCalibration? adcCalibration = null;
@@ -42,7 +42,6 @@ namespace OpenEphys.Onix1
                     ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
                         $"The probe serial number ({probeSerialNumber}) does not " +
                         $"match the ADC calibration file serial number ({adcCalibration.Value.SerialNumber})."));
-                    adcCalibration = null;
                 }
             }
 
@@ -67,7 +66,6 @@ namespace OpenEphys.Onix1
                     ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
                         $"The probe serial number ({probeSerialNumber}) does not " +
                         $"match the gain calibration file serial number ({gainCorrection.Value.SerialNumber})."));
-                    gainCorrection = null;
                 }
             }
 
@@ -100,7 +98,7 @@ namespace OpenEphys.Onix1
         public void WriteConfiguration()
         {
             // shank configuration
-            // NB: no read check because of ASIC bug that is documented in IMEC-API comments
+            // NB: no read check, because of an ASIC bug affecting this register
             var shankBytes = BitHelper.ToBitReversedBytes(ShankConfig);
 
             WriteByte(NeuropixelsV1.SR_LENGTH1, (uint)shankBytes.Length % 0x100);
