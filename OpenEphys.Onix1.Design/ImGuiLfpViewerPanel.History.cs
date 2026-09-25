@@ -4,7 +4,7 @@ using System;
 
 namespace OpenEphys.Onix1.Design
 {
-    partial class ImGuiWaveformPanel
+    partial class ImGuiLfpViewerPanel
     {
         Mat pausedWaveformMin;
         Mat pausedWaveformMax;
@@ -18,12 +18,6 @@ namespace OpenEphys.Onix1.Design
         Mat windowScratch;
         Decimator pannedWaveformMinDecimator;
         Decimator pannedWaveformMaxDecimator;
-
-        /// <summary>
-        /// Whether the display is frozen. Everything else about the paused view hangs off this, including
-        /// whether history is still being written.
-        /// </summary>
-        bool Paused => pauseSample >= 0;
 
         /// <summary>
         /// Whether the paused view has been moved off the samples that were on screen when it was paused.
@@ -41,12 +35,6 @@ namespace OpenEphys.Onix1.Design
         /// moved a whole stale segment back.
         /// </summary>
         int PannedCursorColumn => (int)((pauseSample - viewStart) / waveformMinDecimator.DownsampleFactor);
-
-        void TogglePause()
-        {
-            if (Paused) Resume();
-            else Pause();
-        }
 
         /// <summary>
         /// Freezes the display on what is drawn now.

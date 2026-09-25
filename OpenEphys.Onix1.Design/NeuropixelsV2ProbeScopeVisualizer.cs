@@ -54,8 +54,9 @@ namespace OpenEphys.Onix1.Design
             return new(v2.ProbeGroup, bands.Select(b => b.Band).ToArray());
         }
 
-        private protected override IObservable<Mat> ProcessBand(int band, IObservable<NeuropixelsV2DataFrame> frames) =>
-            transforms[band](frames, Waveform.UseCommonMedianReference);
+        private protected override IObservable<Mat> ProcessBand(
+            int band, bool commonMedianReference, IObservable<NeuropixelsV2DataFrame> frames) =>
+            transforms[band](frames, commonMedianReference);
     }
 
     /// <summary>

@@ -81,26 +81,21 @@ namespace OpenEphys.Onix1.Design
     {
         const float ProbePaneWidth = 260f;
         const float CollapsedPaneWidth = 28f;
+        const float StripTopMargin = 4f;
+        const float ProbeHeaderGap = 4f;
 
         readonly ImGuiProbeSelector selector = new();
-
-        ImGuiWaveformPanel waveform;
+        ImGuiLfpViewerPanel waveform;
+        ImGuiProbeScopeControlStrip strip;
 
         ImPlotGLControl canvas;
         System.Windows.Forms.Timer renderTimer;
-        BehaviorSubject<int> selection;
         EventLoopScheduler scheduler;
 
         string deviceName;
         bool probePaneCollapsed;
         ProbeScopeSource source;
-        int boundSelection;
-
-        /// <summary>
-        /// The panel this visualizer draws into, so that a concrete scope can read the controls that
-        /// belong to it.
-        /// </summary>
-        private protected ImGuiWaveformPanel Waveform => waveform;
+        float stripHeight;
 
         /// <summary>
         /// Returns the device name declared on <paramref name="upstreamOperator"/>, or null if
@@ -118,11 +113,14 @@ namespace OpenEphys.Onix1.Design
         /// Builds the sequence displayed for the band at <paramref name="band"/> in the list returned by
         /// <see cref="CreateSource"/>, in the unit named by <see cref="RangeLabel"/>.
         /// </summary>
-        /// <remarks>
-        /// Called again whenever <see cref="ImGuiWaveformPanel.SelectionRevision"/> moves, so an
-        /// implementation reads whatever panel controls it owns here rather than closing over them.
-        /// </remarks>
-        private protected abstract IObservable<Mat> ProcessBand(int band, IObservable<TFrame> frames);
+        /// <param name="band">Index into the band list returned by <see cref="CreateSource"/>.</param>
+        /// <param name="commonMedianReference">
+        /// Whether to reference the signal against the median of the channels it shares a converter
+        /// with, which only a concrete scope knows how to group.
+        /// </param>
+        /// <param name="frames">The device's frame sequence.</param>
+        private protected abstract IObservable<Mat> ProcessBand(
+            int band, bool commonMedianReference, IObservable<TFrame> frames);
 
         /// <summary>
         /// Unit the bands produce, shown beside the amplitude range control.
@@ -142,7 +140,8 @@ namespace OpenEphys.Onix1.Design
             selector.ShowCoordinateReadout = false;
             selector.DefaultZoomWindowFraction = 1f;
 
-            selection = new BehaviorSubject<int>(0);
+            strip = new ImGuiProbeScopeControlStrip();
+
             scheduler = new EventLoopScheduler();
 
             canvas = new ImPlotGLControl
@@ -236,7 +235,12 @@ namespace OpenEphys.Onix1.Design
                     .Take(1)
                     .Select(_ => ResolveSource())
                     .SelectMany(probe => Observable.Return<object>(probe)
-                        .Concat(selection.Select(_ => BandOutput(probe, shared)).Switch())));
+                        .Concat(strip.BandSelected
+                            .Select(band => BandOutput(probe, band, shared))
+                            .Switch()
+                        )
+                    )
+                );
         }
 
         ProbeScopeSource ResolveSource()
@@ -246,13 +250,10 @@ namespace OpenEphys.Onix1.Design
             return CreateSource(deviceInfo);
         }
 
-        IObservable<object> BandOutput(ProbeScopeSource probe, IObservable<TFrame> frames)
-        {
-            var band = waveform.SelectedBand;
-            var sampleRate = probe.Bands[band].SampleRate;
-            return ProcessBand(band, frames)
-                .Select(data => (object)new ProbeScopeSample(data, sampleRate));
-        }
+        IObservable<object> BandOutput(
+            ProbeScopeSource probe, BandSelection band, IObservable<TFrame> frames) =>
+            ProcessBand(band.Band, band.CommonMedianReference, frames)
+                .Select(data => (object)new ProbeScopeSample(data, probe.Bands[band.Band].SampleRate));
 
         /// <inheritdoc/>
         /// <remarks>
@@ -265,7 +266,7 @@ namespace OpenEphys.Onix1.Design
             {
                 source = probe;
                 selector.Refresh(probe.ProbeGroup);
-                waveform.Bands = probe.Bands.Select(b => (b.Name, b.Description)).ToList();
+                strip.Bands = probe.Bands.Select(b => (b.Name, b.Description)).ToList();
                 return;
             }
 
@@ -285,28 +286,68 @@ namespace OpenEphys.Onix1.Design
                 ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
 
             var availX = ImGui.GetContentRegionAvail().X;
-            var availY = ImGui.GetContentRegionAvail().Y;
+
+            // NB: measured from the last frame rather than derived from the widgets, which are the
+            // strip's business and change as columns are added.
+            if (stripHeight <= 0)
+                stripHeight = ImGui.GetTextLineHeight() + ImGui.GetFrameHeight() * 2;
+            var availY = ImGui.GetContentRegionAvail().Y - stripHeight;
             var probeWidth = probePaneCollapsed ? CollapsedPaneWidth : ProbePaneWidth;
             var waveWidth = Math.Max(200f, availX - probeWidth - ImGui.GetStyle().ItemSpacing.X);
             var probeOrigin = ImGui.GetCursorScreenPos();
 
-            ImGui.BeginChild("##probePane", new Vector2(probeWidth, -1), ImGuiChildFlags.Borders,
+            // NB: the band is as tall as the collapse button, and the panel is told to match it, so
+            // the probe view and the plot start and end on the same lines without either asking the
+            // other what it reserved.
+            waveform.HeaderHeight = ImGui.GetFrameHeight() + ProbeHeaderGap;
+
+            // NB: no vertical padding on either pane, so both start at their own top edge and the
+            // two frames land on the same lines.
+            var panePadding = ImGui.GetStyle().WindowPadding;
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(panePadding.X, 0));
+
+            ImGui.BeginChild("##probePane", new Vector2(probeWidth, availY),
                 ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
+
+            var probeViewTop = ImGui.GetCursorScreenPos().Y + waveform.HeaderHeight;
             if (ImGui.Button(probePaneCollapsed ? "»" : "«"))
                 probePaneCollapsed = !probePaneCollapsed;
+
             if (!probePaneCollapsed)
             {
+                // NB: drawn rather than laid out, as the plot's time labels are, so it sits on the
+                // band's bottom edge instead of being baseline-aligned to the button beside it.
+                var model = source?.ProbeGroup?.Probe?.Annotations?.ModelName;
+                if (!string.IsNullOrEmpty(model))
+                {
+                    var nameX = ImGui.GetItemRectMax().X + ImGui.GetStyle().ItemSpacing.X;
+                    ImGui.GetWindowDrawList().AddText(
+                        new Vector2(nameX, probeViewTop - ImGui.GetTextLineHeight()),
+                        ImGui.GetColorU32(ImGuiCol.Text), model);
+                }
+
+                ImGui.SetCursorScreenPos(new Vector2(ImGui.GetCursorScreenPos().X, probeViewTop));
                 var probeHeight = ImGui.GetContentRegionAvail().Y;
                 selector.UpdateLayout(probeHeight, ImGui.GetContentRegionAvail().X);
                 selector.DrawZoomedView(probeHeight, selectionEnabled: false);
+
+                DrawProbeFrame(ImGui.GetWindowDrawList(), probeOrigin.X, probeWidth,
+                    probeViewTop, probeOrigin.Y + availY);
             }
             ImGui.EndChild();
 
             ImGui.SameLine();
 
-            ImGui.BeginChild("##wavePane", new Vector2(waveWidth, -1));
+            ImGui.BeginChild("##wavePane", new Vector2(waveWidth, availY));
             waveform.Draw();
             ImGui.EndChild();
+
+            ImGui.PopStyleVar();
+
+            var stripTop = ImGui.GetCursorScreenPos().Y;
+            ImGui.SetCursorPosY(ImGui.GetCursorPosY() + StripTopMargin);
+            strip.Draw(waveform);
+            stripHeight = ImGui.GetCursorScreenPos().Y - stripTop;
 
             // Scroll and zoom are handled from the root window, bounded to the probe pane so the
             // wheel still scrolls the channel list on the waveform side.
@@ -314,12 +355,21 @@ namespace OpenEphys.Onix1.Design
                 selector.HandleScrollInput(probeOrigin.Y + availY, probeOrigin.X + probeWidth);
 
             ImGui.End();
+        }
 
-            if (source is not null && waveform.SelectionRevision != boundSelection)
-            {
-                boundSelection = waveform.SelectionRevision;
-                selection.OnNext(boundSelection);
-            }
+        // NB: the same rectangle the plot draws for itself, so the two panes read as one instrument.
+        static void DrawProbeFrame(ImDrawListPtr draw, float left, float width, float top, float bottom)
+        {
+            var l = MathF.Floor(left);
+            var r = MathF.Floor(left + width);
+            var t = MathF.Floor(top);
+            var b = MathF.Floor(bottom);
+            var w = ImGuiLfpViewerPanel.FrameWeight;
+            var color = ImGuiLfpViewerPanel.FrameColor;
+            draw.AddRectFilled(new Vector2(l, t), new Vector2(r, t + w), color);
+            draw.AddRectFilled(new Vector2(l, b - w), new Vector2(r, b), color);
+            draw.AddRectFilled(new Vector2(l, t), new Vector2(l + w, b), color);
+            draw.AddRectFilled(new Vector2(r - w, t), new Vector2(r, b), color);
         }
 
         /// <inheritdoc/>
@@ -327,18 +377,16 @@ namespace OpenEphys.Onix1.Design
         {
             renderTimer?.Stop();
             renderTimer?.Dispose();
-            selection?.Dispose();
             scheduler?.Dispose();
             waveform?.Dispose();
             canvas?.Dispose();
 
             renderTimer = null;
-            selection = null;
+            strip = null;
             scheduler = null;
             waveform = null;
             canvas = null;
             source = null;
-            boundSelection = 0;
         }
     }
 }

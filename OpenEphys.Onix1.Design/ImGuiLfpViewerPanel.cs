@@ -14,16 +14,16 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The owner supplies <see cref="Bands"/> once and then calls <see cref="Update"/> with the matrix and
-    /// sample rate of whichever band <see cref="SelectedBand"/> currently names. A probe offering a single
-    /// band renders the selector disabled.
+    /// The owner calls <see cref="Update"/> with each block and its sample rate, and <see cref="Draw"/>
+    /// once a frame. Everything the display can be told is a property, so a control strip is one way to
+    /// drive it and not a part of it.
     /// </para>
     /// <para>
     /// Ported from <c>Bonsai.Ephys.Design.WaveformVisualizer</c>, with the window and control ownership
     /// removed so it draws into whatever region the caller has opened.
     /// </para>
     /// </remarks>
-    internal sealed partial class ImGuiWaveformPanel : IDisposable
+    internal sealed partial class ImGuiLfpViewerPanel : IDisposable
     {
         readonly long historyBytes;
 
@@ -36,7 +36,7 @@ namespace OpenEphys.Onix1.Design
         /// <paramref name="historyBytes"/> is less than or equal to zero, leaving no history to move a
         /// paused view through.
         /// </exception>
-        public ImGuiWaveformPanel(long historyBytes)
+        public ImGuiLfpViewerPanel(long historyBytes)
         {
             if (historyBytes <= 0)
                 throw new ArgumentOutOfRangeException(nameof(historyBytes));
@@ -67,44 +67,68 @@ namespace OpenEphys.Onix1.Design
         double rangeAmplitude = 500;
 
         /// <summary>
-        /// The bands this probe offers, in display order, as a short name and a description of the
-        /// passband. The closed combo shows the name; the open list shows both. The owner sets this once.
-        /// </summary>
-        public IReadOnlyList<(string Name, string Description)> Bands { get; set; } =
-            Array.Empty<(string, string)>();
-
-        /// <summary>
-        /// Index into <see cref="Bands"/> of the band currently being drawn.
-        /// </summary>
-        public int SelectedBand { get; private set; }
-
-        /// <summary>
         /// Unit shown beside the amplitude range control.
         /// </summary>
         public string RangeLabel { get; set; }
 
         /// <summary>
-        /// Whether per-ADC common median referencing is applied to the displayed signal.
+        /// Height of the band above the plot, which carries the time labels. Zero takes the height of
+        /// one line of text.
         /// </summary>
-        public bool UseCommonMedianReference { get; private set; }
-
-        // TODO: this reconstructs the change notification the widgets already return. SelectedBand and
-        // UseCommonMedianReference are stored here but consumed by the owner, which therefore has to
-        // poll for them. Both belong on the probe-aware panel that the split will add, next to the
-        // widgets that set them, and this goes away with them.
-        /// <summary>
-        /// Increments whenever a control changes which signal the panel is being asked to display, so
-        /// that the owner can rebind its source without knowing which control changed.
-        /// </summary>
-        public int SelectionRevision { get; private set; }
-
+        /// <remarks>
+        /// Settable so that an owner placing something beside the plot can line the two up. The labels
+        /// sit at the bottom of the band whatever its height, leaving the top of it free.
+        /// </remarks>
+        public float HeaderHeight { get; set; }
 
         /// <summary>
-        /// Supplies one block of samples for the selected band. Rebuilds the decimation buffers whenever the
-        /// channel count, element depth or bin width no longer matches the input.
+        /// Seconds of data spanned by the display.
+        /// </summary>
+        public double Timebase
+        {
+            get => timebase;
+            set => timebase = value;
+        }
+
+        /// <summary>
+        /// Height in pixels of one channel's row.
+        /// </summary>
+        public int ChannelHeight
+        {
+            get => channelHeight;
+            set => channelHeight = Math.Max(MinChannelHeight, value);
+        }
+
+        /// <summary>
+        /// Amplitude spanned by one channel's row, in the unit named by <see cref="RangeLabel"/>.
+        /// </summary>
+        public double RangeAmplitude
+        {
+            get => rangeAmplitude;
+            set => rangeAmplitude = Math.Max(1, value);
+        }
+
+        /// <summary>
+        /// Whether the display is frozen. Setting it takes or releases the paused view, which is what
+        /// the history behind the display can then be moved through.
+        /// </summary>
+        public bool Paused
+        {
+            get => pauseSample >= 0;
+            set
+            {
+                if (value == Paused) return;
+                if (value) Pause();
+                else Resume();
+            }
+        }
+
+        /// <summary>
+        /// Supplies one block of samples. Rebuilds the decimation buffers whenever the channel count,
+        /// element depth or bin width no longer matches the input.
         /// </summary>
         /// <param name="data">Channel-by-sample matrix, one row per channel.</param>
-        /// <param name="bandSampleRate">Sample rate of the selected band, in Hz.</param>
+        /// <param name="bandSampleRate">Sample rate of the incoming data, in Hz.</param>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="bandSampleRate"/> is less than one, which leaves timebase without a normalizing unit.
         /// </exception>
@@ -178,17 +202,26 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// Draws the controls and the waveform stack. Called once per frame.
+        /// Draws the waveform stack into the region the caller has opened. Called once per frame.
         /// </summary>
         public void Draw()
         {
-            MenuWidgets();
+            // NB: ahead of the envelope, which resuming disposes. Handling it with the other
+            // gestures would free the matrices the plot is about to read.
+            if (ImGui.IsKeyPressed(ImGuiKey.Space))
+                Paused = !Paused;
+
             if (timeRange is not null)
             {
+                // NB: no vertical padding, so the plot frame lands on the region's own edges and can
+                // be lined up with whatever the owner puts beside it.
+                var padding = ImGui.GetStyle().WindowPadding;
+                ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(padding.X, 0));
                 ImGui.BeginChild("##data");
                 var (waveformMin, waveformMax) = DisplayEnvelope();
                 WaveformPlot(waveformMin, waveformMax);
                 ImGui.EndChild();
+                ImGui.PopStyleVar();
             }
         }
 

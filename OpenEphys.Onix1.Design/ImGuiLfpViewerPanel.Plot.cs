@@ -7,7 +7,7 @@ using OpenCV.Net;
 
 namespace OpenEphys.Onix1.Design
 {
-    partial class ImGuiWaveformPanel
+    partial class ImGuiLfpViewerPanel
     {
         const int TimeDivisions = 10;
 
@@ -16,6 +16,13 @@ namespace OpenEphys.Onix1.Design
         const float SweepCursorWeight = 1;
         const uint ColGraticule = ImGuiPalette.Grey0x88;
         const float GraticuleWeight = 1;
+
+        /// <summary>
+        /// Color and weight of the frame around the plot, so that a pane set beside it can be outlined
+        /// to match rather than with ImGui's fainter default border.
+        /// </summary>
+        public const uint FrameColor = ColGraticule;
+        public const float FrameWeight = GraticuleWeight;
         static readonly uint ColLabelHover = ImGuiPalette.WithAlpha(ImGuiPalette.White, 0x25);
 
         readonly string[] divisionLabels = new string[TimeDivisions + 1];
@@ -47,9 +54,19 @@ namespace OpenEphys.Onix1.Design
             var plotFlags = ImPlotFlags.CanvasOnly | ImPlotFlags.NoFrame | ImPlotFlags.NoInputs;
             var axesFlags = ImPlotAxisFlags.NoHighlight | ImPlotAxisFlags.NoDecorations;
             var tableFlags = ImGuiTableFlags.NoSavedSettings | ImGuiTableFlags.ScrollY;
-            var tableHeight = -(ImGui.GetTextLineHeight() + ImGui.GetStyle().ItemSpacing.Y);
+
+            // NB: the time labels take a band above the plot, and the drag that pans a paused view
+            // goes with them, leaving the bottom edge to whatever the owner puts there. They sit at
+            // the bottom of the band, next to the plot they label, so a taller band leaves room above
+            // them rather than pushing them away from it.
+            var textHeight = ImGui.GetTextLineHeight();
+            var headerHeight = Math.Max(textHeight, HeaderHeight);
+            var labelY = ImGui.GetCursorScreenPos().Y + headerHeight - textHeight;
+            ImGui.SetCursorPosY(ImGui.GetCursorPosY() + headerHeight);
+
             var plotTop = ImGui.GetCursorScreenPos().Y;
-            var plotBottom = plotTop + ImGui.GetContentRegionAvail().Y + tableHeight;
+            var tableHeight = ImGui.GetContentRegionAvail().Y;
+            var plotBottom = plotTop + tableHeight;
             var plotX = 0f;
             var plotWidth = 0f;
 
@@ -93,8 +110,8 @@ namespace OpenEphys.Onix1.Design
 
             if (plotWidth > 0)
             {
-                DrawGraticules(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom);
-                HandlePanInput(plotX, plotWidth, plotBottom + ImGui.GetStyle().ItemSpacing.Y);
+                DrawGraticules(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom, labelY);
+                HandlePanInput(plotX, plotWidth, labelY);
             }
         }
 
@@ -253,12 +270,11 @@ namespace OpenEphys.Onix1.Design
             draw.AddRectFilled(new Vector2(r - w, t), new Vector2(r, b), ColGraticule);
         }
 
-        void DrawGraticules(ImDrawListPtr draw, float left, float width, float top, float bottom)
+        void DrawGraticules(ImDrawListPtr draw, float left, float width, float top, float bottom, float labelY)
         {
             var t = MathF.Floor(top) + GraticuleWeight;
             var b = MathF.Floor(bottom) - GraticuleWeight;
             var textColor = ImGui.GetColorU32(ImGuiCol.Text);
-            var labelY = bottom + ImGui.GetStyle().ItemSpacing.Y;
 
             if (labeledTimebase != timebase)
             {

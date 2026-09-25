@@ -3,7 +3,7 @@ using Hexa.NET.ImGui;
 
 namespace OpenEphys.Onix1.Design
 {
-    partial class ImGuiWaveformPanel
+    partial class ImGuiLfpViewerPanel
     {
         bool? dragHidden;
         int dragAnchor;
@@ -38,7 +38,7 @@ namespace OpenEphys.Onix1.Design
             return channel >= layout.FirstRow && channel < layout.LastRow ? channel : -1;
         }
 
-        // NB: the scroll clamps to zero while one band fills the table, so the position from
+        // NB: the scroll clamps to zero while one channel fills the table, so the position from
         // before the expand is put back on collapse.
         void RestoreScrollIfPending()
         {
@@ -160,7 +160,7 @@ namespace OpenEphys.Onix1.Design
 
         void StepRange(int direction)
         {
-            var i = Array.BinarySearch(StandardRanges, rangeAmplitude);
+            var i = Array.BinarySearch(standardRanges, rangeAmplitude);
             if (i < 0)
             {
                 i = ~i;
@@ -172,7 +172,7 @@ namespace OpenEphys.Onix1.Design
                 i += direction;
             }
 
-            rangeAmplitude = StandardRanges[Math.Max(0, Math.Min(StandardRanges.Length - 1, i))];
+            rangeAmplitude = standardRanges[Math.Max(0, Math.Min(standardRanges.Length - 1, i))];
         }
 
         void Expand(int channel)
