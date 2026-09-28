@@ -36,23 +36,28 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         public IObservable<BandSelection> BandSelected => selection;
 
-        private protected override int Columns => base.Columns + 1;
+        private protected override int ParameterColumns => base.ParameterColumns + 1;
 
         private protected override void LeadingColumns(ImGuiLfpViewerPanel panel)
         {
-            if (!BeginMenuColumn("Band"))
-                return;
+            var bandWidth = MenuColumn("Band");
 
             ImGui.BeginDisabled(panel.Paused); // NB: changing would cause buffer refresh and unpause
+
+            // NB: the checkbox shares the slot, so the combo takes what it leaves.
+            const string ReferenceLabel = "CMR";
+            var style = ImGui.GetStyle();
+            var checkbox = ImGui.GetFrameHeight() + style.ItemInnerSpacing.X
+                + ImGui.CalcTextSize(ReferenceLabel).X + style.ItemSpacing.X;
+            ImGui.SetNextItemWidth(bandWidth - checkbox);
             BandCombo();
 
             ImGui.SameLine();
             var cmr = selection.Value.CommonMedianReference;
-            if (ImGui.Checkbox("CMR", ref cmr))
+            if (ImGui.Checkbox(ReferenceLabel, ref cmr))
                 selection.OnNext(selection.Value with { CommonMedianReference = cmr });
 
             ImGui.EndDisabled();
-            EndMenuColumn();
         }
 
         void BandCombo()

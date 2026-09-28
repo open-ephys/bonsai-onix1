@@ -153,6 +153,7 @@ namespace OpenEphys.Onix1.Design
             canvas.HoverKeys.Add(Keys.W);
             canvas.HoverKeys.Add(Keys.A);
             canvas.HoverKeys.Add(Keys.S);
+            canvas.HoverKeys.Add(Keys.S);
             canvas.HoverKeys.Add(Keys.D);
             canvas.Render += RenderFrame;
 
@@ -331,7 +332,7 @@ namespace OpenEphys.Onix1.Design
                 selector.UpdateLayout(probeHeight, ImGui.GetContentRegionAvail().X);
                 selector.DrawZoomedView(probeHeight, selectionEnabled: false);
 
-                DrawProbeFrame(ImGui.GetWindowDrawList(), probeOrigin.X, probeWidth,
+                DrawPaneFrame(ImGui.GetWindowDrawList(), probeOrigin.X, probeWidth,
                     probeViewTop, probeOrigin.Y + availY);
             }
             ImGui.EndChild();
@@ -346,8 +347,13 @@ namespace OpenEphys.Onix1.Design
 
             var stripTop = ImGui.GetCursorScreenPos().Y;
             ImGui.SetCursorPosY(ImGui.GetCursorPosY() + StripTopMargin);
+
+            var frameTop = ImGui.GetCursorScreenPos().Y;
             strip.Draw(waveform);
-            stripHeight = ImGui.GetCursorScreenPos().Y - stripTop;
+            var frameBottom = ImGui.GetCursorScreenPos().Y;
+            stripHeight = frameBottom - stripTop;
+
+            DrawPaneFrame(ImGui.GetWindowDrawList(), probeOrigin.X, availX, frameTop, frameBottom);
 
             // Scroll and zoom are handled from the root window, bounded to the probe pane so the
             // wheel still scrolls the channel list on the waveform side.
@@ -358,7 +364,7 @@ namespace OpenEphys.Onix1.Design
         }
 
         // NB: the same rectangle the plot draws for itself, so the two panes read as one instrument.
-        static void DrawProbeFrame(ImDrawListPtr draw, float left, float width, float top, float bottom)
+        static void DrawPaneFrame(ImDrawListPtr draw, float left, float width, float top, float bottom)
         {
             var l = MathF.Floor(left);
             var r = MathF.Floor(left + width);

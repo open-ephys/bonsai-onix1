@@ -16,12 +16,64 @@ namespace OpenEphys.Onix1.Design
     /// </remarks>
     internal class ImGuiLfpViewerControlStrip
     {
-        private protected const float TextBoxWidth = 80;
+        /// <summary>
+        /// Width every control is given. Wide enough for the longest palette name, which is the widest
+        /// preview text any of these show, and for every label, so one width serves them all.
+        /// </summary>
+        private protected const float ControlWidth = 150;
 
         /// <summary>
-        /// Number of columns the strip's table is opened with.
+        /// Width the pause button is given where there is room for it, and the least it will be squeezed
+        /// to where there is not. It is not a parameter and is sized to say so.
         /// </summary>
-        private protected virtual int Columns => 6;
+        const float PauseWidth = 200f;
+        const float MinPauseWidth = 60f;
+
+        /// <summary>
+        /// Space either side of the rule separating pause from the parameters.
+        /// </summary>
+        const float RuleGap = 30f;
+
+        /// <summary>
+        /// Space between one column's controls and the next, and between one row and the next.
+        /// </summary>
+        const float ColumnGap = 20f;
+        const float RowGap = 8f;
+
+        /// <summary>
+        /// Space between the controls and the left and right edges of the strip.
+        /// </summary>
+        const float EdgeMargin = 20f;
+
+        /// <summary>
+        /// Left inset of the collapse toggle and the strip's title, which sit closer to the edge than
+        /// the controls do.
+        /// </summary>
+        const float HeaderInset = 6f;
+
+        /// <summary>
+        /// Space between the title row and the first row of controls.
+        /// </summary>
+        const float HeaderGap = 12f;
+
+        /// <summary>
+        /// Space above and below everything, inside whatever frame the owner draws. A collapsed strip
+        /// is meant to take almost no room, so it keeps only enough to clear the toggle.
+        /// </summary>
+        const float VerticalMargin = 6f;
+        const float CollapsedMargin = 1f;
+
+        Vector2 flowOrigin;
+        float columnPitch;
+        float rowPitch;
+        int columnsPerRow;
+        int flowIndex;
+
+        /// <summary>
+        /// Number of columns holding parameters. The strip adds the flexible gap and the pause button
+        /// after them itself.
+        /// </summary>
+        private protected virtual int ParameterColumns => 5;
 
         /// <summary>
         /// Columns drawn ahead of the standard ones.
@@ -29,107 +81,184 @@ namespace OpenEphys.Onix1.Design
         private protected virtual void LeadingColumns(ImGuiLfpViewerPanel panel) { }
 
         /// <summary>
+        /// Whether the controls are folded away, leaving only the toggle that brings them back.
+        /// </summary>
+        public bool Collapsed { get; set; }
+
+        /// <summary>
         /// Draws the strip into the region the caller has opened. Called once per frame.
         /// </summary>
         public void Draw(ImGuiLfpViewerPanel panel)
         {
-            if (!ImGui.BeginTable("##menu", Columns, ImGuiTableFlags.NoSavedSettings))
-                return;
+            var margin = Collapsed ? CollapsedMargin : VerticalMargin;
+            ImGui.Dummy(new Vector2(0, margin));
 
-            ImGui.TableNextRow();
-            ImGui.PushItemWidth(TextBoxWidth);
+            ImGui.Indent(HeaderInset);
+            if (ImGui.ArrowButton("##collapse", Collapsed ? ImGuiDir.Up : ImGuiDir.Down))
+                Collapsed = !Collapsed;
+
+            ImGui.SameLine();
+            ImGui.Text("Control Panel");
+            ImGui.Unindent(HeaderInset);
+
+            if (!Collapsed)
+            {
+                ImGui.Dummy(new Vector2(0, HeaderGap));
+                DrawControls(panel);
+            }
+
+            // NB: an item rather than a cursor move, since nothing follows it to extend the content
+            // extent and ImGui asserts when a cursor move is the last thing in a window.
+            ImGui.Dummy(new Vector2(0, margin));
+        }
+
+        /// <summary>
+        /// Lays the parameter controls out as a wrapping grid, with pause kept to the right of a rule.
+        /// </summary>
+        /// <remarks>
+        /// A table cannot wrap, so the controls are positioned outright. Every control takes one width, which
+        /// makes the wrap arithmetic rather than measurement, and the column pitch is worked out once from a
+        /// full row so that a partly filled last row keeps the columns of the rows above it rather than
+        /// spreading its own few items across the whole width.
+        /// </remarks>
+        void DrawControls(ImGuiLfpViewerPanel panel)
+        {
+            // NB: the flow is positioned outright rather than indented, so every horizontal distance here is
+            // measured from one origin and the rule and pause go exactly where the layout reserved room for
+            // them.
+            var origin = ImGui.GetCursorScreenPos();
+            var available = ImGui.GetContentRegionAvail().X;
+            var usable = available - EdgeMargin * 2;
+            var rightZone = RuleGap * 2 + ImGuiLfpViewerPanel.FrameWeight + PauseWidth;
+            var flowWidth = Math.Max(ControlWidth, usable - rightZone);
+
+            // NB: one control column is the floor for the flow, so a window narrow enough to reach it
+            // leaves pause less than it asked for. It gives width up rather than being clipped.
+            var pauseWidth = Math.Max(MinPauseWidth, Math.Min(
+                PauseWidth,
+                usable - flowWidth - RuleGap * 2 - ImGuiLfpViewerPanel.FrameWeight));
+
+            columnsPerRow = Math.Max(1, (int)((flowWidth + ColumnGap) / (ControlWidth + ColumnGap)));
+            columnsPerRow = Math.Min(columnsPerRow, ParameterColumns);
+            columnPitch = columnsPerRow > 1
+                ? (flowWidth - columnsPerRow * ControlWidth) / (columnsPerRow - 1) + ControlWidth
+                : ControlWidth;
+
+            rowPitch = ImGui.GetTextLineHeight() + ImGui.GetStyle().ItemSpacing.Y
+                + ImGui.GetFrameHeight() + RowGap;
+            var rows = (ParameterColumns + columnsPerRow - 1) / columnsPerRow;
+
+            flowOrigin = new Vector2(origin.X + EdgeMargin, origin.Y);
+            flowIndex = 0;
 
             var paused = panel.Paused;
 
             LeadingColumns(panel);
 
-            if (BeginMenuColumn("Timebase (s)"))
+            var timebaseWidth = MenuColumn("Timebase (s)");
+            ImGui.BeginDisabled(paused); // NB: changing would cause buffer refresh and unpause
+            var timebase = panel.Timebase;
+            if (InputDoubleCombo("##timebase", ref timebase, panel.StandardTimeBases, timebaseWidth))
+                panel.Timebase = timebase;
+            ImGui.EndDisabled();
+
+            ImGui.SetNextItemWidth(MenuColumn("Chan. Height"));
+            var channelHeight = panel.ChannelHeight;
+            if (ImGui.DragInt(
+                    "##channelHeight",
+                    ref channelHeight,
+                    vSpeed: 1,
+                    panel.MinChannelHeight,
+                    int.MaxValue,
+                    ImGuiSliderFlags.AlwaysClamp))
             {
-                ImGui.BeginDisabled(paused); // NB: changing would cause buffer refresh and unpause
-                var timebase = panel.Timebase;
-                if (InputDoubleCombo("##timebase", ref timebase, panel.StandardTimeBases))
-                    panel.Timebase = timebase;
-                ImGui.EndDisabled();
-                EndMenuColumn();
+                panel.ChannelHeight = channelHeight;
             }
 
-            if (BeginMenuColumn("Chan. Height"))
+            var rangeWidth = MenuColumn(
+                string.IsNullOrEmpty(panel.RangeLabel) ? "Range" : $"Range ({panel.RangeLabel})");
+            var range = panel.RangeAmplitude;
+            if (InputDoubleCombo("##range", ref range, panel.StandardRanges, rangeWidth))
+                panel.RangeAmplitude = range;
+
+            var paletteWidth = MenuColumn("Palette");
+            var swatch = panel.Palette == ColorPalette.Custom
+                ? ImGui.GetFrameHeight() + ImGui.GetStyle().ItemInnerSpacing.X
+                : 0f;
+            ImGui.SetNextItemWidth(paletteWidth - swatch);
+            PaletteCombo(panel);
+            if (panel.Palette == ColorPalette.Custom)
             {
-                var channelHeight = panel.ChannelHeight;
-                if (ImGui.DragInt(
-                        "##channelHeight",
-                        ref channelHeight,
-                        vSpeed: 1,
-                        panel.MinChannelHeight,
-                        int.MaxValue,
-                        ImGuiSliderFlags.AlwaysClamp))
-                {
-                    panel.ChannelHeight = channelHeight;
-                }
-                EndMenuColumn();
+                ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
+                var customColor = panel.CustomColor;
+                if (ImGui.ColorEdit3("##customColor", ref customColor, ImGuiColorEditFlags.NoInputs))
+                    panel.CustomColor = customColor;
             }
 
-            var rangeLabel = string.IsNullOrEmpty(panel.RangeLabel) ? "Range" : $"Range ({panel.RangeLabel})";
-            if (BeginMenuColumn(rangeLabel))
-            {
-                var range = panel.RangeAmplitude;
-                if (InputDoubleCombo("##range", ref range, panel.StandardRanges))
-                    panel.RangeAmplitude = range;
-                EndMenuColumn();
-            }
+            var groupWidth = MenuColumn("Color Groups");
+            var enabled = panel.ColorGroupingEnabled;
+            if (ImGui.Checkbox("##colorGroupingEnabled", ref enabled))
+                panel.ColorGroupingEnabled = enabled;
 
-            ImGui.TableNextColumn();
-            PauseButton(panel);
+            ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
+            ImGui.BeginDisabled(!enabled);
+            var grouping = panel.ColorGrouping;
+            ImGui.SetNextItemWidth(
+                groupWidth - ImGui.GetFrameHeight() - ImGui.GetStyle().ItemInnerSpacing.X);
+            // NB: no step buttons, which sit outside the width the item was given and overran it.
+            if (ImGui.InputInt("##colorGrouping", ref grouping, 0))
+                panel.ColorGrouping = grouping;
+            ImGui.EndDisabled();
 
-            if (BeginMenuColumn("Palette"))
-            {
-                PaletteCombo(panel);
-                if (panel.Palette == ColorPalette.Custom)
-                {
-                    ImGui.SameLine();
-                    var customColor = panel.CustomColor;
-                    if (ImGui.ColorEdit3("##customColor", ref customColor, ImGuiColorEditFlags.NoInputs))
-                        panel.CustomColor = customColor;
-                }
-                EndMenuColumn();
-            }
+            var flowHeight = rows * rowPitch - RowGap;
+            var ruleX = MathF.Floor(flowOrigin.X + flowWidth + RuleGap);
+            ImGui.GetWindowDrawList().AddRectFilled(
+                new Vector2(ruleX, flowOrigin.Y),
+                new Vector2(ruleX + ImGuiLfpViewerPanel.FrameWeight, flowOrigin.Y + flowHeight),
+                ImGuiLfpViewerPanel.FrameColor);
 
-            if (BeginMenuColumn("Color Groups"))
-            {
-                var enabled = panel.ColorGroupingEnabled;
-                if (ImGui.Checkbox("##colorGroupingEnabled", ref enabled))
-                    panel.ColorGroupingEnabled = enabled;
+            // NB: one row tall and centered, rather than spanning every row: a narrow window wraps the
+            // controls into several, and a pause button that grew with them would end up absurdly tall.
+            var pauseHeight = rowPitch - RowGap;
+            ImGui.SetCursorScreenPos(new Vector2(
+                ruleX + ImGuiLfpViewerPanel.FrameWeight + RuleGap,
+                flowOrigin.Y + (flowHeight - pauseHeight) / 2));
+            PauseButton(panel, new Vector2(pauseWidth, pauseHeight));
 
-                ImGui.SameLine();
-                ImGui.BeginDisabled(!enabled);
-                var grouping = panel.ColorGrouping;
-                if (ImGui.InputInt("##colorGrouping", ref grouping))
-                    panel.ColorGrouping = grouping;
-                ImGui.EndDisabled();
-                EndMenuColumn();
-            }
-
-            ImGui.PopItemWidth();
-            ImGui.EndTable();
+            // NB: positioning everything outright leaves the parent's content extent where it was, so
+            // the whole laid-out area is claimed in one go. It goes last, so that the cursor ends below
+            // every row rather than below whichever item happened to be drawn last.
+            ImGui.SetCursorScreenPos(origin);
+            ImGui.Dummy(new Vector2(available, flowHeight));
         }
 
-        private protected static bool BeginMenuColumn(string label)
+        /// <summary>
+        /// Takes the next slot in the flow, heads it with <paramref name="label"/>, and leaves the cursor
+        /// under it for the control. Returns the width that control should take.
+        /// </summary>
+        private protected float MenuColumn(string label)
         {
-            ImGui.TableNextColumn();
-            if (!ImGui.BeginTable(label, 1, ImGuiTableFlags.NoSavedSettings))
-                return false;
+            var row = flowIndex / columnsPerRow;
+            var column = flowIndex % columnsPerRow;
+            flowIndex++;
 
-            ImGui.TableNextColumn();
+            var x = flowOrigin.X + column * columnPitch;
+            var y = flowOrigin.Y + row * rowPitch;
+
+            ImGui.SetCursorScreenPos(new Vector2(x, y));
             ImGui.Text(label);
-            return true;
+            ImGui.SetCursorScreenPos(new Vector2(
+                x, y + ImGui.GetTextLineHeight() + ImGui.GetStyle().ItemSpacing.Y));
+            return ControlWidth;
         }
 
-        private protected static void EndMenuColumn() => ImGui.EndTable();
-
-        private protected static bool InputDoubleCombo(string label, ref double value, IReadOnlyList<double> comboItems)
+        // NB: the preset arrow sits beside the input, so the input takes the slot less the arrow.
+        private protected static bool InputDoubleCombo(
+            string label, ref double value, IReadOnlyList<double> comboItems, float width)
         {
             var changed = false;
             var editValue = value;
+            ImGui.SetNextItemWidth(width - ImGui.GetFrameHeight());
             ImGui.InputDouble(label, ref editValue, "%g");
             if (changed = ImGui.IsItemDeactivatedAfterEdit())
                 value = editValue;
@@ -174,14 +303,13 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        static void PauseButton(ImGuiLfpViewerPanel panel)
+        static void PauseButton(ImGuiLfpViewerPanel panel, Vector2 buttonSize)
         {
             var paused = panel.Paused;
             if (paused)
                 ImGui.PushStyleColor(ImGuiCol.Button, ImGui.GetColorU32(ImGuiCol.ButtonActive));
 
-            var buttonSize = new Vector2(TextBoxWidth, ImGui.GetFrameHeight() * 2);
-            if (ImGui.Button("Pause", buttonSize))
+            if (ImGui.Button("Pause (space)", buttonSize))
                 panel.Paused = !paused;
 
             if (paused)
