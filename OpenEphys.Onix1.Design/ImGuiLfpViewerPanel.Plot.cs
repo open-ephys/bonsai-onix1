@@ -72,8 +72,13 @@ namespace OpenEphys.Onix1.Design
             var labelY = ImGui.GetCursorScreenPos().Y + headerHeight - textHeight;
             ImGui.SetCursorPosY(ImGui.GetCursorPosY() + headerHeight);
 
+            // NB: the bar is drawn live as well as paused, filling its track because the window is then
+            // the whole axis. Reserving the band either way is what keeps the plot from changing height
+            // under the trace at the moment of pause.
+            var scrollHeight = ImGui.GetStyle().ScrollbarSize;
+            var scrollGap = ImGui.GetStyle().ItemSpacing.Y;
             var plotTop = ImGui.GetCursorScreenPos().Y;
-            var tableHeight = ImGui.GetContentRegionAvail().Y;
+            var tableHeight = ImGui.GetContentRegionAvail().Y - scrollHeight - scrollGap;
             var plotBottom = plotTop + tableHeight;
             var plotX = 0f;
             var plotWidth = 0f;
@@ -122,7 +127,57 @@ namespace OpenEphys.Onix1.Design
             {
                 DrawGraticules(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom, labelY);
                 HandlePanInput(plotX, plotWidth, labelY);
+                TimeScrollBar(plotX, plotWidth, plotBottom + scrollGap, scrollHeight);
             }
+        }
+
+        /// <summary>
+        /// A horizontal bar below the plot showing where the window sits on the axis, which can be dragged
+        /// to move it.
+        /// </summary>
+        /// <remarks>
+        /// Drawn rather than taken from ImGui, which scrolls its own containers and has no notion of this
+        /// axis. It is styled from the scrollbar colors so that it reads as one alongside the channel
+        /// scrollbar it sits under.
+        /// </remarks>
+        void TimeScrollBar(float left, float width, float top, float height)
+        {
+            var axisFirst = Paused && history is not null ? AxisFirst : window.Start;
+            var axisLast = Paused && history is not null ? AxisLast : window.End;
+            var travel = Math.Max(0, axisLast - axisFirst - window.Span);
+
+            // NB: the thumb sits inside the track by the same margin ImGui gives its own grabs, which is
+            // most of what makes a scrollbar read as one rather than as a filled bar.
+            var inset = Math.Max(0f, Math.Min(3f, MathF.Floor((height - 2f) / 2f)));
+            var trackLeft = left + inset;
+            var trackWidth = width - 2 * inset;
+
+            // NB: the thumb keeps a minimum width so that a window which is a thousandth of the axis is
+            // still something to aim at, which costs a little of the travel it stands for.
+            var reach = (double)(travel + window.Span);
+            var thumbWidth = Math.Max(ImGui.GetStyle().GrabMinSize, (float)(trackWidth * window.Span / reach));
+            var slack = trackWidth - thumbWidth;
+            var thumbX = travel > 0
+                ? trackLeft + slack * (float)((window.Start - axisFirst) / (double)travel)
+                : trackLeft;
+
+            ImGui.SetCursorScreenPos(new Vector2(left, top));
+            ImGui.InvisibleButton("##timescroll", new Vector2(width, height));
+
+            if (ImGui.IsItemActive() && travel > 0 && slack > 0)
+                Pan(-(long)(ImGui.GetIO().MouseDelta.X * (travel / slack)));
+
+            var rounding = ImGui.GetStyle().ScrollbarRounding;
+            var grab = ImGui.IsItemActive() ? ImGuiCol.ScrollbarGrabActive
+                : ImGui.IsItemHovered() ? ImGuiCol.ScrollbarGrabHovered
+                : ImGuiCol.ScrollbarGrab;
+
+            var draw = ImGui.GetWindowDrawList();
+            draw.AddRectFilled(new Vector2(left, top), new Vector2(left + width, top + height),
+                ImGui.GetColorU32(ImGuiCol.ScrollbarBg), rounding);
+            draw.AddRectFilled(
+                new Vector2(thumbX, top + inset), new Vector2(thumbX + thumbWidth, top + height - inset),
+                ImGui.GetColorU32(grab), rounding);
         }
 
         /// <summary>

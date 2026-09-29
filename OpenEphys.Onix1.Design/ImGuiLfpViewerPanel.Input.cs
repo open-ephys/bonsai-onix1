@@ -72,7 +72,7 @@ namespace OpenEphys.Onix1.Design
                 return;
 
             var rows = channelHidden.Length;
-            if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && ImGui.GetIO().KeyShift)
+            if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && Modifiers(shift: true))
             {
                 Array.Copy(channelHidden, dragOriginal, rows);
                 dragHidden = !channelHidden[channel];
@@ -92,6 +92,20 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
+        /// <summary>
+        /// Whether exactly the named modifiers are down and the rest are up.
+        /// </summary>
+        /// <remarks>
+        /// Asking only whether a modifier is down lets gestures overlap: holding the pair that zooms the
+        /// timebase and clicking would also fire the gesture that wants one of them, and the only thing
+        /// keeping a pair from firing its own subsets is the order they happen to be tested in.
+        /// </remarks>
+        static bool Modifiers(bool ctrl = false, bool shift = false, bool alt = false)
+        {
+            var io = ImGui.GetIO();
+            return io.KeyCtrl == ctrl && io.KeyShift == shift && io.KeyAlt == alt && !io.KeySuper;
+        }
+
         // NB: an unclaimed wheel scrolls the channels, and ImGui applies that before this runs, so a
         // gesture that took the wheel back would show a frame of the wrong scroll. Shift avoids it by
         // making the wheel horizontal, which the table cannot do, and so do the modifier sets built on
@@ -105,7 +119,7 @@ namespace OpenEphys.Onix1.Design
             // wherever the pointer is within the pane, as the pause key does, and apply to an expanded
             // channel as well. Scrolling has to be asked for inside the table that owns it.
             var visibleRows = Math.Max(1, layout.LastVisible - layout.FirstVisible);
-            var channelStep = io.KeyShift
+            var channelStep = Modifiers(shift: true)
                 ? (int)(visibleRows * CoarsePanFraction) * layout.RowHeight
                 : layout.RowHeight;
 
@@ -114,7 +128,7 @@ namespace OpenEphys.Onix1.Design
             else if (ImGui.IsKeyPressed(ImGuiKey.S))
                 ImGui.SetScrollY(ImGui.GetScrollY() + channelStep);
 
-            if (io.MouseWheel != 0 && io.KeyCtrl && io.KeyShift && ImGui.IsWindowHovered())
+            if (io.MouseWheel != 0 && Modifiers(ctrl: true, shift: true) && ImGui.IsWindowHovered())
             {
                 Pan(Math.Sign(io.MouseWheel) * (window.Span / TimeDivisions));
                 return;
@@ -123,14 +137,14 @@ namespace OpenEphys.Onix1.Design
             // NB: anchored on the pointer rather than the middle of the view, so that whatever is being
             // looked at stays where it is. The dropdown has no pointer to speak of and anchors on the
             // middle instead.
-            if (io.MouseWheel != 0 && io.KeyShift && io.KeyAlt && ImGui.IsWindowHovered())
+            if (io.MouseWheel != 0 && Modifiers(shift: true, alt: true) && ImGui.IsWindowHovered())
             {
                 StepTimebase(io.MouseWheel > 0 ? -1 : 1, PlotFraction(mouse.X));
                 return;
             }
 
             // NB: range scales works on expanded channel, so it must go before early return due to expandedChannel >= 0
-            if (io.MouseWheel != 0 && io.KeyShift && ImGui.IsWindowHovered())
+            if (io.MouseWheel != 0 && Modifiers(shift: true) && ImGui.IsWindowHovered())
                 StepRange(io.MouseWheel > 0 ? 1 : -1);
 
             if (heightDragStart >= 0 && !ImGui.IsMouseDown(ImGuiMouseButton.Left))
@@ -139,7 +153,7 @@ namespace OpenEphys.Onix1.Design
             if (expandedChannel >= 0 || !ImGui.IsWindowHovered() && heightDragStart < 0)
                 return;
 
-            if (io.MouseWheel != 0 && io.KeyCtrl && heightDragStart < 0)
+            if (io.MouseWheel != 0 && Modifiers(ctrl: true) && heightDragStart < 0)
             {
                 var step = io.MouseWheel > 0 ? 2 : -2;
                 if (channelHeight > 100)
@@ -148,7 +162,7 @@ namespace OpenEphys.Onix1.Design
                 SetChannelHeight(channelHeight + step, channelHeight, pivot, ImGui.GetScrollY(), layout);
             }
 
-            if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && io.KeyCtrl && ImGui.IsWindowHovered())
+            if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && Modifiers(ctrl: true) && ImGui.IsWindowHovered())
             {
                 heightDragStart = channelHeight;
                 heightDragMouseY = mouse.Y;

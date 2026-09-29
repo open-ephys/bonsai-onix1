@@ -5,7 +5,6 @@ using System.Linq;
 using System.Numerics;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Windows.Forms;
 using Bonsai;
 using Bonsai.Dag;
@@ -81,7 +80,6 @@ namespace OpenEphys.Onix1.Design
     {
         const float ProbePaneWidth = 260f;
         const float CollapsedPaneWidth = 28f;
-        const float StripTopMargin = 4f;
         const float ProbeHeaderGap = 4f;
 
         readonly ImGuiProbeSelector selector = new();
@@ -313,17 +311,13 @@ namespace OpenEphys.Onix1.Design
             if (ImGui.Button(probePaneCollapsed ? "»" : "«"))
                 probePaneCollapsed = !probePaneCollapsed;
 
+            var model = source?.ProbeGroup?.Probe?.Annotations?.ModelName;
             if (!probePaneCollapsed)
             {
-                // NB: drawn rather than laid out, as the plot's time labels are, so it sits on the
-                // band's bottom edge instead of being baseline-aligned to the button beside it.
-                var model = source?.ProbeGroup?.Probe?.Annotations?.ModelName;
                 if (!string.IsNullOrEmpty(model))
                 {
-                    var nameX = ImGui.GetItemRectMax().X + ImGui.GetStyle().ItemSpacing.X;
-                    ImGui.GetWindowDrawList().AddText(
-                        new Vector2(nameX, probeViewTop - ImGui.GetTextLineHeight()),
-                        ImGui.GetColorU32(ImGuiCol.Text), model);
+                    ImGui.SameLine();
+                    ImGui.Text(model);
                 }
 
                 ImGui.SetCursorScreenPos(new Vector2(ImGui.GetCursorScreenPos().X, probeViewTop));
@@ -331,8 +325,10 @@ namespace OpenEphys.Onix1.Design
                 selector.UpdateLayout(probeHeight, ImGui.GetContentRegionAvail().X);
                 selector.DrawZoomedView(probeHeight, selectionEnabled: false);
 
-                DrawPaneFrame(ImGui.GetWindowDrawList(), probeOrigin.X, probeWidth,
-                    probeViewTop, probeOrigin.Y + availY);
+            }
+            else if (!string.IsNullOrEmpty(model))
+            {
+                ImGuiControls.StackedLabel(model);
             }
             ImGui.EndChild();
 
@@ -345,14 +341,8 @@ namespace OpenEphys.Onix1.Design
             ImGui.PopStyleVar();
 
             var stripTop = ImGui.GetCursorScreenPos().Y;
-            ImGui.SetCursorPosY(ImGui.GetCursorPosY() + StripTopMargin);
-
-            var frameTop = ImGui.GetCursorScreenPos().Y;
             strip.Draw(waveform);
-            var frameBottom = ImGui.GetCursorScreenPos().Y;
-            stripHeight = frameBottom - stripTop;
-
-            DrawPaneFrame(ImGui.GetWindowDrawList(), probeOrigin.X, availX, frameTop, frameBottom);
+            stripHeight = ImGui.GetCursorScreenPos().Y - stripTop;
 
             // Scroll and zoom are handled from the root window, bounded to the probe pane so the
             // wheel still scrolls the channel list on the waveform side.
@@ -360,21 +350,6 @@ namespace OpenEphys.Onix1.Design
                 selector.HandleScrollInput(probeOrigin.Y + availY, probeOrigin.X + probeWidth);
 
             ImGui.End();
-        }
-
-        // NB: the same rectangle the plot draws for itself, so the two panes read as one instrument.
-        static void DrawPaneFrame(ImDrawListPtr draw, float left, float width, float top, float bottom)
-        {
-            var l = MathF.Floor(left);
-            var r = MathF.Floor(left + width);
-            var t = MathF.Floor(top);
-            var b = MathF.Floor(bottom);
-            var w = ImGuiLfpViewerPanel.FrameWeight;
-            var color = ImGuiLfpViewerPanel.FrameColor;
-            draw.AddRectFilled(new Vector2(l, t), new Vector2(r, t + w), color);
-            draw.AddRectFilled(new Vector2(l, b - w), new Vector2(r, b), color);
-            draw.AddRectFilled(new Vector2(l, t), new Vector2(l + w, b), color);
-            draw.AddRectFilled(new Vector2(r - w, t), new Vector2(r, b), color);
         }
 
         /// <inheritdoc/>

@@ -324,7 +324,7 @@ namespace OpenEphys.Onix1.Design
 
             // NB: a division at a time, or most of a window with Shift, which is the same relationship
             // W and S have for channels.
-            var step = ImGui.GetIO().KeyShift
+            var step = Modifiers(shift: true)
                 ? (long)(window.Span * CoarsePanFraction)
                 : window.Span / TimeDivisions;
 
