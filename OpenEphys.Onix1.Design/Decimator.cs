@@ -45,6 +45,17 @@ namespace OpenEphys.Onix1.Design
 
         public int Cursor => writeIndex;
 
+        /// <summary>
+        /// Samples already reduced into the column <see cref="Cursor"/> names, which is how far past a
+        /// column boundary the reduction has got.
+        /// </summary>
+        /// <remarks>
+        /// Columns are counted from wherever the reduction began, and a caller that has to line its own
+        /// binning up with this one cannot work that out from the blocks it has handed over: they need not
+        /// divide into columns, so the boundaries fall wherever they fall.
+        /// </remarks>
+        public int Filled => DownsampleFactor - carry;
+
         public int DownsampleFactor { get; }
 
         public Depth InputDepth { get; }

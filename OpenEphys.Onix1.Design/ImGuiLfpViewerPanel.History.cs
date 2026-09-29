@@ -4,45 +4,93 @@ using System;
 
 namespace OpenEphys.Onix1.Design
 {
+    /// <remarks>
+    /// <para>
+    /// A paused display is laid out on one axis, measured in samples from the start of the sweep that was
+    /// frozen. Position zero is that start, and the frozen frame reaches from there to the width the
+    /// display had when it was paused. Panning back runs into negative positions, as far as the oldest
+    /// sample the history still holds.
+    /// </para>
+    /// <para>
+    /// Up to the sweep cursor, the sample at a position is that position. At and past it, the display was
+    /// still showing the tail of the previous sweep, so the sample is one frozen width earlier. That is a
+    /// fixed block of samples, settled at the moment of pause, so the signal drawn there cannot slide when
+    /// the timebase changes. It is the one place where two positions name the same sample, and it is why
+    /// everything here moves in positions and never in sample numbers: there is no way back.
+    /// </para>
+    /// </remarks>
     partial class ImGuiLfpViewerPanel
     {
         Mat pausedWaveformMin;
         Mat pausedWaveformMax;
-        int pausedCursor;
 
         long pauseSample = -1;
-        long pauseViewStart;
-        long viewStart;
-        bool viewDirty;
+        long sweepOrigin;
 
-        Mat windowScratch;
+        /// <summary>
+        /// The frame the display was frozen on. The tail past the cursor is one of its widths behind.
+        /// </summary>
+        DisplayWindow frozen;
+
+        // NB: the frozen frame's width in seconds as it was asked for, which is how much older the samples
+        // past the cursor are. Taken from the timebase rather than from the frame's own span, whose whole
+        // number of columns falls a little short of it and would put a ragged number on every division.
+        double pausedTimebase;
+
+        DisplayWindow window;
+        bool windowDirty;
+
+        long anchorPosition;
+        double anchorFraction;
+        bool anchorPending;
+
         Decimator pannedWaveformMinDecimator;
         Decimator pannedWaveformMaxDecimator;
 
         /// <summary>
-        /// Whether the paused view has been moved off the samples that were on screen when it was paused.
+        /// Seconds of signal the history can hold, which is what the memory it was given buys at the current
+        /// sample rate.
         /// </summary>
-        bool Panned => Paused && viewStart != pauseViewStart;
+        public double HistorySeconds => history is null ? 0 : history.Capacity / (double)sampleRate;
 
         /// <summary>
-        /// Samples spanned by the display, which is also the distance the view must travel for the stale
-        /// segment to leave the screen.
+        /// Seconds of signal the history currently holds. It stops advancing while paused, since what the
+        /// user paused on must not expire while they are looking at it.
         /// </summary>
-        int WindowSamples => waveformMinDecimator.Buffer.Cols * waveformMinDecimator.DownsampleFactor;
+        public double HistoryHeldSeconds =>
+            history is null ? 0 : (history.Count - history.Oldest) / (double)sampleRate;
 
         /// <summary>
-        /// Column the pause instant falls at in the panned view, past the last column once the view has
-        /// moved a whole stale segment back.
+        /// Whether the paused view has been moved off the frame that was frozen.
         /// </summary>
-        int PannedCursorColumn => (int)((pauseSample - viewStart) / waveformMinDecimator.DownsampleFactor);
+        bool Panned => Paused && window.Start != 0;
+
+        /// <summary>
+        /// Whether the matrices cloned at the pause instant still describe the display. They stop doing so
+        /// when the timebase changes, which rebuilds the decimators at a different width.
+        /// </summary>
+        bool SnapshotCurrent =>
+            pausedWaveformMin is not null &&
+            frozen.Columns == window.Columns &&
+            frozen.Step == window.Step;
+
+        /// <summary>
+        /// Axis position of the sweep cursor, which is where the newest sample meets the frozen tail.
+        /// </summary>
+        long CursorPosition => pauseSample - sweepOrigin;
+
+        /// <summary>
+        /// The sample drawn at <paramref name="position"/>.
+        /// </summary>
+        long SampleAt(long position) =>
+            sweepOrigin + position - (position >= CursorPosition ? frozen.Span : 0);
 
         /// <summary>
         /// Freezes the display on what is drawn now.
         /// </summary>
         /// <remarks>
-        /// The cursor column holds the newest data, so the columns to its right are a whole window older.
-        /// Column zero is therefore <c>cursor</c> bins behind the newest sample, and the view runs past
-        /// that sample into what the ring has not yet overwritten.
+        /// The cursor column holds the newest sample, so the sweep began <c>cursor</c> bins before it and
+        /// the frame reaches one width past it, into the tail of the previous sweep.
         /// </remarks>
         void Pause()
         {
@@ -51,13 +99,21 @@ namespace OpenEphys.Onix1.Design
 
             pausedWaveformMin = waveformMinDecimator.Buffer.Clone();
             pausedWaveformMax = waveformMaxDecimator.Buffer.Clone();
-            pausedCursor = waveformMinDecimator.Cursor;
+            frozen = new DisplayWindow(
+                0, waveformMinDecimator.DownsampleFactor, waveformMinDecimator.Buffer.Cols);
+            pausedTimebase = timebase;
 
             pauseSample = history?.Count ?? 0;
-            pauseViewStart = pauseSample
-                - (long)waveformMinDecimator.Cursor * waveformMinDecimator.DownsampleFactor;
-            viewStart = pauseViewStart;
-            viewDirty = false;
+
+            // NB: the cursor column is part filled, and by this much, so it began that far before the
+            // newest sample rather than on it. Without the term the whole axis sits up to a column early,
+            // and a view read back out of the history groups its samples differently from the live one.
+            sweepOrigin = pauseSample - waveformMinDecimator.Filled
+                - (long)waveformMinDecimator.Cursor * frozen.Step;
+
+            window = frozen;
+            windowDirty = false;
+            anchorPending = false;
         }
 
         /// <remarks>
@@ -73,75 +129,146 @@ namespace OpenEphys.Onix1.Design
             pausedWaveformMax = null;
 
             pauseSample = -1;
-            viewDirty = false;
+            windowDirty = false;
+            anchorPending = false;
+            window = new DisplayWindow(0, window.Step, window.Columns);
             history?.Clear();
         }
 
         /// <summary>
-        /// Moves the view back through history by <paramref name="samples"/>, or forward when negative,
-        /// as far as the buffer can serve.
+        /// Oldest position the history can serve.
         /// </summary>
-        void Pan(long samples)
+        long AxisFirst => history.Oldest - sweepOrigin;
+
+        /// <summary>
+        /// Position one past the right edge of the frame that was frozen, which is as far forward as there
+        /// is anything to draw.
+        /// </summary>
+        long AxisLast => frozen.Span;
+
+        /// <summary>
+        /// Shows <paramref name="value"/>, as much of it as the axis reaches.
+        /// </summary>
+        void SetWindow(DisplayWindow value)
+        {
+            value = value.Clamp(AxisFirst, AxisLast);
+            if (value.Matches(window))
+                return;
+
+            window = value;
+            windowDirty = true;
+        }
+
+        /// <summary>
+        /// Takes the column spacing the decimators have just been rebuilt at, keeping whatever the last
+        /// gesture asked to hold in place.
+        /// </summary>
+        /// <remarks>
+        /// Called for the live display too, where the window is only there to give the divisions something
+        /// to be placed against.
+        /// </remarks>
+        void RebuildWindow(int step, int columns)
+        {
+            if (!Paused || history is null)
+            {
+                window = new DisplayWindow(0, step, columns);
+                anchorPending = false;
+                return;
+            }
+
+            var anchor = anchorPending ? anchorPosition : window.Start;
+            var fraction = anchorPending ? anchorFraction : 0;
+            anchorPending = false;
+            SetWindow(window.Rescale(step, columns, anchor, fraction));
+
+            // NB: a decimator starts empty, so the columns have to be read again whether or not the
+            // window moved, and a window already where the new spacing wants it does not move.
+            windowDirty = true;
+        }
+
+        /// <summary>
+        /// Moves the view back through history by <paramref name="distance"/>, or forward when negative.
+        /// </summary>
+        void Pan(long distance)
         {
             if (!Paused || history is null)
                 return;
 
-            var window = WindowSamples;
-
-            // NB: the overhang past the pause instant is read a whole window earlier, so panning at all
-            // needs that much history behind it.
-            if (pauseSample - window < history.Oldest)
+            // NB: the frozen tail is read from one frozen width behind the pause instant, so a history that
+            // no longer reaches back that far cannot serve any view that shows it.
+            if (pauseSample - frozen.Span < history.Oldest)
                 return;
 
-            var moved = Math.Max(history.Oldest, Math.Min(pauseViewStart, viewStart - samples));
-            if (moved == viewStart)
-                return;
-
-            viewStart = moved;
-            viewDirty = true;
+            SetWindow(window.Shift(-distance));
         }
 
         /// <summary>
-        /// Reads the samples the panned view covers, taking the part that runs past the pause instant a
-        /// whole window earlier so that the stale segment stays where it was drawn, and reduces them.
+        /// Reduces the samples the window covers straight out of the history.
         /// </summary>
-        /// <returns>False if the buffer can no longer serve the view.</returns>
-        bool TryReadPannedView()
+        /// <remarks>
+        /// At most two runs of positions, split where the frozen tail begins. The decimators carry a
+        /// part-filled bin from one call to the next, so a column lying across that split is reduced from
+        /// both sides without either side knowing, and <see cref="WaveformHistory.Decimate"/> splits again
+        /// where a run straddles the end of the ring. The runs add up to the window's span, so every
+        /// column is filled.
+        /// </remarks>
+        /// <returns>False if the history can no longer serve the window.</returns>
+        bool TryReadWindow()
         {
-            var window = WindowSamples;
-            if (windowScratch is null || windowScratch.Cols != window || windowScratch.Rows != history.Rows)
-            {
-                windowScratch?.Dispose();
-                pannedWaveformMinDecimator?.Dispose();
-                pannedWaveformMaxDecimator?.Dispose();
-                windowScratch = new Mat(history.Rows, window, Depth.F32, 1);
-                var columns = waveformMinDecimator.Buffer.Cols;
-                var factor = waveformMinDecimator.DownsampleFactor;
-                pannedWaveformMinDecimator = new Decimator(windowScratch, columns, factor, ReduceOperation.Min);
-                pannedWaveformMaxDecimator = new Decimator(windowScratch, columns, factor, ReduceOperation.Max);
-            }
+            if (pannedWaveformMinDecimator is null)
+                return false;
 
-            var overhang = (int)Math.Max(0, viewStart + window - pauseSample);
-            var ahead = window - overhang;
-
-            using (var head = windowScratch.GetSubRect(new Rect(0, 0, ahead, windowScratch.Rows)))
-            {
-                if (!history.CopyWindow(viewStart, head))
-                    return false;
-            }
-
-            if (overhang > 0)
-            {
-                using var tail = windowScratch.GetSubRect(new Rect(ahead, 0, overhang, windowScratch.Rows));
-                if (!history.CopyWindow(pauseSample - window, tail))
-                    return false;
-            }
+            var split = Math.Max(window.Start, Math.Min(window.End, CursorPosition));
+            var fresh = (int)(split - window.Start);
+            var tail = (int)(window.End - split);
 
             pannedWaveformMinDecimator.Reset();
-            pannedWaveformMinDecimator.Process(windowScratch);
             pannedWaveformMaxDecimator.Reset();
-            pannedWaveformMaxDecimator.Process(windowScratch);
-            return true;
+
+            if (fresh > 0 && !history.Decimate(
+                    SampleAt(window.Start), fresh, pannedWaveformMinDecimator, pannedWaveformMaxDecimator))
+                return false;
+
+            return tail <= 0 || history.Decimate(
+                SampleAt(split), tail, pannedWaveformMinDecimator, pannedWaveformMaxDecimator);
+        }
+
+        /// <summary>
+        /// The axis position drawn at <paramref name="fraction"/> across the plot.
+        /// </summary>
+        long PositionAtFraction(double fraction)
+        {
+            // NB: the last column, not one past it. The fraction reaches one on the rightmost pixel.
+            var column = (int)(fraction * (window.Columns - 1));
+            return window.PositionOf(column);
+        }
+
+        /// <summary>
+        /// Changes the timebase, holding the axis position <paramref name="anchor"/> at the place it
+        /// currently occupies.
+        /// </summary>
+        /// <remarks>
+        /// The new column spacing is not known until <see cref="Update"/> rebuilds the decimators, so what
+        /// to hold is recorded here and the window solved for there.
+        /// </remarks>
+        void SetTimebase(double value, long anchor, double fraction)
+        {
+            // NB: a backstop for a value typed into the combo rather than picked from it. The offered
+            // list already stops at the longest window the history can serve.
+            if (Paused)
+                value = Math.Min(value, standardTimeBases[ServableTimeBases - 1]);
+
+            if (value == timebase)
+                return;
+
+            if (Paused)
+            {
+                anchorPosition = anchor;
+                anchorFraction = fraction;
+                anchorPending = true;
+            }
+
+            timebase = value;
         }
 
         /// <summary>
@@ -154,18 +281,22 @@ namespace OpenEphys.Onix1.Design
             if (!Paused)
                 return (waveformMinDecimator.Buffer, waveformMaxDecimator.Buffer);
 
-            if (!Panned)
+            if (!Panned && SnapshotCurrent)
                 return (pausedWaveformMin, pausedWaveformMax);
 
-            // NB: Pan refuses to move a view the buffer cannot serve, so this is a backstop; returning
-            // to where the pause left the view is always safe.
-            if (viewDirty && !TryReadPannedView())
+            // NB: a backstop. Whatever the read reached before it gave up stands, so the plot draws a
+            // gap or part of a frame, and the window goes back to the frozen frame to be tried again next
+            // frame. Returning the live buffers here would show the trace running while the cursor and the
+            // pause button both say it is frozen.
+            if (windowDirty && !TryReadWindow())
             {
-                viewStart = pauseViewStart;
-                return (pausedWaveformMin, pausedWaveformMax);
+                SetWindow(new DisplayWindow(0, window.Step, window.Columns));
+                return pannedWaveformMinDecimator is null
+                    ? (waveformMinDecimator.Buffer, waveformMaxDecimator.Buffer)
+                    : (pannedWaveformMinDecimator.Buffer, pannedWaveformMaxDecimator.Buffer);
             }
 
-            viewDirty = false;
+            windowDirty = false;
             return (pannedWaveformMinDecimator.Buffer, pannedWaveformMaxDecimator.Buffer);
         }
 
@@ -189,12 +320,18 @@ namespace OpenEphys.Onix1.Design
                 mouse.Y >= top && mouse.Y < top + ImGui.GetTextLineHeight();
 
             if (overLabels && ImGui.IsMouseDragging(ImGuiMouseButton.Left))
-                Pan((long)(ImGui.GetIO().MouseDelta.X * (WindowSamples / width)));
+                Pan((long)(ImGui.GetIO().MouseDelta.X * (window.Span / width)));
+
+            // NB: a division at a time, or most of a window with Shift, which is the same relationship
+            // W and S have for channels.
+            var step = ImGui.GetIO().KeyShift
+                ? (long)(window.Span * CoarsePanFraction)
+                : window.Span / TimeDivisions;
 
             if (ImGui.IsKeyPressed(ImGuiKey.A))
-                Pan(WindowSamples / TimeDivisions);
+                Pan(step);
             else if (ImGui.IsKeyPressed(ImGuiKey.D))
-                Pan(-WindowSamples / TimeDivisions);
+                Pan(-step);
         }
 
         void DisposeHistoryView()
@@ -203,13 +340,12 @@ namespace OpenEphys.Onix1.Design
             pausedWaveformMax?.Dispose();
             pausedWaveformMin = null;
             pausedWaveformMax = null;
-            windowScratch?.Dispose();
             pannedWaveformMinDecimator?.Dispose();
             pannedWaveformMaxDecimator?.Dispose();
-            windowScratch = null;
             pannedWaveformMinDecimator = null;
             pannedWaveformMaxDecimator = null;
             pauseSample = -1;
+            anchorPending = false;
         }
     }
 }

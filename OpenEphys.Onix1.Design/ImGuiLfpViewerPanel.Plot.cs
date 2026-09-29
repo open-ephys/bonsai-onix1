@@ -25,8 +25,16 @@ namespace OpenEphys.Onix1.Design
         public const float FrameWeight = GraticuleWeight;
         static readonly uint ColLabelHover = ImGuiPalette.WithAlpha(ImGuiPalette.White, 0x25);
 
-        readonly string[] divisionLabels = new string[TimeDivisions + 1];
-        double labeledTimebase = double.NaN;
+        float plotLeft;
+        float plotSpan;
+
+        /// <summary>
+        /// Where <paramref name="x"/> falls across the plot, from zero at its left edge to one at its
+        /// right.
+        /// </summary>
+        float PlotFraction(float x) =>
+            plotSpan > 0 ? Math.Max(0f, Math.Min(1f, (x - plotLeft) / plotSpan)) : 0.5f;
+
 
         /// <summary>
         /// Lays out the label column and the plot, with every channel in one plot whose y axis is in
@@ -90,10 +98,12 @@ namespace OpenEphys.Onix1.Design
                 ImGui.TableNextColumn();
                 plotX = ImGui.GetCursorScreenPos().X;
                 plotWidth = ImGui.GetContentRegionAvail().X;
+                plotLeft = plotX;
+                plotSpan = plotWidth;
                 if (ImPlot.BeginPlot("##channels", new(plotWidth, layout.Height), plotFlags))
                 {
                     ImPlot.SetupAxes(string.Empty, string.Empty, axesFlags, axesFlags);
-                    ImPlot.SetupAxisLimits(ImAxis.X1, 0, timeSpan, ImPlotCond.Always);
+                    ImPlot.SetupAxisLimits(ImAxis.X1, 0, waveformMinDecimator.Buffer.Cols, ImPlotCond.Always);
                     ImPlot.SetupAxisLimits(ImAxis.Y1, -(layout.LastRow - 1) - 0.5, -layout.FirstRow + 0.5, ImPlotCond.Always);
                     PlotTraces(waveformMin, waveformMax, layout.FirstVisible, layout.LastVisible);
                     PlotSweepCursor();
@@ -236,17 +246,20 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// Marks the column being written, or the column the pause instant fell at, which slides right
-        /// and off the plot as a paused view is moved back through history.
+        /// Marks the column being written, or where the pause instant falls, which leaves the plot to
+        /// either side as a paused view is moved away from it.
         /// </summary>
         unsafe void PlotSweepCursor()
         {
-            var sweepHead = Panned ? PannedCursorColumn : Paused ? pausedCursor : waveformMinDecimator.Cursor;
-            if (sweepHead < 0 || sweepHead >= waveformMinDecimator.Buffer.Cols)
+            // NB: paused, a whole column is the wrong answer: the pause instant falls wherever it falls
+            // inside one, and rounding it to the boundary moves it off the join it marks. Live it is a
+            // column, because a column is what is being written.
+            var columns = waveformMinDecimator.Buffer.Cols;
+            double sweepHead = Paused ? window.FractionOf(CursorPosition) * columns : waveformMinDecimator.Cursor;
+            if (sweepHead < 0 || sweepHead >= columns)
                 return;
 
-            timeRange.GetRawData(out IntPtr timeRangePtr, out int _, out Size _);
-            double sweepTime = ((float*)timeRangePtr)[sweepHead];
+            var sweepTime = sweepHead;
             ImPlot.PushStyleColor(ImPlotCol.Line, ImGui.ColorConvertU32ToFloat4(ColSweepCursor));
             ImPlot.PushStyleVar(ImPlotStyleVar.LineWeight, SweepCursorWeight);
             ImPlot.PlotInfLines(string.Empty, &sweepTime, 1);
@@ -270,29 +283,60 @@ namespace OpenEphys.Onix1.Design
             draw.AddRectFilled(new Vector2(r - w, t), new Vector2(r, b), ColGraticule);
         }
 
+        /// <summary>
+        /// Draws the divisions on the sweep's own axis, which panning extends backwards into negative
+        /// seconds.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Live, zero is the start of the sweep and the divisions run forward to the timebase, which is how
+        /// a sweep is read while it is being drawn. Freezing it changes what the numbers are for: the
+        /// display stops being a sweep in progress and becomes a record, so the cursor becomes zero and
+        /// everything else is how long before it the samples were taken. Data to the right of the cursor
+        /// came from the previous sweep and reads older still, which is the truth about it.
+        /// </para>
+        /// <para>
+        /// Either way a division sits at a position on the axis and not at a place on the plot, so it and
+        /// the samples taken at its time travel together: panning carries the divisions across the plot
+        /// rather than sliding data past them.
+        /// </para>
+        /// </remarks>
         void DrawGraticules(ImDrawListPtr draw, float left, float width, float top, float bottom, float labelY)
         {
             var t = MathF.Floor(top) + GraticuleWeight;
             var b = MathF.Floor(bottom) - GraticuleWeight;
             var textColor = ImGui.GetColorU32(ImGuiCol.Text);
 
-            if (labeledTimebase != timebase)
-            {
-                for (int d = 0; d <= TimeDivisions; d++)
-                    divisionLabels[d] = $"{d * timebase / TimeDivisions:g} s";
-                labeledTimebase = timebase;
-            }
+            // NB: a tenth of what is on screen, not of the timebase asked for. The window covers a whole
+            // number of columns and so falls a little short of the timebase, and a tenth of the timebase
+            // would not fit ten times: the count would flip between ten and eleven as the phase drifted,
+            // and the outermost division would come and go. The label still names the round timebase,
+            // which is off by less than a column, as it is live.
+            var interval = window.Span / (double)TimeDivisions;
+            var origin = Paused ? CursorPosition : 0;
 
-            for (int d = 0; d <= TimeDivisions; d++)
+            for (var d = (long)Math.Ceiling((window.Start - origin) / interval);
+                 d <= (long)Math.Floor((window.End - origin) / interval);
+                 d++)
             {
-                var x = left + d * width / TimeDivisions;
-                if (d > 0 && d < TimeDivisions)
-                {
-                    var l = MathF.Floor(x);
+                var position = origin + d * interval;
+                var x = left + (float)(width * window.FractionOf(position));
+
+                // NB: the frame already draws the edges, and a division within a pixel of one would
+                // thicken it rather than read as its own line.
+                var l = MathF.Floor(x);
+                if (l > left + 1 && l < left + width - 1)
                     draw.AddRectFilled(new Vector2(l, t), new Vector2(l + GraticuleWeight, b), ColGraticule);
-                }
 
-                var label = divisionLabels[d];
+                // NB: one lattice for the whole plot, so the divisions stay evenly spaced across the cursor
+                // and two of them can never land close enough to draw their labels over each other. Only
+                // the number changes there, by the width of the frozen frame, because that is how much
+                // older the samples on that side are. The cursor itself keeps its own zero.
+                var seconds = d * timebase / TimeDivisions;
+                if (Paused && position > CursorPosition)
+                    seconds -= pausedTimebase;
+
+                var label = $"{seconds:g} s";
                 draw.AddText(new Vector2(x - ImGui.CalcTextSize(label).X / 2, labelY), textColor, label);
             }
         }

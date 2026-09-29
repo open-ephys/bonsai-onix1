@@ -156,11 +156,9 @@ namespace OpenEphys.Onix1.Design
             LeadingColumns(panel);
 
             var timebaseWidth = MenuColumn("Timebase (s)");
-            ImGui.BeginDisabled(paused); // NB: changing would cause buffer refresh and unpause
             var timebase = panel.Timebase;
             if (InputDoubleCombo("##timebase", ref timebase, panel.StandardTimeBases, timebaseWidth))
                 panel.Timebase = timebase;
-            ImGui.EndDisabled();
 
             ImGui.SetNextItemWidth(MenuColumn("Chan. Height"));
             var channelHeight = panel.ChannelHeight;
@@ -210,20 +208,40 @@ namespace OpenEphys.Onix1.Design
                 panel.ColorGrouping = grouping;
             ImGui.EndDisabled();
 
-            var flowHeight = rows * rowPitch - RowGap;
+            var style = ImGui.GetStyle();
+            var pauseHeight = rowPitch - RowGap;
+            var barHeight = ImGui.GetFrameHeight() / 2;
+            var stackHeight = ImGui.GetTextLineHeight() + style.ItemSpacing.Y
+                + barHeight + style.ItemSpacing.Y + pauseHeight;
+
+            // NB: at one row the pause zone is taller than the controls beside it, so it sets the height.
+            var flowHeight = Math.Max(rows * rowPitch - RowGap, stackHeight);
             var ruleX = MathF.Floor(flowOrigin.X + flowWidth + RuleGap);
             ImGui.GetWindowDrawList().AddRectFilled(
                 new Vector2(ruleX, flowOrigin.Y),
                 new Vector2(ruleX + ImGuiLfpViewerPanel.FrameWeight, flowOrigin.Y + flowHeight),
                 ImGuiLfpViewerPanel.FrameColor);
 
-            // NB: one row tall and centered, rather than spanning every row: a narrow window wraps the
-            // controls into several, and a pause button that grew with them would end up absurdly tall.
-            var pauseHeight = rowPitch - RowGap;
-            ImGui.SetCursorScreenPos(new Vector2(
-                ruleX + ImGuiLfpViewerPanel.FrameWeight + RuleGap,
-                flowOrigin.Y + (flowHeight - pauseHeight) / 2));
+            // NB: the history bar and pause travel together as one stack, centered: a narrow window wraps
+            // the controls into several rows, and a pause button that grew with them would be absurdly tall.
+            var stackX = ruleX + ImGuiLfpViewerPanel.FrameWeight + RuleGap;
+            var stackY = flowOrigin.Y + (flowHeight - stackHeight) / 2;
+
+            var held = panel.HistoryHeldSeconds;
+            var span = panel.HistorySeconds;
+
+            ImGui.SetCursorScreenPos(new Vector2(stackX, stackY));
             PauseButton(panel, new Vector2(pauseWidth, pauseHeight));
+
+            ImGui.SetCursorScreenPos(new Vector2(
+                stackX, stackY + pauseHeight + 2 * style.ItemSpacing.Y));
+            ImGui.ProgressBar(
+                span > 0 ? (float)(held / span) : 0f,
+                new Vector2(pauseWidth, barHeight),
+                string.Empty);
+
+            ImGui.SetCursorScreenPos(new Vector2(stackX, stackY + pauseHeight + 2 * style.ItemSpacing.Y + ImGui.GetTextLineHeight()));
+            ImGui.Text($"Record Length: {held:0.0} / {span:0.0} s");
 
             // NB: positioning everything outright leaves the parent's content extent where it was, so
             // the whole laid-out area is claimed in one go. It goes last, so that the cursor ends below

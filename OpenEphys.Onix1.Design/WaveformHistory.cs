@@ -10,8 +10,8 @@ namespace OpenEphys.Onix1.Design
     /// <remarks>
     /// Samples are addressed on an absolute timeline that starts at zero and never wraps, so a reader can
     /// hold a position across writes; <see cref="Oldest"/> and <see cref="Count"/> bound what is still
-    /// held. The ring itself is never copied whole: a write or a read that straddles its end is two
-    /// copies of adjoining column ranges.
+    /// held. The ring itself is never handled whole: a write that straddles its end is two copies of
+    /// adjoining column ranges, and a read two reductions.
     /// </remarks>
     internal sealed class WaveformHistory : IDisposable
     {
@@ -85,26 +85,42 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// Copies the samples at <paramref name="first"/> on the absolute timeline into
-        /// <paramref name="destination"/>, which must be as wide as the window requested.
+        /// Feeds <paramref name="samples"/> samples from <paramref name="first"/> on the absolute
+        /// timeline through <paramref name="min"/> and <paramref name="max"/>.
         /// </summary>
+        /// <remarks>
+        /// The decimators carry their reduction across calls, so a range straddling the ring's end is
+        /// two reductions that come out as one, and a caller whose view is several ranges calls again for
+        /// each. Nothing is copied: at the longest timebase a window is the whole ring, and a contiguous
+        /// copy of it would double what the history costs.
+        /// </remarks>
         /// <returns>
-        /// False, having copied nothing, if any part of the window is no longer held.
+        /// False, having reduced nothing, if any part of the range is no longer held. What earlier calls
+        /// reduced still stands, so a caller partway through a view is left holding part of one.
         /// </returns>
-        public bool CopyWindow(long first, Mat destination)
+        public bool Decimate(long first, int samples, Decimator min, Decimator max)
         {
-            var samples = destination.Cols;
-            if (first < Oldest || first + samples > Count)
+            if (samples < 0 || first < Oldest || first + samples > Count)
                 return false;
 
             var start = (int)(first % Capacity);
             var run = Math.Min(samples, Capacity - start);
 
-            Copy(buffer, start, destination, 0, run);
+            Reduce(start, run, min, max);
             if (run < samples)
-                Copy(buffer, 0, destination, run, samples - run);
+                Reduce(0, samples - run, min, max);
 
             return true;
+        }
+
+        void Reduce(int column, int columns, Decimator min, Decimator max)
+        {
+            if (columns <= 0)
+                return;
+
+            using var window = buffer.GetSubRect(new Rect(column, 0, columns, buffer.Rows));
+            min.Process(window);
+            max.Process(window);
         }
 
         static void Copy(Mat source, int sourceColumn, Mat destination, int destinationColumn, int columns)

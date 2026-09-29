@@ -36,9 +36,31 @@ namespace OpenEphys.Onix1.Design
         public IReadOnlyList<double> StandardRanges => standardRanges;
 
         /// <summary>
-        /// Timebases offered as presets, capped by what the history behind the display can serve.
+        /// Timebases offered as presets. While paused the list stops at the longest window the history can
+        /// serve, so that nothing is offered which would only be clamped away on being chosen.
         /// </summary>
-        public IReadOnlyList<double> StandardTimeBases => standardTimeBases;
+        public IReadOnlyList<double> StandardTimeBases =>
+            new ArraySegment<double>(standardTimeBases, 0, ServableTimeBases);
+
+        /// <summary>
+        /// How many of the offered timebases the history can serve. A window is read past the pause instant
+        /// from a whole window earlier, so one longer than the history holds cannot be drawn at all.
+        /// </summary>
+        int ServableTimeBases
+        {
+            get
+            {
+                if (!Paused || history is null)
+                    return standardTimeBases.Length;
+
+                var held = (pauseSample - history.Oldest) / (double)sampleRate;
+                var count = 0;
+                while (count < standardTimeBases.Length && standardTimeBases[count] <= held)
+                    count++;
+
+                return Math.Max(1, count);
+            }
+        }
 
         const double ShortestTimeBase = 0.01;
         static readonly double[] TimeBaseSteps = { 1.0, 2.5, 5.0 };

@@ -5,6 +5,11 @@ namespace OpenEphys.Onix1.Design
 {
     partial class ImGuiLfpViewerPanel
     {
+        /// <summary>
+        /// How much of a window, or of the channels on screen, a coarse step covers.
+        /// </summary>
+        const float CoarsePanFraction = 0.8f;
+
         bool? dragHidden;
         int dragAnchor;
         bool dragLeftAnchor;
@@ -99,14 +104,28 @@ namespace OpenEphys.Onix1.Design
             // NB: the keys and the panning wheel are handled ahead of the rest because they answer
             // wherever the pointer is within the pane, as the pause key does, and apply to an expanded
             // channel as well. Scrolling has to be asked for inside the table that owns it.
+            var visibleRows = Math.Max(1, layout.LastVisible - layout.FirstVisible);
+            var channelStep = io.KeyShift
+                ? (int)(visibleRows * CoarsePanFraction) * layout.RowHeight
+                : layout.RowHeight;
+
             if (ImGui.IsKeyPressed(ImGuiKey.W))
-                ImGui.SetScrollY(ImGui.GetScrollY() - layout.RowHeight);
+                ImGui.SetScrollY(ImGui.GetScrollY() - channelStep);
             else if (ImGui.IsKeyPressed(ImGuiKey.S))
-                ImGui.SetScrollY(ImGui.GetScrollY() + layout.RowHeight);
+                ImGui.SetScrollY(ImGui.GetScrollY() + channelStep);
 
             if (io.MouseWheel != 0 && io.KeyCtrl && io.KeyShift && ImGui.IsWindowHovered())
             {
-                Pan(Math.Sign(io.MouseWheel) * (WindowSamples / TimeDivisions));
+                Pan(Math.Sign(io.MouseWheel) * (window.Span / TimeDivisions));
+                return;
+            }
+
+            // NB: anchored on the pointer rather than the middle of the view, so that whatever is being
+            // looked at stays where it is. The dropdown has no pointer to speak of and anchors on the
+            // middle instead.
+            if (io.MouseWheel != 0 && io.KeyShift && io.KeyAlt && ImGui.IsWindowHovered())
+            {
+                StepTimebase(io.MouseWheel > 0 ? -1 : 1, PlotFraction(mouse.X));
                 return;
             }
 
@@ -156,6 +175,25 @@ namespace OpenEphys.Onix1.Design
 
             channelHeight = height;
             ImGui.SetScrollY(baseScroll + pivot * (height - baseHeight));
+        }
+
+        void StepTimebase(int direction, float anchorFraction)
+        {
+            var offered = ServableTimeBases;
+            var i = Array.BinarySearch(standardTimeBases, 0, offered, timebase);
+            if (i < 0)
+            {
+                i = ~i;
+                if (direction < 0)
+                    i--;
+            }
+            else
+            {
+                i += direction;
+            }
+
+            var stepped = standardTimeBases[Math.Max(0, Math.Min(offered - 1, i))];
+            SetTimebase(stepped, PositionAtFraction(anchorFraction), anchorFraction);
         }
 
         void StepRange(int direction)
