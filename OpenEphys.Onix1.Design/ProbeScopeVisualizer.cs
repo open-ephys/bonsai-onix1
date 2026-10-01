@@ -56,6 +56,16 @@ namespace OpenEphys.Onix1.Design
         public double HistorySeconds { get; set; } = 10;
 
         /// <summary>
+        /// Gets or sets the name of the device whose data is displayed.
+        /// </summary>
+        /// <remarks>
+        /// Left empty, the upstream data operator's device is used if it can be unambiguously resolved. It needs
+        /// setting only when it cannot, as when the data arrives through a subject, or through a combinator
+        /// such as Zip that hides its source.
+        /// </remarks>
+        public abstract string DeviceName { get; set; }
+
+        /// <summary>
         /// What <see cref="HistorySeconds"/> costs on this probe, which only a concrete scope can say,
         /// knowing its own channel count and fastest band, and how much memory is reasonable to spend.
         /// </summary>
@@ -71,9 +81,9 @@ namespace OpenEphys.Onix1.Design
     /// and how to turn its <see cref="DeviceInfo"/> into geometry and bands.
     /// </summary>
     /// <remarks>
-    /// The visualizer opens on a pass-through sink node that must sit directly downstream of the data
-    /// operator. The device is resolved once the first frame arrives, since data
-    /// flowing proves the configuration operator has registered it.
+    /// The visualizer opens on a pass-through sink node downstream of the data operator. The device is
+    /// resolved once the first frame arrives, since data flowing proves the configuration operator has
+    /// registered it.
     /// </remarks>
     /// <typeparam name="TFrame">The data frame type the scope displays.</typeparam>
     public abstract class ProbeScopeVisualizer<TFrame> : BufferedVisualizer
@@ -90,6 +100,12 @@ namespace OpenEphys.Onix1.Design
         EventLoopScheduler scheduler;
 
         string deviceName;
+
+        // NB: shown in the pane rather than thrown. The scope is a view on data it does not change, so a
+        // mistake in it must not stop the workflow, and closing the window, correcting the name and
+        // reopening it should work while the workflow runs. Set on the scheduler thread as well as this
+        // one, and read once a frame.
+        volatile string fault;
         bool probePaneCollapsed;
         ProbeScopeSource source;
         float stripHeight;
@@ -129,15 +145,17 @@ namespace OpenEphys.Onix1.Design
         {
             var context = (ITypeVisualizerContext)provider.GetService(typeof(ITypeVisualizerContext));
             var workflowBuilder = (WorkflowBuilder)provider.GetService(typeof(WorkflowBuilder));
-            deviceName = FindUpstreamDeviceName(workflowBuilder?.Workflow, context.Source);
-
             var node = (ProbeScope<TFrame>)ExpressionBuilder.GetWorkflowElement(context.Source);
-            waveform = new(node.HistoryBytes) { RangeLabel = this.RangeLabel };
+            fault = null;
+            try { deviceName = FindDeviceName(workflowBuilder?.Workflow, context.Source, node.DeviceName); }
+            catch (InvalidOperationException ex) { fault = ex.Message; }
+
+            waveform = new(node.HistoryBytes);
             selector.ShowGrid = false;
             selector.ShowCoordinateReadout = false;
             selector.DefaultZoomWindowFraction = 1f;
 
-            strip = new ImGuiProbeScopeControlStrip();
+            strip = new ImGuiProbeScopeControlStrip { RangeLabel = this.RangeLabel };
 
             scheduler = new EventLoopScheduler();
 
@@ -161,53 +179,105 @@ namespace OpenEphys.Onix1.Design
             visualizerService?.AddControl(canvas);
         }
 
-        string FindUpstreamDeviceName(ExpressionBuilderGraph workflow, ExpressionBuilder self)
+        // NB: the name is only ever read here, never written back to the node, so what the workflow file
+        // holds is what was typed and is what runs. An empty name stands for the upstream device.
+        string FindDeviceName(ExpressionBuilderGraph workflow, ExpressionBuilder self, string declared)
         {
-            if (workflow is null || !TryFindNode(workflow, self, out var owner, out var node))
+            var (graph, node) = workflow is null ? default : Nodes(workflow).FirstOrDefault(x => x.Node.Value == self);
+            if (node is null)
                 throw new InvalidOperationException("ProbeScope could not locate itself in the workflow.");
 
-            var upstream = owner.Predecessors(node).ToList();
-            if (upstream.Count != 1)
-                throw new InvalidOperationException("ProbeScope must have exactly one input.");
+            // NB: only through nodes with exactly one input, such as a Condition or a Gate, which cannot
+            // bring in another device's data, and from a SubscribeSubject to whatever feeds its subject. It
+            // stops at a branch such as Zip, where nothing upstream says which device the data is from.
+            string attached = null;
+            while (attached is null)
+            {
+                var upstream = graph.Predecessors(node).ToList();
+                if (upstream.Count == 1)
+                {
+                    node = upstream[0];
+                    attached = DeviceNameOf(ExpressionBuilder.GetWorkflowElement(node.Value));
+                }
+                else if (upstream.Count != 0 ||
+                    ExpressionBuilder.Unwrap(node.Value) is not SubscribeSubject subscribe ||
+                    !TryFindSubjectSource(workflow, graph, subscribe.Name, out graph, out node))
+                {
+                    break;
+                }
+            }
 
-            var element = ExpressionBuilder.GetWorkflowElement(upstream[0].Value);
-            var name = DeviceNameOf(element);
-            if (name is null)
+            if (string.IsNullOrEmpty(declared))
+            {
+                return string.IsNullOrEmpty(attached)
+                    ? throw new InvalidOperationException(
+                        "ProbeScope could not find a data operator upstream that it can display. Set its DeviceName.")
+                    : attached;
+            }
+
+            if (!string.IsNullOrEmpty(attached) && attached != declared)
             {
                 throw new InvalidOperationException(
-                    $"ProbeScope must be attached directly to a data operator it can display, not to {element.GetType().Name}.");
+                    $"ProbeScope's DeviceName is {declared}, but its data comes from {attached}.");
             }
 
-            if (string.IsNullOrEmpty(name))
-                throw new InvalidOperationException($"The {element.GetType().Name} upstream of ProbeScope has no DeviceName set.");
-
-            return name;
+            return declared;
         }
 
-        static bool TryFindNode(
-            ExpressionBuilderGraph workflow,
-            ExpressionBuilder target,
-            out ExpressionBuilderGraph owner,
-            out Node<ExpressionBuilder, ExpressionBuilderArgument> node)
+        /// <summary>
+        /// Every node in <paramref name="graph"/> and the workflows nested in it, with the graph each belongs to.
+        /// </summary>
+        static IEnumerable<(ExpressionBuilderGraph Graph, Node<ExpressionBuilder, ExpressionBuilderArgument> Node)>
+            Nodes(ExpressionBuilderGraph graph)
         {
-            foreach (var candidate in workflow)
+            foreach (var node in graph)
             {
-                if (ReferenceEquals(candidate.Value, target))
+                yield return (graph, node);
+                if (ExpressionBuilder.Unwrap(node.Value) is WorkflowExpressionBuilder { Workflow: { } nested })
                 {
-                    owner = workflow;
-                    node = candidate;
-                    return true;
-                }
-
-                if (ExpressionBuilder.Unwrap(candidate.Value) is WorkflowExpressionBuilder nested &&
-                    nested.Workflow is not null &&
-                    TryFindNode(nested.Workflow, target, out owner, out node))
-                {
-                    return true;
+                    foreach (var inner in Nodes(nested))
+                        yield return inner;
                 }
             }
+        }
 
-            owner = null;
+        /// <summary>
+        /// The node that feeds the subject <paramref name="name"/> as seen from <paramref name="scope"/>: the
+        /// subject itself when it has an input, or else the one MulticastSubject that writes to it.
+        /// </summary>
+        /// <remarks>
+        /// Looked up as Bonsai resolves a subject, in the innermost workflow that declares the name and then
+        /// in each enclosing one.
+        /// </remarks>
+        static bool TryFindSubjectSource(
+            ExpressionBuilderGraph workflow,
+            ExpressionBuilderGraph scope,
+            string name,
+            out ExpressionBuilderGraph graph,
+            out Node<ExpressionBuilder, ExpressionBuilderArgument> node)
+        {
+            for (; scope is not null; scope = Nodes(workflow).FirstOrDefault(x =>
+                ExpressionBuilder.Unwrap(x.Node.Value) is WorkflowExpressionBuilder w && w.Workflow == scope).Graph)
+            {
+                var subject = scope.FirstOrDefault(n =>
+                    ExpressionBuilder.Unwrap(n.Value) is SubjectExpressionBuilder s && s.Name == name);
+                if (subject is null)
+                    continue;
+
+                if (scope.Predecessors(subject).Any())
+                {
+                    (graph, node) = (scope, subject);
+                    return true;
+                }
+
+                var writers = Nodes(scope)
+                    .Where(x => ExpressionBuilder.Unwrap(x.Node.Value) is MulticastSubject m && m.Name == name)
+                    .ToList();
+                (graph, node) = writers.Count == 1 ? writers[0] : default;
+                return writers.Count == 1;
+            }
+
+            graph = null;
             node = null;
             return false;
         }
@@ -220,6 +290,9 @@ namespace OpenEphys.Onix1.Design
 
         IObservable<object> BindBands(IObservable<object> frames)
         {
+            if (fault is not null)
+                return Observable.Never<object>();
+
             // NB: BufferedVisualizer forwards to Show under the lock its producer takes to append,
             // so without this hop the acquisition thread waits on the UI thread once a tick. It must
             // be one ordered thread: the band filters carry state across blocks.
@@ -231,6 +304,7 @@ namespace OpenEphys.Onix1.Design
                 .Publish(shared => shared
                     .Take(1)
                     .Select(_ => ResolveSource())
+                    .Where(probe => probe is not null)
                     .SelectMany(probe => Observable.Return<object>(probe)
                         .Concat(strip.BandSelected
                             .Select(band => BandOutput(probe, band, shared))
@@ -242,9 +316,17 @@ namespace OpenEphys.Onix1.Design
 
         ProbeScopeSource ResolveSource()
         {
-            DeviceInfo deviceInfo = null;
-            using (DeviceManager.GetDevice(deviceName).Subscribe(info => deviceInfo = info)) { }
-            return CreateSource(deviceInfo);
+            try
+            {
+                DeviceInfo deviceInfo = null;
+                using (DeviceManager.GetDevice(deviceName).Subscribe(info => deviceInfo = info)) { }
+                return CreateSource(deviceInfo);
+            }
+            catch (Exception ex)
+            {
+                fault = ex.Message;
+                return null;
+            }
         }
 
         IObservable<object> BandOutput(
@@ -331,7 +413,20 @@ namespace OpenEphys.Onix1.Design
             ImGui.SameLine();
 
             ImGui.BeginChild("##wavePane", new Vector2(waveWidth, availY));
-            waveform.Draw();
+            var message = fault;
+            if (message is null)
+                waveform.Draw();
+            else
+            {
+                // NB: TextUnformatted rather than TextWrapped, which reads its string as a printf format,
+                // and the message is exception text that may contain '%'.
+                ImGui.PushTextWrapPos();
+                ImGui.PushStyleColor(ImGuiCol.Text, ImGuiPalette.VibrantCoral);
+                ImGui.TextUnformatted(message);
+                ImGui.PopStyleColor();
+                ImGui.TextUnformatted("Close this window, correct the ProbeScope's DeviceName, and open it again.");
+                ImGui.PopTextWrapPos();
+            }
             ImGui.EndChild();
 
             ImGui.PopStyleVar();

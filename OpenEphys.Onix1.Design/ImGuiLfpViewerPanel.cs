@@ -66,11 +66,6 @@ namespace OpenEphys.Onix1.Design
         double rangeAmplitude = 500;
 
         /// <summary>
-        /// Unit shown beside the amplitude range control.
-        /// </summary>
-        public string RangeLabel { get; set; }
-
-        /// <summary>
         /// Seconds of data spanned by the display.
         /// </summary>
         public double Timebase
@@ -89,7 +84,7 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// Amplitude spanned by one channel's row, in the unit named by <see cref="RangeLabel"/>.
+        /// Amplitude spanned by one channel's row, in the units of the incoming data.
         /// </summary>
         public double RangeAmplitude
         {

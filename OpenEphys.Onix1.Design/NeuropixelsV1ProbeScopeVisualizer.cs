@@ -83,7 +83,7 @@ namespace OpenEphys.Onix1.Design
     }
 
     /// <summary>
-    /// Marks a point directly downstream of a <see cref="NeuropixelsV1eData"/> operator where a probe
+    /// Marks a point downstream of a <see cref="NeuropixelsV1eData"/> operator where a probe
     /// schematic and live waveform viewer can be opened.
     /// </summary>
     [TypeVisualizer(typeof(NeuropixelsV1ProbeScopeVisualizer))]
@@ -91,6 +91,12 @@ namespace OpenEphys.Onix1.Design
     public class NeuropixelsV1ProbeScope : ProbeScope<NeuropixelsV1DataFrame>
     {
         const double MaxHistorySeconds = 10;
+
+        /// <inheritdoc/>
+        [TypeConverter(typeof(NeuropixelsV1.NameConverter))]
+        [Description("The name of the device whose data is displayed. Leave empty to use the upstream data " +
+            "operator's device if it can be unambiguously resolved.")]
+        public override string DeviceName { get; set; }
 
         /// <inheritdoc/>
         internal override long HistoryBytes =>

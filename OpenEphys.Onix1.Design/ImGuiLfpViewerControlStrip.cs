@@ -81,6 +81,11 @@ namespace OpenEphys.Onix1.Design
         public bool Collapsed { get; set; }
 
         /// <summary>
+        /// Unit shown beside the amplitude range control.
+        /// </summary>
+        public string RangeLabel { get; set; }
+
+        /// <summary>
         /// Draws the strip into the region the caller has opened. Called once per frame.
         /// </summary>
         public void Draw(ImGuiLfpViewerPanel panel)
@@ -152,7 +157,7 @@ namespace OpenEphys.Onix1.Design
             if (InputDoubleCombo("##timebase", ref timebase, panel.StandardTimeBases, timebaseWidth))
                 panel.Timebase = timebase;
 
-            ImGui.SetNextItemWidth(MenuColumn("Chan. Height"));
+            ImGui.SetNextItemWidth(MenuColumn("Chan. Height (px)"));
             var channelHeight = panel.ChannelHeight;
             if (ImGui.DragInt(
                     "##channelHeight",
@@ -166,7 +171,7 @@ namespace OpenEphys.Onix1.Design
             }
 
             var rangeWidth = MenuColumn(
-                string.IsNullOrEmpty(panel.RangeLabel) ? "Range" : $"Range ({panel.RangeLabel})");
+                string.IsNullOrEmpty(RangeLabel) ? "Range" : $"Range ({RangeLabel})");
             var range = panel.RangeAmplitude;
             if (InputDoubleCombo("##range", ref range, panel.StandardRanges, rangeWidth))
                 panel.RangeAmplitude = range;
