@@ -16,6 +16,9 @@ namespace OpenEphys.Onix1.Design
         const float SweepCursorWeight = 1;
         const uint ColGraticule = ImGuiPalette.Grey0x88;
         const float GraticuleWeight = 1;
+        const float HoverLineWeight = 3;
+
+        static readonly uint ColFrozenTail = ImGuiPalette.WithAlpha(ImGuiPalette.Black, 0x80);
 
         /// <summary>
         /// Color and weight of the frame around the plot, so that a pane set beside it can be outlined
@@ -23,7 +26,7 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         public const uint FrameColor = ColGraticule;
         public const float FrameWeight = GraticuleWeight;
-        static readonly uint ColLabelHover = ImGuiPalette.WithAlpha(ImGuiPalette.White, 0x25);
+        const float HoverFillAlpha = 0.65f;
 
         float plotLeft;
         float plotSpan;
@@ -63,20 +66,13 @@ namespace OpenEphys.Onix1.Design
             var axesFlags = ImPlotAxisFlags.NoHighlight | ImPlotAxisFlags.NoDecorations;
             var tableFlags = ImGuiTableFlags.NoSavedSettings | ImGuiTableFlags.ScrollY;
 
-            // NB: the time labels take a band above the plot, and the drag that pans a paused view
-            // goes with them, leaving the bottom edge to whatever the owner puts there. They sit at
-            // the bottom of the band, next to the plot they label, so a taller band leaves room above
-            // them rather than pushing them away from it.
-            var textHeight = ImGui.GetTextLineHeight();
-            var headerHeight = Math.Max(textHeight, HeaderHeight);
-            var labelY = ImGui.GetCursorScreenPos().Y + headerHeight - textHeight;
+            // NB: the axis labels get a button-height row, so the plot's frame starts one button-height down.
+            var headerHeight = ImGui.GetFrameHeight();
+            var labelY = ImGui.GetCursorScreenPos().Y + ImGui.GetStyle().FramePadding.Y;
             ImGui.SetCursorPosY(ImGui.GetCursorPosY() + headerHeight);
 
-            // NB: the bar is drawn live as well as paused, filling its track because the window is then
-            // the whole axis. Reserving the band either way is what keeps the plot from changing height
-            // under the trace at the moment of pause.
             var scrollHeight = ImGui.GetStyle().ScrollbarSize;
-            var scrollGap = ImGui.GetStyle().ItemSpacing.Y;
+            var scrollGap = ImGui.GetStyle().ItemSpacing.Y / 2;
             var plotTop = ImGui.GetCursorScreenPos().Y;
             var tableHeight = ImGui.GetContentRegionAvail().Y - scrollHeight - scrollGap;
             var plotBottom = plotTop + tableHeight;
@@ -110,11 +106,13 @@ namespace OpenEphys.Onix1.Design
                     ImPlot.SetupAxes(string.Empty, string.Empty, axesFlags, axesFlags);
                     ImPlot.SetupAxisLimits(ImAxis.X1, 0, waveformMinDecimator.Buffer.Cols, ImPlotCond.Always);
                     ImPlot.SetupAxisLimits(ImAxis.Y1, -(layout.LastRow - 1) - 0.5, -layout.FirstRow + 0.5, ImPlotCond.Always);
-                    PlotTraces(waveformMin, waveformMax, layout.FirstVisible, layout.LastVisible);
+                    PlotTraces(waveformMin, waveformMax, layout.FirstVisible, layout.LastVisible, hovered);
                     PlotSweepCursor();
                     ImPlot.EndPlot();
 
-                    // NB: drawn after the plot so it lies over the traces
+                    // NB: both drawn after the plot, and from inside the table,
+                    // so they lie over the traces
+                    ShadeFrozenTail(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom);
                     DrawFrame(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom);
                 }
                 ImGui.EndTable();
@@ -129,6 +127,29 @@ namespace OpenEphys.Onix1.Design
                 HandlePanInput(plotX, plotWidth, labelY);
                 TimeScrollBar(plotX, plotWidth, plotBottom + scrollGap, scrollHeight);
             }
+        }
+
+        /// <summary>
+        /// Veils the part of a paused plot that is still showing the tail of the previous sweep.
+        /// </summary>
+        /// <remarks>
+        /// Everything to the right of the sweep cursor is both older than the sweep cursor and is repeated in
+        /// the record. This indicates that the data is stale and its better to look elsewhere.
+        /// </remarks>
+        void ShadeFrozenTail(ImDrawListPtr draw, float left, float width, float top, float bottom)
+        {
+            if (!Paused)
+                return;
+
+            var split = Math.Max(window.Start, Math.Min(window.End, CursorPosition));
+            if (split >= window.End)
+                return;
+
+            var x = MathF.Floor(left + (float)(width * window.FractionOf(split)));
+            draw.AddRectFilled(
+                new Vector2(x, MathF.Floor(top) + GraticuleWeight),
+                new Vector2(MathF.Floor(left + width) - GraticuleWeight, MathF.Floor(bottom) - GraticuleWeight),
+                ColFrozenTail);
         }
 
         /// <summary>
@@ -220,10 +241,7 @@ namespace OpenEphys.Onix1.Design
                 : new RowLayout(0, rows, channelHeight, top, bottom, origin);
         }
 
-        // NB: channel numbers are zero-padded to the width of the largest so the label column, and
-        // with it the plot, keeps one width whichever channels are scrolled into view.
-        static float LabelColumnWidth(int labelDigits) =>
-            ImGui.CalcTextSize("CH").X + labelDigits * ImGui.CalcTextSize("0").X;
+        static float LabelColumnWidth(int labelDigits) => labelDigits * ImGui.CalcTextSize("0").X;
 
         unsafe void ChannelLabels(in RowLayout layout, int labelDigits, int hovered)
         {
@@ -238,16 +256,19 @@ namespace OpenEphys.Onix1.Design
             for (int i = layout.FirstVisible; i < layout.LastVisible; i++)
             {
                 label.Reset();
-                label.Append("CH");
                 for (var n = DigitCount(i); n < labelDigits; n++)
                     label.Append('0');
                 label.Append(i);
                 label.End();
 
-                if (i == hovered)
+                // Highlight hovered channel
+                if (i == hovered && expandedChannel < 0)
                 {
                     var rowTop = layout.RowTop(i);
-                    draw.AddRectFilled(new Vector2(left, rowTop), new Vector2(right, rowTop + layout.RowHeight), ColLabelHover);
+                    var fill = ChannelColor(i);
+                    fill.W = HoverFillAlpha;
+                    draw.AddRectFilled(new Vector2(left, rowTop), new Vector2(right, rowTop + layout.RowHeight),
+                        ImGui.ColorConvertFloat4ToU32(fill));
                 }
 
                 var hidden = channelHidden[i];
@@ -271,7 +292,7 @@ namespace OpenEphys.Onix1.Design
         /// where <c>rowOffsets</c> is the constant <c>-i</c> term, one row per channel, and plots
         /// the visible rows.
         /// </summary>
-        unsafe void PlotTraces(Mat waveformMin, Mat waveformMax, int first, int last)
+        unsafe void PlotTraces(Mat waveformMin, Mat waveformMax, int first, int last, int hovered)
         {
             CV.AddWeighted(waveformMin, 1 / rangeAmplitude, rowOffsets, 1, 0, scaledWaveformMin);
             CV.AddWeighted(waveformMax, 1 / rangeAmplitude, rowOffsets, 1, 0, scaledWaveformMax);
@@ -287,44 +308,43 @@ namespace OpenEphys.Onix1.Design
 
                 var minLinePtr = (float*)((byte*)minPtr + i * minStep);
                 var maxLinePtr = (float*)((byte*)maxPtr + i * maxStep);
-                var group = colorGroupingEnabled
-                    ? i / colorGrouping
-                    : palette == ColorPalette.OpenEphysGui ? i : 0;
-                var channelColor = GroupColor(group);
+                var channelColor = ChannelColor(i);
                 ImPlot.PushStyleColor(ImPlotCol.Line, channelColor);
                 ImPlot.PushStyleColor(ImPlotCol.Fill, channelColor);
+
+                // Heavier outline on hovered trace
+                var weighted = i == hovered && expandedChannel < 0;
+                if (weighted) ImPlot.PushStyleVar(ImPlotStyleVar.LineWeight, HoverLineWeight);
+
                 ImPlot.PlotShaded(string.Empty, (float*)timeRangePtr, minLinePtr, maxLinePtr, columns);
                 ImPlot.PlotLine(string.Empty, (float*)timeRangePtr, minLinePtr, columns);
                 ImPlot.PlotLine(string.Empty, (float*)timeRangePtr, maxLinePtr, columns);
+
+                if (weighted) ImPlot.PopStyleVar();
                 ImPlot.PopStyleColor(2);
             }
         }
 
         /// <summary>
-        /// Marks the column being written, or where the pause instant falls, which leaves the plot to
-        /// either side as a paused view is moved away from it.
+        /// Marks the column being written, or where the display was paused.
         /// </summary>
         unsafe void PlotSweepCursor()
         {
-            // NB: paused, a whole column is the wrong answer: the pause instant falls wherever it falls
-            // inside one, and rounding it to the boundary moves it off the join it marks. Live it is a
-            // column, because a column is what is being written.
+            // NB: not rounded to a column while paused, since the pause instant can fall partway through one.
             var columns = waveformMinDecimator.Buffer.Cols;
             double sweepHead = Paused ? window.FractionOf(CursorPosition) * columns : waveformMinDecimator.Cursor;
             if (sweepHead < 0 || sweepHead >= columns)
                 return;
 
-            var sweepTime = sweepHead;
             ImPlot.PushStyleColor(ImPlotCol.Line, ImGui.ColorConvertU32ToFloat4(ColSweepCursor));
             ImPlot.PushStyleVar(ImPlotStyleVar.LineWeight, SweepCursorWeight);
-            ImPlot.PlotInfLines(string.Empty, &sweepTime, 1);
+            ImPlot.PlotInfLines(string.Empty, &sweepHead, 1);
             ImPlot.PopStyleVar();
             ImPlot.PopStyleColor();
         }
 
-        // NB: AddRectFilled on floored coordinates, here and in DrawGraticules, because AddRect and
-        // AddLine offset by half a pixel and anti-alias: a 1 px AddRect frame lands a pixel inside
-        // its extent, and thicker lines get a grey halo.
+        // NB: filled rects on whole pixels, here and in DrawGraticules. AddRect and AddLine draw half a
+        // pixel off and anti-alias, which blurs a 1 px line.
         static void DrawFrame(ImDrawListPtr draw, float left, float width, float top, float bottom)
         {
             var l = MathF.Floor(left);
@@ -339,22 +359,12 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// Draws the divisions on the sweep's own axis, which panning extends backwards into negative
-        /// seconds.
+        /// Draws the time divisions and their labels.
         /// </summary>
         /// <remarks>
-        /// <para>
-        /// Live, zero is the start of the sweep and the divisions run forward to the timebase, which is how
-        /// a sweep is read while it is being drawn. Freezing it changes what the numbers are for: the
-        /// display stops being a sweep in progress and becomes a record, so the cursor becomes zero and
-        /// everything else is how long before it the samples were taken. Data to the right of the cursor
-        /// came from the previous sweep and reads older still, which is the truth about it.
-        /// </para>
-        /// <para>
-        /// Either way a division sits at a position on the axis and not at a place on the plot, so it and
-        /// the samples taken at its time travel together: panning carries the divisions across the plot
-        /// rather than sliding data past them.
-        /// </para>
+        /// Live, zero is the start of the sweep. Paused, zero is the cursor and every label is how long before
+        /// the pause that sample was taken, so the frozen tail right of the cursor reads oldest. Divisions are
+        /// fixed to positions on the axis rather than to the plot, so they pan with the data.
         /// </remarks>
         void DrawGraticules(ImDrawListPtr draw, float left, float width, float top, float bottom, float labelY)
         {
@@ -362,11 +372,9 @@ namespace OpenEphys.Onix1.Design
             var b = MathF.Floor(bottom) - GraticuleWeight;
             var textColor = ImGui.GetColorU32(ImGuiCol.Text);
 
-            // NB: a tenth of what is on screen, not of the timebase asked for. The window covers a whole
-            // number of columns and so falls a little short of the timebase, and a tenth of the timebase
-            // would not fit ten times: the count would flip between ten and eleven as the phase drifted,
-            // and the outermost division would come and go. The label still names the round timebase,
-            // which is off by less than a column, as it is live.
+            // NB: a tenth of the window's span, not of the timebase. The span is a whole number of columns
+            // and slightly shorter, so a tenth of the timebase would not fit ten times and the last
+            // division would flicker. Labels still show the round timebase.
             var interval = window.Span / (double)TimeDivisions;
             var origin = Paused ? CursorPosition : 0;
 
@@ -377,16 +385,13 @@ namespace OpenEphys.Onix1.Design
                 var position = origin + d * interval;
                 var x = left + (float)(width * window.FractionOf(position));
 
-                // NB: the frame already draws the edges, and a division within a pixel of one would
-                // thicken it rather than read as its own line.
+                // NB: skip divisions on the edges, where the frame already draws a line.
                 var l = MathF.Floor(x);
                 if (l > left + 1 && l < left + width - 1)
                     draw.AddRectFilled(new Vector2(l, t), new Vector2(l + GraticuleWeight, b), ColGraticule);
 
-                // NB: one lattice for the whole plot, so the divisions stay evenly spaced across the cursor
-                // and two of them can never land close enough to draw their labels over each other. Only
-                // the number changes there, by the width of the frozen frame, because that is how much
-                // older the samples on that side are. The cursor itself keeps its own zero.
+                // NB: one spacing across the whole plot, so labels on either side of the cursor never
+                // overlap. Right of the cursor is the frozen tail, a whole frozen window older.
                 var seconds = d * timebase / TimeDivisions;
                 if (Paused && position > CursorPosition)
                     seconds -= pausedTimebase;

@@ -52,11 +52,6 @@ namespace OpenEphys.Onix1.Design
         const float HeaderInset = 6f;
 
         /// <summary>
-        /// Space between the title row and the first row of controls.
-        /// </summary>
-        const float HeaderGap = 12f;
-
-        /// <summary>
         /// Space above and below everything, inside whatever frame the owner draws. A collapsed strip
         /// is meant to take almost no room, so it keeps only enough to clear the toggle.
         /// </summary>
@@ -102,10 +97,7 @@ namespace OpenEphys.Onix1.Design
             ImGui.Unindent(HeaderInset);
 
             if (!Collapsed)
-            {
-                ImGui.Dummy(new Vector2(0, HeaderGap));
                 DrawControls(panel);
-            }
 
             // NB: an item rather than a cursor move, since nothing follows it to extend the content
             // extent and ImGui asserts when a cursor move is the last thing in a window.

@@ -131,6 +131,17 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
+        /// The color channel <paramref name="channel"/> is drawn in.
+        /// </summary>
+        /// <remarks>
+        /// Read by the trace and by the label naming it, which is the only way the two can be sure to agree
+        /// about which channel a color stands for.
+        /// </remarks>
+        Vector4 ChannelColor(int channel) => GroupColor(colorGroupingEnabled
+            ? channel / colorGrouping
+            : palette == ColorPalette.OpenEphysGui ? channel : 0);
+
+        /// <summary>
         /// The color for channel group <paramref name="group"/> under the selected <see
         /// cref="palette"/>.
         /// </summary>

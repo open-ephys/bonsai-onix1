@@ -71,16 +71,6 @@ namespace OpenEphys.Onix1.Design
         public string RangeLabel { get; set; }
 
         /// <summary>
-        /// Height of the band above the plot, which carries the time labels. Zero takes the height of
-        /// one line of text.
-        /// </summary>
-        /// <remarks>
-        /// Settable so that an owner placing something beside the plot can line the two up. The labels
-        /// sit at the bottom of the band whatever its height, leaving the top of it free.
-        /// </remarks>
-        public float HeaderHeight { get; set; }
-
-        /// <summary>
         /// Seconds of data spanned by the display.
         /// </summary>
         public double Timebase

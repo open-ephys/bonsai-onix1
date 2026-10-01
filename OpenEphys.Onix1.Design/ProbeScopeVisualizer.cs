@@ -80,7 +80,6 @@ namespace OpenEphys.Onix1.Design
     {
         const float ProbePaneWidth = 260f;
         const float CollapsedPaneWidth = 28f;
-        const float ProbeHeaderGap = 4f;
 
         readonly ImGuiProbeSelector selector = new();
         ImGuiLfpViewerPanel waveform;
@@ -294,11 +293,6 @@ namespace OpenEphys.Onix1.Design
             var waveWidth = Math.Max(200f, availX - probeWidth - ImGui.GetStyle().ItemSpacing.X);
             var probeOrigin = ImGui.GetCursorScreenPos();
 
-            // NB: the band is as tall as the collapse button, and the panel is told to match it, so
-            // the probe view and the plot start and end on the same lines without either asking the
-            // other what it reserved.
-            waveform.HeaderHeight = ImGui.GetFrameHeight() + ProbeHeaderGap;
-
             // NB: no vertical padding on either pane, so both start at their own top edge and the
             // two frames land on the same lines.
             var panePadding = ImGui.GetStyle().WindowPadding;
@@ -307,7 +301,9 @@ namespace OpenEphys.Onix1.Design
             ImGui.BeginChild("##probePane", new Vector2(probeWidth, availY),
                 ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
 
-            var probeViewTop = ImGui.GetCursorScreenPos().Y + waveform.HeaderHeight;
+            // NB: a button's height, which is the row the plot's time labels take as well, so the
+            // probe view and the plot begin on the same line
+            var probeViewTop = ImGui.GetCursorScreenPos().Y + ImGui.GetFrameHeight();
             if (ImGui.Button(probePaneCollapsed ? "»" : "«"))
                 probePaneCollapsed = !probePaneCollapsed;
 
