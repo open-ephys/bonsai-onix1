@@ -86,7 +86,14 @@ namespace OpenEphys.Onix1.Design
                 try
                 {
                     MakeCurrent();
+
+                    // NB: the Win32 and OpenGL3 backends share one current-context global inside
+                    // ImGuiImpl.dll, and WndProc on any ImGuiGLControl repoints it. A message for another
+                    // control dispatched mid-frame leaves it pointing at that control's context, so it is
+                    // re-asserted immediately before each backend call rather than once per frame.
+                    ImGuiImplOpenGL3.SetCurrentContext(imGuiCtx);
                     ImGuiImplOpenGL3.NewFrame();
+                    ImGuiImplWin32.SetCurrentContext(imGuiCtx);
                     ImGuiImplWin32.NewFrame();
                     ImGui.NewFrame();
 
@@ -106,6 +113,7 @@ namespace OpenEphys.Onix1.Design
                     GL.Viewport(0, 0, Width, Height);
                     GL.ClearColor(Color.Black);
                     GL.Clear(ClearBufferMask.ColorBufferBit);
+                    ImGuiImplOpenGL3.SetCurrentContext(imGuiCtx);
                     ImGuiImplOpenGL3.RenderDrawData(ImGui.GetDrawData());
 
                     SwapBuffers();
