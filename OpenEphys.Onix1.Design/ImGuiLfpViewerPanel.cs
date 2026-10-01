@@ -113,8 +113,8 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// Supplies one block of samples. Rebuilds the decimation buffers whenever the channel count,
-        /// element depth or bin width no longer matches the input.
+        /// Supplies one block of samples. Rebuilds the decimation buffers whenever the channel count or bin
+        /// width no longer matches the input.
         /// </summary>
         /// <param name="data">Channel-by-sample matrix, one row per channel.</param>
         /// <param name="dataSampleRate">Sample rate of the incoming data, in Hz.</param>
@@ -153,14 +153,27 @@ namespace OpenEphys.Onix1.Design
                 RebuildTimeBases(capacity / (double)sampleRate);
             }
 
+            RebuildBuffers(data.Rows);
+            waveformMinDecimator.Process(data);
+            waveformMaxDecimator.Process(data);
+
+            if (!Paused)
+                history.Write(data);
+        }
+
+        /// <summary>
+        /// Rebuilds the decimation buffers if the channel count or the timebase no longer matches them, and
+        /// moves the window onto the new column spacing.
+        /// </summary>
+        void RebuildBuffers(int rows)
+        {
             var totalSamples = Math.Max(1, (int)(timebase * sampleRate));
             var samplesPerBin = (totalSamples + maxSamplesPerChannel - 1) / maxSamplesPerChannel;
             var columns = totalSamples / samplesPerBin;
             var buffersStale =
                 timeRange is null ||
-                waveformMinDecimator.Buffer.Rows != data.Rows ||        // # channels
+                waveformMinDecimator.Buffer.Rows != rows ||             // # channels
                 waveformMinDecimator.Buffer.Cols != columns ||          // # downsamples
-                waveformMinDecimator.InputDepth != data.Depth ||        // inner type
                 waveformMinDecimator.DownsampleFactor != samplesPerBin; // factor to map totalSamples -> # downsamples
 
             if (buffersStale)
@@ -173,13 +186,13 @@ namespace OpenEphys.Onix1.Design
                 scaledWaveformMax?.Dispose();
                 pannedWaveformMinDecimator?.Dispose();
                 pannedWaveformMaxDecimator?.Dispose();
-                waveformMinDecimator = new Decimator(data, columns, samplesPerBin, ReduceOperation.Min);
-                waveformMaxDecimator = new Decimator(data, columns, samplesPerBin, ReduceOperation.Max);
+                waveformMinDecimator = new Decimator(rows, columns, samplesPerBin, ReduceOperation.Min);
+                waveformMaxDecimator = new Decimator(rows, columns, samplesPerBin, ReduceOperation.Max);
 
                 // NB: the paused view reduces out of the history into its own pair, at the same width as
                 // the live one, so that changing the timebase while paused rebuilds both together.
-                pannedWaveformMinDecimator = new Decimator(data, columns, samplesPerBin, ReduceOperation.Min);
-                pannedWaveformMaxDecimator = new Decimator(data, columns, samplesPerBin, ReduceOperation.Max);
+                pannedWaveformMinDecimator = new Decimator(rows, columns, samplesPerBin, ReduceOperation.Min);
+                pannedWaveformMaxDecimator = new Decimator(rows, columns, samplesPerBin, ReduceOperation.Max);
 
                 // NB: the plot's own axis is the column index, so that a column lands where the
                 // divisions and the cursor put it. Any other unit needs the plot's first and last column
@@ -188,19 +201,19 @@ namespace OpenEphys.Onix1.Design
                 timeRange = new Mat(1, columns, Depth.F32, 1);
                 CV.Range(timeRange, 0, columns);
 
-                rowOffsets = new Mat(data.Rows, columns, Depth.F32, 1);
-                for (int i = 0; i < data.Rows; i++)
+                rowOffsets = new Mat(rows, columns, Depth.F32, 1);
+                for (int i = 0; i < rows; i++)
                 {
                     using var row = rowOffsets.GetRow(i);
                     row.Set(Scalar.All(-i));
                 }
 
-                scaledWaveformMin = new Mat(data.Rows, columns, Depth.F32, 1);
-                scaledWaveformMax = new Mat(data.Rows, columns, Depth.F32, 1);
-                if (channelHidden.Length != data.Rows)
+                scaledWaveformMin = new Mat(rows, columns, Depth.F32, 1);
+                scaledWaveformMax = new Mat(rows, columns, Depth.F32, 1);
+                if (channelHidden.Length != rows)
                 {
-                    channelHidden = new bool[data.Rows];
-                    dragOriginal = new bool[data.Rows];
+                    channelHidden = new bool[rows];
+                    dragOriginal = new bool[rows];
                 }
             }
 
@@ -208,12 +221,6 @@ namespace OpenEphys.Onix1.Design
             // the same column spacing still moves the window to where the gesture asked.
             if (buffersStale || anchorPending)
                 RebuildWindow(samplesPerBin, columns);
-
-            waveformMinDecimator.Process(data);
-            waveformMaxDecimator.Process(data);
-
-            if (!Paused)
-                history.Write(data);
         }
 
         /// <summary>
@@ -225,6 +232,11 @@ namespace OpenEphys.Onix1.Design
             // gestures would free the matrices the plot is about to read.
             if (ImGui.IsKeyPressed(ImGuiKey.Space))
                 Paused = !Paused;
+
+            // NB: also here and not only in Update, so a timebase change takes effect while no data is
+            // arriving, as when paused after acquisition has stopped.
+            if (waveformMinDecimator is not null)
+                RebuildBuffers(waveformMinDecimator.Buffer.Rows);
 
             if (timeRange is not null)
             {

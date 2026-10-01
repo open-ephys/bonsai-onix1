@@ -18,10 +18,9 @@ namespace OpenEphys.Onix1.Design
         int writeIndex;
         int inputIndex;
         readonly Mat carryBuffer;
-        readonly Mat conversionBuffer;
         readonly ReduceOperation reduceOp;
 
-        public Decimator(Mat input, int length, int factor, ReduceOperation reduceOperation)
+        public Decimator(int rows, int length, int factor, ReduceOperation reduceOperation)
         {
             if (length < 1)
                 throw new ArgumentOutOfRangeException(nameof(length));
@@ -31,14 +30,11 @@ namespace OpenEphys.Onix1.Design
 
             writeIndex = 0;
             DownsampleFactor = factor;
-            InputDepth = input.Depth;
             carry = DownsampleFactor;
-            carryBuffer = new Mat(input.Rows, 1, Depth.F32, input.Channels);
-            Buffer = new Mat(input.Rows, length, Depth.F32, input.Channels);
+            carryBuffer = new Mat(rows, 1, Depth.F32, 1);
+            Buffer = new Mat(rows, length, Depth.F32, 1);
             Buffer.Set(Scalar.All(double.NaN));
             reduceOp = reduceOperation;
-            if (InputDepth != Depth.F32)
-                conversionBuffer = new Mat(input.Size, Depth.F32, input.Channels);
         }
 
         public Mat Buffer { get; }
@@ -58,8 +54,6 @@ namespace OpenEphys.Onix1.Design
 
         public int DownsampleFactor { get; }
 
-        public Depth InputDepth { get; }
-
         /// <summary>
         /// Reduces a block of samples into <see cref="Buffer"/>, continuing from the column the previous call
         /// left off at.
@@ -69,15 +63,9 @@ namespace OpenEphys.Onix1.Design
         /// therefore fills every column once and leaves <see cref="Cursor"/> back at zero, which is how a
         /// whole window is reduced without a second implementation of the binning.
         /// </remarks>
-        /// <param name="input">Channel-by-sample matrix to reduce.</param>
+        /// <param name="input">Channel-by-sample matrix of 32-bit floats to reduce.</param>
         public void Process(Mat input)
         {
-            if (conversionBuffer is not null)
-            {
-                CV.ConvertScale(input, conversionBuffer);
-                input = conversionBuffer;
-            }
-
             while (inputIndex < input.Cols)
             {
                 var inputSamples = Math.Min(input.Cols - inputIndex, carry);
@@ -133,7 +121,6 @@ namespace OpenEphys.Onix1.Design
         {
             Buffer.Dispose();
             carryBuffer.Dispose();
-            conversionBuffer?.Dispose();
         }
     }
 }
