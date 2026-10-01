@@ -42,7 +42,7 @@ namespace OpenEphys.Onix1.Design
         {
             var bandWidth = MenuColumn("Band");
 
-            ImGui.BeginDisabled(panel.Paused); // NB: changing would cause buffer refresh and unpause
+            ImGui.BeginDisabled(panel.Paused); // NB: a band change while paused would not show until resumed
 
             // NB: the checkbox shares the slot, so the combo takes what it leaves.
             const string ReferenceLabel = "CMR";

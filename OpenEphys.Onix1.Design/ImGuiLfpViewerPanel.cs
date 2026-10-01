@@ -117,27 +117,34 @@ namespace OpenEphys.Onix1.Design
         /// element depth or bin width no longer matches the input.
         /// </summary>
         /// <param name="data">Channel-by-sample matrix, one row per channel.</param>
-        /// <param name="bandSampleRate">Sample rate of the incoming data, in Hz.</param>
+        /// <param name="dataSampleRate">Sample rate of the incoming data, in Hz.</param>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="bandSampleRate"/> is less than one, which leaves timebase without a normalizing unit.
+        /// <paramref name="dataSampleRate"/> is less than one, which leaves timebase without a normalizing unit.
         /// </exception>
-        public void Update(Mat data, int bandSampleRate)
+        public void Update(Mat data, int dataSampleRate)
         {
-            if (bandSampleRate < 1)
-                throw new ArgumentOutOfRangeException(nameof(bandSampleRate));
+            if (dataSampleRate < 1)
+                throw new ArgumentOutOfRangeException(nameof(dataSampleRate));
 
-            // NB: the history converts sample offsets to time with a single factor, so it cannot hold
-            // two rates. A change of band that keeps the rate is left alone: what the history holds is
-            // what was displayed, seams included.
-            var historyInvalid = bandSampleRate != sampleRate;
-            sampleRate = bandSampleRate;
             var budgetSamples = historyBytes / (data.Rows * sizeof(float));
             var capacity = (int)Math.Max(1, Math.Min(int.MaxValue, budgetSamples));
-            if (history is null || history.Rows != data.Rows || history.Capacity != capacity)
+            var historyReplaced = history is null || history.Rows != data.Rows || history.Capacity != capacity;
+
+            // NB: the history converts sample offsets to time with a single factor, so it cannot hold two
+            // rates. A change of band that keeps the rate is left alone: what the history holds is what was
+            // displayed, seams between band switches are included.
+            var historyInvalid = historyReplaced || dataSampleRate != sampleRate;
+
+            // NB: a paused view is read from the history, so a block that would clear it is dropped. Once
+            // the view resumes, the next block still differs and is applied as usual.
+            if (Paused && historyInvalid)
+                return;
+
+            sampleRate = dataSampleRate;
+            if (historyReplaced)
             {
                 history?.Dispose();
                 history = new WaveformHistory(data.Rows, capacity);
-                historyInvalid = true;
             }
 
             if (historyInvalid)
