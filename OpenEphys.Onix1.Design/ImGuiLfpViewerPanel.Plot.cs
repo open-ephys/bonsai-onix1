@@ -59,7 +59,6 @@ namespace OpenEphys.Onix1.Design
 
             ImPlot.PushStyleVar(ImPlotStyleVar.Padding, new Vector2(0, 0));
             ImPlot.PushStyleVar(ImPlotStyleVar.BorderSize, 0);
-            ImPlot.PushStyleVar(ImPlotStyleVar.FillAlpha, 0.25f);
             ImPlot.PushStyleColor(ImPlotCol.Bg, Vector4.Zero);
 
             var plotFlags = ImPlotFlags.CanvasOnly | ImPlotFlags.NoFrame | ImPlotFlags.NoInputs;
@@ -106,7 +105,8 @@ namespace OpenEphys.Onix1.Design
                     ImPlot.SetupAxes(string.Empty, string.Empty, axesFlags, axesFlags);
                     ImPlot.SetupAxisLimits(ImAxis.X1, 0, waveformMinDecimator.Buffer.Cols, ImPlotCond.Always);
                     ImPlot.SetupAxisLimits(ImAxis.Y1, -(layout.LastRow - 1) - 0.5, -layout.FirstRow + 0.5, ImPlotCond.Always);
-                    PlotTraces(waveformMin, waveformMax, layout.FirstVisible, layout.LastVisible, hovered);
+                    PlotTraces(waveformMin, waveformMax, layout.FirstVisible, layout.LastVisible, hovered,
+                        layout.RowHeight);
                     PlotSweepCursor();
                     ImPlot.EndPlot();
 
@@ -119,7 +119,7 @@ namespace OpenEphys.Onix1.Design
             }
 
             ImPlot.PopStyleColor();
-            ImPlot.PopStyleVar(3);
+            ImPlot.PopStyleVar(2);
 
             if (plotWidth > 0)
             {
@@ -292,37 +292,81 @@ namespace OpenEphys.Onix1.Design
         /// where <c>rowOffsets</c> is the constant <c>-i</c> term, one row per channel, and plots
         /// the visible rows.
         /// </summary>
-        unsafe void PlotTraces(Mat waveformMin, Mat waveformMax, int first, int last, int hovered)
+        unsafe void PlotTraces(Mat waveformMin, Mat waveformMax, int first, int last, int hovered, float rowHeight)
         {
             CV.AddWeighted(waveformMin, 1 / rangeAmplitude, rowOffsets, 1, 0, scaledWaveformMin);
             CV.AddWeighted(waveformMax, 1 / rangeAmplitude, rowOffsets, 1, 0, scaledWaveformMax);
             scaledWaveformMin.GetRawData(out IntPtr minPtr, out int minStep, out Size shape);
             scaledWaveformMax.GetRawData(out IntPtr maxPtr, out int maxStep, out Size _);
-            timeRange.GetRawData(out IntPtr timeRangePtr, out int _, out Size _);
             var columns = shape.Width;
+
+            // NB: no more bins than the plot has pixels, each holding the min and max of the columns that
+            // fall in it. A pixel cannot show more than that, and every column drawn costs the same however
+            // many share a pixel. Each bin sits at the first column it covers, on the plot's column axis.
+            var pixels = (int)plotSpan;
+            var bins = pixels > 0 && pixels < columns ? pixels : columns;
+            float* binX = stackalloc float[bins];
+            float* binMin = stackalloc float[bins];
+            float* binMax = stackalloc float[bins];
+            for (int p = 0; p < bins; p++)
+                binX[p] = p * columns / bins;
+
+            // NB: every bin at least a pixel tall. With no outline to fall back on, a bin whose min and max
+            // sit closer than that is too thin to rasterize, and a slow trace would vanish where it is flattest.
+            var pixel = 1f / rowHeight;
+
+            // NB: an expanded channel is drawn alone, so it keeps the translucent fill and outlines that show
+            // its shape best. Otherwise outlines would double what each channel costs to draw, so the fill
+            // carries the trace on its own and outlines mark only the channel under the pointer.
+            var expanded = expandedChannel >= 0;
+            ImPlot.PushStyleVar(ImPlotStyleVar.FillAlpha, expanded ? 0.25f : 1f);
 
             for (int i = first; i < last; i++)
             {
                 if (channelHidden[i] && i != expandedChannel)
                     continue;
 
-                var minLinePtr = (float*)((byte*)minPtr + i * minStep);
-                var maxLinePtr = (float*)((byte*)maxPtr + i * maxStep);
+                var minLine = (float*)((byte*)minPtr + i * minStep);
+                var maxLine = (float*)((byte*)maxPtr + i * maxStep);
+                for (int p = 0; p < bins; p++)
+                {
+                    int start = p * columns / bins, end = (p + 1) * columns / bins;
+                    float low = minLine[start], high = maxLine[start];
+                    for (int c = start + 1; c < end; c++)
+                    {
+                        low = Math.Min(low, minLine[c]);
+                        high = Math.Max(high, maxLine[c]);
+                    }
+
+                    var shortfall = pixel - (high - low);
+                    if (shortfall > 0)
+                    {
+                        low -= shortfall / 2;
+                        high += shortfall / 2;
+                    }
+
+                    binMin[p] = low;
+                    binMax[p] = high;
+                }
+
                 var channelColor = ChannelColor(i);
-                ImPlot.PushStyleColor(ImPlotCol.Line, channelColor);
                 ImPlot.PushStyleColor(ImPlotCol.Fill, channelColor);
+                ImPlot.PushStyleColor(ImPlotCol.Line, channelColor);
+                ImPlot.PlotShaded(string.Empty, binX, binMin, binMax, bins);
 
-                // Heavier outline on hovered trace
-                var weighted = i == hovered && expandedChannel < 0;
-                if (weighted) ImPlot.PushStyleVar(ImPlotStyleVar.LineWeight, HoverLineWeight);
+                var hover = i == hovered && !expanded;
+                if (expanded || hover)
+                {
+                    if (hover) ImPlot.PushStyleVar(ImPlotStyleVar.LineWeight, HoverLineWeight);
+                    ImPlot.PlotLine(string.Empty, binX, binMin, bins);
+                    ImPlot.PlotLine(string.Empty, binX, binMax, bins);
+                    if (hover) ImPlot.PopStyleVar();
+                }
 
-                ImPlot.PlotShaded(string.Empty, (float*)timeRangePtr, minLinePtr, maxLinePtr, columns);
-                ImPlot.PlotLine(string.Empty, (float*)timeRangePtr, minLinePtr, columns);
-                ImPlot.PlotLine(string.Empty, (float*)timeRangePtr, maxLinePtr, columns);
-
-                if (weighted) ImPlot.PopStyleVar();
                 ImPlot.PopStyleColor(2);
             }
+
+            ImPlot.PopStyleVar();
         }
 
         /// <summary>
