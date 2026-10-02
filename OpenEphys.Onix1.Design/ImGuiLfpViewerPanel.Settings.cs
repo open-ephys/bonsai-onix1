@@ -23,11 +23,6 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// Smallest height a channel row may be given.
         /// </summary>
-        /// <remarks>
-        /// A constant for now. It is a property rather than a constant so that it can later be
-        /// derived from the pane height and the channel count without anything driving the panel
-        /// having to change.
-        /// </remarks>
         public int MinChannelHeight => 2;
 
         /// <summary>
@@ -36,15 +31,13 @@ namespace OpenEphys.Onix1.Design
         public IReadOnlyList<double> StandardRanges => standardRanges;
 
         /// <summary>
-        /// Timebases offered as presets. While paused the list stops at the longest window the history can
-        /// serve, so that nothing is offered which would only be clamped away on being chosen.
+        /// Timebases offered as presets. While paused, only those the history can fill.
         /// </summary>
         public IReadOnlyList<double> StandardTimeBases =>
             new ArraySegment<double>(standardTimeBases, 0, ServableTimeBases);
 
         /// <summary>
-        /// How many of the offered timebases the history can serve. A window is read past the pause instant
-        /// from a whole window earlier, so one longer than the history holds cannot be drawn at all.
+        /// How many of the offered timebases fit in what the history holds while paused.
         /// </summary>
         int ServableTimeBases
         {
@@ -134,8 +127,7 @@ namespace OpenEphys.Onix1.Design
         /// The color channel <paramref name="channel"/> is drawn in.
         /// </summary>
         /// <remarks>
-        /// Read by the trace and by the label naming it, which is the only way the two can be sure to agree
-        /// about which channel a color stands for.
+        /// Read by both the trace and its label's hover highlight, so the two always agree.
         /// </remarks>
         Vector4 ChannelColor(int channel) => GroupColor(colorGroupingEnabled
             ? channel / colorGrouping
@@ -146,11 +138,9 @@ namespace OpenEphys.Onix1.Design
         /// cref="palette"/>.
         /// </summary>
         /// <remarks>
-        /// In <see cref="ColorPalette.Custom"/>, groups are variants of the one picked hue, spread
-        /// across <see cref="PaletteSteps"/> saturation/value combinations rather than assigned in
-        /// order, so that consecutive groups land far apart in the ramp instead of a barely
-        /// different neighboring shade — group 0 is always the picked color unmodified, which is
-        /// also what a single-group plot gets.
+        /// In <see cref="ColorPalette.Custom"/>, groups are shades of the picked hue, taken out of order from
+        /// <see cref="PaletteSteps"/> saturation and value steps so that neighboring groups differ clearly.
+        /// Group 0 is the picked color itself.
         /// </remarks>
         Vector4 GroupColor(int group)
         {

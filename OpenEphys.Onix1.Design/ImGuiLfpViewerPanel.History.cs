@@ -6,17 +6,14 @@ namespace OpenEphys.Onix1.Design
 {
     /// <remarks>
     /// <para>
-    /// A paused display is laid out on one axis, measured in samples from the start of the sweep that was
-    /// frozen. Position zero is that start, and the frozen frame reaches from there to the width the
-    /// display had when it was paused. Panning back runs into negative positions, as far as the oldest
-    /// sample the history still holds.
+    /// A paused view is laid out on an axis of positions, in samples, with zero at the first sample of the
+    /// frozen sweep. The frozen frame covers zero to its own width, and panning back reaches negative
+    /// positions, down to the oldest sample the history holds.
     /// </para>
     /// <para>
-    /// Up to the sweep cursor, the sample at a position is that position. At and past it, the display was
-    /// still showing the tail of the previous sweep, so the sample is one frozen width earlier. That is a
-    /// fixed block of samples, settled at the moment of pause, so the signal drawn there cannot slide when
-    /// the timebase changes. It is the one place where two positions name the same sample, and it is why
-    /// everything here moves in positions and never in sample numbers: there is no way back.
+    /// Left of the sweep cursor, a position shows the sample at that position. From the cursor on, the frame
+    /// was still showing the previous sweep, so a position there shows the sample one frozen width earlier.
+    /// Two positions can therefore show the same sample, so the view is moved by position, never by sample.
     /// </para>
     /// </remarks>
     partial class ImGuiLfpViewerPanel
@@ -48,14 +45,13 @@ namespace OpenEphys.Onix1.Design
         Decimator pannedWaveformMaxDecimator;
 
         /// <summary>
-        /// Seconds of signal the history can hold, which is what the memory it was given buys at the current
-        /// sample rate.
+        /// Seconds of signal the history can hold at the current sample rate.
         /// </summary>
         public double HistorySeconds => history is null ? 0 : history.Capacity / (double)sampleRate;
 
         /// <summary>
-        /// Seconds of signal the history currently holds. It stops advancing while paused, since what the
-        /// user paused on must not expire while they are looking at it.
+        /// Seconds of signal the history currently holds. It does not grow while paused, when the history is
+        /// not written.
         /// </summary>
         public double HistoryHeldSeconds =>
             history is null ? 0 : (history.Count - history.Oldest) / (double)sampleRate;
@@ -66,8 +62,8 @@ namespace OpenEphys.Onix1.Design
         bool Panned => Paused && window.Start != 0;
 
         /// <summary>
-        /// Whether the matrices cloned at the pause instant still describe the display. They stop doing so
-        /// when the timebase changes, which rebuilds the decimators at a different width.
+        /// Whether the buffers copied at pause still match the display's columns, which a timebase change
+        /// alters.
         /// </summary>
         bool SnapshotCurrent =>
             pausedWaveformMin is not null &&
@@ -89,8 +85,8 @@ namespace OpenEphys.Onix1.Design
         /// Freezes the display on what is drawn now.
         /// </summary>
         /// <remarks>
-        /// The cursor column holds the newest sample, so the sweep began <c>cursor</c> bins before it and
-        /// the frame reaches one width past it, into the tail of the previous sweep.
+        /// The sweep began <c>Cursor</c> columns before the newest sample, and the frame runs one full width
+        /// from there, into the tail of the previous sweep.
         /// </remarks>
         void Pause()
         {
@@ -117,9 +113,8 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <remarks>
-        /// History stops being written while paused, so that what the user paused on cannot expire while
-        /// they look at it. That leaves a gap in the timeline, which the buffer is told to abandon rather
-        /// than let a later view read across it.
+        /// The history is not written while paused, so that what was paused on cannot expire. Resuming
+        /// clears it rather than leave a gap that a later view could read across.
         /// </remarks>
         void Resume()
         {
@@ -160,12 +155,11 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// Takes the column spacing the decimators have just been rebuilt at, keeping whatever the last
-        /// gesture asked to hold in place.
+        /// Adopts the column spacing the decimators were just rebuilt at, keeping in place whatever the last
+        /// timebase change asked to hold.
         /// </summary>
         /// <remarks>
-        /// Called for the live display too, where the window is only there to give the divisions something
-        /// to be placed against.
+        /// Also called live, where the window only places the divisions.
         /// </remarks>
         void RebuildWindow(int step, int columns)
         {
@@ -206,11 +200,8 @@ namespace OpenEphys.Onix1.Design
         /// Reduces the samples the window covers straight out of the history.
         /// </summary>
         /// <remarks>
-        /// At most two runs of positions, split where the frozen tail begins. The decimators carry a
-        /// part-filled bin from one call to the next, so a column lying across that split is reduced from
-        /// both sides without either side knowing, and <see cref="WaveformHistory.Decimate"/> splits again
-        /// where a run straddles the end of the ring. The runs add up to the window's span, so every
-        /// column is filled.
+        /// Read as at most two runs, split where the frozen tail begins. The decimators carry a part-filled
+        /// column from one run into the next, so a column across the split is reduced from both.
         /// </remarks>
         /// <returns>False if the history can no longer serve the window.</returns>
         bool TryReadWindow()
@@ -248,8 +239,8 @@ namespace OpenEphys.Onix1.Design
         /// currently occupies.
         /// </summary>
         /// <remarks>
-        /// The new column spacing is not known until <see cref="Update"/> rebuilds the decimators, so what
-        /// to hold is recorded here and the window solved for there.
+        /// The new column spacing is not known until <see cref="RebuildBuffers"/> runs, so the anchor is
+        /// recorded here and the window solved there.
         /// </remarks>
         void SetTimebase(double value, long anchor, double fraction)
         {
@@ -272,9 +263,8 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// The envelope to draw this frame: two matrices of one row per channel and one column per bin across
-        /// the plot, holding the smallest and largest sample that fell in each decimation bin, which the plot
-        /// fills between and outlines.
+        /// The min and max buffers to draw this frame: the live ones, the copies taken at pause, or ones read
+        /// from the history for a view that has been moved.
         /// </summary>
         (Mat WaveformMin, Mat WaveformMax) DisplayEnvelope()
         {
@@ -301,13 +291,11 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// Moves the paused view: dragging the time labels below the plot, or A and D.
+        /// Moves the paused view by dragging the time labels, or with A and D.
         /// </summary>
         /// <remarks>
-        /// A drag carries the samples under the pointer with it, so the trace follows the mouse rather
-        /// than merely responding to it. The keys step by a tenth of the view, which is one time
-        /// division, and answer wherever the pointer is, as the pause key does, so that the left hand
-        /// can move the view while the right stays on the mouse.
+        /// A drag keeps the samples under the pointer. A and D step one division, or most of a window with
+        /// Shift, and work wherever the pointer is, like the pause key.
         /// </remarks>
         void HandlePanInput(float left, float width, float top)
         {

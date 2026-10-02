@@ -21,8 +21,7 @@ namespace OpenEphys.Onix1.Design
         static readonly uint ColFrozenTail = ImGuiPalette.WithAlpha(ImGuiPalette.Black, 0x80);
 
         /// <summary>
-        /// Color and weight of the frame around the plot, so that a pane set beside it can be outlined
-        /// to match rather than with ImGui's fainter default border.
+        /// Color and weight of the plot's frame, for the control strip's divider to match.
         /// </summary>
         public const uint FrameColor = ColGraticule;
         public const float FrameWeight = GraticuleWeight;
@@ -46,9 +45,8 @@ namespace OpenEphys.Onix1.Design
         /// instead of being clipped at a row edge.
         /// </summary>
         /// <remarks>
-        /// The graticules are drawn into this window's draw list rather than as plot decorations so
-        /// they stay put while the channels scroll; the plot background is cleared so they show
-        /// through it.
+        /// The graticules go in this window's draw list rather than the plot's, so they stay put while the
+        /// channels scroll. They sit under the traces, showing through the plot's cleared background.
         /// </remarks>
         /// <param name="waveformMin">Per-bin minima, one row per channel.</param>
         /// <param name="waveformMax">Per-bin maxima, one row per channel.</param>
@@ -133,8 +131,8 @@ namespace OpenEphys.Onix1.Design
         /// Veils the part of a paused plot that is still showing the tail of the previous sweep.
         /// </summary>
         /// <remarks>
-        /// Everything to the right of the sweep cursor is both older than the sweep cursor and is repeated in
-        /// the record. This indicates that the data is stale and its better to look elsewhere.
+        /// Everything right of the cursor is older than everything left of it, and appears again elsewhere in
+        /// the history. The shading marks it as stale.
         /// </remarks>
         void ShadeFrozenTail(ImDrawListPtr draw, float left, float width, float top, float bottom)
         {
@@ -288,9 +286,8 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// Transforms the decimated buffers into channel units as <c>data / range + rowOffsets</c>,
-        /// where <c>rowOffsets</c> is the constant <c>-i</c> term, one row per channel, and plots
-        /// the visible rows.
+        /// Scales the buffers into channel units, <c>data / range + rowOffsets</c> with <c>-i</c> in row
+        /// <c>i</c>, and draws the visible rows.
         /// </summary>
         unsafe void PlotTraces(Mat waveformMin, Mat waveformMax, int first, int last, int hovered, float rowHeight)
         {

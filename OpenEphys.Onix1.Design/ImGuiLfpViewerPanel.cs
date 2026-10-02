@@ -9,39 +9,48 @@ using OpenCV.Net;
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Self-contained ImGui rendering component that displays a multi-channel matrix as a stack of scrolling
-    /// waveforms with peak-preserving downsampling. Draws into whatever region the caller has already opened.
+    /// Draws a multi-channel signal as a stack of sweeping traces, each column showing the min and max of
+    /// the samples it covers, into whatever region the caller has opened.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The owner calls <see cref="Update"/> with each block and its sample rate, and <see cref="Draw"/>
-    /// once a frame. Everything the display can be told is a property, so a control strip is one way to
-    /// drive it and not a part of it.
+    /// The owner calls <see cref="Update"/> with each block and <see cref="Draw"/> once a frame. Everything
+    /// the display can be told is a property, so a control strip is one way to drive it, not part of it.
     /// </para>
     /// <para>
-    /// Ported from <c>Bonsai.Ephys.Design.WaveformVisualizer</c>, with the window and control ownership
-    /// removed so it draws into whatever region the caller has opened.
+    /// While <see cref="Paused"/>, the display is frozen and can be panned back through a history of recent
+    /// samples and redrawn at any timebase.
+    /// </para>
+    /// <para>
+    /// Ported from <c>Bonsai.Ephys.Design.WaveformVisualizer</c>.
     /// </para>
     /// </remarks>
     internal sealed partial class ImGuiLfpViewerPanel : IDisposable
     {
         readonly long historyBytes;
+        readonly int maxColumns;
 
         /// <param name="historyBytes">
-        /// Memory to spend on the history behind the display. The owner has already turned the seconds
-        /// the user asked for into bytes, knowing its own channel count and fastest band; the seconds
-        /// this buys fall back out of it once the channel count of the incoming data is known.
+        /// Memory for the history of recent samples. The owner sizes it, since only it knows its channel
+        /// count and fastest band; the panel works out the seconds it buys once data arrives.
+        /// </param>
+        /// <param name="maxColumns">
+        /// Most columns the decimation buffers hold. Drawing combines columns down to the plot's pixel width,
+        /// so more than the widest screen buys nothing.
         /// </param>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="historyBytes"/> is less than or equal to zero, leaving no history to move a
-        /// paused view through.
+        /// <paramref name="historyBytes"/> is not positive, or <paramref name="maxColumns"/> is less than one.
         /// </exception>
-        public ImGuiLfpViewerPanel(long historyBytes)
+        public ImGuiLfpViewerPanel(long historyBytes, int maxColumns)
         {
             if (historyBytes <= 0)
                 throw new ArgumentOutOfRangeException(nameof(historyBytes));
 
+            if (maxColumns < 1)
+                throw new ArgumentOutOfRangeException(nameof(maxColumns));
+
             this.historyBytes = historyBytes;
+            this.maxColumns = maxColumns;
         }
 
         Decimator waveformMinDecimator;
@@ -61,7 +70,6 @@ namespace OpenEphys.Onix1.Design
         int expandedChannel = -1;
 
         int channelHeight = 20;
-        int maxSamplesPerChannel = 1920;
         double timebase = 2.0;
         double rangeAmplitude = 500;
 
@@ -93,8 +101,8 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// Whether the display is frozen. Setting it takes or releases the paused view, which is what
-        /// the history behind the display can then be moved through.
+        /// Whether the display is frozen. While it is, the view can be panned through the history and redrawn
+        /// at any timebase.
         /// </summary>
         public bool Paused
         {
@@ -108,13 +116,13 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// Supplies one block of samples. Rebuilds the decimation buffers whenever the channel count or bin
-        /// width no longer matches the input.
+        /// Supplies one block of samples. While paused, a block whose rate or channel count would clear the
+        /// history is dropped.
         /// </summary>
-        /// <param name="data">Channel-by-sample matrix, one row per channel.</param>
+        /// <param name="data">Channel-by-sample matrix of 32-bit floats, one row per channel.</param>
         /// <param name="dataSampleRate">Sample rate of the incoming data, in Hz.</param>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="dataSampleRate"/> is less than one, which leaves timebase without a normalizing unit.
+        /// <paramref name="dataSampleRate"/> is less than one.
         /// </exception>
         public void Update(Mat data, int dataSampleRate)
         {
@@ -163,7 +171,7 @@ namespace OpenEphys.Onix1.Design
         void RebuildBuffers(int rows)
         {
             var totalSamples = Math.Max(1, (int)(timebase * sampleRate));
-            var samplesPerBin = (totalSamples + maxSamplesPerChannel - 1) / maxSamplesPerChannel;
+            var samplesPerBin = (totalSamples + maxColumns - 1) / maxColumns;
             var columns = totalSamples / samplesPerBin;
             var buffersStale =
                 timeRange is null ||

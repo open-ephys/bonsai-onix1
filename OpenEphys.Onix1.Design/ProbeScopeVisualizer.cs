@@ -150,7 +150,9 @@ namespace OpenEphys.Onix1.Design
             try { deviceName = FindDeviceName(workflowBuilder?.Workflow, context.Source, node.DeviceName); }
             catch (InvalidOperationException ex) { fault = ex.Message; }
 
-            waveform = new(node.HistoryBytes);
+            // NB: no plot can be wider than the widest monitor unless its window spans two, so that is as
+            // much horizontal detail as is ever worth holding.
+            waveform = new(node.HistoryBytes, Screen.AllScreens.Max(screen => screen.Bounds.Width));
             selector.ShowGrid = false;
             selector.ShowCoordinateReadout = false;
             selector.DefaultZoomWindowFraction = 1f;
@@ -171,7 +173,10 @@ namespace OpenEphys.Onix1.Design
             canvas.HoverKeys.Add(Keys.D);
             canvas.Render += RenderFrame;
 
-            renderTimer = new System.Windows.Forms.Timer { Interval = 16 };
+            // NB: 10 ms rather than a frame at 60 Hz. Windows fires the timer on its 15.6 ms clock tick, and
+            // 16 ms often missed one tick and waited for the next, holding the display near 40 fps. 10 ms
+            // always fits in one tick, which gives about 64.
+            renderTimer = new System.Windows.Forms.Timer { Interval = 10 };
             renderTimer.Tick += (_, _) => canvas.Invalidate();
             renderTimer.Start();
 

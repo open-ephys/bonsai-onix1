@@ -96,9 +96,8 @@ namespace OpenEphys.Onix1.Design
         /// Whether exactly the named modifiers are down and the rest are up.
         /// </summary>
         /// <remarks>
-        /// Asking only whether a modifier is down lets gestures overlap: holding the pair that zooms the
-        /// timebase and clicking would also fire the gesture that wants one of them, and the only thing
-        /// keeping a pair from firing its own subsets is the order they happen to be tested in.
+        /// Testing only whether a modifier is down lets gestures overlap: Shift+Alt+click would also fire the
+        /// Shift+click gesture.
         /// </remarks>
         static bool Modifiers(bool ctrl = false, bool shift = false, bool alt = false)
         {
