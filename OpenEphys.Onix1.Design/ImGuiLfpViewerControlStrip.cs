@@ -200,8 +200,7 @@ namespace OpenEphys.Onix1.Design
             var grouping = panel.ColorGrouping;
             ImGui.SetNextItemWidth(
                 groupWidth - ImGui.GetFrameHeight() - ImGui.GetStyle().ItemInnerSpacing.X);
-            // NB: no step buttons, which sit outside the width the item was given and overran it.
-            if (ImGui.InputInt("##colorGrouping", ref grouping, 0))
+            if (ImGui.InputInt("##colorGrouping", ref grouping, 1))
                 panel.ColorGrouping = grouping;
             ImGui.EndDisabled();
 
