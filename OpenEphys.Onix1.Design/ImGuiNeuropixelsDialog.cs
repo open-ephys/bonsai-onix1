@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Numerics;
 using System.Windows.Forms;
 using Hexa.NET.ImGui;
 using Newtonsoft.Json;
@@ -134,11 +133,7 @@ namespace OpenEphys.Onix1.Design
         protected void RefreshProbeState()
         {
             allContacts = ProbeGroup.Probe.Contacts;
-
-            var contacts = allContacts
-                .Select((c, i) => new ProbeContact(i, new Vector2((float)c.PosX, (float)c.PosY), ContactSizeUm(c)))
-                .ToList();
-            selector.Refresh(ProbeGroup, contacts);
+            selector.Refresh(ProbeGroup);
 
             RebuildMaps();
             BuildPotentialChannelMap();
@@ -693,19 +688,5 @@ namespace OpenEphys.Onix1.Design
 
         #endregion
 
-        #region Misc helpers
-
-        protected static Vector2 ContactSizeUm(Contact c)
-        {
-            var sp = c.ShapeParams;
-            return c.Shape switch
-            {
-                ContactShape.Circle => new Vector2((float)(sp.Radius ?? 6.0) * 2f, (float)(sp.Radius ?? 6.0) * 2f),
-                ContactShape.Rect   => new Vector2((float)(sp.Width ?? 12.0), (float)(sp.Height ?? sp.Width ?? 12.0)),
-                _                   => new Vector2((float)(sp.Width ?? 12.0), (float)(sp.Width ?? 12.0))
-            };
-        }
-
-        #endregion
     }
 }
