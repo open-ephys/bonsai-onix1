@@ -544,7 +544,7 @@ namespace OpenEphys.Onix1.Design
                     gridMajor);
             }
 
-            if (!ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.R, false))
+            if (ImGui.IsWindowHovered() && !ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.R, false))
             {
                 rulerMode = !rulerMode;
                 if (!rulerMode) ruler.ResetHover();

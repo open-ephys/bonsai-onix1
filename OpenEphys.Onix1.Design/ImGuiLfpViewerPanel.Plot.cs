@@ -103,6 +103,7 @@ namespace OpenEphys.Onix1.Design
                     ImPlot.SetupAxes(string.Empty, string.Empty, axesFlags, axesFlags);
                     ImPlot.SetupAxisLimits(ImAxis.X1, 0, waveformMinDecimator.Buffer.Cols, ImPlotCond.Always);
                     ImPlot.SetupAxisLimits(ImAxis.Y1, -(layout.LastRow - 1) - 0.5, -layout.FirstRow + 0.5, ImPlotCond.Always);
+                    SelectedRowBand(ImGui.GetWindowDrawList(), layout, plotX, plotWidth);
                     PlotTraces(waveformMin, waveformMax, layout.FirstVisible, layout.LastVisible, hovered,
                         layout.RowHeight);
                     PlotSweepCursor();
@@ -111,7 +112,10 @@ namespace OpenEphys.Onix1.Design
                     // NB: both drawn after the plot, and from inside the table,
                     // so they lie over the traces
                     ShadeFrozenTail(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom);
+                    Cursors(ImGui.GetWindowDrawList(), layout, hovered, waveformMin, waveformMax,
+                        plotX, plotWidth, plotTop, plotBottom);
                     DrawFrame(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom);
+                    DrawReadout(ImGui.GetWindowDrawList(), layout, hovered, plotX, plotWidth, plotBottom);
                 }
                 ImGui.EndTable();
             }
@@ -122,8 +126,12 @@ namespace OpenEphys.Onix1.Design
             if (plotWidth > 0)
             {
                 DrawGraticules(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom, labelY);
+                CursorTimeLabels(ImGui.GetWindowDrawList(), plotX, plotWidth, labelY);
                 HandlePanInput(plotX, plotWidth, labelY);
                 TimeScrollBar(plotX, plotWidth, plotBottom + scrollGap, scrollHeight);
+
+                // NB: last, so that its window is drawn over the table's and takes the pointer from it.
+                CursorTable(waveformMin, waveformMax, plotX, plotBottom);
             }
         }
 
@@ -148,6 +156,41 @@ namespace OpenEphys.Onix1.Design
                 new Vector2(x, MathF.Floor(top) + GraticuleWeight),
                 new Vector2(MathF.Floor(left + width) - GraticuleWeight, MathF.Floor(bottom) - GraticuleWeight),
                 ColFrozenTail);
+        }
+
+        /// <summary>
+        /// The time the axis labels give <paramref name="position"/>.
+        /// </summary>
+        double SecondsAt(double position)
+        {
+            var seconds = (position - (Paused ? CursorPosition : 0)) / window.Span * timebase;
+            return Paused && position > CursorPosition ? seconds - pausedTimebase : seconds;
+        }
+
+        /// <summary>
+        /// Shows the channel, time and amplitude under the pointer in the plot's lower right corner.
+        /// </summary>
+        /// <remarks>
+        /// The time reads as the time axis labels do, and the amplitude from the center of the channel's row.
+        /// </remarks>
+        void DrawReadout(ImDrawListPtr draw, in RowLayout layout, int hovered, float left, float width, float bottom)
+        {
+            var mouse = ImGui.GetMousePos();
+            if (hovered < 0 || mouse.X < left || mouse.X >= left + width)
+                return;
+
+            var seconds = SecondsAt(window.Start + PlotFraction(mouse.X) * window.Span);
+            var center = layout.RowTop(hovered) + layout.RowHeight / 2;
+            var amplitude = (center - mouse.Y) / layout.RowHeight * rangeAmplitude;
+
+            var text = $"Ch {hovered}   {seconds:0.0000} s   {amplitude:0.0} {Unit}";
+            var size = ImGui.CalcTextSize(text);
+            var pad = ImGui.GetStyle().FramePadding;
+            var corner = new Vector2(left + width, bottom) - size - 2 * pad;
+            var rounding = ImGui.GetStyle().ChildRounding;
+            draw.AddRectFilled(corner - pad, corner + size + pad, ColLabelBg, rounding);
+            draw.AddRect(corner - pad, corner + size + pad, ImGui.GetColorU32(ImGuiCol.Border), rounding);
+            draw.AddText(corner, ImGui.GetColorU32(ImGuiCol.Text), text);
         }
 
         /// <summary>
@@ -259,14 +302,20 @@ namespace OpenEphys.Onix1.Design
                 label.Append(i);
                 label.End();
 
-                // Highlight hovered channel
-                if (i == hovered && expandedChannel < 0)
+                // Highlight hovered channel and the one the cursors read
+                if ((i == hovered || i == CursorChannel) && expandedChannel < 0)
                 {
                     var rowTop = layout.RowTop(i);
                     var fill = ChannelColor(i);
                     fill.W = HoverFillAlpha;
                     draw.AddRectFilled(new Vector2(left, rowTop), new Vector2(right, rowTop + layout.RowHeight),
                         ImGui.ColorConvertFloat4ToU32(fill));
+                }
+
+                if (i == CursorChannel && expandedChannel < 0)
+                {
+                    var rowTop = MathF.Floor(layout.RowTop(i));
+                    draw.AddRect(new Vector2(left, rowTop), new Vector2(right, rowTop + layout.RowHeight), ColCursor);
                 }
 
                 var hidden = channelHidden[i];
@@ -305,11 +354,15 @@ namespace OpenEphys.Onix1.Design
             float* binX = stackalloc float[bins];
             float* binMin = stackalloc float[bins];
             float* binMax = stackalloc float[bins];
+            float* fillMin = stackalloc float[bins];
+            float* fillMax = stackalloc float[bins];
             for (int p = 0; p < bins; p++)
                 binX[p] = p * columns / bins;
 
-            // NB: every bin at least a pixel tall. With no outline to fall back on, a bin whose min and max
-            // sit closer than that is too thin to rasterize, and a slow trace would vanish where it is flattest.
+            // NB: with no outline to fall back on, the fill alone has to cover the trace. Each bin is stretched
+            // to reach the one before it, so the band covers every step between neighbors as a line would,
+            // rather than a band one pixel tall that a steep step thins below a pixel. What is left flat is
+            // padded to a pixel, so a trace does not vanish where it is flattest.
             var pixel = 1f / rowHeight;
 
             // NB: an expanded channel is drawn alone, so it keeps the translucent fill and outlines that show
@@ -317,6 +370,10 @@ namespace OpenEphys.Onix1.Design
             // carries the trace on its own and outlines mark only the channel under the pointer.
             var expanded = expandedChannel >= 0;
             ImPlot.PushStyleVar(ImPlotStyleVar.FillAlpha, expanded ? 0.25f : 1f);
+
+            // NB: when every bin is one sample there is no envelope, only the samples, so they are joined by a
+            // line. A fill there could only span neighboring samples, and would shadow the line.
+            var samplesOnly = window.Step == 1 && bins == columns;
 
             for (int i = first; i < last; i++)
             {
@@ -335,6 +392,15 @@ namespace OpenEphys.Onix1.Design
                         high = Math.Max(high, maxLine[c]);
                     }
 
+                    binMin[p] = low;
+                    binMax[p] = high;
+
+                    if (p > 0 && !float.IsNaN(binMin[p - 1]))
+                    {
+                        low = Math.Min(low, binMax[p - 1]);
+                        high = Math.Max(high, binMin[p - 1]);
+                    }
+
                     var shortfall = pixel - (high - low);
                     if (shortfall > 0)
                     {
@@ -342,23 +408,31 @@ namespace OpenEphys.Onix1.Design
                         high += shortfall / 2;
                     }
 
-                    binMin[p] = low;
-                    binMax[p] = high;
+                    fillMin[p] = low;
+                    fillMax[p] = high;
                 }
 
                 var channelColor = ChannelColor(i);
                 ImPlot.PushStyleColor(ImPlotCol.Fill, channelColor);
                 ImPlot.PushStyleColor(ImPlotCol.Line, channelColor);
-                ImPlot.PlotShaded(string.Empty, binX, binMin, binMax, bins);
-
                 var hover = i == hovered && !expanded;
-                if (expanded || hover)
+                if (hover) ImPlot.PushStyleVar(ImPlotStyleVar.LineWeight, HoverLineWeight);
+
+                if (samplesOnly)
                 {
-                    if (hover) ImPlot.PushStyleVar(ImPlotStyleVar.LineWeight, HoverLineWeight);
                     ImPlot.PlotLine(string.Empty, binX, binMin, bins);
-                    ImPlot.PlotLine(string.Empty, binX, binMax, bins);
-                    if (hover) ImPlot.PopStyleVar();
                 }
+                else
+                {
+                    ImPlot.PlotShaded(string.Empty, binX, fillMin, fillMax, bins);
+                    if (expanded || hover)
+                    {
+                        ImPlot.PlotLine(string.Empty, binX, binMin, bins);
+                        ImPlot.PlotLine(string.Empty, binX, binMax, bins);
+                    }
+                }
+
+                if (hover) ImPlot.PopStyleVar();
 
                 ImPlot.PopStyleColor(2);
             }

@@ -68,7 +68,7 @@ namespace OpenEphys.Onix1.Design
         /// Number of columns holding parameters. The strip adds the flexible gap and the pause button
         /// after them itself.
         /// </summary>
-        private protected virtual int ParameterColumns => 5;
+        private protected virtual int ParameterColumns => 6;
 
         /// <summary>
         /// Columns drawn ahead of the standard ones.
@@ -79,11 +79,6 @@ namespace OpenEphys.Onix1.Design
         /// Whether the controls are folded away, leaving only the toggle that brings them back.
         /// </summary>
         public bool Collapsed { get; set; }
-
-        /// <summary>
-        /// Unit shown beside the amplitude range control.
-        /// </summary>
-        public string RangeLabel { get; set; }
 
         /// <summary>
         /// Draws the strip into the region the caller has opened. Called once per frame.
@@ -159,19 +154,11 @@ namespace OpenEphys.Onix1.Design
 
             ImGui.SetNextItemWidth(MenuColumn("Chan. Height (px)"));
             var channelHeight = panel.ChannelHeight;
-            if (ImGui.DragInt(
-                    "##channelHeight",
-                    ref channelHeight,
-                    vSpeed: 1,
-                    panel.MinChannelHeight,
-                    int.MaxValue,
-                    ImGuiSliderFlags.AlwaysClamp))
-            {
+            if (ImGui.InputInt("##channelHeight", ref channelHeight, ImGuiLfpViewerPanel.MinChannelHeight))
                 panel.ChannelHeight = channelHeight;
-            }
 
             var rangeWidth = MenuColumn(
-                string.IsNullOrEmpty(RangeLabel) ? "Range" : $"Range ({RangeLabel})");
+                string.IsNullOrEmpty(panel.Unit) ? "Range" : $"Range ({panel.Unit})");
             var range = panel.RangeAmplitude;
             if (InputDoubleCombo("##range", ref range, panel.StandardRanges, rangeWidth))
                 panel.RangeAmplitude = range;
@@ -203,6 +190,11 @@ namespace OpenEphys.Onix1.Design
             if (ImGui.InputInt("##colorGrouping", ref grouping, 1))
                 panel.ColorGrouping = grouping;
             ImGui.EndDisabled();
+
+            MenuColumn("Cursors (c)");
+            var showCursors = panel.ShowCursors;
+            if (ImGui.Checkbox("##cursors", ref showCursors))
+                panel.ShowCursors = showCursors;
 
             var style = ImGui.GetStyle();
             var pauseHeight = rowPitch - RowGap;

@@ -93,6 +93,12 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
+        /// Whether <paramref name="key"/> was pressed, unless it was typed into a text field.
+        /// </summary>
+        static bool HotkeyPressed(ImGuiKey key, bool repeat = true) =>
+            !ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(key, repeat);
+
+        /// <summary>
         /// Whether exactly the named modifiers are down and the rest are up.
         /// </summary>
         /// <remarks>
@@ -122,9 +128,9 @@ namespace OpenEphys.Onix1.Design
                 ? (int)(visibleRows * CoarsePanFraction) * layout.RowHeight
                 : layout.RowHeight;
 
-            if (ImGui.IsKeyPressed(ImGuiKey.W))
+            if (HotkeyPressed(ImGuiKey.W))
                 ImGui.SetScrollY(ImGui.GetScrollY() - channelStep);
-            else if (ImGui.IsKeyPressed(ImGuiKey.S))
+            else if (HotkeyPressed(ImGuiKey.S))
                 ImGui.SetScrollY(ImGui.GetScrollY() + channelStep);
 
             if (io.MouseWheel != 0 && Modifiers(ctrl: true, shift: true) && ImGui.IsWindowHovered())

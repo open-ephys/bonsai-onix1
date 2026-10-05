@@ -101,6 +101,11 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
+        /// Unit of the incoming data, shown wherever an amplitude is.
+        /// </summary>
+        public string Unit { get; set; }
+
+        /// <summary>
         /// Whether the display is frozen. While it is, the view can be panned through the history and redrawn
         /// at any timebase.
         /// </summary>
@@ -233,8 +238,14 @@ namespace OpenEphys.Onix1.Design
         {
             // NB: ahead of the envelope, which resuming disposes. Handling it with the other
             // gestures would free the matrices the plot is about to read.
-            if (ImGui.IsKeyPressed(ImGuiKey.Space))
+            if (HotkeyPressed(ImGuiKey.Space))
                 Paused = !Paused;
+
+            if (HotkeyPressed(ImGuiKey.C, false))
+                ShowCursors = !ShowCursors;
+
+            if (ShowCursors && HotkeyPressed(ImGuiKey.H, false))
+                HomeCursors();
 
             // NB: also here and not only in Update, so a timebase change takes effect while no data is
             // arriving, as when paused after acquisition has stopped.

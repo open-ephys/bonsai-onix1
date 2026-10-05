@@ -124,7 +124,7 @@ namespace OpenEphys.Onix1.Design
 
         /// <summary>
         /// Builds the sequence displayed for the band at <paramref name="band"/> in the list returned by
-        /// <see cref="CreateSource"/>, in the unit named by <see cref="RangeLabel"/>.
+        /// <see cref="CreateSource"/>, in the unit named by <see cref="Unit"/>.
         /// </summary>
         /// <param name="band">Index into the band list returned by <see cref="CreateSource"/>.</param>
         /// <param name="commonMedianReference">
@@ -136,9 +136,9 @@ namespace OpenEphys.Onix1.Design
             int band, bool commonMedianReference, IObservable<TFrame> frames);
 
         /// <summary>
-        /// Unit the bands produce, shown beside the amplitude range control.
+        /// Unit the bands produce.
         /// </summary>
-        private protected abstract string RangeLabel { get; }
+        private protected abstract string Unit { get; }
 
         /// <inheritdoc/>
         public override void Load(IServiceProvider provider)
@@ -152,12 +152,11 @@ namespace OpenEphys.Onix1.Design
 
             // NB: no plot can be wider than the widest monitor unless its window spans two, so that is as
             // much horizontal detail as is ever worth holding.
-            waveform = new(node.HistoryBytes, Screen.AllScreens.Max(screen => screen.Bounds.Width));
+            waveform = new(node.HistoryBytes, Screen.AllScreens.Max(screen => screen.Bounds.Width)) { Unit = Unit };
             selector.ShowGrid = false;
-            selector.ShowCoordinateReadout = false;
             selector.DefaultZoomWindowFraction = 1f;
 
-            strip = new ImGuiProbeScopeControlStrip { RangeLabel = this.RangeLabel };
+            strip = new ImGuiProbeScopeControlStrip();
 
             scheduler = new EventLoopScheduler();
 
@@ -171,6 +170,12 @@ namespace OpenEphys.Onix1.Design
             canvas.HoverKeys.Add(Keys.A);
             canvas.HoverKeys.Add(Keys.S);
             canvas.HoverKeys.Add(Keys.D);
+            canvas.HoverKeys.Add(Keys.R);
+            canvas.HoverKeys.Add(Keys.C);
+            canvas.HoverKeys.Add(Keys.H);
+            canvas.HoverKeys.Add(Keys.Delete);
+            canvas.HoverKeys.Add(Keys.Q);
+            canvas.HoverKeys.Add(Keys.E);
             canvas.Render += RenderFrame;
 
             // NB: 10 ms rather than a frame at 60 Hz. Windows fires the timer on its 15.6 ms clock tick, and

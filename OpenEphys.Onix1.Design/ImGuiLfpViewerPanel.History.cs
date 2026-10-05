@@ -316,9 +316,9 @@ namespace OpenEphys.Onix1.Design
                 ? (long)(window.Span * CoarsePanFraction)
                 : window.Span / TimeDivisions;
 
-            if (ImGui.IsKeyPressed(ImGuiKey.A))
+            if (HotkeyPressed(ImGuiKey.A))
                 Pan(step);
-            else if (ImGui.IsKeyPressed(ImGuiKey.D))
+            else if (HotkeyPressed(ImGuiKey.D))
                 Pan(-step);
         }
 

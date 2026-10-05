@@ -21,9 +21,9 @@ namespace OpenEphys.Onix1.Design
         };
 
         /// <summary>
-        /// Smallest height a channel row may be given.
+        /// Smallest height a channel row may be given in pixels.
         /// </summary>
-        public int MinChannelHeight => 2;
+        public const int MinChannelHeight = 5;
 
         /// <summary>
         /// Amplitude ranges offered as presets.
@@ -82,19 +82,12 @@ namespace OpenEphys.Onix1.Design
             timebase = Math.Min(timebase, standardTimeBases[standardTimeBases.Length - 1]);
         }
 
-        bool colorGroupingEnabled;
         int colorGrouping = 1;
-        ColorPalette palette = ColorPalette.OpenEphysGui;
-        Vector3 customColor = new(140 / 255f, 219 / 255f, 142 / 255f); // suggested default: a soft green
 
         /// <summary>
         /// Whether consecutive channels are colored in groups rather than all alike.
         /// </summary>
-        public bool ColorGroupingEnabled
-        {
-            get => colorGroupingEnabled;
-            set => colorGroupingEnabled = value;
-        }
+        public bool ColorGroupingEnabled { get; set; }
 
         /// <summary>
         /// Number of consecutive channels sharing a color when <see cref="ColorGroupingEnabled"/>.
@@ -108,20 +101,12 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// Palette the trace colors are drawn from.
         /// </summary>
-        public ColorPalette Palette
-        {
-            get => palette;
-            set => palette = value;
-        }
+        public ColorPalette Palette { get; set; } = ColorPalette.OpenEphysGui;
 
         /// <summary>
         /// Hue the <see cref="ColorPalette.Custom"/> palette is built from.
         /// </summary>
-        public Vector3 CustomColor
-        {
-            get => customColor;
-            set => customColor = value;
-        }
+        public Vector3 CustomColor { get; set; } = new(140 / 255f, 219 / 255f, 142 / 255f); // suggested default: a soft green
 
         /// <summary>
         /// The color channel <paramref name="channel"/> is drawn in.
@@ -129,13 +114,13 @@ namespace OpenEphys.Onix1.Design
         /// <remarks>
         /// Read by both the trace and its label's hover highlight, so the two always agree.
         /// </remarks>
-        Vector4 ChannelColor(int channel) => GroupColor(colorGroupingEnabled
+        Vector4 ChannelColor(int channel) => GroupColor(ColorGroupingEnabled
             ? channel / colorGrouping
-            : palette == ColorPalette.OpenEphysGui ? channel : 0);
+            : Palette == ColorPalette.OpenEphysGui ? channel : 0);
 
         /// <summary>
         /// The color for channel group <paramref name="group"/> under the selected <see
-        /// cref="palette"/>.
+        /// cref="Palette"/>.
         /// </summary>
         /// <remarks>
         /// In <see cref="ColorPalette.Custom"/>, groups are shades of the picked hue, taken out of order from
@@ -144,11 +129,11 @@ namespace OpenEphys.Onix1.Design
         /// </remarks>
         Vector4 GroupColor(int group)
         {
-            if (palette == ColorPalette.OpenEphysGui)
+            if (Palette == ColorPalette.OpenEphysGui)
                 return ImGui.ColorConvertU32ToFloat4(ImGuiPalette.OpenEphysGuiLfp[group % ImGuiPalette.OpenEphysGuiLfp.Length]);
 
             float hue = 0, saturation = 0, value = 0;
-            ImGui.ColorConvertRGBtoHSV(customColor.X, customColor.Y, customColor.Z, ref hue, ref saturation, ref value);
+            ImGui.ColorConvertRGBtoHSV(CustomColor.X, CustomColor.Y, CustomColor.Z, ref hue, ref saturation, ref value);
 
             var step = group * 7 % PaletteSteps;
             var fraction = step / (float)(PaletteSteps - 1);

@@ -16,7 +16,7 @@ namespace OpenEphys.Onix1.Design
             upstreamOperator is NeuropixelsV2eData data ? data.DeviceName : null;
 
         /// <inheritdoc/>
-        private protected override string RangeLabel => "uV";
+        private protected override string Unit => "uV";
 
         Func<IObservable<NeuropixelsV2DataFrame>, bool, IObservable<Mat>>[] transforms;
 
