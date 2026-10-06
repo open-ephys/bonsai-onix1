@@ -302,6 +302,8 @@ namespace OpenEphys.Onix1.Design
 
         static float LabelColumnWidth(int labelDigits) => labelDigits * ImGui.CalcTextSize("0").X;
 
+        static readonly int[] LabelSteps = { 1, 2, 5, 10 };
+
         unsafe void ChannelLabels(in RowLayout layout, int labelDigits, int hovered)
         {
             var labelBuffer = stackalloc byte[32];
@@ -311,6 +313,25 @@ namespace OpenEphys.Onix1.Design
             var left = ImGui.GetCursorScreenPos().X;
             var right = left + ImGui.GetContentRegionAvail().X;
             var draw = ImGui.GetWindowDrawList();
+
+            // NB: rows shorter than the text get every 2nd, 5th or 10th label, the smallest step whose labels
+            // clear each other. The hovered channel and the one the cursors read are always labeled, and the
+            // stepped labels they would overlap give way to them.
+            var lineHeight = ImGui.GetTextLineHeight();
+            var rowHeight = layout.RowHeight;
+            var step = LabelSteps[LabelSteps.Length - 1];
+            foreach (var candidate in LabelSteps)
+            {
+                if (candidate * rowHeight >= lineHeight)
+                {
+                    step = candidate;
+                    break;
+                }
+            }
+
+            var selected = CursorChannel;
+            bool Crowds(int channel, int priority) =>
+                priority >= 0 && priority != channel && Math.Abs(channel - priority) * rowHeight < lineHeight;
 
             // NB: an expanded channel is named inside the plot instead, by AmplitudeLabels.
             for (int i = layout.FirstVisible; i < layout.LastVisible && expandedChannel < 0; i++)
@@ -336,6 +357,9 @@ namespace OpenEphys.Onix1.Design
                     var rowTop = MathF.Floor(layout.RowTop(i));
                     draw.AddRect(new Vector2(left, rowTop), new Vector2(right, rowTop + layout.RowHeight), ColCursor);
                 }
+
+                if (i != hovered && i != selected && (i % step != 0 || Crowds(i, hovered) || Crowds(i, selected)))
+                    continue;
 
                 var hidden = channelHidden[i];
                 if (hidden) ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled));
