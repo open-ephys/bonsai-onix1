@@ -17,11 +17,12 @@ using OpenEphys.ProbeInterface.NET;
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// One selectable band of a probe: a short display name, a description of its passband for the
-    /// dropdown, and the rate at which that band produces samples. How the band is actually computed is
-    /// <see cref="ProbeScopeVisualizer{TFrame}.ProcessBand"/>, which only a concrete scope can answer.
+    /// One selectable band of a probe: a short display name, a description of its passband for the dropdown,
+    /// the rate at which that band produces samples, and the passband of its AC coupled variant, or null where
+    /// it has none, as a band already high-passed well above the coupling's cutoff does not. How the band is
+    /// actually computed is left to concrete implementation of <see cref="ProbeScopeVisualizer{TFrame}.ProcessBand"/>.
     /// </summary>
-    internal sealed record ProbeScopeBand(string Name, string Description, int SampleRate);
+    internal sealed record ProbeScopeBand(string Name, string Description, int SampleRate, string AcDescription);
 
     /// <summary>
     /// Everything a <see cref="ProbeScopeVisualizer{TFrame}"/> needs from a resolved device: the probe
@@ -123,17 +124,13 @@ namespace OpenEphys.Onix1.Design
         private protected abstract ProbeScopeSource CreateSource(DeviceInfo info);
 
         /// <summary>
-        /// Builds the sequence displayed for the band at <paramref name="band"/> in the list returned by
-        /// <see cref="CreateSource"/>, in the unit named by <see cref="Unit"/>.
+        /// Builds the complete signal displayed for <paramref name="selection"/>: everything done to the
+        /// device's data to produce what is drawn, in the unit named by <see cref="Unit"/>.
         /// </summary>
-        /// <param name="band">Index into the band list returned by <see cref="CreateSource"/>.</param>
-        /// <param name="commonMedianReference">
-        /// Whether to reference the signal against the median of the channels it shares a converter
-        /// with, which only a concrete scope knows how to group.
-        /// </param>
+        /// <param name="selection">The band, by index into the list returned by <see cref="CreateSource"/>,
+        /// and the options asked for.</param>
         /// <param name="frames">The device's frame sequence.</param>
-        private protected abstract IObservable<Mat> ProcessBand(
-            int band, bool commonMedianReference, IObservable<TFrame> frames);
+        private protected abstract IObservable<Mat> ProcessBand(BandSelection selection, IObservable<TFrame> frames);
 
         /// <summary>
         /// Unit the bands produce.
@@ -339,10 +336,11 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        IObservable<object> BandOutput(
-            ProbeScopeSource probe, BandSelection band, IObservable<TFrame> frames) =>
-            ProcessBand(band.Band, band.CommonMedianReference, frames)
-                .Select(data => (object)new ProbeScopeSample(data, probe.Bands[band.Band].SampleRate));
+        IObservable<object> BandOutput(ProbeScopeSource probe, BandSelection selection, IObservable<TFrame> frames)
+        {
+            var sampleRate = probe.Bands[selection.Band].SampleRate;
+            return ProcessBand(selection, frames).Select(data => (object)new ProbeScopeSample(data, sampleRate));
+        }
 
         /// <inheritdoc/>
         /// <remarks>
@@ -355,7 +353,7 @@ namespace OpenEphys.Onix1.Design
             {
                 source = probe;
                 selector.Refresh(probe.ProbeGroup);
-                strip.Bands = probe.Bands.Select(b => (b.Name, b.Description)).ToList();
+                strip.Bands = probe.Bands;
                 return;
             }
 

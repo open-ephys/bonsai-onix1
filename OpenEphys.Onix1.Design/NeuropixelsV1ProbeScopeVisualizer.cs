@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reactive.Linq;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -20,7 +21,9 @@ namespace OpenEphys.Onix1.Design
         /// <inheritdoc/>
         private protected override string Unit => "uV";
 
-        Func<IObservable<NeuropixelsV1DataFrame>, bool, IObservable<Mat>>[] transforms;
+        List<(ProbeScopeBand Band,
+            Func<IObservable<NeuropixelsV1DataFrame>, IObservable<Mat>> Transform,
+            Func<IObservable<NeuropixelsV1DataFrame>, IObservable<Mat>> AcTransform)> bands;
 
         private protected override ProbeScopeSource CreateSource(DeviceInfo info)
         {
@@ -33,53 +36,72 @@ namespace OpenEphys.Onix1.Design
             const int spikeRate = NeuropixelsV1.SamplesPerChannelPerSecond;
             const int lfpRate = NeuropixelsV1.SamplesPerChannelPerSecond / NeuropixelsV1.FramesPerRoundRobin;
 
-            IObservable<Mat> ScaleSpike(IObservable<NeuropixelsV1DataFrame> frames, bool cmr) =>
+            IObservable<Mat> ScaleSpike(IObservable<NeuropixelsV1DataFrame> frames) =>
                 new NeuropixelsV1Scale
                 {
                     Band = NeuropixelsV1EphysBand.Spike,
-                    AmplifierGain = configuration.SpikeAmplifierGain,
-                    UseCommonMedianReference = cmr
+                    AmplifierGain = configuration.SpikeAmplifierGain
                 }.Process(frames);
 
-            IObservable<Mat> ScaleLfp(IObservable<NeuropixelsV1DataFrame> frames, bool cmr) =>
+            IObservable<Mat> ScaleLfp(IObservable<NeuropixelsV1DataFrame> frames) =>
                 new NeuropixelsV1Scale
                 {
                     Band = NeuropixelsV1EphysBand.Lfp,
-                    AmplifierGain = configuration.LfpAmplifierGain,
-                    UseCommonMedianReference = cmr
+                    AmplifierGain = configuration.LfpAmplifierGain
                 }.Process(frames);
 
-            // NB: each band is declared beside the transform that produces it so the two cannot drift.
-            var bands = new List<(ProbeScopeBand Band, Func<IObservable<NeuropixelsV1DataFrame>, bool, IObservable<Mat>> Transform)>();
+            static IObservable<Mat> AcCouple(IObservable<Mat> source, int sampleRate) =>
+                new Butterworth
+                {
+                    SampleRate = sampleRate,
+                    Cutoff1 = 1.0,
+                    FilterType = FilterType.HighPass,
+                    FilterOrder = 2
+                }.Process(source);
+
+            // NB: each band is declared beside the transforms that produce it so they cannot drift.
+            bands = new();
 
             // NB: with the hardware spike filter off, the spike stream is wideband, so it is offered as
             // such and a software spike band is carved out of it, as for NeuropixelsV2.
             if (configuration.SpikeFilter)
             {
-                bands.Add((new("Spike", "300 Hz to 9 kHz", spikeRate), ScaleSpike));
+                bands.Add((new("Spike", "300 Hz to 9 kHz", spikeRate, null), ScaleSpike, null));
             }
             else
             {
-                bands.Add((new("Wideband", "0.2 Hz to 9 kHz", spikeRate), ScaleSpike));
-                bands.Add((new("Spike", "300 Hz to 9 kHz", spikeRate), (frames, cmr) => new Butterworth
+                bands.Add((new("Wideband", "0.2 Hz to 9 kHz", spikeRate, "1 Hz to 9 kHz"),
+                    ScaleSpike,
+                    frames => AcCouple(ScaleSpike(frames), spikeRate)));
+                bands.Add((new("Spike", "300 Hz to 9 kHz", spikeRate, null), frames => new Butterworth
                 {
                     SampleRate = spikeRate,
                     Cutoff1 = 300.0,
                     Cutoff2 = 9000.0,
                     FilterType = FilterType.BandPass,
                     FilterOrder = 2
-                }.Process(ScaleSpike(frames, cmr))));
+                }.Process(ScaleSpike(frames)), null));
             }
 
-            bands.Add((new("LFP", "0.2 Hz to 500 Hz", lfpRate), ScaleLfp));
+            bands.Add((new("LFP", "0.2 Hz to 500 Hz", lfpRate, "1 Hz to 500 Hz"),
+                ScaleLfp,
+                frames => AcCouple(ScaleLfp(frames), lfpRate)));
 
-            transforms = bands.Select(b => b.Transform).ToArray();
             return new(v1.ProbeGroup, bands.Select(b => b.Band).ToArray());
         }
 
         private protected override IObservable<Mat> ProcessBand(
-            int band, bool commonMedianReference, IObservable<NeuropixelsV1DataFrame> frames) =>
-            transforms[band](frames, commonMedianReference);
+            BandSelection selection, IObservable<NeuropixelsV1DataFrame> frames)
+        {
+            var (_, transform, acTransform) = bands[selection.Band];
+            var output = selection.AcCoupled && acTransform is not null ? acTransform(frames) : transform(frames);
+            if (selection.CommonMedianReference)
+            {
+                var adcGroups = NeuropixelsV1.AdcChannelGroups();
+                output = output.Select(data => Neuropixels.ApplyCmrF32(data, adcGroups));
+            }
+            return output;
+        }
     }
 
     /// <summary>
