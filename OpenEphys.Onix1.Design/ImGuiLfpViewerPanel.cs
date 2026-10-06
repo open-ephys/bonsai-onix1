@@ -177,8 +177,8 @@ namespace OpenEphys.Onix1.Design
             var columns = totalSamples / samplesPerBin;
             var buffersStale =
                 timeRange is null ||
-                waveformMinDecimator.Buffer.Rows != rows ||             // # channels
-                waveformMinDecimator.Buffer.Cols != columns ||          // # downsamples
+                waveformMinDecimator.Sweep.Rows != rows ||             // # channels
+                waveformMinDecimator.Sweep.Cols != columns ||          // # downsamples
                 waveformMinDecimator.DownsampleFactor != samplesPerBin; // factor to map totalSamples -> # downsamples
 
             if (buffersStale)
@@ -235,7 +235,7 @@ namespace OpenEphys.Onix1.Design
             // NB: also here and not only in Update, so a timebase change takes effect while no data is
             // arriving, as when paused after acquisition has stopped.
             if (waveformMinDecimator is not null)
-                RebuildBuffers(waveformMinDecimator.Buffer.Rows);
+                RebuildBuffers(waveformMinDecimator.Sweep.Rows);
 
             if (timeRange is not null)
             {

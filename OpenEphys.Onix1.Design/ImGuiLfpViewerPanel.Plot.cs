@@ -104,7 +104,7 @@ namespace OpenEphys.Onix1.Design
                 if (ImPlot.BeginPlot("##channels", new(plotWidth, layout.Height), plotFlags))
                 {
                     ImPlot.SetupAxes(string.Empty, string.Empty, axesFlags, axesFlags);
-                    ImPlot.SetupAxisLimits(ImAxis.X1, 0, waveformMinDecimator.Buffer.Cols, ImPlotCond.Always);
+                    ImPlot.SetupAxisLimits(ImAxis.X1, 0, waveformMinDecimator.Sweep.Cols, ImPlotCond.Always);
                     ImPlot.SetupAxisLimits(ImAxis.Y1, -(layout.LastRow - 1) - 0.5, -layout.FirstRow + 0.5, ImPlotCond.Always);
                     SelectedRowBand(ImGui.GetWindowDrawList(), layout, plotX, plotWidth);
                     DrawTraces(waveformMin, waveformMax, layout, plotX, plotWidth, plotTop, plotBottom);
@@ -429,8 +429,11 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         unsafe void PlotSweepCursor()
         {
+            if (FastSweep)
+                return;
+
             // NB: not rounded to a column while paused, since the pause instant can fall partway through one.
-            var columns = waveformMinDecimator.Buffer.Cols;
+            var columns = waveformMinDecimator.Sweep.Cols;
             double sweepHead = Paused ? window.FractionOf(CursorPosition) * columns : waveformMinDecimator.Cursor;
             if (sweepHead < 0 || sweepHead >= columns)
                 return;

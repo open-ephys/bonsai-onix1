@@ -57,6 +57,18 @@ namespace OpenEphys.Onix1.Design
             history is null ? 0 : (history.Count - history.Oldest) / (double)sampleRate;
 
         /// <summary>
+        /// Whether a live sweep takes less than about two frames.
+        /// </summary>
+        /// <remarks>
+        /// Each frame would then catch the sweep somewhere new, so its cursor appears to move at a speed that is
+        /// not its own and the seam between the new sweep and the last jumps about. Whole sweeps are drawn
+        /// instead, as a scope does at fast sweeps.
+        /// </remarks>
+        bool FastSweep =>
+            !Paused && waveformMinDecimator?.LastSweep is not null &&
+            window.Span < 2 * sampleRate / Math.Max(1f, ImGui.GetIO().Framerate);
+
+        /// <summary>
         /// Whether the paused view has been moved off the frame that was frozen.
         /// </summary>
         bool Panned => Paused && window.Start != 0;
@@ -93,10 +105,10 @@ namespace OpenEphys.Onix1.Design
             if (waveformMinDecimator is null)
                 return;
 
-            pausedWaveformMin = waveformMinDecimator.Buffer.Clone();
-            pausedWaveformMax = waveformMaxDecimator.Buffer.Clone();
+            pausedWaveformMin = waveformMinDecimator.Sweep.Clone();
+            pausedWaveformMax = waveformMaxDecimator.Sweep.Clone();
             frozen = new DisplayWindow(
-                0, waveformMinDecimator.DownsampleFactor, waveformMinDecimator.Buffer.Cols);
+                0, waveformMinDecimator.DownsampleFactor, waveformMinDecimator.Sweep.Cols);
             pausedTimebase = timebase;
 
             pauseSample = history?.Count ?? 0;
@@ -268,8 +280,11 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         (Mat WaveformMin, Mat WaveformMax) DisplayEnvelope()
         {
+            if (FastSweep)
+                return (waveformMinDecimator.LastSweep, waveformMaxDecimator.LastSweep);
+
             if (!Paused)
-                return (waveformMinDecimator.Buffer, waveformMaxDecimator.Buffer);
+                return (waveformMinDecimator.Sweep, waveformMaxDecimator.Sweep);
 
             if (!Panned && SnapshotCurrent)
                 return (pausedWaveformMin, pausedWaveformMax);
@@ -282,12 +297,12 @@ namespace OpenEphys.Onix1.Design
             {
                 SetWindow(new DisplayWindow(0, window.Step, window.Columns));
                 return pannedWaveformMinDecimator is null
-                    ? (waveformMinDecimator.Buffer, waveformMaxDecimator.Buffer)
-                    : (pannedWaveformMinDecimator.Buffer, pannedWaveformMaxDecimator.Buffer);
+                    ? (waveformMinDecimator.Sweep, waveformMaxDecimator.Sweep)
+                    : (pannedWaveformMinDecimator.Sweep, pannedWaveformMaxDecimator.Sweep);
             }
 
             windowDirty = false;
-            return (pannedWaveformMinDecimator.Buffer, pannedWaveformMaxDecimator.Buffer);
+            return (pannedWaveformMinDecimator.Sweep, pannedWaveformMaxDecimator.Sweep);
         }
 
         /// <summary>

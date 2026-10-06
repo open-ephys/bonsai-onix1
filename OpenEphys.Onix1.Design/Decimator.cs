@@ -32,12 +32,18 @@ namespace OpenEphys.Onix1.Design
             DownsampleFactor = factor;
             carry = DownsampleFactor;
             carryBuffer = new Mat(rows, 1, Depth.F32, 1);
-            Buffer = new Mat(rows, length, Depth.F32, 1);
-            Buffer.Set(Scalar.All(double.NaN));
+            Sweep = new Mat(rows, length, Depth.F32, 1);
+            Sweep.Set(Scalar.All(double.NaN));
             reduceOp = reduceOperation;
         }
 
-        public Mat Buffer { get; }
+        public Mat Sweep { get; }
+
+        /// <summary>
+        /// A copy of <see cref="Sweep"/> taken each time <see cref="Cursor"/> wraps, when every column
+        /// holds the same sweep, or null before the first.
+        /// </summary>
+        public Mat LastSweep { get; private set; }
 
         public int Cursor => writeIndex;
 
@@ -55,11 +61,11 @@ namespace OpenEphys.Onix1.Design
         public int DownsampleFactor { get; }
 
         /// <summary>
-        /// Reduces a block of samples into <see cref="Buffer"/>, continuing from the column the previous call
+        /// Reduces a block of samples into <see cref="Sweep"/>, continuing from the column the previous call
         /// left off at.
         /// </summary>
         /// <remarks>
-        /// A single call of exactly <c>Buffer.Cols * DownsampleFactor</c> samples after a <see cref="Reset"/>
+        /// A single call of exactly <c>Sweep.Cols * DownsampleFactor</c> samples after a <see cref="Reset"/>
         /// therefore fills every column once and leaves <see cref="Cursor"/> back at zero, which is how a
         /// whole window is reduced without a second implementation of the binning.
         /// </remarks>
@@ -72,7 +78,7 @@ namespace OpenEphys.Onix1.Design
                 var inputRect = new Rect(inputIndex, 0, inputSamples, input.Rows);
 
                 using var inputBuffer = input.GetSubRect(inputRect);
-                using var outputBuffer = Buffer.GetCol(writeIndex);
+                using var outputBuffer = Sweep.GetCol(writeIndex);
                 if (carry < DownsampleFactor)
                 {
                     CV.Reduce(inputBuffer, carryBuffer, 1, reduceOp);
@@ -95,11 +101,16 @@ namespace OpenEphys.Onix1.Design
                 carry -= inputSamples;
                 if (carry <= 0)
                 {
-                    writeIndex = (writeIndex + 1) % Buffer.Cols;
+                    writeIndex = (writeIndex + 1) % Sweep.Cols;
                     carry = DownsampleFactor;
+                    if (writeIndex == 0)
+                    {
+                        LastSweep ??= new Mat(Sweep.Rows, Sweep.Cols, Depth.F32, 1);
+                        CV.Copy(Sweep, LastSweep);
+                    }
                 }
 
-                writeIndex = writeIndex % Buffer.Cols;
+                writeIndex = writeIndex % Sweep.Cols;
             }
 
             inputIndex -= input.Cols;
@@ -107,19 +118,20 @@ namespace OpenEphys.Onix1.Design
 
         /// <summary>
         /// Returns this instance to its state at construction: <see cref="Cursor"/> back at zero and <see
-        /// cref="Buffer"/> empty, so that unfilled columns plot as a gap rather than as stale data.
+        /// cref="Sweep"/> empty, so that unfilled columns plot as a gap rather than as stale data.
         /// </summary>
         public void Reset()
         {
             writeIndex = 0;
             inputIndex = 0;
             carry = DownsampleFactor;
-            Buffer.Set(Scalar.All(double.NaN));
+            Sweep.Set(Scalar.All(double.NaN));
         }
 
         public void Dispose()
         {
-            Buffer.Dispose();
+            Sweep.Dispose();
+            LastSweep?.Dispose();
             carryBuffer.Dispose();
         }
     }
