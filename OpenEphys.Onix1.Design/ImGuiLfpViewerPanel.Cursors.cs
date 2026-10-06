@@ -22,7 +22,6 @@ namespace OpenEphys.Onix1.Design
         const float CursorArrow = 8f;
         static readonly uint ColSelectedRow = ImGuiPalette.WithAlpha(ImGuiPalette.White, 0x20);
         static readonly uint ColLabelBg = ImGuiPalette.WithAlpha(ImGuiPalette.Black, 0xBB);
-        const float LabelPad = 3f;
 
         readonly List<long> cursors = new(MaxCursors);
         int grabbedCursor = -1;
@@ -202,10 +201,12 @@ namespace OpenEphys.Onix1.Design
             }
 
             // NB: one row per cursor rather than packed, so the dimensions can never overlap however the
-            // cursors are arranged.
-            var row = ImGui.GetTextLineHeight() + 2 * LabelPad + CursorLabelGap;
+            // cursors are arranged. An expanded channel's name takes the first row, so shift by one in that
+            // case
+            var row = ImGui.GetTextLineHeight() + 2 * ImGui.GetStyle().FramePadding.Y + CursorLabelGap;
+            var first = top + CursorLabelGap + (expandedChannel >= 0 ? row : 0);
             for (int i = 1; i < cursors.Count; i++)
-                CursorDimension(draw, cursors[0], cursors[i], left, width, top + CursorLabelGap + (i - 1) * row);
+                CursorDimension(draw, cursors[0], cursors[i], left, width, first + (i - 1) * row);
         }
 
         /// <summary>
@@ -224,12 +225,23 @@ namespace OpenEphys.Onix1.Design
             if (b < left || a > right)
                 return;
 
-            var size = ImGui.CalcTextSize("0");
-            var center = y + LabelPad + size.Y / 2;
+            var pad = ImGui.GetStyle().FramePadding;
+            var center = y + pad.Y + ImGui.GetTextLineHeight() / 2;
             var start = Math.Max(left, a);
             var end = Math.Min(right, b);
-            draw.AddRectFilled(new Vector2(start, MathF.Floor(center)), new Vector2(end, MathF.Floor(center) + GraticuleWeight),
-                ColCursor);
+
+            // NB: the line breaks around the text, as a drawing's dimension does, rather than the text sitting on it
+            // in a box.
+            var text = $"{Significant(samples * 1000.0 / sampleRate)} ms ({Significant(sampleRate / (double)samples)} Hz)";
+            var textSize = ImGui.CalcTextSize(text);
+            var textLeft = Math.Max(left + pad.X, Math.Min(right - pad.X - textSize.X, (start + end - textSize.X) / 2));
+            var line = MathF.Floor(center);
+            if (textLeft - pad.X > start)
+                draw.AddRectFilled(new Vector2(start, line), new Vector2(textLeft - pad.X, line + GraticuleWeight), ColCursor);
+            if (textLeft + textSize.X + pad.X < end)
+                draw.AddRectFilled(new Vector2(textLeft + textSize.X + pad.X, line), new Vector2(end, line + GraticuleWeight),
+                    ColCursor);
+            draw.AddText(new Vector2(textLeft, center - textSize.Y / 2), ColCursor, text);
 
             // NB: an arrowhead only where the dimension reaches its cursor, not where the plot edge cuts it.
             if (a >= left)
@@ -240,14 +252,6 @@ namespace OpenEphys.Onix1.Design
                 draw.AddTriangleFilled(new Vector2(b, center),
                     new Vector2(b - CursorArrow, center + CursorArrow / 2), new Vector2(b - CursorArrow, center - CursorArrow / 2),
                     ColCursor);
-
-            var text = $"{Significant(samples * 1000.0 / sampleRate)} ms ({Significant(sampleRate / (double)samples)} Hz)";
-            var textSize = ImGui.CalcTextSize(text);
-            var corner = new Vector2(
-                Math.Max(left + LabelPad, Math.Min(right - LabelPad - textSize.X, (start + end - textSize.X) / 2)),
-                center - textSize.Y / 2);
-            draw.AddRectFilled(corner - new Vector2(LabelPad), corner + textSize + new Vector2(LabelPad), ColLabelBg, LabelPad);
-            draw.AddText(corner, ColCursor, text);
         }
 
         /// <summary>
@@ -302,16 +306,14 @@ namespace OpenEphys.Onix1.Design
             var text = $"{Significant(value)} {Unit}";
             var size = ImGui.CalcTextSize(text);
             var x = at.X + CursorLabelGap;
-            if (x + size.X + LabelPad > right)
+            if (x + size.X + ImGui.GetStyle().FramePadding.X > right)
                 x = at.X - CursorLabelGap - size.X;
 
             var y = side < 0 ? at.Y - CursorLabelGap - size.Y
                 : side > 0 ? at.Y + CursorLabelGap
                 : at.Y - size.Y / 2;
 
-            var corner = new Vector2(x, y);
-            draw.AddRectFilled(corner - new Vector2(LabelPad), corner + size + new Vector2(LabelPad), ColLabelBg, LabelPad);
-            draw.AddText(corner, ColCursor, text);
+            FramedText(draw, new Vector2(x, y), text);
         }
 
         // NB: three significant figures, as fine as a value read off a trace by eye is worth.

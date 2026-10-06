@@ -16,6 +16,9 @@ namespace OpenEphys.Onix1.Design
         const float SweepCursorWeight = 1;
         const uint ColGraticule = ImGuiPalette.Grey0x88;
         const float GraticuleWeight = 1;
+        const int AmplitudeDivisions = 10;
+        const uint ColDivision = ImGuiPalette.Grey0x55;
+        const float DivisionDotGap = 3;
         const float HoverLineWeight = 3;
 
         static readonly uint ColFrozenTail = ImGuiPalette.WithAlpha(ImGuiPalette.Black, 0x80);
@@ -116,6 +119,7 @@ namespace OpenEphys.Onix1.Design
                         plotX, plotWidth, plotTop, plotBottom);
                     DrawFrame(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom);
                     DrawReadout(ImGui.GetWindowDrawList(), layout, hovered, plotX, plotWidth, plotBottom);
+                    AmplitudeLabels(ImGui.GetWindowDrawList(), plotX, plotTop, plotBottom);
                 }
                 ImGui.EndTable();
             }
@@ -183,11 +187,25 @@ namespace OpenEphys.Onix1.Design
             var center = layout.RowTop(hovered) + layout.RowHeight / 2;
             var amplitude = (center - mouse.Y) / layout.RowHeight * rangeAmplitude;
 
-            var text = $"Ch {hovered}   {seconds:0.0000} s   {amplitude:0.0} {Unit}";
-            var size = ImGui.CalcTextSize(text);
+            // NB: an expanded channel is named in the plot's top left already.
+            var position = $"{seconds:0.0000} s   {amplitude:0.0} {Unit}";
+            var text = expandedChannel >= 0 ? position : $"Ch {hovered}   {position}";
+            var corner = new Vector2(left + width, bottom) - ImGui.CalcTextSize(text) - 2 * ImGui.GetStyle().FramePadding;
+            FramedText(draw, corner, text);
+        }
+
+        /// <summary>
+        /// Writes <paramref name="text"/> at <paramref name="corner"/> in a box framed like the cursor table.
+        /// </summary>
+        /// <remarks>
+        /// The cursor table is a bordered child window, so the box takes its rounding and border color from the
+        /// style, and the overlays on the plot read as one set.
+        /// </remarks>
+        static void FramedText(ImDrawListPtr draw, Vector2 corner, string text)
+        {
             var pad = ImGui.GetStyle().FramePadding;
-            var corner = new Vector2(left + width, bottom) - size - 2 * pad;
             var rounding = ImGui.GetStyle().ChildRounding;
+            var size = ImGui.CalcTextSize(text);
             draw.AddRectFilled(corner - pad, corner + size + pad, ColLabelBg, rounding);
             draw.AddRect(corner - pad, corner + size + pad, ImGui.GetColorU32(ImGuiCol.Border), rounding);
             draw.AddText(corner, ImGui.GetColorU32(ImGuiCol.Text), text);
@@ -294,7 +312,8 @@ namespace OpenEphys.Onix1.Design
             var right = left + ImGui.GetContentRegionAvail().X;
             var draw = ImGui.GetWindowDrawList();
 
-            for (int i = layout.FirstVisible; i < layout.LastVisible; i++)
+            // NB: an expanded channel is named inside the plot instead, by AmplitudeLabels.
+            for (int i = layout.FirstVisible; i < layout.LastVisible && expandedChannel < 0; i++)
             {
                 label.Reset();
                 for (var n = DigitCount(i); n < labelDigits; n++)
@@ -503,7 +522,7 @@ namespace OpenEphys.Onix1.Design
                 // NB: skip divisions on the edges, where the frame already draws a line.
                 var l = MathF.Floor(x);
                 if (l > left + 1 && l < left + width - 1)
-                    draw.AddRectFilled(new Vector2(l, t), new Vector2(l + GraticuleWeight, b), ColGraticule);
+                    DivisionDots(draw, new Vector2(l, t), b - t, vertical: true);
 
                 // NB: one spacing across the whole plot, so labels on either side of the cursor never
                 // overlap. Right of the cursor is the frozen tail, a whole frozen window older.
@@ -513,6 +532,60 @@ namespace OpenEphys.Onix1.Design
 
                 var label = $"{seconds:g} s";
                 draw.AddText(new Vector2(x - ImGui.CalcTextSize(label).X / 2, labelY), textColor, label);
+            }
+
+            if (expandedChannel < 0)
+                return;
+
+            // NB: an expanded channel fills the plot, so its row is the plot, and a tenth of the range is a
+            // tenth of the height. The outermost divisions lie on the frame.
+            var l0 = MathF.Floor(left) + GraticuleWeight;
+            for (int k = 1; k < AmplitudeDivisions; k++)
+                DivisionDots(draw, new Vector2(l0, MathF.Floor(AmplitudeDivisionY(k, top, bottom))),
+                    MathF.Floor(left + width) - GraticuleWeight - l0, vertical: false);
+        }
+
+        /// <summary>
+        /// Height on screen of amplitude division <paramref name="k"/> of an expanded channel, counted down from
+        /// the top of the plot.
+        /// </summary>
+        static float AmplitudeDivisionY(int k, float top, float bottom) =>
+            top + (bottom - top) * k / AmplitudeDivisions;
+
+        /// <summary>
+        /// Labels an expanded channel's amplitude divisions down the left of the plot, and names the channel
+        /// and both scales in its top left corner.
+        /// </summary>
+        /// <remarks>
+        /// Drawn over the traces, where the divisions themselves are drawn under them.
+        /// </remarks>
+        void AmplitudeLabels(ImDrawListPtr draw, float left, float top, float bottom)
+        {
+            if (expandedChannel < 0)
+                return;
+
+            var pad = ImGui.GetStyle().FramePadding;
+            var color = ImGui.GetColorU32(ImGuiCol.TextDisabled);
+            for (int k = 1; k < AmplitudeDivisions; k++)
+            {
+                var text = $"{Significant(rangeAmplitude * (AmplitudeDivisions / 2 - k) / AmplitudeDivisions)}";
+                var y = AmplitudeDivisionY(k, top, bottom) - ImGui.GetTextLineHeight() / 2;
+                draw.AddText(new Vector2(left + pad.X, y), color, text);
+            }
+
+            var timeDivision = timebase / TimeDivisions;
+            var time = timeDivision < 1 ? $"{Significant(timeDivision * 1000)} ms/div" : $"{Significant(timeDivision)} s/div";
+            var name = $"Ch {expandedChannel}   {Significant(rangeAmplitude / AmplitudeDivisions)} {Unit}/div   {time}";
+            FramedText(draw, new Vector2(left, top) + 2 * pad, name);
+        }
+
+        static void DivisionDots(ImDrawListPtr draw, Vector2 start, float length, bool vertical)
+        {
+            // NB: whole-pixel rects, as for the frame, since a 1 px line drawn any other way blurs.
+            for (var d = 0f; d < length; d += GraticuleWeight + DivisionDotGap)
+            {
+                var at = vertical ? start + new Vector2(0, d) : start + new Vector2(d, 0);
+                draw.AddRectFilled(at, at + new Vector2(GraticuleWeight), ColDivision);
             }
         }
     }
