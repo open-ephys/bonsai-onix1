@@ -107,8 +107,11 @@ namespace OpenEphys.Onix1.Design
                     ImPlot.SetupAxisLimits(ImAxis.X1, 0, waveformMinDecimator.Buffer.Cols, ImPlotCond.Always);
                     ImPlot.SetupAxisLimits(ImAxis.Y1, -(layout.LastRow - 1) - 0.5, -layout.FirstRow + 0.5, ImPlotCond.Always);
                     SelectedRowBand(ImGui.GetWindowDrawList(), layout, plotX, plotWidth);
-                    PlotTraces(waveformMin, waveformMax, layout.FirstVisible, layout.LastVisible, hovered,
-                        layout.RowHeight);
+                    DrawTraces(waveformMin, waveformMax, layout, plotX, plotWidth, plotTop, plotBottom);
+                    if (expandedChannel >= 0)
+                        PlotChannelLines(waveformMin, waveformMax, expandedChannel, 1);
+                    else if (hovered >= 0 && !channelHidden[hovered])
+                        PlotChannelLines(waveformMin, waveformMax, hovered, HoverLineWeight);
                     PlotSweepCursor();
                     ImPlot.EndPlot();
 
@@ -378,109 +381,47 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// Scales the buffers into channel units, <c>data / range + rowOffsets</c> with <c>-i</c> in row
-        /// <c>i</c>, and draws the visible rows.
+        /// Outlines a channel's trace, its max and min, or the line through its samples where each column holds
+        /// one. Drawn every frame over the traces' texture, for the one channel hovered or expanded.
         /// </summary>
-        unsafe void PlotTraces(Mat waveformMin, Mat waveformMax, int first, int last, int hovered, float rowHeight)
+        unsafe void PlotChannelLines(Mat waveformMin, Mat waveformMax, int channel, float weight)
         {
-            CV.AddWeighted(waveformMin, 1 / rangeAmplitude, rowOffsets, 1, 0, scaledWaveformMin);
-            CV.AddWeighted(waveformMax, 1 / rangeAmplitude, rowOffsets, 1, 0, scaledWaveformMax);
-            scaledWaveformMin.GetRawData(out IntPtr minPtr, out int minStep, out Size shape);
-            scaledWaveformMax.GetRawData(out IntPtr maxPtr, out int maxStep, out Size _);
+            waveformMin.GetRawData(out IntPtr minPtr, out int minStep, out Size shape);
+            waveformMax.GetRawData(out IntPtr maxPtr, out int maxStep, out Size _);
+            var minLine = (float*)((byte*)minPtr + channel * minStep);
+            var maxLine = (float*)((byte*)maxPtr + channel * maxStep);
             var columns = shape.Width;
 
-            // NB: no more bins than the plot has pixels, each holding the min and max of the columns that
-            // fall in it. A pixel cannot show more than that, and every column drawn costs the same however
-            // many share a pixel. Each bin sits at the first column it covers, on the plot's column axis.
+            // NB: no more bins than the plot has pixels, each at the first column it covers on the plot's column
+            // axis, as the texture beneath has them.
             var pixels = (int)plotSpan;
             var bins = pixels > 0 && pixels < columns ? pixels : columns;
             float* binX = stackalloc float[bins];
             float* binMin = stackalloc float[bins];
             float* binMax = stackalloc float[bins];
-            float* fillMin = stackalloc float[bins];
-            float* fillMax = stackalloc float[bins];
+            var scale = (float)(1 / rangeAmplitude);
             for (int p = 0; p < bins; p++)
-                binX[p] = p * columns / bins;
-
-            // NB: with no outline to fall back on, the fill alone has to cover the trace. Each bin is stretched
-            // to reach the one before it, so the band covers every step between neighbors as a line would,
-            // rather than a band one pixel tall that a steep step thins below a pixel. What is left flat is
-            // padded to a pixel, so a trace does not vanish where it is flattest.
-            var pixel = 1f / rowHeight;
-
-            // NB: an expanded channel is drawn alone, so it keeps the translucent fill and outlines that show
-            // its shape best. Otherwise outlines would double what each channel costs to draw, so the fill
-            // carries the trace on its own and outlines mark only the channel under the pointer.
-            var expanded = expandedChannel >= 0;
-            ImPlot.PushStyleVar(ImPlotStyleVar.FillAlpha, expanded ? 0.25f : 1f);
-
-            // NB: when every bin is one sample there is no envelope, only the samples, so they are joined by a
-            // line. A fill there could only span neighboring samples, and would shadow the line.
-            var samplesOnly = window.Step == 1 && bins == columns;
-
-            for (int i = first; i < last; i++)
             {
-                if (channelHidden[i] && i != expandedChannel)
-                    continue;
-
-                var minLine = (float*)((byte*)minPtr + i * minStep);
-                var maxLine = (float*)((byte*)maxPtr + i * maxStep);
-                for (int p = 0; p < bins; p++)
+                int start = p * columns / bins, end = (p + 1) * columns / bins;
+                float low = minLine[start], high = maxLine[start];
+                for (int c = start + 1; c < end; c++)
                 {
-                    int start = p * columns / bins, end = (p + 1) * columns / bins;
-                    float low = minLine[start], high = maxLine[start];
-                    for (int c = start + 1; c < end; c++)
-                    {
-                        low = Math.Min(low, minLine[c]);
-                        high = Math.Max(high, maxLine[c]);
-                    }
-
-                    binMin[p] = low;
-                    binMax[p] = high;
-
-                    if (p > 0 && !float.IsNaN(binMin[p - 1]))
-                    {
-                        low = Math.Min(low, binMax[p - 1]);
-                        high = Math.Max(high, binMin[p - 1]);
-                    }
-
-                    var shortfall = pixel - (high - low);
-                    if (shortfall > 0)
-                    {
-                        low -= shortfall / 2;
-                        high += shortfall / 2;
-                    }
-
-                    fillMin[p] = low;
-                    fillMax[p] = high;
+                    low = Math.Min(low, minLine[c]);
+                    high = Math.Max(high, maxLine[c]);
                 }
 
-                var channelColor = ChannelColor(i);
-                ImPlot.PushStyleColor(ImPlotCol.Fill, channelColor);
-                ImPlot.PushStyleColor(ImPlotCol.Line, channelColor);
-                var hover = i == hovered && !expanded;
-                if (hover) ImPlot.PushStyleVar(ImPlotStyleVar.LineWeight, HoverLineWeight);
-
-                if (samplesOnly)
-                {
-                    ImPlot.PlotLine(string.Empty, binX, binMin, bins);
-                }
-                else
-                {
-                    ImPlot.PlotShaded(string.Empty, binX, fillMin, fillMax, bins);
-                    if (expanded || hover)
-                    {
-                        ImPlot.PlotLine(string.Empty, binX, binMin, bins);
-                        ImPlot.PlotLine(string.Empty, binX, binMax, bins);
-                    }
-                }
-
-                if (hover) ImPlot.PopStyleVar();
-
-                ImPlot.PopStyleColor(2);
+                binX[p] = start;
+                binMin[p] = low * scale - channel;
+                binMax[p] = high * scale - channel;
             }
 
+            ImPlot.PushStyleColor(ImPlotCol.Line, ChannelColor(channel));
+            ImPlot.PushStyleVar(ImPlotStyleVar.LineWeight, weight);
+            ImPlot.PlotLine(string.Empty, binX, binMin, bins);
+            if (window.Step > 1 || bins < columns)
+                ImPlot.PlotLine(string.Empty, binX, binMax, bins);
             ImPlot.PopStyleVar();
+            ImPlot.PopStyleColor();
         }
 
         /// <summary>

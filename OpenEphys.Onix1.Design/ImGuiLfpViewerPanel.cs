@@ -58,9 +58,6 @@ namespace OpenEphys.Onix1.Design
         Mat timeRange;
         int sampleRate = 30000;
 
-        Mat rowOffsets;
-        Mat scaledWaveformMin;
-        Mat scaledWaveformMax;
 
         WaveformHistory history;
 
@@ -189,9 +186,6 @@ namespace OpenEphys.Onix1.Design
                 timeRange?.Dispose();
                 waveformMinDecimator?.Dispose();
                 waveformMaxDecimator?.Dispose();
-                rowOffsets?.Dispose();
-                scaledWaveformMin?.Dispose();
-                scaledWaveformMax?.Dispose();
                 pannedWaveformMinDecimator?.Dispose();
                 pannedWaveformMaxDecimator?.Dispose();
                 waveformMinDecimator = new Decimator(rows, columns, samplesPerBin, ReduceOperation.Min);
@@ -209,15 +203,6 @@ namespace OpenEphys.Onix1.Design
                 timeRange = new Mat(1, columns, Depth.F32, 1);
                 CV.Range(timeRange, 0, columns);
 
-                rowOffsets = new Mat(rows, columns, Depth.F32, 1);
-                for (int i = 0; i < rows; i++)
-                {
-                    using var row = rowOffsets.GetRow(i);
-                    row.Set(Scalar.All(-i));
-                }
-
-                scaledWaveformMin = new Mat(rows, columns, Depth.F32, 1);
-                scaledWaveformMax = new Mat(rows, columns, Depth.F32, 1);
                 if (channelHidden.Length != rows)
                 {
                     channelHidden = new bool[rows];
@@ -279,17 +264,11 @@ namespace OpenEphys.Onix1.Design
             timeRange?.Dispose();
             waveformMinDecimator?.Dispose();
             waveformMaxDecimator?.Dispose();
-            rowOffsets?.Dispose();
-            scaledWaveformMin?.Dispose();
-            scaledWaveformMax?.Dispose();
             history?.Dispose();
             DisposeHistoryView();
             timeRange = null;
             waveformMinDecimator = null;
             waveformMaxDecimator = null;
-            rowOffsets = null;
-            scaledWaveformMin = null;
-            scaledWaveformMax = null;
             history = null;
         }
 
