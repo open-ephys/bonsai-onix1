@@ -178,13 +178,13 @@ namespace OpenEphys.Onix1
                         }
 
                         byte id2 = i2c.ReadByte(IntanSPI.RHD_ID_2);
-                        rhdMiso1 = id1 == IntanSPI.ScanningChipId ? (Rhd2000ChipId)0 : (Rhd2000ChipId)id1;
-                        rhdMiso2 = id2 == IntanSPI.ScanningChipId ? (Rhd2000ChipId)0 : (Rhd2000ChipId)id2;
+                        rhdMiso1 = ValidateChipId(id1, 1);
+                        rhdMiso2 = ValidateChipId(id2, 2);
 
                         if (rhdMiso1 == 0 && rhdMiso2 == 0)
                         {
                             throw new InvalidOperationException(
-                                $"No Rhd2000 chip was detected by the Intan SPI device \"{deviceName}\".");
+                                $"No Rhd2000 chip was detected.");
                         }
 
                         i2c.WriteByte(IntanSPI.DATA_ENABLE, 1u);
@@ -205,6 +205,26 @@ namespace OpenEphys.Onix1
 
                 return new CompositeDisposable(disposables);
             });
+        }
+
+        // NB: a chip ID of 0 means no chip is present. Any other ID that is not defined by Rhd2000ChipId
+        // (including the scanning value, which means the scan timed out) is invalid. When validation is
+        // permissive, an invalid ID is treated as not present.
+        static Rhd2000ChipId ValidateChipId(byte id, int misoIndex)
+        {
+            if (id == 0)
+            {
+                return 0;
+            }
+
+            if (!Enum.IsDefined(typeof(Rhd2000ChipId), (int)id))
+            {
+                ContextHelper.Validate(ValidationLevel.Permissive, new InvalidOperationException(
+                    $"An invalid Rhd2000 chip ID ({id}) was detected on MISO {misoIndex}."));
+                return 0;
+            }
+
+            return (Rhd2000ChipId)id;
         }
 
         static void SetDspCutoff(I2CRegisterContext i2c, Rhd2000DspCutoff cutoff)
