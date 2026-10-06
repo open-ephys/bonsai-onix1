@@ -401,7 +401,7 @@ namespace OpenEphys.Onix1.Design
                 var oneSample = window.Step == 1;
                 var headers = oneSample
                     ? new[] { "", "t (s)", "dt (ms)", "1/dt (Hz)", $"y ({Unit})", $"dy ({Unit})", "" }
-                    : new[] { "", "t (s)", "dt (ms)", "1/dt (Hz)", $"min ({Unit})", $"max ({Unit})", $"dmin ({Unit})", $"dmax ({Unit})", "" };
+                    : new[] { "", "t (s)", "dt (ms)", "1/dt (Hz)", $"min ({Unit})", $"max ({Unit})", $"dy min ({Unit})", $"dy max ({Unit})", "" };
                 if (ImGui.BeginTable("##readings", headers.Length, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.BordersInnerV))
                 {
                     foreach (var header in headers)
@@ -429,9 +429,10 @@ namespace OpenEphys.Onix1.Design
                         Cell(read ? $"{Significant(min)}" : "");
                         if (!oneSample)
                             Cell(read ? $"{Significant(max)}" : "");
-                        Cell(i > 0 && read && !double.IsNaN(min0) ? $"{Significant(min - min0)}" : "");
+                        var differs = i > 0 && read && !double.IsNaN(min0);
+                        Cell(differs ? $"{Significant(min - max0)}" : "");
                         if (!oneSample)
-                            Cell(i > 0 && read && !double.IsNaN(max0) ? $"{Significant(max - max0)}" : "");
+                            Cell(differs ? $"{Significant(max - min0)}" : "");
 
                         ImGui.TableNextColumn();
                         if (i > 0 && ImGui.SmallButton($"x##remove{i}"))
