@@ -116,7 +116,7 @@ namespace OpenEphys.Onix1
             device.WriteRegister(DS90UB9x.SYNCBITS, 0);
             device.WriteRegister(DS90UB9x.DATAGATE, (uint)DS90UB9xDataGate.HsyncPositive);
             device.WriteRegister(DS90UB9x.MARK, (uint)DS90UB9xMarkMode.Disabled);
-            device.WriteRegister(DS90UB9x.READSZ, IntanSPI.NumAdcSamplesPerRoundRobbin);
+            device.WriteRegister(DS90UB9x.READSZ, IntanSPI.NumAdcSamplesPerLine);
             device.WriteRegister(DS90UB9x.MAGIC_MASK, 0);
             device.WriteRegister(DS90UB9x.MAGIC, 0);
             // Serial mode, 1 stream, 16 bits per word, 2 lines, LSB first
@@ -175,6 +175,9 @@ namespace OpenEphys.Onix1
             : base(typeof(PortController))
         {
         }
+
+        // TODO : Adapt voltage discovery to the capabilities of the headstage,
+        // including power_good measure
         protected override bool ConfigurePortVoltage(DeviceContext device, out double voltage)
         {
             const double MinVoltage = 4.0;

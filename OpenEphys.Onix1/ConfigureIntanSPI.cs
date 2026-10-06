@@ -117,6 +117,18 @@ namespace OpenEphys.Onix1
         [Description("Specifies whether the Intan SPI device is enabled.")]
         public bool Enable { get; set; } = true;
 
+        /// <summary>
+        /// Configures a IntanSPI device
+        /// </summary>
+        /// <remarks>
+        /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
+        /// prior to data acquisition.
+        /// </remarks>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> that holds all configuration actions.</param>
+        /// <returns>
+        /// The original sequence with the side effect of an additional configuration action to configure
+        /// a IntanSPI device.
+        /// </returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;
@@ -139,13 +151,11 @@ namespace OpenEphys.Onix1
                         device.WriteRegister(DS90UB9x.ENABLE, 1u);
                         var i2c = new I2CRegisterContext(device, IntanSPI.I2CAddress);
 
-                        var adcMux = Rhd2000.ToAdcAndMuxBias(samplesPerSecond.Value * IntanSPI.NumAdcSamplesPerRoundRobbin);
-                        var adcBuffBias = BitHelper.Replace(Rhd2000PsbDecoder.DEFAULT_ADCBUFF, 0b00111111, (uint)adcMux[0]);
-                        var muxBias = BitHelper.Replace(Rhd2000PsbDecoder.DEFAULT_MUXBIAS, 0b00111111, (uint)adcMux[1]);
+                        var adcMux = Rhd2000.ToAdcAndMuxBias(samplesPerSecond.Value * IntanSPI.NumAdcSamplesPerStream);
 
                         i2c.WriteByte(IntanSPI.CLK_DIV, Rhd2000PsbDecoderSampleRate.ToRegister(samplesPerSecond.Value));
-                        i2c.WriteByte(IntanSPI.ADC_BIAS, adcBuffBias);
-                        i2c.WriteByte(IntanSPI.MUX_BIAS, muxBias);
+                        i2c.WriteByte(IntanSPI.ADC_BIAS, (uint)adcMux[0]);
+                        i2c.WriteByte(IntanSPI.MUX_BIAS, (uint)adcMux[1]);
                         i2c.WriteByte(IntanSPI.FAST_SETTLE, 0u);
 
                         disposables.Add(dspCutoff.Subscribe(value => SetDspCutoff(i2c, value)));
@@ -206,18 +216,17 @@ namespace OpenEphys.Onix1
         static void SetAnalogHighCutoff(I2CRegisterContext i2c, Rhd2000AnalogHighCutoff cutoff)
         {
             var highCutoff = Rhd2000.ToHighCutoffToRegisters(cutoff);
-            i2c.WriteByte(IntanSPI.RH1_DAC1, BitHelper.Replace(Rhd2000PsbDecoder.DEFAULT_BW0, 0b00111111, (uint)highCutoff[0]));
-            i2c.WriteByte(IntanSPI.RH1_DAC2, BitHelper.Replace(Rhd2000PsbDecoder.DEFAULT_BW1, 0b00011111, (uint)highCutoff[1]));
-            i2c.WriteByte(IntanSPI.RH2_DAC1, BitHelper.Replace(Rhd2000PsbDecoder.DEFAULT_BW2, 0b00111111, (uint)highCutoff[2]));
-            i2c.WriteByte(IntanSPI.RH2_DAC2, BitHelper.Replace(Rhd2000PsbDecoder.DEFAULT_BW3, 0b00011111, (uint)highCutoff[3]));
+            i2c.WriteByte(IntanSPI.RH1_DAC1, (uint)highCutoff[0]);
+            i2c.WriteByte(IntanSPI.RH1_DAC2, (uint)highCutoff[1]);
+            i2c.WriteByte(IntanSPI.RH2_DAC1, (uint)highCutoff[2]);
+            i2c.WriteByte(IntanSPI.RH2_DAC2, (uint)highCutoff[3]);
         }
 
         static void SetAnalogLowCutoff(I2CRegisterContext i2c, Rhd2000AnalogLowCutoff cutoff)
         {
             var lowCutoff = Rhd2000.ToLowCutoffToRegisters(cutoff);
-            i2c.WriteByte(IntanSPI.RL_DAC1, BitHelper.Replace(Rhd2000PsbDecoder.DEFAULT_BW4, 0b01111111, (uint)lowCutoff[0]));
-            i2c.WriteByte(IntanSPI.RL_DAC23, BitHelper.Replace(Rhd2000PsbDecoder.DEFAULT_BW5, 0b01111111, ((uint)lowCutoff[2] << 6) & 0b01000000 |
-                                                                                                         (uint)lowCutoff[1] & 0b00111111));
+            i2c.WriteByte(IntanSPI.RL_DAC1, (uint)lowCutoff[0]);
+            i2c.WriteByte(IntanSPI.RL_DAC23, ((uint)lowCutoff[2] << 6) & 0b01000000 | (uint)lowCutoff[1] & 0b00111111);
         }
 
         static void SetDigitalOutState(I2CRegisterContext i2c, Rhd2000DigitalOutState state)
@@ -272,11 +281,28 @@ namespace OpenEphys.Onix1
         // Bit 1: '0' RHD digout enabled, '1' RHD digout in HiZ, Bit 0: digout value. Bits 1:0 of RHD register 3
         public const uint DIGOUT = 16;
 
-        public const int NumAdcSamplesPerRoundRobbin = 34; //32 amplifiers + aux + cfg channel
-        public const int FrameSizeBytes = NumAdcSamplesPerRoundRobbin * 8; // 16bit workds, 4 streams per frame (2 miso x 2 ddr)
+        // Frame layout: each channel is interleaved as A1, A2, B1, B2, where the letter is the (DDR) stream and the
+        // number is the MISO line
+        public const int NumAdcSamplesPerStream = 34; // 32 amplifier channels + aux channel + sample index channel
+        public const int NumAdcSamplesPerLine = NumAdcSamplesPerStream * 2; // 2 streams per line
+        public const int NumMisoLines = 2;
+        public const int WordsPerChannel = NumMisoLines * 2; // 2 streams per line
+        public const int FrameSizeWords = NumAdcSamplesPerStream * WordsPerChannel;
+        public const int AmplifierChannelsPerStream = 32;
+        public const int AuxOffset = 32 * WordsPerChannel; // Line 1 stream A word offset of the interleaved auxiliary data
+        public const int SampleIndexOffset = 33 * WordsPerChannel; // Line 1 stream A word offset of the sample index
+        public const int AuxCycleLength = 4; // Number of samples needed to cycle through all auxiliary slots (aux 0-2 + voltage)
 
         public const byte ScanningChipId = 0xFF; // Chip id register value while the chip scan is in progress
         public const int ChipScanTimeoutMilliseconds = 1000;
+
+        internal class NameConverter : DeviceNameConverter
+        {
+            public NameConverter()
+                : base(typeof(IntanSPI))
+            {
+            }
+        }
     }
 
 }
