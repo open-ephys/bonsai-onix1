@@ -21,7 +21,8 @@ namespace OpenEphys.Onix1
         public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext context, object value, Attribute[] attributes)
         {
             var properties = (from property in base.GetProperties(context, value, attributes).Cast<PropertyDescriptor>()
-                              where !property.IsReadOnly && property.ComponentType != typeof(SingleDeviceFactory)
+                              where !property.IsReadOnly &&
+                              !(property.ComponentType.IsGenericType && property.ComponentType.GetGenericTypeDefinition() == typeof(SingleDeviceFactory<>))
                               select property)
                               .ToArray();
             return new PropertyDescriptorCollection(properties).Sort(properties.Select(p => p.Name).ToArray());
