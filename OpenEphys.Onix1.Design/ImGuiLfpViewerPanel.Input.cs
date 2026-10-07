@@ -95,7 +95,7 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// Whether <paramref name="key"/> was pressed, unless it was typed into a text field.
         /// </summary>
-        static bool HotkeyPressed(ImGuiKey key, bool repeat = true) =>
+        internal static bool HotkeyPressed(ImGuiKey key, bool repeat = true) =>
             !ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(key, repeat);
 
         /// <summary>
@@ -105,7 +105,7 @@ namespace OpenEphys.Onix1.Design
         /// Testing only whether a modifier is down lets gestures overlap: Shift+Alt+click would also fire the
         /// Shift+click gesture.
         /// </remarks>
-        static bool Modifiers(bool ctrl = false, bool shift = false, bool alt = false)
+        internal static bool Modifiers(bool ctrl = false, bool shift = false, bool alt = false)
         {
             var io = ImGui.GetIO();
             return io.KeyCtrl == ctrl && io.KeyShift == shift && io.KeyAlt == alt && !io.KeySuper;

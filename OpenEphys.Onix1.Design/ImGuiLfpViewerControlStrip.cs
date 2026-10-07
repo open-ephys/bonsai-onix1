@@ -164,31 +164,31 @@ namespace OpenEphys.Onix1.Design
                 panel.RangeAmplitude = range;
 
             var paletteWidth = MenuColumn("Palette");
-            var swatch = panel.Palette == ColorPalette.Custom
+            var swatch = panel.Colors.Palette == ColorPalette.Custom
                 ? ImGui.GetFrameHeight() + ImGui.GetStyle().ItemInnerSpacing.X
                 : 0f;
             ImGui.SetNextItemWidth(paletteWidth - swatch);
             PaletteCombo(panel);
-            if (panel.Palette == ColorPalette.Custom)
+            if (panel.Colors.Palette == ColorPalette.Custom)
             {
                 ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
-                var customColor = panel.CustomColor;
+                var customColor = panel.Colors.CustomColor;
                 if (ImGui.ColorEdit3("##customColor", ref customColor, ImGuiColorEditFlags.NoInputs))
-                    panel.CustomColor = customColor;
+                    panel.Colors.CustomColor = customColor;
             }
 
             var groupWidth = MenuColumn("Color Groups");
-            var enabled = panel.ColorGroupingEnabled;
+            var enabled = panel.Colors.GroupingEnabled;
             if (ImGui.Checkbox("##colorGroupingEnabled", ref enabled))
-                panel.ColorGroupingEnabled = enabled;
+                panel.Colors.GroupingEnabled = enabled;
 
             ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
             ImGui.BeginDisabled(!enabled);
-            var grouping = panel.ColorGrouping;
+            var grouping = panel.Colors.Grouping;
             ImGui.SetNextItemWidth(
                 groupWidth - ImGui.GetFrameHeight() - ImGui.GetStyle().ItemInnerSpacing.X);
             if (ImGui.InputInt("##colorGrouping", ref grouping, 1))
-                panel.ColorGrouping = grouping;
+                panel.Colors.Grouping = grouping;
             ImGui.EndDisabled();
 
             MenuColumn("Cursors (c)");
@@ -292,17 +292,17 @@ namespace OpenEphys.Onix1.Design
 
         static void PaletteCombo(ImGuiLfpViewerPanel panel)
         {
-            var preview = panel.Palette == ColorPalette.OpenEphysGui ? "Open Ephys GUI" : "Custom";
+            var preview = panel.Colors.Palette == ColorPalette.OpenEphysGui ? "Open Ephys GUI" : "Custom";
             if (ImGui.BeginCombo("##palette", preview))
             {
-                if (ImGui.Selectable("Open Ephys GUI", panel.Palette == ColorPalette.OpenEphysGui))
-                    panel.Palette = ColorPalette.OpenEphysGui;
-                if (panel.Palette == ColorPalette.OpenEphysGui)
+                if (ImGui.Selectable("Open Ephys GUI", panel.Colors.Palette == ColorPalette.OpenEphysGui))
+                    panel.Colors.Palette = ColorPalette.OpenEphysGui;
+                if (panel.Colors.Palette == ColorPalette.OpenEphysGui)
                     ImGui.SetItemDefaultFocus();
 
-                if (ImGui.Selectable("Custom", panel.Palette == ColorPalette.Custom))
-                    panel.Palette = ColorPalette.Custom;
-                if (panel.Palette == ColorPalette.Custom)
+                if (ImGui.Selectable("Custom", panel.Colors.Palette == ColorPalette.Custom))
+                    panel.Colors.Palette = ColorPalette.Custom;
+                if (panel.Colors.Palette == ColorPalette.Custom)
                     ImGui.SetItemDefaultFocus();
 
                 ImGui.EndCombo();

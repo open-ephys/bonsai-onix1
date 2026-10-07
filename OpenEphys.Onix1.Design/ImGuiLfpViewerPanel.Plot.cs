@@ -33,6 +33,8 @@ namespace OpenEphys.Onix1.Design
         float plotLeft;
         float plotSpan;
 
+        readonly TraceRaster traces = new();
+
         /// <summary>
         /// Where <paramref name="x"/> falls across the plot, from zero at its left edge to one at its
         /// right.
@@ -77,6 +79,7 @@ namespace OpenEphys.Onix1.Design
             var plotBottom = plotTop + tableHeight;
             var plotX = 0f;
             var plotWidth = 0f;
+            var frame = default(PlotFrame);
 
             if (ImGui.BeginTable("##table", 2, tableFlags, new Vector2(-1, tableHeight)))
             {
@@ -100,13 +103,18 @@ namespace OpenEphys.Onix1.Design
                 plotWidth = ImGui.GetContentRegionAvail().X;
                 plotLeft = plotX;
                 plotSpan = plotWidth;
+                frame = new PlotFrame(
+                    waveformMin, waveformMax, layout, plotX, plotWidth, plotTop, plotBottom,
+                    window, sampleRate, Paused, CursorPosition, timebase, pausedTimebase,
+                    rangeAmplitude, Unit, channelHidden, expandedChannel);
                 if (ImPlot.BeginPlot("##channels", new(plotWidth, layout.Height), plotFlags))
                 {
                     ImPlot.SetupAxes(string.Empty, string.Empty, axesFlags, axesFlags);
                     ImPlot.SetupAxisLimits(ImAxis.X1, 0, waveformMinDecimator.Sweep.Cols, ImPlotCond.Always);
                     ImPlot.SetupAxisLimits(ImAxis.Y1, -(layout.LastRow - 1) - 0.5, -layout.FirstRow + 0.5, ImPlotCond.Always);
-                    SelectedRowBand(ImGui.GetWindowDrawList(), layout, plotX, plotWidth);
-                    DrawTraces(waveformMin, waveformMax, layout, plotX, plotWidth, plotTop, plotBottom);
+                    cursors.DrawRowBand(ImGui.GetWindowDrawList(), frame);
+                    traces.Draw(frame, Colors.Packed(channelHidden.Length),
+                        Paused ? -1 : waveformMinDecimator.Cursor, history?.Count ?? 0);
                     if (expandedChannel >= 0)
                         PlotChannelLines(waveformMin, waveformMax, expandedChannel, 1);
                     else if (hovered >= 0 && !channelHidden[hovered])
@@ -117,10 +125,9 @@ namespace OpenEphys.Onix1.Design
                     // NB: both drawn after the plot, and from inside the table,
                     // so they lie over the traces
                     ShadeFrozenTail(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom);
-                    Cursors(ImGui.GetWindowDrawList(), layout, hovered, waveformMin, waveformMax,
-                        plotX, plotWidth, plotTop, plotBottom);
+                    cursors.Draw(ImGui.GetWindowDrawList(), frame, hovered);
                     DrawFrame(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom);
-                    DrawReadout(ImGui.GetWindowDrawList(), layout, hovered, plotX, plotWidth, plotBottom);
+                    DrawReadout(ImGui.GetWindowDrawList(), frame, hovered);
                     AmplitudeLabels(ImGui.GetWindowDrawList(), plotX, plotTop, plotBottom);
                 }
                 ImGui.EndTable();
@@ -132,12 +139,13 @@ namespace OpenEphys.Onix1.Design
             if (plotWidth > 0)
             {
                 DrawGraticules(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom, labelY);
-                CursorTimeLabels(ImGui.GetWindowDrawList(), plotX, plotWidth, labelY);
+                cursors.DrawTimeLabels(ImGui.GetWindowDrawList(), frame, labelY);
                 HandlePanInput(plotX, plotWidth, labelY);
                 TimeScrollBar(plotX, plotWidth, plotBottom + scrollGap, scrollHeight);
 
                 // NB: last, so that its window is drawn over the table's and takes the pointer from it.
-                CursorTable(waveformMin, waveformMax, plotX, plotBottom);
+                if (cursors.DrawTable(frame) is long distance)
+                    Pan(distance);
             }
         }
 
@@ -165,12 +173,14 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// The time the axis labels give <paramref name="position"/>.
+        /// The time the axis labels give <paramref name="position"/>: live, from the start of the sweep; paused,
+        /// before the moment of pausing, with the frozen tail a whole paused timebase older.
         /// </summary>
-        double SecondsAt(double position)
+        internal static double SecondsAt(in PlotFrame frame, double position)
         {
-            var seconds = (position - (Paused ? CursorPosition : 0)) / window.Span * timebase;
-            return Paused && position > CursorPosition ? seconds - pausedTimebase : seconds;
+            var origin = frame.Paused ? frame.PauseOrigin : 0;
+            var seconds = (position - origin) / frame.Window.Span * frame.Timebase;
+            return frame.Paused && position > origin ? seconds - frame.PausedTimebase : seconds;
         }
 
         /// <summary>
@@ -179,38 +189,22 @@ namespace OpenEphys.Onix1.Design
         /// <remarks>
         /// The time reads as the time axis labels do, and the amplitude from the center of the channel's row.
         /// </remarks>
-        void DrawReadout(ImDrawListPtr draw, in RowLayout layout, int hovered, float left, float width, float bottom)
+        void DrawReadout(ImDrawListPtr draw, in PlotFrame frame, int hovered)
         {
             var mouse = ImGui.GetMousePos();
-            if (hovered < 0 || mouse.X < left || mouse.X >= left + width)
+            if (hovered < 0 || mouse.X < frame.Left || mouse.X >= frame.Left + frame.Width)
                 return;
 
-            var seconds = SecondsAt(window.Start + PlotFraction(mouse.X) * window.Span);
-            var center = layout.RowTop(hovered) + layout.RowHeight / 2;
-            var amplitude = (center - mouse.Y) / layout.RowHeight * rangeAmplitude;
+            var seconds = SecondsAt(frame, frame.Window.Start + PlotFraction(mouse.X) * frame.Window.Span);
+            var center = frame.Layout.RowTop(hovered) + frame.Layout.RowHeight / 2;
+            var amplitude = (center - mouse.Y) / frame.Layout.RowHeight * frame.Range;
 
             // NB: an expanded channel is named in the plot's top left already.
-            var position = $"{seconds:0.0000} s   {amplitude:0.0} {Unit}";
-            var text = expandedChannel >= 0 ? position : $"Ch {hovered}   {position}";
-            var corner = new Vector2(left + width, bottom) - ImGui.CalcTextSize(text) - 2 * ImGui.GetStyle().FramePadding;
-            FramedText(draw, corner, text);
-        }
-
-        /// <summary>
-        /// Writes <paramref name="text"/> at <paramref name="corner"/> in a box framed like the cursor table.
-        /// </summary>
-        /// <remarks>
-        /// The cursor table is a bordered child window, so the box takes its rounding and border color from the
-        /// style, and the overlays on the plot read as one set.
-        /// </remarks>
-        static void FramedText(ImDrawListPtr draw, Vector2 corner, string text)
-        {
-            var pad = ImGui.GetStyle().FramePadding;
-            var rounding = ImGui.GetStyle().ChildRounding;
-            var size = ImGui.CalcTextSize(text);
-            draw.AddRectFilled(corner - pad, corner + size + pad, ColLabelBg, rounding);
-            draw.AddRect(corner - pad, corner + size + pad, ImGui.GetColorU32(ImGuiCol.Border), rounding);
-            draw.AddText(corner, ImGui.GetColorU32(ImGuiCol.Text), text);
+            var position = $"{seconds:0.0000} s   {amplitude:0.0} {frame.Unit}";
+            var text = frame.Expanded >= 0 ? position : $"Ch {hovered}   {position}";
+            var corner = new Vector2(frame.Left + frame.Width, frame.Bottom) - ImGui.CalcTextSize(text) -
+                2 * ImGui.GetStyle().FramePadding;
+            PlotText.Framed(draw, corner, text);
         }
 
         /// <summary>
@@ -266,7 +260,7 @@ namespace OpenEphys.Onix1.Design
         /// The rows the plot spans this frame and where they fall on screen: every channel at
         /// <c>channelHeight</c>, or the expanded channel alone filling the visible height.
         /// </summary>
-        readonly struct RowLayout
+        internal readonly struct RowLayout
         {
             public readonly int FirstRow;
             public readonly int LastRow;
@@ -348,7 +342,7 @@ namespace OpenEphys.Onix1.Design
                 if ((i == hovered || i == CursorChannel) && expandedChannel < 0)
                 {
                     var rowTop = layout.RowTop(i);
-                    var fill = ChannelColor(i);
+                    var fill = Colors.Of(i);
                     fill.W = HoverFillAlpha;
                     draw.AddRectFilled(new Vector2(left, rowTop), new Vector2(right, rowTop + layout.RowHeight),
                         ImGui.ColorConvertFloat4ToU32(fill));
@@ -357,7 +351,7 @@ namespace OpenEphys.Onix1.Design
                 if (i == CursorChannel && expandedChannel < 0)
                 {
                     var rowTop = MathF.Floor(layout.RowTop(i));
-                    draw.AddRect(new Vector2(left, rowTop), new Vector2(right, rowTop + layout.RowHeight), ColCursor);
+                    draw.AddRect(new Vector2(left, rowTop), new Vector2(right, rowTop + layout.RowHeight), WaveformCursors.Color);
                 }
 
                 if (i != hovered && i != selected && (i % step != 0 || Crowds(i, hovered) || Crowds(i, selected)))
@@ -414,7 +408,7 @@ namespace OpenEphys.Onix1.Design
                 binMax[p] = high * scale - channel;
             }
 
-            ImPlot.PushStyleColor(ImPlotCol.Line, ChannelColor(channel));
+            ImPlot.PushStyleColor(ImPlotCol.Line, Colors.Of(channel));
             ImPlot.PushStyleVar(ImPlotStyleVar.LineWeight, weight);
             ImPlot.PlotLine(string.Empty, binX, binMin, bins);
             if (window.Step > 1 || bins < columns)
@@ -535,15 +529,15 @@ namespace OpenEphys.Onix1.Design
             var color = ImGui.GetColorU32(ImGuiCol.TextDisabled);
             for (int k = 1; k < AmplitudeDivisions; k++)
             {
-                var text = $"{Significant(rangeAmplitude * (AmplitudeDivisions / 2 - k) / AmplitudeDivisions)}";
+                var text = $"{PlotText.Significant(rangeAmplitude * (AmplitudeDivisions / 2 - k) / AmplitudeDivisions)}";
                 var y = AmplitudeDivisionY(k, top, bottom) - ImGui.GetTextLineHeight() / 2;
                 draw.AddText(new Vector2(left + pad.X, y), color, text);
             }
 
             var timeDivision = timebase / TimeDivisions;
-            var time = timeDivision < 1 ? $"{Significant(timeDivision * 1000)} ms/div" : $"{Significant(timeDivision)} s/div";
-            var name = $"Ch {expandedChannel}   {Significant(rangeAmplitude / AmplitudeDivisions)} {Unit}/div   {time}";
-            FramedText(draw, new Vector2(left, top) + 2 * pad, name);
+            var time = timeDivision < 1 ? $"{PlotText.Significant(timeDivision * 1000)} ms/div" : $"{PlotText.Significant(timeDivision)} s/div";
+            var name = $"Ch {expandedChannel}   {PlotText.Significant(rangeAmplitude / AmplitudeDivisions)} {Unit}/div   {time}";
+            PlotText.Framed(draw, new Vector2(left, top) + 2 * pad, name);
         }
 
         static void DivisionDots(ImDrawListPtr draw, Vector2 start, float length, bool vertical)

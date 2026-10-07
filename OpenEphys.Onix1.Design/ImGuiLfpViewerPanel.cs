@@ -53,6 +53,29 @@ namespace OpenEphys.Onix1.Design
             this.maxColumns = maxColumns;
         }
 
+        readonly WaveformCursors cursors = new();
+
+        /// <summary>
+        /// Whether the cursors are shown. While they are, a cursor's line can be dragged and a plain click on
+        /// the plot selects the channel they read.
+        /// </summary>
+        public bool ShowCursors
+        {
+            get => cursors.Show;
+            set => cursors.Show = value;
+        }
+
+        /// <summary>
+        /// Moves the cursors to the middle of the view, keeping their spacing, or spreads them evenly across it
+        /// if they span more than it does.
+        /// </summary>
+        public void HomeCursors() => cursors.Home(window);
+
+        /// <summary>
+        /// The channel the cursors read, or -1 while they are hidden.
+        /// </summary>
+        int CursorChannel => cursors.Channel(expandedChannel);
+
         Decimator waveformMinDecimator;
         Decimator waveformMaxDecimator;
         Mat timeRange;
