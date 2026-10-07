@@ -97,7 +97,7 @@ namespace OpenEphys.Onix1.Design
         ImGuiProbeScopeControlStrip strip;
 
         ImPlotGLControl canvas;
-        System.Windows.Forms.Timer renderTimer;
+        DisplayPacer pacer;
         EventLoopScheduler scheduler;
 
         string deviceName;
@@ -175,12 +175,10 @@ namespace OpenEphys.Onix1.Design
             canvas.HoverKeys.Add(Keys.E);
             canvas.Render += RenderFrame;
 
-            // NB: 10 ms rather than a frame at 60 Hz. Windows fires the timer on its 15.6 ms clock tick, and
-            // 16 ms often missed one tick and waited for the next, holding the display near 40 fps. 10 ms
-            // always fits in one tick, which gives about 64.
-            renderTimer = new System.Windows.Forms.Timer { Interval = 10 };
-            renderTimer.Tick += (_, _) => canvas.Invalidate();
-            renderTimer.Start();
+            // NB: paced from the handle's lifetime rather than Load's, since a handle can be recreated.
+            canvas.HandleCreated += (_, _) => pacer = new DisplayPacer(canvas.Handle);
+            canvas.HandleDestroyed += (_, _) => StopPacer();
+            canvas.Paint += (_, _) => pacer?.Painted();
 
             var visualizerService = (IDialogTypeVisualizerService)provider.GetService(typeof(IDialogTypeVisualizerService));
             visualizerService?.AddControl(canvas);
@@ -423,7 +421,10 @@ namespace OpenEphys.Onix1.Design
             ImGui.BeginChild("##wavePane", new Vector2(waveWidth, availY));
             var message = fault;
             if (message is null)
+            {
+                waveform.RefreshRate = pacer?.RefreshRate ?? waveform.RefreshRate;
                 waveform.Draw();
+            }
             else
             {
                 // NB: TextUnformatted rather than TextWrapped, which reads its string as a printf format,
@@ -451,16 +452,20 @@ namespace OpenEphys.Onix1.Design
             ImGui.End();
         }
 
+        void StopPacer()
+        {
+            pacer?.Dispose();
+            pacer = null;
+        }
+
         /// <inheritdoc/>
         public override void Unload()
         {
-            renderTimer?.Stop();
-            renderTimer?.Dispose();
+            StopPacer();
             scheduler?.Dispose();
             waveform?.Dispose();
             canvas?.Dispose();
 
-            renderTimer = null;
             strip = null;
             scheduler = null;
             waveform = null;

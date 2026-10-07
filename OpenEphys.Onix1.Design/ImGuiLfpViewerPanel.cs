@@ -98,6 +98,12 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
+        /// Refresh rate, in Hz, of the display the panel is drawn on, which decides how fast a sweep can be shown
+        /// as it is written. The measured frame rate will not do, since it drops whenever a frame is slow.
+        /// </summary>
+        public double RefreshRate { get; set; } = 60;
+
+        /// <summary>
         /// Unit of the incoming data, shown wherever an amplitude is.
         /// </summary>
         public string Unit { get; set; }

@@ -40,7 +40,6 @@ namespace OpenEphys.Onix1.Design
         float PlotFraction(float x) =>
             plotSpan > 0 ? Math.Max(0f, Math.Min(1f, (x - plotLeft) / plotSpan)) : 0.5f;
 
-
         /// <summary>
         /// Lays out the label column and the plot, with every channel in one plot whose y axis is in
         /// channel units: channel <c>i</c> is centered at <c>-i</c> with +/- range / 2 mapped to

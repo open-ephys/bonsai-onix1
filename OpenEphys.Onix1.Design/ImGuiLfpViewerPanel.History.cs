@@ -57,16 +57,22 @@ namespace OpenEphys.Onix1.Design
             history is null ? 0 : (history.Count - history.Oldest) / (double)sampleRate;
 
         /// <summary>
-        /// Whether a live sweep takes less than about two frames.
+        /// Fewest frames a sweep must take to be seen moving across the screen rather than jumping.
+        /// </summary>
+        const int FramesToFollowSweep = 10;
+
+        /// <summary>
+        /// Whether a live sweep is too fast to show as it is written, so that whole sweeps are drawn instead, as a
+        /// scope does at fast sweeps.
         /// </summary>
         /// <remarks>
-        /// Each frame would then catch the sweep somewhere new, so its cursor appears to move at a speed that is
-        /// not its own and the seam between the new sweep and the last jumps about. Whole sweeps are drawn
-        /// instead, as a scope does at fast sweeps.
+        /// A sweep is drawn in as many steps as there are frames during it, and too few steps read as jumps, not
+        /// motion. Under about two, each frame also catches the sweep somewhere new, so its cursor appears to move
+        /// at a speed that is not its own and the seam between the new sweep and the last jumps about.
         /// </remarks>
         bool FastSweep =>
             !Paused && waveformMinDecimator?.LastSweep is not null &&
-            window.Span < 2 * sampleRate / Math.Max(1f, ImGui.GetIO().Framerate);
+            timebase * RefreshRate <= FramesToFollowSweep;
 
         /// <summary>
         /// Whether the paused view has been moved off the frame that was frozen.
