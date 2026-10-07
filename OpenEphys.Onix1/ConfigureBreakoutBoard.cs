@@ -20,7 +20,7 @@ namespace OpenEphys.Onix1
     /// </list>
     /// </remarks>
     [Description("Configures an ONIX breakout board.")]
-    public class ConfigureBreakoutBoard : MultiDeviceFactory
+    public class ConfigureBreakoutBoard : MultiDeviceFactory<OnixContextTask>
     {
         /// <summary>
         /// Gets or sets the heartbeat configuration.
@@ -73,7 +73,7 @@ namespace OpenEphys.Onix1
         [Category(DevicesCategory)]
         public ConfigureMemoryMonitor MemoryMonitor { get; set; } = new();
 
-        internal override IEnumerable<IDeviceConfiguration> GetDevices()
+        internal override IEnumerable<IDeviceConfiguration<OnixContextTask>> GetDevices()
         {
             yield return Heartbeat;
             yield return AnalogIO;

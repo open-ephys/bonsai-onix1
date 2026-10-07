@@ -19,7 +19,7 @@ namespace OpenEphys.Onix1
     /// interleaving to reduce photobleaching.</description></item>
     /// </list>
     /// </remarks>
-    public class ConfigureUclaMiniscopeV4 : MultiDeviceFactory
+    public class ConfigureUclaMiniscopeV4 : MultiDeviceFactory<OnixContextTask>
     {
 
         PortName port;
@@ -97,7 +97,7 @@ namespace OpenEphys.Onix1
             set => PortControl.PortVoltage = value;
         }
 
-        internal override IEnumerable<IDeviceConfiguration> GetDevices()
+        internal override IEnumerable<IDeviceConfiguration<OnixContextTask>> GetDevices()
         {
             yield return PortControl;
             yield return Serdes; // must come before dependent devices that follow

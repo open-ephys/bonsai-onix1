@@ -1,10 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
+using System.Reactive.Linq;
 using Bonsai;
 
 namespace OpenEphys.Onix1
 {
+
+    internal interface IDeviceFactory
+    {
+        IEnumerable<IDeviceConfiguration> GetDevices();
+    }
+
     /// <summary>
     /// Provides an abstract base class for all device configuration operators.
     /// </summary>
@@ -16,15 +24,48 @@ namespace OpenEphys.Onix1
     /// </remarks>
     [WorkflowElementCategory(ElementCategory.Sink)]
     [Combinator]
-    public abstract class DeviceFactory : IDeviceCollection
+    public abstract class DeviceFactory<TContext> : IDeviceFactory where TContext : ContextTask
+    {
+
+        internal abstract IEnumerable<IDeviceConfiguration<TContext>> GetDevices();
+
+        IEnumerable<IDeviceConfiguration> IDeviceFactory.GetDevices() => GetDevices().Cast<IDeviceConfiguration>();
+
+        /// <summary>
+        /// Configure all devices in the device group.
+        /// </summary>
+        /// <remarks>
+        /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance
+        /// prior to data acquisition.
+        /// </remarks>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that hold configuration actions.</param>
+        /// <returns>
+        /// The original sequence modified by adding additional configuration actions required to configure
+        /// all the devices in the device group.
+        /// </returns>
+        public abstract IObservable<TContext> Process(IObservable<TContext> source);
+
+
+        internal const string ConfigurationCategory = DeviceFactory.ConfigurationCategory;
+        internal const string AcquisitionCategory = DeviceFactory.AcquisitionCategory;
+    }
+
+    /// <summary>
+    /// Static strings constant for DeviceFactory 
+    /// </summary>
+    public static class DeviceFactory
     {
         internal const string ConfigurationCategory = "Configuration";
         internal const string AcquisitionCategory = "Acquisition";
+    }
 
-        IEnumerable<IDeviceConfiguration> IDeviceCollection.GetDevices() => GetDevices();
-        internal abstract IEnumerable<IDeviceConfiguration> GetDevices();
-
-        public abstract IObservable<TContext> Process<TContext>(IObservable<TContext> source) where TContext : ContextTask;
+    /// <summary>
+    /// Static strings constant for SingleDeviceFactory
+    /// </summary>
+    public static class SingleDeviceFactory
+    {
+        internal const string DeviceNameDescription = "The unique device name.";
+        internal const string DeviceAddressDescription = "The device address.";
     }
 
     /// <summary>
@@ -36,10 +77,10 @@ namespace OpenEphys.Onix1
     /// they can be interacted with. The <see cref="SingleDeviceFactory"/> provides a modular abstraction
     /// allowing flexible assembly and sequencing of of all device-specific configuration code.
     /// </remarks>
-    public abstract class SingleDeviceFactory : DeviceFactory, IDeviceConfiguration, IAddressableDevice
+    public abstract class SingleDeviceFactory<TContext> : DeviceFactory<TContext>, IDeviceConfiguration<TContext>, IAddressableDevice where TContext : ContextTask
     {
-        internal const string DeviceNameDescription = "The unique device name.";
-        internal const string DeviceAddressDescription = "The device address.";
+        internal const string DeviceNameDescription = SingleDeviceFactory.DeviceNameDescription;
+        internal const string DeviceAddressDescription = SingleDeviceFactory.DeviceAddressDescription;
 
         internal SingleDeviceFactory(Type deviceType)
         {
@@ -88,9 +129,11 @@ namespace OpenEphys.Onix1
         [Browsable(false)]
         public Type DeviceType { get; }
 
-        internal override IEnumerable<IDeviceConfiguration> GetDevices()
+        internal override IEnumerable<IDeviceConfiguration<TContext>> GetDevices()
         {
             yield return this;
         }
+
+        IObservable<T> IDeviceConfiguration<TContext>.Process<T>(IObservable<T> source) => Process(source).Cast<T>();
     }
 }

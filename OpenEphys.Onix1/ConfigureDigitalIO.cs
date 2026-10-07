@@ -18,7 +18,7 @@ namespace OpenEphys.Onix1
     /// <c>DeviceName</c>.
     /// </remarks>
     [Description("Configures the ONIX breakout board's digital inputs and outputs.")]
-    public class ConfigureDigitalIO : SingleDeviceFactory
+    public class ConfigureDigitalIO : SingleDeviceFactory<ContextTask>
     {
 
         double? sampleRate = null;
@@ -79,8 +79,9 @@ namespace OpenEphys.Onix1
         [Category(ConfigurationCategory)]
         [Description("Specifies the optional sample rate, in Hz, of digital inputs. If not specified, digital " +
             "data will be produced asynchronously upon changes in digital input state.")]
-        public double? SampleRate { 
-            get => sampleRate; 
+        public double? SampleRate
+        {
+            get => sampleRate;
             set => sampleRate = (value >= 10 && value <= 1e6) | value is null
             ? value
             : throw new ArgumentOutOfRangeException(nameof(SampleRate), value,
@@ -100,7 +101,7 @@ namespace OpenEphys.Onix1
         /// The original sequence modified by adding additional configuration actions required to configure a
         /// digital IO device.
         /// </returns>
-        public override IObservable<TContext> Process<TContext>(IObservable<TContext> source)
+        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
@@ -118,7 +119,8 @@ namespace OpenEphys.Onix1
                 {
                     var periodTicks = (uint)(baseFreqHz / sr) - 2; // NB: -2 results from known issue in version 2 of DigitalIO device
                     device.WriteRegister(DigitalIO.SAMPLE_PERIOD, periodTicks);
-                } else
+                }
+                else
                 {
                     device.WriteRegister(DigitalIO.SAMPLE_PERIOD, 0);
                 }

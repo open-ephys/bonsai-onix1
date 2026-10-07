@@ -31,7 +31,7 @@ namespace OpenEphys.Onix1
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV1eHeadstageEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a NeuropixelsV1e headstage.")]
-    public class ConfigureHeadstageNeuropixelsV1e : MultiDeviceFactory
+    public class ConfigureHeadstageNeuropixelsV1e : MultiDeviceFactory<OnixContextTask>
     {
         PortName port;
         readonly ConfigureNeuropixelsV1ePortController PortControl = new();
@@ -119,7 +119,7 @@ namespace OpenEphys.Onix1
             set => Serdes.EnableLed = value;
         }
 
-        internal override IEnumerable<IDeviceConfiguration> GetDevices()
+        internal override IEnumerable<IDeviceConfiguration<OnixContextTask>> GetDevices()
         {
             yield return PortControl;
             yield return Serdes; // must come before dependent devices that follow

@@ -1,16 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OpenEphys.Onix1
 {
     /// <inheritdoc/>
-    public class OnixContextTask : ContextTask
+    public sealed class OnixContextTask : ContextTask
     {
         /// <inheritdoc/>
-        internal OnixContextTask(string driver, int index, ValidationLevel validationLevel) 
+        internal OnixContextTask(string driver, int index, ValidationLevel validationLevel)
             : base(driver, index, validationLevel) { }
 
         internal const string DefaultDriver = "riffa";

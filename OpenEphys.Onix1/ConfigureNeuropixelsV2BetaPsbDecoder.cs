@@ -24,7 +24,7 @@ namespace OpenEphys.Onix1
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a parallel serial bus decoder for a single NeuropixelsV2-Beta probe.")]
-    public class ConfigureNeuropixelsV2BetaPsbDecoder : OnixSingleDeviceFactory, IConfigureNeuropixelsV2
+    public class ConfigureNeuropixelsV2BetaPsbDecoder : SingleDeviceFactory<OnixContextTask>, IConfigureNeuropixelsV2
     {
         internal Action<I2CRegisterContext> SelectProbe { private get; set; } = _ => { };
         internal Action<I2CRegisterContext> SyncProbes { private get; set; } = _ => { };

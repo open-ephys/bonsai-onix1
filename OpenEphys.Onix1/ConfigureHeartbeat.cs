@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1
     /// using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Configures a heartbeat device.")]
-    public class ConfigureHeartbeat : SingleDeviceFactory
+    public class ConfigureHeartbeat : SingleDeviceFactory<ContextTask>
     {
         readonly BehaviorSubject<uint> beatsPerSecond = new(10);
 
@@ -58,7 +58,7 @@ namespace OpenEphys.Onix1
         /// </remarks>
         /// <param name="source">A sequence of <see cref="OnixContextTask"/> instances that holds configuration actions.</param>
         /// <returns>The original sequence modified by adding additional configuration actions required to configure a heartbeat device./></returns>
-        public override IObservable<TContext> Process<TContext>(IObservable<TContext> source)
+        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;
             var deviceName = DeviceName;

@@ -11,7 +11,7 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Configures the camera on a UCLA Miniscope V4.
     /// </summary>
-    public class ConfigureUclaMiniscopeV4Camera : OnixSingleDeviceFactory
+    public class ConfigureUclaMiniscopeV4Camera : SingleDeviceFactory<OnixContextTask>
     {
         readonly BehaviorSubject<double> ledBrightness = new(0);
         readonly BehaviorSubject<UclaMiniscopeV4SensorGain> sensorGain = new(UclaMiniscopeV4SensorGain.Low);

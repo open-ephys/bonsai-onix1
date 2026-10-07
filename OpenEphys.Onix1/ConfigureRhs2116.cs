@@ -12,7 +12,7 @@ namespace OpenEphys.Onix1
     /// This configuration operator can be linked to a data IO operator, such as <see cref="Rhs2116Data"/>,
     /// using a shared <c>DeviceName</c>.
     /// </remarks>
-    public class ConfigureRhs2116 : SingleDeviceFactory
+    public class ConfigureRhs2116 : SingleDeviceFactory<ContextTask>
     {
         readonly BehaviorSubject<Rhs2116AnalogLowCutoff> analogLowCutoff = new(Rhs2116AnalogLowCutoff.Low100mHz);
         readonly BehaviorSubject<Rhs2116AnalogLowCutoff> analogLowCutoffRecovery = new(Rhs2116AnalogLowCutoff.Low250Hz);
@@ -117,12 +117,12 @@ namespace OpenEphys.Onix1
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
         /// prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="OnixContextTask"/> that holds all configuration actions.</param>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> that holds all configuration actions.</param>
         /// <returns>
         /// The original sequence with the side effect of an additional configuration action to configure
         /// an Rhs2116 device.
         /// </returns>
-        public override IObservable<TContext> Process<TContext>(IObservable<TContext> source)
+        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;
             var deviceName = DeviceName;

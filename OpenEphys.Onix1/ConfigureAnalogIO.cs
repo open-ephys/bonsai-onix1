@@ -18,7 +18,7 @@ namespace OpenEphys.Onix1
     /// </remarks>
     [TypeConverter(typeof(SortedPropertyConverter))]
     [Description("Configures analog inputs and outputs.")]
-    public class ConfigureAnalogIO : SingleDeviceFactory
+    public class ConfigureAnalogIO : SingleDeviceFactory<ContextTask>
     {
         /// <summary>
         /// Initialize a new instance of <see cref="ConfigureAnalogIO"/> class.
@@ -221,7 +221,7 @@ namespace OpenEphys.Onix1
         /// A sequence of <see cref="OnixContextTask"/> objects that is identical to <paramref name="source"/>
         /// in which each <see cref="OnixContextTask"/> has been instructed to apply the analog IO configuration.
         /// </returns>
-        public override IObservable<TContext> Process<TContext>(IObservable<TContext> source)
+        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;

@@ -24,7 +24,7 @@ namespace OpenEphys.Onix1
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a parallel serial bus decoder for a Neuropixels V2 probe.")]
-    public class ConfigureNeuropixelsV2PsbDecoder : OnixSingleDeviceFactory, IConfigureNeuropixelsV2
+    public class ConfigureNeuropixelsV2PsbDecoder : SingleDeviceFactory<OnixContextTask>, IConfigureNeuropixelsV2
     {
         internal Action<I2CRegisterContext> SelectProbe { private get; set; } = _ => { };
         internal Action<I2CRegisterContext> DeselectProbe { private get; set; } = _ => { };
@@ -55,7 +55,7 @@ namespace OpenEphys.Onix1
         [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eProbeConfigurationEditor, OpenEphys.Onix1.Design", typeof(UITypeEditor))]
         [XmlElement(nameof(ProbeConfiguration), typeof(NeuropixelsV2QuadShankProbeConfiguration))] // NB: Needed for backward compatibility; TODO: remove in 1.0.0
         [TypeConverter(typeof(GenericPropertyConverter))]
-        public NeuropixelsV2ProbeConfiguration ProbeConfiguration { get; set; } 
+        public NeuropixelsV2ProbeConfiguration ProbeConfiguration { get; set; }
             = new NeuropixelsV2QuadShankProbeConfiguration(NeuropixelsV2QuadShankReference.External);
 
         /// <summary>

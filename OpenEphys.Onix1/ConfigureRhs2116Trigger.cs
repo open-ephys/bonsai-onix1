@@ -17,7 +17,7 @@ namespace OpenEphys.Onix1
     /// <c>DeviceName</c>.
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.Rhs2116StimulusSequenceEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
-    public class ConfigureRhs2116Trigger : SingleDeviceFactory
+    public class ConfigureRhs2116Trigger : SingleDeviceFactory<ContextTask>
     {
         readonly BehaviorSubject<Rhs2116StimulusSequencePair> stimulusSequence = new(new Rhs2116StimulusSequencePair());
         readonly BehaviorSubject<bool> triggerArmed = new(true);
@@ -91,12 +91,12 @@ namespace OpenEphys.Onix1
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
         /// prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="OnixContextTask"/> that holds all configuration actions.</param>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> that holds all configuration actions.</param>
         /// <returns>
         /// The original sequence with the side effect of an additional configuration action to configure
         /// aN Rhs2116 Trigger device.
         /// </returns>
-        public override IObservable<TContext> Process<TContext>(IObservable<TContext> source)
+        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;
             var triggerSource = TriggerSource;

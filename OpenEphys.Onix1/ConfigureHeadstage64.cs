@@ -25,7 +25,7 @@ namespace OpenEphys.Onix1
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.Headstage64Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures an ONIX multifunction 64-channel headstage.")]
-    public class ConfigureHeadstage64 : MultiDeviceFactory
+    public class ConfigureHeadstage64 : MultiDeviceFactory<OnixContextTask>
     {
         PortName port;
         readonly ConfigureHeadstage64PortController PortControl = new();
@@ -140,7 +140,7 @@ namespace OpenEphys.Onix1
             set => PortControl.PortVoltage = value;
         }
 
-        internal override IEnumerable<IDeviceConfiguration> GetDevices()
+        internal override IEnumerable<IDeviceConfiguration<OnixContextTask>> GetDevices()
         {
             yield return PortControl;
             yield return Rhd2164;

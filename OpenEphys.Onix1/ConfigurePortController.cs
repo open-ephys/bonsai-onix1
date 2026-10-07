@@ -3,11 +3,10 @@ using System.ComponentModel;
 using System.Reactive.Disposables;
 using System.Reflection;
 using System.Threading;
-using oni;
 
 namespace OpenEphys.Onix1
 {
-    internal abstract class ConfigurePortController : OnixSingleDeviceFactory
+    internal abstract class ConfigurePortController : SingleDeviceFactory<OnixContextTask>
     {
         public ConfigurePortController(Type deviceType)
             : base(deviceType)
@@ -65,7 +64,7 @@ namespace OpenEphys.Onix1
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
                 void dispose() { device.WriteRegister(PortController.PORTVOLTAGE, 0); }
                 device.WriteRegister(PortController.ENABLE, 1);
-                device.WriteRegister(PortController.DESPWR, 1); 
+                device.WriteRegister(PortController.DESPWR, 1);
 
                 bool serdesLock = false;
                 if (portVoltage.Requested.HasValue)
@@ -74,7 +73,8 @@ namespace OpenEphys.Onix1
                     serdesLock = ConfigurePortVoltageOverride(device, voltage);
                     PortVoltage.Applied = voltage;
 
-                } else
+                }
+                else
                 {
                     serdesLock = ConfigurePortVoltage(device, out double voltage);
                     PortVoltage.Applied = voltage;

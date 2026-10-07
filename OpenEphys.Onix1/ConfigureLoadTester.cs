@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1
     /// response latency using a high-resolution hardware timer.
     /// </remarks>
     [Description("Configures a load testing device.")]
-    public class ConfigureLoadTester : SingleDeviceFactory
+    public class ConfigureLoadTester : SingleDeviceFactory<ContextTask>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureLoadTester"/> class.
@@ -71,12 +71,12 @@ namespace OpenEphys.Onix1
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance
         /// prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="OnixContextTask"/> instances that hold configuration actions.</param>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that hold configuration actions.</param>
         /// <returns>
         /// The original sequence modified by adding additional configuration actions required to configure
         /// a load testing device.
         /// </returns>
-        public override IObservable<TContext> Process<TContext>(IObservable<TContext> source)
+        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;
             var deviceName = DeviceName;
@@ -106,13 +106,13 @@ namespace OpenEphys.Onix1
 
                 if (receivedWords > maxSize)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(ReceivedWords), 
+                    throw new ArgumentOutOfRangeException(nameof(ReceivedWords),
                         $"{nameof(ReceivedWords)} must be less than {maxSize} for the requested frame rate of {framesPerSecond} Hz.");
                 }
 
                 device.WriteRegister(LoadTester.DT0H16_WORDS, receivedWords);
                 device.WriteRegister(LoadTester.HTOD32_WORDS, transmittedWords);
-                
+
                 var deviceInfo = new LoadTesterDeviceInfo(context, DeviceType, deviceAddress, ReceivedWords, TransmittedWords);
                 return DeviceManager.RegisterDevice(deviceName, deviceInfo);
             });

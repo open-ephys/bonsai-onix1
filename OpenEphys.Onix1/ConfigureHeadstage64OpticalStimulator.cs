@@ -17,7 +17,7 @@ namespace OpenEphys.Onix1
     /// </remarks>
     [Description("Configures a headstage-64 optical stimulator.")]
     [Editor("OpenEphys.Onix1.Design.Headstage64OpticalStimulatorComponentEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
-    public class ConfigureHeadstage64OpticalStimulator : SingleDeviceFactory
+    public class ConfigureHeadstage64OpticalStimulator : SingleDeviceFactory<ContextTask>
     {
         readonly BehaviorSubject<bool> arm = new(true);
         readonly BehaviorSubject<double> maxCurrent = new(100);
@@ -229,11 +229,11 @@ namespace OpenEphys.Onix1
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/>
         /// instance prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="OnixContextTask"/> instances that holds configuration
+        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that holds configuration
         /// actions.</param>
         /// <returns>The original sequence modified by adding additional configuration actions required to
         /// configure a headstage-64 dual-channel optical stimulator.</returns>
-        public override IObservable<TContext> Process<TContext>(IObservable<TContext> source)
+        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;
@@ -352,12 +352,12 @@ namespace OpenEphys.Onix1
         {
             double R = Math.Pow(currentMa / 3.833e+05, 1 / -0.9632);
             uint s = (uint)Math.Round(256 * (R - MinRheostatResistanceOhms) / PotResistanceOhms);
-            return s > 255 ? 255 : s < 0 ? 0 :s;
+            return s > 255 ? 255 : s < 0 ? 0 : s;
         }
 
         internal static double PotSettingToMilliamps(uint potSetting)
         {
-            var R = MinRheostatResistanceOhms + PotResistanceOhms * potSetting / 255; 
+            var R = MinRheostatResistanceOhms + PotResistanceOhms * potSetting / 255;
             return 3.833e+05 * Math.Pow(R, -0.9632);
         }
 

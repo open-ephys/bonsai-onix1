@@ -26,7 +26,7 @@ namespace OpenEphys.Onix1
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV1fHeadstageEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a NeuropixelsV1f headstage.")]
-    public class ConfigureHeadstageNeuropixelsV1f : MultiDeviceFactory
+    public class ConfigureHeadstageNeuropixelsV1f : MultiDeviceFactory<OnixContextTask>
     {
         PortName port;
         readonly ConfigureNeuropixels1fHeadstageLinkController PortControl = new();
@@ -124,7 +124,7 @@ namespace OpenEphys.Onix1
             set => PortControl.PortVoltage = value;
         }
 
-        internal override IEnumerable<IDeviceConfiguration> GetDevices()
+        internal override IEnumerable<IDeviceConfiguration<OnixContextTask>> GetDevices()
         {
             yield return PortControl;
             yield return NeuropixelsV1A;

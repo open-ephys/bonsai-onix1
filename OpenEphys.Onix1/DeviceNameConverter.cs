@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using Bonsai.Expressions;
 using Bonsai;
+using Bonsai.Expressions;
 
 namespace OpenEphys.Onix1
 {
@@ -109,10 +109,10 @@ namespace OpenEphys.Onix1
                     {
                         var names = (from level in callContext
                                      from element in SelectContextElements(level)
-                                     let factory = ExpressionBuilder.GetWorkflowElement(element) as IDeviceCollection
+                                     let factory = ExpressionBuilder.GetWorkflowElement(element) as IDeviceFactory
                                      where factory != null
                                      from device in factory.GetDevices()
-                                     where ContextHelper.CheckDeviceType(device.DeviceType,targetType)
+                                     where ContextHelper.CheckDeviceType(device.DeviceType, targetType)
                                      select device.DeviceName)
                                      .Distinct()
                                      .ToList();

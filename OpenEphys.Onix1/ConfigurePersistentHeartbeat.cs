@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Reactive.Subjects;
-using Bonsai;
 
 namespace OpenEphys.Onix1
 {
@@ -13,7 +12,7 @@ namespace OpenEphys.Onix1
     /// using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Configures a heartbeat device.")]
-    public class ConfigurePersistentHeartbeat : SingleDeviceFactory
+    public class ConfigurePersistentHeartbeat : SingleDeviceFactory<ContextTask>
     {
         readonly BehaviorSubject<uint> beatsPerSecond = new(100);
 
@@ -43,11 +42,11 @@ namespace OpenEphys.Onix1
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/>
         /// instance prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="OnixContextTask"/> instances that holds configuration
+        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that holds configuration
         /// actions.</param>
         /// <returns>The original sequence modified by adding additional configuration actions required to
         /// configure a persistent heartbeat device./></returns>
-        public override IObservable<TContext> Process<TContext>(IObservable<TContext> source)
+        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             //var enable = Enable;
             var deviceName = DeviceName;

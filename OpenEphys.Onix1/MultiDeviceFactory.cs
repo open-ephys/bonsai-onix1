@@ -24,7 +24,7 @@ namespace OpenEphys.Onix1
     /// assembly and sequencing of device groups.
     /// </para>
     /// </remarks>
-    public abstract class MultiDeviceFactory : DeviceFactory, INamedElement
+    public abstract class MultiDeviceFactory<TContext> : DeviceFactory<TContext>, INamedElement where TContext : ContextTask
     {
         const string BaseTypePrefix = "Configure";
         string _name;
@@ -79,12 +79,12 @@ namespace OpenEphys.Onix1
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance
         /// prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="OnixContextTask"/> instances that hold configuration actions.</param>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that hold configuration actions.</param>
         /// <returns>
         /// The original sequence modified by adding additional configuration actions required to configure
         /// all the devices in the device group.
         /// </returns>
-        public override IObservable<TContext> Process<TContext>(IObservable<TContext> source)
+        public override IObservable<TContext> Process(IObservable<TContext> source)
         {
             if (string.IsNullOrEmpty(_name))
             {

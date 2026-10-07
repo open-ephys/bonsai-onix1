@@ -30,7 +30,7 @@ namespace OpenEphys.Onix1
     /// </list>
     /// </remarks>
     [Description("Configures a hardware memory monitor.")]
-    public class ConfigureMemoryMonitor : SingleDeviceFactory
+    public class ConfigureMemoryMonitor : SingleDeviceFactory<ContextTask>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureMemoryMonitor"/> class.
@@ -66,9 +66,9 @@ namespace OpenEphys.Onix1
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance
         /// prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="OnixContextTask"/> instances that holds configuration actions.</param>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that holds configuration actions.</param>
         /// <returns>The original sequence modified by adding additional configuration actions required to configure a memory monitor device.</returns>
-        public override IObservable<TContext> Process<TContext>(IObservable<TContext> source)
+        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var enable = Enable;
             var deviceName = DeviceName;

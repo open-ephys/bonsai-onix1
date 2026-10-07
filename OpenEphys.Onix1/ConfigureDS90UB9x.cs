@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace OpenEphys.Onix1
 {
-    internal abstract class ConfigureDS90UB9x : OnixSingleDeviceFactory
+    internal abstract class ConfigureDS90UB9x : SingleDeviceFactory<OnixContextTask>
     {
         public ConfigureDS90UB9x(Type deviceType)
             : base(deviceType)

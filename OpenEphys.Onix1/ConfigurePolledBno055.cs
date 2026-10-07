@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1
     /// such as <see cref="PolledBno055Data"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Configures a PolledBno055 device.")]
-    public class ConfigurePolledBno055 : OnixSingleDeviceFactory
+    public class ConfigurePolledBno055 : SingleDeviceFactory<OnixContextTask>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigurePolledBno055"/> class.

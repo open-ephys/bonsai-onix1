@@ -32,7 +32,7 @@ namespace OpenEphys.Onix1
     /// </para>
     /// </remarks>
     [Description("Configures a ONIX breakout board Harp sync input.")]
-    public class ConfigureHarpSyncInput : SingleDeviceFactory
+    public class ConfigureHarpSyncInput : SingleDeviceFactory<ContextTask>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureHarpSyncInput"/> class.
@@ -77,7 +77,7 @@ namespace OpenEphys.Onix1
         /// The original sequence modified by adding additional configuration actions required to configure
         /// a ONIX breakout board Harp sync input device.
         /// </returns>
-        public override IObservable<TContext> Process<TContext>(IObservable<TContext> source)
+        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;

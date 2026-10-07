@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1
     /// arena.
     /// </remarks>
     [Description("Configures a TS4231 receiver array.")]
-    public class ConfigureTS4231V1 : SingleDeviceFactory
+    public class ConfigureTS4231V1 : SingleDeviceFactory<ContextTask>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureTS4231V1"/> class.
@@ -42,9 +42,9 @@ namespace OpenEphys.Onix1
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance
         /// prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="OnixContextTask"/> instances that holds configuration actions.</param>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that holds configuration actions.</param>
         /// <returns>The original sequence modified by adding additional configuration actions required to configure a TS4231 array.</returns>
-        public override IObservable<TContext> Process<TContext>(IObservable<TContext> source)
+        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var deviceName = DeviceName;
             var deviceAddress = DeviceAddress;

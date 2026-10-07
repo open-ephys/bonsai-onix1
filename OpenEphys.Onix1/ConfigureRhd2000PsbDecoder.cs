@@ -11,7 +11,7 @@ namespace OpenEphys.Onix1
     /// cref="MultiDeviceFactory"/>, e.g. <see cref="ConfigureHeadstageNeuropixelsV2Rhd2000e"/>.
     /// </remarks>
     [Description("Configures a parallel serial bus decoder for an embedded Rhd2000 data stream.")]
-    public class ConfigureRhd2000PsbDecoder : OnixSingleDeviceFactory
+    public class ConfigureRhd2000PsbDecoder : SingleDeviceFactory<OnixContextTask>
     {
         internal ushort StreamIndex { private get; set; } = 0;
 

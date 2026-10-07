@@ -18,7 +18,7 @@ namespace OpenEphys.Onix1
     /// logged by external recording systems for post-hoc synchronization with ONIX data.
     /// </remarks>
     [Description("Configures the ONIX breakout board's output clock.")]
-    public class ConfigureOutputClock : SingleDeviceFactory
+    public class ConfigureOutputClock : SingleDeviceFactory<ContextTask>
     {
         readonly BehaviorSubject<bool> gate = new(false);
         double frequencyHz = 1e6;
@@ -125,11 +125,11 @@ namespace OpenEphys.Onix1
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/>
         /// instance prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="OnixContextTask"/> instances that holds configuration
+        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that holds configuration
         /// actions.</param>
         /// <returns>The original sequence modified by adding additional configuration actions required to
         /// configure a clock output device./></returns>
-        public override IObservable<TContext> Process<TContext>(IObservable<TContext> source)
+        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {
             var clkFreqHz = Frequency;
             var dutyCycle = DutyCycle;
