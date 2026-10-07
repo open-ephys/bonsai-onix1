@@ -126,6 +126,11 @@ namespace OpenEphys.Onix1.Design
             base.OnPaint(e);
         }
 
+        // NB: WinForms takes the arrows for moving focus between controls, and drops the message, unless the
+        // control claims them as input. ImGui needs them for the caret in text fields and for keyboard navigation.
+        protected override bool IsInputKey(Keys keyData) =>
+            (keyData & Keys.KeyCode) is Keys.Up or Keys.Down or Keys.Left or Keys.Right || base.IsInputKey(keyData);
+
         protected override void WndProc(ref Message m)
         {
             if (initialized && !disposed)

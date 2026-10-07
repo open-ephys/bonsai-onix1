@@ -366,7 +366,7 @@ namespace OpenEphys.Onix1.Design
 
             ImGui.SetNextWindowPos(Vector2.Zero);
             ImGui.SetNextWindowSize(io.DisplaySize);
-            ImGui.Begin("##probescope",
+            ImGui.Begin("Probe Scope##probescope",
                 ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove |
                 ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
 
