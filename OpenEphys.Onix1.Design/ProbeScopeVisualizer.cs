@@ -170,6 +170,7 @@ namespace OpenEphys.Onix1.Design
             canvas.HoverKeys.Add(Keys.R);
             canvas.HoverKeys.Add(Keys.C);
             canvas.HoverKeys.Add(Keys.H);
+            canvas.HoverKeys.Add(Keys.F);
             canvas.HoverKeys.Add(Keys.Delete);
             canvas.HoverKeys.Add(Keys.Q);
             canvas.HoverKeys.Add(Keys.E);

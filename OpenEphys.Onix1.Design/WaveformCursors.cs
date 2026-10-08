@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Hexa.NET.ImGui;
@@ -28,6 +28,7 @@ namespace OpenEphys.Onix1.Design
         const float MarkerRadius = 3f;
         const float LabelGap = 4f;
         const float Arrow = 8f;
+
         static readonly uint ColSelectedRow = ImGuiPalette.WithAlpha(ImGuiPalette.White, 0x20);
 
         readonly List<long> positions = new(MaxCursors);
@@ -96,12 +97,13 @@ namespace OpenEphys.Onix1.Design
         /// Shades the row of the channel the cursors read.
         /// </summary>
         /// <remarks>
-        /// Drawn ahead of the traces, so the selection is marked without anything drawn over the trace.
+        /// Drawn ahead of the traces, so the selection is marked without anything drawn over the trace. Not in the
+        /// heatmap, which covers it, and where the values written across the row mark it instead.
         /// </remarks>
         public void DrawRowBand(ImDrawListPtr draw, in PlotFrame frame)
         {
             var channel = Channel(frame.Expanded);
-            if (channel < 0 || frame.Expanded >= 0)
+            if (channel < 0 || frame.Expanded >= 0 || frame.Heatmap)
                 return;
 
             var top = MathF.Floor(frame.Layout.RowTop(channel));
@@ -266,7 +268,8 @@ namespace OpenEphys.Onix1.Design
         /// The min and max of the column at <paramref name="position"/> on the channel the cursors read.
         /// </summary>
         /// <remarks>
-        /// Read from the column that is drawn, so the values are those of the trace on screen.
+        /// Read from the column that is drawn, so the values are those of the trace on screen. In the heatmap both
+        /// are the one value its color shows, whichever of them lies further from zero.
         /// </remarks>
         /// <returns>False if no channel can be read, or the column is off the window or holds no data.</returns>
         bool TryRead(in PlotFrame frame, long position, out double min, out double max)
@@ -280,12 +283,15 @@ namespace OpenEphys.Onix1.Design
 
             min = frame.WaveformMin.GetReal(channel, column);
             max = frame.WaveformMax.GetReal(channel, column);
+            if (Heatmap(frame))
+                min = max = Math.Abs(max) >= Math.Abs(min) ? max : min;
             return !double.IsNaN(min) && !double.IsNaN(max);
         }
 
         /// <summary>
         /// Marks where a cursor crosses the channel's trace and labels the value there: the column's max above
-        /// and its min below, or the one sample when the column holds only one.
+        /// and its min below, or the one sample when the column holds only one. In the heatmap, which shows no
+        /// trace to mark, the one value is labeled level with the middle of the row.
         /// </summary>
         void Values(ImDrawListPtr draw, in PlotFrame frame, double min, double max, float x)
         {
@@ -294,6 +300,12 @@ namespace OpenEphys.Onix1.Design
             var scale = layout.RowHeight / frame.Range;
             var right = frame.Left + frame.Width;
             float ScreenY(double value) => center - (float)(value * scale);
+
+            if (Heatmap(frame))
+            {
+                Value(draw, new Vector2(x, center), max, frame.Unit, 0, right, marker: false);
+                return;
+            }
 
             if (min == max)
             {
@@ -309,9 +321,11 @@ namespace OpenEphys.Onix1.Design
         /// A marker at <paramref name="at"/>, labeled beside the cursor line: above the marker for
         /// <paramref name="side"/> -1, below it for 1, level with it for 0.
         /// </summary>
-        static void Value(ImDrawListPtr draw, Vector2 at, double value, string unit, int side, float right)
+        static void Value(
+            ImDrawListPtr draw, Vector2 at, double value, string unit, int side, float right, bool marker = true)
         {
-            draw.AddCircleFilled(at, MarkerRadius, Color);
+            if (marker)
+                draw.AddCircleFilled(at, MarkerRadius, Color);
 
             var text = $"{PlotText.Significant(value)} {unit}";
             var size = ImGui.CalcTextSize(text);
@@ -404,8 +418,9 @@ namespace OpenEphys.Onix1.Design
                 ImGui.TextUnformatted(channel >= 0 ? $"Ch {channel}" : "No channel");
 
                 var remove = -1;
-                // NB: a column of one sample has min and max equal, so it has one value and one difference from C0.
-                var oneSample = window.Step == 1;
+                // NB: a column of one sample has min and max equal, so it has one value and one difference from C0,
+                // as does the heatmap, which reduces a column to one value.
+                var oneSample = window.Step == 1 || Heatmap(frame);
                 var headers = oneSample
                     ? new[] { "", "t (s)", "dt (ms)", "1/dt (Hz)", $"y ({unit})", $"dy ({unit})", "" }
                     : new[] { "", "t (s)", "dt (ms)", "1/dt (Hz)", $"min ({unit})", $"max ({unit})", $"dy min ({unit})", $"dy max ({unit})", "" };
@@ -461,7 +476,7 @@ namespace OpenEphys.Onix1.Design
                 ImGui.EndDisabled();
 
                 ImGui.SameLine();
-                if (ImGui.SmallButton("Home (h)"))
+                if (ImGui.SmallButton("Home"))
                     Home(window);
             }
 
@@ -477,6 +492,9 @@ namespace OpenEphys.Onix1.Design
                 ImGui.TextUnformatted(text);
             }
         }
+
+        // NB: an expanded channel is drawn as a trace in either view.
+        static bool Heatmap(in PlotFrame frame) => frame.Heatmap && frame.Expanded < 0;
 
         static float X(in PlotFrame frame, long position) =>
             frame.Left + (float)(frame.Width * frame.Window.FractionOf(position));

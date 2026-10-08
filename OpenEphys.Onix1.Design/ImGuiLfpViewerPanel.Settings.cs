@@ -15,7 +15,12 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// Smallest height a channel row may be given in pixels.
         /// </summary>
-        public const int MinChannelHeight = 5;
+        public const int MinChannelHeight = 1;
+
+        /// <summary>
+        /// Pixels the channel height steps by from the control strip.
+        /// </summary>
+        public const int ChannelHeightStep = 5;
 
         /// <summary>
         /// Amplitude ranges offered as presets.

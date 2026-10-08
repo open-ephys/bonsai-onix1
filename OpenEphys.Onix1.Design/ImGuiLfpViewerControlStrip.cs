@@ -68,7 +68,7 @@ namespace OpenEphys.Onix1.Design
         /// Number of columns holding parameters. The strip adds the flexible gap and the pause button
         /// after them itself.
         /// </summary>
-        private protected virtual int ParameterColumns => 6;
+        private protected virtual int ParameterColumns => 7;
 
         /// <summary>
         /// Columns drawn ahead of the standard ones.
@@ -152,16 +152,42 @@ namespace OpenEphys.Onix1.Design
             if (InputDoubleCombo("##timebase", ref timebase, panel.StandardTimeBases, timebaseWidth))
                 panel.Timebase = timebase;
 
-            ImGui.SetNextItemWidth(MenuColumn("Chan. Height (px)"));
-            var channelHeight = panel.ChannelHeight;
-            if (ImGui.InputInt("##channelHeight", ref channelHeight, ImGuiLfpViewerPanel.MinChannelHeight))
+            var heightWidth = MenuColumn("Chan. Height (px)");
+            const string FitLabel = "Fit (f)";
+            var inner = ImGui.GetStyle().ItemInnerSpacing.X;
+            var fitWidth = ImGui.GetFrameHeight() + inner + ImGui.CalcTextSize(FitLabel).X;
+            ImGui.SetNextItemWidth(heightWidth - fitWidth - inner);
+            var previousHeight = panel.ChannelHeight;
+            var channelHeight = previousHeight;
+            const float Step = ImGuiLfpViewerPanel.ChannelHeightStep;
+            ImGui.BeginDisabled(panel.FitChannels);
+            if (ImGui.InputFloat("##channelHeight", ref channelHeight, Step, Step,
+                channelHeight % 1 == 0 ? "%.0f" : "%.1f"))
+            {
+                // NB: ImGui reports the buttons only as a change of one step.
+                if (channelHeight == previousHeight + Step)
+                    channelHeight = ImGuiLfpViewerPanel.StepChannelHeight(previousHeight, 1);
+                else if (channelHeight == previousHeight - Step)
+                    channelHeight = ImGuiLfpViewerPanel.StepChannelHeight(previousHeight, -1);
                 panel.ChannelHeight = channelHeight;
+            }
+            ImGui.EndDisabled();
+            ImGui.SameLine(0, inner);
+            var fit = panel.FitChannels;
+            if (ImGui.Checkbox(FitLabel + "##fitChannels", ref fit))
+                panel.FitChannels = fit;
+            ImGui.SetItemTooltip("Keep every channel fitted to the plot's height");
 
-            var rangeWidth = MenuColumn(
-                string.IsNullOrEmpty(panel.Unit) ? "Range" : $"Range ({panel.Unit})");
-            var range = panel.RangeAmplitude;
-            if (InputDoubleCombo("##range", ref range, panel.StandardRanges, rangeWidth))
-                panel.RangeAmplitude = range;
+            if (panel.ShowHeatmap)
+                ColorColumn(panel);
+            else
+            {
+                var rangeWidth = MenuColumn(
+                    string.IsNullOrEmpty(panel.Unit) ? "Range" : $"Range ({panel.Unit})");
+                var range = panel.RangeAmplitude;
+                if (InputDoubleCombo("##range", ref range, panel.StandardRanges, rangeWidth))
+                    panel.RangeAmplitude = range;
+            }
 
             var paletteWidth = MenuColumn("Palette");
             var swatch = panel.Colors.Palette == ColorPalette.Custom
@@ -190,6 +216,12 @@ namespace OpenEphys.Onix1.Design
             if (ImGui.InputInt("##colorGrouping", ref grouping, 1))
                 panel.Colors.Grouping = grouping;
             ImGui.EndDisabled();
+
+            MenuColumn("Heatmap (h)");
+            var showHeatmap = panel.ShowHeatmap;
+            if (ImGui.Checkbox("##heatmap", ref showHeatmap))
+                panel.ShowHeatmap = showHeatmap;
+            ImGui.SetItemTooltip("Draw channels as rows of color");
 
             MenuColumn("Cursors (c)");
             var showCursors = panel.ShowCursors;
@@ -236,6 +268,33 @@ namespace OpenEphys.Onix1.Design
             // every row rather than below whichever item happened to be drawn last.
             ImGui.SetCursorScreenPos(origin);
             ImGui.Dummy(new Vector2(available, flowHeight));
+        }
+
+        // NB: the range sets the colors' bright end, so it stays in view, at the end of the bar it bounds. The bar
+        // is half height so that the threshold's value fits under it within the slot.
+        void ColorColumn(ImGuiLfpViewerPanel panel)
+        {
+            var width = MenuColumn(string.IsNullOrEmpty(panel.Unit) ? "Color" : $"Color ({panel.Unit})");
+            var corner = ImGui.GetCursorScreenPos();
+            var style = ImGui.GetStyle();
+            var widest = panel.StandardRanges[panel.StandardRanges.Count - 1].ToString();
+            var rangeWidth = ImGui.CalcTextSize(widest).X + 2 * style.FramePadding.X + ImGui.GetFrameHeight();
+            var barWidth = width - rangeWidth - style.ItemInnerSpacing.X;
+
+            var threshold = (float)panel.ColorThreshold;
+            if (ImGuiThresholdSlider.Draw(
+                "##threshold", Icefire.Map, (float)panel.RangeAmplitude, ref threshold,
+                barWidth, ImGui.GetFrameHeight() / 2,
+                tooltip: "Threshold: magnitudes at or below it are black"))
+            {
+                panel.ColorThreshold = threshold;
+            }
+
+            ImGui.SetCursorScreenPos(new Vector2(corner.X + width - rangeWidth, corner.Y));
+            var range = panel.RangeAmplitude;
+            if (InputDoubleCombo("##range", ref range, panel.StandardRanges, rangeWidth))
+                panel.RangeAmplitude = range;
+            ImGui.SetItemTooltip("Range: magnitudes at or above it are brightest");
         }
 
         /// <summary>

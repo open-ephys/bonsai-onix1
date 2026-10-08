@@ -20,6 +20,7 @@ namespace OpenEphys.Onix1.Design
         const uint ColDivision = ImGuiPalette.Grey0x55;
         const float DivisionDotGap = 3;
         const float HoverLineWeight = 3;
+        const uint ColHoveredRow = ImGuiPalette.Grey0x99;
 
         static readonly uint ColFrozenTail = ImGuiPalette.WithAlpha(ImGuiPalette.Black, 0x80);
 
@@ -32,6 +33,7 @@ namespace OpenEphys.Onix1.Design
 
         float plotLeft;
         float plotSpan;
+        float visibleHeight;
 
         readonly TraceRaster traces = new();
 
@@ -89,6 +91,10 @@ namespace OpenEphys.Onix1.Design
 
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();
+
+                // NB: measured inside the cell, which leaves out the row's padding, and less the scroll, by which
+                // the cell's top has moved up, so that rows fitted to it fill the table without scrolling.
+                visibleHeight = ImGui.GetContentRegionAvail().Y - ImGui.GetScrollY();
                 var layout = LayoutRows(rows, plotTop, plotBottom, ImGui.GetCursorScreenPos().Y,
                     ImGui.GetContentRegionAvail().Y);
                 var hovered = HoveredChannel(layout);
@@ -106,7 +112,7 @@ namespace OpenEphys.Onix1.Design
                 frame = new PlotFrame(
                     waveformMin, waveformMax, layout, plotX, plotWidth, plotTop, plotBottom,
                     window, sampleRate, Paused, CursorPosition, timebase, pausedTimebase,
-                    rangeAmplitude, Unit, channelHidden, expandedChannel);
+                    rangeAmplitude, Unit, channelHidden, expandedChannel, ShowHeatmap, ColorThreshold);
                 if (ImPlot.BeginPlot("##channels", new(plotWidth, layout.Height), plotFlags))
                 {
                     ImPlot.SetupAxes(string.Empty, string.Empty, axesFlags, axesFlags);
@@ -117,7 +123,7 @@ namespace OpenEphys.Onix1.Design
                         Paused ? -1 : waveformMinDecimator.Cursor, history?.Count ?? 0);
                     if (expandedChannel >= 0)
                         PlotChannelLines(waveformMin, waveformMax, expandedChannel, 1);
-                    else if (hovered >= 0 && !channelHidden[hovered])
+                    else if (hovered >= 0 && !channelHidden[hovered] && !ShowHeatmap)
                         PlotChannelLines(waveformMin, waveformMax, hovered, HoverLineWeight);
                     PlotSweepCursor();
                     ImPlot.EndPlot();
@@ -125,6 +131,10 @@ namespace OpenEphys.Onix1.Design
                     // NB: both drawn after the plot, and from inside the table,
                     // so they lie over the traces
                     ShadeFrozenTail(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom);
+
+                    // NB: a heatmap row has no line to thicken, so the hovered one is marked from outside.
+                    if (ShowHeatmap && expandedChannel < 0 && hovered >= 0 && !channelHidden[hovered])
+                        BracketRow(ImGui.GetWindowDrawList(), frame, hovered, ColHoveredRow);
                     cursors.Draw(ImGui.GetWindowDrawList(), frame, hovered);
                     DrawFrame(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom);
                     DrawReadout(ImGui.GetWindowDrawList(), frame, hovered);
@@ -258,7 +268,7 @@ namespace OpenEphys.Onix1.Design
 
         /// <summary>
         /// The rows the plot spans this frame and where they fall on screen: every channel at
-        /// <c>channelHeight</c>, or the expanded channel alone filling the visible height.
+        /// <see cref="ChannelHeight"/>, or the expanded channel alone filling the visible height.
         /// </summary>
         internal readonly struct RowLayout
         {
@@ -293,7 +303,7 @@ namespace OpenEphys.Onix1.Design
 
             return expandedChannel >= 0
                 ? new RowLayout(expandedChannel, expandedChannel + 1, available, top, bottom, origin)
-                : new RowLayout(0, rows, channelHeight, top, bottom, origin);
+                : new RowLayout(0, rows, ChannelHeight, top, bottom, origin);
         }
 
         static float LabelColumnWidth(int labelDigits) => labelDigits * ImGui.CalcTextSize("0").X;
@@ -438,8 +448,20 @@ namespace OpenEphys.Onix1.Design
             ImPlot.PopStyleColor();
         }
 
-        // NB: filled rects on whole pixels, here and in DrawGraticules. AddRect and AddLine draw half a
-        // pixel off and anti-alias, which blurs a 1 px line.
+        /// <summary>
+        /// Marks a channel's row with a line just above it and another just below, leaving the row as drawn.
+        /// </summary>
+        internal static void BracketRow(ImDrawListPtr draw, in PlotFrame frame, int channel, uint color)
+        {
+            var top = MathF.Floor(frame.Layout.RowTop(channel));
+            var bottom = MathF.Floor(frame.Layout.RowTop(channel) + frame.Layout.RowHeight);
+            var right = frame.Left + frame.Width;
+            draw.AddRectFilled(new Vector2(frame.Left, top - 1), new Vector2(right, top), color);
+            draw.AddRectFilled(new Vector2(frame.Left, bottom), new Vector2(right, bottom + 1), color);
+        }
+
+        // NB: filled rects on whole pixels, here and in DrawGraticules and BracketRow. AddRect and AddLine draw
+        // half a pixel off and anti-alias, which blurs a 1 px line.
         static void DrawFrame(ImDrawListPtr draw, float left, float width, float top, float bottom)
         {
             var l = MathF.Floor(left);

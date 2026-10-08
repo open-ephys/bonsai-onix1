@@ -22,7 +22,8 @@ namespace OpenEphys.Onix1.Design
         /// of it redraws it whole.
         /// </summary>
         readonly record struct Key(
-            Mat Envelope, DisplayWindow Window, double Range, int Expanded, int Width, int Height,
+            Mat Envelope, DisplayWindow Window, double Range, int Expanded, bool Heatmap, double ColorThreshold,
+            int Width, int Height,
             int FirstVisible, int LastVisible, float RowHeight, float Origin);
 
         uint[] pixels = Array.Empty<uint>();
@@ -59,7 +60,8 @@ namespace OpenEphys.Onix1.Design
                 Create(w, h);
 
             var current = new Key(
-                frame.WaveformMin, frame.Window, frame.Range, frame.Expanded, w, h,
+                frame.WaveformMin, frame.Window, frame.Range, frame.Expanded, frame.Heatmap, frame.ColorThreshold,
+                w, h,
                 layout.FirstVisible, layout.LastVisible, layout.RowHeight, layout.Origin - frame.Top);
 
             var columns = frame.WaveformMin.Cols;
@@ -141,7 +143,11 @@ namespace OpenEphys.Onix1.Design
             for (int y = 0; y < height; y++)
                 Array.Clear(pixels, y * width + from, to - from);
 
-            PaintTraces(frame, colors, from, to);
+            // NB: an expanded channel is drawn as a trace in either view, which is how a row of color is read.
+            if (frame.Heatmap && frame.Expanded < 0)
+                PaintHeatmap(frame, from, to);
+            else
+                PaintTraces(frame, colors, from, to);
 
             GL.BindTexture(TextureTarget.Texture2D, texture);
             GL.PixelStore(PixelStoreParameter.UnpackRowLength, width);
@@ -208,6 +214,55 @@ namespace OpenEphys.Onix1.Design
                         continue;
 
                     for (int y = Math.Max(0, y0); y <= Math.Min(height - 1, y1); y++)
+                        pixels[y * width + p] = color;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Fills each visible channel's row in pixel columns <paramref name="from"/> up to <paramref name="to"/>
+        /// with the color of its signal there.
+        /// </summary>
+        /// <remarks>
+        /// A pixel's value is whichever of the min and max of the columns it covers lies further from zero, with its
+        /// sign, so a brief excursion shows rather than averaging away. The colormap is diverging and black at zero,
+        /// the two signs brightening in two hues out to the range. Magnitudes up to the threshold are black, and those
+        /// above it keep their color rather than the colormap being squeezed above the threshold, so a color means
+        /// one amplitude whatever the threshold.
+        /// </remarks>
+        unsafe void PaintHeatmap(in PlotFrame frame, int from, int to)
+        {
+            frame.WaveformMin.GetRawData(out IntPtr minPtr, out int minStep, out Size shape);
+            frame.WaveformMax.GetRawData(out IntPtr maxPtr, out int maxStep, out Size _);
+            var layout = frame.Layout;
+            var columns = shape.Width;
+            var map = Icefire.Map;
+            var middle = map.Length / 2;
+
+            for (int i = layout.FirstVisible; i < layout.LastVisible; i++)
+            {
+                if (frame.Hidden[i])
+                    continue;
+
+                var y0 = Math.Max(0, (int)MathF.Floor(layout.RowTop(i) - frame.Top));
+                var y1 = Math.Min(height, (int)MathF.Floor(layout.RowTop(i) + layout.RowHeight - frame.Top));
+                if (y1 <= y0)
+                    continue;
+
+                var minLine = (float*)((byte*)minPtr + i * minStep);
+                var maxLine = (float*)((byte*)maxPtr + i * maxStep);
+                for (int p = from; p < to; p++)
+                {
+                    var (low, high) = Bin(minLine, maxLine, columns, p);
+                    if (float.IsNaN(low))
+                        continue;
+
+                    var value = Math.Abs(high) >= Math.Abs(low) ? high : low;
+                    var magnitude = Math.Abs(value);
+                    var step = (int)(Math.Min(1, magnitude / frame.Range) * (middle - 1) + 0.5);
+                    var color = magnitude <= frame.ColorThreshold ? ImGuiPalette.Black
+                        : map[value >= 0 ? middle + step : middle - 1 - step];
+                    for (int y = y0; y < y1; y++)
                         pixels[y * width + p] = color;
                 }
             }

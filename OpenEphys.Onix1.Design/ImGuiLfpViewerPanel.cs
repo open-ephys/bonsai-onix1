@@ -72,6 +72,28 @@ namespace OpenEphys.Onix1.Design
         public void HomeCursors() => cursors.Home(window);
 
         /// <summary>
+        /// Whether channels are drawn as rows of color, a compressed view of every channel at once, rather than
+        /// as traces. Rows are laid out alike in both views, so a channel stays in place when the view changes.
+        /// </summary>
+        public bool ShowHeatmap { get; set; }
+
+        /// <summary>
+        /// Magnitude, in the units of the incoming data, at or below which the heatmap shows black. It can
+        /// reach the range, where the colors are brightest.
+        /// </summary>
+        public double ColorThreshold
+        {
+            get => Math.Min(colorThreshold, rangeAmplitude);
+            set => colorThreshold = Math.Max(0, Math.Min(value, rangeAmplitude));
+        }
+
+        /// <summary>
+        /// Whether the channel height follows the plot's visible height so that every channel fits it, as far as
+        /// the smallest height allows. Setting the height any other way stops it.
+        /// </summary>
+        public bool FitChannels { get; set; }
+
+        /// <summary>
         /// The channel the cursors read, or -1 while they are hidden.
         /// </summary>
         int CursorChannel => cursors.Channel(expandedChannel);
@@ -89,9 +111,10 @@ namespace OpenEphys.Onix1.Design
 
         int expandedChannel = -1;
 
-        int channelHeight = 20;
-        double timebase = 2.0;
+        float channelHeight = 20;
+        double timebase = 2.5;
         double rangeAmplitude = 500;
+        double colorThreshold;
 
         /// <summary>
         /// Seconds of data spanned by the display.
@@ -103,13 +126,38 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// Height in pixels of one channel's row.
+        /// Height in pixels of one channel's row, which may be a fraction of a pixel, exactly the fit height while
+        /// fitting and never less than it. Setting it stops fitting.
         /// </summary>
-        public int ChannelHeight
+        public float ChannelHeight
         {
-            get => channelHeight;
-            set => channelHeight = Math.Max(MinChannelHeight, value);
+            get => FitChannels ? FitHeight : Math.Max(channelHeight, FitHeight);
+            set
+            {
+                channelHeight = Math.Max(FitHeight, value);
+                FitChannels = false;
+            }
         }
+
+        /// <summary>
+        /// The channel height at which every channel just fills the plot's visible height, as far as the smallest
+        /// height allows. Rows any shorter would leave part of the plot unused.
+        /// </summary>
+        float FitHeight => channelHidden.Length > 0 && visibleHeight > 0
+            ? Math.Max(MinChannelHeight, visibleHeight / channelHidden.Length)
+            : MinChannelHeight;
+
+        /// <summary>
+        /// The next multiple of the channel height step above <paramref name="height"/>, or below it when
+        /// <paramref name="direction"/> is negative.
+        /// </summary>
+        /// <remarks>
+        /// To a multiple rather than by a step, so that a height off the multiples, as a fitted one is, comes back
+        /// onto them.
+        /// </remarks>
+        public static float StepChannelHeight(float height, int direction) => direction > 0
+            ? (MathF.Floor(height / ChannelHeightStep) + 1) * ChannelHeightStep
+            : (MathF.Ceiling(height / ChannelHeightStep) - 1) * ChannelHeightStep;
 
         /// <summary>
         /// Amplitude spanned by one channel's row, in the units of the incoming data.
@@ -258,8 +306,11 @@ namespace OpenEphys.Onix1.Design
             if (HotkeyPressed(ImGuiKey.C, false))
                 ShowCursors = !ShowCursors;
 
-            if (ShowCursors && HotkeyPressed(ImGuiKey.H, false))
-                HomeCursors();
+            if (HotkeyPressed(ImGuiKey.H, false))
+                ShowHeatmap = !ShowHeatmap;
+
+            if (HotkeyPressed(ImGuiKey.F, false))
+                FitChannels = !FitChannels;
 
             // NB: also here and not only in Update, so a timebase change takes effect while no data is
             // arriving, as when paused after acquisition has stopped.

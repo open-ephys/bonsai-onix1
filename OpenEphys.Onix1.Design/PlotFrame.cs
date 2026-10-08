@@ -1,4 +1,4 @@
-using OpenCV.Net;
+﻿using OpenCV.Net;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -23,11 +23,13 @@ namespace OpenEphys.Onix1.Design
     /// <param name="Unit">Unit of the amplitudes.</param>
     /// <param name="Hidden">Hidden channels, by index.</param>
     /// <param name="Expanded">The channel drawn alone, or -1.</param>
+    /// <param name="Heatmap">Whether channels are drawn as rows of color rather than as traces.</param>
+    /// <param name="ColorThreshold">Magnitude at or below which a row of color is black.</param>
     internal readonly record struct PlotFrame(
         Mat WaveformMin, Mat WaveformMax,
         ImGuiLfpViewerPanel.RowLayout Layout, float Left, float Width, float Top, float Bottom,
         DisplayWindow Window, int SampleRate,
         bool Paused, long PauseOrigin, double Timebase, double PausedTimebase,
         double Range, string Unit,
-        bool[] Hidden, int Expanded);
+        bool[] Hidden, int Expanded, bool Heatmap, double ColorThreshold);
 }

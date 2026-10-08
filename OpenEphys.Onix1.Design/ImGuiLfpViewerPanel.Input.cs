@@ -17,7 +17,7 @@ namespace OpenEphys.Onix1.Design
         float collapsedScroll;
         bool restoreScroll;
 
-        int heightDragStart = -1;
+        float heightDragStart = -1;
         float heightDragMouseY;
         float heightDragPivot;
         float heightDragScroll;
@@ -160,16 +160,14 @@ namespace OpenEphys.Onix1.Design
 
             if (io.MouseWheel != 0 && Modifiers(ctrl: true) && heightDragStart < 0)
             {
-                var step = io.MouseWheel > 0 ? 2 : -2;
-                if (channelHeight > 100)
-                    step *= 3;
+                var height = ChannelHeight;
                 var pivot = (mouse.Y - layout.Origin) / layout.RowHeight;
-                SetChannelHeight(channelHeight + step, channelHeight, pivot, ImGui.GetScrollY(), layout);
+                SetChannelHeight(StepChannelHeight(height, Math.Sign(io.MouseWheel)), height, pivot, ImGui.GetScrollY(), layout);
             }
 
             if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && Modifiers(ctrl: true) && ImGui.IsWindowHovered())
             {
-                heightDragStart = channelHeight;
+                heightDragStart = ChannelHeight;
                 heightDragMouseY = mouse.Y;
                 heightDragPivot = (mouse.Y - layout.Origin) / layout.RowHeight;
                 heightDragScroll = ImGui.GetScrollY();
@@ -186,14 +184,14 @@ namespace OpenEphys.Onix1.Design
 
         // NB: the channel that was under the pointer when the gesture began is kept at the same
         // screen position by moving the scroll with the height change.
-        void SetChannelHeight(int height, int baseHeight, float pivot, float baseScroll, in RowLayout layout)
+        void SetChannelHeight(float height, float baseHeight, float pivot, float baseScroll, in RowLayout layout)
         {
-            height = Math.Max(MinChannelHeight, Math.Min((int)(layout.Bottom - layout.Top), height));
-            if (height == channelHeight)
+            // NB: a drag that has not moved yet leaves a fitted height fitted.
+            if (height == baseHeight)
                 return;
 
-            channelHeight = height;
-            ImGui.SetScrollY(baseScroll + pivot * (height - baseHeight));
+            ChannelHeight = Math.Min(layout.Bottom - layout.Top, height);
+            ImGui.SetScrollY(baseScroll + pivot * (ChannelHeight - baseHeight));
         }
 
         void StepTimebase(int direction, float anchorFraction)
