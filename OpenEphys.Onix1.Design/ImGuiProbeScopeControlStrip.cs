@@ -22,7 +22,7 @@ namespace OpenEphys.Onix1.Design
     /// </remarks>
     internal sealed class ImGuiProbeScopeControlStrip : ImGuiLfpViewerControlStrip
     {
-        readonly BehaviorSubject<BandSelection> selection = new(new BandSelection(0, CommonMedianReference: false, AcCoupled: false));
+        readonly BehaviorSubject<BandSelection> selection = new(new BandSelection(0, CommonMedianReference: false, AcCoupled: true));
 
         /// <summary>
         /// The bands to offer, in display order. The owner sets this once the probe is known.
@@ -52,8 +52,12 @@ namespace OpenEphys.Onix1.Design
 
             ImGui.SameLine();
             var band = selection.Value.Band;
-            ImGui.BeginDisabled(band < Bands.Count && Bands[band].AcDescription is null);
-            var ac = selection.Value.AcCoupled;
+            var acOffered = band >= Bands.Count || Bands[band].AcDescription is not null;
+            ImGui.BeginDisabled(!acOffered);
+
+            // NB: shown unchecked where the band does not offer it, since nothing is applied there, while the
+            // choice is kept for the next band that does.
+            var ac = selection.Value.AcCoupled && acOffered;
             if (ImGui.Checkbox("AC", ref ac))
                 selection.OnNext(selection.Value with { AcCoupled = ac });
             ImGui.SetItemTooltip("High-pass each channel at 1 Hz, as AC coupling does on a scope");

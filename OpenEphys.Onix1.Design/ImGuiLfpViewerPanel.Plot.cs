@@ -21,6 +21,7 @@ namespace OpenEphys.Onix1.Design
         const float DivisionDotGap = 3;
         const float HoverLineWeight = 3;
         const uint ColHoveredRow = ImGuiPalette.Grey0x99;
+        static readonly uint ColSelectedRow = ImGuiPalette.WithAlpha(ImGuiPalette.White, 0x20);
 
         static readonly uint ColFrozenTail = ImGuiPalette.WithAlpha(ImGuiPalette.Black, 0x80);
 
@@ -98,6 +99,11 @@ namespace OpenEphys.Onix1.Design
                 var layout = LayoutRows(rows, plotTop, plotBottom, ImGui.GetCursorScreenPos().Y,
                     ImGui.GetContentRegionAvail().Y);
                 var hovered = HoveredChannel(layout);
+                if (selectedChannel >= rows)
+                    selectedChannel = -1;
+                if (selectOnShow && selectedChannel < 0)
+                    selectedChannel = FirstShownInView(layout);
+                selectOnShow = false;
                 ChannelLabels(layout, labelDigits, hovered);
                 HandleChannelInput(hovered);
                 HandleZoomInput(layout);
@@ -112,13 +118,13 @@ namespace OpenEphys.Onix1.Design
                 frame = new PlotFrame(
                     waveformMin, waveformMax, layout, plotX, plotWidth, plotTop, plotBottom,
                     window, sampleRate, Paused, CursorPosition, timebase, pausedTimebase,
-                    rangeAmplitude, Unit, channelHidden, expandedChannel, ShowHeatmap, ColorThreshold);
+                    rangeAmplitude, Unit, channelHidden, expandedChannel, selectedChannel, ShowHeatmap, ColorThreshold);
                 if (ImPlot.BeginPlot("##channels", new(plotWidth, layout.Height), plotFlags))
                 {
                     ImPlot.SetupAxes(string.Empty, string.Empty, axesFlags, axesFlags);
                     ImPlot.SetupAxisLimits(ImAxis.X1, 0, waveformMinDecimator.Sweep.Cols, ImPlotCond.Always);
                     ImPlot.SetupAxisLimits(ImAxis.Y1, -(layout.LastRow - 1) - 0.5, -layout.FirstRow + 0.5, ImPlotCond.Always);
-                    cursors.DrawRowBand(ImGui.GetWindowDrawList(), frame);
+                    DrawRowBand(ImGui.GetWindowDrawList(), frame);
                     traces.Draw(frame, Colors.Packed(channelHidden.Length),
                         Paused ? -1 : waveformMinDecimator.Cursor, history?.Count ?? 0);
                     if (expandedChannel >= 0)
@@ -132,10 +138,14 @@ namespace OpenEphys.Onix1.Design
                     // so they lie over the traces
                     ShadeFrozenTail(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom);
 
-                    // NB: a heatmap row has no line to thicken, so the hovered one is marked from outside.
+                    // NB: a heatmap row has no line to thicken and covers the band, so the hovered and selected rows
+                    // are marked from outside, which also ties a label to its row when rows are far shorter than it.
                     if (ShowHeatmap && expandedChannel < 0 && hovered >= 0 && !channelHidden[hovered])
                         BracketRow(ImGui.GetWindowDrawList(), frame, hovered, ColHoveredRow);
-                    cursors.Draw(ImGui.GetWindowDrawList(), frame, hovered);
+                    if (ShowHeatmap && expandedChannel < 0 && selectedChannel >= 0)
+                        BracketRow(ImGui.GetWindowDrawList(), frame, selectedChannel, WaveformCursors.Color);
+                    cursors.Draw(ImGui.GetWindowDrawList(), frame);
+                    SelectClicked(frame, hovered);
                     DrawFrame(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom);
                     DrawReadout(ImGui.GetWindowDrawList(), frame, hovered);
                     AmplitudeLabels(ImGui.GetWindowDrawList(), plotX, plotTop, plotBottom);
@@ -335,7 +345,7 @@ namespace OpenEphys.Onix1.Design
                 }
             }
 
-            var selected = CursorChannel;
+            var selected = selectedChannel;
             bool Crowds(int channel, int priority) =>
                 priority >= 0 && priority != channel && Math.Abs(channel - priority) * rowHeight < lineHeight;
 
@@ -348,20 +358,24 @@ namespace OpenEphys.Onix1.Design
                 label.Append(i);
                 label.End();
 
-                // Highlight hovered channel and the one the cursors read
-                if ((i == hovered || i == CursorChannel) && expandedChannel < 0)
+                // NB: at least as tall as the label, centered on the row as the label is, so that on a row shorter
+                // than the text the highlight frames it rather than striking it through.
+                var markHeight = Math.Max(layout.RowHeight, lineHeight);
+                var markTop = layout.RowTop(i) + (layout.RowHeight - markHeight) / 2;
+
+                // Highlight hovered channel and the selected one
+                if ((i == hovered || i == selected) && expandedChannel < 0)
                 {
-                    var rowTop = layout.RowTop(i);
                     var fill = Colors.Of(i);
                     fill.W = HoverFillAlpha;
-                    draw.AddRectFilled(new Vector2(left, rowTop), new Vector2(right, rowTop + layout.RowHeight),
+                    draw.AddRectFilled(new Vector2(left, markTop), new Vector2(right, markTop + markHeight),
                         ImGui.ColorConvertFloat4ToU32(fill));
                 }
 
-                if (i == CursorChannel && expandedChannel < 0)
+                if (i == selected && expandedChannel < 0)
                 {
-                    var rowTop = MathF.Floor(layout.RowTop(i));
-                    draw.AddRect(new Vector2(left, rowTop), new Vector2(right, rowTop + layout.RowHeight), WaveformCursors.Color);
+                    var boxTop = MathF.Floor(markTop);
+                    draw.AddRect(new Vector2(left, boxTop), new Vector2(right, boxTop + markHeight), WaveformCursors.Color);
                 }
 
                 if (i != hovered && i != selected && (i % step != 0 || Crowds(i, hovered) || Crowds(i, selected)))
@@ -446,6 +460,37 @@ namespace OpenEphys.Onix1.Design
             ImPlot.PlotInfLines(string.Empty, &sweepHead, 1);
             ImPlot.PopStyleVar();
             ImPlot.PopStyleColor();
+        }
+
+        /// <summary>
+        /// Shades the row of the selected channel.
+        /// </summary>
+        /// <remarks>
+        /// Drawn ahead of the traces, so the selection is marked without anything drawn over the trace. Not in the
+        /// heatmap, which covers it, and where lines above and below the row mark it instead.
+        /// </remarks>
+        static void DrawRowBand(ImDrawListPtr draw, in PlotFrame frame)
+        {
+            if (frame.Selected < 0 || frame.Expanded >= 0 || frame.Heatmap)
+                return;
+
+            var top = MathF.Floor(frame.Layout.RowTop(frame.Selected));
+            draw.AddRectFilled(new Vector2(frame.Left, top),
+                new Vector2(frame.Left + frame.Width, top + frame.Layout.RowHeight), ColSelectedRow);
+        }
+
+        // NB: after the cursors, so that a click that grabs a cursor's line does not also select.
+        void SelectClicked(in PlotFrame frame, int hovered)
+        {
+            var pointer = ImGui.GetMousePos();
+            var inPlot = ImGui.IsWindowHovered() &&
+                pointer.X >= frame.Left && pointer.X < frame.Left + frame.Width &&
+                pointer.Y >= frame.Top && pointer.Y < frame.Bottom;
+            if (inPlot && !cursors.Dragging && hovered >= 0 && !channelHidden[hovered] && expandedChannel < 0 &&
+                ImGui.IsMouseClicked(ImGuiMouseButton.Left) && Modifiers())
+            {
+                selectedChannel = hovered;
+            }
         }
 
         /// <summary>

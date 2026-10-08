@@ -36,6 +36,7 @@ namespace OpenEphys.Onix1.Design
 
         DisplayWindow window;
         bool windowDirty;
+        long panCarry;
 
         long anchorPosition;
         double anchorFraction;
@@ -164,7 +165,18 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         void SetWindow(DisplayWindow value)
         {
+            // NB: the start is kept a whole number of columns from the sweep origin, as the live decimators'
+            // columns are, so a column always covers the same samples and a pan moves what is drawn without
+            // binning it afresh, which would change the envelope and what a cursor reads.
             value = value.Clamp(AxisFirst, AxisLast);
+            var step = value.Step;
+            var start = (long)Math.Round(value.Start / (double)step) * step;
+            if (start < AxisFirst)
+                start += step;
+            else if (start + value.Span > AxisLast && start - step >= AxisFirst)
+                start -= step;
+
+            value = new DisplayWindow(start, step, value.Columns);
             if (value.Matches(window))
                 return;
 
@@ -211,7 +223,11 @@ namespace OpenEphys.Onix1.Design
             if (pauseSample - frozen.Span < history.Oldest)
                 return;
 
-            SetWindow(window.Shift(-distance));
+            // NB: whole columns only, with the rest carried to the next pan, so that a slow drag still moves.
+            panCarry += distance;
+            var columns = panCarry / window.Step;
+            panCarry -= columns * window.Step;
+            SetWindow(window.Shift(-columns * window.Step));
         }
 
         /// <summary>

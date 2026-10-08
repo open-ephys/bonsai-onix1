@@ -23,6 +23,7 @@ namespace OpenEphys.Onix1.Design
     /// <param name="Unit">Unit of the amplitudes.</param>
     /// <param name="Hidden">Hidden channels, by index.</param>
     /// <param name="Expanded">The channel drawn alone, or -1.</param>
+    /// <param name="Selected">The selected channel, or -1.</param>
     /// <param name="Heatmap">Whether channels are drawn as rows of color rather than as traces.</param>
     /// <param name="ColorThreshold">Magnitude at or below which a row of color is black.</param>
     internal readonly record struct PlotFrame(
@@ -31,5 +32,5 @@ namespace OpenEphys.Onix1.Design
         DisplayWindow Window, int SampleRate,
         bool Paused, long PauseOrigin, double Timebase, double PausedTimebase,
         double Range, string Unit,
-        bool[] Hidden, int Expanded, bool Heatmap, double ColorThreshold);
+        bool[] Hidden, int Expanded, int Selected, bool Heatmap, double ColorThreshold);
 }

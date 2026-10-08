@@ -29,24 +29,25 @@ namespace OpenEphys.Onix1.Design
         const float LabelGap = 4f;
         const float Arrow = 8f;
 
-        static readonly uint ColSelectedRow = ImGuiPalette.WithAlpha(ImGuiPalette.White, 0x20);
-
         readonly List<long> positions = new(MaxCursors);
         int grabbed = -1;
-        int selectedChannel = -1;
         Vector2 tableSize;
 
         /// <summary>
-        /// Whether the cursors are shown. While they are, a cursor's line can be dragged and a plain click on
-        /// the plot selects the channel they read.
+        /// Whether the cursors are shown. While they are, a cursor's line can be dragged.
         /// </summary>
         public bool Show { get; set; }
 
         /// <summary>
-        /// The channel the cursors read, or -1 while they are hidden. An expanded channel is the only one
-        /// there is to read.
+        /// Whether a cursor's line is being dragged.
         /// </summary>
-        public int Channel(int expanded) => !Show ? -1 : expanded >= 0 ? expanded : selectedChannel;
+        public bool Dragging => grabbed >= 0;
+
+        /// <summary>
+        /// The channel the cursors read, or -1 while they are hidden: the selected channel, or an expanded
+        /// channel, which is the only one there is to read.
+        /// </summary>
+        public int Channel(in PlotFrame frame) => !Show ? -1 : frame.Expanded >= 0 ? frame.Expanded : frame.Selected;
 
         /// <summary>
         /// Moves the cursors to the middle of <paramref name="window"/>, keeping their spacing, or spreads them
@@ -94,41 +95,17 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// Shades the row of the channel the cursors read.
+        /// Moves a cursor by dragging its line, and draws the cursors.
         /// </summary>
-        /// <remarks>
-        /// Drawn ahead of the traces, so the selection is marked without anything drawn over the trace. Not in the
-        /// heatmap, which covers it, and where the values written across the row mark it instead.
-        /// </remarks>
-        public void DrawRowBand(ImDrawListPtr draw, in PlotFrame frame)
-        {
-            var channel = Channel(frame.Expanded);
-            if (channel < 0 || frame.Expanded >= 0 || frame.Heatmap)
-                return;
-
-            var top = MathF.Floor(frame.Layout.RowTop(channel));
-            draw.AddRectFilled(new Vector2(frame.Left, top),
-                new Vector2(frame.Left + frame.Width, top + frame.Layout.RowHeight), ColSelectedRow);
-        }
-
-        /// <summary>
-        /// Moves a cursor by dragging its line, selects the channel clicked on, steps the selection with
-        /// Q and E, and draws the cursors.
-        /// </summary>
-        public void Draw(ImDrawListPtr draw, in PlotFrame frame, int hovered)
+        public void Draw(ImDrawListPtr draw, in PlotFrame frame)
         {
             if (!Show)
                 return;
 
             var window = frame.Window;
-            var hidden = frame.Hidden;
-            var layout = frame.Layout;
             var (left, width, top, bottom) = (frame.Left, frame.Width, frame.Top, frame.Bottom);
             if (positions.Count == 0)
                 positions.Add(SnapToColumn(window, window.PositionOf(window.Columns / 2)));
-
-            if (selectedChannel < 0 || selectedChannel >= hidden.Length)
-                selectedChannel = layout.FirstVisible;
 
             var pointer = ImGui.GetMousePos();
             var inPlot = ImGui.IsWindowHovered() &&
@@ -161,39 +138,12 @@ namespace OpenEphys.Onix1.Design
                     }
                 }
 
-                var clicked = ImGui.IsMouseClicked(ImGuiMouseButton.Left) && ImGuiLfpViewerPanel.Modifiers();
                 if (near >= 0)
                 {
                     ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeEw);
-                    if (clicked)
+                    if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && ImGuiLfpViewerPanel.Modifiers())
                         grabbed = near;
                 }
-                else if (clicked && hovered >= 0 && !hidden[hovered])
-                {
-                    selectedChannel = hovered;
-                }
-            }
-
-            var step = !ImGuiLfpViewerPanel.Modifiers() || frame.Expanded >= 0 ? 0
-                : ImGuiLfpViewerPanel.HotkeyPressed(ImGuiKey.Q) ? -1
-                : ImGuiLfpViewerPanel.HotkeyPressed(ImGuiKey.E) ? 1
-                : 0;
-            if (step != 0)
-            {
-                for (var c = selectedChannel + step; c >= 0 && c < hidden.Length; c += step)
-                {
-                    if (!hidden[c])
-                    {
-                        selectedChannel = c;
-                        break;
-                    }
-                }
-
-                var rowTop = layout.RowTop(selectedChannel);
-                if (rowTop < top)
-                    ImGui.SetScrollY(ImGui.GetScrollY() - (top - rowTop));
-                else if (rowTop + layout.RowHeight > bottom)
-                    ImGui.SetScrollY(ImGui.GetScrollY() + (rowTop + layout.RowHeight - bottom));
             }
 
             for (int i = 0; i < positions.Count; i++)
@@ -275,7 +225,7 @@ namespace OpenEphys.Onix1.Design
         bool TryRead(in PlotFrame frame, long position, out double min, out double max)
         {
             min = max = double.NaN;
-            var channel = Channel(frame.Expanded);
+            var channel = Channel(frame);
             var column = frame.Window.ColumnOf(position);
             if (channel < 0 || frame.Hidden[channel] && channel != frame.Expanded ||
                 column < 0 || column >= frame.WaveformMin.Cols)
@@ -296,7 +246,7 @@ namespace OpenEphys.Onix1.Design
         void Values(ImDrawListPtr draw, in PlotFrame frame, double min, double max, float x)
         {
             var layout = frame.Layout;
-            var center = layout.RowTop(Channel(frame.Expanded)) + layout.RowHeight / 2;
+            var center = layout.RowTop(Channel(frame)) + layout.RowHeight / 2;
             var scale = layout.RowHeight / frame.Range;
             var right = frame.Left + frame.Width;
             float ScreenY(double value) => center - (float)(value * scale);
@@ -414,7 +364,7 @@ namespace OpenEphys.Onix1.Design
                 ImGuiChildFlags.AlwaysAutoResize;
             if (ImGui.BeginChild("##cursorTable", Vector2.Zero, childFlags, ImGuiWindowFlags.NoScrollbar))
             {
-                var channel = Channel(frame.Expanded);
+                var channel = Channel(frame);
                 ImGui.TextUnformatted(channel >= 0 ? $"Ch {channel}" : "No channel");
 
                 var remove = -1;

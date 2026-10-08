@@ -10,9 +10,21 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         const float CoarsePanFraction = 0.8f;
 
+        /// <summary>
+        /// Natural log of the factor the range changes by per pixel of Shift+Drag: it doubles every 140 or so.
+        /// </summary>
+        const double RangeDragRate = 0.005;
+
+        /// <summary>
+        /// Significant digits a dragged range is rounded to.
+        /// </summary>
+        const int RangeDragDigits = 3;
+
         bool? dragHidden;
         int dragAnchor;
-        bool dragLeftAnchor;
+
+        double? rangeDragStart;
+        float rangeDragMouseY;
 
         float collapsedScroll;
         bool restoreScroll;
@@ -43,8 +55,8 @@ namespace OpenEphys.Onix1.Design
             return channel >= layout.FirstRow && channel < layout.LastRow ? channel : -1;
         }
 
-        // NB: the scroll clamps to zero while one channel fills the table, so the position from
-        // before the expand is put back on collapse.
+        // NB: the scroll clamps to zero while one channel fills the table, so the one from before the expand is
+        // put back once the rows are back.
         void RestoreScrollIfPending()
         {
             if (restoreScroll)
@@ -71,24 +83,30 @@ namespace OpenEphys.Onix1.Design
             if (expandedChannel >= 0)
                 return;
 
+            // NB: only from the labels, which leaves a click on a trace to select it and Shift+Drag there to set
+            // the range. Set rather than toggled, so a drag across a mix of shown and hidden channels gives one
+            // result.
             var rows = channelHidden.Length;
-            if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && Modifiers(shift: true))
+            var onLabels = ImGui.GetMousePos().X < plotLeft;
+            if (onLabels && ImGui.IsMouseClicked(ImGuiMouseButton.Left) && (Modifiers() || Modifiers(shift: true)))
             {
                 Array.Copy(channelHidden, dragOriginal, rows);
-                dragHidden = !channelHidden[channel];
+                dragHidden = ImGui.GetIO().KeyShift;
                 dragAnchor = channel;
-                dragLeftAnchor = false;
+                if (!ImGui.GetIO().KeyShift)
+                    selectedChannel = channel;
             }
 
-            // NB: a drag that comes back to the pressed channel undoes it too, unlike a click that
-            // never left it.
-            if (dragHidden is bool paint)
+            if (dragHidden is bool hide)
             {
-                dragLeftAnchor |= channel != dragAnchor;
                 var lo = Math.Min(dragAnchor, channel);
-                var hi = dragLeftAnchor && channel == dragAnchor ? lo - 1 : Math.Max(dragAnchor, channel);
+                var hi = Math.Max(dragAnchor, channel);
                 for (int c = 0; c < rows; c++)
-                    channelHidden[c] = c >= lo && c <= hi ? paint : dragOriginal[c];
+                    channelHidden[c] = c >= lo && c <= hi ? hide : dragOriginal[c];
+
+                // NB: a hidden channel shows nothing to select, and the cursors would read nothing from it.
+                if (selectedChannel >= 0 && channelHidden[selectedChannel])
+                    selectedChannel = -1;
             }
         }
 
@@ -133,6 +151,29 @@ namespace OpenEphys.Onix1.Design
             else if (HotkeyPressed(ImGuiKey.S))
                 ImGui.SetScrollY(ImGui.GetScrollY() + channelStep);
 
+            var selectionStep = !Modifiers() ? 0
+                : HotkeyPressed(ImGuiKey.Q) ? -1
+                : HotkeyPressed(ImGuiKey.E) ? 1
+                : 0;
+            if (selectionStep != 0)
+                StepSelection(selectionStep, layout);
+
+            if (HotkeyPressed(ImGuiKey.Escape, false))
+                selectedChannel = -1;
+
+            if (HotkeyPressed(ImGuiKey.X, false))
+            {
+                if (expandedChannel >= 0)
+                    Collapse();
+                else
+                {
+                    if (selectedChannel < 0)
+                        selectedChannel = FirstShownInView(layout);
+                    if (selectedChannel >= 0)
+                        Expand(selectedChannel);
+                }
+            }
+
             if (io.MouseWheel != 0 && Modifiers(ctrl: true, shift: true) && ImGui.IsWindowHovered())
             {
                 Pan(Math.Sign(io.MouseWheel) * (window.Span / TimeDivisions));
@@ -151,6 +192,22 @@ namespace OpenEphys.Onix1.Design
             // NB: range scales works on expanded channel, so it must go before early return due to expandedChannel >= 0
             if (io.MouseWheel != 0 && Modifiers(shift: true) && ImGui.IsWindowHovered())
                 StepRange(io.MouseWheel > 0 ? 1 : -1);
+
+            if (rangeDragStart is not null && !ImGui.IsMouseDown(ImGuiMouseButton.Left))
+                rangeDragStart = null;
+
+            // NB: on the plot only, since Shift on the labels hides channels.
+            if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && Modifiers(shift: true) && ImGui.IsWindowHovered() &&
+                mouse.X >= plotLeft && mouse.X < plotLeft + plotSpan)
+            {
+                rangeDragStart = rangeAmplitude;
+                rangeDragMouseY = mouse.Y;
+            }
+
+            // NB: up widens the range, as the wheel does, by a factor rather than an amount so the drag feels alike
+            // at every range.
+            if (rangeDragStart is double startRange)
+                RangeAmplitude = Significant(startRange * Math.Exp((rangeDragMouseY - mouse.Y) * RangeDragRate));
 
             if (heightDragStart >= 0 && !ImGui.IsMouseDown(ImGuiMouseButton.Left))
                 heightDragStart = -1;
@@ -213,6 +270,12 @@ namespace OpenEphys.Onix1.Design
             SetTimebase(stepped, PositionAtFraction(anchorFraction), anchorFraction);
         }
 
+        static double Significant(double value)
+        {
+            var scale = Math.Pow(10, Math.Floor(Math.Log10(value)) - RangeDragDigits + 1);
+            return Math.Round(value / scale) * scale;
+        }
+
         void StepRange(int direction)
         {
             var i = Array.BinarySearch(standardRanges, rangeAmplitude);
@@ -230,14 +293,71 @@ namespace OpenEphys.Onix1.Design
             rangeAmplitude = standardRanges[Math.Max(0, Math.Min(standardRanges.Length - 1, i))];
         }
 
+        /// <summary>
+        /// Selects the next shown channel in <paramref name="direction"/>, and brings it into view: expanded in
+        /// its turn if a channel is expanded, or scrolled to otherwise.
+        /// </summary>
+        void StepSelection(int direction, in RowLayout layout)
+        {
+            var from = expandedChannel >= 0 ? expandedChannel
+                : selectedChannel >= 0 ? selectedChannel
+                : layout.FirstVisible - direction;
+            for (var c = from + direction; c >= 0 && c < channelHidden.Length; c += direction)
+            {
+                if (!channelHidden[c])
+                {
+                    selectedChannel = c;
+                    break;
+                }
+            }
+
+            if (selectedChannel < 0)
+                return;
+
+            if (expandedChannel >= 0)
+            {
+                expandedChannel = selectedChannel;
+                return;
+            }
+
+            var top = layout.RowTop(selectedChannel);
+            if (top < layout.Top)
+                ImGui.SetScrollY(ImGui.GetScrollY() - (layout.Top - top));
+            else if (top + layout.RowHeight > layout.Bottom)
+                ImGui.SetScrollY(ImGui.GetScrollY() + (top + layout.RowHeight - layout.Bottom));
+        }
+
+        /// <summary>
+        /// The first channel in view that is not hidden, or -1, which is what anything needing a selection
+        /// selects when there is none.
+        /// </summary>
+        int FirstShownInView(in RowLayout layout)
+        {
+            for (int c = layout.FirstVisible; c < layout.LastVisible; c++)
+            {
+                if (!channelHidden[c])
+                    return c;
+            }
+            return -1;
+        }
+
         void Expand(int channel)
         {
             collapsedScroll = ImGui.GetScrollY();
             expandedChannel = channel;
         }
 
+        // NB: back where the expand began, moved only as far as brings the channel that was expanded into view,
+        // since Q and E may have stepped away from it. Not at all if it is in view there already.
         void Collapse()
         {
+            var height = ChannelHeight;
+            var rowTop = expandedChannel * height;
+            if (rowTop < collapsedScroll)
+                collapsedScroll = rowTop;
+            else if (rowTop + height > collapsedScroll + visibleHeight)
+                collapsedScroll = rowTop + height - visibleHeight;
+
             expandedChannel = -1;
             restoreScroll = true;
         }

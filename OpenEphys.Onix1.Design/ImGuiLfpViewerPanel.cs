@@ -56,14 +56,22 @@ namespace OpenEphys.Onix1.Design
         readonly WaveformCursors cursors = new();
 
         /// <summary>
-        /// Whether the cursors are shown. While they are, a cursor's line can be dragged and a plain click on
-        /// the plot selects the channel they read.
+        /// Whether the cursors are shown. While they are, a cursor's line can be dragged, and they read the selected
+        /// channel.
         /// </summary>
         public bool ShowCursors
         {
             get => cursors.Show;
-            set => cursors.Show = value;
+            set
+            {
+                selectOnShow |= value && !cursors.Show;
+                cursors.Show = value;
+            }
         }
+
+        // NB: once, as the cursors are shown, rather than whenever there is no selection, so that clearing the
+        // selection with the cursors shown leaves it clear.
+        bool selectOnShow;
 
         /// <summary>
         /// Moves the cursors to the middle of the view, keeping their spacing, or spreads them evenly across it
@@ -94,9 +102,10 @@ namespace OpenEphys.Onix1.Design
         public bool FitChannels { get; set; }
 
         /// <summary>
-        /// The channel the cursors read, or -1 while they are hidden.
+        /// The channel selected by clicking its trace or label or stepping with Q and E, or -1. The cursors read
+        /// it.
         /// </summary>
-        int CursorChannel => cursors.Channel(expandedChannel);
+        int selectedChannel = -1;
 
         Decimator waveformMinDecimator;
         Decimator waveformMaxDecimator;
