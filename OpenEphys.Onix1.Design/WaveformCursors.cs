@@ -50,11 +50,12 @@ namespace OpenEphys.Onix1.Design
         public int Channel(in PlotFrame frame) => !Show ? -1 : frame.Expanded >= 0 ? frame.Expanded : frame.Selected;
 
         /// <summary>
-        /// Moves the cursors to the middle of <paramref name="window"/>, keeping their spacing, or spreads them
-        /// evenly across it in the same order if they span more than it does.
+        /// Moves the cursors to the middle of the window <paramref name="axis"/> shows, keeping their spacing, or
+        /// spreads them evenly across it in the same order if they span more than it does.
         /// </summary>
-        public void Home(DisplayWindow window)
+        public void Home(in PixelAxis axis)
         {
+            var window = axis.Window;
             if (positions.Count == 0)
                 return;
 
@@ -69,7 +70,7 @@ namespace OpenEphys.Onix1.Design
             {
                 var shift = window.Start + window.Span / 2 - (first + last) / 2;
                 for (int i = 0; i < positions.Count; i++)
-                    positions[i] = SnapToColumn(window, positions[i] + shift);
+                    positions[i] = axis.Snap(positions[i] + shift);
                 return;
             }
 
@@ -78,20 +79,7 @@ namespace OpenEphys.Onix1.Design
                 order[i] = i;
             Array.Sort(positions.ToArray(), order);
             for (int k = 0; k < order.Length; k++)
-                positions[order[k]] = SnapToColumn(window, window.Start + window.Span * (k + 1) / (order.Length + 1));
-        }
-
-        /// <summary>
-        /// The middle of the column <paramref name="position"/> falls in, within the window.
-        /// </summary>
-        /// <remarks>
-        /// The middle rather than the start, so that the column it is read from does not change with a
-        /// window whose start is not a whole number of columns from it.
-        /// </remarks>
-        static long SnapToColumn(DisplayWindow window, long position)
-        {
-            var column = Math.Max(0, Math.Min(window.Columns - 1, window.ColumnOf(position)));
-            return window.PositionOf(column) + window.Step / 2;
+                positions[order[k]] = axis.Snap(window.Start + window.Span * (k + 1) / (order.Length + 1));
         }
 
         /// <summary>
@@ -102,10 +90,10 @@ namespace OpenEphys.Onix1.Design
             if (!Show)
                 return;
 
-            var window = frame.Window;
+            var axis = frame.Axis;
             var (left, width, top, bottom) = (frame.Left, frame.Width, frame.Top, frame.Bottom);
             if (positions.Count == 0)
-                positions.Add(SnapToColumn(window, window.PositionOf(window.Columns / 2)));
+                positions.Add(axis.Snap(axis.Window.Start + axis.Window.Span / 2));
 
             var pointer = ImGui.GetMousePos();
             var inPlot = ImGui.IsWindowHovered() &&
@@ -119,8 +107,7 @@ namespace OpenEphys.Onix1.Design
                 else
                 {
                     // NB: clamped to the plot, so a cursor dragged past an edge stops at it.
-                    var fraction = Math.Max(0, Math.Min(1, (pointer.X - left) / width));
-                    positions[grabbed] = SnapToColumn(window, window.Start + (long)(fraction * window.Span));
+                    positions[grabbed] = axis.PositionAt(pointer.X);
                     ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeEw);
                 }
             }
@@ -130,7 +117,7 @@ namespace OpenEphys.Onix1.Design
                 var nearest = GrabDistance;
                 for (int i = 0; i < positions.Count; i++)
                 {
-                    var distance = Math.Abs(pointer.X - X(frame, positions[i]));
+                    var distance = Math.Abs(pointer.X - axis.X(positions[i]));
                     if (distance <= nearest)
                     {
                         near = i;
@@ -148,7 +135,7 @@ namespace OpenEphys.Onix1.Design
 
             for (int i = 0; i < positions.Count; i++)
             {
-                var x = X(frame, positions[i]);
+                var x = axis.X(positions[i]);
                 if (x < left || x > left + width)
                     continue;
 
@@ -182,8 +169,8 @@ namespace OpenEphys.Onix1.Design
 
             var left = frame.Left;
             var right = left + frame.Width;
-            var a = X(frame, Math.Min(from, to));
-            var b = X(frame, Math.Max(from, to));
+            var a = frame.Axis.X(Math.Min(from, to));
+            var b = frame.Axis.X(Math.Max(from, to));
             if (b < left || a > right)
                 return;
 
@@ -215,24 +202,30 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// The min and max of the column at <paramref name="position"/> on the channel the cursors read.
+        /// The min and max drawn at <paramref name="position"/> on the channel the cursors read.
         /// </summary>
         /// <remarks>
-        /// Read from the column that is drawn, so the values are those of the trace on screen. In the heatmap both
-        /// are the one value its color shows, whichever of them lies further from zero.
+        /// Read from the cell the screen shows there, every column a pixel combines or the one column a pixel
+        /// shows, as the traces are drawn, so the values are those on screen. In the heatmap both are the one value
+        /// its color shows, whichever of them lies further from zero.
         /// </remarks>
-        /// <returns>False if no channel can be read, or the column is off the window or holds no data.</returns>
+        /// <returns>False if no channel can be read, or the cell is off the window or holds no data.</returns>
         bool TryRead(in PlotFrame frame, long position, out double min, out double max)
         {
             min = max = double.NaN;
             var channel = Channel(frame);
-            var column = frame.Window.ColumnOf(position);
-            if (channel < 0 || frame.Hidden[channel] && channel != frame.Expanded ||
-                column < 0 || column >= frame.Envelope.Cols)
+            var (start, end) = frame.Axis.CellColumns(position);
+            if (channel < 0 || frame.Hidden[channel] && channel != frame.Expanded || end <= start)
                 return false;
 
-            min = frame.Envelope.Min.GetReal(channel, column);
-            max = frame.Envelope.Max.GetReal(channel, column);
+            min = double.PositiveInfinity;
+            max = double.NegativeInfinity;
+            for (int c = start; c < end; c++)
+            {
+                min = Math.Min(min, frame.Envelope.Min.GetReal(channel, c));
+                max = Math.Max(max, frame.Envelope.Max.GetReal(channel, c));
+            }
+
             if (Heatmap(frame))
                 min = max = Math.Abs(max) >= Math.Abs(min) ? max : min;
             return !double.IsNaN(min) && !double.IsNaN(max);
@@ -309,7 +302,7 @@ namespace OpenEphys.Onix1.Design
             var background = ImGui.GetColorU32(ImGuiCol.WindowBg);
             for (int i = 0; i < positions.Count; i++)
             {
-                var x = X(frame, positions[i]);
+                var x = frame.Axis.X(positions[i]);
                 if (x < left || x > left + width)
                     continue;
 
@@ -331,9 +324,9 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        // NB: to the width of a column, which is as fine as a cursor can be placed.
+        // NB: to the width of a cell, which is as fine as a cursor can be placed.
         static string FormatSeconds(in PlotFrame frame, double seconds) =>
-            seconds.ToString("F" + Math.Max(0, (int)Math.Ceiling(-Math.Log10(frame.Window.Step / (double)frame.SampleRate))));
+            seconds.ToString("F" + Math.Max(0, (int)Math.Ceiling(-Math.Log10(frame.Axis.CellSpan / (double)frame.SampleRate))));
 
         /// <summary>
         /// The cursors' readings on the selected channel, in a table over the plot's lower left corner, with
@@ -343,13 +336,13 @@ namespace OpenEphys.Onix1.Design
         /// Times are read only. Right of the sweep cursor on a paused view, two places on the axis carry the
         /// same time, so a typed time would not name one place. A cursor is moved by dragging its line.
         /// </remarks>
-        /// <returns>How far to pan back through history to center a cursor whose button was pressed, or null.</returns>
+        /// <returns>The position of a cursor whose button was pressed, to center the view on, or null.</returns>
         public long? DrawTable(in PlotFrame frame)
         {
             if (!Show || positions.Count == 0)
                 return null;
 
-            long? pan = null;
+            long? center = null;
             var window = frame.Window;
             var sampleRate = frame.SampleRate;
             var unit = frame.Unit;
@@ -368,9 +361,9 @@ namespace OpenEphys.Onix1.Design
                 ImGui.TextUnformatted(channel >= 0 ? $"Ch {channel}" : "No channel");
 
                 var remove = -1;
-                // NB: a column of one sample has min and max equal, so it has one value and one difference from C0,
-                // as does the heatmap, which reduces a column to one value.
-                var oneSample = window.Step == 1 || Heatmap(frame);
+                // NB: a cell of one sample has min and max equal, so it has one value and one difference from C0, as
+                // does the heatmap, which reduces a cell to one value.
+                var oneSample = window.Step == 1 && frame.Axis.SingleColumnCells || Heatmap(frame);
                 var headers = oneSample
                     ? new[] { "", "t (s)", "dt (ms)", "1/dt (Hz)", $"y ({unit})", $"dy ({unit})", "" }
                     : new[] { "", "t (s)", "dt (ms)", "1/dt (Hz)", $"min ({unit})", $"max ({unit})", $"dy min ({unit})", $"dy max ({unit})", "" };
@@ -392,7 +385,7 @@ namespace OpenEphys.Onix1.Design
                         ImGui.TableNextColumn();
                         ImGui.BeginDisabled(!frame.Paused);
                         if (ImGui.SmallButton($"C{i}"))
-                            pan = window.Start + window.Span / 2 - positions[i];
+                            center = positions[i];
                         ImGui.EndDisabled();
 
                         Cell(FormatSeconds(frame, ImGuiLfpViewerPanel.SecondsAt(frame, positions[i])));
@@ -422,19 +415,19 @@ namespace OpenEphys.Onix1.Design
 
                 ImGui.BeginDisabled(positions.Count >= MaxCursors);
                 if (ImGui.SmallButton("+ Add cursor"))
-                    positions.Add(SnapToColumn(window, window.PositionOf(window.Columns / 2)));
+                    positions.Add(frame.Axis.Snap(window.Start + window.Span / 2));
                 ImGui.EndDisabled();
 
                 ImGui.SameLine();
                 if (ImGui.SmallButton("Home"))
-                    Home(window);
+                    Home(frame.Axis);
             }
 
             ImGui.EndChild();
             ImGui.PopStyleVar();
             ImGui.PopStyleColor();
             tableSize = ImGui.GetItemRectSize();
-            return pan;
+            return center;
 
             static void Cell(string text)
             {
@@ -445,9 +438,6 @@ namespace OpenEphys.Onix1.Design
 
         // NB: an expanded channel is drawn as a trace in either view.
         static bool Heatmap(in PlotFrame frame) => frame.Heatmap && frame.Expanded < 0;
-
-        static float X(in PlotFrame frame, long position) =>
-            frame.Left + (float)(frame.Width * frame.Window.FractionOf(position));
 
         static void DottedLine(ImDrawListPtr draw, float x, float top, float bottom)
         {

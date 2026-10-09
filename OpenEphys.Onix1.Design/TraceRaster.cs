@@ -126,9 +126,8 @@ namespace OpenEphys.Onix1.Design
         void RepaintColumns(in PlotFrame frame, uint[] colors, int first, int last)
         {
             // NB: a pixel past each end as well, since a pixel's span reaches to its neighbor's.
-            var columns = frame.Envelope.Cols;
-            var from = (int)((long)first * width / columns) - 1;
-            var to = (int)((long)(last + 1) * width / columns) + 2;
+            var from = frame.Axis.PixelOf(first) - 1;
+            var to = frame.Axis.PixelOf(last + 1) + 2;
             RepaintPixels(frame, colors, Math.Max(0, from), Math.Min(width, to));
         }
 
@@ -175,7 +174,6 @@ namespace OpenEphys.Onix1.Design
             frame.Envelope.Min.GetRawData(out IntPtr minPtr, out int minStep, out Size shape);
             frame.Envelope.Max.GetRawData(out IntPtr maxPtr, out int maxStep, out Size _);
             var layout = frame.Layout;
-            var columns = shape.Width;
             var scale = layout.RowHeight / (float)frame.Range;
 
             // NB: an expanded channel is drawn alone and translucent, under the outlines that show its shape.
@@ -191,10 +189,10 @@ namespace OpenEphys.Onix1.Design
                 var center = layout.RowTop(i) + layout.RowHeight / 2 - frame.Top;
                 var color = colors[i] & 0x00FFFFFFu | alpha;
 
-                var (prevLow, prevHigh) = from > 0 ? Bin(minLine, maxLine, columns, from - 1) : (float.NaN, float.NaN);
+                var (prevLow, prevHigh) = from > 0 ? Bin(minLine, maxLine, frame.Axis, from - 1) : (float.NaN, float.NaN);
                 for (int p = from; p < to; p++)
                 {
-                    var (low, high) = Bin(minLine, maxLine, columns, p);
+                    var (low, high) = Bin(minLine, maxLine, frame.Axis, p);
                     if (float.IsNaN(low))
                     {
                         prevLow = prevHigh = float.NaN;
@@ -235,7 +233,6 @@ namespace OpenEphys.Onix1.Design
             frame.Envelope.Min.GetRawData(out IntPtr minPtr, out int minStep, out Size shape);
             frame.Envelope.Max.GetRawData(out IntPtr maxPtr, out int maxStep, out Size _);
             var layout = frame.Layout;
-            var columns = shape.Width;
             var map = Icefire.Map;
             var middle = map.Length / 2;
 
@@ -253,7 +250,7 @@ namespace OpenEphys.Onix1.Design
                 var maxLine = (float*)((byte*)maxPtr + i * maxStep);
                 for (int p = from; p < to; p++)
                 {
-                    var (low, high) = Bin(minLine, maxLine, columns, p);
+                    var (low, high) = Bin(minLine, maxLine, frame.Axis, p);
                     if (float.IsNaN(low))
                         continue;
 
@@ -271,12 +268,15 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// The min and max drawn at pixel column <paramref name="p"/> of a channel.
         /// </summary>
-        unsafe (float Low, float High) Bin(float* minLine, float* maxLine, int columns, int p)
+        internal static unsafe (float Low, float High) Bin(float* minLine, float* maxLine, in PixelAxis axis, int p)
         {
-            if (columns >= width)
+            var columns = axis.Window.Columns;
+            if (axis.Combines)
             {
-                var start = (int)((long)p * columns / width);
-                var end = Math.Max(start + 1, (int)((long)(p + 1) * columns / width));
+                var (start, end) = axis.ColumnsAt(p);
+                if (end <= start)
+                    return (float.NaN, float.NaN);
+
                 float low = minLine[start], high = maxLine[start];
                 for (int c = start + 1; c < end; c++)
                 {
@@ -287,7 +287,7 @@ namespace OpenEphys.Onix1.Design
             }
 
             // NB: a sample at its column's left edge, where the plot's column axis puts the outlines drawn over it.
-            var x = Math.Max(0, Math.Min(columns - 1, (p + 0.5f) * columns / width));
+            var x = Math.Max(0, Math.Min(columns - 1, (p + 0.5f) * columns / axis.Width));
             var c0 = (int)x;
             var c1 = Math.Min(columns - 1, c0 + 1);
             var f = x - c0;

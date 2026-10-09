@@ -38,11 +38,9 @@ namespace OpenEphys.Onix1.Design
         readonly TraceRaster traces = new();
 
         /// <summary>
-        /// Where <paramref name="x"/> falls across the plot, from zero at its left edge to one at its
-        /// right.
+        /// Where the window's columns fall on the plot's pixels, from the plot as last laid out.
         /// </summary>
-        float PlotFraction(float x) =>
-            plotSpan > 0 ? Math.Max(0f, Math.Min(1f, (x - plotLeft) / plotSpan)) : 0.5f;
+        PixelAxis Axis => new(window, plotLeft, plotSpan);
 
         /// <summary>
         /// Lays out the label column and the plot. Each channel's row is centered on zero with +/- range / 2 at its
@@ -104,11 +102,16 @@ namespace OpenEphys.Onix1.Design
                 ImGui.TableNextColumn();
                 plotX = ImGui.GetCursorScreenPos().X;
                 plotWidth = ImGui.GetContentRegionAvail().X;
+                var resized = plotWidth != plotSpan;
                 plotLeft = plotX;
                 plotSpan = plotWidth;
+
+                // NB: the cells follow the plot's width, so a resized plot puts the window back on a cell boundary.
+                if (resized && CanPan)
+                    SetWindow(window);
                 frame = new PlotFrame(
-                    envelope, layout, plotX, plotWidth, plotTop, plotBottom,
-                    window, sampleRate, Paused, CursorPosition, timebase, pausedTimebase,
+                    envelope, layout, Axis, plotTop, plotBottom,
+                    sampleRate, Paused, CursorPosition, timebase, pausedTimebase,
                     rangeAmplitude, Unit, channelHidden, expandedChannel, selectedChannel, ShowHeatmap, ColorThreshold);
 
                 // NB: an item the height of every row, which is what the table scrolls through. Everything in the
@@ -154,8 +157,8 @@ namespace OpenEphys.Onix1.Design
                 TimeScrollBar(plotX, plotWidth, plotBottom + scrollGap, scrollHeight);
 
                 // NB: last, so that its window is drawn over the table's and takes the pointer from it.
-                if (cursors.DrawTable(frame) is long distance)
-                    Pan(distance);
+                if (cursors.DrawTable(frame) is long center)
+                    CenterOn(center);
             }
         }
 
@@ -175,7 +178,7 @@ namespace OpenEphys.Onix1.Design
             if (split >= window.End)
                 return;
 
-            var x = MathF.Floor(left + (float)(width * window.FractionOf(split)));
+            var x = Axis.X(split);
             draw.AddRectFilled(
                 new Vector2(x, MathF.Floor(top) + GraticuleWeight),
                 new Vector2(MathF.Floor(left + width) - GraticuleWeight, MathF.Floor(bottom) - GraticuleWeight),
@@ -205,7 +208,7 @@ namespace OpenEphys.Onix1.Design
             if (hovered < 0 || mouse.X < frame.Left || mouse.X >= frame.Left + frame.Width)
                 return;
 
-            var seconds = SecondsAt(frame, frame.Window.Start + PlotFraction(mouse.X) * frame.Window.Span);
+            var seconds = SecondsAt(frame, frame.Axis.PositionAt(mouse.X));
             var center = frame.Layout.RowTop(hovered) + frame.Layout.RowHeight / 2;
             var amplitude = (center - mouse.Y) / frame.Layout.RowHeight * frame.Range;
 
@@ -398,34 +401,27 @@ namespace OpenEphys.Onix1.Design
             var minLine = (float*)((byte*)minPtr + channel * minStep);
             var maxLine = (float*)((byte*)maxPtr + channel * maxStep);
             var columns = shape.Width;
+            var axis = frame.Axis;
 
-            // NB: no more bins than the plot has pixels, each at the first column it covers, as the texture beneath
-            // has them.
-            var pixels = (int)frame.Width;
-            var bins = pixels > 0 && pixels < columns ? pixels : columns;
-            var low = stackalloc Vector2[bins];
-            var high = stackalloc Vector2[bins];
+            // NB: a point per pixel where pixels combine columns, read as the texture beneath reads them, or else
+            // one per column, at its left edge.
+            var points = axis.Combines ? axis.Width : columns;
+            var low = stackalloc Vector2[points];
+            var high = stackalloc Vector2[points];
             var center = frame.Layout.RowTop(channel) + frame.Layout.RowHeight / 2;
             var scale = (float)(frame.Layout.RowHeight / frame.Range);
-            for (int p = 0; p < bins; p++)
+            for (int i = 0; i < points; i++)
             {
-                int start = p * columns / bins, end = (p + 1) * columns / bins;
-                float min = minLine[start], max = maxLine[start];
-                for (int c = start + 1; c < end; c++)
-                {
-                    min = Math.Min(min, minLine[c]);
-                    max = Math.Max(max, maxLine[c]);
-                }
-
-                var x = frame.Left + start * frame.Width / columns;
-                low[p] = new Vector2(x, center - min * scale);
-                high[p] = new Vector2(x, center - max * scale);
+                var (min, max) = axis.Combines ? TraceRaster.Bin(minLine, maxLine, axis, i) : (minLine[i], maxLine[i]);
+                var x = axis.Combines ? axis.Left + i : axis.ColumnX(i);
+                low[i] = new Vector2(x, center - min * scale);
+                high[i] = new Vector2(x, center - max * scale);
             }
 
             var color = ImGui.ColorConvertFloat4ToU32(Colors.Of(channel));
-            Segments(draw, low, bins, color, weight);
-            if (frame.Window.Step > 1 || bins < columns)
-                Segments(draw, high, bins, color, weight);
+            Segments(draw, low, points, color, weight);
+            if (frame.Window.Step > 1 || axis.Combines && points < columns)
+                Segments(draw, high, points, color, weight);
         }
 
         // NB: one segment at a time rather than a polyline, whose mitred joins overshoot a sharp turn by many
@@ -449,14 +445,14 @@ namespace OpenEphys.Onix1.Design
             if (FastSweep)
                 return;
 
-            // NB: not rounded to a column while paused, since the pause instant can fall partway through one.
-            var columns = decimator.Sweep.Cols;
-            var sweepHead = Paused ? window.FractionOf(CursorPosition) * columns : decimator.Cursor;
-            if (sweepHead < 0 || sweepHead >= columns)
+            // NB: paused, the pause instant, which can fall partway through a column.
+            var position = Paused ? CursorPosition : window.PositionOf(decimator.Cursor);
+            if (position < window.Start || position >= window.End)
                 return;
 
-            // NB: half a pixel back, which AddLine moves its ends by.
-            var x = frame.Left + (float)(sweepHead / columns * frame.Width) - 0.5f;
+            // NB: on the pixel the position is drawn in. AddLine moves its ends half a pixel, which centers the line
+            // on that pixel, and is taken back vertically.
+            var x = frame.Axis.X(position);
             var top = frame.Layout.Origin - 0.5f;
             draw.AddLine(new Vector2(x, top), new Vector2(x, top + frame.Layout.Height), ColSweepCursor, SweepCursorWeight);
         }
@@ -544,7 +540,7 @@ namespace OpenEphys.Onix1.Design
                  d++)
             {
                 var position = origin + d * interval;
-                var x = left + (float)(width * window.FractionOf(position));
+                var x = Axis.X(position);
 
                 // NB: skip divisions on the edges, where the frame already draws a line.
                 var l = MathF.Floor(x);

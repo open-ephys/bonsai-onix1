@@ -149,18 +149,18 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         void SetWindow(DisplayWindow value)
         {
-            // NB: the start is kept a whole number of columns from the sweep origin, as the live decimators'
-            // columns are, so a column always covers the same samples and a pan moves what is drawn without
-            // binning it afresh, which would change the envelope and what a cursor reads.
+            // NB: the start is kept on a boundary between the cells the screen shows, counted from the sweep
+            // origin, so a column always covers the same samples, and a pixel the same columns, as live. A pan then
+            // moves what is drawn without grouping it afresh, which would change the traces and what a cursor reads.
             value = value.Clamp(AxisFirst, AxisLast);
-            var step = value.Step;
-            var start = (long)Math.Round(value.Start / (double)step) * step;
+            var cells = new PixelAxis(value, plotLeft, plotSpan);
+            var start = cells.Boundary(value.Start, 0);
             if (start < AxisFirst)
-                start += step;
-            else if (start + value.Span > AxisLast && start - step >= AxisFirst)
-                start -= step;
+                start = cells.Boundary(AxisFirst, 1);
+            else if (start + value.Span > AxisLast && cells.Boundary(AxisLast - value.Span, -1) >= AxisFirst)
+                start = cells.Boundary(AxisLast - value.Span, -1);
 
-            value = new DisplayWindow(start, step, value.Columns);
+            value = new DisplayWindow(start, value.Step, value.Columns);
             if (value.Matches(window))
                 return;
 
@@ -199,20 +199,38 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         void Pan(long distance)
         {
-            if (!Paused || history is null)
+            if (!CanPan)
                 return;
 
-            // NB: the frozen tail is read from one frozen width behind the pause instant, so a history that
-            // no longer reaches back that far cannot serve any view that shows it.
-            if (pauseSample - frozen.Span < history.Oldest)
-                return;
-
-            // NB: whole columns only, with the rest carried to the next pan, so that a slow drag still moves.
-            panCarry += distance;
-            var columns = panCarry / window.Step;
-            panCarry -= columns * window.Step;
-            SetWindow(window.Shift(-columns * window.Step));
+            // NB: to the nearest cell boundary, with the rest carried to the next pan so that a slow drag still
+            // moves. No more than the widest cell is carried, which is enough to reach the next boundary from any
+            // start, and little enough that a drag back from the end of the history answers within a cell.
+            var target = window.Start + panCarry - distance;
+            SetWindow(window.Shift(target - window.Start));
+            var reach = Axis.WidestCell;
+            panCarry = Math.Max(-reach, Math.Min(reach, target - window.Start));
         }
+
+        /// <summary>
+        /// Moves the view to center <paramref name="position"/>, as near as the cell boundaries and the history
+        /// allow.
+        /// </summary>
+        /// <remarks>
+        /// Straight to the window rather than through <see cref="Pan"/>, whose carry would put a position
+        /// halfway between two boundaries on alternate ones each time.
+        /// </remarks>
+        void CenterOn(long position)
+        {
+            if (!CanPan)
+                return;
+
+            panCarry = 0;
+            SetWindow(window.Shift(position - window.Span / 2 - window.Start));
+        }
+
+        // NB: the frozen tail is read from one frozen width behind the pause instant, so a history that no longer
+        // reaches back that far cannot serve any view that shows it.
+        bool CanPan => Paused && history is not null && pauseSample - frozen.Span >= history.Oldest;
 
         bool TryReadWindow() =>
             pannedDecimator is not null &&
@@ -258,16 +276,6 @@ namespace OpenEphys.Onix1.Design
 
             long SampleAt(long position) =>
                 sweepOrigin + position - (position >= cursorPosition ? frozenSpan : 0);
-        }
-
-        /// <summary>
-        /// The axis position drawn at <paramref name="fraction"/> across the plot.
-        /// </summary>
-        long PositionAtFraction(double fraction)
-        {
-            // NB: the last column, not one past it. The fraction reaches one on the rightmost pixel.
-            var column = (int)(fraction * (window.Columns - 1));
-            return window.PositionOf(column);
         }
 
         /// <summary>

@@ -76,7 +76,7 @@ namespace OpenEphys.Onix1.Design
         /// Moves the cursors to the middle of the view, keeping their spacing, or spreads them evenly across it
         /// if they span more than it does.
         /// </summary>
-        public void HomeCursors() => cursors.Home(window);
+        public void HomeCursors() => cursors.Home(Axis);
 
         /// <summary>
         /// Whether channels are drawn as rows of color, a compressed view of every channel at once, rather than
@@ -127,7 +127,7 @@ namespace OpenEphys.Onix1.Design
         public double Timebase
         {
             get => timebase;
-            set => SetTimebase(value, PositionAtFraction(0.5f), 0.5f);
+            set => SetTimebaseAt(value, plotLeft + plotSpan / 2);
         }
 
         /// <summary>

@@ -207,7 +207,7 @@ namespace OpenEphys.Onix1.Design
             // looked at stays where it is. The dropdown has no pointer to speak of and anchors on the
             // middle instead.
             else if (Modifiers(shift: true, alt: true))
-                StepTimebase(-direction, PlotFraction(mouse.X));
+                StepTimebase(-direction, mouse.X);
             else if (Modifiers(shift: true))
                 StepRange(direction);
             else if (Modifiers(ctrl: true) && expandedChannel < 0 && heightDrag is null)
@@ -263,7 +263,7 @@ namespace OpenEphys.Onix1.Design
             ImGui.SetScrollY(baseScroll + pivot * (ChannelHeight - baseHeight));
         }
 
-        void StepTimebase(int direction, float anchorFraction)
+        void StepTimebase(int direction, float x)
         {
             var offered = ServableTimeBases;
             var i = Array.BinarySearch(standardTimeBases, 0, offered, timebase);
@@ -279,7 +279,14 @@ namespace OpenEphys.Onix1.Design
             }
 
             var stepped = standardTimeBases[Math.Max(0, Math.Min(offered - 1, i))];
-            SetTimebase(stepped, PositionAtFraction(anchorFraction), anchorFraction);
+            SetTimebaseAt(stepped, x);
+        }
+
+        // NB: whatever is drawn at x stays there, so that what is being looked at stays put.
+        void SetTimebaseAt(double value, float x)
+        {
+            var anchor = Axis.PositionAt(x);
+            SetTimebase(value, anchor, window.FractionOf(anchor));
         }
 
         static double Significant(double value)
