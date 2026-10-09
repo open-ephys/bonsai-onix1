@@ -93,12 +93,6 @@ namespace OpenEphys.Onix1.Design
         long CursorPosition => pauseSample - sweepOrigin;
 
         /// <summary>
-        /// The sample drawn at <paramref name="position"/>.
-        /// </summary>
-        long SampleAt(long position) =>
-            sweepOrigin + position - (position >= CursorPosition ? frozen.Span : 0);
-
-        /// <summary>
         /// Freezes the display on what is drawn now.
         /// </summary>
         /// <remarks>
@@ -116,10 +110,7 @@ namespace OpenEphys.Onix1.Design
 
             pauseSample = history?.Count ?? 0;
 
-            // NB: the cursor column is part filled, and by this much, so it began that far before the
-            // newest sample rather than on it. Without the term the whole axis sits up to a column early,
-            // and a view read back out of the history groups its samples differently from the live one.
-            sweepOrigin = pauseSample - decimator.Filled - (long)decimator.Cursor * frozen.Step;
+            sweepOrigin = SweepOrigin(pauseSample, decimator);
 
             window = frozen;
             windowDirty = false;
@@ -223,28 +214,50 @@ namespace OpenEphys.Onix1.Design
             SetWindow(window.Shift(-columns * window.Step));
         }
 
+        bool TryReadWindow() =>
+            pannedDecimator is not null &&
+            ReadWindow(history, pannedDecimator, window, sweepOrigin, CursorPosition, frozen.Span);
+
         /// <summary>
-        /// Reduces the samples the window covers straight out of the history.
+        /// The sample at axis position zero: where the sweep on screen began, given the newest sample written
+        /// and the live decimator that has reduced everything up to it.
         /// </summary>
         /// <remarks>
-        /// Read as at most two runs, split where the frozen tail begins. The decimators carry a part-filled
-        /// column from one run into the next, so a column across the split is reduced from both.
+        /// The cursor column is part filled, and by <see cref="Decimator.Filled"/>, so it began that far before
+        /// the newest sample rather than on it. Without the term the whole axis sits up to a column early, and a
+        /// view read back out of the history groups its samples differently from the live one.
+        /// </remarks>
+        internal static long SweepOrigin(long newestSample, Decimator live) =>
+            newestSample - live.Filled - (long)live.Cursor * live.DownsampleFactor;
+
+        /// <summary>
+        /// Reduces the samples <paramref name="window"/> covers straight out of <paramref name="history"/> into
+        /// <paramref name="into"/>.
+        /// </summary>
+        /// <remarks>
+        /// Left of <paramref name="cursorPosition"/> a position shows the sample at that position from
+        /// <paramref name="sweepOrigin"/>, and from it on the sample one <paramref name="frozenSpan"/> earlier,
+        /// the tail of the previous sweep. So the window is read as at most two runs, split at the cursor. The
+        /// decimator carries a part-filled column from one run into the next, so a column across the split is
+        /// reduced from both.
         /// </remarks>
         /// <returns>False if the history can no longer serve the window.</returns>
-        bool TryReadWindow()
+        internal static bool ReadWindow(
+            WaveformHistory history, Decimator into, DisplayWindow window,
+            long sweepOrigin, long cursorPosition, long frozenSpan)
         {
-            if (pannedDecimator is null)
-                return false;
-
-            var split = Math.Max(window.Start, Math.Min(window.End, CursorPosition));
+            var split = Math.Max(window.Start, Math.Min(window.End, cursorPosition));
             var fresh = (int)(split - window.Start);
             var tail = (int)(window.End - split);
 
-            pannedDecimator.Reset();
-            if (fresh > 0 && !history.Decimate(SampleAt(window.Start), fresh, pannedDecimator))
+            into.Reset();
+            if (fresh > 0 && !history.Decimate(SampleAt(window.Start), fresh, into))
                 return false;
 
-            return tail <= 0 || history.Decimate(SampleAt(split), tail, pannedDecimator);
+            return tail <= 0 || history.Decimate(SampleAt(split), tail, into);
+
+            long SampleAt(long position) =>
+                sweepOrigin + position - (position >= cursorPosition ? frozenSpan : 0);
         }
 
         /// <summary>
