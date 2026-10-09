@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Numerics;
 using Hexa.NET.ImGui;
-using Hexa.NET.ImPlot;
-using Hexa.NET.Utilities.Text;
 using OpenCV.Net;
 
 namespace OpenEphys.Onix1.Design
@@ -108,9 +105,7 @@ namespace OpenEphys.Onix1.Design
         int selectedChannel = -1;
 
         Decimator decimator;
-        Mat timeRange;
         int sampleRate = 30000;
-
 
         WaveformHistory history;
 
@@ -260,14 +255,13 @@ namespace OpenEphys.Onix1.Design
             var samplesPerBin = (totalSamples + maxColumns - 1) / maxColumns;
             var columns = totalSamples / samplesPerBin;
             var buffersStale =
-                timeRange is null ||
+                decimator is null ||
                 decimator.Sweep.Rows != rows ||             // # channels
                 decimator.Sweep.Cols != columns ||          // # downsamples
                 decimator.DownsampleFactor != samplesPerBin; // factor to map totalSamples -> # downsamples
 
             if (buffersStale)
             {
-                timeRange?.Dispose();
                 decimator?.Dispose();
                 pannedDecimator?.Dispose();
                 decimator = new Decimator(rows, columns, samplesPerBin);
@@ -275,13 +269,6 @@ namespace OpenEphys.Onix1.Design
                 // NB: the paused view reduces out of the history into its own decimator, at the same width as
                 // the live one, so that changing the timebase while paused rebuilds both together.
                 pannedDecimator = new Decimator(rows, columns, samplesPerBin);
-
-                // NB: the plot's own axis is the column index, so that a column lands where the
-                // divisions and the cursor put it. Any other unit needs the plot's first and last column
-                // to bound it, which spreads the columns over one fewer step than there are columns and
-                // leaves the two placements a column apart at the narrowest timebases.
-                timeRange = new Mat(1, columns, Depth.F32, 1);
-                CV.Range(timeRange, 0, columns);
 
                 if (channelHidden.Length != rows)
                 {
@@ -320,7 +307,7 @@ namespace OpenEphys.Onix1.Design
             if (decimator is not null)
                 RebuildBuffers(decimator.Sweep.Rows);
 
-            if (timeRange is not null)
+            if (decimator is not null)
             {
                 // NB: no vertical padding, so the plot frame lands on the region's own edges and can
                 // be lined up with whatever the owner puts beside it.
@@ -343,11 +330,9 @@ namespace OpenEphys.Onix1.Design
         /// </remarks>
         public void ResetBuffers()
         {
-            timeRange?.Dispose();
             decimator?.Dispose();
             history?.Dispose();
             DisposeHistoryView();
-            timeRange = null;
             decimator = null;
             history = null;
         }

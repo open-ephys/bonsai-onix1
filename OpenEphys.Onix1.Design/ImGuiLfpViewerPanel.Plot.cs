@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Numerics;
 using Hexa.NET.ImGui;
-using Hexa.NET.ImPlot;
 using Hexa.NET.Utilities.Text;
 using OpenCV.Net;
 
@@ -46,14 +45,13 @@ namespace OpenEphys.Onix1.Design
             plotSpan > 0 ? Math.Max(0f, Math.Min(1f, (x - plotLeft) / plotSpan)) : 0.5f;
 
         /// <summary>
-        /// Lays out the label column and the plot, with every channel in one plot whose y axis is in
-        /// channel units: channel <c>i</c> is centered at <c>-i</c> with +/- range / 2 mapped to
-        /// +/- 0.5, so a trace that exceeds its range runs into the neighboring channels' rows
-        /// instead of being clipped at a row edge.
+        /// Lays out the label column and the plot. Each channel's row is centered on zero with +/- range / 2 at its
+        /// edges, and a trace that exceeds its range runs into the neighboring channels' rows rather than being
+        /// clipped at its own.
         /// </summary>
         /// <remarks>
-        /// The graticules go in this window's draw list rather than the plot's, so they stay put while the
-        /// channels scroll. They sit under the traces, showing through the plot's cleared background.
+        /// The graticules go in this window's draw list rather than the table's, so they stay put while the
+        /// channels scroll, and lie under the traces.
         /// </remarks>
         /// <param name="envelope">Per-column minima and maxima, one row per channel.</param>
         void WaveformPlot(Envelope envelope)
@@ -61,12 +59,6 @@ namespace OpenEphys.Onix1.Design
             var rows = envelope.Rows;
             var labelDigits = DigitCount(rows - 1);
 
-            ImPlot.PushStyleVar(ImPlotStyleVar.Padding, new Vector2(0, 0));
-            ImPlot.PushStyleVar(ImPlotStyleVar.BorderSize, 0);
-            ImPlot.PushStyleColor(ImPlotCol.Bg, Vector4.Zero);
-
-            var plotFlags = ImPlotFlags.CanvasOnly | ImPlotFlags.NoFrame | ImPlotFlags.NoInputs;
-            var axesFlags = ImPlotAxisFlags.NoHighlight | ImPlotAxisFlags.NoDecorations;
             var tableFlags = ImGuiTableFlags.NoSavedSettings | ImGuiTableFlags.ScrollY;
 
             // NB: the axis labels get a button-height row, so the plot's frame starts one button-height down.
@@ -107,8 +99,6 @@ namespace OpenEphys.Onix1.Design
                 HandleChannelInput(hovered);
                 HandleZoomInput(layout);
 
-                // NB: with no padding, border or decorations the plot area is the item rect, so
-                // its extent is known before the plot is drawn.
                 ImGui.TableNextColumn();
                 plotX = ImGui.GetCursorScreenPos().X;
                 plotWidth = ImGui.GetContentRegionAvail().X;
@@ -118,42 +108,41 @@ namespace OpenEphys.Onix1.Design
                     envelope, layout, plotX, plotWidth, plotTop, plotBottom,
                     window, sampleRate, Paused, CursorPosition, timebase, pausedTimebase,
                     rangeAmplitude, Unit, channelHidden, expandedChannel, selectedChannel, ShowHeatmap, ColorThreshold);
-                if (ImPlot.BeginPlot("##channels", new(plotWidth, layout.Height), plotFlags))
-                {
-                    ImPlot.SetupAxes(string.Empty, string.Empty, axesFlags, axesFlags);
-                    ImPlot.SetupAxisLimits(ImAxis.X1, 0, decimator.Sweep.Cols, ImPlotCond.Always);
-                    ImPlot.SetupAxisLimits(ImAxis.Y1, -(layout.LastRow - 1) - 0.5, -layout.FirstRow + 0.5, ImPlotCond.Always);
-                    DrawRowBand(ImGui.GetWindowDrawList(), frame);
-                    traces.Draw(frame, Colors.Packed(channelHidden.Length),
-                        Paused ? -1 : decimator.Cursor, history?.Count ?? 0);
-                    if (expandedChannel >= 0)
-                        PlotChannelLines(envelope, expandedChannel, 1);
-                    else if (hovered >= 0 && !channelHidden[hovered] && !ShowHeatmap)
-                        PlotChannelLines(envelope, hovered, HoverLineWeight);
-                    PlotSweepCursor();
-                    ImPlot.EndPlot();
 
-                    // NB: both drawn after the plot, and from inside the table,
-                    // so they lie over the traces
-                    ShadeFrozenTail(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom);
+                // NB: an item the height of every row, which is what the table scrolls through. Everything in the
+                // plot is drawn rather than laid out.
+                ImGui.Dummy(new Vector2(plotWidth, layout.Height));
+                var draw = ImGui.GetWindowDrawList();
+                DrawRowBand(draw, frame);
+                traces.Draw(frame, Colors.Packed(channelHidden.Length),
+                    Paused ? -1 : decimator.Cursor, history?.Count ?? 0);
 
-                    // NB: a heatmap row has no line to thicken and covers the band, so the hovered and selected rows
-                    // are marked from outside, which also ties a label to its row when rows are far shorter than it.
-                    if (ShowHeatmap && expandedChannel < 0 && hovered >= 0 && !channelHidden[hovered])
-                        BracketRow(ImGui.GetWindowDrawList(), frame, hovered, ColHoveredRow);
-                    if (ShowHeatmap && expandedChannel < 0 && selectedChannel >= 0)
-                        BracketRow(ImGui.GetWindowDrawList(), frame, selectedChannel, WaveformCursors.Color);
-                    cursors.Draw(ImGui.GetWindowDrawList(), frame);
-                    SelectClicked(frame, hovered);
-                    DrawFrame(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom);
-                    DrawReadout(ImGui.GetWindowDrawList(), frame, hovered);
-                    AmplitudeLabels(ImGui.GetWindowDrawList(), plotX, plotTop, plotBottom);
-                }
+                // NB: a trace that runs off its row may run into its neighbors but not past the rows, which can
+                // end above the plot's bottom when there are few channels.
+                draw.PushClipRect(new Vector2(plotX, layout.Origin),
+                    new Vector2(plotX + plotWidth, layout.Origin + layout.Height), true);
+                if (expandedChannel >= 0)
+                    DrawChannelLines(draw, frame, expandedChannel, 1);
+                else if (hovered >= 0 && !channelHidden[hovered] && !ShowHeatmap)
+                    DrawChannelLines(draw, frame, hovered, HoverLineWeight);
+                DrawSweepCursor(draw, frame);
+                draw.PopClipRect();
+
+                ShadeFrozenTail(draw, plotX, plotWidth, plotTop, plotBottom);
+
+                // NB: a heatmap row has no line to thicken and covers the band, so the hovered and selected rows
+                // are marked from outside, which also ties a label to its row when rows are far shorter than it.
+                if (ShowHeatmap && expandedChannel < 0 && hovered >= 0 && !channelHidden[hovered])
+                    BracketRow(draw, frame, hovered, ColHoveredRow);
+                if (ShowHeatmap && expandedChannel < 0 && selectedChannel >= 0)
+                    BracketRow(draw, frame, selectedChannel, WaveformCursors.Color);
+                cursors.Draw(draw, frame);
+                SelectClicked(frame, hovered);
+                DrawFrame(draw, plotX, plotWidth, plotTop, plotBottom);
+                DrawReadout(draw, frame, hovered);
+                AmplitudeLabels(draw, plotX, plotTop, plotBottom);
                 ImGui.EndTable();
             }
-
-            ImPlot.PopStyleColor();
-            ImPlot.PopStyleVar(2);
 
             if (plotWidth > 0)
             {
@@ -400,65 +389,74 @@ namespace OpenEphys.Onix1.Design
         /// Outlines a channel's trace, its max and min, or the line through its samples where each column holds
         /// one. Drawn every frame over the traces' texture, for the one channel hovered or expanded.
         /// </summary>
-        unsafe void PlotChannelLines(Envelope envelope, int channel, float weight)
+        unsafe void DrawChannelLines(ImDrawListPtr draw, in PlotFrame frame, int channel, float weight)
         {
-            envelope.Min.GetRawData(out IntPtr minPtr, out int minStep, out Size shape);
-            envelope.Max.GetRawData(out IntPtr maxPtr, out int maxStep, out Size _);
+            frame.Envelope.Min.GetRawData(out IntPtr minPtr, out int minStep, out Size shape);
+            frame.Envelope.Max.GetRawData(out IntPtr maxPtr, out int maxStep, out Size _);
             var minLine = (float*)((byte*)minPtr + channel * minStep);
             var maxLine = (float*)((byte*)maxPtr + channel * maxStep);
             var columns = shape.Width;
 
-            // NB: no more bins than the plot has pixels, each at the first column it covers on the plot's column
-            // axis, as the texture beneath has them.
-            var pixels = (int)plotSpan;
+            // NB: no more bins than the plot has pixels, each at the first column it covers, as the texture beneath
+            // has them.
+            var pixels = (int)frame.Width;
             var bins = pixels > 0 && pixels < columns ? pixels : columns;
-            float* binX = stackalloc float[bins];
-            float* binMin = stackalloc float[bins];
-            float* binMax = stackalloc float[bins];
-            var scale = (float)(1 / rangeAmplitude);
+            var low = stackalloc Vector2[bins];
+            var high = stackalloc Vector2[bins];
+            var center = frame.Layout.RowTop(channel) + frame.Layout.RowHeight / 2;
+            var scale = (float)(frame.Layout.RowHeight / frame.Range);
             for (int p = 0; p < bins; p++)
             {
                 int start = p * columns / bins, end = (p + 1) * columns / bins;
-                float low = minLine[start], high = maxLine[start];
+                float min = minLine[start], max = maxLine[start];
                 for (int c = start + 1; c < end; c++)
                 {
-                    low = Math.Min(low, minLine[c]);
-                    high = Math.Max(high, maxLine[c]);
+                    min = Math.Min(min, minLine[c]);
+                    max = Math.Max(max, maxLine[c]);
                 }
 
-                binX[p] = start;
-                binMin[p] = low * scale - channel;
-                binMax[p] = high * scale - channel;
+                var x = frame.Left + start * frame.Width / columns;
+                low[p] = new Vector2(x, center - min * scale);
+                high[p] = new Vector2(x, center - max * scale);
             }
 
-            ImPlot.PushStyleColor(ImPlotCol.Line, Colors.Of(channel));
-            ImPlot.PushStyleVar(ImPlotStyleVar.LineWeight, weight);
-            ImPlot.PlotLine(string.Empty, binX, binMin, bins);
-            if (window.Step > 1 || bins < columns)
-                ImPlot.PlotLine(string.Empty, binX, binMax, bins);
-            ImPlot.PopStyleVar();
-            ImPlot.PopStyleColor();
+            var color = ImGui.ColorConvertFloat4ToU32(Colors.Of(channel));
+            Segments(draw, low, bins, color, weight);
+            if (frame.Window.Step > 1 || bins < columns)
+                Segments(draw, high, bins, color, weight);
+        }
+
+        // NB: one segment at a time rather than a polyline, whose mitred joins overshoot a sharp turn by many
+        // pixels on a noisy trace. A segment touching a column that holds nothing is left out, so empty columns
+        // are a gap. AddLine moves its ends half a pixel, which is taken back.
+        static unsafe void Segments(ImDrawListPtr draw, Vector2* points, int count, uint color, float weight)
+        {
+            var half = new Vector2(0.5f);
+            for (int i = 1; i < count; i++)
+            {
+                if (!float.IsNaN(points[i - 1].Y) && !float.IsNaN(points[i].Y))
+                    draw.AddLine(points[i - 1] - half, points[i] - half, color, weight);
+            }
         }
 
         /// <summary>
         /// Marks the column being written, or where the display was paused.
         /// </summary>
-        unsafe void PlotSweepCursor()
+        void DrawSweepCursor(ImDrawListPtr draw, in PlotFrame frame)
         {
             if (FastSweep)
                 return;
 
             // NB: not rounded to a column while paused, since the pause instant can fall partway through one.
             var columns = decimator.Sweep.Cols;
-            double sweepHead = Paused ? window.FractionOf(CursorPosition) * columns : decimator.Cursor;
+            var sweepHead = Paused ? window.FractionOf(CursorPosition) * columns : decimator.Cursor;
             if (sweepHead < 0 || sweepHead >= columns)
                 return;
 
-            ImPlot.PushStyleColor(ImPlotCol.Line, ImGui.ColorConvertU32ToFloat4(ColSweepCursor));
-            ImPlot.PushStyleVar(ImPlotStyleVar.LineWeight, SweepCursorWeight);
-            ImPlot.PlotInfLines(string.Empty, &sweepHead, 1);
-            ImPlot.PopStyleVar();
-            ImPlot.PopStyleColor();
+            // NB: half a pixel back, which AddLine moves its ends by.
+            var x = frame.Left + (float)(sweepHead / columns * frame.Width) - 0.5f;
+            var top = frame.Layout.Origin - 0.5f;
+            draw.AddLine(new Vector2(x, top), new Vector2(x, top + frame.Layout.Height), ColSweepCursor, SweepCursorWeight);
         }
 
         /// <summary>
