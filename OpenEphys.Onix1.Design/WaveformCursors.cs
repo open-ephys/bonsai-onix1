@@ -11,8 +11,9 @@ namespace OpenEphys.Onix1.Design
     /// </summary>
     /// <remarks>
     /// A cursor is an axis position only, so it stays on the samples it marks through panning, zooming and
-    /// pausing. Cursor 0 is always present and is the origin the others are measured from. The cursors keep only
-    /// their own state; everything about the plot comes in with each frame.
+    /// pausing. One cursor is the reference the others are measured from, C0 to begin with; clicking a cursor's
+    /// time label makes it the reference, and the reference cannot be removed. The cursors keep only their own state; everything about the
+    /// plot comes in with each frame.
     /// </remarks>
     internal sealed class WaveformCursors
     {
@@ -30,6 +31,7 @@ namespace OpenEphys.Onix1.Design
         const float Arrow = 8f;
 
         readonly List<long> positions = new(MaxCursors);
+        int reference;
         int grabbed = -1;
         Vector2 tableSize;
 
@@ -140,7 +142,7 @@ namespace OpenEphys.Onix1.Design
                     continue;
 
                 // NB: the reference solid and the rest dotted, as on a scope.
-                if (i == 0)
+                if (i == reference)
                     draw.AddRectFilled(new Vector2(MathF.Floor(x), top), new Vector2(MathF.Floor(x) + LineWeight, bottom), Color);
                 else
                     DottedLine(draw, x, top, bottom);
@@ -152,14 +154,21 @@ namespace OpenEphys.Onix1.Design
             // NB: one row per cursor rather than packed, so the dimensions can never overlap however the
             // cursors are arranged. An expanded channel's name takes the first row.
             var row = ImGui.GetTextLineHeight() + 2 * ImGui.GetStyle().FramePadding.Y + LabelGap;
-            var first = top + LabelGap + (frame.Expanded >= 0 ? row : 0);
-            for (int i = 1; i < positions.Count; i++)
-                Dimension(draw, frame, positions[0], positions[i], first + (i - 1) * row);
+            var y = top + LabelGap + (frame.Expanded >= 0 ? row : 0);
+            for (int i = 0; i < positions.Count; i++)
+            {
+                if (i == reference)
+                    continue;
+
+                Dimension(draw, frame, positions[reference], positions[i], y);
+                y += row;
+            }
         }
 
         /// <summary>
-        /// A dimension from <paramref name="from"/> to <paramref name="to"/> at height <paramref name="y"/>,
-        /// with arrowheads on the cursor lines and the time between them and its inverse in the middle.
+        /// A dimension from the reference at <paramref name="from"/> to the cursor at <paramref name="to"/> at height
+        /// <paramref name="y"/>, with an arrowhead on that cursor's line and the time between them and its inverse in
+        /// the middle.
         /// </summary>
         static void Dimension(ImDrawListPtr draw, in PlotFrame frame, long from, long to, float y)
         {
@@ -179,8 +188,8 @@ namespace OpenEphys.Onix1.Design
             var start = Math.Max(left, a);
             var end = Math.Min(right, b);
 
-            // NB: the line breaks around the text, as a drawing's dimension does, rather than the text sitting on it
-            // in a box.
+            // NB: the line breaks around the text, as a drawing's dimension does, and the text sits on a dark fill so
+            // that it reads over the cursor lines and graticules it crosses. No outline, which the break makes busy.
             var text = $"{PlotText.Significant(samples * 1000.0 / frame.SampleRate)} ms " +
                 $"({PlotText.Significant(frame.SampleRate / (double)samples)} Hz)";
             var textSize = ImGui.CalcTextSize(text);
@@ -190,13 +199,14 @@ namespace OpenEphys.Onix1.Design
                 draw.AddRectFilled(new Vector2(start, line), new Vector2(textLeft - pad.X, line + LineWeight), Color);
             if (textLeft + textSize.X + pad.X < end)
                 draw.AddRectFilled(new Vector2(textLeft + textSize.X + pad.X, line), new Vector2(end, line + LineWeight), Color);
-            draw.AddText(new Vector2(textLeft, center - textSize.Y / 2), Color, text);
+            PlotText.Framed(draw, new Vector2(textLeft, center - textSize.Y / 2), text, outline: false);
 
-            // NB: an arrowhead only where the dimension reaches its cursor, not where the plot edge cuts it.
-            if (a >= left)
+            // NB: one arrowhead, at the measured cursor rather than the reference, so the dimension reads from the
+            // reference out to it. None where the plot edge cuts the dimension short of that cursor.
+            if (to < from && a >= left)
                 draw.AddTriangleFilled(new Vector2(a, center),
                     new Vector2(a + Arrow, center - Arrow / 2), new Vector2(a + Arrow, center + Arrow / 2), Color);
-            if (b <= right)
+            if (to > from && b <= right)
                 draw.AddTriangleFilled(new Vector2(b, center),
                     new Vector2(b - Arrow, center + Arrow / 2), new Vector2(b - Arrow, center - Arrow / 2), Color);
         }
@@ -284,7 +294,8 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// Labels each cursor with its time in the row of time axis labels.
+        /// Labels each cursor with its time in the row of time axis labels, and makes a cursor whose label is
+        /// clicked the reference.
         /// </summary>
         /// <remarks>
         /// Boxed, the reference filled, and drawn over the axis labels on the window's own background with a margin
@@ -295,33 +306,57 @@ namespace OpenEphys.Onix1.Design
             if (!Show)
                 return;
 
-            var left = frame.Left;
-            var width = frame.Width;
+            // NB: hit-tested here rather than with a button per label, so that where labels overlap only the one
+            // drawn on top, the last, answers the pointer.
             var pad = ImGui.GetStyle().FramePadding;
+            var pointer = ImGui.GetMousePos();
+            var hovered = -1;
+            for (int i = 0; ImGui.IsWindowHovered() && i < positions.Count; i++)
+            {
+                if (TryPlaceLabel(frame, i, labelY, out _, out var corner, out var size) &&
+                    pointer.X >= corner.X - pad.X && pointer.X < corner.X + size.X + pad.X &&
+                    pointer.Y >= corner.Y - pad.Y && pointer.Y < corner.Y + size.Y + pad.Y)
+                {
+                    hovered = i;
+                }
+            }
+
+            if (hovered >= 0 && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+                reference = hovered;
+
             var margin = new Vector2(pad.X + ImGui.GetStyle().ItemSpacing.X, pad.Y);
             var background = ImGui.GetColorU32(ImGuiCol.WindowBg);
             for (int i = 0; i < positions.Count; i++)
             {
-                var x = frame.Axis.X(positions[i]);
-                if (x < left || x > left + width)
+                if (!TryPlaceLabel(frame, i, labelY, out var text, out var corner, out var size))
                     continue;
 
-                var text = $"C{i}: {FormatSeconds(frame, ImGuiLfpViewerPanel.SecondsAt(frame, positions[i]))} s";
-                var size = ImGui.CalcTextSize(text);
-                var corner = new Vector2(
-                    Math.Max(left + pad.X, Math.Min(left + width - pad.X - size.X, x - size.X / 2)), labelY);
+                // NB: lit while hovered, as a button is, so that it shows it can be clicked.
                 draw.AddRectFilled(corner - margin, corner + size + margin, background);
-                if (i == 0)
-                {
+                if (i == hovered)
+                    draw.AddRectFilled(corner - pad, corner + size + pad, ImGui.GetColorU32(ImGuiCol.ButtonHovered));
+                else if (i == reference)
                     draw.AddRectFilled(corner - pad, corner + size + pad, Color);
-                    draw.AddText(corner, ImGuiPalette.Black, text);
-                }
-                else
-                {
-                    draw.AddRect(corner - pad, corner + size + pad, Color);
-                    draw.AddText(corner, Color, text);
-                }
+                draw.AddRect(corner - pad, corner + size + pad, Color);
+                draw.AddText(corner, i == reference && i != hovered ? ImGuiPalette.Black : Color, text);
             }
+        }
+
+        // NB: centered on the cursor's line, kept within the plot, or false where the cursor is off it.
+        bool TryPlaceLabel(in PlotFrame frame, int i, float labelY, out string text, out Vector2 corner, out Vector2 size)
+        {
+            text = null;
+            corner = size = default;
+            var x = frame.Axis.X(positions[i]);
+            if (x < frame.Left || x > frame.Left + frame.Width)
+                return false;
+
+            var pad = ImGui.GetStyle().FramePadding;
+            text = $"C{i}: {FormatSeconds(frame, ImGuiLfpViewerPanel.SecondsAt(frame, positions[i]))} s";
+            size = ImGui.CalcTextSize(text);
+            corner = new Vector2(
+                Math.Max(frame.Left + pad.X, Math.Min(frame.Left + frame.Width - pad.X - size.X, x - size.X / 2)), labelY);
+            return true;
         }
 
         // NB: to the width of a cell, which is as fine as a cursor can be placed.
@@ -329,8 +364,9 @@ namespace OpenEphys.Onix1.Design
             seconds.ToString("F" + Math.Max(0, (int)Math.Ceiling(-Math.Log10(frame.Axis.CellSpan / (double)frame.SampleRate))));
 
         /// <summary>
-        /// The cursors' readings on the selected channel, in a table over the plot's lower left corner, with
-        /// buttons to add and remove cursors.
+        /// The cursors' readings on the selected channel, in a table over the plot's lower left corner, with a
+        /// button per cursor to center a paused view on it, which reaches a cursor whose line and label are off
+        /// the plot, and buttons to add and remove cursors.
         /// </summary>
         /// <remarks>
         /// Times are read only. Right of the sweep cursor on a paused view, two places on the axis carry the
@@ -373,45 +409,58 @@ namespace OpenEphys.Onix1.Design
                         ImGui.TableSetupColumn(header);
                     ImGui.TableHeadersRow();
 
-                    TryRead(frame, positions[0], out var min0, out var max0);
+                    TryRead(frame, positions[reference], out var min0, out var max0);
                     for (int i = 0; i < positions.Count; i++)
                     {
                         var read = TryRead(frame, positions[i], out var min, out var max);
-                        var samples = positions[i] - positions[0];
+                        var samples = positions[i] - positions[reference];
+                        var measured = i != reference;
 
                         ImGui.TableNextRow();
 
-                        // NB: only paused, since live the window does not move. Home brings a cursor back instead.
+                        // NB: only paused, since live the window does not move. The reference's button filled, as
+                        // its time label is, so that both mark it alike.
                         ImGui.TableNextColumn();
                         ImGui.BeginDisabled(!frame.Paused);
+                        if (!measured)
+                        {
+                            ImGui.PushStyleColor(ImGuiCol.Button, Color);
+                            ImGui.PushStyleColor(ImGuiCol.Text, ImGuiPalette.Black);
+                        }
                         if (ImGui.SmallButton($"C{i}"))
                             center = positions[i];
+                        if (!measured)
+                            ImGui.PopStyleColor(2);
                         ImGui.EndDisabled();
 
                         Cell(FormatSeconds(frame, ImGuiLfpViewerPanel.SecondsAt(frame, positions[i])));
-                        Cell(i > 0 ? $"{PlotText.Significant(samples * 1000.0 / sampleRate)}" : "");
-                        Cell(i > 0 && samples != 0 ? $"{PlotText.Significant(sampleRate / (double)Math.Abs(samples))}" : "");
+                        Cell(measured ? $"{PlotText.Significant(samples * 1000.0 / sampleRate)}" : "");
+                        Cell(measured && samples != 0 ? $"{PlotText.Significant(sampleRate / (double)Math.Abs(samples))}" : "");
                         Cell(read ? $"{PlotText.Significant(min)}" : "");
                         if (!oneSample)
                             Cell(read ? $"{PlotText.Significant(max)}" : "");
 
-                        // NB: the signal at each cursor lies somewhere in its column's range, so its difference
-                        // from C0's lies between the two extremes, which meet at one sample per column.
-                        var differs = i > 0 && read && !double.IsNaN(min0);
+                        // NB: the signal at each cursor lies somewhere in its cell's range, so its difference from
+                        // the reference's lies between the two extremes, which meet at one sample per cell.
+                        var differs = measured && read && !double.IsNaN(min0);
                         Cell(differs ? $"{PlotText.Significant(min - max0)}" : "");
                         if (!oneSample)
                             Cell(differs ? $"{PlotText.Significant(max - min0)}" : "");
 
                         ImGui.TableNextColumn();
-                        if (i > 0 && ImGui.SmallButton($"x##remove{i}"))
+                        if (measured && ImGui.SmallButton($"x##remove{i}"))
                             remove = i;
                     }
 
                     ImGui.EndTable();
                 }
 
-                if (remove > 0)
+                if (remove >= 0)
+                {
                     positions.RemoveAt(remove);
+                    if (remove < reference)
+                        reference--;
+                }
 
                 ImGui.BeginDisabled(positions.Count >= MaxCursors);
                 if (ImGui.SmallButton("+ Add cursor"))
