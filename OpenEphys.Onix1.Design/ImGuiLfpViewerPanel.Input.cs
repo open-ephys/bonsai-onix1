@@ -26,16 +26,12 @@ namespace OpenEphys.Onix1.Design
         bool? dragHidden;
         int dragAnchor;
 
-        double? rangeDragStart;
-        float rangeDragMouseY;
+        // NB: while a vertical drag is held, the value it began from and where the pointer was then.
+        (double Value, float Y)? rangeDrag;
+        (float Value, float Y, float Pivot, float Scroll)? heightDrag;
 
         float collapsedScroll;
         bool restoreScroll;
-
-        float heightDragStart = -1;
-        float heightDragMouseY;
-        float heightDragPivot;
-        float heightDragScroll;
 
         // NB: the channel under the mouse is found from its y anywhere across the label column and
         // the plot, so a trace can be acted on where it is looked at.
@@ -196,75 +192,62 @@ namespace OpenEphys.Onix1.Design
         // gesture that took the wheel back would show a frame of the wrong scroll. Shift avoids it by
         // making the wheel horizontal, which the table cannot do, and so do the modifier sets built on
         // Shift; Ctrl alone is claimed by ImGui's own font zoom. Those are the three used here.
-        void HandleZoomInput(in RowLayout layout)
+        void HandleWheel(in RowLayout layout)
         {
-            var io = ImGui.GetIO();
-            var mouse = ImGui.GetMousePos();
-
-            // NB: the panning wheel is handled ahead of the rest because it answers wherever the pointer is
-            // within the pane and applies to an expanded channel as well.
-            if (io.MouseWheel != 0 && Modifiers(ctrl: true, shift: true) && ImGui.IsWindowHovered())
-            {
-                Pan(Math.Sign(io.MouseWheel) * (window.Span / TimeDivisions));
+            var wheel = ImGui.GetIO().MouseWheel;
+            if (wheel == 0 || !ImGui.IsWindowHovered())
                 return;
-            }
+
+            var direction = Math.Sign(wheel);
+            var mouse = ImGui.GetMousePos();
+            if (Modifiers(ctrl: true, shift: true))
+                Pan(direction * (window.Span / TimeDivisions));
 
             // NB: anchored on the pointer rather than the middle of the view, so that whatever is being
             // looked at stays where it is. The dropdown has no pointer to speak of and anchors on the
             // middle instead.
-            if (io.MouseWheel != 0 && Modifiers(shift: true, alt: true) && ImGui.IsWindowHovered())
-            {
-                StepTimebase(io.MouseWheel > 0 ? -1 : 1, PlotFraction(mouse.X));
-                return;
-            }
-
-            // NB: range scales works on expanded channel, so it must go before early return due to expandedChannel >= 0
-            if (io.MouseWheel != 0 && Modifiers(shift: true) && ImGui.IsWindowHovered())
-                StepRange(io.MouseWheel > 0 ? 1 : -1);
-
-            if (rangeDragStart is not null && !ImGui.IsMouseDown(ImGuiMouseButton.Left))
-                rangeDragStart = null;
-
-            // NB: on the plot only, since Shift on the labels hides channels.
-            if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && Modifiers(shift: true) && ImGui.IsWindowHovered() &&
-                mouse.X >= plotLeft && mouse.X < plotLeft + plotSpan)
-            {
-                rangeDragStart = rangeAmplitude;
-                rangeDragMouseY = mouse.Y;
-            }
-
-            // NB: up widens the range, as the wheel does, by a factor rather than an amount so the drag feels alike
-            // at every range.
-            if (rangeDragStart is double startRange)
-                RangeAmplitude = Significant(startRange * Math.Exp((rangeDragMouseY - mouse.Y) * RangeDragRate));
-
-            if (heightDragStart >= 0 && !ImGui.IsMouseDown(ImGuiMouseButton.Left))
-                heightDragStart = -1;
-
-            if (expandedChannel >= 0 || !ImGui.IsWindowHovered() && heightDragStart < 0)
-                return;
-
-            if (io.MouseWheel != 0 && Modifiers(ctrl: true) && heightDragStart < 0)
+            else if (Modifiers(shift: true, alt: true))
+                StepTimebase(-direction, PlotFraction(mouse.X));
+            else if (Modifiers(shift: true))
+                StepRange(direction);
+            else if (Modifiers(ctrl: true) && expandedChannel < 0 && heightDrag is null)
             {
                 var height = ChannelHeight;
                 var pivot = (mouse.Y - layout.Origin) / layout.RowHeight;
-                SetChannelHeight(StepChannelHeight(height, Math.Sign(io.MouseWheel)), height, pivot, ImGui.GetScrollY(), layout);
+                SetChannelHeight(StepChannelHeight(height, direction), height, pivot, ImGui.GetScrollY(), layout);
             }
+        }
 
-            if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && Modifiers(ctrl: true) && ImGui.IsWindowHovered())
-            {
-                heightDragStart = ChannelHeight;
-                heightDragMouseY = mouse.Y;
-                heightDragPivot = (mouse.Y - layout.Origin) / layout.RowHeight;
-                heightDragScroll = ImGui.GetScrollY();
-            }
+        // NB: each drag works from where it began rather than frame to frame, so it ends where the pointer does.
+        void HandleDrags(in RowLayout layout)
+        {
+            var mouse = ImGui.GetMousePos();
+            if (!ImGui.IsMouseDown(ImGuiMouseButton.Left))
+                (rangeDrag, heightDrag) = (null, null);
 
-            if (heightDragStart >= 0)
+            var clicked = ImGui.IsMouseClicked(ImGuiMouseButton.Left) && ImGui.IsWindowHovered();
+
+            // NB: on the plot only, since Shift on the labels hides channels.
+            if (clicked && Modifiers(shift: true) && mouse.X >= plotLeft && mouse.X < plotLeft + plotSpan)
+                rangeDrag = (rangeAmplitude, mouse.Y);
+
+            // NB: up widens the range, as the wheel does, by a factor rather than an amount so the drag feels alike
+            // at every range.
+            if (rangeDrag is { } range)
+                RangeAmplitude = Significant(range.Value * Math.Exp((range.Y - mouse.Y) * RangeDragRate));
+
+            if (expandedChannel >= 0)
+                return;
+
+            if (clicked && Modifiers(ctrl: true))
+                heightDrag = (ChannelHeight, mouse.Y, (mouse.Y - layout.Origin) / layout.RowHeight, ImGui.GetScrollY());
+
+            if (heightDrag is { } height)
             {
-                var delta = (int)Math.Round(-0.2f * (mouse.Y - heightDragMouseY));
-                if (heightDragStart > 100)
+                var delta = (int)Math.Round(-0.2f * (mouse.Y - height.Y));
+                if (height.Value > 100)
                     delta *= 3;
-                SetChannelHeight(heightDragStart + delta, heightDragStart, heightDragPivot, heightDragScroll, layout);
+                SetChannelHeight(height.Value + delta, height.Value, height.Pivot, height.Scroll, layout);
             }
         }
 

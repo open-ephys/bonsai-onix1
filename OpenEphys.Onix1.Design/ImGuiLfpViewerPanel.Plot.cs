@@ -98,7 +98,8 @@ namespace OpenEphys.Onix1.Design
                 ChannelLabels(layout, labelDigits, hovered);
                 HandleChannelInput(hovered);
                 AnswerTableKeys(layout);
-                HandleZoomInput(layout);
+                HandleWheel(layout);
+                HandleDrags(layout);
 
                 ImGui.TableNextColumn();
                 plotX = ImGui.GetCursorScreenPos().X;
