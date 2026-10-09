@@ -307,19 +307,26 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// The envelope to draw this frame: the live one, the copy taken at pause, or one read from the history
-        /// for a view that has been moved.
+        /// The envelope to draw this frame, the live one, the copy taken at pause, or one read from the history
+        /// for a view that has been moved, with the window it holds.
         /// </summary>
-        Envelope DisplayEnvelope()
+        /// <remarks>
+        /// The window is returned with the envelope rather than read again later in the frame, since input during
+        /// the frame can move the window after the envelope was read for it. Drawn under a window it does not hold,
+        /// the trace texture, which is redrawn only when its window changes, would keep the wrong data.
+        /// </remarks>
+        (Envelope Envelope, DisplayWindow Window) DisplayEnvelope()
         {
             if (FastSweep)
-                return decimator.LastSweep;
+                return (decimator.LastSweep, window);
 
             if (!Paused)
-                return decimator.Sweep;
+                return (decimator.Sweep, window);
 
             if (!Panned && SnapshotCurrent)
-                return pausedEnvelope;
+                return (pausedEnvelope, window);
+
+            var read = window;
 
             // NB: a backstop. Whatever the read reached before it gave up stands, so the plot draws a
             // gap or part of a frame, and the window goes back to the frozen frame to be tried again next
@@ -328,11 +335,11 @@ namespace OpenEphys.Onix1.Design
             if (windowDirty && !TryReadWindow())
             {
                 SetWindow(new DisplayWindow(0, window.Step, window.Columns));
-                return (pannedDecimator ?? decimator).Sweep;
+                return ((pannedDecimator ?? decimator).Sweep, read);
             }
 
             windowDirty = false;
-            return pannedDecimator.Sweep;
+            return (pannedDecimator.Sweep, read);
         }
 
         void DisposeHistoryView()

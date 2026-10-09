@@ -305,8 +305,9 @@ namespace OpenEphys.Onix1.Design
                 // be lined up with whatever the owner puts beside it.
                 var padding = ImGui.GetStyle().WindowPadding;
                 ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(padding.X, 0));
-                ImGui.BeginChild("##data");
-                WaveformPlot(DisplayEnvelope());
+                ImGui.BeginChild("##data", Vector2.Zero, ImGuiChildFlags.None, ImGuiWindowFlags.NoScrollWithMouse);
+                var (envelope, shown) = DisplayEnvelope();
+                WaveformPlot(envelope, shown);
                 ImGui.EndChild();
                 ImGui.PopStyleVar();
             }

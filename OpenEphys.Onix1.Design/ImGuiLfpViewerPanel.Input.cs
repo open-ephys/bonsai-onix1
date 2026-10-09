@@ -14,21 +14,32 @@ namespace OpenEphys.Onix1.Design
         const float CoarsePanFraction = 0.8f;
 
         /// <summary>
-        /// Natural log of the factor the range changes by per pixel of Shift+Drag: it doubles every 140 or so.
+        /// Natural log of the factor the range changes by per pixel of Alt+Drag: it halves every 140 or so upward.
         /// </summary>
         const double RangeDragRate = 0.005;
 
         /// <summary>
-        /// Significant digits a dragged range is rounded to.
+        /// Natural log of the factor the timebase changes by per pixel of Ctrl+Drag: it halves every 140 or so
+        /// rightward.
+        /// </summary>
+        const double TimebaseDragRate = 0.005;
+
+        /// <summary>
+        /// Significant digits a dragged range or timebase is rounded to.
         /// </summary>
         const int RangeDragDigits = 3;
 
         bool? dragHidden;
         int dragAnchor;
 
-        // NB: while a vertical drag is held, the value it began from and where the pointer was then.
+        // NB: while a drag is held, the value it began from and where the pointer was then.
         (double Value, float Y)? rangeDrag;
         (float Value, float Y, float Pivot, float Scroll)? heightDrag;
+        (double Value, float X, long Anchor, double Fraction)? timebaseDrag;
+        bool grabbing;
+
+        // NB: wheel movement not yet a whole step, which a touchpad sends in fractions of a notch.
+        float wheelSteps;
 
         float collapsedScroll;
         bool restoreScroll;
@@ -119,16 +130,16 @@ namespace OpenEphys.Onix1.Design
             (Keys.H, false, () => ShowHeatmap = !ShowHeatmap),
             (Keys.F, false, () => FitChannels = !FitChannels),
             (Keys.Escape, false, () => selectedChannel = -1),
-            (Keys.A, true, () => Pan(PanStep())),
-            (Keys.D, true, () => Pan(-PanStep())),
+            (Keys.A, true, () => TimeKey(-1)),
+            (Keys.D, true, () => TimeKey(1)),
         };
 
         // NB: these scroll the channels, which ImGui does to the window current when asked, so they are answered
         // inside the table that owns the scroll.
         (Keys, bool, Action<RowLayout>)[] TableKeys() => new (Keys, bool, Action<RowLayout>)[]
         {
-            (Keys.W, true, layout => ImGui.SetScrollY(ImGui.GetScrollY() - ChannelStep(layout))),
-            (Keys.S, true, layout => ImGui.SetScrollY(ImGui.GetScrollY() + ChannelStep(layout))),
+            (Keys.W, true, layout => ChannelKey(-1, layout)),
+            (Keys.S, true, layout => ChannelKey(1, layout)),
             (Keys.Q, true, layout => { if (Modifiers()) StepSelection(-1, layout); }),
             (Keys.E, true, layout => { if (Modifiers()) StepSelection(1, layout); }),
             (Keys.X, false, layout =>
@@ -188,70 +199,161 @@ namespace OpenEphys.Onix1.Design
             return io.KeyCtrl == ctrl && io.KeyShift == shift && io.KeyAlt == alt && !io.KeySuper;
         }
 
-        // NB: an unclaimed wheel scrolls the channels, and ImGui applies that before this runs, so a
-        // gesture that took the wheel back would show a frame of the wrong scroll. Shift avoids it by
-        // making the wheel horizontal, which the table cannot do, and so do the modifier sets built on
-        // Shift; Ctrl alone is claimed by ImGui's own font zoom. Those are the three used here.
+        // NB: every wheel over the rows is answered here, since their child is not scrolled by ImGui (WaveformPlot).
+        // The gestures follow two conventions every application shares: Shift turns the wheel horizontal, as a
+        // touchpad's sideways swipe is, and Ctrl zooms, as a touchpad's pinch arrives. So the wheel alone and with
+        // Shift moves along the channels and through time, anywhere over the rows; with Ctrl it zooms the channel
+        // height, and with Ctrl+Shift the timebase; with Alt it sets the gain, the range. Zooming and gain answer
+        // from the plot only, and upward always magnifies.
         void HandleWheel(in RowLayout layout)
         {
-            var wheel = ImGui.GetIO().MouseWheel;
+            var io = ImGui.GetIO();
+            var wheel = io.MouseWheel;
+            var sideways = io.MouseWheelH;
             var mouse = ImGui.GetMousePos();
-            if (wheel == 0 || !ImGui.IsWindowHovered() || !OverPlot(mouse.X))
+            if (wheel == 0 && sideways == 0 || !ImGui.IsWindowHovered())
                 return;
 
-            var direction = Math.Sign(wheel);
-            if (Modifiers(ctrl: true, shift: true))
-                Pan(direction * (window.Span / TimeDivisions));
+            if (Modifiers())
+            {
+                var step = MathF.Floor(Math.Min(5 * ImGui.GetFontSize(), visibleHeight * 0.67f));
+                ImGui.SetScrollY(ImGui.GetScrollY() - wheel * step);
+                if (sideways != 0)
+                    Pan((long)(sideways * (window.Span / TimeDivisions)));
+                return;
+            }
 
-            // NB: anchored on the pointer rather than the middle of the view, so that whatever is being
-            // looked at stays where it is. The dropdown has no pointer to speak of and anchors on the
-            // middle instead.
-            else if (Modifiers(shift: true, alt: true))
-                StepTimebase(-direction, mouse.X);
-            else if (Modifiers(shift: true))
+            if (Modifiers(shift: true))
+            {
+                Pan((long)(wheel * (window.Span / TimeDivisions)));
+                return;
+            }
+
+            if (wheel == 0 || !OverPlot(mouse.X))
+                return;
+
+            wheelSteps += wheel;
+            var steps = (int)wheelSteps;
+            wheelSteps -= steps;
+            for (var direction = Math.Sign(steps); steps != 0; steps -= direction)
+            {
+                // NB: anchored on the pointer rather than the middle of the view, so that whatever is being
+                // looked at stays where it is. The keys and the dropdown have no pointer to speak of and anchor
+                // on the middle instead.
+                if (Modifiers(ctrl: true, shift: true))
+                    StepTimebase(-direction, mouse.X);
+                else if (Modifiers(alt: true))
+                    StepRange(-direction);
+                else if (Modifiers(ctrl: true) && expandedChannel < 0 && heightDrag is null)
+                {
+                    var height = ChannelHeight;
+                    var pivot = (mouse.Y - layout.Origin) / layout.RowHeight;
+                    SetChannelHeight(StepChannelHeight(height, direction), height, pivot, ImGui.GetScrollY(), layout);
+                }
+            }
+        }
+
+        /// <summary>
+        /// W and S: alone or with Shift, scroll the channels; with Ctrl, step the channel height; with Alt, step the
+        /// range. <paramref name="direction"/> is -1 for W, upward, which magnifies, as the wheel's upward does.
+        /// </summary>
+        void ChannelKey(int direction, in RowLayout layout)
+        {
+            if (Modifiers() || Modifiers(shift: true))
+                ImGui.SetScrollY(ImGui.GetScrollY() + direction * ChannelStep(layout));
+            else if (Modifiers(alt: true))
                 StepRange(direction);
-            else if (Modifiers(ctrl: true) && expandedChannel < 0 && heightDrag is null)
+            else if (Modifiers(ctrl: true) && expandedChannel < 0)
             {
                 var height = ChannelHeight;
-                var pivot = (mouse.Y - layout.Origin) / layout.RowHeight;
-                SetChannelHeight(StepChannelHeight(height, direction), height, pivot, ImGui.GetScrollY(), layout);
+                var pivot = ((layout.Top + layout.Bottom) / 2 - layout.Origin) / layout.RowHeight;
+                SetChannelHeight(StepChannelHeight(height, -direction), height, pivot, ImGui.GetScrollY(), layout);
             }
+        }
+
+        /// <summary>
+        /// A and D: alone or with Shift, move through time; with Ctrl, step the timebase about the middle of the
+        /// plot. <paramref name="direction"/> is 1 for D, rightward, which magnifies, as a rightward Ctrl+Drag does.
+        /// </summary>
+        void TimeKey(int direction)
+        {
+            if (Modifiers() || Modifiers(shift: true))
+                Pan(-direction * PanStep());
+            else if (Modifiers(ctrl: true))
+                StepTimebase(-direction, plotLeft + plotSpan / 2);
         }
 
         // NB: the modifier wheels and drags set the plot's scales, so they start on the plot only. The channel labels
         // have gestures of their own, and the plain wheel scrolls the channels anywhere, as ImGui does.
         bool OverPlot(float x) => x >= plotLeft && x < plotLeft + plotSpan;
 
-        // NB: each drag works from where it began rather than frame to frame, so it ends where the pointer does.
+        // NB: the modifier picks what a drag sets and its direction which axis: with Ctrl, up raises the channel
+        // height and right shortens the timebase, so a diagonal zooms both; with Alt, up narrows the range. Each
+        // works from where it began rather than frame to frame, so it ends where the pointer does, and an axis
+        // answers only past the drag threshold, so a drag along one barely moves the other. A right drag grabs
+        // the plot instead and moves it with the pointer, through the channels and, paused, through time.
         void HandleDrags(in RowLayout layout)
         {
             var mouse = ImGui.GetMousePos();
             if (!ImGui.IsMouseDown(ImGuiMouseButton.Left))
-                (rangeDrag, heightDrag) = (null, null);
+                (rangeDrag, heightDrag, timebaseDrag) = (null, null, null);
+
+            if (!ImGui.IsMouseDown(ImGuiMouseButton.Right))
+                grabbing = false;
+
+            if (ImGui.IsMouseClicked(ImGuiMouseButton.Right) && ImGui.IsWindowHovered() && Modifiers())
+                grabbing = true;
+
+            if (grabbing && ImGui.IsMouseDragging(ImGuiMouseButton.Right))
+            {
+                var delta = ImGui.GetIO().MouseDelta;
+                ImGui.SetScrollY(ImGui.GetScrollY() - delta.Y);
+                if (plotSpan > 0)
+                    Pan((long)(delta.X * (window.Span / plotSpan)));
+            }
 
             var clicked = ImGui.IsMouseClicked(ImGuiMouseButton.Left) && ImGui.IsWindowHovered() && OverPlot(mouse.X);
 
-            if (clicked && Modifiers(shift: true))
+            if (clicked && Modifiers(alt: true))
                 rangeDrag = (rangeAmplitude, mouse.Y);
 
-            // NB: up widens the range, as the wheel does, by a factor rather than an amount so the drag feels alike
-            // at every range.
+            // NB: by a factor rather than an amount, so the drag feels alike at every range.
             if (rangeDrag is { } range)
-                RangeAmplitude = Significant(range.Value * Math.Exp((range.Y - mouse.Y) * RangeDragRate));
-
-            if (expandedChannel >= 0)
-                return;
+                RangeAmplitude = Significant(range.Value * Math.Exp(Beyond(mouse.Y - range.Y) * RangeDragRate));
 
             if (clicked && Modifiers(ctrl: true))
-                heightDrag = (ChannelHeight, mouse.Y, (mouse.Y - layout.Origin) / layout.RowHeight, ImGui.GetScrollY());
-
-            if (heightDrag is { } height)
             {
-                var delta = (int)Math.Round(-0.2f * (mouse.Y - height.Y));
+                var anchor = Axis.PositionAt(mouse.X);
+                timebaseDrag = (timebase, mouse.X, anchor, window.FractionOf(anchor));
+                if (expandedChannel < 0)
+                    heightDrag = (ChannelHeight, mouse.Y, (mouse.Y - layout.Origin) / layout.RowHeight, ImGui.GetScrollY());
+            }
+
+            // NB: about the press point, which stays where it was pressed, as the wheel zooms about the pointer.
+            // Rounded, which keeps the division labels readable and the decimators from being rebuilt on every
+            // pixel of the drag.
+            if (timebaseDrag is { } zoom)
+            {
+                var longest = standardTimeBases[ServableTimeBases - 1];
+                var value = Significant(zoom.Value * Math.Exp(-Beyond(mouse.X - zoom.X) * TimebaseDragRate));
+                SetTimebase(Math.Max(ShortestTimeBase, Math.Min(longest, value)), zoom.Anchor, zoom.Fraction);
+            }
+
+            if (heightDrag is { } height && expandedChannel < 0)
+            {
+                var delta = (int)Math.Round(-0.2f * Beyond(mouse.Y - height.Y));
                 if (height.Value > 100)
                     delta *= 3;
                 SetChannelHeight(height.Value + delta, height.Value, height.Pivot, height.Scroll, layout);
             }
+        }
+
+        // NB: how far a drag has gone along one axis past the drag threshold, so a drag held to one axis does not
+        // move the other by the pointer's wobble.
+        static float Beyond(float distance)
+        {
+            var threshold = ImGui.GetIO().MouseDragThreshold;
+            return Math.Sign(distance) * Math.Max(0, Math.Abs(distance) - threshold);
         }
 
         // NB: the channel that was under the pointer when the gesture began is kept at the same

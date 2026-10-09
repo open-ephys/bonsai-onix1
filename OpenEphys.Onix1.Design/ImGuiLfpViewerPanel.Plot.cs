@@ -52,12 +52,12 @@ namespace OpenEphys.Onix1.Design
         /// channels scroll, and lie under the traces.
         /// </remarks>
         /// <param name="envelope">Per-column minima and maxima, one row per channel.</param>
-        void WaveformPlot(Envelope envelope)
+        /// <param name="shown">The window <paramref name="envelope"/> holds, which the frame is drawn in.</param>
+        void WaveformPlot(Envelope envelope, DisplayWindow shown)
         {
             var rows = envelope.Rows;
             var labelDigits = DigitCount(rows - 1);
 
-            var tableFlags = ImGuiTableFlags.NoSavedSettings | ImGuiTableFlags.ScrollY;
 
             // NB: the axis labels get a button-height row, so the plot's frame starts one button-height down.
             var headerHeight = ImGui.GetFrameHeight();
@@ -73,7 +73,15 @@ namespace OpenEphys.Onix1.Design
             var plotWidth = 0f;
             var frame = default(PlotFrame);
 
-            if (ImGui.BeginTable("##table", 2, tableFlags, new Vector2(-1, tableHeight)))
+            // NB: the rows scroll in a child of their own that the wheel does not scroll, so that every wheel gesture
+            // over them, plain or with modifiers, is the panel's to answer (HandleWheel). With no padding, as the
+            // table that scrolled them before had none.
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+            var rowsOpen = ImGui.BeginChild("##rows", new Vector2(-1, tableHeight), ImGuiChildFlags.None,
+                ImGuiWindowFlags.NoScrollWithMouse);
+            ImGui.PopStyleVar();
+
+            if (rowsOpen && ImGui.BeginTable("##table", 2, ImGuiTableFlags.NoSavedSettings))
             {
                 ImGui.TableSetupColumn(string.Empty, ImGuiTableColumnFlags.WidthFixed, LabelColumnWidth(labelDigits));
                 ImGui.TableSetupColumn(string.Empty);
@@ -110,7 +118,7 @@ namespace OpenEphys.Onix1.Design
                 if (resized && CanPan)
                     SetWindow(window);
                 frame = new PlotFrame(
-                    envelope, layout, Axis, plotTop, plotBottom,
+                    envelope, layout, new PixelAxis(shown, plotLeft, plotSpan), plotTop, plotBottom,
                     sampleRate, Paused, CursorPosition, timebase, pausedTimebase,
                     rangeAmplitude, Unit, channelHidden, expandedChannel, selectedChannel, ShowHeatmap, ColorThreshold);
 
@@ -133,7 +141,7 @@ namespace OpenEphys.Onix1.Design
                 DrawSweepCursor(draw, frame);
                 draw.PopClipRect();
 
-                ShadeFrozenTail(draw, plotX, plotWidth, plotTop, plotBottom);
+                ShadeFrozenTail(draw, frame.Axis, plotX, plotWidth, plotTop, plotBottom);
 
                 // NB: a heatmap row has no line to thicken and covers the band, so the hovered and selected rows
                 // are marked from outside, which also ties a label to its row when rows are far shorter than it.
@@ -148,10 +156,11 @@ namespace OpenEphys.Onix1.Design
                 AmplitudeLabels(draw, plotX, plotTop, plotBottom);
                 ImGui.EndTable();
             }
+            ImGui.EndChild();
 
             if (plotWidth > 0)
             {
-                DrawGraticules(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom, labelY);
+                DrawGraticules(ImGui.GetWindowDrawList(), frame.Axis, plotX, plotWidth, plotTop, plotBottom, labelY);
                 cursors.DrawTimeLabels(ImGui.GetWindowDrawList(), frame, labelY);
                 TimeScrollBar(plotX, plotWidth, plotBottom + scrollGap, scrollHeight);
 
@@ -168,16 +177,17 @@ namespace OpenEphys.Onix1.Design
         /// Everything right of the cursor is older than everything left of it, and appears again elsewhere in
         /// the history. The shading marks it as stale.
         /// </remarks>
-        void ShadeFrozenTail(ImDrawListPtr draw, float left, float width, float top, float bottom)
+        void ShadeFrozenTail(ImDrawListPtr draw, in PixelAxis axis, float left, float width, float top, float bottom)
         {
             if (!Paused)
                 return;
 
-            var split = Math.Max(window.Start, Math.Min(window.End, CursorPosition));
-            if (split >= window.End)
+            var shown = axis.Window;
+            var split = Math.Max(shown.Start, Math.Min(shown.End, CursorPosition));
+            if (split >= shown.End)
                 return;
 
-            var x = Axis.X(split);
+            var x = axis.X(split);
             draw.AddRectFilled(
                 new Vector2(x, MathF.Floor(top) + GraticuleWeight),
                 new Vector2(MathF.Floor(left + width) - GraticuleWeight, MathF.Floor(bottom) - GraticuleWeight),
@@ -445,8 +455,9 @@ namespace OpenEphys.Onix1.Design
                 return;
 
             // NB: paused, the pause instant, which can fall partway through a column.
-            var position = Paused ? CursorPosition : window.PositionOf(decimator.Cursor);
-            if (position < window.Start || position >= window.End)
+            var shown = frame.Window;
+            var position = Paused ? CursorPosition : shown.PositionOf(decimator.Cursor);
+            if (position < shown.Start || position >= shown.End)
                 return;
 
             // NB: on the pixel the position is drawn in. AddLine moves its ends half a pixel, which centers the line
@@ -522,8 +533,10 @@ namespace OpenEphys.Onix1.Design
         /// the pause that sample was taken, so the frozen tail right of the cursor reads oldest. Divisions are
         /// fixed to positions on the axis rather than to the plot, so they pan with the data.
         /// </remarks>
-        void DrawGraticules(ImDrawListPtr draw, float left, float width, float top, float bottom, float labelY)
+        void DrawGraticules(
+            ImDrawListPtr draw, in PixelAxis axis, float left, float width, float top, float bottom, float labelY)
         {
+            var shown = axis.Window;
             var t = MathF.Floor(top) + GraticuleWeight;
             var b = MathF.Floor(bottom) - GraticuleWeight;
             var textColor = ImGui.GetColorU32(ImGuiCol.Text);
@@ -531,15 +544,15 @@ namespace OpenEphys.Onix1.Design
             // NB: a tenth of the window's span, not of the timebase. The span is a whole number of columns
             // and slightly shorter, so a tenth of the timebase would not fit ten times and the last
             // division would flicker. Labels still show the round timebase.
-            var interval = window.Span / (double)TimeDivisions;
+            var interval = shown.Span / (double)TimeDivisions;
             var origin = Paused ? CursorPosition : 0;
 
-            for (var d = (long)Math.Ceiling((window.Start - origin) / interval);
-                 d <= (long)Math.Floor((window.End - origin) / interval);
+            for (var d = (long)Math.Ceiling((shown.Start - origin) / interval);
+                 d <= (long)Math.Floor((shown.End - origin) / interval);
                  d++)
             {
                 var position = origin + d * interval;
-                var x = Axis.X(position);
+                var x = axis.X(position);
 
                 // NB: skip divisions on the edges, where the frame already draws a line.
                 var l = MathF.Floor(x);

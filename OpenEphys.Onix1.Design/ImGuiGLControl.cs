@@ -184,9 +184,24 @@ namespace OpenEphys.Onix1.Design
                 ImGuiImplWin32.SetCurrentContext(imGuiCtx);
                 if (ImGuiImplWin32.WndProcHandler(Handle, (uint)m.Msg, (nuint)(ulong)m.WParam.ToInt64(), m.LParam) != 0)
                     return;
+
+                // NB: Alt pressed and released with no key between puts the window into menu mode, which a wheel
+                // turn or a drag between does not cancel, so the key after an Alt gesture would go to the menu.
+                // ImGui has had the release; Windows does not get it.
+                if (m.Msg == WM_SYSKEYUP && (int)m.WParam.ToInt64() == VK_MENU)
+                    return;
+
+                // NB: Alt with a letter looks for a menu item with that mnemonic and beeps when there is none. ImGui
+                // has had the key; Windows does not get the character, except Alt+Space, the window's own menu.
+                if (m.Msg == WM_SYSCHAR && (int)m.WParam.ToInt64() != ' ')
+                    return;
             }
             base.WndProc(ref m);
         }
+
+        const int WM_SYSKEYUP = 0x0105;
+        const int WM_SYSCHAR = 0x0106;
+        const int VK_MENU = 0x12;
 
         protected override void OnHandleDestroyed(EventArgs e)
         {
