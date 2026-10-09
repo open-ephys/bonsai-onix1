@@ -18,8 +18,7 @@ namespace OpenEphys.Onix1.Design
     /// </remarks>
     partial class ImGuiLfpViewerPanel
     {
-        Mat pausedWaveformMin;
-        Mat pausedWaveformMax;
+        Envelope pausedEnvelope;
 
         long pauseSample = -1;
         long sweepOrigin;
@@ -42,8 +41,7 @@ namespace OpenEphys.Onix1.Design
         double anchorFraction;
         bool anchorPending;
 
-        Decimator pannedWaveformMinDecimator;
-        Decimator pannedWaveformMaxDecimator;
+        Decimator pannedDecimator;
 
         /// <summary>
         /// Seconds of signal the history can hold at the current sample rate.
@@ -72,7 +70,7 @@ namespace OpenEphys.Onix1.Design
         /// at a speed that is not its own and the seam between the new sweep and the last jumps about.
         /// </remarks>
         bool FastSweep =>
-            !Paused && waveformMinDecimator?.LastSweep is not null &&
+            !Paused && decimator?.LastSweep is not null &&
             timebase * RefreshRate <= FramesToFollowSweep;
 
         /// <summary>
@@ -85,7 +83,7 @@ namespace OpenEphys.Onix1.Design
         /// alters.
         /// </summary>
         bool SnapshotCurrent =>
-            pausedWaveformMin is not null &&
+            pausedEnvelope is not null &&
             frozen.Columns == window.Columns &&
             frozen.Step == window.Step;
 
@@ -109,13 +107,11 @@ namespace OpenEphys.Onix1.Design
         /// </remarks>
         void Pause()
         {
-            if (waveformMinDecimator is null)
+            if (decimator is null)
                 return;
 
-            pausedWaveformMin = waveformMinDecimator.Sweep.Clone();
-            pausedWaveformMax = waveformMaxDecimator.Sweep.Clone();
-            frozen = new DisplayWindow(
-                0, waveformMinDecimator.DownsampleFactor, waveformMinDecimator.Sweep.Cols);
+            pausedEnvelope = decimator.Sweep.Clone();
+            frozen = new DisplayWindow(0, decimator.DownsampleFactor, decimator.Sweep.Cols);
             pausedTimebase = timebase;
 
             pauseSample = history?.Count ?? 0;
@@ -123,8 +119,7 @@ namespace OpenEphys.Onix1.Design
             // NB: the cursor column is part filled, and by this much, so it began that far before the
             // newest sample rather than on it. Without the term the whole axis sits up to a column early,
             // and a view read back out of the history groups its samples differently from the live one.
-            sweepOrigin = pauseSample - waveformMinDecimator.Filled
-                - (long)waveformMinDecimator.Cursor * frozen.Step;
+            sweepOrigin = pauseSample - decimator.Filled - (long)decimator.Cursor * frozen.Step;
 
             window = frozen;
             windowDirty = false;
@@ -137,10 +132,8 @@ namespace OpenEphys.Onix1.Design
         /// </remarks>
         void Resume()
         {
-            pausedWaveformMin?.Dispose();
-            pausedWaveformMax?.Dispose();
-            pausedWaveformMin = null;
-            pausedWaveformMax = null;
+            pausedEnvelope?.Dispose();
+            pausedEnvelope = null;
 
             pauseSample = -1;
             windowDirty = false;
@@ -240,22 +233,18 @@ namespace OpenEphys.Onix1.Design
         /// <returns>False if the history can no longer serve the window.</returns>
         bool TryReadWindow()
         {
-            if (pannedWaveformMinDecimator is null)
+            if (pannedDecimator is null)
                 return false;
 
             var split = Math.Max(window.Start, Math.Min(window.End, CursorPosition));
             var fresh = (int)(split - window.Start);
             var tail = (int)(window.End - split);
 
-            pannedWaveformMinDecimator.Reset();
-            pannedWaveformMaxDecimator.Reset();
-
-            if (fresh > 0 && !history.Decimate(
-                    SampleAt(window.Start), fresh, pannedWaveformMinDecimator, pannedWaveformMaxDecimator))
+            pannedDecimator.Reset();
+            if (fresh > 0 && !history.Decimate(SampleAt(window.Start), fresh, pannedDecimator))
                 return false;
 
-            return tail <= 0 || history.Decimate(
-                SampleAt(split), tail, pannedWaveformMinDecimator, pannedWaveformMaxDecimator);
+            return tail <= 0 || history.Decimate(SampleAt(split), tail, pannedDecimator);
         }
 
         /// <summary>
@@ -297,19 +286,19 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// The min and max buffers to draw this frame: the live ones, the copies taken at pause, or ones read
-        /// from the history for a view that has been moved.
+        /// The envelope to draw this frame: the live one, the copy taken at pause, or one read from the history
+        /// for a view that has been moved.
         /// </summary>
-        (Mat WaveformMin, Mat WaveformMax) DisplayEnvelope()
+        Envelope DisplayEnvelope()
         {
             if (FastSweep)
-                return (waveformMinDecimator.LastSweep, waveformMaxDecimator.LastSweep);
+                return decimator.LastSweep;
 
             if (!Paused)
-                return (waveformMinDecimator.Sweep, waveformMaxDecimator.Sweep);
+                return decimator.Sweep;
 
             if (!Panned && SnapshotCurrent)
-                return (pausedWaveformMin, pausedWaveformMax);
+                return pausedEnvelope;
 
             // NB: a backstop. Whatever the read reached before it gave up stands, so the plot draws a
             // gap or part of a frame, and the window goes back to the frozen frame to be tried again next
@@ -318,13 +307,11 @@ namespace OpenEphys.Onix1.Design
             if (windowDirty && !TryReadWindow())
             {
                 SetWindow(new DisplayWindow(0, window.Step, window.Columns));
-                return pannedWaveformMinDecimator is null
-                    ? (waveformMinDecimator.Sweep, waveformMaxDecimator.Sweep)
-                    : (pannedWaveformMinDecimator.Sweep, pannedWaveformMaxDecimator.Sweep);
+                return (pannedDecimator ?? decimator).Sweep;
             }
 
             windowDirty = false;
-            return (pannedWaveformMinDecimator.Sweep, pannedWaveformMaxDecimator.Sweep);
+            return pannedDecimator.Sweep;
         }
 
         /// <summary>
@@ -361,14 +348,10 @@ namespace OpenEphys.Onix1.Design
 
         void DisposeHistoryView()
         {
-            pausedWaveformMin?.Dispose();
-            pausedWaveformMax?.Dispose();
-            pausedWaveformMin = null;
-            pausedWaveformMax = null;
-            pannedWaveformMinDecimator?.Dispose();
-            pannedWaveformMaxDecimator?.Dispose();
-            pannedWaveformMinDecimator = null;
-            pannedWaveformMaxDecimator = null;
+            pausedEnvelope?.Dispose();
+            pausedEnvelope = null;
+            pannedDecimator?.Dispose();
+            pannedDecimator = null;
             pauseSample = -1;
             anchorPending = false;
         }

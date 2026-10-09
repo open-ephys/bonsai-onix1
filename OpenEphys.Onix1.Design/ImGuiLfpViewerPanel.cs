@@ -107,8 +107,7 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         int selectedChannel = -1;
 
-        Decimator waveformMinDecimator;
-        Decimator waveformMaxDecimator;
+        Decimator decimator;
         Mat timeRange;
         int sampleRate = 30000;
 
@@ -245,8 +244,7 @@ namespace OpenEphys.Onix1.Design
             }
 
             RebuildBuffers(data.Rows);
-            waveformMinDecimator.Process(data);
-            waveformMaxDecimator.Process(data);
+            decimator.Process(data);
 
             if (!Paused)
                 history.Write(data);
@@ -263,24 +261,20 @@ namespace OpenEphys.Onix1.Design
             var columns = totalSamples / samplesPerBin;
             var buffersStale =
                 timeRange is null ||
-                waveformMinDecimator.Sweep.Rows != rows ||             // # channels
-                waveformMinDecimator.Sweep.Cols != columns ||          // # downsamples
-                waveformMinDecimator.DownsampleFactor != samplesPerBin; // factor to map totalSamples -> # downsamples
+                decimator.Sweep.Rows != rows ||             // # channels
+                decimator.Sweep.Cols != columns ||          // # downsamples
+                decimator.DownsampleFactor != samplesPerBin; // factor to map totalSamples -> # downsamples
 
             if (buffersStale)
             {
                 timeRange?.Dispose();
-                waveformMinDecimator?.Dispose();
-                waveformMaxDecimator?.Dispose();
-                pannedWaveformMinDecimator?.Dispose();
-                pannedWaveformMaxDecimator?.Dispose();
-                waveformMinDecimator = new Decimator(rows, columns, samplesPerBin, ReduceOperation.Min);
-                waveformMaxDecimator = new Decimator(rows, columns, samplesPerBin, ReduceOperation.Max);
+                decimator?.Dispose();
+                pannedDecimator?.Dispose();
+                decimator = new Decimator(rows, columns, samplesPerBin);
 
-                // NB: the paused view reduces out of the history into its own pair, at the same width as
+                // NB: the paused view reduces out of the history into its own decimator, at the same width as
                 // the live one, so that changing the timebase while paused rebuilds both together.
-                pannedWaveformMinDecimator = new Decimator(rows, columns, samplesPerBin, ReduceOperation.Min);
-                pannedWaveformMaxDecimator = new Decimator(rows, columns, samplesPerBin, ReduceOperation.Max);
+                pannedDecimator = new Decimator(rows, columns, samplesPerBin);
 
                 // NB: the plot's own axis is the column index, so that a column lands where the
                 // divisions and the cursor put it. Any other unit needs the plot's first and last column
@@ -323,8 +317,8 @@ namespace OpenEphys.Onix1.Design
 
             // NB: also here and not only in Update, so a timebase change takes effect while no data is
             // arriving, as when paused after acquisition has stopped.
-            if (waveformMinDecimator is not null)
-                RebuildBuffers(waveformMinDecimator.Sweep.Rows);
+            if (decimator is not null)
+                RebuildBuffers(decimator.Sweep.Rows);
 
             if (timeRange is not null)
             {
@@ -333,8 +327,7 @@ namespace OpenEphys.Onix1.Design
                 var padding = ImGui.GetStyle().WindowPadding;
                 ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(padding.X, 0));
                 ImGui.BeginChild("##data");
-                var (waveformMin, waveformMax) = DisplayEnvelope();
-                WaveformPlot(waveformMin, waveformMax);
+                WaveformPlot(DisplayEnvelope());
                 ImGui.EndChild();
                 ImGui.PopStyleVar();
             }
@@ -351,13 +344,11 @@ namespace OpenEphys.Onix1.Design
         public void ResetBuffers()
         {
             timeRange?.Dispose();
-            waveformMinDecimator?.Dispose();
-            waveformMaxDecimator?.Dispose();
+            decimator?.Dispose();
             history?.Dispose();
             DisposeHistoryView();
             timeRange = null;
-            waveformMinDecimator = null;
-            waveformMaxDecimator = null;
+            decimator = null;
             history = null;
         }
 

@@ -86,10 +86,10 @@ namespace OpenEphys.Onix1.Design
 
         /// <summary>
         /// Feeds <paramref name="samples"/> samples from <paramref name="first"/> on the absolute
-        /// timeline through <paramref name="min"/> and <paramref name="max"/>.
+        /// timeline through <paramref name="decimator"/>.
         /// </summary>
         /// <remarks>
-        /// The decimators carry their reduction across calls, so a range straddling the ring's end is
+        /// The decimator carries its reduction across calls, so a range straddling the ring's end is
         /// two reductions that come out as one, and a caller whose view is several ranges calls again for
         /// each. Nothing is copied: at the longest timebase a window is the whole ring, and a contiguous
         /// copy of it would double what the history costs.
@@ -98,7 +98,7 @@ namespace OpenEphys.Onix1.Design
         /// False, having reduced nothing, if any part of the range is no longer held. What earlier calls
         /// reduced still stands, so a caller partway through a view is left holding part of one.
         /// </returns>
-        public bool Decimate(long first, int samples, Decimator min, Decimator max)
+        public bool Decimate(long first, int samples, Decimator decimator)
         {
             if (samples < 0 || first < Oldest || first + samples > Count)
                 return false;
@@ -106,21 +106,20 @@ namespace OpenEphys.Onix1.Design
             var start = (int)(first % Capacity);
             var run = Math.Min(samples, Capacity - start);
 
-            Reduce(start, run, min, max);
+            Reduce(start, run, decimator);
             if (run < samples)
-                Reduce(0, samples - run, min, max);
+                Reduce(0, samples - run, decimator);
 
             return true;
         }
 
-        void Reduce(int column, int columns, Decimator min, Decimator max)
+        void Reduce(int column, int columns, Decimator decimator)
         {
             if (columns <= 0)
                 return;
 
             using var window = buffer.GetSubRect(new Rect(column, 0, columns, buffer.Rows));
-            min.Process(window);
-            max.Process(window);
+            decimator.Process(window);
         }
 
         static void Copy(Mat source, int sourceColumn, Mat destination, int destinationColumn, int columns)

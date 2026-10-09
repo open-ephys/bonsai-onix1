@@ -228,11 +228,11 @@ namespace OpenEphys.Onix1.Design
             var channel = Channel(frame);
             var column = frame.Window.ColumnOf(position);
             if (channel < 0 || frame.Hidden[channel] && channel != frame.Expanded ||
-                column < 0 || column >= frame.WaveformMin.Cols)
+                column < 0 || column >= frame.Envelope.Cols)
                 return false;
 
-            min = frame.WaveformMin.GetReal(channel, column);
-            max = frame.WaveformMax.GetReal(channel, column);
+            min = frame.Envelope.Min.GetReal(channel, column);
+            max = frame.Envelope.Max.GetReal(channel, column);
             if (Heatmap(frame))
                 min = max = Math.Abs(max) >= Math.Abs(min) ? max : min;
             return !double.IsNaN(min) && !double.IsNaN(max);

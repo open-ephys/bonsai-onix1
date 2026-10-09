@@ -22,7 +22,7 @@ namespace OpenEphys.Onix1.Design
         /// of it redraws it whole.
         /// </summary>
         readonly record struct Key(
-            Mat Envelope, DisplayWindow Window, double Range, int Expanded, bool Heatmap, double ColorThreshold,
+            Envelope Envelope, DisplayWindow Window, double Range, int Expanded, bool Heatmap, double ColorThreshold,
             int Width, int Height,
             int FirstVisible, int LastVisible, float RowHeight, float Origin);
 
@@ -60,11 +60,11 @@ namespace OpenEphys.Onix1.Design
                 Create(w, h);
 
             var current = new Key(
-                frame.WaveformMin, frame.Window, frame.Range, frame.Expanded, frame.Heatmap, frame.ColorThreshold,
+                frame.Envelope, frame.Window, frame.Range, frame.Expanded, frame.Heatmap, frame.ColorThreshold,
                 w, h,
                 layout.FirstVisible, layout.LastVisible, layout.RowHeight, layout.Origin - frame.Top);
 
-            var columns = frame.WaveformMin.Cols;
+            var columns = frame.Envelope.Cols;
             if (current != key ||
                 !hidden.AsSpan().SequenceEqual(drawnHidden) ||
                 !colors.AsSpan().SequenceEqual(drawnColors))
@@ -126,7 +126,7 @@ namespace OpenEphys.Onix1.Design
         void RepaintColumns(in PlotFrame frame, uint[] colors, int first, int last)
         {
             // NB: a pixel past each end as well, since a pixel's span reaches to its neighbor's.
-            var columns = frame.WaveformMin.Cols;
+            var columns = frame.Envelope.Cols;
             var from = (int)((long)first * width / columns) - 1;
             var to = (int)((long)(last + 1) * width / columns) + 2;
             RepaintPixels(frame, colors, Math.Max(0, from), Math.Min(width, to));
@@ -172,8 +172,8 @@ namespace OpenEphys.Onix1.Design
         /// </remarks>
         unsafe void PaintTraces(in PlotFrame frame, uint[] colors, int from, int to)
         {
-            frame.WaveformMin.GetRawData(out IntPtr minPtr, out int minStep, out Size shape);
-            frame.WaveformMax.GetRawData(out IntPtr maxPtr, out int maxStep, out Size _);
+            frame.Envelope.Min.GetRawData(out IntPtr minPtr, out int minStep, out Size shape);
+            frame.Envelope.Max.GetRawData(out IntPtr maxPtr, out int maxStep, out Size _);
             var layout = frame.Layout;
             var columns = shape.Width;
             var scale = layout.RowHeight / (float)frame.Range;
@@ -232,8 +232,8 @@ namespace OpenEphys.Onix1.Design
         /// </remarks>
         unsafe void PaintHeatmap(in PlotFrame frame, int from, int to)
         {
-            frame.WaveformMin.GetRawData(out IntPtr minPtr, out int minStep, out Size shape);
-            frame.WaveformMax.GetRawData(out IntPtr maxPtr, out int maxStep, out Size _);
+            frame.Envelope.Min.GetRawData(out IntPtr minPtr, out int minStep, out Size shape);
+            frame.Envelope.Max.GetRawData(out IntPtr maxPtr, out int maxStep, out Size _);
             var layout = frame.Layout;
             var columns = shape.Width;
             var map = Icefire.Map;

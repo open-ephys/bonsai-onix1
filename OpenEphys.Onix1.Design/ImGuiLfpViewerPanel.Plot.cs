@@ -55,11 +55,10 @@ namespace OpenEphys.Onix1.Design
         /// The graticules go in this window's draw list rather than the plot's, so they stay put while the
         /// channels scroll. They sit under the traces, showing through the plot's cleared background.
         /// </remarks>
-        /// <param name="waveformMin">Per-bin minima, one row per channel.</param>
-        /// <param name="waveformMax">Per-bin maxima, one row per channel.</param>
-        void WaveformPlot(Mat waveformMin, Mat waveformMax)
+        /// <param name="envelope">Per-column minima and maxima, one row per channel.</param>
+        void WaveformPlot(Envelope envelope)
         {
-            var rows = waveformMin.Rows;
+            var rows = envelope.Rows;
             var labelDigits = DigitCount(rows - 1);
 
             ImPlot.PushStyleVar(ImPlotStyleVar.Padding, new Vector2(0, 0));
@@ -116,21 +115,21 @@ namespace OpenEphys.Onix1.Design
                 plotLeft = plotX;
                 plotSpan = plotWidth;
                 frame = new PlotFrame(
-                    waveformMin, waveformMax, layout, plotX, plotWidth, plotTop, plotBottom,
+                    envelope, layout, plotX, plotWidth, plotTop, plotBottom,
                     window, sampleRate, Paused, CursorPosition, timebase, pausedTimebase,
                     rangeAmplitude, Unit, channelHidden, expandedChannel, selectedChannel, ShowHeatmap, ColorThreshold);
                 if (ImPlot.BeginPlot("##channels", new(plotWidth, layout.Height), plotFlags))
                 {
                     ImPlot.SetupAxes(string.Empty, string.Empty, axesFlags, axesFlags);
-                    ImPlot.SetupAxisLimits(ImAxis.X1, 0, waveformMinDecimator.Sweep.Cols, ImPlotCond.Always);
+                    ImPlot.SetupAxisLimits(ImAxis.X1, 0, decimator.Sweep.Cols, ImPlotCond.Always);
                     ImPlot.SetupAxisLimits(ImAxis.Y1, -(layout.LastRow - 1) - 0.5, -layout.FirstRow + 0.5, ImPlotCond.Always);
                     DrawRowBand(ImGui.GetWindowDrawList(), frame);
                     traces.Draw(frame, Colors.Packed(channelHidden.Length),
-                        Paused ? -1 : waveformMinDecimator.Cursor, history?.Count ?? 0);
+                        Paused ? -1 : decimator.Cursor, history?.Count ?? 0);
                     if (expandedChannel >= 0)
-                        PlotChannelLines(waveformMin, waveformMax, expandedChannel, 1);
+                        PlotChannelLines(envelope, expandedChannel, 1);
                     else if (hovered >= 0 && !channelHidden[hovered] && !ShowHeatmap)
-                        PlotChannelLines(waveformMin, waveformMax, hovered, HoverLineWeight);
+                        PlotChannelLines(envelope, hovered, HoverLineWeight);
                     PlotSweepCursor();
                     ImPlot.EndPlot();
 
@@ -401,10 +400,10 @@ namespace OpenEphys.Onix1.Design
         /// Outlines a channel's trace, its max and min, or the line through its samples where each column holds
         /// one. Drawn every frame over the traces' texture, for the one channel hovered or expanded.
         /// </summary>
-        unsafe void PlotChannelLines(Mat waveformMin, Mat waveformMax, int channel, float weight)
+        unsafe void PlotChannelLines(Envelope envelope, int channel, float weight)
         {
-            waveformMin.GetRawData(out IntPtr minPtr, out int minStep, out Size shape);
-            waveformMax.GetRawData(out IntPtr maxPtr, out int maxStep, out Size _);
+            envelope.Min.GetRawData(out IntPtr minPtr, out int minStep, out Size shape);
+            envelope.Max.GetRawData(out IntPtr maxPtr, out int maxStep, out Size _);
             var minLine = (float*)((byte*)minPtr + channel * minStep);
             var maxLine = (float*)((byte*)maxPtr + channel * maxStep);
             var columns = shape.Width;
@@ -450,8 +449,8 @@ namespace OpenEphys.Onix1.Design
                 return;
 
             // NB: not rounded to a column while paused, since the pause instant can fall partway through one.
-            var columns = waveformMinDecimator.Sweep.Cols;
-            double sweepHead = Paused ? window.FractionOf(CursorPosition) * columns : waveformMinDecimator.Cursor;
+            var columns = decimator.Sweep.Cols;
+            double sweepHead = Paused ? window.FractionOf(CursorPosition) * columns : decimator.Cursor;
             if (sweepHead < 0 || sweepHead >= columns)
                 return;
 

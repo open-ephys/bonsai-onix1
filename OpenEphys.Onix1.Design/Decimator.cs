@@ -1,26 +1,27 @@
-﻿using OpenCV.Net;
+using OpenCV.Net;
 using System;
 
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// Reduces a multi-channel signal to a fixed-width ring buffer by combining every <c>factor</c> input
-    /// samples into one output sample with <see cref="ReduceOperation"/>. Reduction state carries across
-    /// calls, so an input block that ends part-way through an output bin resumes that bin on the next call.
+    /// Reduces a multi-channel signal to the envelope of a fixed-width ring of columns, each holding the min
+    /// and max of <c>factor</c> input samples. Reduction state carries across calls, so an input block that ends
+    /// part-way through a column resumes that column on the next call.
     /// </summary>
     /// <remarks>
     /// Ported from <c>Bonsai.Ephys.Design.Decimator</c>, which is internal to that assembly and so not
-    /// reachable through a package reference.
+    /// reachable through a package reference, and which reduces with one operation where this reduces with
+    /// both.
     /// </remarks>
     internal sealed class Decimator : IDisposable
     {
         int carry;
         int writeIndex;
         int inputIndex;
-        readonly Mat carryBuffer;
-        readonly ReduceOperation reduceOp;
+        readonly Mat carryMin;
+        readonly Mat carryMax;
 
-        public Decimator(int rows, int length, int factor, ReduceOperation reduceOperation)
+        public Decimator(int rows, int length, int factor)
         {
             if (length < 1)
                 throw new ArgumentOutOfRangeException(nameof(length));
@@ -31,19 +32,18 @@ namespace OpenEphys.Onix1.Design
             writeIndex = 0;
             DownsampleFactor = factor;
             carry = DownsampleFactor;
-            carryBuffer = new Mat(rows, 1, Depth.F32, 1);
-            Sweep = new Mat(rows, length, Depth.F32, 1);
-            Sweep.Set(Scalar.All(double.NaN));
-            reduceOp = reduceOperation;
+            carryMin = new Mat(rows, 1, Depth.F32, 1);
+            carryMax = new Mat(rows, 1, Depth.F32, 1);
+            Sweep = new Envelope(rows, length);
         }
 
-        public Mat Sweep { get; }
+        public Envelope Sweep { get; }
 
         /// <summary>
         /// A copy of <see cref="Sweep"/> taken each time <see cref="Cursor"/> wraps, when every column
         /// holds the same sweep, or null before the first.
         /// </summary>
-        public Mat LastSweep { get; private set; }
+        public Envelope LastSweep { get; private set; }
 
         public int Cursor => writeIndex;
 
@@ -78,24 +78,20 @@ namespace OpenEphys.Onix1.Design
                 var inputRect = new Rect(inputIndex, 0, inputSamples, input.Rows);
 
                 using var inputBuffer = input.GetSubRect(inputRect);
-                using var outputBuffer = Sweep.GetCol(writeIndex);
+                using var min = Sweep.Min.GetCol(writeIndex);
+                using var max = Sweep.Max.GetCol(writeIndex);
                 if (carry < DownsampleFactor)
                 {
-                    CV.Reduce(inputBuffer, carryBuffer, 1, reduceOp);
-                    switch (reduceOp)
-                    {
-                        case ReduceOperation.Sum:
-                            CV.Add(outputBuffer, carryBuffer, outputBuffer);
-                            break;
-                        case ReduceOperation.Max:
-                            CV.Max(outputBuffer, carryBuffer, outputBuffer);
-                            break;
-                        case ReduceOperation.Min:
-                            CV.Min(outputBuffer, carryBuffer, outputBuffer);
-                            break;
-                    }
+                    CV.Reduce(inputBuffer, carryMin, 1, ReduceOperation.Min);
+                    CV.Min(min, carryMin, min);
+                    CV.Reduce(inputBuffer, carryMax, 1, ReduceOperation.Max);
+                    CV.Max(max, carryMax, max);
                 }
-                else CV.Reduce(inputBuffer, outputBuffer, 1, reduceOp);
+                else
+                {
+                    CV.Reduce(inputBuffer, min, 1, ReduceOperation.Min);
+                    CV.Reduce(inputBuffer, max, 1, ReduceOperation.Max);
+                }
 
                 inputIndex += inputRect.Width;
                 carry -= inputSamples;
@@ -105,8 +101,8 @@ namespace OpenEphys.Onix1.Design
                     carry = DownsampleFactor;
                     if (writeIndex == 0)
                     {
-                        LastSweep ??= new Mat(Sweep.Rows, Sweep.Cols, Depth.F32, 1);
-                        CV.Copy(Sweep, LastSweep);
+                        LastSweep ??= new Envelope(Sweep.Rows, Sweep.Cols);
+                        Sweep.CopyTo(LastSweep);
                     }
                 }
 
@@ -125,14 +121,15 @@ namespace OpenEphys.Onix1.Design
             writeIndex = 0;
             inputIndex = 0;
             carry = DownsampleFactor;
-            Sweep.Set(Scalar.All(double.NaN));
+            Sweep.Clear();
         }
 
         public void Dispose()
         {
             Sweep.Dispose();
             LastSweep?.Dispose();
-            carryBuffer.Dispose();
+            carryMin.Dispose();
+            carryMax.Dispose();
         }
     }
 }

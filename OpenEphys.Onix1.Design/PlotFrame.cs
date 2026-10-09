@@ -1,13 +1,10 @@
-﻿using OpenCV.Net;
-
-namespace OpenEphys.Onix1.Design
+﻿namespace OpenEphys.Onix1.Design
 {
     /// <summary>
     /// The plot as it is drawn in one frame: what is shown, where it is on screen, and how screen positions map to
     /// time and amplitude.
     /// </summary>
-    /// <param name="WaveformMin">Per-column minima, one row per channel.</param>
-    /// <param name="WaveformMax">Per-column maxima, one row per channel.</param>
+    /// <param name="Envelope">Per-column minima and maxima, one row per channel.</param>
     /// <param name="Layout">Where the channels' rows fall on screen.</param>
     /// <param name="Left">Left edge of the plot on screen.</param>
     /// <param name="Width">Width of the plot in pixels.</param>
@@ -27,7 +24,7 @@ namespace OpenEphys.Onix1.Design
     /// <param name="Heatmap">Whether channels are drawn as rows of color rather than as traces.</param>
     /// <param name="ColorThreshold">Magnitude at or below which a row of color is black.</param>
     internal readonly record struct PlotFrame(
-        Mat WaveformMin, Mat WaveformMax,
+        Envelope Envelope,
         ImGuiLfpViewerPanel.RowLayout Layout, float Left, float Width, float Top, float Bottom,
         DisplayWindow Window, int SampleRate,
         bool Paused, long PauseOrigin, double Timebase, double PausedTimebase,
