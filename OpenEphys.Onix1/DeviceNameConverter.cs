@@ -27,30 +27,8 @@ namespace OpenEphys.Onix1
             targetType = deviceType;
         }
 
-        static bool IsGroup(IWorkflowExpressionBuilder builder)
-        {
-            return builder is IncludeWorkflowBuilder || builder is GroupWorkflowBuilder;
-        }
-
-        static IEnumerable<ExpressionBuilder> SelectContextElements(ExpressionBuilderGraph source)
-        {
-            foreach (var node in source)
-            {
-                var element = ExpressionBuilder.Unwrap(node.Value);
-                yield return element;
-
-                var workflowBuilder = element as IWorkflowExpressionBuilder;
-                if (IsGroup(workflowBuilder))
-                {
-                    var workflow = workflowBuilder.Workflow;
-                    if (workflow == null) continue;
-                    foreach (var groupElement in SelectContextElements(workflow))
-                    {
-                        yield return groupElement;
-                    }
-                }
-            }
-        }
+        static IEnumerable<ExpressionBuilder> SelectContextElements(ExpressionBuilderGraph source) =>
+            WorkflowScope.Nodes(source).Select(x => ExpressionBuilder.Unwrap(x.Node.Value));
 
         static bool GetCallContext(ExpressionBuilderGraph source, ExpressionBuilderGraph target, Stack<ExpressionBuilderGraph> context)
         {
@@ -63,7 +41,7 @@ namespace OpenEphys.Onix1
             foreach (var element in SelectContextElements(source))
             {
                 var groupBuilder = element as IWorkflowExpressionBuilder;
-                if (IsGroup(groupBuilder) && groupBuilder.Workflow == target)
+                if (WorkflowScope.IsGroup(groupBuilder) && groupBuilder.Workflow == target)
                 {
                     return true;
                 }

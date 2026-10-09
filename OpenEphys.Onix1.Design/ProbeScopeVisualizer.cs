@@ -7,7 +7,6 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Windows.Forms;
 using Bonsai;
-using Bonsai.Dag;
 using Bonsai.Design;
 using Bonsai.Expressions;
 using Hexa.NET.ImGui;
@@ -144,8 +143,9 @@ namespace OpenEphys.Onix1.Design
             var workflowBuilder = (WorkflowBuilder)provider.GetService(typeof(WorkflowBuilder));
             var node = (ProbeScope<TFrame>)ExpressionBuilder.GetWorkflowElement(context.Source);
             fault = null;
-            try { deviceName = FindDeviceName(workflowBuilder?.Workflow, context.Source, node.DeviceName); }
-            catch (InvalidOperationException ex) { fault = ex.Message; }
+
+            try { deviceName = UpstreamDevice.Resolve(workflowBuilder?.Workflow, context.Source, node.DeviceName, DeviceNameOf); }
+            catch (InvalidOperationException ex) { fault = $"ProbeScope: {ex.Message}"; }
 
             // NB: no plot can be wider than the widest monitor unless its window spans two, so that is as
             // much horizontal detail as is ever worth holding.
@@ -176,109 +176,6 @@ namespace OpenEphys.Onix1.Design
 
             var visualizerService = (IDialogTypeVisualizerService)provider.GetService(typeof(IDialogTypeVisualizerService));
             visualizerService?.AddControl(canvas);
-        }
-
-        // NB: the name is only ever read here, never written back to the node, so what the workflow file
-        // holds is what was typed and is what runs. An empty name stands for the upstream device.
-        string FindDeviceName(ExpressionBuilderGraph workflow, ExpressionBuilder self, string declared)
-        {
-            var (graph, node) = workflow is null ? default : Nodes(workflow).FirstOrDefault(x => x.Node.Value == self);
-            if (node is null)
-                throw new InvalidOperationException("ProbeScope could not locate itself in the workflow.");
-
-            // NB: only through nodes with exactly one input, such as a Condition or a Gate, which cannot
-            // bring in another device's data, and from a SubscribeSubject to whatever feeds its subject. It
-            // stops at a branch such as Zip, where nothing upstream says which device the data is from.
-            string attached = null;
-            while (attached is null)
-            {
-                var upstream = graph.Predecessors(node).ToList();
-                if (upstream.Count == 1)
-                {
-                    node = upstream[0];
-                    attached = DeviceNameOf(ExpressionBuilder.GetWorkflowElement(node.Value));
-                }
-                else if (upstream.Count != 0 ||
-                    ExpressionBuilder.Unwrap(node.Value) is not SubscribeSubject subscribe ||
-                    !TryFindSubjectSource(workflow, graph, subscribe.Name, out graph, out node))
-                {
-                    break;
-                }
-            }
-
-            if (string.IsNullOrEmpty(declared))
-            {
-                return string.IsNullOrEmpty(attached)
-                    ? throw new InvalidOperationException(
-                        "ProbeScope could not find a data operator upstream that it can display. Set its DeviceName.")
-                    : attached;
-            }
-
-            if (!string.IsNullOrEmpty(attached) && attached != declared)
-            {
-                throw new InvalidOperationException(
-                    $"ProbeScope's DeviceName is {declared}, but its data comes from {attached}.");
-            }
-
-            return declared;
-        }
-
-        /// <summary>
-        /// Every node in <paramref name="graph"/> and the workflows nested in it, with the graph each belongs to.
-        /// </summary>
-        static IEnumerable<(ExpressionBuilderGraph Graph, Node<ExpressionBuilder, ExpressionBuilderArgument> Node)>
-            Nodes(ExpressionBuilderGraph graph)
-        {
-            foreach (var node in graph)
-            {
-                yield return (graph, node);
-                if (ExpressionBuilder.Unwrap(node.Value) is WorkflowExpressionBuilder { Workflow: { } nested })
-                {
-                    foreach (var inner in Nodes(nested))
-                        yield return inner;
-                }
-            }
-        }
-
-        /// <summary>
-        /// The node that feeds the subject <paramref name="name"/> as seen from <paramref name="scope"/>: the
-        /// subject itself when it has an input, or else the one MulticastSubject that writes to it.
-        /// </summary>
-        /// <remarks>
-        /// Looked up as Bonsai resolves a subject, in the innermost workflow that declares the name and then
-        /// in each enclosing one.
-        /// </remarks>
-        static bool TryFindSubjectSource(
-            ExpressionBuilderGraph workflow,
-            ExpressionBuilderGraph scope,
-            string name,
-            out ExpressionBuilderGraph graph,
-            out Node<ExpressionBuilder, ExpressionBuilderArgument> node)
-        {
-            for (; scope is not null; scope = Nodes(workflow).FirstOrDefault(x =>
-                ExpressionBuilder.Unwrap(x.Node.Value) is WorkflowExpressionBuilder w && w.Workflow == scope).Graph)
-            {
-                var subject = scope.FirstOrDefault(n =>
-                    ExpressionBuilder.Unwrap(n.Value) is SubjectExpressionBuilder s && s.Name == name);
-                if (subject is null)
-                    continue;
-
-                if (scope.Predecessors(subject).Any())
-                {
-                    (graph, node) = (scope, subject);
-                    return true;
-                }
-
-                var writers = Nodes(scope)
-                    .Where(x => ExpressionBuilder.Unwrap(x.Node.Value) is MulticastSubject m && m.Name == name)
-                    .ToList();
-                (graph, node) = writers.Count == 1 ? writers[0] : default;
-                return writers.Count == 1;
-            }
-
-            graph = null;
-            node = null;
-            return false;
         }
 
         /// <inheritdoc/>
