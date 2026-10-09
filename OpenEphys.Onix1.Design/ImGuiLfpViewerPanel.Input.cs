@@ -195,11 +195,11 @@ namespace OpenEphys.Onix1.Design
         void HandleWheel(in RowLayout layout)
         {
             var wheel = ImGui.GetIO().MouseWheel;
-            if (wheel == 0 || !ImGui.IsWindowHovered())
+            var mouse = ImGui.GetMousePos();
+            if (wheel == 0 || !ImGui.IsWindowHovered() || !OverPlot(mouse.X))
                 return;
 
             var direction = Math.Sign(wheel);
-            var mouse = ImGui.GetMousePos();
             if (Modifiers(ctrl: true, shift: true))
                 Pan(direction * (window.Span / TimeDivisions));
 
@@ -218,6 +218,10 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
+        // NB: the modifier wheels and drags set the plot's scales, so they start on the plot only. The channel labels
+        // have gestures of their own, and the plain wheel scrolls the channels anywhere, as ImGui does.
+        bool OverPlot(float x) => x >= plotLeft && x < plotLeft + plotSpan;
+
         // NB: each drag works from where it began rather than frame to frame, so it ends where the pointer does.
         void HandleDrags(in RowLayout layout)
         {
@@ -225,10 +229,9 @@ namespace OpenEphys.Onix1.Design
             if (!ImGui.IsMouseDown(ImGuiMouseButton.Left))
                 (rangeDrag, heightDrag) = (null, null);
 
-            var clicked = ImGui.IsMouseClicked(ImGuiMouseButton.Left) && ImGui.IsWindowHovered();
+            var clicked = ImGui.IsMouseClicked(ImGuiMouseButton.Left) && ImGui.IsWindowHovered() && OverPlot(mouse.X);
 
-            // NB: on the plot only, since Shift on the labels hides channels.
-            if (clicked && Modifiers(shift: true) && mouse.X >= plotLeft && mouse.X < plotLeft + plotSpan)
+            if (clicked && Modifiers(shift: true))
                 rangeDrag = (rangeAmplitude, mouse.Y);
 
             // NB: up widens the range, as the wheel does, by a factor rather than an amount so the drag feels alike

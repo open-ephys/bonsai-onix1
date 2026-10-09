@@ -335,23 +335,6 @@ namespace OpenEphys.Onix1.Design
             return pannedDecimator.Sweep;
         }
 
-        /// <summary>
-        /// Moves the paused view by dragging the time labels, keeping the samples under the pointer.
-        /// </summary>
-        void HandlePanInput(float left, float width, float top)
-        {
-            if (!Paused)
-                return;
-
-            var mouse = ImGui.GetMousePos();
-            var overLabels = ImGui.IsWindowHovered() &&
-                mouse.X >= left && mouse.X < left + width &&
-                mouse.Y >= top && mouse.Y < top + ImGui.GetTextLineHeight();
-
-            if (overLabels && ImGui.IsMouseDragging(ImGuiMouseButton.Left))
-                Pan((long)(ImGui.GetIO().MouseDelta.X * (window.Span / width)));
-        }
-
         void DisposeHistoryView()
         {
             pausedEnvelope?.Dispose();

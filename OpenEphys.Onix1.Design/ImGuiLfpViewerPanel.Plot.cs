@@ -153,7 +153,6 @@ namespace OpenEphys.Onix1.Design
             {
                 DrawGraticules(ImGui.GetWindowDrawList(), plotX, plotWidth, plotTop, plotBottom, labelY);
                 cursors.DrawTimeLabels(ImGui.GetWindowDrawList(), frame, labelY);
-                HandlePanInput(plotX, plotWidth, labelY);
                 TimeScrollBar(plotX, plotWidth, plotBottom + scrollGap, scrollHeight);
 
                 // NB: last, so that its window is drawn over the table's and takes the pointer from it.
