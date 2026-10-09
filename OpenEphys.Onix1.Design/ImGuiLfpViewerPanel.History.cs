@@ -328,12 +328,8 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
-        /// Moves the paused view by dragging the time labels, or with A and D.
+        /// Moves the paused view by dragging the time labels, keeping the samples under the pointer.
         /// </summary>
-        /// <remarks>
-        /// A drag keeps the samples under the pointer. A and D step one division, or most of a window with
-        /// Shift, and work wherever the pointer is, like the pause key.
-        /// </remarks>
         void HandlePanInput(float left, float width, float top)
         {
             if (!Paused)
@@ -346,17 +342,6 @@ namespace OpenEphys.Onix1.Design
 
             if (overLabels && ImGui.IsMouseDragging(ImGuiMouseButton.Left))
                 Pan((long)(ImGui.GetIO().MouseDelta.X * (window.Span / width)));
-
-            // NB: a division at a time, or most of a window with Shift, which is the same relationship
-            // W and S have for channels.
-            var step = Modifiers(shift: true)
-                ? (long)(window.Span * CoarsePanFraction)
-                : window.Span / TimeDivisions;
-
-            if (HotkeyPressed(ImGuiKey.A))
-                Pan(step);
-            else if (HotkeyPressed(ImGuiKey.D))
-                Pan(-step);
         }
 
         void DisposeHistoryView()

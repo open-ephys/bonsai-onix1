@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Hexa.NET.ImGui;
+using Keys = System.Windows.Forms.Keys;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -110,11 +113,71 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
+        readonly (Keys Key, bool Repeat, Action Answer)[] frameKeys;
+        readonly (Keys Key, bool Repeat, Action<RowLayout> Answer)[] tableKeys;
+
+        (Keys, bool, Action)[] FrameKeys() => new (Keys, bool, Action)[]
+        {
+            (Keys.Space, true, () => Paused = !Paused),
+            (Keys.C, false, () => ShowCursors = !ShowCursors),
+            (Keys.H, false, () => ShowHeatmap = !ShowHeatmap),
+            (Keys.F, false, () => FitChannels = !FitChannels),
+            (Keys.Escape, false, () => selectedChannel = -1),
+            (Keys.A, true, () => Pan(PanStep())),
+            (Keys.D, true, () => Pan(-PanStep())),
+        };
+
+        // NB: these scroll the channels, which ImGui does to the window current when asked, so they are answered
+        // inside the table that owns the scroll.
+        (Keys, bool, Action<RowLayout>)[] TableKeys() => new (Keys, bool, Action<RowLayout>)[]
+        {
+            (Keys.W, true, layout => ImGui.SetScrollY(ImGui.GetScrollY() - ChannelStep(layout))),
+            (Keys.S, true, layout => ImGui.SetScrollY(ImGui.GetScrollY() + ChannelStep(layout))),
+            (Keys.Q, true, layout => { if (Modifiers()) StepSelection(-1, layout); }),
+            (Keys.E, true, layout => { if (Modifiers()) StepSelection(1, layout); }),
+            (Keys.X, false, layout =>
+            {
+                if (selectedChannel < 0 && expandedChannel < 0)
+                    selectedChannel = FirstShownInView(layout);
+                if (expandedChannel >= 0) Collapse();
+                else if (selectedChannel >= 0) Expand(selectedChannel);
+            }),
+        };
+
         /// <summary>
-        /// Whether <paramref name="key"/> was pressed, unless it was typed into a text field.
+        /// Every key the panel answers, for a host to hand to whichever panel is under the pointer.
         /// </summary>
-        internal static bool HotkeyPressed(ImGuiKey key, bool repeat = true) =>
-            !ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(key, repeat);
+        public IEnumerable<Keys> Hotkeys => frameKeys.Select(k => k.Key).Concat(tableKeys.Select(k => k.Key));
+
+        void AnswerFrameKeys()
+        {
+            foreach (var key in frameKeys)
+            {
+                if (Pressed(key.Key, key.Repeat))
+                    key.Answer();
+            }
+        }
+
+        void AnswerTableKeys(in RowLayout layout)
+        {
+            foreach (var key in tableKeys)
+            {
+                if (Pressed(key.Key, key.Repeat))
+                    key.Answer(layout);
+            }
+        }
+
+        // NB: not a key typed into a text field.
+        static bool Pressed(Keys key, bool repeat) =>
+            !ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ToImGuiKey(key), repeat);
+
+        static ImGuiKey ToImGuiKey(Keys key) => key switch
+        {
+            Keys.Space => ImGuiKey.Space,
+            Keys.Escape => ImGuiKey.Escape,
+            >= Keys.A and <= Keys.Z => ImGuiKey.A + (key - Keys.A),
+            _ => throw new ArgumentOutOfRangeException(nameof(key)),
+        };
 
         /// <summary>
         /// Whether exactly the named modifiers are down and the rest are up.
@@ -138,42 +201,8 @@ namespace OpenEphys.Onix1.Design
             var io = ImGui.GetIO();
             var mouse = ImGui.GetMousePos();
 
-            // NB: the keys and the panning wheel are handled ahead of the rest because they answer
-            // wherever the pointer is within the pane, as the pause key does, and apply to an expanded
-            // channel as well. Scrolling has to be asked for inside the table that owns it.
-            var visibleRows = Math.Max(1, layout.LastVisible - layout.FirstVisible);
-            var channelStep = Modifiers(shift: true)
-                ? (int)(visibleRows * CoarsePanFraction) * layout.RowHeight
-                : layout.RowHeight;
-
-            if (HotkeyPressed(ImGuiKey.W))
-                ImGui.SetScrollY(ImGui.GetScrollY() - channelStep);
-            else if (HotkeyPressed(ImGuiKey.S))
-                ImGui.SetScrollY(ImGui.GetScrollY() + channelStep);
-
-            var selectionStep = !Modifiers() ? 0
-                : HotkeyPressed(ImGuiKey.Q) ? -1
-                : HotkeyPressed(ImGuiKey.E) ? 1
-                : 0;
-            if (selectionStep != 0)
-                StepSelection(selectionStep, layout);
-
-            if (HotkeyPressed(ImGuiKey.Escape, false))
-                selectedChannel = -1;
-
-            if (HotkeyPressed(ImGuiKey.X, false))
-            {
-                if (expandedChannel >= 0)
-                    Collapse();
-                else
-                {
-                    if (selectedChannel < 0)
-                        selectedChannel = FirstShownInView(layout);
-                    if (selectedChannel >= 0)
-                        Expand(selectedChannel);
-                }
-            }
-
+            // NB: the panning wheel is handled ahead of the rest because it answers wherever the pointer is
+            // within the pane and applies to an expanded channel as well.
             if (io.MouseWheel != 0 && Modifiers(ctrl: true, shift: true) && ImGui.IsWindowHovered())
             {
                 Pan(Math.Sign(io.MouseWheel) * (window.Span / TimeDivisions));
@@ -292,6 +321,19 @@ namespace OpenEphys.Onix1.Design
 
             rangeAmplitude = standardRanges[Math.Max(0, Math.Min(standardRanges.Length - 1, i))];
         }
+
+        static float ChannelStep(in RowLayout layout)
+        {
+            var visibleRows = Math.Max(1, layout.LastVisible - layout.FirstVisible);
+            return Modifiers(shift: true)
+                ? (int)(visibleRows * CoarsePanFraction) * layout.RowHeight
+                : layout.RowHeight;
+        }
+
+        // NB: the same relationship to a window as ChannelStep has to the channels in view.
+        long PanStep() => Modifiers(shift: true)
+            ? (long)(window.Span * CoarsePanFraction)
+            : window.Span / TimeDivisions;
 
         /// <summary>
         /// Selects the next shown channel in <paramref name="direction"/>, and brings it into view: expanded in

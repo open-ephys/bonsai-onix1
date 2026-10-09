@@ -97,6 +97,7 @@ namespace OpenEphys.Onix1.Design
                 selectOnShow = false;
                 ChannelLabels(layout, labelDigits, hovered);
                 HandleChannelInput(hovered);
+                AnswerTableKeys(layout);
                 HandleZoomInput(layout);
 
                 ImGui.TableNextColumn();

@@ -162,20 +162,11 @@ namespace OpenEphys.Onix1.Design
                 Size = new System.Drawing.Size(1100, 620),
                 Dock = DockStyle.Fill
             };
-            canvas.HoverKeys.Add(Keys.Space);
-            canvas.HoverKeys.Add(Keys.W);
-            canvas.HoverKeys.Add(Keys.A);
-            canvas.HoverKeys.Add(Keys.S);
-            canvas.HoverKeys.Add(Keys.D);
+            canvas.HoverKeys.UnionWith(waveform.Hotkeys);
+
+            // NB: the probe selector's, for its ruler.
             canvas.HoverKeys.Add(Keys.R);
-            canvas.HoverKeys.Add(Keys.C);
-            canvas.HoverKeys.Add(Keys.H);
-            canvas.HoverKeys.Add(Keys.F);
-            canvas.HoverKeys.Add(Keys.X);
-            canvas.HoverKeys.Add(Keys.Escape);
             canvas.HoverKeys.Add(Keys.Delete);
-            canvas.HoverKeys.Add(Keys.Q);
-            canvas.HoverKeys.Add(Keys.E);
             canvas.Render += RenderFrame;
 
             // NB: paced from the handle's lifetime rather than Load's, since a handle can be recreated.

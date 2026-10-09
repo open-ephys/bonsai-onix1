@@ -48,6 +48,8 @@ namespace OpenEphys.Onix1.Design
 
             this.historyBytes = historyBytes;
             this.maxColumns = maxColumns;
+            frameKeys = FrameKeys();
+            tableKeys = TableKeys();
         }
 
         readonly WaveformCursors cursors = new();
@@ -288,19 +290,9 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         public void Draw()
         {
-            // NB: ahead of the envelope, which resuming disposes. Handling it with the other
+            // NB: ahead of the envelope, which resuming with Space disposes. Answering it with the other
             // gestures would free the matrices the plot is about to read.
-            if (HotkeyPressed(ImGuiKey.Space))
-                Paused = !Paused;
-
-            if (HotkeyPressed(ImGuiKey.C, false))
-                ShowCursors = !ShowCursors;
-
-            if (HotkeyPressed(ImGuiKey.H, false))
-                ShowHeatmap = !ShowHeatmap;
-
-            if (HotkeyPressed(ImGuiKey.F, false))
-                FitChannels = !FitChannels;
+            AnswerFrameKeys();
 
             // NB: also here and not only in Update, so a timebase change takes effect while no data is
             // arriving, as when paused after acquisition has stopped.
