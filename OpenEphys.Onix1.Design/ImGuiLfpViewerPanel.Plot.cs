@@ -1,0 +1,682 @@
+﻿using System;
+using System.Numerics;
+using Hexa.NET.ImGui;
+using Hexa.NET.Utilities.Text;
+using OpenCV.Net;
+
+namespace OpenEphys.Onix1.Design
+{
+    partial class ImGuiLfpViewerPanel
+    {
+        const int TimeDivisions = 10;
+
+        // visual constants
+        const uint ColSweepCursor = ImGuiPalette.Yellow;
+        const float SweepCursorWeight = 1;
+        const uint ColGraticule = ImGuiPalette.Grey0x88;
+        const float GraticuleWeight = 1;
+        const int AmplitudeDivisions = 10;
+        const uint ColDivision = ImGuiPalette.Grey0x55;
+        const float DivisionDotGap = 3;
+        const float HoverLineWeight = 3;
+        const uint ColHoveredRow = ImGuiPalette.Grey0x99;
+        const uint ColClipping = ImGuiPalette.Red;
+        static readonly uint ColSelectedRow = ImGuiPalette.WithAlpha(ImGuiPalette.White, 0x20);
+
+        static readonly uint ColFrozenTail = ImGuiPalette.WithAlpha(ImGuiPalette.Black, 0x80);
+
+        /// <summary>
+        /// Color and weight of the plot's frame, for the control strip's divider to match.
+        /// </summary>
+        public const uint FrameColor = ColGraticule;
+        public const float FrameWeight = GraticuleWeight;
+        const float HoverFillAlpha = 0.65f;
+
+        float plotLeft;
+        float plotSpan;
+        float visibleHeight;
+
+        readonly TraceRaster traces = new();
+
+        /// <summary>
+        /// Where the window's columns fall on the plot's pixels, from the plot as last laid out.
+        /// </summary>
+        PixelAxis Axis => new(window, plotLeft, plotSpan);
+
+        /// <summary>
+        /// Lays out the label column and the plot. Each channel's row is centered on zero with +/- range / 2 at its
+        /// edges, and a trace that exceeds its range runs into the neighboring channels' rows rather than being
+        /// clipped at its own.
+        /// </summary>
+        /// <remarks>
+        /// The graticules go in this window's draw list rather than the table's, so they stay put while the
+        /// channels scroll, and lie under the traces.
+        /// </remarks>
+        /// <param name="envelope">Per-column minima and maxima, one row per channel.</param>
+        /// <param name="shown">The window <paramref name="envelope"/> holds, which the frame is drawn in.</param>
+        void WaveformPlot(Envelope envelope, DisplayWindow shown)
+        {
+            var rows = envelope.Rows;
+            var labelDigits = DigitCount(rows - 1);
+            if (amplitudeView.Channel != expandedChannel || amplitudeView.Range != rangeAmplitude)
+                amplitudeView.Channel = -1;
+
+
+            // NB: the axis labels get a button-height row, so the plot's frame starts one button-height down.
+            var headerHeight = ImGui.GetFrameHeight();
+            var labelY = ImGui.GetCursorScreenPos().Y + ImGui.GetStyle().FramePadding.Y;
+            ImGui.SetCursorPosY(ImGui.GetCursorPosY() + headerHeight);
+
+            var scrollHeight = ImGui.GetStyle().ScrollbarSize;
+            var scrollGap = ImGui.GetStyle().ItemSpacing.Y / 2;
+            var plotTop = ImGui.GetCursorScreenPos().Y;
+            var tableHeight = ImGui.GetContentRegionAvail().Y - scrollHeight - scrollGap;
+            var plotBottom = plotTop + tableHeight;
+            var plotX = 0f;
+            var plotWidth = 0f;
+            var frame = default(PlotFrame);
+
+            // NB: the rows scroll in a child of their own that the wheel does not scroll, so that every wheel gesture
+            // over them, plain or with modifiers, is the panel's to answer (HandleWheel). With no padding, as the
+            // table that scrolled them before had none.
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+            var rowsOpen = ImGui.BeginChild("##rows", new Vector2(-1, tableHeight), ImGuiChildFlags.None,
+                ImGuiWindowFlags.NoScrollWithMouse);
+            ImGui.PopStyleVar();
+
+            if (rowsOpen && ImGui.BeginTable("##table", 2, ImGuiTableFlags.NoSavedSettings))
+            {
+                ImGui.TableSetupColumn(string.Empty, ImGuiTableColumnFlags.WidthFixed, LabelColumnWidth(labelDigits));
+                ImGui.TableSetupColumn(string.Empty);
+                RestoreScrollIfPending();
+
+                ImGui.TableNextRow();
+                ImGui.TableNextColumn();
+
+                // NB: measured inside the cell, which leaves out the row's padding, so that rows fitted to it fill
+                // the table without scrolling.
+                visibleHeight = ImGui.GetContentRegionAvail().Y;
+                var layout = LayoutRows(rows, plotTop, plotBottom, ImGui.GetCursorScreenPos().Y,
+                    ImGui.GetContentRegionAvail().Y);
+                var hovered = HoveredChannel(layout);
+                if (selectedChannel >= rows)
+                    selectedChannel = -1;
+                if (selectOnShow && selectedChannel < 0)
+                    selectedChannel = FirstShownInView(layout);
+                selectOnShow = false;
+                ChannelLabels(layout, labelDigits, hovered);
+                HandleChannelInput(hovered);
+                AnswerTableKeys(layout);
+                HandleWheel(layout);
+                HandleDrags(layout);
+
+                ImGui.TableNextColumn();
+                plotX = ImGui.GetCursorScreenPos().X;
+                plotWidth = ImGui.GetContentRegionAvail().X;
+                var resized = plotWidth != plotSpan;
+                plotLeft = plotX;
+                plotSpan = plotWidth;
+
+                // NB: the cells follow the plot's width, so a resized plot puts the window back on a cell boundary.
+                if (resized && CanPan)
+                    SetWindow(window);
+                frame = new PlotFrame(
+                    envelope, layout, new PixelAxis(shown, plotLeft, plotSpan), plotTop, plotBottom,
+                    sampleRate, Paused, CursorPosition, timebase, pausedTimebase,
+                    AmplitudeView.Span, AmplitudeView.Center, Unit, channelHidden, expandedChannel, selectedChannel, ShowHeatmap, ColorThreshold);
+
+                // NB: an item the height of every row, which is what the table scrolls through. Everything in the
+                // plot is drawn rather than laid out.
+                ImGui.Dummy(new Vector2(plotWidth, layout.Height));
+                var draw = ImGui.GetWindowDrawList();
+                DrawRowBand(draw, frame);
+                traces.Draw(frame, Colors.Packed(channelHidden.Length),
+                    Paused ? -1 : decimator.Cursor, history?.Count ?? 0);
+
+                // NB: a trace that runs off its row may run into its neighbors but not past the rows, which can
+                // end above the plot's bottom when there are few channels.
+                draw.PushClipRect(new Vector2(plotX, layout.Origin),
+                    new Vector2(plotX + plotWidth, layout.Origin + layout.Height), true);
+                if (expandedChannel >= 0)
+                    DrawChannelLines(draw, frame, expandedChannel, 1);
+                else if (hovered >= 0 && !channelHidden[hovered] && !ShowHeatmap)
+                    DrawChannelLines(draw, frame, hovered, HoverLineWeight);
+                DrawSweepCursor(draw, frame);
+                draw.PopClipRect();
+
+                ShadeFrozenTail(draw, frame.Axis, plotX, plotWidth, plotTop, plotBottom);
+
+                // NB: a heatmap row has no line to thicken and covers the band, so the hovered and selected rows
+                // are marked from outside, which also ties a label to its row when rows are far shorter than it.
+                if (ShowHeatmap && expandedChannel < 0 && hovered >= 0 && !channelHidden[hovered])
+                    BracketRow(draw, frame, hovered, ColHoveredRow);
+                if (ShowHeatmap && expandedChannel < 0 && selectedChannel >= 0)
+                    BracketRow(draw, frame, selectedChannel, WaveformCursors.Color);
+                // NB: ahead of the cursors so the don't compete for a click on [CLIPPING] in the plot area.
+                DrawClipping(draw, frame);
+                cursors.Draw(draw, frame);
+                SelectClicked(frame, hovered);
+                DrawFrame(draw, plotX, plotWidth, plotTop, plotBottom);
+                DrawReadout(draw, frame, hovered);
+                AmplitudeLabels(draw, frame, plotX, plotTop, plotBottom);
+                ImGui.EndTable();
+            }
+            ImGui.EndChild();
+
+            if (plotWidth > 0)
+            {
+                DrawGraticules(ImGui.GetWindowDrawList(), frame.Axis, plotX, plotWidth, plotTop, plotBottom, labelY);
+                cursors.DrawTimeLabels(ImGui.GetWindowDrawList(), frame, labelY);
+                TimeScrollBar(plotX, plotWidth, plotBottom + scrollGap, scrollHeight);
+
+                // NB: last, so that its window is drawn over the table's and takes the pointer from it.
+                if (cursors.DrawTable(frame) is long center)
+                    CenterOn(center);
+            }
+        }
+
+        /// <summary>
+        /// Veils the part of a paused plot that is still showing the tail of the previous sweep.
+        /// </summary>
+        /// <remarks>
+        /// Everything right of the cursor is older than everything left of it, and appears again elsewhere in
+        /// the history. The shading marks it as stale.
+        /// </remarks>
+        void ShadeFrozenTail(ImDrawListPtr draw, in PixelAxis axis, float left, float width, float top, float bottom)
+        {
+            if (!Paused)
+                return;
+
+            var shown = axis.Window;
+            var split = Math.Max(shown.Start, Math.Min(shown.End, CursorPosition));
+            if (split >= shown.End)
+                return;
+
+            var x = axis.X(split);
+            draw.AddRectFilled(
+                new Vector2(x, MathF.Floor(top) + GraticuleWeight),
+                new Vector2(MathF.Floor(left + width) - GraticuleWeight, MathF.Floor(bottom) - GraticuleWeight),
+                ColFrozenTail);
+        }
+
+        /// <summary>
+        /// The time the axis labels give <paramref name="position"/>: live, from the start of the sweep; paused,
+        /// before the moment of pausing, with the frozen tail a whole paused timebase older.
+        /// </summary>
+        internal static double SecondsAt(in PlotFrame frame, double position)
+        {
+            var origin = frame.Paused ? frame.PauseOrigin : 0;
+            var seconds = (position - origin) / frame.Window.Span * frame.Timebase;
+            return frame.Paused && position > origin ? seconds - frame.PausedTimebase : seconds;
+        }
+
+        /// <summary>
+        /// Shows the channel, time and amplitude under the pointer in the plot's lower right corner.
+        /// </summary>
+        /// <remarks>
+        /// The time reads as the time axis labels do, and the amplitude from the center of the channel's row.
+        /// </remarks>
+        void DrawReadout(ImDrawListPtr draw, in PlotFrame frame, int hovered)
+        {
+            var mouse = ImGui.GetMousePos();
+            if (hovered < 0 || mouse.X < frame.Left || mouse.X >= frame.Left + frame.Width)
+                return;
+
+            var seconds = SecondsAt(frame, frame.Axis.PositionAt(mouse.X));
+            var amplitude = frame.ValueAt(hovered, mouse.Y);
+
+            // NB: an expanded channel is named in the plot's top left already.
+            var position = $"{seconds:0.0000} s   {amplitude:0.0} {frame.Unit}";
+            var text = frame.Expanded >= 0 ? position : $"Ch {hovered}   {position}";
+            var corner = new Vector2(frame.Left + frame.Width, frame.Bottom) - ImGui.CalcTextSize(text) -
+                2 * ImGui.GetStyle().FramePadding;
+            PlotText.Framed(draw, corner, text);
+        }
+
+        /// <summary>
+        /// A horizontal bar below the plot showing where the window sits on the axis, which can be dragged
+        /// to move it.
+        /// </summary>
+        /// <remarks>
+        /// Drawn rather than taken from ImGui, which scrolls its own containers and has no notion of this
+        /// axis. It is styled from the scrollbar colors so that it reads as one alongside the channel
+        /// scrollbar it sits under.
+        /// </remarks>
+        void TimeScrollBar(float left, float width, float top, float height)
+        {
+            var axisFirst = Paused && history is not null ? AxisFirst : window.Start;
+            var axisLast = Paused && history is not null ? AxisLast : window.End;
+            var travel = Math.Max(0, axisLast - axisFirst - window.Span);
+
+            // NB: the thumb sits inside the track by the same margin ImGui gives its own grabs, which is
+            // most of what makes a scrollbar read as one rather than as a filled bar.
+            var inset = Math.Max(0f, Math.Min(3f, MathF.Floor((height - 2f) / 2f)));
+            var trackLeft = left + inset;
+            var trackWidth = width - 2 * inset;
+
+            // NB: the thumb keeps a minimum width so that a window which is a thousandth of the axis is
+            // still something to aim at, which costs a little of the travel it stands for.
+            var reach = (double)(travel + window.Span);
+            var thumbWidth = Math.Max(ImGui.GetStyle().GrabMinSize, (float)(trackWidth * window.Span / reach));
+            var slack = trackWidth - thumbWidth;
+            var thumbX = travel > 0
+                ? trackLeft + slack * (float)((window.Start - axisFirst) / (double)travel)
+                : trackLeft;
+
+            ImGui.SetCursorScreenPos(new Vector2(left, top));
+            ImGui.InvisibleButton("##timescroll", new Vector2(width, height));
+
+            if (ImGui.IsItemActive() && travel > 0 && slack > 0)
+                Pan(-(long)(ImGui.GetIO().MouseDelta.X * (travel / slack)));
+
+            var rounding = ImGui.GetStyle().ScrollbarRounding;
+            var grab = ImGui.IsItemActive() ? ImGuiCol.ScrollbarGrabActive
+                : ImGui.IsItemHovered() ? ImGuiCol.ScrollbarGrabHovered
+                : ImGuiCol.ScrollbarGrab;
+
+            var draw = ImGui.GetWindowDrawList();
+            draw.AddRectFilled(new Vector2(left, top), new Vector2(left + width, top + height),
+                ImGui.GetColorU32(ImGuiCol.ScrollbarBg), rounding);
+            draw.AddRectFilled(
+                new Vector2(thumbX, top + inset), new Vector2(thumbX + thumbWidth, top + height - inset),
+                ImGui.GetColorU32(grab), rounding);
+        }
+
+        /// <summary>
+        /// The rows the plot spans this frame and where they fall on screen: every channel at
+        /// <see cref="ChannelHeight"/>, or the expanded channel alone filling the visible height.
+        /// </summary>
+        internal readonly struct RowLayout
+        {
+            public readonly int FirstRow;
+            public readonly int LastRow;
+            public readonly float RowHeight;
+            public readonly float Top;
+            public readonly float Bottom;
+            public readonly float Origin;
+
+            public RowLayout(int firstRow, int lastRow, float rowHeight, float top, float bottom, float origin)
+            {
+                FirstRow = firstRow;
+                LastRow = lastRow;
+                RowHeight = rowHeight;
+                Top = top;
+                Bottom = bottom;
+                Origin = origin;
+            }
+
+            public float Height => (LastRow - FirstRow) * RowHeight;
+            public int FirstVisible => Math.Max(FirstRow, ChannelAt(Top));
+            public int LastVisible => Math.Min(LastRow, FirstRow + (int)Math.Ceiling((Bottom - Origin) / RowHeight));
+            public float RowTop(int channel) => Origin + (channel - FirstRow) * RowHeight;
+            public int ChannelAt(float y) => FirstRow + (int)Math.Floor((y - Origin) / RowHeight);
+        }
+
+        RowLayout LayoutRows(int rows, float top, float bottom, float origin, float available)
+        {
+            if (expandedChannel >= rows)
+                Collapse();
+
+            return expandedChannel >= 0
+                ? new RowLayout(expandedChannel, expandedChannel + 1, available, top, bottom, origin)
+                : new RowLayout(0, rows, ChannelHeight, top, bottom, origin);
+        }
+
+        static float LabelColumnWidth(int labelDigits) => labelDigits * ImGui.CalcTextSize("0").X;
+
+        static readonly int[] LabelSteps = { 1, 2, 5, 10 };
+
+        unsafe void ChannelLabels(in RowLayout layout, int labelDigits, int hovered)
+        {
+            var labelBuffer = stackalloc byte[32];
+            var label = new StrBuilder(labelBuffer, 32);
+            var labelTop = ImGui.GetCursorPosY();
+            var textOffset = (layout.RowHeight - ImGui.GetTextLineHeight()) / 2;
+            var left = ImGui.GetCursorScreenPos().X;
+            var right = left + ImGui.GetContentRegionAvail().X;
+            var draw = ImGui.GetWindowDrawList();
+
+            // NB: rows shorter than the text get every 2nd, 5th or 10th label, the smallest step whose labels
+            // clear each other. The hovered channel and the one the cursors read are always labeled, and the
+            // stepped labels they would overlap give way to them.
+            var lineHeight = ImGui.GetTextLineHeight();
+            var rowHeight = layout.RowHeight;
+            var step = LabelSteps[LabelSteps.Length - 1];
+            foreach (var candidate in LabelSteps)
+            {
+                if (candidate * rowHeight >= lineHeight)
+                {
+                    step = candidate;
+                    break;
+                }
+            }
+
+            var selected = selectedChannel;
+            bool Crowds(int channel, int priority) =>
+                priority >= 0 && priority != channel && Math.Abs(channel - priority) * rowHeight < lineHeight;
+
+            // NB: an expanded channel is named inside the plot instead, by AmplitudeLabels.
+            for (int i = layout.FirstVisible; i < layout.LastVisible && expandedChannel < 0; i++)
+            {
+                label.Reset();
+                for (var n = DigitCount(i); n < labelDigits; n++)
+                    label.Append('0');
+                label.Append(i);
+                label.End();
+
+                // NB: at least as tall as the label, centered on the row as the label is, so that on a row shorter
+                // than the text the highlight frames it rather than striking it through.
+                var markHeight = Math.Max(layout.RowHeight, lineHeight);
+                var markTop = layout.RowTop(i) + (layout.RowHeight - markHeight) / 2;
+
+                // NB: a clipping channel's label flashes, in step with the plot's CLIPPING, and is always written.
+                var clipping = Clipping(i);
+                if (clipping && ClipFlashOn)
+                    draw.AddRectFilled(new Vector2(left, markTop), new Vector2(right, markTop + markHeight), ColClipping);
+
+                // Highlight hovered channel and the selected one
+                if ((i == hovered || i == selected) && expandedChannel < 0)
+                {
+                    var fill = Colors.Of(i);
+                    fill.W = HoverFillAlpha;
+                    draw.AddRectFilled(new Vector2(left, markTop), new Vector2(right, markTop + markHeight),
+                        ImGui.ColorConvertFloat4ToU32(fill));
+                }
+
+                if (i == selected && expandedChannel < 0)
+                {
+                    var boxTop = MathF.Floor(markTop);
+                    draw.AddRect(new Vector2(left, boxTop), new Vector2(right, boxTop + markHeight), WaveformCursors.Color);
+                }
+
+                if (i != hovered && i != selected && !clipping &&
+                    (i % step != 0 || Crowds(i, hovered) || Crowds(i, selected)))
+                    continue;
+
+                var hidden = channelHidden[i];
+                if (hidden) ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled));
+                ImGui.SetCursorPosY(labelTop + (i - layout.FirstRow) * layout.RowHeight + textOffset);
+                ImGui.Text(label);
+                if (hidden) ImGui.PopStyleColor();
+            }
+        }
+
+        static int DigitCount(int value)
+        {
+            var digits = 1;
+            for (; value >= 10; value /= 10)
+                digits++;
+            return digits;
+        }
+
+        /// <summary>
+        /// Outlines a channel's trace, its max and min, or the line through its samples where each column holds
+        /// one. Drawn every frame over the traces' texture, for the one channel hovered or expanded.
+        /// </summary>
+        unsafe void DrawChannelLines(ImDrawListPtr draw, in PlotFrame frame, int channel, float weight)
+        {
+            frame.Envelope.Min.GetRawData(out IntPtr minPtr, out int minStep, out Size shape);
+            frame.Envelope.Max.GetRawData(out IntPtr maxPtr, out int maxStep, out Size _);
+            var minLine = (float*)((byte*)minPtr + channel * minStep);
+            var maxLine = (float*)((byte*)maxPtr + channel * maxStep);
+            var columns = shape.Width;
+            var axis = frame.Axis;
+
+            // NB: a point per pixel where pixels combine columns, read as the texture beneath reads them, or else
+            // one per column, at its left edge.
+            var points = axis.Combines ? axis.Width : columns;
+            var low = stackalloc Vector2[points];
+            var high = stackalloc Vector2[points];
+            for (int i = 0; i < points; i++)
+            {
+                var (min, max) = axis.Combines ? TraceRaster.Bin(minLine, maxLine, axis, i) : (minLine[i], maxLine[i]);
+                var x = axis.Combines ? axis.Left + i : axis.ColumnX(i);
+                low[i] = new Vector2(x, frame.ValueY(channel, min));
+                high[i] = new Vector2(x, frame.ValueY(channel, max));
+            }
+
+            var color = ImGui.ColorConvertFloat4ToU32(Colors.Of(channel));
+            Segments(draw, low, points, color, weight);
+            if (frame.Window.Step > 1 || axis.Combines && points < columns)
+                Segments(draw, high, points, color, weight);
+        }
+
+        // NB: one segment at a time rather than a polyline, whose mitred joins overshoot a sharp turn by many
+        // pixels on a noisy trace. A segment touching a column that holds nothing is left out, so empty columns
+        // are a gap. AddLine moves its ends half a pixel, which is taken back.
+        static unsafe void Segments(ImDrawListPtr draw, Vector2* points, int count, uint color, float weight)
+        {
+            var half = new Vector2(0.5f);
+            for (int i = 1; i < count; i++)
+            {
+                if (!float.IsNaN(points[i - 1].Y) && !float.IsNaN(points[i].Y))
+                    draw.AddLine(points[i - 1] - half, points[i] - half, color, weight);
+            }
+        }
+
+        /// <summary>
+        /// Marks the column being written, or where the display was paused.
+        /// </summary>
+        void DrawSweepCursor(ImDrawListPtr draw, in PlotFrame frame)
+        {
+            if (FastSweep)
+                return;
+
+            // NB: paused, the pause instant, which can fall partway through a column.
+            var shown = frame.Window;
+            var position = Paused ? CursorPosition : shown.PositionOf(decimator.Cursor);
+            if (position < shown.Start || position >= shown.End)
+                return;
+
+            // NB: on the pixel the position is drawn in. AddLine moves its ends half a pixel, which centers the line
+            // on that pixel, and is taken back vertically.
+            var x = frame.Axis.X(position);
+            var top = frame.Layout.Origin - 0.5f;
+            draw.AddLine(new Vector2(x, top), new Vector2(x, top + frame.Layout.Height), ColSweepCursor, SweepCursorWeight);
+        }
+
+        /// <summary>
+        /// Shades the row of the selected channel.
+        /// </summary>
+        /// <remarks>
+        /// Drawn ahead of the traces, so the selection is marked without anything drawn over the trace. Not in the
+        /// heatmap, which covers it, and where lines above and below the row mark it instead.
+        /// </remarks>
+        static void DrawRowBand(ImDrawListPtr draw, in PlotFrame frame)
+        {
+            if (frame.Selected < 0 || frame.Expanded >= 0 || frame.Heatmap)
+                return;
+
+            var top = MathF.Floor(frame.Layout.RowTop(frame.Selected));
+            draw.AddRectFilled(new Vector2(frame.Left, top),
+                new Vector2(frame.Left + frame.Width, top + frame.Layout.RowHeight), ColSelectedRow);
+        }
+
+        // NB: after the cursors, so that a click that grabs a cursor's line does not also select.
+        void SelectClicked(in PlotFrame frame, int hovered)
+        {
+            var pointer = ImGui.GetMousePos();
+            var inPlot = ImGui.IsWindowHovered() && !ImGui.IsAnyItemHovered() &&
+                pointer.X >= frame.Left && pointer.X < frame.Left + frame.Width &&
+                pointer.Y >= frame.Top && pointer.Y < frame.Bottom;
+            if (inPlot && !cursors.Dragging && hovered >= 0 && !channelHidden[hovered] && expandedChannel < 0 &&
+                ImGui.IsMouseClicked(ImGuiMouseButton.Left) && Modifiers())
+            {
+                selectedChannel = hovered;
+            }
+        }
+
+        /// <summary>
+        /// Flashes CLIPPING in the plot's top right corner while any channel is clipping, as a scope's overload
+        /// light does, as a button that brings the first clipping channel into view.
+        /// </summary>
+        void DrawClipping(ImDrawListPtr draw, in PlotFrame frame)
+        {
+            var first = -1;
+            for (int c = 0; c < lastClip.Length && first < 0; c++)
+            {
+                if (Clipping(c))
+                    first = c;
+            }
+
+            if (first < 0)
+                return;
+
+            const string Text = "CLIPPING";
+            var pad = ImGui.GetStyle().FramePadding;
+            var size = ImGui.CalcTextSize(Text);
+            var corner = new Vector2(frame.Left + frame.Width - size.X - 2 * pad.X, frame.Top + 2 * pad.Y);
+
+            // NB: only the text flashes, so that a click is never lost to the dark half of a flash.
+            ImGui.SetCursorScreenPos(corner - pad);
+            if (ImGui.InvisibleButton("##clipping", size + 2 * pad))
+                ShowChannel(first, frame.Layout);
+
+            var rounding = ImGui.GetStyle().ChildRounding;
+            var fill = ImGui.IsItemHovered() ? ImGui.GetColorU32(ImGuiCol.ButtonHovered) : PlotText.LabelBackground;
+            draw.AddRectFilled(corner - pad, corner + size + pad, fill, rounding);
+            draw.AddRect(corner - pad, corner + size + pad, ColClipping, rounding);
+            if (ClipFlashOn)
+                draw.AddText(corner, ColClipping, Text);
+        }
+
+        // NB: If not expanxed, center the channel. If expanded, show that channel in expanded view.
+        void ShowChannel(int channel, in RowLayout layout)
+        {
+            if (expandedChannel >= 0)
+            {
+                expandedChannel = channel;
+                return;
+            }
+
+            var center = layout.RowTop(channel) + layout.RowHeight / 2;
+            ImGui.SetScrollY(ImGui.GetScrollY() + center - (layout.Top + layout.Bottom) / 2);
+        }
+
+        /// <summary>
+        /// Marks a channel's row with a line just above it and another just below, leaving the row as drawn.
+        /// </summary>
+        internal static void BracketRow(ImDrawListPtr draw, in PlotFrame frame, int channel, uint color)
+        {
+            var top = MathF.Floor(frame.Layout.RowTop(channel));
+            var bottom = MathF.Floor(frame.Layout.RowTop(channel) + frame.Layout.RowHeight);
+            var right = frame.Left + frame.Width;
+            draw.AddRectFilled(new Vector2(frame.Left, top - 1), new Vector2(right, top), color);
+            draw.AddRectFilled(new Vector2(frame.Left, bottom), new Vector2(right, bottom + 1), color);
+        }
+
+        // NB: filled rects on whole pixels, here and in DrawGraticules and BracketRow. AddRect and AddLine draw
+        // half a pixel off and anti-alias, which blurs a 1 px line.
+        static void DrawFrame(ImDrawListPtr draw, float left, float width, float top, float bottom)
+        {
+            var l = MathF.Floor(left);
+            var r = MathF.Floor(left + width);
+            var t = MathF.Floor(top);
+            var b = MathF.Floor(bottom);
+            var w = GraticuleWeight;
+            draw.AddRectFilled(new Vector2(l, t), new Vector2(r, t + w), ColGraticule);
+            draw.AddRectFilled(new Vector2(l, b - w), new Vector2(r, b), ColGraticule);
+            draw.AddRectFilled(new Vector2(l, t), new Vector2(l + w, b), ColGraticule);
+            draw.AddRectFilled(new Vector2(r - w, t), new Vector2(r, b), ColGraticule);
+        }
+
+        /// <summary>
+        /// Draws the time divisions and their labels.
+        /// </summary>
+        /// <remarks>
+        /// Live, zero is the start of the sweep. Paused, zero is the cursor and every label is how long before
+        /// the pause that sample was taken, so the frozen tail right of the cursor reads oldest. Divisions are
+        /// fixed to positions on the axis rather than to the plot, so they pan with the data.
+        /// </remarks>
+        void DrawGraticules(
+            ImDrawListPtr draw, in PixelAxis axis, float left, float width, float top, float bottom, float labelY)
+        {
+            var shown = axis.Window;
+            var t = MathF.Floor(top) + GraticuleWeight;
+            var b = MathF.Floor(bottom) - GraticuleWeight;
+            var textColor = ImGui.GetColorU32(ImGuiCol.Text);
+
+            // NB: a tenth of the window's span, not of the timebase. The span is a whole number of columns
+            // and slightly shorter, so a tenth of the timebase would not fit ten times and the last
+            // division would flicker. Labels still show the round timebase.
+            var interval = shown.Span / (double)TimeDivisions;
+            var origin = Paused ? CursorPosition : 0;
+
+            for (var d = (long)Math.Ceiling((shown.Start - origin) / interval);
+                 d <= (long)Math.Floor((shown.End - origin) / interval);
+                 d++)
+            {
+                var position = origin + d * interval;
+                var x = axis.X(position);
+
+                // NB: skip divisions on the edges, where the frame already draws a line.
+                var l = MathF.Floor(x);
+                if (l > left + 1 && l < left + width - 1)
+                    DivisionDots(draw, new Vector2(l, t), b - t, vertical: true);
+
+                // NB: one spacing across the whole plot, so labels on either side of the cursor never
+                // overlap. Right of the cursor is the frozen tail, a whole frozen window older.
+                var seconds = d * timebase / TimeDivisions;
+                if (Paused && position > CursorPosition)
+                    seconds -= pausedTimebase;
+
+                var label = $"{seconds:g} s";
+                draw.AddText(new Vector2(x - ImGui.CalcTextSize(label).X / 2, labelY), textColor, label);
+            }
+
+            if (expandedChannel < 0)
+                return;
+
+            // NB: an expanded channel fills the plot, so its row is the plot, and a tenth of the range is a
+            // tenth of the height. The outermost divisions lie on the frame.
+            var l0 = MathF.Floor(left) + GraticuleWeight;
+            for (int k = 1; k < AmplitudeDivisions; k++)
+                DivisionDots(draw, new Vector2(l0, MathF.Floor(AmplitudeDivisionY(k, top, bottom))),
+                    MathF.Floor(left + width) - GraticuleWeight - l0, vertical: false);
+        }
+
+        /// <summary>
+        /// Height on screen of amplitude division <paramref name="k"/> of an expanded channel, counted down from
+        /// the top of the plot.
+        /// </summary>
+        static float AmplitudeDivisionY(int k, float top, float bottom) =>
+            top + (bottom - top) * k / AmplitudeDivisions;
+
+        /// <summary>
+        /// Labels an expanded channel's amplitude divisions down the left of the plot, and names the channel
+        /// and both scales in its top left corner.
+        /// </summary>
+        /// <remarks>
+        /// Drawn over the traces, where the divisions themselves are drawn under them.
+        /// </remarks>
+        void AmplitudeLabels(ImDrawListPtr draw, in PlotFrame frame, float left, float top, float bottom)
+        {
+            if (expandedChannel < 0)
+                return;
+
+            var pad = ImGui.GetStyle().FramePadding;
+            var color = ImGui.GetColorU32(ImGuiCol.TextDisabled);
+            for (int k = 1; k < AmplitudeDivisions; k++)
+            {
+                var text = $"{PlotText.Significant(frame.Center + frame.Range * (AmplitudeDivisions / 2 - k) / AmplitudeDivisions)}";
+                var y = AmplitudeDivisionY(k, top, bottom) - ImGui.GetTextLineHeight() / 2;
+                draw.AddText(new Vector2(left + pad.X, y), color, text);
+            }
+
+            var timeDivision = timebase / TimeDivisions;
+            var time = timeDivision < 1 ? $"{PlotText.Significant(timeDivision * 1000)} ms/div" : $"{PlotText.Significant(timeDivision)} s/div";
+            var name = $"Ch {expandedChannel}   {PlotText.Significant(frame.Range / AmplitudeDivisions)} {Unit}/div   {time}";
+            PlotText.Framed(draw, new Vector2(left, top) + 2 * pad, name);
+        }
+
+        static void DivisionDots(ImDrawListPtr draw, Vector2 start, float length, bool vertical)
+        {
+            // NB: whole-pixel rects, as for the frame, since a 1 px line drawn any other way blurs.
+            for (var d = 0f; d < length; d += GraticuleWeight + DivisionDotGap)
+            {
+                var at = vertical ? start + new Vector2(0, d) : start + new Vector2(d, 0);
+                draw.AddRectFilled(at, at + new Vector2(GraticuleWeight), ColDivision);
+            }
+        }
+    }
+}

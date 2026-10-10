@@ -43,18 +43,6 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that controls if the channels are ordered by depth.
-        /// </summary>
-        /// <remarks>
-        /// If <see cref="OrderByDepth"/> is false, then channels are ordered from 0 to 383. 
-        /// If <see cref="OrderByDepth"/> is true, then channels are ordered based on the depth
-        /// of the electrodes.
-        /// </remarks>
-        [Description("Determines if the channels are returned ordered by depth.")]
-        [Category(DeviceFactory.ConfigurationCategory)]
-        public bool OrderByDepth { get; set; } = false;
-
-        /// <summary>
         /// Generates a sequence of <see cref="NeuropixelsV1DataFrame"/> objects.
         /// </summary>
         /// <returns>A sequence of <see cref="NeuropixelsV1DataFrame"/> objects.</returns>
@@ -62,31 +50,24 @@ namespace OpenEphys.Onix1
         {
             var spikeBufferSize = BufferSize;
             var lfpBufferSize = spikeBufferSize / NeuropixelsV1.FramesPerRoundRobin;
-            var bufferSize = BufferSize;
-            var orderByDepth = OrderByDepth;
 
             return DeviceManager.GetDevice(DeviceName).SelectMany(
                 deviceInfo => Observable.Create<NeuropixelsV1DataFrame>(observer =>
                 {
                     var sampleIndex = 0;
                     var info = (NeuropixelsV1fDeviceInfo)deviceInfo;
-                    if (info.ProbeGroup == null)
-                    {
-                        throw new NullReferenceException($"No ProbeGroup found for {nameof(NeuropixelsV1f)}.");
-                    }
                     var device = info.GetDeviceContext(typeof(NeuropixelsV1f));
                     var spikeBuffer = new ushort[NeuropixelsV1.ChannelCount, spikeBufferSize];
                     var lfpBuffer = new ushort[NeuropixelsV1.ChannelCount, lfpBufferSize];
                     var frameCountBuffer = new int[spikeBufferSize * NeuropixelsV1.FramesPerSuperFrame];
                     var hubClockBuffer = new ulong[spikeBufferSize];
                     var clockBuffer = new ulong[spikeBufferSize];
-                    int[,] channelOrder = orderByDepth ? Neuropixels.OrderChannelsByDepth(info.ProbeGroup, RawToChannel) : RawToChannel;
 
                     var frameObserver = Observer.Create<oni.Frame>(
                         frame =>
                         {
                             var payload = (NeuropixelsV1fPayload*)frame.Data.ToPointer();
-                            NeuropixelsV1fDataFrame.CopyAmplifierBuffer(payload->AmplifierData, frameCountBuffer, spikeBuffer, lfpBuffer, sampleIndex, channelOrder);
+                            NeuropixelsV1fDataFrame.CopyAmplifierBuffer(payload->AmplifierData, frameCountBuffer, spikeBuffer, lfpBuffer, sampleIndex, RawToChannel);
                             hubClockBuffer[sampleIndex] = payload->HubClock;
                             clockBuffer[sampleIndex] = frame.Clock;
 

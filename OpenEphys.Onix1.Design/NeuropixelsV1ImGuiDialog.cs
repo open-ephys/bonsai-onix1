@@ -239,8 +239,8 @@ namespace OpenEphys.Onix1.Design
         public NeuropixelsV1ImGuiDialog(IConfigureNeuropixelsV1 configureNode, string probeName, ImGuiLogConsole log)
             : base(probeName, log)
         {
-            selector.DefaultZoomWindowMicrons = 2000f;
-            selector.DefaultScrollYMicrons = 700f;
+            selector.DefaultZoomWindow = 2000f;
+            selector.DefaultScrollY = 700f;
 
             this.configureNode = configureNode ?? throw new ArgumentNullException(nameof(configureNode));
 
