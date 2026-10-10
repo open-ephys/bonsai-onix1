@@ -174,7 +174,6 @@ namespace OpenEphys.Onix1.Design
             frame.Envelope.Min.GetRawData(out IntPtr minPtr, out int minStep, out Size shape);
             frame.Envelope.Max.GetRawData(out IntPtr maxPtr, out int maxStep, out Size _);
             var layout = frame.Layout;
-            var scale = layout.RowHeight / (float)frame.Range;
 
             // NB: an expanded channel is drawn alone and translucent, under the outlines that show its shape.
             var alpha = frame.Expanded >= 0 ? 0x40u << 24 : 0xFFu << 24;
@@ -186,7 +185,6 @@ namespace OpenEphys.Onix1.Design
 
                 var minLine = (float*)((byte*)minPtr + i * minStep);
                 var maxLine = (float*)((byte*)maxPtr + i * maxStep);
-                var center = layout.RowTop(i) + layout.RowHeight / 2 - frame.Top;
                 var color = colors[i] & 0x00FFFFFFu | alpha;
 
                 var (prevLow, prevHigh) = from > 0 ? Bin(minLine, maxLine, frame.Axis, from - 1) : (float.NaN, float.NaN);
@@ -206,8 +204,8 @@ namespace OpenEphys.Onix1.Design
                     prevLow = low;
                     prevHigh = high;
 
-                    var y0 = (int)MathF.Floor(center - spanHigh * scale);
-                    var y1 = (int)MathF.Floor(center - spanLow * scale);
+                    var y0 = (int)MathF.Floor(frame.ValueY(i, spanHigh) - frame.Top);
+                    var y1 = (int)MathF.Floor(frame.ValueY(i, spanLow) - frame.Top);
                     if (y1 < 0 || y0 >= height)
                         continue;
 

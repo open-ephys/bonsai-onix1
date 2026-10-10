@@ -45,5 +45,17 @@
         /// Width of the plot in whole pixels.
         /// </summary>
         public float Width => Axis.Width;
+
+        /// <summary>
+        /// Height on screen of <paramref name="value"/> in <paramref name="channel"/>'s row.
+        /// </summary>
+        public float ValueY(int channel, double value) =>
+            Layout.RowTop(channel) + Layout.RowHeight / 2 - (float)(value * Layout.RowHeight / Range);
+
+        /// <summary>
+        /// The value at height <paramref name="y"/> on screen in <paramref name="channel"/>'s row.
+        /// </summary>
+        public double ValueAt(int channel, float y) =>
+            (Layout.RowTop(channel) + Layout.RowHeight / 2 - y) / Layout.RowHeight * Range;
     }
 }

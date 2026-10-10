@@ -156,7 +156,7 @@ namespace OpenEphys.Onix1.Design
                 SelectClicked(frame, hovered);
                 DrawFrame(draw, plotX, plotWidth, plotTop, plotBottom);
                 DrawReadout(draw, frame, hovered);
-                AmplitudeLabels(draw, plotX, plotTop, plotBottom);
+                AmplitudeLabels(draw, frame, plotX, plotTop, plotBottom);
                 ImGui.EndTable();
             }
             ImGui.EndChild();
@@ -221,8 +221,7 @@ namespace OpenEphys.Onix1.Design
                 return;
 
             var seconds = SecondsAt(frame, frame.Axis.PositionAt(mouse.X));
-            var center = frame.Layout.RowTop(hovered) + frame.Layout.RowHeight / 2;
-            var amplitude = (center - mouse.Y) / frame.Layout.RowHeight * frame.Range;
+            var amplitude = frame.ValueAt(hovered, mouse.Y);
 
             // NB: an expanded channel is named in the plot's top left already.
             var position = $"{seconds:0.0000} s   {amplitude:0.0} {frame.Unit}";
@@ -426,14 +425,12 @@ namespace OpenEphys.Onix1.Design
             var points = axis.Combines ? axis.Width : columns;
             var low = stackalloc Vector2[points];
             var high = stackalloc Vector2[points];
-            var center = frame.Layout.RowTop(channel) + frame.Layout.RowHeight / 2;
-            var scale = (float)(frame.Layout.RowHeight / frame.Range);
             for (int i = 0; i < points; i++)
             {
                 var (min, max) = axis.Combines ? TraceRaster.Bin(minLine, maxLine, axis, i) : (minLine[i], maxLine[i]);
                 var x = axis.Combines ? axis.Left + i : axis.ColumnX(i);
-                low[i] = new Vector2(x, center - min * scale);
-                high[i] = new Vector2(x, center - max * scale);
+                low[i] = new Vector2(x, frame.ValueY(channel, min));
+                high[i] = new Vector2(x, frame.ValueY(channel, max));
             }
 
             var color = ImGui.ColorConvertFloat4ToU32(Colors.Of(channel));
@@ -650,7 +647,7 @@ namespace OpenEphys.Onix1.Design
         /// <remarks>
         /// Drawn over the traces, where the divisions themselves are drawn under them.
         /// </remarks>
-        void AmplitudeLabels(ImDrawListPtr draw, float left, float top, float bottom)
+        void AmplitudeLabels(ImDrawListPtr draw, in PlotFrame frame, float left, float top, float bottom)
         {
             if (expandedChannel < 0)
                 return;
@@ -659,14 +656,14 @@ namespace OpenEphys.Onix1.Design
             var color = ImGui.GetColorU32(ImGuiCol.TextDisabled);
             for (int k = 1; k < AmplitudeDivisions; k++)
             {
-                var text = $"{PlotText.Significant(rangeAmplitude * (AmplitudeDivisions / 2 - k) / AmplitudeDivisions)}";
+                var text = $"{PlotText.Significant(frame.Range * (AmplitudeDivisions / 2 - k) / AmplitudeDivisions)}";
                 var y = AmplitudeDivisionY(k, top, bottom) - ImGui.GetTextLineHeight() / 2;
                 draw.AddText(new Vector2(left + pad.X, y), color, text);
             }
 
             var timeDivision = timebase / TimeDivisions;
             var time = timeDivision < 1 ? $"{PlotText.Significant(timeDivision * 1000)} ms/div" : $"{PlotText.Significant(timeDivision)} s/div";
-            var name = $"Ch {expandedChannel}   {PlotText.Significant(rangeAmplitude / AmplitudeDivisions)} {Unit}/div   {time}";
+            var name = $"Ch {expandedChannel}   {PlotText.Significant(frame.Range / AmplitudeDivisions)} {Unit}/div   {time}";
             PlotText.Framed(draw, new Vector2(left, top) + 2 * pad, name);
         }
 

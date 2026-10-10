@@ -249,10 +249,9 @@ namespace OpenEphys.Onix1.Design
         void Values(ImDrawListPtr draw, in PlotFrame frame, double min, double max, float x)
         {
             var layout = frame.Layout;
-            var center = layout.RowTop(Channel(frame)) + layout.RowHeight / 2;
-            var scale = layout.RowHeight / frame.Range;
+            var channel = Channel(frame);
+            var center = layout.RowTop(channel) + layout.RowHeight / 2;
             var right = frame.Left + frame.Width;
-            float ScreenY(double value) => center - (float)(value * scale);
 
             if (Heatmap(frame))
             {
@@ -262,12 +261,12 @@ namespace OpenEphys.Onix1.Design
 
             if (min == max)
             {
-                Value(draw, new Vector2(x, ScreenY(max)), max, frame.Unit, 0, right);
+                Value(draw, new Vector2(x, frame.ValueY(channel, max)), max, frame.Unit, 0, right);
                 return;
             }
 
-            Value(draw, new Vector2(x, ScreenY(max)), max, frame.Unit, -1, right);
-            Value(draw, new Vector2(x, ScreenY(min)), min, frame.Unit, 1, right);
+            Value(draw, new Vector2(x, frame.ValueY(channel, max)), max, frame.Unit, -1, right);
+            Value(draw, new Vector2(x, frame.ValueY(channel, min)), min, frame.Unit, 1, right);
         }
 
         /// <summary>
