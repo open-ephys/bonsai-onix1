@@ -88,6 +88,9 @@ namespace OpenEphys.Onix1.Design
             return new(v2.ProbeGroup, bands.Select(b => b.Band).ToArray());
         }
 
+        private protected override bool[] Clipped(NeuropixelsV2DataFrame frame, BandSelection selection) =>
+            ClippedRows(frame.AmplifierData, (1 << NeuropixelsV2.AdcBits) - 1);
+
         private protected override IObservable<Mat> ProcessBand(
             BandSelection selection, IObservable<NeuropixelsV2DataFrame> frames)
         {

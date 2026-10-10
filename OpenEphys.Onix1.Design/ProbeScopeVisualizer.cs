@@ -37,6 +37,11 @@ namespace OpenEphys.Onix1.Design
     internal sealed record ProbeScopeSample(Mat Data, int SampleRate);
 
     /// <summary>
+    /// The channels one frame found at either end of the ADC's range.
+    /// </summary>
+    internal sealed record ProbeScopeClipping(bool[] Channels);
+
+    /// <summary>
     /// Provides the pass-through node a <see cref="ProbeScopeVisualizer{TFrame}"/> opens on, and the
     /// settings that belong to the workflow rather than to one viewing session.
     /// </summary>
@@ -136,6 +141,40 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         private protected abstract string Unit { get; }
 
+        /// <summary>
+        /// The channels of <paramref name="frame"/> holding a sample at either end of the ADC's range in the stream
+        /// <paramref name="selection"/>'s band comes from, or null where none does.
+        /// </summary>
+        private protected abstract bool[] Clipped(TFrame frame, BandSelection selection);
+
+        /// <summary>
+        /// The rows of <paramref name="raw"/> holding a sample at either end of the ADC's range, or null where none
+        /// does.
+        /// </summary>
+        /// <remarks>
+        /// On the raw counts, before scaling and any filter, which smear a clipped stretch away from the limits and
+        /// move its baseline. Null when nothing clipped, so a clean recording sends the display nothing.
+        /// </remarks>
+        private protected static bool[] ClippedRows(Mat raw, double maximum)
+        {
+            using var low = new Mat(raw.Rows, 1, raw.Depth, 1);
+            using var high = new Mat(raw.Rows, 1, raw.Depth, 1);
+            CV.Reduce(raw, low, 1, ReduceOperation.Min);
+            CV.Reduce(raw, high, 1, ReduceOperation.Max);
+
+            bool[] clipped = null;
+            for (int row = 0; row < raw.Rows; row++)
+            {
+                if (low.GetReal(row, 0) <= 0 || high.GetReal(row, 0) >= maximum)
+                {
+                    clipped ??= new bool[raw.Rows];
+                    clipped[row] = true;
+                }
+            }
+
+            return clipped;
+        }
+
         /// <inheritdoc/>
         public override void Load(IServiceProvider provider)
         {
@@ -228,7 +267,12 @@ namespace OpenEphys.Onix1.Design
         IObservable<object> BandOutput(ProbeScopeSource probe, BandSelection selection, IObservable<TFrame> frames)
         {
             var sampleRate = probe.Bands[selection.Band].SampleRate;
-            return ProcessBand(selection, frames).Select(data => (object)new ProbeScopeSample(data, sampleRate));
+            var clipping = frames
+                .Select(frame => Clipped(frame, selection))
+                .Where(channels => channels is not null)
+                .Select(channels => (object)new ProbeScopeClipping(channels));
+
+            return ProcessBand(selection, frames).Select(data => (object)new ProbeScopeSample(data, sampleRate)).Merge(clipping);
         }
 
         /// <inheritdoc/>
@@ -243,6 +287,12 @@ namespace OpenEphys.Onix1.Design
                 source = probe;
                 selector.Refresh(probe.ProbeGroup);
                 strip.Bands = probe.Bands;
+                return;
+            }
+
+            if (value is ProbeScopeClipping clipping)
+            {
+                waveform.MarkClipping(clipping.Channels);
                 return;
             }
 

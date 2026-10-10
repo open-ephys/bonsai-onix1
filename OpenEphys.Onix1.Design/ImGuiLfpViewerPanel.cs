@@ -85,6 +85,11 @@ namespace OpenEphys.Onix1.Design
         public bool ShowHeatmap { get; set; }
 
         /// <summary>
+        /// Whether clipping channels are marked and CLIPPING shown.
+        /// </summary>
+        public bool ShowClipping { get; set; } = true;
+
+        /// <summary>
         /// Magnitude, in the units of the incoming data, at or below which the heatmap shows black. It can
         /// reach the range, where the colors are brightest.
         /// </summary>
@@ -113,6 +118,52 @@ namespace OpenEphys.Onix1.Design
 
         bool[] channelHidden = Array.Empty<bool>();
         bool[] dragOriginal = Array.Empty<bool>();
+
+        /// <summary>
+        /// How long a channel is shown clipping after it last clipped.
+        /// </summary>
+        const double ClipHoldSeconds = 1;
+
+        /// <summary>
+        /// How often the clipping marks flash, on and off.
+        /// </summary>
+        const double ClipFlashHz = 4;
+
+        // NB: seconds of data shown, which stand still while paused or while no data arrives, and so hold the marks.
+        double dataSeconds;
+        double[] lastClip = Array.Empty<double>();
+
+        /// <summary>
+        /// Marks the channels set in <paramref name="channels"/> as clipping now: a sample sat at either end of
+        /// their source's range. Ignored while paused, which keeps the marks as they were.
+        /// </summary>
+        public void MarkClipping(bool[] channels)
+        {
+            if (Paused || channels.Length != lastClip.Length)
+                return;
+
+            for (int c = 0; c < channels.Length; c++)
+            {
+                if (channels[c])
+                    lastClip[c] = dataSeconds;
+            }
+        }
+
+        /// <summary>
+        /// Forgets every channel's clipping, as when what is displayed comes from another source.
+        /// </summary>
+        public void ClearClipping()
+        {
+            for (int c = 0; c < lastClip.Length; c++)
+                lastClip[c] = double.NegativeInfinity;
+        }
+
+        bool Clipping(int channel) =>
+            ShowClipping && !channelHidden[channel] && dataSeconds - lastClip[channel] < ClipHoldSeconds;
+
+        // NB: steady while paused, when the marks only say which channels were clipping and flashing would only
+        // distract from studying the view.
+        bool ClipFlashOn => Paused || (long)(ImGui.GetTime() * 2 * ClipFlashHz) % 2 == 0;
 
         int expandedChannel = -1;
 
@@ -244,7 +295,10 @@ namespace OpenEphys.Onix1.Design
             decimator.Process(data);
 
             if (!Paused)
+            {
                 history.Write(data);
+                dataSeconds += data.Cols / (double)sampleRate;
+            }
         }
 
         /// <summary>
@@ -276,6 +330,8 @@ namespace OpenEphys.Onix1.Design
                 {
                     channelHidden = new bool[rows];
                     dragOriginal = new bool[rows];
+                    lastClip = new double[rows];
+                    ClearClipping();
                 }
             }
 

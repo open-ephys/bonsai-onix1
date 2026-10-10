@@ -22,6 +22,7 @@ namespace OpenEphys.Onix1.Design
         private protected override string Unit => "uV";
 
         List<(ProbeScopeBand Band,
+            NeuropixelsV1EphysBand Source,
             Func<IObservable<NeuropixelsV1DataFrame>, IObservable<Mat>> Transform,
             Func<IObservable<NeuropixelsV1DataFrame>, IObservable<Mat>> AcTransform)> bands;
 
@@ -66,14 +67,15 @@ namespace OpenEphys.Onix1.Design
             // such and a software spike band is carved out of it, as for NeuropixelsV2.
             if (configuration.SpikeFilter)
             {
-                bands.Add((new("Spike", "300 Hz to 9 kHz", spikeRate, null), ScaleSpike, null));
+                bands.Add((new("Spike", "300 Hz to 9 kHz", spikeRate, null), NeuropixelsV1EphysBand.Spike, ScaleSpike, null));
             }
             else
             {
                 bands.Add((new("Wideband", "0.2 Hz to 9 kHz", spikeRate, "1 Hz to 9 kHz"),
+                    NeuropixelsV1EphysBand.Spike,
                     ScaleSpike,
                     frames => AcCouple(ScaleSpike(frames), spikeRate)));
-                bands.Add((new("Spike", "300 Hz to 9 kHz", spikeRate, null), frames => new Butterworth
+                bands.Add((new("Spike", "300 Hz to 9 kHz", spikeRate, null), NeuropixelsV1EphysBand.Spike, frames => new Butterworth
                 {
                     SampleRate = spikeRate,
                     Cutoff1 = 300.0,
@@ -84,16 +86,22 @@ namespace OpenEphys.Onix1.Design
             }
 
             bands.Add((new("LFP", "0.2 Hz to 500 Hz", lfpRate, "1 Hz to 500 Hz"),
+                NeuropixelsV1EphysBand.Lfp,
                 ScaleLfp,
                 frames => AcCouple(ScaleLfp(frames), lfpRate)));
 
             return new(v1.ProbeGroup, bands.Select(b => b.Band).ToArray());
         }
 
+        private protected override bool[] Clipped(NeuropixelsV1DataFrame frame, BandSelection selection) =>
+            ClippedRows(
+                bands[selection.Band].Source == NeuropixelsV1EphysBand.Lfp ? frame.LfpData : frame.SpikeData,
+                (1 << NeuropixelsV1.AdcBits) - 1);
+
         private protected override IObservable<Mat> ProcessBand(
             BandSelection selection, IObservable<NeuropixelsV1DataFrame> frames)
         {
-            var (_, transform, acTransform) = bands[selection.Band];
+            var (_, _, transform, acTransform) = bands[selection.Band];
             var output = selection.AcCoupled && acTransform is not null ? acTransform(frames) : transform(frames);
             if (selection.CommonMedianReference)
             {

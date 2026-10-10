@@ -98,7 +98,7 @@ namespace OpenEphys.Onix1.Design
                 positions.Add(axis.Snap(axis.Window.Start + axis.Window.Span / 2));
 
             var pointer = ImGui.GetMousePos();
-            var inPlot = ImGui.IsWindowHovered() &&
+            var inPlot = ImGui.IsWindowHovered() && !ImGui.IsAnyItemHovered() &&
                 pointer.X >= left && pointer.X < left + width &&
                 pointer.Y >= top && pointer.Y < bottom;
 

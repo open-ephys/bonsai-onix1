@@ -68,7 +68,7 @@ namespace OpenEphys.Onix1.Design
         /// Number of columns holding parameters. The strip adds the flexible gap and the pause button
         /// after them itself.
         /// </summary>
-        private protected virtual int ParameterColumns => 7;
+        private protected virtual int ParameterColumns => 6;
 
         /// <summary>
         /// Columns drawn ahead of the standard ones.
@@ -217,16 +217,32 @@ namespace OpenEphys.Onix1.Design
                 panel.Colors.Grouping = grouping;
             ImGui.EndDisabled();
 
-            MenuColumn("Heatmap (h)");
-            var showHeatmap = panel.ShowHeatmap;
-            if (ImGui.Checkbox("##heatmap", ref showHeatmap))
-                panel.ShowHeatmap = showHeatmap;
-            ImGui.SetItemTooltip("Draw channels as rows of color");
+            // NB: two lines of checkboxes in the height of a label and a control, so their frames are made shorter.
+            var spacing = ImGui.GetStyle().ItemSpacing.Y;
+            var line = (rowPitch - RowGap - spacing) / 2;
+            var padding = ImGui.GetStyle().FramePadding;
+            var slot = Slot();
+            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding,
+                new Vector2(padding.X, Math.Max(0, (line - ImGui.GetFontSize()) / 2)));
 
-            MenuColumn("Cursors (c)");
+            ImGui.SetCursorScreenPos(slot);
+            var showHeatmap = panel.ShowHeatmap;
+            if (ImGui.Checkbox("Heatmap", ref showHeatmap))
+                panel.ShowHeatmap = showHeatmap;
+            ImGui.SetItemTooltip("Draw channels as rows of color (h)");
+
+            ImGui.SameLine();
             var showCursors = panel.ShowCursors;
-            if (ImGui.Checkbox("##cursors", ref showCursors))
+            if (ImGui.Checkbox("Cursors", ref showCursors))
                 panel.ShowCursors = showCursors;
+            ImGui.SetItemTooltip("Show the cursors and their table (c)");
+
+            ImGui.SetCursorScreenPos(new Vector2(slot.X, slot.Y + line + spacing));
+            var showClipping = panel.ShowClipping;
+            if (ImGui.Checkbox("Clipping", ref showClipping))
+                panel.ShowClipping = showClipping;
+            ImGui.SetItemTooltip("Warn while any shown channel clips");
+            ImGui.PopStyleVar();
 
             var style = ImGui.GetStyle();
             var pauseHeight = rowPitch - RowGap;
@@ -303,18 +319,23 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         private protected float MenuColumn(string label)
         {
+            var slot = Slot();
+            ImGui.SetCursorScreenPos(slot);
+            ImGui.Text(label);
+            ImGui.SetCursorScreenPos(new Vector2(
+                slot.X, slot.Y + ImGui.GetTextLineHeight() + ImGui.GetStyle().ItemSpacing.Y));
+            return ControlWidth;
+        }
+
+        /// <summary>
+        /// Takes the next slot in the flow and returns its top left corner.
+        /// </summary>
+        Vector2 Slot()
+        {
             var row = flowIndex / columnsPerRow;
             var column = flowIndex % columnsPerRow;
             flowIndex++;
-
-            var x = flowOrigin.X + column * columnPitch;
-            var y = flowOrigin.Y + row * rowPitch;
-
-            ImGui.SetCursorScreenPos(new Vector2(x, y));
-            ImGui.Text(label);
-            ImGui.SetCursorScreenPos(new Vector2(
-                x, y + ImGui.GetTextLineHeight() + ImGui.GetStyle().ItemSpacing.Y));
-            return ControlWidth;
+            return new Vector2(flowOrigin.X + column * columnPitch, flowOrigin.Y + row * rowPitch);
         }
 
         // NB: the preset arrow sits beside the input, so the input takes the slot less the arrow.

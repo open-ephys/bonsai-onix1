@@ -20,6 +20,7 @@ namespace OpenEphys.Onix1.Design
         const float DivisionDotGap = 3;
         const float HoverLineWeight = 3;
         const uint ColHoveredRow = ImGuiPalette.Grey0x99;
+        const uint ColClipping = ImGuiPalette.Red;
         static readonly uint ColSelectedRow = ImGuiPalette.WithAlpha(ImGuiPalette.White, 0x20);
 
         static readonly uint ColFrozenTail = ImGuiPalette.WithAlpha(ImGuiPalette.Black, 0x80);
@@ -90,9 +91,9 @@ namespace OpenEphys.Onix1.Design
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();
 
-                // NB: measured inside the cell, which leaves out the row's padding, and less the scroll, by which
-                // the cell's top has moved up, so that rows fitted to it fill the table without scrolling.
-                visibleHeight = ImGui.GetContentRegionAvail().Y - ImGui.GetScrollY();
+                // NB: measured inside the cell, which leaves out the row's padding, so that rows fitted to it fill
+                // the table without scrolling.
+                visibleHeight = ImGui.GetContentRegionAvail().Y;
                 var layout = LayoutRows(rows, plotTop, plotBottom, ImGui.GetCursorScreenPos().Y,
                     ImGui.GetContentRegionAvail().Y);
                 var hovered = HoveredChannel(layout);
@@ -149,6 +150,8 @@ namespace OpenEphys.Onix1.Design
                     BracketRow(draw, frame, hovered, ColHoveredRow);
                 if (ShowHeatmap && expandedChannel < 0 && selectedChannel >= 0)
                     BracketRow(draw, frame, selectedChannel, WaveformCursors.Color);
+                // NB: ahead of the cursors so the don't compete for a click on [CLIPPING] in the plot area.
+                DrawClipping(draw, frame);
                 cursors.Draw(draw, frame);
                 SelectClicked(frame, hovered);
                 DrawFrame(draw, plotX, plotWidth, plotTop, plotBottom);
@@ -365,6 +368,11 @@ namespace OpenEphys.Onix1.Design
                 var markHeight = Math.Max(layout.RowHeight, lineHeight);
                 var markTop = layout.RowTop(i) + (layout.RowHeight - markHeight) / 2;
 
+                // NB: a clipping channel's label flashes, in step with the plot's CLIPPING, and is always written.
+                var clipping = Clipping(i);
+                if (clipping && ClipFlashOn)
+                    draw.AddRectFilled(new Vector2(left, markTop), new Vector2(right, markTop + markHeight), ColClipping);
+
                 // Highlight hovered channel and the selected one
                 if ((i == hovered || i == selected) && expandedChannel < 0)
                 {
@@ -380,7 +388,8 @@ namespace OpenEphys.Onix1.Design
                     draw.AddRect(new Vector2(left, boxTop), new Vector2(right, boxTop + markHeight), WaveformCursors.Color);
                 }
 
-                if (i != hovered && i != selected && (i % step != 0 || Crowds(i, hovered) || Crowds(i, selected)))
+                if (i != hovered && i != selected && !clipping &&
+                    (i % step != 0 || Crowds(i, hovered) || Crowds(i, selected)))
                     continue;
 
                 var hidden = channelHidden[i];
@@ -488,7 +497,7 @@ namespace OpenEphys.Onix1.Design
         void SelectClicked(in PlotFrame frame, int hovered)
         {
             var pointer = ImGui.GetMousePos();
-            var inPlot = ImGui.IsWindowHovered() &&
+            var inPlot = ImGui.IsWindowHovered() && !ImGui.IsAnyItemHovered() &&
                 pointer.X >= frame.Left && pointer.X < frame.Left + frame.Width &&
                 pointer.Y >= frame.Top && pointer.Y < frame.Bottom;
             if (inPlot && !cursors.Dragging && hovered >= 0 && !channelHidden[hovered] && expandedChannel < 0 &&
@@ -496,6 +505,53 @@ namespace OpenEphys.Onix1.Design
             {
                 selectedChannel = hovered;
             }
+        }
+
+        /// <summary>
+        /// Flashes CLIPPING in the plot's top right corner while any channel is clipping, as a scope's overload
+        /// light does, as a button that brings the first clipping channel into view.
+        /// </summary>
+        void DrawClipping(ImDrawListPtr draw, in PlotFrame frame)
+        {
+            var first = -1;
+            for (int c = 0; c < lastClip.Length && first < 0; c++)
+            {
+                if (Clipping(c))
+                    first = c;
+            }
+
+            if (first < 0)
+                return;
+
+            const string Text = "CLIPPING";
+            var pad = ImGui.GetStyle().FramePadding;
+            var size = ImGui.CalcTextSize(Text);
+            var corner = new Vector2(frame.Left + frame.Width - size.X - 2 * pad.X, frame.Top + 2 * pad.Y);
+
+            // NB: only the text flashes, so that a click is never lost to the dark half of a flash.
+            ImGui.SetCursorScreenPos(corner - pad);
+            if (ImGui.InvisibleButton("##clipping", size + 2 * pad))
+                ShowChannel(first, frame.Layout);
+
+            var rounding = ImGui.GetStyle().ChildRounding;
+            var fill = ImGui.IsItemHovered() ? ImGui.GetColorU32(ImGuiCol.ButtonHovered) : PlotText.LabelBackground;
+            draw.AddRectFilled(corner - pad, corner + size + pad, fill, rounding);
+            draw.AddRect(corner - pad, corner + size + pad, ColClipping, rounding);
+            if (ClipFlashOn)
+                draw.AddText(corner, ColClipping, Text);
+        }
+
+        // NB: If not expanxed, center the channel. If expanded, show that channel in expanded view.
+        void ShowChannel(int channel, in RowLayout layout)
+        {
+            if (expandedChannel >= 0)
+            {
+                expandedChannel = channel;
+                return;
+            }
+
+            var center = layout.RowTop(channel) + layout.RowHeight / 2;
+            ImGui.SetScrollY(ImGui.GetScrollY() + center - (layout.Top + layout.Bottom) / 2);
         }
 
         /// <summary>
