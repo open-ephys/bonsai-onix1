@@ -131,7 +131,7 @@ namespace OpenEphys.Onix1.Design
 
         (Keys, bool, Action)[] FrameKeys() => new (Keys, bool, Action)[]
         {
-            (Keys.Space, true, () => Paused = !Paused),
+            (Keys.Space, false, () => Paused = !Paused),
             (Keys.C, false, () => ShowCursors = !ShowCursors),
             (Keys.H, false, () => ShowHeatmap = !ShowHeatmap),
             (Keys.F, false, () => FitChannels = !FitChannels),
