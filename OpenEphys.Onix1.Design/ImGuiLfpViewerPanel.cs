@@ -167,6 +167,33 @@ namespace OpenEphys.Onix1.Design
 
         int expandedChannel = -1;
 
+        /// <summary>
+        /// Most an expanded channel's amplitude can be magnified, against the range.
+        /// </summary>
+        const double MaxAmplitudeZoom = 1000;
+
+        // NB: for one channel at one range, so that expanding another, collapsing or changing the range starts it over.
+        (int Channel, double Range, double Center, double Span) amplitudeView = (-1, 0, 0, 0);
+
+        /// <summary>
+        /// The value at the middle of a row and the amplitude a row spans: an expanded channel's zoom, or zero and the
+        /// range.
+        /// </summary>
+        (double Center, double Span) AmplitudeView =>
+            expandedChannel >= 0 && amplitudeView.Channel == expandedChannel && amplitudeView.Range == rangeAmplitude
+                ? (amplitudeView.Center, amplitudeView.Span)
+                : (0, rangeAmplitude);
+
+        /// <summary>
+        /// Zooms the expanded channel to <paramref name="span"/>, no wider than the range, keeping
+        /// <paramref name="value"/> a <paramref name="fraction"/> of the row above its middle.
+        /// </summary>
+        void SetAmplitudeView(double value, double fraction, double span)
+        {
+            span = Math.Max(rangeAmplitude / MaxAmplitudeZoom, Math.Min(rangeAmplitude, span));
+            amplitudeView = (expandedChannel, rangeAmplitude, value - fraction * span, span);
+        }
+
         float channelHeight = 20;
         double timebase = 2.5;
         double rangeAmplitude = 500;

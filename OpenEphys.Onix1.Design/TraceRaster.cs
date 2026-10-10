@@ -22,7 +22,7 @@ namespace OpenEphys.Onix1.Design
         /// of it redraws it whole.
         /// </summary>
         readonly record struct Key(
-            Envelope Envelope, DisplayWindow Window, double Range, int Expanded, bool Heatmap, double ColorThreshold,
+            Envelope Envelope, DisplayWindow Window, double Range, double Center, int Expanded, bool Heatmap, double ColorThreshold,
             int Width, int Height,
             int FirstVisible, int LastVisible, float RowHeight, float Origin);
 
@@ -60,7 +60,7 @@ namespace OpenEphys.Onix1.Design
                 Create(w, h);
 
             var current = new Key(
-                frame.Envelope, frame.Window, frame.Range, frame.Expanded, frame.Heatmap, frame.ColorThreshold,
+                frame.Envelope, frame.Window, frame.Range, frame.Center, frame.Expanded, frame.Heatmap, frame.ColorThreshold,
                 w, h,
                 layout.FirstVisible, layout.LastVisible, layout.RowHeight, layout.Origin - frame.Top);
 

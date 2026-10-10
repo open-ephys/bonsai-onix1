@@ -58,6 +58,8 @@ namespace OpenEphys.Onix1.Design
         {
             var rows = envelope.Rows;
             var labelDigits = DigitCount(rows - 1);
+            if (amplitudeView.Channel != expandedChannel || amplitudeView.Range != rangeAmplitude)
+                amplitudeView.Channel = -1;
 
 
             // NB: the axis labels get a button-height row, so the plot's frame starts one button-height down.
@@ -121,7 +123,7 @@ namespace OpenEphys.Onix1.Design
                 frame = new PlotFrame(
                     envelope, layout, new PixelAxis(shown, plotLeft, plotSpan), plotTop, plotBottom,
                     sampleRate, Paused, CursorPosition, timebase, pausedTimebase,
-                    rangeAmplitude, Unit, channelHidden, expandedChannel, selectedChannel, ShowHeatmap, ColorThreshold);
+                    AmplitudeView.Span, AmplitudeView.Center, Unit, channelHidden, expandedChannel, selectedChannel, ShowHeatmap, ColorThreshold);
 
                 // NB: an item the height of every row, which is what the table scrolls through. Everything in the
                 // plot is drawn rather than laid out.
@@ -656,7 +658,7 @@ namespace OpenEphys.Onix1.Design
             var color = ImGui.GetColorU32(ImGuiCol.TextDisabled);
             for (int k = 1; k < AmplitudeDivisions; k++)
             {
-                var text = $"{PlotText.Significant(frame.Range * (AmplitudeDivisions / 2 - k) / AmplitudeDivisions)}";
+                var text = $"{PlotText.Significant(frame.Center + frame.Range * (AmplitudeDivisions / 2 - k) / AmplitudeDivisions)}";
                 var y = AmplitudeDivisionY(k, top, bottom) - ImGui.GetTextLineHeight() / 2;
                 draw.AddText(new Vector2(left + pad.X, y), color, text);
             }

@@ -25,6 +25,11 @@ namespace OpenEphys.Onix1.Design
         const double TimebaseDragRate = 0.005;
 
         /// <summary>
+        /// Factor an expanded channel's amplitude is magnified by per notch of Ctrl+Wheel.
+        /// </summary>
+        const double AmplitudeWheelFactor = 1.25;
+
+        /// <summary>
         /// Significant digits a dragged range or timebase is rounded to.
         /// </summary>
         const int RangeDragDigits = 3;
@@ -35,6 +40,7 @@ namespace OpenEphys.Onix1.Design
         // NB: while a drag is held, the value it began from and where the pointer was then.
         (double Value, float Y)? rangeDrag;
         (float Value, float Y, float Pivot, float Scroll)? heightDrag;
+        (double Span, float Y, double Value, double Fraction)? amplitudeDrag;
         (double Value, float X, long Anchor, double Fraction)? timebaseDrag;
         bool grabbing;
 
@@ -216,8 +222,16 @@ namespace OpenEphys.Onix1.Design
 
             if (Modifiers())
             {
-                var step = MathF.Floor(Math.Min(5 * ImGui.GetFontSize(), visibleHeight * 0.67f));
-                ImGui.SetScrollY(ImGui.GetScrollY() - wheel * step);
+                if (expandedChannel >= 0)
+                {
+                    var (center, span) = AmplitudeView;
+                    SetAmplitudeView(center + wheel * span / AmplitudeDivisions, 0, span);
+                }
+                else
+                {
+                    var step = MathF.Floor(Math.Min(5 * ImGui.GetFontSize(), visibleHeight * 0.67f));
+                    ImGui.SetScrollY(ImGui.GetScrollY() - wheel * step);
+                }
                 if (sideways != 0)
                     Pan((long)(sideways * (window.Span / TimeDivisions)));
                 return;
@@ -249,6 +263,13 @@ namespace OpenEphys.Onix1.Design
                     var height = ChannelHeight;
                     var pivot = (mouse.Y - layout.Origin) / layout.RowHeight;
                     SetChannelHeight(StepChannelHeight(height, direction), height, pivot, ImGui.GetScrollY(), layout);
+                }
+                else if (Modifiers(ctrl: true) && expandedChannel >= 0 && amplitudeDrag is null)
+                {
+                    var (center, span) = AmplitudeView;
+                    var fraction = RowFraction(layout, mouse.Y);
+                    SetAmplitudeView(center + fraction * span, fraction,
+                        Significant(span * Math.Pow(AmplitudeWheelFactor, -direction)));
                 }
             }
         }
@@ -288,26 +309,33 @@ namespace OpenEphys.Onix1.Design
         bool OverPlot(float x) => x >= plotLeft && x < plotLeft + plotSpan;
 
         // NB: the modifier picks what a drag sets and its direction which axis: with Ctrl, up raises the channel
-        // height and right shortens the timebase, so a diagonal zooms both; with Alt, up narrows the range. Each
-        // works from where it began rather than frame to frame, so it ends where the pointer does, and an axis
-        // answers only past the drag threshold, so a drag along one barely moves the other. A right drag grabs
-        // the plot instead and moves it with the pointer, through the channels and, paused, through time.
+        // height, or magnifies an expanded channel's amplitude, and right shortens the timebase, so a diagonal zooms
+        // both; with Alt, up narrows the range. Each works from where it began rather than frame to frame, so it
+        // ends where the pointer does, and an axis answers only past the drag threshold, so a drag along one barely
+        // moves the other. A middle drag grabs the plot instead and moves it with the pointer, through the channels
+        // or an expanded channel's amplitudes and, paused, through time.
         void HandleDrags(in RowLayout layout)
         {
             var mouse = ImGui.GetMousePos();
             if (!ImGui.IsMouseDown(ImGuiMouseButton.Left))
-                (rangeDrag, heightDrag, timebaseDrag) = (null, null, null);
+                (rangeDrag, heightDrag, timebaseDrag, amplitudeDrag) = (null, null, null, null);
 
-            if (!ImGui.IsMouseDown(ImGuiMouseButton.Right))
+            if (!ImGui.IsMouseDown(ImGuiMouseButton.Middle))
                 grabbing = false;
 
-            if (ImGui.IsMouseClicked(ImGuiMouseButton.Right) && ImGui.IsWindowHovered() && Modifiers())
+            if (ImGui.IsMouseClicked(ImGuiMouseButton.Middle) && ImGui.IsWindowHovered() && Modifiers())
                 grabbing = true;
 
-            if (grabbing && ImGui.IsMouseDragging(ImGuiMouseButton.Right))
+            if (grabbing && ImGui.IsMouseDragging(ImGuiMouseButton.Middle))
             {
                 var delta = ImGui.GetIO().MouseDelta;
-                ImGui.SetScrollY(ImGui.GetScrollY() - delta.Y);
+                if (expandedChannel >= 0)
+                {
+                    var (center, span) = AmplitudeView;
+                    SetAmplitudeView(center + delta.Y / layout.RowHeight * span, 0, span);
+                }
+                else
+                    ImGui.SetScrollY(ImGui.GetScrollY() - delta.Y);
                 if (plotSpan > 0)
                     Pan((long)(delta.X * (window.Span / plotSpan)));
             }
@@ -321,12 +349,18 @@ namespace OpenEphys.Onix1.Design
             if (rangeDrag is { } range)
                 RangeAmplitude = Significant(range.Value * Math.Exp(Beyond(mouse.Y - range.Y) * RangeDragRate));
 
-            if (clicked && Modifiers(ctrl: true))
+            if (clicked && Paused && Modifiers(ctrl: true))
             {
                 var anchor = Axis.PositionAt(mouse.X);
                 timebaseDrag = (timebase, mouse.X, anchor, window.FractionOf(anchor));
                 if (expandedChannel < 0)
                     heightDrag = (ChannelHeight, mouse.Y, (mouse.Y - layout.Origin) / layout.RowHeight, ImGui.GetScrollY());
+                else
+                {
+                    var (center, span) = AmplitudeView;
+                    var fraction = RowFraction(layout, mouse.Y);
+                    amplitudeDrag = (span, mouse.Y, center + fraction * span, fraction);
+                }
             }
 
             // NB: about the press point, which stays where it was pressed, as the wheel zooms about the pointer.
@@ -339,6 +373,12 @@ namespace OpenEphys.Onix1.Design
                 SetTimebase(Math.Max(ShortestTimeBase, Math.Min(longest, value)), zoom.Anchor, zoom.Fraction);
             }
 
+            if (amplitudeDrag is { } amplitude && expandedChannel >= 0)
+            {
+                var span = Significant(amplitude.Span * Math.Exp(Beyond(mouse.Y - amplitude.Y) * RangeDragRate));
+                SetAmplitudeView(amplitude.Value, amplitude.Fraction, span);
+            }
+
             if (heightDrag is { } height && expandedChannel < 0)
             {
                 var delta = (int)Math.Round(-0.2f * Beyond(mouse.Y - height.Y));
@@ -347,6 +387,12 @@ namespace OpenEphys.Onix1.Design
                 SetChannelHeight(height.Value + delta, height.Value, height.Pivot, height.Scroll, layout);
             }
         }
+
+        /// <summary>
+        /// How far <paramref name="y"/> lies above the middle of the expanded channel's row, in rows.
+        /// </summary>
+        float RowFraction(in RowLayout layout, float y) =>
+            (layout.RowTop(expandedChannel) + layout.RowHeight / 2 - y) / layout.RowHeight;
 
         // NB: how far a drag has gone along one axis past the drag threshold, so a drag held to one axis does not
         // move the other by the pointer's wobble.

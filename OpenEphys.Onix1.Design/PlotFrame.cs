@@ -18,6 +18,7 @@
     /// <param name="Timebase">Seconds the plot spans, as offered, which the time labels are given in.</param>
     /// <param name="PausedTimebase">The timebase when paused, how much older the frozen tail is.</param>
     /// <param name="Range">Amplitude spanned by one channel's row.</param>
+    /// <param name="Center">Value at the middle of a channel's row.</param>
     /// <param name="Unit">Unit of the amplitudes.</param>
     /// <param name="Hidden">Hidden channels, by index.</param>
     /// <param name="Expanded">The channel drawn alone, or -1.</param>
@@ -28,7 +29,7 @@
         Envelope Envelope,
         ImGuiLfpViewerPanel.RowLayout Layout, PixelAxis Axis, float Top, float Bottom, int SampleRate,
         bool Paused, long PauseOrigin, double Timebase, double PausedTimebase,
-        double Range, string Unit,
+        double Range, double Center, string Unit,
         bool[] Hidden, int Expanded, int Selected, bool Heatmap, double ColorThreshold)
     {
         /// <summary>
@@ -50,12 +51,12 @@
         /// Height on screen of <paramref name="value"/> in <paramref name="channel"/>'s row.
         /// </summary>
         public float ValueY(int channel, double value) =>
-            Layout.RowTop(channel) + Layout.RowHeight / 2 - (float)(value * Layout.RowHeight / Range);
+            Layout.RowTop(channel) + Layout.RowHeight / 2 - (float)((value - Center) * Layout.RowHeight / Range);
 
         /// <summary>
         /// The value at height <paramref name="y"/> on screen in <paramref name="channel"/>'s row.
         /// </summary>
         public double ValueAt(int channel, float y) =>
-            (Layout.RowTop(channel) + Layout.RowHeight / 2 - y) / Layout.RowHeight * Range;
+            Center + (Layout.RowTop(channel) + Layout.RowHeight / 2 - y) / Layout.RowHeight * Range;
     }
 }
