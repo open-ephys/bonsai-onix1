@@ -4,9 +4,19 @@ using Hexa.NET.ImGui;
 
 namespace OpenEphys.Onix1.Design
 {
-    internal enum ColorPalette
+    /// <summary>
+    /// Specifies the palette a waveform viewer draws its channels in.
+    /// </summary>
+    public enum ColorPalette
     {
+        /// <summary>
+        /// The colors the Open Ephys GUI draws channels in.
+        /// </summary>
         OpenEphysGui,
+
+        /// <summary>
+        /// Shades of one chosen color.
+        /// </summary>
         Custom,
     }
 
@@ -17,8 +27,13 @@ namespace OpenEphys.Onix1.Design
     {
         const int PaletteSteps = 16;
 
+        readonly WaveformScope settings;
+
         int grouping = 1;
         uint[] packed = Array.Empty<uint>();
+
+        /// <param name="settings">The node whose palette and custom color are read and written.</param>
+        public TraceColors(WaveformScope settings) => this.settings = settings;
 
         /// <summary>
         /// Whether consecutive channels are colored in groups rather than all alike.
@@ -37,12 +52,26 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// Palette the colors are drawn from.
         /// </summary>
-        public ColorPalette Palette { get; set; } = ColorPalette.OpenEphysGui;
+        public ColorPalette Palette
+        {
+            get => settings.Palette;
+            set => settings.Palette = value;
+        }
 
         /// <summary>
         /// Hue the <see cref="ColorPalette.Custom"/> palette is built from.
         /// </summary>
-        public Vector3 CustomColor { get; set; } = new(140 / 255f, 219 / 255f, 142 / 255f); // suggested default: a soft green
+        public Vector3 CustomColor
+        {
+            get
+            {
+                var color = settings.CustomColor;
+                return new(color.R / 255f, color.G / 255f, color.B / 255f);
+            }
+            set => settings.CustomColor = System.Drawing.Color.FromArgb(Byte(value.X), Byte(value.Y), Byte(value.Z));
+        }
+
+        static int Byte(float component) => (int)Math.Round(Math.Max(0, Math.Min(1, component)) * 255);
 
         /// <summary>
         /// The color channel <paramref name="channel"/> is drawn in.

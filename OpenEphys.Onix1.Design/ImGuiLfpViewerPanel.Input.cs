@@ -343,7 +343,7 @@ namespace OpenEphys.Onix1.Design
             var clicked = ImGui.IsMouseClicked(ImGuiMouseButton.Left) && ImGui.IsWindowHovered() && OverPlot(mouse.X);
 
             if (clicked && Modifiers(alt: true))
-                rangeDrag = (rangeAmplitude, mouse.Y);
+                rangeDrag = (RangeAmplitude, mouse.Y);
 
             // NB: by a factor rather than an amount, so the drag feels alike at every range.
             if (rangeDrag is { } range)
@@ -352,7 +352,7 @@ namespace OpenEphys.Onix1.Design
             if (clicked && Paused && Modifiers(ctrl: true))
             {
                 var anchor = Axis.PositionAt(mouse.X);
-                timebaseDrag = (timebase, mouse.X, anchor, window.FractionOf(anchor));
+                timebaseDrag = (Timebase, mouse.X, anchor, window.FractionOf(anchor));
                 if (expandedChannel < 0)
                     heightDrag = (ChannelHeight, mouse.Y, (mouse.Y - layout.Origin) / layout.RowHeight, ImGui.GetScrollY());
                 else
@@ -417,7 +417,7 @@ namespace OpenEphys.Onix1.Design
         void StepTimebase(int direction, float x)
         {
             var offered = ServableTimeBases;
-            var i = Array.BinarySearch(standardTimeBases, 0, offered, timebase);
+            var i = Array.BinarySearch(standardTimeBases, 0, offered, Timebase);
             if (i < 0)
             {
                 i = ~i;
@@ -448,7 +448,7 @@ namespace OpenEphys.Onix1.Design
 
         void StepRange(int direction)
         {
-            var i = Array.BinarySearch(standardRanges, rangeAmplitude);
+            var i = Array.BinarySearch(standardRanges, RangeAmplitude);
             if (i < 0)
             {
                 i = ~i;
@@ -460,7 +460,7 @@ namespace OpenEphys.Onix1.Design
                 i += direction;
             }
 
-            rangeAmplitude = standardRanges[Math.Max(0, Math.Min(standardRanges.Length - 1, i))];
+            RangeAmplitude = standardRanges[Math.Max(0, Math.Min(standardRanges.Length - 1, i))];
         }
 
         static float ChannelStep(in RowLayout layout)

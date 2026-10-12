@@ -71,7 +71,7 @@ namespace OpenEphys.Onix1.Design
         /// </remarks>
         bool FastSweep =>
             !Paused && decimator?.LastSweep is not null &&
-            timebase * RefreshRate <= FramesToFollowSweep;
+            Timebase * RefreshRate <= FramesToFollowSweep;
 
         /// <summary>
         /// Whether the paused view has been moved off the frame that was frozen.
@@ -106,7 +106,7 @@ namespace OpenEphys.Onix1.Design
 
             pausedEnvelope = decimator.Sweep.Clone();
             frozen = new DisplayWindow(0, decimator.DownsampleFactor, decimator.Sweep.Cols);
-            pausedTimebase = timebase;
+            pausedTimebase = Timebase;
 
             pauseSample = history?.Count ?? 0;
 
@@ -184,8 +184,9 @@ namespace OpenEphys.Onix1.Design
                 return;
             }
 
-            var anchor = anchorPending ? anchorPosition : window.Start;
-            var fraction = anchorPending ? anchorFraction : 0;
+            // NB: a change that asked for no anchor, as one made in the property grid, keeps the middle in place.
+            var anchor = anchorPending ? anchorPosition : window.Start + window.Span / 2;
+            var fraction = anchorPending ? anchorFraction : 0.5;
             anchorPending = false;
             SetWindow(window.Rescale(step, columns, anchor, fraction));
 
@@ -293,7 +294,7 @@ namespace OpenEphys.Onix1.Design
             if (Paused)
                 value = Math.Min(value, standardTimeBases[ServableTimeBases - 1]);
 
-            if (value == timebase)
+            if (value == Timebase)
                 return;
 
             if (Paused)
@@ -303,7 +304,7 @@ namespace OpenEphys.Onix1.Design
                 anchorPending = true;
             }
 
-            timebase = value;
+            settings.Timebase = value;
         }
 
         /// <summary>

@@ -58,7 +58,7 @@ namespace OpenEphys.Onix1.Design
         {
             var rows = envelope.Rows;
             var labelDigits = DigitCount(rows - 1);
-            if (amplitudeView.Channel != expandedChannel || amplitudeView.Range != rangeAmplitude)
+            if (amplitudeView.Channel != expandedChannel || amplitudeView.Range != RangeAmplitude)
                 amplitudeView.Channel = -1;
 
 
@@ -122,7 +122,7 @@ namespace OpenEphys.Onix1.Design
                     SetWindow(window);
                 frame = new PlotFrame(
                     envelope, layout, new PixelAxis(shown, plotLeft, plotSpan), plotTop, plotBottom,
-                    sampleRate, Paused, CursorPosition, timebase, pausedTimebase,
+                    sampleRate, Paused, CursorPosition, Timebase, pausedTimebase,
                     AmplitudeView.Span, AmplitudeView.Center, Unit, channelHidden, expandedChannel, selectedChannel, ShowHeatmap, ColorThreshold);
 
                 // NB: an item the height of every row, which is what the table scrolls through. Everything in the
@@ -616,7 +616,7 @@ namespace OpenEphys.Onix1.Design
 
                 // NB: one spacing across the whole plot, so labels on either side of the cursor never
                 // overlap. Right of the cursor is the frozen tail, a whole frozen window older.
-                var seconds = d * timebase / TimeDivisions;
+                var seconds = d * Timebase / TimeDivisions;
                 if (Paused && position > CursorPosition)
                     seconds -= pausedTimebase;
 
@@ -663,7 +663,7 @@ namespace OpenEphys.Onix1.Design
                 draw.AddText(new Vector2(left + pad.X, y), color, text);
             }
 
-            var timeDivision = timebase / TimeDivisions;
+            var timeDivision = Timebase / TimeDivisions;
             var time = timeDivision < 1 ? $"{PlotText.Significant(timeDivision * 1000)} ms/div" : $"{PlotText.Significant(timeDivision)} s/div";
             var name = $"Ch {expandedChannel}   {PlotText.Significant(frame.Range / AmplitudeDivisions)} {Unit}/div   {time}";
             PlotText.Framed(draw, new Vector2(left, top) + 2 * pad, name);

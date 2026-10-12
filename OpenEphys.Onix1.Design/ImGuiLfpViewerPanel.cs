@@ -12,7 +12,8 @@ namespace OpenEphys.Onix1.Design
     /// <remarks>
     /// <para>
     /// The owner calls <see cref="Update"/> with each block and <see cref="Draw"/> once a frame. Everything
-    /// the display can be told is a property, so a control strip is one way to drive it, not part of it.
+    /// the display can be told is a property, so a control strip is one way to drive it, not part of it. The
+    /// settings a node saves are read from and written to that node, which holds the only copy of them.
     /// </para>
     /// <para>
     /// While <see cref="Paused"/>, the display is frozen and can be panned back through a history of recent
@@ -24,9 +25,11 @@ namespace OpenEphys.Onix1.Design
     /// </remarks>
     internal sealed partial class ImGuiLfpViewerPanel : IDisposable
     {
+        readonly WaveformScope settings;
         readonly long historyBytes;
         readonly int maxColumns;
 
+        /// <param name="settings">The node whose display settings the panel reads and writes.</param>
         /// <param name="historyBytes">
         /// Memory for the history of recent samples. The owner sizes it, since only it knows its channel
         /// count and fastest band; the panel works out the seconds it buys once data arrives.
@@ -38,7 +41,7 @@ namespace OpenEphys.Onix1.Design
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="historyBytes"/> is not positive, or <paramref name="maxColumns"/> is less than one.
         /// </exception>
-        public ImGuiLfpViewerPanel(long historyBytes, int maxColumns)
+        public ImGuiLfpViewerPanel(WaveformScope settings, long historyBytes, int maxColumns)
         {
             if (historyBytes <= 0)
                 throw new ArgumentOutOfRangeException(nameof(historyBytes));
@@ -46,13 +49,16 @@ namespace OpenEphys.Onix1.Design
             if (maxColumns < 1)
                 throw new ArgumentOutOfRangeException(nameof(maxColumns));
 
+            this.settings = settings;
             this.historyBytes = historyBytes;
             this.maxColumns = maxColumns;
+            cursors = new(settings);
+            Colors = new(settings);
             frameKeys = FrameKeys();
             tableKeys = TableKeys();
         }
 
-        readonly WaveformCursors cursors = new();
+        readonly WaveformCursors cursors;
 
         /// <summary>
         /// Whether the cursors are shown. While they are, a cursor's line can be dragged, and they read the selected
@@ -82,12 +88,20 @@ namespace OpenEphys.Onix1.Design
         /// Whether channels are drawn as rows of color, a compressed view of every channel at once, rather than
         /// as traces. Rows are laid out alike in both views, so a channel stays in place when the view changes.
         /// </summary>
-        public bool ShowHeatmap { get; set; }
+        public bool ShowHeatmap
+        {
+            get => settings.ShowHeatmap;
+            set => settings.ShowHeatmap = value;
+        }
 
         /// <summary>
         /// Whether clipping channels are marked and CLIPPING shown.
         /// </summary>
-        public bool ShowClipping { get; set; } = true;
+        public bool ShowClipping
+        {
+            get => settings.ShowClipping;
+            set => settings.ShowClipping = value;
+        }
 
         /// <summary>
         /// Magnitude, in the units of the incoming data, at or below which the heatmap shows black. It can
@@ -95,15 +109,19 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         public double ColorThreshold
         {
-            get => Math.Min(colorThreshold, rangeAmplitude);
-            set => colorThreshold = Math.Max(0, Math.Min(value, rangeAmplitude));
+            get => Math.Max(0, Math.Min(settings.ColorThreshold, RangeAmplitude));
+            set => settings.ColorThreshold = value;
         }
 
         /// <summary>
         /// Whether the channel height follows the plot's visible height so that every channel fits it, as far as
         /// the smallest height allows. Setting the height any other way stops it.
         /// </summary>
-        public bool FitChannels { get; set; }
+        public bool FitChannels
+        {
+            get => settings.FitChannels;
+            set => settings.FitChannels = value;
+        }
 
         /// <summary>
         /// The channel selected by clicking its trace or label or stepping with Q and E, or -1. The cursors read
@@ -180,9 +198,9 @@ namespace OpenEphys.Onix1.Design
         /// range.
         /// </summary>
         (double Center, double Span) AmplitudeView =>
-            expandedChannel >= 0 && amplitudeView.Channel == expandedChannel && amplitudeView.Range == rangeAmplitude
+            expandedChannel >= 0 && amplitudeView.Channel == expandedChannel && amplitudeView.Range == RangeAmplitude
                 ? (amplitudeView.Center, amplitudeView.Span)
-                : (0, rangeAmplitude);
+                : (0, RangeAmplitude);
 
         /// <summary>
         /// Zooms the expanded channel to <paramref name="span"/>, no wider than the range, keeping
@@ -190,21 +208,17 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         void SetAmplitudeView(double value, double fraction, double span)
         {
-            span = Math.Max(rangeAmplitude / MaxAmplitudeZoom, Math.Min(rangeAmplitude, span));
-            amplitudeView = (expandedChannel, rangeAmplitude, value - fraction * span, span);
+            span = Math.Max(RangeAmplitude / MaxAmplitudeZoom, Math.Min(RangeAmplitude, span));
+            amplitudeView = (expandedChannel, RangeAmplitude, value - fraction * span, span);
         }
 
-        float channelHeight = 20;
-        double timebase = 2.5;
-        double rangeAmplitude = 500;
-        double colorThreshold;
-
         /// <summary>
-        /// Seconds of data spanned by the display.
+        /// Seconds of data spanned by the display, no more than the history holds, of which a paused view can show
+        /// only what was held at pausing.
         /// </summary>
         public double Timebase
         {
-            get => timebase;
+            get => history is null ? settings.Timebase : Math.Min(settings.Timebase, standardTimeBases[ServableTimeBases - 1]);
             set => SetTimebaseAt(value, plotLeft + plotSpan / 2);
         }
 
@@ -214,10 +228,10 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         public float ChannelHeight
         {
-            get => FitChannels ? FitHeight : Math.Max(channelHeight, FitHeight);
+            get => FitChannels ? FitHeight : Math.Max(settings.ChannelHeight, FitHeight);
             set
             {
-                channelHeight = Math.Max(FitHeight, value);
+                settings.ChannelHeight = value;
                 FitChannels = false;
             }
         }
@@ -247,8 +261,8 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         public double RangeAmplitude
         {
-            get => rangeAmplitude;
-            set => rangeAmplitude = Math.Max(1, value);
+            get => Math.Max(1, settings.RangeAmplitude);
+            set => settings.RangeAmplitude = value;
         }
 
         /// <summary>
@@ -334,7 +348,7 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         void RebuildBuffers(int rows)
         {
-            var totalSamples = Math.Max(1, (int)(timebase * sampleRate));
+            var totalSamples = Math.Max(1, (int)(Timebase * sampleRate));
             var samplesPerBin = (totalSamples + maxColumns - 1) / maxColumns;
             var columns = totalSamples / samplesPerBin;
             var buffersStale =

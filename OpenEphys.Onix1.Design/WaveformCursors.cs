@@ -35,10 +35,19 @@ namespace OpenEphys.Onix1.Design
         int grabbed = -1;
         Vector2 tableSize;
 
+        readonly WaveformScope settings;
+
+        /// <param name="settings">The node whose setting for showing the cursors is read and written.</param>
+        public WaveformCursors(WaveformScope settings) => this.settings = settings;
+
         /// <summary>
         /// Whether the cursors are shown. While they are, a cursor's line can be dragged.
         /// </summary>
-        public bool Show { get; set; }
+        public bool Show
+        {
+            get => settings.ShowCursors;
+            set => settings.ShowCursors = value;
+        }
 
         /// <summary>
         /// Whether a cursor's line is being dragged.

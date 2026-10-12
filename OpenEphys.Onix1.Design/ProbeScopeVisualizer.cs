@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Numerics;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -42,24 +43,12 @@ namespace OpenEphys.Onix1.Design
     internal sealed record ProbeScopeClipping(bool[] Channels);
 
     /// <summary>
-    /// Provides the pass-through node a <see cref="ProbeScopeVisualizer{TFrame}"/> opens on, and the
-    /// settings that belong to the workflow rather than to one viewing session.
+    /// Provides the pass-through node a <see cref="ProbeScopeVisualizer{TFrame}"/> opens on, with the settings a
+    /// probe scope adds to every waveform viewer's.
     /// </summary>
     /// <typeparam name="TFrame">The data frame type the scope displays.</typeparam>
-    public abstract class ProbeScope<TFrame> : Sink<TFrame>
+    public abstract class ProbeScope<TFrame> : WaveformScope
     {
-        /// <summary>
-        /// Gets or sets the number of seconds of data retained behind the display.
-        /// </summary>
-        /// <remarks>
-        /// While the scope is paused, the view can be moved back through this much of what has already
-        /// been shown and redrawn at any timebase. What a second costs, and how many of them a probe is
-        /// willing to spend memory on, is answered by <see cref="HistoryBytes"/>.
-        /// </remarks>
-        [Description("The number of seconds of data retained behind the display, which a paused view can " +
-            "be moved back through. Longer histories cost proportionally more memory.")]
-        public double HistorySeconds { get; set; } = 10;
-
         /// <summary>
         /// Gets or sets the name of the device whose data is displayed.
         /// </summary>
@@ -71,13 +60,52 @@ namespace OpenEphys.Onix1.Design
         public abstract string DeviceName { get; set; }
 
         /// <summary>
-        /// What <see cref="HistorySeconds"/> costs on this probe, which only a concrete scope can say,
+        /// Gets or sets the name of the band displayed.
+        /// </summary>
+        /// <remarks>
+        /// By name rather than position, since which bands a probe offers depends on its configuration. A name the
+        /// probe does not offer shows its first band.
+        /// </remarks>
+        [Description("The name of the band displayed. Left empty, or naming a band the probe does not offer, the " +
+            "first band is shown.")]
+        public string Band { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value specifying whether each channel is referenced against the median of the channels
+        /// sharing its converter.
+        /// </summary>
+        [DefaultValue(false)]
+        [Description("Specifies whether each channel is referenced against the median of the channels sharing its " +
+            "converter.")]
+        public bool CommonMedianReference { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value specifying whether each channel is high-passed at 1 Hz, on bands that offer it.
+        /// </summary>
+        [DefaultValue(true)]
+        [Description("Specifies whether each channel is high-passed at 1 Hz, as AC coupling does on a scope, on " +
+            "bands that offer it.")]
+        public bool AcCoupled { get; set; } = true;
+
+        /// <summary>
+        /// What <see cref="WaveformScope.HistorySeconds"/> costs on this probe, which only a concrete scope can say,
         /// knowing its own channel count and fastest band, and how much memory is reasonable to spend.
         /// </summary>
         internal abstract long HistoryBytes { get; }
 
         /// <inheritdoc/>
-        public override IObservable<TFrame> Process(IObservable<TFrame> source) => source;
+        public override Expression Build(IEnumerable<Expression> arguments)
+        {
+            var source = arguments.First();
+            if (source.Type != typeof(IObservable<TFrame>))
+                throw new InvalidOperationException($"{GetType().Name} displays a sequence of {typeof(TFrame).Name}.");
+
+            // NB: through a call of its own rather than returning the source, which the editor would take for the
+            // upstream node's output and offer that node's visualizers instead of the scope.
+            return Expression.Call(Expression.Constant(this, typeof(ProbeScope<TFrame>)), nameof(Process), null, source);
+        }
+
+        IObservable<TFrame> Process(IObservable<TFrame> source) => source;
     }
 
     /// <summary>
@@ -98,7 +126,7 @@ namespace OpenEphys.Onix1.Design
 
         readonly ImGuiProbeSelector selector = new();
         ImGuiLfpViewerPanel waveform;
-        ImGuiProbeScopeControlStrip strip;
+        ImGuiProbeScopeControlStrip<TFrame> strip;
 
         ImPlotGLControl canvas;
         DisplayPacer pacer;
@@ -188,11 +216,11 @@ namespace OpenEphys.Onix1.Design
 
             // NB: no plot can be wider than the widest monitor unless its window spans two, so that is as
             // much horizontal detail as is ever worth holding.
-            waveform = new(node.HistoryBytes, Screen.AllScreens.Max(screen => screen.Bounds.Width)) { Unit = Unit };
+            waveform = new(node, node.HistoryBytes, Screen.AllScreens.Max(screen => screen.Bounds.Width)) { Unit = Unit };
             selector.ShowGrid = false;
             selector.DefaultZoomWindowFraction = 1f;
 
-            strip = new ImGuiProbeScopeControlStrip();
+            strip = new ImGuiProbeScopeControlStrip<TFrame>(node);
 
             scheduler = new EventLoopScheduler();
 
@@ -364,6 +392,7 @@ namespace OpenEphys.Onix1.Design
             if (message is null)
             {
                 waveform.RefreshRate = pacer?.RefreshRate ?? waveform.RefreshRate;
+                strip.RequestSelection();
                 waveform.Draw();
             }
             else

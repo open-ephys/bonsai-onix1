@@ -76,12 +76,11 @@ namespace OpenEphys.Onix1.Design
             }
 
             standardTimeBases = ladder.ToArray();
-            timebase = Math.Min(timebase, standardTimeBases[standardTimeBases.Length - 1]);
         }
 
         /// <summary>
         /// The colors channels are drawn in.
         /// </summary>
-        public TraceColors Colors { get; } = new();
+        public TraceColors Colors { get; }
     }
 }
