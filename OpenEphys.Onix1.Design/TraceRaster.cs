@@ -47,7 +47,10 @@ namespace OpenEphys.Onix1.Design
         /// <param name="colors">Each channel's color, packed as RGBA.</param>
         /// <param name="sweepCursor">The column a live sweep is filling, or -1 when not live.</param>
         /// <param name="samples">Samples that have arrived so far, which only grows while live.</param>
-        public unsafe void Draw(in PlotFrame frame, uint[] colors, int sweepCursor, long samples)
+        /// <param name="wholeSweeps">
+        /// Whether the envelope holds the last whole sweep, as at fast sweeps, rather than the one being written.
+        /// </param>
+        public unsafe void Draw(in PlotFrame frame, uint[] colors, int sweepCursor, long samples, bool wholeSweeps)
         {
             var w = (int)frame.Width;
             var h = (int)(frame.Bottom - frame.Top);
@@ -77,11 +80,13 @@ namespace OpenEphys.Onix1.Design
             else if (sweepCursor >= 0)
             {
                 // NB: from the column the sweep was filling at the last frame to the one it is filling now, both
-                // included, since each was part filled when last drawn. How far the sweep went is taken from the
-                // samples that arrived, not from where the cursor stands, which repeats every sweep: at the shortest
-                // timebases a sweep can go round between frames and end a few columns on. More than half a sweep
-                // is cheaper drawn whole than worked out.
-                if (drawnCursor < 0 || 2 * (samples - drawnSamples) > frame.Window.Span)
+                // included, since each was part filled when last drawn. A sweep that went all the way round since
+                // then changed every column and is drawn whole, which is told from the samples that arrived, since
+                // the cursor repeats every sweep. Not so the last whole sweep, which is replaced every few frames
+                // anyway: drawn whole, at the shortest timebases it can take longer than a sweep lasts, so every
+                // frame would find a sweep gone round and draw whole again, and the frame rate never recovers.
+                var wentRound = samples - drawnSamples >= frame.Window.Span;
+                if (drawnCursor < 0 || wentRound && !wholeSweeps)
                 {
                     RepaintPixels(frame, colors, 0, w);
                 }

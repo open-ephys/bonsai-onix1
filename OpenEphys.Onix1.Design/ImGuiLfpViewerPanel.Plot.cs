@@ -131,7 +131,7 @@ namespace OpenEphys.Onix1.Design
                 var draw = ImGui.GetWindowDrawList();
                 DrawRowBand(draw, frame);
                 traces.Draw(frame, Colors.Packed(channelHidden.Length),
-                    Paused ? -1 : decimator.Cursor, history?.Count ?? 0);
+                    Paused ? -1 : decimator.Cursor, history?.Count ?? 0, FastSweep);
 
                 // NB: a trace that runs off its row may run into its neighbors but not past the rows, which can
                 // end above the plot's bottom when there are few channels.
