@@ -1,8 +1,6 @@
 ﻿using System;
-using System.ComponentModel;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Numerics;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -12,123 +10,32 @@ using Bonsai.Design;
 using Bonsai.Expressions;
 using Hexa.NET.ImGui;
 using OpenCV.Net;
-using OpenEphys.ProbeInterface.NET;
 
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// One selectable band of a probe: a short display name, a description of its passband for the dropdown,
-    /// the rate at which that band produces samples, and the passband of its AC coupled variant, or null where
-    /// it has none, as a band already high-passed well above the coupling's cutoff does not. How the band is
-    /// actually computed is left to concrete implementation of <see cref="ProbeScopeVisualizer{TFrame}.ProcessBand"/>.
-    /// </summary>
-    internal sealed record ProbeScopeBand(string Name, string Description, int SampleRate, string AcDescription);
-
-    /// <summary>
-    /// Everything a <see cref="ProbeScopeVisualizer{TFrame}"/> needs from a resolved device: the probe
-    /// geometry and the bands available for display.
-    /// </summary>
-    internal sealed record ProbeScopeSource(
-        SingleProbeGroup ProbeGroup,
-        IReadOnlyList<ProbeScopeBand> Bands);
-
-    /// <summary>
-    /// One block of band output on its way to the display, with the rate of the band that produced it.
-    /// </summary>
-    internal sealed record ProbeScopeSample(Mat Data, int SampleRate);
-
-    /// <summary>
-    /// The channels one frame found at either end of the ADC's range.
-    /// </summary>
-    internal sealed record ProbeScopeClipping(bool[] Channels);
-
-    /// <summary>
-    /// Provides the pass-through node a <see cref="ProbeScopeVisualizer{TFrame}"/> opens on, with the settings a
-    /// probe scope adds to every waveform viewer's.
-    /// </summary>
-    /// <typeparam name="TFrame">The data frame type the scope displays.</typeparam>
-    public abstract class ProbeScope<TFrame> : WaveformScope
-    {
-        /// <summary>
-        /// Gets or sets the name of the device whose data is displayed.
-        /// </summary>
-        /// <remarks>
-        /// Left empty, the upstream data operator's device is used if it can be unambiguously resolved. It needs
-        /// setting only when it cannot, as when the data arrives through a subject, or through a combinator
-        /// such as Zip that hides its source.
-        /// </remarks>
-        public abstract string DeviceName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the name of the band displayed.
-        /// </summary>
-        /// <remarks>
-        /// By name rather than position, since which bands a probe offers depends on its configuration. A name the
-        /// probe does not offer shows its first band.
-        /// </remarks>
-        [Description("The name of the band displayed. Left empty, or naming a band the probe does not offer, the " +
-            "first band is shown.")]
-        public string Band { get; set; }
-
-        /// <summary>
-        /// Gets or sets a value specifying whether each channel is referenced against the median of the channels
-        /// sharing its converter.
-        /// </summary>
-        [DefaultValue(false)]
-        [Description("Specifies whether each channel is referenced against the median of the channels sharing its " +
-            "converter.")]
-        public bool CommonMedianReference { get; set; }
-
-        /// <summary>
-        /// Gets or sets a value specifying whether each channel is high-passed at 1 Hz, on bands that offer it.
-        /// </summary>
-        [DefaultValue(true)]
-        [Description("Specifies whether each channel is high-passed at 1 Hz, as AC coupling does on a scope, on " +
-            "bands that offer it.")]
-        public bool AcCoupled { get; set; } = true;
-
-        /// <summary>
-        /// What <see cref="WaveformScope.HistorySeconds"/> costs on this probe, which only a concrete scope can say,
-        /// knowing its own channel count and fastest band, and how much memory is reasonable to spend.
-        /// </summary>
-        internal abstract long HistoryBytes { get; }
-
-        /// <inheritdoc/>
-        public override Expression Build(IEnumerable<Expression> arguments)
-        {
-            var source = arguments.First();
-            if (source.Type != typeof(IObservable<TFrame>))
-                throw new InvalidOperationException($"{GetType().Name} displays a sequence of {typeof(TFrame).Name}.");
-
-            // NB: through a call of its own rather than returning the source, which the editor would take for the
-            // upstream node's output and offer that node's visualizers instead of the scope.
-            return Expression.Call(Expression.Constant(this, typeof(ProbeScope<TFrame>)), nameof(Process), null, source);
-        }
-
-        IObservable<TFrame> Process(IObservable<TFrame> source) => source;
-    }
-
-    /// <summary>
-    /// Provides a type visualizer that shows a probe schematic beside a live multi-channel waveform viewer
-    /// for a streaming probe. Subclasses supply how to read the device name off the upstream data operator
-    /// and how to turn its <see cref="DeviceInfo"/> into geometry and bands.
+    /// Provides a type visualizer that shows a <see cref="ProbeScope{TFrame}"/>'s data as a probe schematic beside a
+    /// live multi-channel waveform viewer.
     /// </summary>
     /// <remarks>
-    /// The visualizer opens on a pass-through sink node downstream of the data operator. The device is
-    /// resolved once the first frame arrives, since data flowing proves the configuration operator has
+    /// The device is resolved once the first frame arrives, since data flowing proves the configuration operator has
     /// registered it.
     /// </remarks>
     /// <typeparam name="TFrame">The data frame type the scope displays.</typeparam>
-    public abstract class ProbeScopeVisualizer<TFrame> : BufferedVisualizer
+    public class ProbeScopeVisualizer<TFrame> : DialogTypeVisualizer
     {
         const float ProbePaneWidth = 260f;
+        const int DrainMilliseconds = 15;
         const float CollapsedPaneWidth = 28f;
 
+        ProbeScope<TFrame> node;
+        readonly ConcurrentQueue<object> pending = new();
+        Timer drainTimer;
         readonly ImGuiProbeSelector selector = new();
         ImGuiLfpViewerPanel waveform;
         ImGuiProbeScopeControlStrip<TFrame> strip;
 
-        ImPlotGLControl canvas;
+        ImGuiHoverGLControl canvas;
         DisplayPacer pacer;
         EventLoopScheduler scheduler;
 
@@ -140,40 +47,116 @@ namespace OpenEphys.Onix1.Design
         // one, and read once a frame.
         volatile string fault;
         bool probePaneCollapsed;
-        ProbeScopeSource source;
+        ProbeScopeSource<TFrame> source;
         float stripHeight;
 
-        /// <summary>
-        /// Returns the device name declared on <paramref name="upstreamOperator"/>, or null if
-        /// it is not a data operator this scope can display.
-        /// </summary>
-        private protected abstract string DeviceNameOf(object upstreamOperator);
+        /// <inheritdoc/>
+        public override void Load(IServiceProvider provider)
+        {
+            var context = (ITypeVisualizerContext)provider.GetService(typeof(ITypeVisualizerContext));
+            var workflowBuilder = (WorkflowBuilder)provider.GetService(typeof(WorkflowBuilder));
+            node = (ProbeScope<TFrame>)ExpressionBuilder.GetWorkflowElement(context.Source);
+            fault = null;
 
-        /// <summary>
-        /// Builds the geometry and bands for a resolved device. Throw to report a device this
-        /// scope cannot display.
-        /// </summary>
-        private protected abstract ProbeScopeSource CreateSource(DeviceInfo info);
+            try { deviceName = UpstreamDevice.Resolve(workflowBuilder?.Workflow, context.Source, node.DeviceName, node.DeviceNameOf); }
+            catch (InvalidOperationException ex) { fault = $"ProbeScope: {ex.Message}"; }
 
-        /// <summary>
-        /// Builds the complete signal displayed for <paramref name="selection"/>: everything done to the
-        /// device's data to produce what is drawn, in the unit named by <see cref="Unit"/>.
-        /// </summary>
-        /// <param name="selection">The band, by index into the list returned by <see cref="CreateSource"/>,
-        /// and the options asked for.</param>
-        /// <param name="frames">The device's frame sequence.</param>
-        private protected abstract IObservable<Mat> ProcessBand(BandSelection selection, IObservable<TFrame> frames);
+            // NB: no plot can be wider than the widest monitor unless its window spans two, so that is as
+            // much horizontal detail as is ever worth holding.
+            waveform = new(node, node.HistoryBytes, Screen.AllScreens.Max(screen => screen.Bounds.Width)) { Unit = node.Unit };
+            selector.ShowGrid = false;
+            selector.DefaultZoomWindowFraction = 1f;
 
-        /// <summary>
-        /// Unit the bands produce.
-        /// </summary>
-        private protected abstract string Unit { get; }
+            strip = new ImGuiProbeScopeControlStrip<TFrame>(node);
 
-        /// <summary>
-        /// The channels of <paramref name="frame"/> holding a sample at either end of the ADC's range in the stream
-        /// <paramref name="selection"/>'s band comes from, or null where none does.
-        /// </summary>
-        private protected abstract bool[] Clipped(TFrame frame, BandSelection selection);
+            scheduler = new EventLoopScheduler();
+
+            canvas = new ImGuiHoverGLControl(waveform.Hotkeys.Concat(selector.Hotkeys))
+            {
+                Size = new System.Drawing.Size(1100, 620),
+                Dock = DockStyle.Fill
+            };
+            canvas.Render += RenderFrame;
+
+            // NB: paced from the handle's lifetime rather than Load's, since a handle can be recreated.
+            canvas.HandleCreated += (_, _) => pacer = new DisplayPacer(canvas.Handle);
+            canvas.HandleDestroyed += (_, _) => StopPacer();
+            canvas.Paint += (_, _) => pacer?.Painted();
+
+            var visualizerService = (IDialogTypeVisualizerService)provider.GetService(typeof(IDialogTypeVisualizerService));
+            visualizerService?.AddControl(canvas);
+
+            // NB: each frame applies what has arrived, and so does a timer, which runs while the window is
+            // minimized and paints nothing, so that what arrives meanwhile is applied rather than held.
+            drainTimer = new Timer { Interval = DrainMilliseconds };
+            drainTimer.Tick += (_, _) => Drain();
+            drainTimer.Start();
+        }
+
+        /// <inheritdoc/>
+        /// <remarks>
+        /// What the band chain produces is queued and applied at the start of each frame, rather than handed to
+        /// <see cref="Show"/> one value at a time as the base class does, which at a probe's rate would keep the
+        /// window from painting, or in batches on a timer, as <see cref="BufferedVisualizer"/> delivers them, which
+        /// would feed the frames unevenly.
+        /// </remarks>
+        public override IObservable<object> Visualize(IObservable<IObservable<object>> source, IServiceProvider provider) =>
+            Observable.Create<object>(_ =>
+                BindBands(source.Merge().Cast<TFrame>()).Subscribe(pending.Enqueue, ex => fault = ex.Message));
+
+        IObservable<object> BindBands(IObservable<TFrame> frames)
+        {
+            if (fault is not null)
+                return Observable.Never<object>();
+
+            // NB: off the acquisition thread the frames arrive on, so the band filters never hold it up, and onto
+            // one ordered thread, since the filters carry state across blocks.
+            return frames
+                .ObserveOn(scheduler)
+                // NB: GetDevice throws until the configuration operator has registered, which
+                // nothing orders before the visualizer subscribes. A frame arriving proves it has.
+                .Publish(shared => shared
+                    .Take(1)
+                    .Select(_ => ResolveSource())
+                    .Where(probe => probe is not null)
+                    .SelectMany(probe => Observable.Return<object>(probe)
+                        .Concat(strip.BandSelected
+                            .Select(band => BandOutput(probe, band, shared))
+                            .Switch()
+                        )
+                    )
+                );
+        }
+
+        ProbeScopeSource<TFrame> ResolveSource()
+        {
+            try
+            {
+                DeviceInfo deviceInfo = null;
+                using (DeviceManager.GetDevice(deviceName).Subscribe(info => deviceInfo = info)) { }
+                return node.CreateSource(deviceInfo);
+            }
+            catch (Exception ex)
+            {
+                fault = ex.Message;
+                return null;
+            }
+        }
+
+        IObservable<object> BandOutput(ProbeScopeSource<TFrame> probe, BandSelection selection, IObservable<TFrame> frames)
+        {
+            var band = probe.Bands[selection.Band];
+            var clipping = frames
+                .Select(frame => ClippedRows(band.Raw(frame), probe.AdcMaximum))
+                .Where(channels => channels is not null)
+                .Select(channels => (object)new ProbeScopeClipping(channels));
+
+            var output = selection.AcCoupled && band.AcTransform is not null ? band.AcTransform(frames) : band.Transform(frames);
+            if (selection.CommonMedianReference && probe.Reference is not null)
+                output = probe.Reference(output);
+
+            return output.Select(data => (object)new ProbeScopeSample(data, band.SampleRate)).Merge(clipping);
+        }
 
         /// <summary>
         /// The rows of <paramref name="raw"/> holding a sample at either end of the ADC's range, or null where none
@@ -183,7 +166,7 @@ namespace OpenEphys.Onix1.Design
         /// On the raw counts, before scaling and any filter, which smear a clipped stretch away from the limits and
         /// move its baseline. Null when nothing clipped, so a clean recording sends the display nothing.
         /// </remarks>
-        private protected static bool[] ClippedRows(Mat raw, double maximum)
+        static bool[] ClippedRows(Mat raw, double maximum)
         {
             using var low = new Mat(raw.Rows, 1, raw.Depth, 1);
             using var high = new Mat(raw.Rows, 1, raw.Depth, 1);
@@ -203,118 +186,30 @@ namespace OpenEphys.Onix1.Design
             return clipped;
         }
 
-        /// <inheritdoc/>
-        public override void Load(IServiceProvider provider)
+        void Drain()
         {
-            var context = (ITypeVisualizerContext)provider.GetService(typeof(ITypeVisualizerContext));
-            var workflowBuilder = (WorkflowBuilder)provider.GetService(typeof(WorkflowBuilder));
-            var node = (ProbeScope<TFrame>)ExpressionBuilder.GetWorkflowElement(context.Source);
-            fault = null;
-
-            try { deviceName = UpstreamDevice.Resolve(workflowBuilder?.Workflow, context.Source, node.DeviceName, DeviceNameOf); }
-            catch (InvalidOperationException ex) { fault = $"ProbeScope: {ex.Message}"; }
-
-            // NB: no plot can be wider than the widest monitor unless its window spans two, so that is as
-            // much horizontal detail as is ever worth holding.
-            waveform = new(node, node.HistoryBytes, Screen.AllScreens.Max(screen => screen.Bounds.Width)) { Unit = Unit };
-            selector.ShowGrid = false;
-            selector.DefaultZoomWindowFraction = 1f;
-
-            strip = new ImGuiProbeScopeControlStrip<TFrame>(node);
-
-            scheduler = new EventLoopScheduler();
-
-            canvas = new ImPlotGLControl
-            {
-                Size = new System.Drawing.Size(1100, 620),
-                Dock = DockStyle.Fill
-            };
-            canvas.HoverKeys.UnionWith(waveform.Hotkeys);
-
-            // NB: the probe selector's, for its ruler.
-            canvas.HoverKeys.Add(Keys.R);
-            canvas.HoverKeys.Add(Keys.Delete);
-            canvas.Render += RenderFrame;
-
-            // NB: paced from the handle's lifetime rather than Load's, since a handle can be recreated.
-            canvas.HandleCreated += (_, _) => pacer = new DisplayPacer(canvas.Handle);
-            canvas.HandleDestroyed += (_, _) => StopPacer();
-            canvas.Paint += (_, _) => pacer?.Painted();
-
-            var visualizerService = (IDialogTypeVisualizerService)provider.GetService(typeof(IDialogTypeVisualizerService));
-            visualizerService?.AddControl(canvas);
-        }
-
-        /// <inheritdoc/>
-        public override IObservable<object> Visualize(IObservable<IObservable<object>> source, IServiceProvider provider)
-        {
-            return base.Visualize(source.Select(BindBands), provider);
-        }
-
-        IObservable<object> BindBands(IObservable<object> frames)
-        {
-            if (fault is not null)
-                return Observable.Never<object>();
-
-            // NB: BufferedVisualizer forwards to Show under the lock its producer takes to append,
-            // so without this hop the acquisition thread waits on the UI thread once a tick. It must
-            // be one ordered thread: the band filters carry state across blocks.
-            return frames
-                .Cast<TFrame>()
-                .ObserveOn(scheduler)
-                // NB: GetDevice throws until the configuration operator has registered, which
-                // nothing orders before the visualizer subscribes. A frame arriving proves it has.
-                .Publish(shared => shared
-                    .Take(1)
-                    .Select(_ => ResolveSource())
-                    .Where(probe => probe is not null)
-                    .SelectMany(probe => Observable.Return<object>(probe)
-                        .Concat(strip.BandSelected
-                            .Select(band => BandOutput(probe, band, shared))
-                            .Switch()
-                        )
-                    )
-                );
-        }
-
-        ProbeScopeSource ResolveSource()
-        {
-            try
-            {
-                DeviceInfo deviceInfo = null;
-                using (DeviceManager.GetDevice(deviceName).Subscribe(info => deviceInfo = info)) { }
-                return CreateSource(deviceInfo);
-            }
-            catch (Exception ex)
-            {
-                fault = ex.Message;
-                return null;
-            }
-        }
-
-        IObservable<object> BandOutput(ProbeScopeSource probe, BandSelection selection, IObservable<TFrame> frames)
-        {
-            var sampleRate = probe.Bands[selection.Band].SampleRate;
-            var clipping = frames
-                .Select(frame => Clipped(frame, selection))
-                .Where(channels => channels is not null)
-                .Select(channels => (object)new ProbeScopeClipping(channels));
-
-            return ProcessBand(selection, frames).Select(data => (object)new ProbeScopeSample(data, sampleRate)).Merge(clipping);
+            while (pending.TryDequeue(out var value))
+                Apply(value);
         }
 
         /// <inheritdoc/>
         /// <remarks>
-        /// The resolved source arrives through the same sequence as the samples so that it is
-        /// applied on the UI thread, in order, ahead of anything that depends on it.
+        /// Nothing is shown through here, since <see cref="Visualize"/> applies what the scope receives itself.
         /// </remarks>
         public override void Show(object value)
         {
-            if (value is ProbeScopeSource probe)
+        }
+
+        // NB: the resolved source arrives through the same sequence as the samples so that it is applied on the UI
+        // thread, in order, ahead of anything that depends on it.
+        void Apply(object value)
+        {
+            if (value is ProbeScopeSource<TFrame> probe)
             {
                 source = probe;
                 selector.Refresh(probe.ProbeGroup);
                 strip.Bands = probe.Bands;
+                strip.ReferenceOffered = probe.Reference is not null;
                 return;
             }
 
@@ -330,6 +225,7 @@ namespace OpenEphys.Onix1.Design
 
         void RenderFrame(object sender, EventArgs e)
         {
+            Drain();
             var io = ImGui.GetIO();
             io.DisplaySize = new Vector2(canvas.Width, canvas.Height);
 
@@ -431,6 +327,8 @@ namespace OpenEphys.Onix1.Design
         /// <inheritdoc/>
         public override void Unload()
         {
+            drainTimer?.Dispose();
+            while (pending.TryDequeue(out _)) { }
             StopPacer();
             scheduler?.Dispose();
             waveform?.Dispose();
@@ -441,6 +339,8 @@ namespace OpenEphys.Onix1.Design
             waveform = null;
             canvas = null;
             source = null;
+            drainTimer = null;
+            node = null;
         }
     }
 }

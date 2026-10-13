@@ -36,12 +36,17 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// The bands to offer, in display order. The owner sets this once the probe is known.
         /// </summary>
-        public IReadOnlyList<ProbeScopeBand> Bands { get; set; } = Array.Empty<ProbeScopeBand>();
+        public IReadOnlyList<ProbeScopeBand<TFrame>> Bands { get; set; } = Array.Empty<ProbeScopeBand<TFrame>>();
 
         /// <summary>
         /// The signal being asked for, starting with whatever the strip opens on.
         /// </summary>
         public IObservable<BandSelection> BandSelected => selection;
+
+        /// <summary>
+        /// Whether the probe offers referencing. The owner sets this once the probe is known.
+        /// </summary>
+        public bool ReferenceOffered { get; set; } = true;
 
         /// <summary>
         /// The scope's band by name, or the first band where the bands are not yet known or do not include it.
@@ -84,10 +89,13 @@ namespace OpenEphys.Onix1.Design
             BandCombo();
 
             MenuColumn("Filters");
-            var cmr = scope.CommonMedianReference;
+            // NB: shown unchecked where the probe does not offer it, as AC is where the band does not.
+            ImGui.BeginDisabled(!ReferenceOffered);
+            var cmr = scope.CommonMedianReference && ReferenceOffered;
             if (ImGui.Checkbox("CMR", ref cmr))
                 scope.CommonMedianReference = cmr;
             ImGui.SetItemTooltip("Reference each channel against the median of the channels sharing its converter");
+            ImGui.EndDisabled();
 
             ImGui.SameLine();
             var band = Band;

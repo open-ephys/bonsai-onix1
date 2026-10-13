@@ -21,7 +21,6 @@
     <PackageReference Include="clroni" Version="6.3.0" />
     <PackageReference Include="Hexa.NET.ImGui" Version="2.2.9" GeneratePathProperty="true" />
     <PackageReference Include="Hexa.NET.ImGui.Backends" Version="1.0.18" GeneratePathProperty="true" />
-    <PackageReference Include="Hexa.NET.ImPlot" Version="2.2.9" GeneratePathProperty="true" />
     <PackageReference Include="Hexa.NET.Utilities" Version="2.2.9" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="OpenCV.Net" Version="3.4.2" />
@@ -82,7 +81,6 @@
     <ItemGroup>
       <NativeDlls Include="$(PkgHexa_NET_ImGui_Backends)\runtimes\win-x64\native\ImGuiImpl.dll" />
       <NativeDlls Include="$(PkgHexa_NET_ImGui)\runtimes\win-x64\native\cimgui.dll" />
-      <NativeDlls Include="$(PkgHexa_NET_ImPlot)\runtimes\win-x64\native\cimplot.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(NativeDlls)" DestinationFolder="$(OutputPath)" />
   </Target>
@@ -111,10 +109,7 @@
     <ProbeInterfaceJsonSource Include="Resources\OEHSRHS2116.json" />
   </ItemGroup>
 
-  <UsingTask
-    TaskName="GZipCompress"
-    TaskFactory="RoslynCodeTaskFactory"
-    AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+  <UsingTask TaskName="GZipCompress" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
     <ParameterGroup>
       <SourceFile ParameterType="System.String" Required="true" />
       <DestinationFile ParameterType="System.String" Required="true" />
@@ -142,13 +137,8 @@ using (var gzip = new GZipStream(output, CompressionLevel.Optimal))
     GZipCompress for a source .json newer than its own (already-computed) .gz output,
     skipping the rest on every build where the source hasn't changed.
   -->
-  <Target Name="CompressProbeInterfaceResources"
-          BeforeTargets="AssignTargetPaths"
-          Inputs="@(ProbeInterfaceJsonSource)"
-          Outputs="@(ProbeInterfaceJsonSource->'$(IntermediateOutputPath)Resources\%(Filename)%(Extension).gz')">
-    <GZipCompress
-      SourceFile="%(ProbeInterfaceJsonSource.Identity)"
-      DestinationFile="$(IntermediateOutputPath)Resources\%(ProbeInterfaceJsonSource.Filename)%(ProbeInterfaceJsonSource.Extension).gz" />
+  <Target Name="CompressProbeInterfaceResources" BeforeTargets="AssignTargetPaths" Inputs="@(ProbeInterfaceJsonSource)" Outputs="@(ProbeInterfaceJsonSource->'$(IntermediateOutputPath)Resources\%(Filename)%(Extension).gz')">
+    <GZipCompress SourceFile="%(ProbeInterfaceJsonSource.Identity)" DestinationFile="$(IntermediateOutputPath)Resources\%(ProbeInterfaceJsonSource.Filename)%(ProbeInterfaceJsonSource.Extension).gz" />
   </Target>
 
   <!--

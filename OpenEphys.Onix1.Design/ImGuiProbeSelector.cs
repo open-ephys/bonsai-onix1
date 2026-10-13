@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Keys = System.Windows.Forms.Keys;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -215,6 +216,12 @@ namespace OpenEphys.Onix1.Design
         string units = "um";
 
         readonly ImGuiProbeRuler ruler = new();
+
+        /// <summary>
+        /// Every key the probe view answers: R turns the ruler on and off, and Delete removes the ruler under the
+        /// pointer.
+        /// </summary>
+        public IEnumerable<Keys> Hotkeys => new[] { Keys.R, Keys.Delete };
         bool rulerMode;
 
         // visual constants
