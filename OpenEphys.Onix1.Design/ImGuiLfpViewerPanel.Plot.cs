@@ -330,7 +330,7 @@ namespace OpenEphys.Onix1.Design
         {
             var labelBuffer = stackalloc byte[32];
             var label = new StrBuilder(labelBuffer, 32);
-            var labelTop = ImGui.GetCursorPosY();
+            var labelTop = ImGui.GetCursorScreenPos().Y;
             var textOffset = (layout.RowHeight - ImGui.GetTextLineHeight()) / 2;
             var left = ImGui.GetCursorScreenPos().X;
             var right = left + ImGui.GetContentRegionAvail().X;
@@ -393,11 +393,10 @@ namespace OpenEphys.Onix1.Design
                     (i % step != 0 || Crowds(i, hovered) || Crowds(i, selected)))
                     continue;
 
-                var hidden = channelHidden[i];
-                if (hidden) ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled));
-                ImGui.SetCursorPosY(labelTop + (i - layout.FirstRow) * layout.RowHeight + textOffset);
-                ImGui.Text(label);
-                if (hidden) ImGui.PopStyleColor();
+                // NB: drawn rather than laid out, since a label on a row shorter than the text reaches past it,
+                // and on the last rows would stretch what the rows scroll through and bring up a scroll bar.
+                var color = ImGui.GetColorU32(channelHidden[i] ? ImGuiCol.TextDisabled : ImGuiCol.Text);
+                draw.AddText(new Vector2(left, labelTop + (i - layout.FirstRow) * layout.RowHeight + textOffset), color, label);
             }
         }
 
