@@ -114,10 +114,9 @@ namespace OpenEphys.Onix1.Design
         public bool ShowClipping { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets a value specifying whether the cursors are shown.
+        /// Gets or sets the channels not drawn, by index.
         /// </summary>
-        [DefaultValue(false)]
-        [Description("Specifies whether the cursors are shown.")]
-        public bool ShowCursors { get; set; }
+        [Description("The channels not drawn, by index.")]
+        public int[] HiddenChannels { get; set; }
     }
 }

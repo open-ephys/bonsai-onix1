@@ -102,11 +102,10 @@ namespace OpenEphys.Onix1.Design
             // NB: only from the labels, which leaves a click on a trace to select it and Shift+Drag there to set
             // the range. Set rather than toggled, so a drag across a mix of shown and hidden channels gives one
             // result.
-            var rows = channelHidden.Length;
             var onLabels = ImGui.GetMousePos().X < plotLeft;
             if (onLabels && ImGui.IsMouseClicked(ImGuiMouseButton.Left) && (Modifiers() || Modifiers(shift: true)))
             {
-                Array.Copy(channelHidden, dragOriginal, rows);
+                dragOriginal = settings.HiddenChannels ?? Array.Empty<int>();
                 dragHidden = ImGui.GetIO().KeyShift;
                 dragAnchor = channel;
                 if (!ImGui.GetIO().KeyShift)
@@ -117,11 +116,19 @@ namespace OpenEphys.Onix1.Design
             {
                 var lo = Math.Min(dragAnchor, channel);
                 var hi = Math.Max(dragAnchor, channel);
-                for (int c = 0; c < rows; c++)
-                    channelHidden[c] = c >= lo && c <= hi ? hide : dragOriginal[c];
+                var hidden = dragOriginal.Where(c => c < lo || c > hi).ToList();
+                if (hide)
+                {
+                    for (int c = lo; c <= hi; c++)
+                        hidden.Add(c);
+                    hidden.Sort();
+                }
+
+                if (!hidden.SequenceEqual(settings.HiddenChannels ?? Array.Empty<int>()))
+                    settings.HiddenChannels = hidden.Count > 0 ? hidden.ToArray() : null;
 
                 // NB: a hidden channel shows nothing to select, and the cursors would read nothing from it.
-                if (selectedChannel >= 0 && channelHidden[selectedChannel])
+                if (selectedChannel >= 0 && ChannelHidden[selectedChannel])
                     selectedChannel = -1;
             }
         }
@@ -485,9 +492,9 @@ namespace OpenEphys.Onix1.Design
             var from = expandedChannel >= 0 ? expandedChannel
                 : selectedChannel >= 0 ? selectedChannel
                 : layout.FirstVisible - direction;
-            for (var c = from + direction; c >= 0 && c < channelHidden.Length; c += direction)
+            for (var c = from + direction; c >= 0 && c < channels; c += direction)
             {
-                if (!channelHidden[c])
+                if (!ChannelHidden[c])
                 {
                     selectedChannel = c;
                     break;
@@ -518,7 +525,7 @@ namespace OpenEphys.Onix1.Design
         {
             for (int c = layout.FirstVisible; c < layout.LastVisible; c++)
             {
-                if (!channelHidden[c])
+                if (!ChannelHidden[c])
                     return c;
             }
             return -1;

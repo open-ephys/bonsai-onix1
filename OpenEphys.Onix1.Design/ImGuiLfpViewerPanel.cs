@@ -52,13 +52,12 @@ namespace OpenEphys.Onix1.Design
             this.settings = settings;
             this.historyBytes = historyBytes;
             this.maxColumns = maxColumns;
-            cursors = new(settings);
             Colors = new(settings);
             frameKeys = FrameKeys();
             tableKeys = TableKeys();
         }
 
-        readonly WaveformCursors cursors;
+        readonly WaveformCursors cursors = new();
 
         /// <summary>
         /// Whether the cursors are shown. While they are, a cursor's line can be dragged, and they read the selected
@@ -134,8 +133,35 @@ namespace OpenEphys.Onix1.Design
 
         WaveformHistory history;
 
-        bool[] channelHidden = Array.Empty<bool>();
-        bool[] dragOriginal = Array.Empty<bool>();
+        // NB: how many channels the data has, which the hidden mask's length used to stand in for.
+        int channels;
+
+        // NB: the node's hidden channels as a mask, for looking a channel up, worked out again whenever the node's
+        // array is replaced or the channel count changes. Never written to: hiding and showing replace the array.
+        bool[] hiddenMask = Array.Empty<bool>();
+        int[] maskedFrom;
+
+        bool[] ChannelHidden
+        {
+            get
+            {
+                if (hiddenMask.Length != channels || !ReferenceEquals(maskedFrom, settings.HiddenChannels))
+                {
+                    maskedFrom = settings.HiddenChannels;
+                    hiddenMask = new bool[channels];
+                    foreach (var channel in maskedFrom ?? Array.Empty<int>())
+                    {
+                        if (channel >= 0 && channel < channels)
+                            hiddenMask[channel] = true;
+                    }
+                }
+
+                return hiddenMask;
+            }
+        }
+
+        // NB: the hidden channels when a drag on the labels began, which the drag sets its range against.
+        int[] dragOriginal = Array.Empty<int>();
 
         /// <summary>
         /// How long a channel is shown clipping after it last clipped.
@@ -177,7 +203,7 @@ namespace OpenEphys.Onix1.Design
         }
 
         bool Clipping(int channel) =>
-            ShowClipping && !channelHidden[channel] && dataSeconds - lastClip[channel] < ClipHoldSeconds;
+            ShowClipping && !ChannelHidden[channel] && dataSeconds - lastClip[channel] < ClipHoldSeconds;
 
         // NB: steady while paused, when the marks only say which channels were clipping and flashing would only
         // distract from studying the view.
@@ -240,8 +266,8 @@ namespace OpenEphys.Onix1.Design
         /// The channel height at which every channel just fills the plot's visible height, as far as the smallest
         /// height allows. Rows any shorter would leave part of the plot unused.
         /// </summary>
-        float FitHeight => channelHidden.Length > 0 && visibleHeight > 0
-            ? Math.Max(MinChannelHeight, visibleHeight / channelHidden.Length)
+        float FitHeight => channels > 0 && visibleHeight > 0
+            ? Math.Max(MinChannelHeight, visibleHeight / channels)
             : MinChannelHeight;
 
         /// <summary>
@@ -367,10 +393,9 @@ namespace OpenEphys.Onix1.Design
                 // the live one, so that changing the timebase while paused rebuilds both together.
                 pannedDecimator = new Decimator(rows, columns, samplesPerBin);
 
-                if (channelHidden.Length != rows)
+                if (channels != rows)
                 {
-                    channelHidden = new bool[rows];
-                    dragOriginal = new bool[rows];
+                    channels = rows;
                     lastClip = new double[rows];
                     ClearClipping();
                 }

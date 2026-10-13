@@ -123,14 +123,14 @@ namespace OpenEphys.Onix1.Design
                 frame = new PlotFrame(
                     envelope, layout, new PixelAxis(shown, plotLeft, plotSpan), plotTop, plotBottom,
                     sampleRate, Paused, CursorPosition, Timebase, pausedTimebase,
-                    AmplitudeView.Span, AmplitudeView.Center, Unit, channelHidden, expandedChannel, selectedChannel, ShowHeatmap, ColorThreshold);
+                    AmplitudeView.Span, AmplitudeView.Center, Unit, ChannelHidden, expandedChannel, selectedChannel, ShowHeatmap, ColorThreshold);
 
                 // NB: an item the height of every row, which is what the table scrolls through. Everything in the
                 // plot is drawn rather than laid out.
                 ImGui.Dummy(new Vector2(plotWidth, layout.Height));
                 var draw = ImGui.GetWindowDrawList();
                 DrawRowBand(draw, frame);
-                traces.Draw(frame, Colors.Packed(channelHidden.Length),
+                traces.Draw(frame, Colors.Packed(channels),
                     Paused ? -1 : decimator.Cursor, history?.Count ?? 0, FastSweep);
 
                 // NB: a trace that runs off its row may run into its neighbors but not past the rows, which can
@@ -139,7 +139,7 @@ namespace OpenEphys.Onix1.Design
                     new Vector2(plotX + plotWidth, layout.Origin + layout.Height), true);
                 if (expandedChannel >= 0)
                     DrawChannelLines(draw, frame, expandedChannel, 1);
-                else if (hovered >= 0 && !channelHidden[hovered] && !ShowHeatmap)
+                else if (hovered >= 0 && !ChannelHidden[hovered] && !ShowHeatmap)
                     DrawChannelLines(draw, frame, hovered, HoverLineWeight);
                 DrawSweepCursor(draw, frame);
                 draw.PopClipRect();
@@ -148,7 +148,7 @@ namespace OpenEphys.Onix1.Design
 
                 // NB: a heatmap row has no line to thicken and covers the band, so the hovered and selected rows
                 // are marked from outside, which also ties a label to its row when rows are far shorter than it.
-                if (ShowHeatmap && expandedChannel < 0 && hovered >= 0 && !channelHidden[hovered])
+                if (ShowHeatmap && expandedChannel < 0 && hovered >= 0 && !ChannelHidden[hovered])
                     BracketRow(draw, frame, hovered, ColHoveredRow);
                 if (ShowHeatmap && expandedChannel < 0 && selectedChannel >= 0)
                     BracketRow(draw, frame, selectedChannel, WaveformCursors.Color);
@@ -395,7 +395,7 @@ namespace OpenEphys.Onix1.Design
 
                 // NB: drawn rather than laid out, since a label on a row shorter than the text reaches past it,
                 // and on the last rows would stretch what the rows scroll through and bring up a scroll bar.
-                var color = ImGui.GetColorU32(channelHidden[i] ? ImGuiCol.TextDisabled : ImGuiCol.Text);
+                var color = ImGui.GetColorU32(ChannelHidden[i] ? ImGuiCol.TextDisabled : ImGuiCol.Text);
                 draw.AddText(new Vector2(left, labelTop + (i - layout.FirstRow) * layout.RowHeight + textOffset), color, label);
             }
         }
@@ -498,7 +498,7 @@ namespace OpenEphys.Onix1.Design
             var inPlot = ImGui.IsWindowHovered() && !ImGui.IsAnyItemHovered() &&
                 pointer.X >= frame.Left && pointer.X < frame.Left + frame.Width &&
                 pointer.Y >= frame.Top && pointer.Y < frame.Bottom;
-            if (inPlot && !cursors.Dragging && hovered >= 0 && !channelHidden[hovered] && expandedChannel < 0 &&
+            if (inPlot && !cursors.Dragging && hovered >= 0 && !ChannelHidden[hovered] && expandedChannel < 0 &&
                 ImGui.IsMouseClicked(ImGuiMouseButton.Left) && Modifiers())
             {
                 selectedChannel = hovered;
