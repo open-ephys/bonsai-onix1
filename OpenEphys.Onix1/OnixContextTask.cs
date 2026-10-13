@@ -7,14 +7,9 @@ namespace OpenEphys.Onix1
     {
         /// <inheritdoc/>
         internal OnixContextTask(string driver, int index, ValidationLevel validationLevel)
-            : base(driver, index, validationLevel) { }
-
-        internal const string DefaultDriver = "riffa";
-        internal const int DefaultIndex = 0;
-
-        /// <inheritdoc/>
-        protected override void ContextCreationChecks()
+            : base(driver, index, validationLevel)
         {
+
             var (major, _) = GenericHelper.GetFirmwareVersionComponents(GetHub(0).FirmwareVersion);
             if (major != 2)
             {
@@ -24,20 +19,23 @@ namespace OpenEphys.Onix1
             }
         }
 
+        internal const string DefaultDriver = "riffa";
+        internal const int DefaultIndex = 0;
+
         /// <inheritdoc/>
-        protected override bool IndependentFrameClockReset()
+        protected override FrameClockResetMode GetFrameClockResetMode()
         {
-            int address = ctx.HardwareAddress;
+            int address = HardwareAddress;
             int mode = (address & 0x00FF0000) >> 16;
-            return mode != 0; // synchronized mode, reset counter independently
+            return mode == 0 ? FrameClockResetMode.Synchronized : FrameClockResetMode.Independent;
         }
 
         #region oni.Context Properties
         // Port A and Port B each have a bit in PORTFUNC
         internal PassthroughState HubState
         {
-            get => (PassthroughState)ctx.GetCustomOption((int)oni.ONIXOption.PORTFUNC);
-            set => ctx.SetCustomOption((int)oni.ONIXOption.PORTFUNC, (int)value);
+            get => (PassthroughState)GetCustomOption((int)oni.ONIXOption.PORTFUNC);
+            set => SetCustomOption((int)oni.ONIXOption.PORTFUNC, (int)value);
         }
 
         internal uint GetPassthroughDeviceAddress(uint deviceAddress)
