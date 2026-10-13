@@ -48,10 +48,23 @@
         public float Width => Axis.Width;
 
         /// <summary>
+        /// The line values in <paramref name="channel"/>'s row lie on: a value's height on screen is
+        /// <c>Offset</c> less the value times <c>Scale</c>.
+        /// </summary>
+        public (float Offset, float Scale) ValueMapping(int channel)
+        {
+            var scale = Layout.RowHeight / Range;
+            return ((float)(Layout.RowTop(channel) + Layout.RowHeight / 2 + Center * scale), (float)scale);
+        }
+
+        /// <summary>
         /// Height on screen of <paramref name="value"/> in <paramref name="channel"/>'s row.
         /// </summary>
-        public float ValueY(int channel, double value) =>
-            Layout.RowTop(channel) + Layout.RowHeight / 2 - (float)((value - Center) * Layout.RowHeight / Range);
+        public float ValueY(int channel, double value)
+        {
+            var (offset, scale) = ValueMapping(channel);
+            return offset - (float)value * scale;
+        }
 
         /// <summary>
         /// The value at height <paramref name="y"/> on screen in <paramref name="channel"/>'s row.

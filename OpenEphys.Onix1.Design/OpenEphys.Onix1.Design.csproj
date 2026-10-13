@@ -75,6 +75,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <EmbeddedResource Include="Shaders\*" LogicalName="OpenEphys.Onix1.Design.Shaders.%(Filename)%(Extension)" />
   </ItemGroup>
 
   <Target Name="CopyNativeDependencies" AfterTargets="AfterBuild">

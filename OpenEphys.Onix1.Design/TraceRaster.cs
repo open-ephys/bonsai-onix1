@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.IO;
 using System.Numerics;
 using Hexa.NET.ImGui;
 using OpenCV.Net;
@@ -10,23 +11,23 @@ namespace OpenEphys.Onix1.Design
     /// Draws a stack of traces from per-column minima and maxima into a texture, and shows it as one image.
     /// </summary>
     /// <remarks>
-    /// The texture is drawn a pixel column at a time. A sweep changes only the columns it crossed since the last
-    /// frame, so only those are drawn and uploaded; anything else that changes what the plot shows redraws it whole
-    /// once. The cost of a frame then follows what changed on screen rather than how many channels and columns are
-    /// visible.
+    /// The envelope is uploaded to the GPU where it changed, which for a sweep is the columns it crossed since the
+    /// last frame, and the GPU draws the texture from it: a quad for each channel's pixel column for the traces, or a
+    /// pass over every pixel for the heatmap. Which columns each pixel shows is worked out here, by the plot's pixel
+    /// axis, so the drawing agrees with everything placed over it.
     /// </remarks>
     internal sealed class TraceRaster
     {
         /// <summary>
         /// Everything a drawn texture depends on besides the samples, colors and hidden channels. A change in any
-        /// of it redraws it whole.
+        /// of it uploads the envelope whole.
         /// </summary>
         readonly record struct Key(
             Envelope Envelope, DisplayWindow Window, double Range, double Center, int Expanded, bool Heatmap, double ColorThreshold,
             int Width, int Height,
             int FirstVisible, int LastVisible, float RowHeight, float Origin);
 
-        uint[] pixels = Array.Empty<uint>();
+        readonly GpuPainter gpu = new();
         int width;
         int height;
         int texture;
@@ -59,6 +60,14 @@ namespace OpenEphys.Onix1.Design
             if (w <= 0 || h <= 0)
                 return;
 
+            var corner = new Vector2(MathF.Floor(frame.Left), MathF.Floor(frame.Top));
+            if (!gpu.Ready())
+            {
+                ImGui.GetWindowDrawList().AddText(corner + new Vector2(8, 8), ImGuiPalette.VibrantCoral,
+                    $"The traces cannot be drawn: {gpu.Error}");
+                return;
+            }
+
             if (texture == 0 || w != width || h != height)
                 Create(w, h);
 
@@ -67,44 +76,50 @@ namespace OpenEphys.Onix1.Design
                 w, h,
                 layout.FirstVisible, layout.LastVisible, layout.RowHeight, layout.Origin - frame.Top);
 
+            // NB: the columns changed since the last frame: all of them, or from the column the sweep was filling at
+            // the last frame to the one it is filling now, both included, since each was part filled when last drawn.
+            // A sweep that went all the way round since then changed every column, which is told from the samples
+            // that arrived, since the cursor repeats every sweep. Not so the last whole sweep, which is replaced every
+            // few frames anyway.
             var columns = frame.Envelope.Cols;
-            if (current != key ||
+            var all = current != key ||
                 !hidden.AsSpan().SequenceEqual(drawnHidden) ||
-                !colors.AsSpan().SequenceEqual(drawnColors))
+                !colors.AsSpan().SequenceEqual(drawnColors);
+            (int First, int Last) run = (0, -1);
+            (int First, int Last) wrapped = (0, -1);
+            if (!all && sweepCursor >= 0)
             {
-                RepaintPixels(frame, colors, 0, w);
+                var wentRound = samples - drawnSamples >= frame.Window.Span;
+                if (drawnCursor < 0 || wentRound && !wholeSweeps)
+                    all = true;
+                else if (sweepCursor >= drawnCursor)
+                    run = (drawnCursor, sweepCursor);
+                else
+                {
+                    run = (drawnCursor, columns - 1);
+                    wrapped = (0, sweepCursor);
+                }
+            }
+
+            if (all)
+                run = (0, columns - 1);
+
+            if (run.Last >= run.First)
+            {
+                gpu.Upload(frame.Envelope, run.First, run.Last, reallocate: all);
+                gpu.Upload(frame.Envelope, wrapped.First, wrapped.Last, reallocate: false);
+                gpu.Draw(frame, colors, texture, w, h);
+            }
+
+            if (all)
+            {
                 key = current;
                 drawnHidden = (bool[])hidden.Clone();
                 drawnColors = (uint[])colors.Clone();
             }
-            else if (sweepCursor >= 0)
-            {
-                // NB: from the column the sweep was filling at the last frame to the one it is filling now, both
-                // included, since each was part filled when last drawn. A sweep that went all the way round since
-                // then changed every column and is drawn whole, which is told from the samples that arrived, since
-                // the cursor repeats every sweep. Not so the last whole sweep, which is replaced every few frames
-                // anyway: drawn whole, at the shortest timebases it can take longer than a sweep lasts, so every
-                // frame would find a sweep gone round and draw whole again, and the frame rate never recovers.
-                var wentRound = samples - drawnSamples >= frame.Window.Span;
-                if (drawnCursor < 0 || wentRound && !wholeSweeps)
-                {
-                    RepaintPixels(frame, colors, 0, w);
-                }
-                else if (sweepCursor >= drawnCursor)
-                {
-                    RepaintColumns(frame, colors, drawnCursor, sweepCursor);
-                }
-                else
-                {
-                    RepaintColumns(frame, colors, drawnCursor, columns - 1);
-                    RepaintColumns(frame, colors, 0, sweepCursor);
-                }
-            }
 
             drawnCursor = sweepCursor;
             drawnSamples = samples;
-
-            var corner = new Vector2(MathF.Floor(frame.Left), MathF.Floor(frame.Top));
             ImGui.GetWindowDrawList().AddImage(new ImTextureRef(null, (ulong)texture), corner, corner + new Vector2(w, h));
         }
 
@@ -122,150 +137,9 @@ namespace OpenEphys.Onix1.Design
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, w, h, 0,
                 PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
 
-            pixels = new uint[w * h];
             width = w;
             height = h;
             key = default;
-        }
-
-        void RepaintColumns(in PlotFrame frame, uint[] colors, int first, int last)
-        {
-            // NB: a pixel past each end as well, since a pixel's span reaches to its neighbor's.
-            var from = frame.Axis.PixelOf(first) - 1;
-            var to = frame.Axis.PixelOf(last + 1) + 2;
-            RepaintPixels(frame, colors, Math.Max(0, from), Math.Min(width, to));
-        }
-
-        /// <summary>
-        /// Clears and redraws pixel columns <paramref name="from"/> up to <paramref name="to"/>, and uploads them.
-        /// </summary>
-        unsafe void RepaintPixels(in PlotFrame frame, uint[] colors, int from, int to)
-        {
-            if (to <= from)
-                return;
-
-            for (int y = 0; y < height; y++)
-                Array.Clear(pixels, y * width + from, to - from);
-
-            // NB: an expanded channel is drawn as a trace in either view, which is how a row of color is read.
-            if (frame.Heatmap && frame.Expanded < 0)
-                PaintHeatmap(frame, from, to);
-            else
-                PaintTraces(frame, colors, from, to);
-
-            GL.BindTexture(TextureTarget.Texture2D, texture);
-            GL.PixelStore(PixelStoreParameter.UnpackRowLength, width);
-            GL.PixelStore(PixelStoreParameter.UnpackAlignment, 4);
-            fixed (uint* data = &pixels[from])
-            {
-                GL.TexSubImage2D(TextureTarget.Texture2D, 0, from, 0, to - from, height,
-                    PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr)data);
-            }
-            GL.PixelStore(PixelStoreParameter.UnpackRowLength, 0);
-        }
-
-        /// <summary>
-        /// Draws each visible channel's trace into pixel columns <paramref name="from"/> up to
-        /// <paramref name="to"/>, which are clear.
-        /// </summary>
-        /// <remarks>
-        /// Each pixel holds the span from the min to the max of the columns it covers, in the channel's color, drawn
-        /// in channel order so that a trace running into its neighbors' rows lies over them. Where there are fewer
-        /// columns than pixels, as at the shortest timebases, the samples are interpolated instead. One painter of
-        /// the texture: another, such as a color-mapped view of every channel, fills the same columns its own way.
-        /// </remarks>
-        unsafe void PaintTraces(in PlotFrame frame, uint[] colors, int from, int to)
-        {
-            frame.Envelope.Min.GetRawData(out IntPtr minPtr, out int minStep, out Size shape);
-            frame.Envelope.Max.GetRawData(out IntPtr maxPtr, out int maxStep, out Size _);
-            var layout = frame.Layout;
-
-            // NB: an expanded channel is drawn alone and translucent, under the outlines that show its shape.
-            var alpha = frame.Expanded >= 0 ? 0x40u << 24 : 0xFFu << 24;
-
-            for (int i = layout.FirstVisible; i < layout.LastVisible; i++)
-            {
-                if (frame.Hidden[i] && i != frame.Expanded)
-                    continue;
-
-                var minLine = (float*)((byte*)minPtr + i * minStep);
-                var maxLine = (float*)((byte*)maxPtr + i * maxStep);
-                var color = colors[i] & 0x00FFFFFFu | alpha;
-
-                var (prevLow, prevHigh) = from > 0 ? Bin(minLine, maxLine, frame.Axis, from - 1) : (float.NaN, float.NaN);
-                for (int p = from; p < to; p++)
-                {
-                    var (low, high) = Bin(minLine, maxLine, frame.Axis, p);
-                    if (float.IsNaN(low))
-                    {
-                        prevLow = prevHigh = float.NaN;
-                        continue;
-                    }
-
-                    // NB: stretched to reach the pixel before, so the span covers every step between neighbors as
-                    // a line would, rather than a band a pixel tall that a steep step thins to nothing.
-                    var spanLow = float.IsNaN(prevLow) ? low : Math.Min(low, prevHigh);
-                    var spanHigh = float.IsNaN(prevLow) ? high : Math.Max(high, prevLow);
-                    prevLow = low;
-                    prevHigh = high;
-
-                    var y0 = (int)MathF.Floor(frame.ValueY(i, spanHigh) - frame.Top);
-                    var y1 = (int)MathF.Floor(frame.ValueY(i, spanLow) - frame.Top);
-                    if (y1 < 0 || y0 >= height)
-                        continue;
-
-                    for (int y = Math.Max(0, y0); y <= Math.Min(height - 1, y1); y++)
-                        pixels[y * width + p] = color;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Fills each visible channel's row in pixel columns <paramref name="from"/> up to <paramref name="to"/>
-        /// with the color of its signal there.
-        /// </summary>
-        /// <remarks>
-        /// A pixel's value is whichever of the min and max of the columns it covers lies further from zero, with its
-        /// sign, so a brief excursion shows rather than averaging away. The colormap is diverging and black at zero,
-        /// the two signs brightening in two hues out to the range. Magnitudes up to the threshold are black, and those
-        /// above it keep their color rather than the colormap being squeezed above the threshold, so a color means
-        /// one amplitude whatever the threshold.
-        /// </remarks>
-        unsafe void PaintHeatmap(in PlotFrame frame, int from, int to)
-        {
-            frame.Envelope.Min.GetRawData(out IntPtr minPtr, out int minStep, out Size shape);
-            frame.Envelope.Max.GetRawData(out IntPtr maxPtr, out int maxStep, out Size _);
-            var layout = frame.Layout;
-            var map = Icefire.Map;
-            var middle = map.Length / 2;
-
-            for (int i = layout.FirstVisible; i < layout.LastVisible; i++)
-            {
-                if (frame.Hidden[i])
-                    continue;
-
-                var y0 = Math.Max(0, (int)MathF.Floor(layout.RowTop(i) - frame.Top));
-                var y1 = Math.Min(height, (int)MathF.Floor(layout.RowTop(i) + layout.RowHeight - frame.Top));
-                if (y1 <= y0)
-                    continue;
-
-                var minLine = (float*)((byte*)minPtr + i * minStep);
-                var maxLine = (float*)((byte*)maxPtr + i * maxStep);
-                for (int p = from; p < to; p++)
-                {
-                    var (low, high) = Bin(minLine, maxLine, frame.Axis, p);
-                    if (float.IsNaN(low))
-                        continue;
-
-                    var value = Math.Abs(high) >= Math.Abs(low) ? high : low;
-                    var magnitude = Math.Abs(value);
-                    var step = (int)(Math.Min(1, magnitude / frame.Range) * (middle - 1) + 0.5);
-                    var color = magnitude <= frame.ColorThreshold ? ImGuiPalette.Black
-                        : map[value >= 0 ? middle + step : middle - 1 - step];
-                    for (int y = y0; y < y1; y++)
-                        pixels[y * width + p] = color;
-                }
-            }
         }
 
         /// <summary>
@@ -273,15 +147,14 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         internal static unsafe (float Low, float High) Bin(float* minLine, float* maxLine, in PixelAxis axis, int p)
         {
-            var columns = axis.Window.Columns;
+            var (first, last, fraction) = Cell(axis, p);
             if (axis.Combines)
             {
-                var (start, end) = axis.ColumnsAt(p);
-                if (end <= start)
+                if (last <= first)
                     return (float.NaN, float.NaN);
 
-                float low = minLine[start], high = maxLine[start];
-                for (int c = start + 1; c < end; c++)
+                float low = minLine[first], high = maxLine[first];
+                for (int c = first + 1; c < last; c++)
                 {
                     low = Math.Min(low, minLine[c]);
                     high = Math.Max(high, maxLine[c]);
@@ -289,12 +162,281 @@ namespace OpenEphys.Onix1.Design
                 return (low, high);
             }
 
+            return (minLine[first] + fraction * (minLine[last] - minLine[first]),
+                maxLine[first] + fraction * (maxLine[last] - maxLine[first]));
+        }
+
+        /// <summary>
+        /// The columns pixel column <paramref name="p"/> takes its min and max from: those it combines, from
+        /// <c>First</c> up to <c>Last</c>, or where there are fewer columns than pixels, the two it interpolates
+        /// between, <c>Fraction</c> of the way from <c>First</c> to <c>Last</c>.
+        /// </summary>
+        static (int First, int Last, float Fraction) Cell(in PixelAxis axis, int p)
+        {
+            if (axis.Combines)
+            {
+                var (start, end) = axis.ColumnsAt(p);
+                return (start, end, 0);
+            }
+
             // NB: a sample at its column's left edge, where the plot's column axis puts the outlines drawn over it.
+            var columns = axis.Window.Columns;
             var x = Math.Max(0, Math.Min(columns - 1, (p + 0.5f) * columns / axis.Width));
             var c0 = (int)x;
-            var c1 = Math.Min(columns - 1, c0 + 1);
-            var f = x - c0;
-            return (minLine[c0] + f * (minLine[c1] - minLine[c0]), maxLine[c0] + f * (maxLine[c1] - maxLine[c0]));
+            return (c0, Math.Min(columns - 1, c0 + 1), x - c0);
+        }
+
+        /// <summary>
+        /// The GL objects the GPU draws the texture with, made the first time they are needed in the plot's context.
+        /// </summary>
+        sealed class GpuPainter
+        {
+            int framebuffer;
+            int vertexArray;
+            int traces;
+            int heatmap;
+            int minima;
+            int maxima;
+            int cellTexture;
+            int colorTexture;
+            int colormap;
+            int envelopeRows;
+            int envelopeColumns;
+            bool tried;
+            float[] cellData = Array.Empty<float>();
+            uint[] colorData = Array.Empty<uint>();
+
+            /// <summary>
+            /// Why the traces cannot be drawn, or null.
+            /// </summary>
+            public string Error { get; private set; }
+
+            public bool Ready()
+            {
+                if (!tried)
+                {
+                    tried = true;
+                    try { Build(); }
+                    catch (Exception ex) { Error = ex.Message; }
+                }
+
+                return Error is null;
+            }
+
+            void Build()
+            {
+                var common = Source("TraceRaster.Common.glsl");
+                traces = Link(Source("TraceRaster.Traces.vert"), Source("TraceRaster.Traces.frag"), common);
+                heatmap = Link(Source("TraceRaster.Heatmap.vert"), Source("TraceRaster.Heatmap.frag"), common);
+                vertexArray = GL.GenVertexArray();
+                framebuffer = GL.GenFramebuffer();
+                minima = DataTexture();
+                maxima = DataTexture();
+                cellTexture = DataTexture();
+                colorTexture = DataTexture();
+                colormap = DataTexture();
+
+                var map = Icefire.Map;
+                GL.BindTexture(TextureTarget.Texture2D, colormap);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, map.Length, 1, 0,
+                    PixelFormat.Rgba, PixelType.UnsignedByte, map);
+            }
+
+            static string Source(string name)
+            {
+                using var stream = typeof(TraceRaster).Assembly.GetManifestResourceStream($"OpenEphys.Onix1.Design.Shaders.{name}")
+                    ?? throw new InvalidOperationException($"The shader {name} is missing.");
+                using var reader = new StreamReader(stream);
+                return reader.ReadToEnd();
+            }
+
+            static int Link(string vertex, string fragment, string common)
+            {
+                const string Version = "#version 330 core\n";
+                var vertexShader = Compile(ShaderType.VertexShader, Version + common + vertex);
+                var fragmentShader = Compile(ShaderType.FragmentShader, Version + common + fragment);
+                var program = GL.CreateProgram();
+                GL.AttachShader(program, vertexShader);
+                GL.AttachShader(program, fragmentShader);
+                GL.LinkProgram(program);
+                GL.DeleteShader(vertexShader);
+                GL.DeleteShader(fragmentShader);
+                GL.GetProgram(program, GetProgramParameterName.LinkStatus, out int linked);
+                if (linked == 0)
+                    throw new InvalidOperationException(GL.GetProgramInfoLog(program));
+                return program;
+            }
+
+            static int Compile(ShaderType type, string source)
+            {
+                var shader = GL.CreateShader(type);
+                GL.ShaderSource(shader, source);
+                GL.CompileShader(shader);
+                GL.GetShader(shader, ShaderParameter.CompileStatus, out int compiled);
+                if (compiled == 0)
+                    throw new InvalidOperationException(GL.GetShaderInfoLog(shader));
+                return shader;
+            }
+
+            // NB: read with texelFetch, which ignores filtering, but a texture whose filter asks for mipmaps it does
+            // not have is incomplete and reads as zero.
+            static int DataTexture()
+            {
+                var texture = GL.GenTexture();
+                GL.BindTexture(TextureTarget.Texture2D, texture);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+                return texture;
+            }
+
+            /// <summary>
+            /// Uploads columns <paramref name="first"/> to <paramref name="last"/> of the envelope, both included, first
+            /// making room for all of it where <paramref name="reallocate"/> asks or its size changed.
+            /// </summary>
+            public void Upload(Envelope envelope, int first, int last, bool reallocate)
+            {
+                var rows = envelope.Rows;
+                var columns = envelope.Cols;
+                if (reallocate || rows != envelopeRows || columns != envelopeColumns)
+                {
+                    foreach (var texture in new[] { minima, maxima })
+                    {
+                        GL.BindTexture(TextureTarget.Texture2D, texture);
+                        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.R32f, columns, rows, 0,
+                            PixelFormat.Red, PixelType.Float, IntPtr.Zero);
+                    }
+
+                    envelopeRows = rows;
+                    envelopeColumns = columns;
+                    (first, last) = (0, columns - 1);
+                }
+
+                if (last < first)
+                    return;
+
+                UploadColumns(minima, envelope.Min, first, last);
+                UploadColumns(maxima, envelope.Max, first, last);
+            }
+
+            static void UploadColumns(int texture, Mat data, int first, int last)
+            {
+                data.GetRawData(out IntPtr pointer, out int step, out Size size);
+                GL.BindTexture(TextureTarget.Texture2D, texture);
+                GL.PixelStore(PixelStoreParameter.UnpackRowLength, step / sizeof(float));
+                GL.PixelStore(PixelStoreParameter.UnpackAlignment, 4);
+                GL.TexSubImage2D(TextureTarget.Texture2D, 0, first, 0, last - first + 1, size.Height,
+                    PixelFormat.Red, PixelType.Float, pointer + first * sizeof(float));
+                GL.PixelStore(PixelStoreParameter.UnpackRowLength, 0);
+            }
+
+            /// <summary>
+            /// Draws the traces or the heatmap into <paramref name="target"/> from the envelope as uploaded.
+            /// </summary>
+            public void Draw(in PlotFrame frame, uint[] colors, int target, int width, int height)
+            {
+                var layout = frame.Layout;
+                var heatmapView = frame.Heatmap && frame.Expanded < 0;
+
+                // NB: which columns each pixel takes its min and max from is the same for every channel, so it is
+                // worked out once a frame, here, rather than by every channel's pass in the shaders.
+                if (cellData.Length != width * 3)
+                    cellData = new float[width * 3];
+                for (int p = 0; p < width; p++)
+                {
+                    var (first, last, fraction) = Cell(frame.Axis, p);
+                    cellData[3 * p] = first;
+                    cellData[3 * p + 1] = last;
+                    cellData[3 * p + 2] = fraction;
+                }
+                GL.BindTexture(TextureTarget.Texture2D, cellTexture);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb32f, width, 1, 0,
+                    PixelFormat.Rgb, PixelType.Float, cellData);
+
+                // NB: alpha 0 for a channel not drawn: a hidden one, unless it is the expanded channel.
+                if (colorData.Length != colors.Length)
+                    colorData = new uint[colors.Length];
+                for (int i = 0; i < colors.Length; i++)
+                {
+                    var drawn = !frame.Hidden[i] || i == frame.Expanded && !heatmapView;
+                    colorData[i] = drawn ? colors[i] | 0xFF000000u : colors[i] & 0x00FFFFFFu;
+                }
+                GL.BindTexture(TextureTarget.Texture2D, colorTexture);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, colorData.Length, 1, 0,
+                    PixelFormat.Rgba, PixelType.UnsignedByte, colorData);
+
+                var viewport = new int[4];
+                GL.GetInteger(GetPName.Viewport, viewport);
+
+                // NB: attached every time, since the texture is made again when the plot is resized, and GL can give
+                // the new one the old one's name, which an attachment made once would take for the same texture.
+                GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer);
+                GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
+                    TextureTarget.Texture2D, target, 0);
+                var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
+                if (status != FramebufferErrorCode.FramebufferComplete)
+                {
+                    GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+                    Error = $"framebuffer {status}";
+                    return;
+                }
+
+                GL.Viewport(0, 0, width, height);
+                GL.Disable(EnableCap.ScissorTest);
+                GL.Disable(EnableCap.Blend);
+                GL.Disable(EnableCap.DepthTest);
+                GL.Disable(EnableCap.CullFace);
+                GL.ClearColor(0, 0, 0, 0);
+                GL.Clear(ClearBufferMask.ColorBufferBit);
+
+                var program = heatmapView ? heatmap : traces;
+                GL.UseProgram(program);
+                GL.BindVertexArray(vertexArray);
+                Bind(program, "minimaTexture", 0, minima);
+                Bind(program, "maximaTexture", 1, maxima);
+                Bind(program, "cellTexture", 2, cellTexture);
+                Bind(program, "colorTexture", 3, colorTexture);
+                GL.Uniform1(GL.GetUniformLocation(program, "combines"), frame.Axis.Combines ? 1 : 0);
+                GL.Uniform1(GL.GetUniformLocation(program, "firstRow"), layout.FirstRow);
+                GL.Uniform1(GL.GetUniformLocation(program, "firstVisible"), layout.FirstVisible);
+                GL.Uniform1(GL.GetUniformLocation(program, "origin"), layout.Origin - frame.Top);
+                GL.Uniform1(GL.GetUniformLocation(program, "rowHeight"), layout.RowHeight);
+
+                var visible = layout.LastVisible - layout.FirstVisible;
+                if (heatmapView)
+                {
+                    Bind(program, "colormapTexture", 4, colormap);
+                    GL.Uniform1(GL.GetUniformLocation(program, "colormapLength"), Icefire.Map.Length);
+                    GL.Uniform1(GL.GetUniformLocation(program, "lastVisible"), layout.LastVisible);
+                    GL.Uniform1(GL.GetUniformLocation(program, "range"), (float)frame.Range);
+                    GL.Uniform1(GL.GetUniformLocation(program, "threshold"), (float)frame.ColorThreshold);
+                    GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
+                }
+                else if (visible > 0)
+                {
+                    var (_, scale) = frame.ValueMapping(layout.FirstVisible);
+                    GL.Uniform1(GL.GetUniformLocation(program, "width"), width);
+                    GL.Uniform1(GL.GetUniformLocation(program, "height"), height);
+                    GL.Uniform1(GL.GetUniformLocation(program, "center"), (float)frame.Center);
+                    GL.Uniform1(GL.GetUniformLocation(program, "scale"), scale);
+
+                    // NB: an expanded channel is drawn alone and translucent, under the outlines that show its shape.
+                    GL.Uniform1(GL.GetUniformLocation(program, "alpha"), frame.Expanded >= 0 ? 0x40 / 255f : 1f);
+                    GL.DrawArraysInstanced(PrimitiveType.TriangleStrip, 0, 4, visible * width);
+                }
+
+                GL.BindVertexArray(0);
+                GL.UseProgram(0);
+                GL.ActiveTexture(TextureUnit.Texture0);
+                GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+                GL.Viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+            }
+
+            static void Bind(int program, string name, int unit, int texture)
+            {
+                GL.ActiveTexture(TextureUnit.Texture0 + unit);
+                GL.BindTexture(TextureTarget.Texture2D, texture);
+                GL.Uniform1(GL.GetUniformLocation(program, name), unit);
+            }
         }
     }
 }
