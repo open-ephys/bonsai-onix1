@@ -45,6 +45,17 @@
         public const uint Grey0xCC = 0xFFCCCCCCu;
 
         /// <summary>
+        /// The Open Ephys GUI's classic sixteen-color LFP viewer channel palette.
+        /// </summary>
+        public static readonly uint[] OpenEphysGuiLfp =
+        {
+            0xFF24B9E0u, 0xFFB6D2D6u, 0xFF2177F3u, 0xFFA89DBAu,
+            0xFF2425EDu, 0xFF4F7AB3u, 0xFFAB2ED9u, 0xFFC48BD9u,
+            0xFFFF1F65u, 0xFFB56F8Du, 0xFFFF7530u, 0xFFE0C6B8u,
+            0xFF9CE374u, 0xFF9B9E96u, 0xFF00AD52u, 0xFF20637Du,
+        };
+
+        /// <summary>
         /// Returns <paramref name="color"/> with its alpha byte replaced.
         /// </summary>
         public static uint WithAlpha(uint color, byte alpha) =>

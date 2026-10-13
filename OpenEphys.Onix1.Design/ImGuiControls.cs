@@ -17,6 +17,22 @@ namespace OpenEphys.Onix1.Design
             ImGui.TextUnformatted(value);
         }
 
+        /// <summary>
+        /// Writes <paramref name="text"/> one character per line, each centered on the region's width, so
+        /// that a label fits a column too narrow to hold it across.
+        /// </summary>
+        public static void StackedLabel(string text)
+        {
+            var width = ImGui.GetContentRegionAvail().X;
+            foreach (var c in text)
+            {
+                var character = c.ToString();
+                var characterWidth = ImGui.CalcTextSize(character).X;
+                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + Math.Max(0f, (width - characterWidth) / 2));
+                ImGui.TextUnformatted(character);
+            }
+        }
+
         // Item ID + timestamp of the most recent click/drag/edit to finish. ImGui's own hover-delay
         // timer accumulates for as long as the mouse sits on an item, click or no click, so a
         // control that was already hovered-with-delay before being clicked stays "primed" through
@@ -43,7 +59,7 @@ namespace OpenEphys.Onix1.Design
             if (!ImGui.IsItemHovered(ImGuiHoveredFlags.DelayNormal | ImGuiHoveredFlags.AllowWhenDisabled))
                 return; // only show when hovering for a delay and allow for disabled components as well
             bool disabled = ((ImGuiItemFlagsPrivate)ImGuiP.GetItemFlags() & ImGuiItemFlagsPrivate.Disabled) != 0;
-            ImGui.SetTooltip(disabled && disabledHint != null ? $"{text}\n({disabledHint})" : text);
+            ImGui.SetTooltip(disabled && disabledHint != null ? $"{text}\n{disabledHint}" : text);
         }
 
         public static void WriteString(byte[] buf, string value)

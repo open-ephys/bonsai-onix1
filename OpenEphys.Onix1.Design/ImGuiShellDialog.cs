@@ -97,18 +97,6 @@ namespace OpenEphys.Onix1.Design
             ImGui.End();
         }
 
-        // "Vertical" text. One character per line, centered, e.g. for narrow collapsed label.
-        static void DrawStackedVerticalLabel(string text)
-        {
-            float avail = ImGui.GetContentRegionAvail().X;
-            foreach (char c in text)
-            {
-                float charWidth = ImGui.CalcTextSize(c.ToString()).X;
-                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + Math.Max(0f, (avail - charWidth) * 0.5f));
-                ImGui.TextUnformatted(c.ToString());
-            }
-        }
-
         // Same resizable/collapsible top-wrapper-plus-bottom-child split ImGuiProbePanel.Draw() uses for
         // its own per-probe log, just promoted one level up so the bottom log spans under DrawContent()
         // (tab area + side panel together) instead of a single tab's own content.
@@ -155,7 +143,7 @@ namespace OpenEphys.Onix1.Design
                 if (sidePanelTitle != null)
                 {
                     if (sidePanelCollapsed)
-                        DrawStackedVerticalLabel(sidePanelTitle.ToUpper());
+                        ImGuiControls.StackedLabel(sidePanelTitle.ToUpper());
                     else
                     {
                         ImGui.SameLine();
