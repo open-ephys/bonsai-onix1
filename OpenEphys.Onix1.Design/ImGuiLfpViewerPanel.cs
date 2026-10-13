@@ -96,6 +96,16 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// Whether clipping channels are marked and CLIPPING shown.
         /// </summary>
+        /// <summary>
+        /// Whether the plot is given the whole window, its owner hiding whatever else it draws beside it, such as a
+        /// control strip.
+        /// </summary>
+        public bool Maximized
+        {
+            get => settings.Maximized;
+            set => settings.Maximized = value;
+        }
+
         public bool ShowClipping
         {
             get => settings.ShowClipping;

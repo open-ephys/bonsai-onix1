@@ -8,7 +8,8 @@ uniform sampler2D maximaTexture;
 uniform sampler2D cellTexture;
 uniform int combines;
 
-// The min and max channel shows at pixel column p, or false where the pixel holds no column.
+// The min and max channel shows at pixel column p, or false where the pixel holds no column or a column not yet
+// written, which holds NaN.
 bool Bin(int channel, int p, out float low, out float high)
 {
     vec3 cell = texelFetch(cellTexture, ivec2(p, 0), 0).xyz;
@@ -28,7 +29,7 @@ bool Bin(int channel, int p, out float low, out float high)
             low = min(low, texelFetch(minimaTexture, ivec2(c, channel), 0).r);
             high = max(high, texelFetch(maximaTexture, ivec2(c, channel), 0).r);
         }
-        return true;
+        return !isnan(low) && !isnan(high);
     }
 
     float low0 = texelFetch(minimaTexture, ivec2(first, channel), 0).r;
@@ -37,5 +38,5 @@ bool Bin(int channel, int p, out float low, out float high)
     float high1 = texelFetch(maximaTexture, ivec2(last, channel), 0).r;
     low = low0 + cell.z * (low1 - low0);
     high = high0 + cell.z * (high1 - high0);
-    return true;
+    return !isnan(low) && !isnan(high);
 }

@@ -153,7 +153,8 @@ namespace OpenEphys.Onix1.Design
                 if (ShowHeatmap && expandedChannel < 0 && selectedChannel >= 0)
                     BracketRow(draw, frame, selectedChannel, WaveformCursors.Color);
                 // NB: ahead of the cursors so the don't compete for a click on [CLIPPING] in the plot area.
-                DrawClipping(draw, frame);
+                var cornerTaken = DrawMaximize(draw, frame);
+                DrawClipping(draw, frame, cornerTaken);
                 cursors.Draw(draw, frame);
                 SelectClicked(frame, hovered);
                 DrawFrame(draw, plotX, plotWidth, plotTop, plotBottom);
@@ -509,7 +510,53 @@ namespace OpenEphys.Onix1.Design
         /// Flashes CLIPPING in the plot's top right corner while any channel is clipping, as a scope's overload
         /// light does, as a button that brings the first clipping channel into view.
         /// </summary>
-        void DrawClipping(ImDrawListPtr draw, in PlotFrame frame)
+        /// <summary>
+        /// Draws the button in the plot's top right corner that gives the plot the whole window or gives the rest
+        /// back, and returns the width it takes from the corner.
+        /// </summary>
+        /// <remarks>
+        /// Faint until hovered, since it sits over the traces.
+        /// </remarks>
+        float DrawMaximize(ImDrawListPtr draw, in PlotFrame frame)
+        {
+            var pad = ImGui.GetStyle().FramePadding;
+            var side = ImGui.GetFrameHeight();
+            var min = new Vector2(frame.Left + frame.Width - pad.X - side, frame.Top + pad.Y);
+            var max = min + new Vector2(side);
+
+            ImGui.SetCursorScreenPos(min);
+            if (ImGui.InvisibleButton("##maximize", new Vector2(side)))
+                Maximized = !Maximized;
+            var hovered = ImGui.IsItemHovered();
+            ImGui.SetItemTooltip(Maximized ? "Restore the layout (M)" : "Give the plot the whole window (M)");
+
+            if (hovered)
+                draw.AddRectFilled(min, max, ImGui.GetColorU32(ImGuiCol.ButtonHovered), ImGui.GetStyle().ChildRounding);
+
+            // NB: a window's glyph, one square to maximize, and to restore one square in front of another, of which
+            // only the top and right edges show.
+            var color = ImGui.GetColorU32(ImGuiCol.Text, hovered ? 1f : 0.25f);
+            var inset = MathF.Floor(side * 0.28f);
+            var a = min + new Vector2(inset);
+            var b = max - new Vector2(inset);
+            if (Maximized)
+            {
+                var offset = MathF.Floor(side * 0.12f);
+                var front = (Min: a + new Vector2(0, offset), Max: b + new Vector2(-offset, 0));
+                var back = (Min: front.Min + new Vector2(offset, -offset), Max: front.Max + new Vector2(offset, -offset));
+                draw.AddRect(front.Min, front.Max, color);
+                draw.AddLine(back.Min, new Vector2(back.Max.X, back.Min.Y), color);
+                draw.AddLine(new Vector2(back.Max.X, back.Min.Y), back.Max, color);
+            }
+            else
+            {
+                draw.AddRect(a, b, color);
+            }
+
+            return side + pad.X;
+        }
+
+        void DrawClipping(ImDrawListPtr draw, in PlotFrame frame, float right)
         {
             var first = -1;
             for (int c = 0; c < lastClip.Length && first < 0; c++)
@@ -524,7 +571,7 @@ namespace OpenEphys.Onix1.Design
             const string Text = "CLIPPING";
             var pad = ImGui.GetStyle().FramePadding;
             var size = ImGui.CalcTextSize(Text);
-            var corner = new Vector2(frame.Left + frame.Width - size.X - 2 * pad.X, frame.Top + 2 * pad.Y);
+            var corner = new Vector2(frame.Left + frame.Width - right - size.X - 2 * pad.X, frame.Top + 2 * pad.Y);
 
             // NB: only the text flashes, so that a click is never lost to the dark half of a flash.
             ImGui.SetCursorScreenPos(corner - pad);

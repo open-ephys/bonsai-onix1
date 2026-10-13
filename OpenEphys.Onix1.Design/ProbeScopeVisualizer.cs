@@ -241,9 +241,12 @@ namespace OpenEphys.Onix1.Design
             // strip's business and change as columns are added.
             if (stripHeight <= 0)
                 stripHeight = ImGui.GetTextLineHeight() + ImGui.GetFrameHeight() * 2;
-            var availY = ImGui.GetContentRegionAvail().Y - stripHeight;
+
+            // NB: maximized, the plot takes the window, and the probe pane and the strip are not drawn.
+            var maximized = waveform.Maximized;
+            var availY = ImGui.GetContentRegionAvail().Y - (maximized ? 0 : stripHeight);
             var probeWidth = probePaneCollapsed ? CollapsedPaneWidth : ProbePaneWidth;
-            var waveWidth = Math.Max(200f, availX - probeWidth - ImGui.GetStyle().ItemSpacing.X);
+            var waveWidth = maximized ? availX : Math.Max(200f, availX - probeWidth - ImGui.GetStyle().ItemSpacing.X);
             var probeOrigin = ImGui.GetCursorScreenPos();
 
             // NB: no vertical padding on either pane, so both start at their own top edge and the
@@ -251,6 +254,49 @@ namespace OpenEphys.Onix1.Design
             var panePadding = ImGui.GetStyle().WindowPadding;
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(panePadding.X, 0));
 
+            if (!maximized)
+                DrawProbePane(probeWidth, availY);
+
+            ImGui.BeginChild("##wavePane", new Vector2(waveWidth, availY));
+            var message = fault;
+            if (message is null)
+            {
+                waveform.RefreshRate = pacer?.RefreshRate ?? waveform.RefreshRate;
+                strip.RequestSelection();
+                waveform.Draw();
+            }
+            else
+            {
+                // NB: TextUnformatted rather than TextWrapped, which reads its string as a printf format,
+                // and the message is exception text that may contain '%'.
+                ImGui.PushTextWrapPos();
+                ImGui.PushStyleColor(ImGuiCol.Text, ImGuiPalette.VibrantCoral);
+                ImGui.TextUnformatted(message);
+                ImGui.PopStyleColor();
+                ImGui.TextUnformatted("Close this window, correct the ProbeScope's DeviceName, and open it again.");
+                ImGui.PopTextWrapPos();
+            }
+            ImGui.EndChild();
+
+            ImGui.PopStyleVar();
+
+            if (!maximized)
+            {
+                var stripTop = ImGui.GetCursorScreenPos().Y;
+                strip.Draw(waveform);
+                stripHeight = ImGui.GetCursorScreenPos().Y - stripTop;
+
+                // Scroll and zoom are handled from the root window, bounded to the probe pane so the
+                // wheel still scrolls the channel list on the waveform side.
+                if (!probePaneCollapsed)
+                    selector.HandleScrollInput(probeOrigin.Y + availY, probeOrigin.X + probeWidth);
+            }
+
+            ImGui.End();
+        }
+
+        void DrawProbePane(float probeWidth, float availY)
+        {
             ImGui.BeginChild("##probePane", new Vector2(probeWidth, availY),
                 ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
 
@@ -282,40 +328,6 @@ namespace OpenEphys.Onix1.Design
             ImGui.EndChild();
 
             ImGui.SameLine();
-
-            ImGui.BeginChild("##wavePane", new Vector2(waveWidth, availY));
-            var message = fault;
-            if (message is null)
-            {
-                waveform.RefreshRate = pacer?.RefreshRate ?? waveform.RefreshRate;
-                strip.RequestSelection();
-                waveform.Draw();
-            }
-            else
-            {
-                // NB: TextUnformatted rather than TextWrapped, which reads its string as a printf format,
-                // and the message is exception text that may contain '%'.
-                ImGui.PushTextWrapPos();
-                ImGui.PushStyleColor(ImGuiCol.Text, ImGuiPalette.VibrantCoral);
-                ImGui.TextUnformatted(message);
-                ImGui.PopStyleColor();
-                ImGui.TextUnformatted("Close this window, correct the ProbeScope's DeviceName, and open it again.");
-                ImGui.PopTextWrapPos();
-            }
-            ImGui.EndChild();
-
-            ImGui.PopStyleVar();
-
-            var stripTop = ImGui.GetCursorScreenPos().Y;
-            strip.Draw(waveform);
-            stripHeight = ImGui.GetCursorScreenPos().Y - stripTop;
-
-            // Scroll and zoom are handled from the root window, bounded to the probe pane so the
-            // wheel still scrolls the channel list on the waveform side.
-            if (!probePaneCollapsed)
-                selector.HandleScrollInput(probeOrigin.Y + availY, probeOrigin.X + probeWidth);
-
-            ImGui.End();
         }
 
         void StopPacer()

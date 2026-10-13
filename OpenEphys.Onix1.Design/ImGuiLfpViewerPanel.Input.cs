@@ -142,6 +142,7 @@ namespace OpenEphys.Onix1.Design
             (Keys.C, false, () => ShowCursors = !ShowCursors),
             (Keys.H, false, () => ShowHeatmap = !ShowHeatmap),
             (Keys.F, false, () => FitChannels = !FitChannels),
+            (Keys.M, false, () => Maximized = !Maximized),
             (Keys.Escape, false, () => selectedChannel = -1),
             (Keys.A, true, () => TimeKey(-1)),
             (Keys.D, true, () => TimeKey(1)),

@@ -114,6 +114,13 @@ namespace OpenEphys.Onix1.Design
         public bool ShowClipping { get; set; } = true;
 
         /// <summary>
+        /// Gets or sets a value specifying whether the plot is given the whole window.
+        /// </summary>
+        [DefaultValue(false)]
+        [Description("Specifies whether the plot is given the whole window.")]
+        public bool Maximized { get; set; }
+
+        /// <summary>
         /// Gets or sets the channels not drawn, by index.
         /// </summary>
         [Description("The channels not drawn, by index.")]
