@@ -22,13 +22,13 @@ namespace OpenEphys.Onix1.Design
 
         static bool keyFilterInstalled;
 
-        readonly HashSet<Keys> hoverKeys;
+        readonly HashSet<ImGuiKey> hoverKeys;
 
         /// <param name="hoverKeys">
         /// Keys that reach this control while the pointer is over it even when another window has the
         /// keyboard. Any other key goes wherever the keyboard already is.
         /// </param>
-        public ImGuiHoverGLControl(IEnumerable<Keys> hoverKeys) => this.hoverKeys = new(hoverKeys);
+        public ImGuiHoverGLControl(IEnumerable<ImGuiKey> hoverKeys) => this.hoverKeys = new(hoverKeys);
 
         protected override void OnHandleCreated(EventArgs e)
         {
@@ -78,7 +78,7 @@ namespace OpenEphys.Onix1.Design
             {
                 if (m.Msg != WM_KEYDOWN) return false;
 
-                var key = (Keys)(int)m.WParam;
+                var key = ToImGuiKey((Keys)(int)m.WParam);
                 var handle = WindowFromPoint(Cursor.Position);
                 var under = Control.FromHandle(handle) as ImGuiHoverGLControl;
                 var focused = Control.FromHandle(m.HWnd) as ImGuiHoverGLControl;
@@ -92,6 +92,15 @@ namespace OpenEphys.Onix1.Design
 
                 return under is null && focused is not null && focused.hoverKeys.Contains(key);
             }
+
+            static ImGuiKey ToImGuiKey(Keys key) => key switch
+            {
+                Keys.Space => ImGuiKey.Space,
+                Keys.Escape => ImGuiKey.Escape,
+                Keys.Delete => ImGuiKey.Delete,
+                >= Keys.A and <= Keys.Z => ImGuiKey.A + (key - Keys.A),
+                _ => ImGuiKey.None,
+            };
 
             [DllImport("user32.dll")]
             static extern IntPtr WindowFromPoint(Point point);

@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using Keys = System.Windows.Forms.Keys;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -221,7 +220,7 @@ namespace OpenEphys.Onix1.Design
         /// Every key the probe view answers: R turns the ruler on and off, and Delete removes the ruler under the
         /// pointer.
         /// </summary>
-        public IEnumerable<Keys> Hotkeys => new[] { Keys.R, Keys.Delete };
+        public IEnumerable<ImGuiKey> Hotkeys => new[] { ImGuiKey.R, ImGuiKey.Delete };
         bool rulerMode;
 
         // visual constants

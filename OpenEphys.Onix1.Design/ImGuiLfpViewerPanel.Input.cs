@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Hexa.NET.ImGui;
-using Keys = System.Windows.Forms.Keys;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -133,30 +132,30 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        readonly (Keys Key, bool Repeat, Action Answer)[] frameKeys;
-        readonly (Keys Key, bool Repeat, Action<RowLayout> Answer)[] tableKeys;
+        readonly (ImGuiKey Key, bool Repeat, Action Answer)[] frameKeys;
+        readonly (ImGuiKey Key, bool Repeat, Action<RowLayout> Answer)[] tableKeys;
 
-        (Keys, bool, Action)[] FrameKeys() => new (Keys, bool, Action)[]
+        (ImGuiKey, bool, Action)[] FrameKeys() => new (ImGuiKey, bool, Action)[]
         {
-            (Keys.Space, false, () => Paused = !Paused),
-            (Keys.C, false, () => ShowCursors = !ShowCursors),
-            (Keys.H, false, () => ShowHeatmap = !ShowHeatmap),
-            (Keys.F, false, () => FitChannels = !FitChannels),
-            (Keys.M, false, () => Maximized = !Maximized),
-            (Keys.Escape, false, () => selectedChannel = -1),
-            (Keys.A, true, () => TimeKey(-1)),
-            (Keys.D, true, () => TimeKey(1)),
+            (ImGuiKey.Space, false, () => Paused = !Paused),
+            (ImGuiKey.C, false, () => ShowCursors = !ShowCursors),
+            (ImGuiKey.H, false, () => ShowHeatmap = !ShowHeatmap),
+            (ImGuiKey.F, false, () => FitChannels = !FitChannels),
+            (ImGuiKey.M, false, () => Maximized = !Maximized),
+            (ImGuiKey.Escape, false, () => selectedChannel = -1),
+            (ImGuiKey.A, true, () => TimeKey(-1)),
+            (ImGuiKey.D, true, () => TimeKey(1)),
         };
 
         // NB: these scroll the channels, which ImGui does to the window current when asked, so they are answered
         // inside the table that owns the scroll.
-        (Keys, bool, Action<RowLayout>)[] TableKeys() => new (Keys, bool, Action<RowLayout>)[]
+        (ImGuiKey, bool, Action<RowLayout>)[] TableKeys() => new (ImGuiKey, bool, Action<RowLayout>)[]
         {
-            (Keys.W, true, layout => ChannelKey(-1, layout)),
-            (Keys.S, true, layout => ChannelKey(1, layout)),
-            (Keys.Q, true, layout => { if (Modifiers()) StepSelection(-1, layout); }),
-            (Keys.E, true, layout => { if (Modifiers()) StepSelection(1, layout); }),
-            (Keys.X, false, layout =>
+            (ImGuiKey.W, true, layout => ChannelKey(-1, layout)),
+            (ImGuiKey.S, true, layout => ChannelKey(1, layout)),
+            (ImGuiKey.Q, true, layout => { if (Modifiers()) StepSelection(-1, layout); }),
+            (ImGuiKey.E, true, layout => { if (Modifiers()) StepSelection(1, layout); }),
+            (ImGuiKey.X, false, layout =>
             {
                 if (selectedChannel < 0 && expandedChannel < 0)
                     selectedChannel = FirstShownInView(layout);
@@ -168,7 +167,7 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// Every key the panel answers, for a host to hand to whichever panel is under the pointer.
         /// </summary>
-        public IEnumerable<Keys> Hotkeys => frameKeys.Select(k => k.Key).Concat(tableKeys.Select(k => k.Key));
+        public IEnumerable<ImGuiKey> Hotkeys => frameKeys.Select(k => k.Key).Concat(tableKeys.Select(k => k.Key));
 
         void AnswerFrameKeys()
         {
@@ -189,16 +188,8 @@ namespace OpenEphys.Onix1.Design
         }
 
         // NB: not a key typed into a text field.
-        static bool Pressed(Keys key, bool repeat) =>
-            !ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ToImGuiKey(key), repeat);
-
-        static ImGuiKey ToImGuiKey(Keys key) => key switch
-        {
-            Keys.Space => ImGuiKey.Space,
-            Keys.Escape => ImGuiKey.Escape,
-            >= Keys.A and <= Keys.Z => ImGuiKey.A + (key - Keys.A),
-            _ => throw new ArgumentOutOfRangeException(nameof(key)),
-        };
+        static bool Pressed(ImGuiKey key, bool repeat) =>
+            !ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(key, repeat);
 
         /// <summary>
         /// Whether exactly the named modifiers are down and the rest are up.
