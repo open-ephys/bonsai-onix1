@@ -322,6 +322,8 @@ namespace OpenEphys.Onix1.Design
 
             if (hovered >= 0 && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
                 reference = hovered;
+            if (hovered >= 0)
+                ImGui.SetTooltip("Click to measure the other cursors from this one. Drag its line on the plot to move it.");
 
             var margin = new Vector2(pad.X + ImGui.GetStyle().ItemSpacing.X, pad.Y);
             var background = ImGui.GetColorU32(ImGuiCol.WindowBg);
@@ -428,6 +430,7 @@ namespace OpenEphys.Onix1.Design
                         }
                         if (ImGui.SmallButton($"C{i}"))
                             center = positions[i];
+                        ImGuiControls.Tooltip("Center the view on this cursor.", "While paused.");
                         if (!measured)
                             ImGui.PopStyleColor(2);
                         ImGui.EndDisabled();
@@ -449,6 +452,8 @@ namespace OpenEphys.Onix1.Design
                         ImGui.TableNextColumn();
                         if (measured && ImGui.SmallButton($"x##remove{i}"))
                             remove = i;
+                        if (measured)
+                            ImGuiControls.Tooltip("Remove this cursor.");
                     }
 
                     ImGui.EndTable();
@@ -464,11 +469,13 @@ namespace OpenEphys.Onix1.Design
                 ImGui.BeginDisabled(positions.Count >= MaxCursors);
                 if (ImGui.SmallButton("+ Add cursor"))
                     positions.Add(frame.Axis.Snap(window.Start + window.Span / 2));
+                ImGuiControls.Tooltip("Add a cursor in the middle of the view.", "Four cursors at most.");
                 ImGui.EndDisabled();
 
                 ImGui.SameLine();
                 if (ImGui.SmallButton("Home"))
                     Home(frame.Axis);
+                ImGuiControls.Tooltip("Bring the cursors back into view, keeping their spacing.");
             }
 
             ImGui.EndChild();

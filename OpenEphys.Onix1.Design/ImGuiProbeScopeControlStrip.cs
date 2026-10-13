@@ -94,7 +94,8 @@ namespace OpenEphys.Onix1.Design
             var cmr = scope.CommonMedianReference && ReferenceOffered;
             if (ImGui.Checkbox("CMR", ref cmr))
                 scope.CommonMedianReference = cmr;
-            ImGui.SetItemTooltip("Reference each channel against the median of the channels sharing its converter");
+            ImGuiControls.Tooltip("Common median reference: subtract from each channel, at each moment, the median of " +
+                "the channels that share its ADC, which removes noise they have in common.");
             ImGui.EndDisabled();
 
             ImGui.SameLine();
@@ -107,7 +108,8 @@ namespace OpenEphys.Onix1.Design
             var ac = scope.AcCoupled && acOffered;
             if (ImGui.Checkbox("AC", ref ac))
                 scope.AcCoupled = ac;
-            ImGui.SetItemTooltip("High-pass each channel at 1 Hz, as AC coupling does on a scope");
+            ImGuiControls.Tooltip("Show only the AC part of each channel's signal, using a 1 Hz high-pass.",
+                "This band is AC: it is high-pass filtered.");
             ImGui.EndDisabled();
 
             ImGui.EndDisabled();
@@ -120,7 +122,10 @@ namespace OpenEphys.Onix1.Design
             var preview = band >= 0 && band < Bands.Count ? Bands[band].Name : string.Empty;
 
             if (singleBand) ImGui.BeginDisabled();
-            if (ImGui.BeginCombo("##band", preview))
+            var open = ImGui.BeginCombo("##band", preview);
+            ImGuiControls.Tooltip("Signal shown: wideband, the spike band or the LFP band, as the probe offers them.",
+                "This probe offers one band.");
+            if (open)
             {
                 for (int i = 0; i < Bands.Count; i++)
                 {

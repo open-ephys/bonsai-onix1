@@ -149,11 +149,15 @@ namespace OpenEphys.Onix1.Design
 
             var timebaseWidth = MenuColumn("Timebase (s)");
             var timebase = panel.Timebase;
-            if (InputDoubleCombo("##timebase", ref timebase, panel.StandardTimeBases, timebaseWidth))
+            if (InputDoubleCombo("##timebase", ref timebase, panel.StandardTimeBases, timebaseWidth,
+                "During live display, the time one sweep takes to cross the plot, in seconds. When paused, the time " +
+                "the plot window shows from record history. A shorter time shows faster events in more detail.\n" +
+                "Keys: Ctrl+A longer, Ctrl+D shorter\n" +
+                "On the plot: Ctrl+Shift+Wheel, or Ctrl+Drag left and right while paused"))
                 panel.Timebase = timebase;
 
             var heightWidth = MenuColumn("Chan. Height (px)");
-            const string FitLabel = "Fit (f)";
+            const string FitLabel = "Fit";
             var inner = ImGui.GetStyle().ItemInnerSpacing.X;
             var fitWidth = ImGui.GetFrameHeight() + inner + ImGui.CalcTextSize(FitLabel).X;
             ImGui.SetNextItemWidth(heightWidth - fitWidth - inner);
@@ -171,12 +175,16 @@ namespace OpenEphys.Onix1.Design
                     channelHeight = ImGuiLfpViewerPanel.StepChannelHeight(previousHeight, -1);
                 panel.ChannelHeight = channelHeight;
             }
+            ImGuiControls.Tooltip("Height of each channel's row, in pixels.\n" +
+                "Keys: Ctrl+W taller, Ctrl+S shorter\n" +
+                "On the plot: Ctrl+Wheel, or Ctrl+Drag up and down while paused",
+                "Turn Fit off to set the height yourself.");
             ImGui.EndDisabled();
             ImGui.SameLine(0, inner);
             var fit = panel.FitChannels;
             if (ImGui.Checkbox(FitLabel + "##fitChannels", ref fit))
                 panel.FitChannels = fit;
-            ImGui.SetItemTooltip("Keep every channel fitted to the plot's height");
+            ImGuiControls.Tooltip("Fit every channel into the plot's height, so that none is out of view.\nKey: F");
 
             if (panel.ShowHeatmap)
                 ColorColumn(panel);
@@ -185,7 +193,8 @@ namespace OpenEphys.Onix1.Design
                 var rangeWidth = MenuColumn(
                     string.IsNullOrEmpty(panel.Unit) ? "Range" : $"Range ({panel.Unit})");
                 var range = panel.RangeAmplitude;
-                if (InputDoubleCombo("##range", ref range, panel.StandardRanges, rangeWidth))
+                if (InputDoubleCombo("##range", ref range, panel.StandardRanges, rangeWidth,
+                    "Amplitude each channel's row spans. A smaller range magnifies the signal.\n" + RangeKeys))
                     panel.RangeAmplitude = range;
             }
 
@@ -199,14 +208,18 @@ namespace OpenEphys.Onix1.Design
             {
                 ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
                 var customColor = panel.Colors.CustomColor;
-                if (ImGui.ColorEdit3("##customColor", ref customColor, ImGuiColorEditFlags.NoInputs))
+                if (ImGui.ColorEdit3("##customColor", ref customColor,
+                    ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoTooltip))
                     panel.Colors.CustomColor = customColor;
+                ImGuiControls.Tooltip("The color the custom palette is made from. Click to choose another.");
             }
 
             var groupWidth = MenuColumn("Color Groups");
             var enabled = panel.Colors.GroupingEnabled;
             if (ImGui.Checkbox("##colorGroupingEnabled", ref enabled))
                 panel.Colors.GroupingEnabled = enabled;
+            ImGuiControls.Tooltip("Color neighboring channels alike, in groups of the size beside it, to tell groups " +
+                "of channels apart.");
 
             ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
             ImGui.BeginDisabled(!enabled);
@@ -215,6 +228,8 @@ namespace OpenEphys.Onix1.Design
                 groupWidth - ImGui.GetFrameHeight() - ImGui.GetStyle().ItemInnerSpacing.X);
             if (ImGui.InputInt("##colorGrouping", ref grouping, 1))
                 panel.Colors.Grouping = grouping;
+            ImGuiControls.Tooltip("How many neighboring channels share a color.",
+                "Check the box beside it to color channels in groups.");
             ImGui.EndDisabled();
 
             // NB: two lines of checkboxes in the height of a label and a control, so their frames are made shorter.
@@ -229,19 +244,23 @@ namespace OpenEphys.Onix1.Design
             var showHeatmap = panel.ShowHeatmap;
             if (ImGui.Checkbox("Heatmap", ref showHeatmap))
                 panel.ShowHeatmap = showHeatmap;
-            ImGui.SetItemTooltip("Draw channels as rows of color (h)");
+            ImGuiControls.Tooltip("Show each channel as a row of color, brighter for larger signals, instead of as a " +
+                "trace, so that patterns of activity across neighboring channels stand out. Double-click a row to read " +
+                "it as a trace.\nKey: H");
 
             ImGui.SameLine();
             var showCursors = panel.ShowCursors;
             if (ImGui.Checkbox("Cursors", ref showCursors))
                 panel.ShowCursors = showCursors;
-            ImGui.SetItemTooltip("Show the cursors and their table (c)");
+            ImGuiControls.Tooltip("Show cursors for measuring time and amplitude on the selected channel, with a table " +
+                "of their readings. Click a channel's label or trace to choose the channel they read.\nKey: C");
 
             ImGui.SetCursorScreenPos(new Vector2(slot.X, slot.Y + line + spacing));
             var showClipping = panel.ShowClipping;
             if (ImGui.Checkbox("Clipping", ref showClipping))
                 panel.ShowClipping = showClipping;
-            ImGui.SetItemTooltip("Warn while any shown channel clips");
+            ImGuiControls.Tooltip("Warn when a channel's signal reaches the limit of the amplifier's range, by " +
+                "flashing CLIPPING in the plot and the channel's label. Hidden channels do not warn.");
             ImGui.PopStyleVar();
 
             var style = ImGui.GetStyle();
@@ -275,9 +294,11 @@ namespace OpenEphys.Onix1.Design
                 span > 0 ? (float)(held / span) : 0f,
                 new Vector2(pauseWidth, barHeight),
                 string.Empty);
+            ImGuiControls.Tooltip(RecordTooltip);
 
             ImGui.SetCursorScreenPos(new Vector2(stackX, stackY + pauseHeight + 2 * style.ItemSpacing.Y + ImGui.GetTextLineHeight()));
             ImGui.Text($"Record Length: {held:0.0} / {span:0.0} s");
+            ImGuiControls.Tooltip(RecordTooltip);
 
             // NB: positioning everything outright leaves the parent's content extent where it was, so
             // the whole laid-out area is claimed in one go. It goes last, so that the cursor ends below
@@ -301,17 +322,21 @@ namespace OpenEphys.Onix1.Design
             if (ImGuiThresholdSlider.Draw(
                 "##threshold", Icefire.Map, (float)panel.RangeAmplitude, ref threshold,
                 barWidth, ImGui.GetFrameHeight() / 2,
-                tooltip: "Threshold: magnitudes at or below it are black"))
+                tooltip: "Signals smaller than this show as black, so that only larger activity is colored. Drag to set."))
             {
                 panel.ColorThreshold = threshold;
             }
 
             ImGui.SetCursorScreenPos(new Vector2(corner.X + width - rangeWidth, corner.Y));
             var range = panel.RangeAmplitude;
-            if (InputDoubleCombo("##range", ref range, panel.StandardRanges, rangeWidth))
+            if (InputDoubleCombo("##range", ref range, panel.StandardRanges, rangeWidth,
+                "Amplitude at which the colors are brightest. A smaller range brings out smaller signals.\n" + RangeKeys))
                 panel.RangeAmplitude = range;
-            ImGui.SetItemTooltip("Range: magnitudes at or above it are brightest");
         }
+
+        const string RangeKeys = "Keys: Alt+W smaller, Alt+S larger\nOn the plot: Alt+Wheel, or Alt+Drag up and down";
+
+        const string RecordTooltip = "How much recent signal is kept for scrolling back through while paused.";
 
         /// <summary>
         /// Takes the next slot in the flow, heads it with <paramref name="label"/>, and leaves the cursor
@@ -338,9 +363,10 @@ namespace OpenEphys.Onix1.Design
             return new Vector2(flowOrigin.X + column * columnPitch, flowOrigin.Y + row * rowPitch);
         }
 
-        // NB: the preset arrow sits beside the input, so the input takes the slot less the arrow.
+        // NB: the preset arrow sits beside the input, so the input takes the slot less the arrow, and both carry
+        // the tooltip, which only ever belongs to one item.
         private protected static bool InputDoubleCombo(
-            string label, ref double value, IReadOnlyList<double> comboItems, float width)
+            string label, ref double value, IReadOnlyList<double> comboItems, float width, string tooltip)
         {
             var changed = false;
             var editValue = value;
@@ -348,10 +374,13 @@ namespace OpenEphys.Onix1.Design
             ImGui.InputDouble(label, ref editValue, "%g");
             if (changed = ImGui.IsItemDeactivatedAfterEdit())
                 value = editValue;
+            ImGuiControls.Tooltip(tooltip);
             ImGui.SameLine(0, 0);
 
             var comboFlags = ImGuiComboFlags.NoPreview | ImGuiComboFlags.PopupAlignLeft;
-            if (ImGui.BeginCombo(label + "C", string.Empty, comboFlags))
+            var open = ImGui.BeginCombo(label + "C", string.Empty, comboFlags);
+            ImGuiControls.Tooltip(tooltip);
+            if (open)
             {
                 for (int i = 0; i < comboItems.Count; i++)
                 {
@@ -373,7 +402,10 @@ namespace OpenEphys.Onix1.Design
         static void PaletteCombo(ImGuiLfpViewerPanel panel)
         {
             var preview = panel.Colors.Palette == ColorPalette.OpenEphysGui ? "Open Ephys GUI" : "Custom";
-            if (ImGui.BeginCombo("##palette", preview))
+            var open = ImGui.BeginCombo("##palette", preview);
+            ImGuiControls.Tooltip("Colors the channels are drawn in: the Open Ephys GUI's, or shades of one color you " +
+                "choose.");
+            if (open)
             {
                 if (ImGui.Selectable("Open Ephys GUI", panel.Colors.Palette == ColorPalette.OpenEphysGui))
                     panel.Colors.Palette = ColorPalette.OpenEphysGui;
@@ -395,8 +427,10 @@ namespace OpenEphys.Onix1.Design
             if (paused)
                 ImGui.PushStyleColor(ImGuiCol.Button, ImGui.GetColorU32(ImGuiCol.ButtonActive));
 
-            if (ImGui.Button("Pause (space)", buttonSize))
+            if (ImGui.Button("Pause", buttonSize))
                 panel.Paused = !paused;
+            ImGuiControls.Tooltip("Freeze the display to study it. While paused, scroll back through the recent signal " +
+                "and zoom in on it. Recording is not affected.\nKey: Space");
 
             if (paused)
                 ImGui.PopStyleColor();

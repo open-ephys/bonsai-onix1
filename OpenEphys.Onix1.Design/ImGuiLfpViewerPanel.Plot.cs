@@ -266,6 +266,8 @@ namespace OpenEphys.Onix1.Design
 
             ImGui.SetCursorScreenPos(new Vector2(left, top));
             ImGui.InvisibleButton("##timescroll", new Vector2(width, height));
+            ImGuiControls.Tooltip("Drag to move back and forth through the recent signal while paused.\n" +
+                "Keys: A and D\nOn the plot: Shift+Wheel, or drag with the middle button");
 
             if (ImGui.IsItemActive() && travel > 0 && slack > 0)
                 Pan(-(long)(ImGui.GetIO().MouseDelta.X * (travel / slack)));
@@ -528,7 +530,7 @@ namespace OpenEphys.Onix1.Design
             if (ImGui.InvisibleButton("##maximize", new Vector2(side)))
                 Maximized = !Maximized;
             var hovered = ImGui.IsItemHovered();
-            ImGui.SetItemTooltip(Maximized ? "Restore the layout (M)" : "Give the plot the whole window (M)");
+            ImGuiControls.Tooltip(Maximized ? "Restore the layout\nKey: M" : "Give the plot the whole window\nKey: M");
 
             if (hovered)
                 draw.AddRectFilled(min, max, ImGui.GetColorU32(ImGuiCol.ButtonHovered), ImGui.GetStyle().ChildRounding);
@@ -577,6 +579,8 @@ namespace OpenEphys.Onix1.Design
             ImGui.SetCursorScreenPos(corner - pad);
             if (ImGui.InvisibleButton("##clipping", size + 2 * pad))
                 ShowChannel(first, frame.Layout);
+            ImGuiControls.Tooltip("Some channels are clipping: their signal reaches the limit of the amplifier's range. " +
+                "Click to bring the first one into view.");
 
             var rounding = ImGui.GetStyle().ChildRounding;
             var fill = ImGui.IsItemHovered() ? ImGui.GetColorU32(ImGuiCol.ButtonHovered) : PlotText.LabelBackground;

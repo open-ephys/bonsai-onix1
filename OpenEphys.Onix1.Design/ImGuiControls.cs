@@ -59,7 +59,7 @@ namespace OpenEphys.Onix1.Design
             if (!ImGui.IsItemHovered(ImGuiHoveredFlags.DelayNormal | ImGuiHoveredFlags.AllowWhenDisabled))
                 return; // only show when hovering for a delay and allow for disabled components as well
             bool disabled = ((ImGuiItemFlagsPrivate)ImGuiP.GetItemFlags() & ImGuiItemFlagsPrivate.Disabled) != 0;
-            ImGui.SetTooltip(disabled && disabledHint != null ? $"{text}\n({disabledHint})" : text);
+            ImGui.SetTooltip(disabled && disabledHint != null ? $"{text}\n{disabledHint}" : text);
         }
 
         public static void WriteString(byte[] buf, string value)

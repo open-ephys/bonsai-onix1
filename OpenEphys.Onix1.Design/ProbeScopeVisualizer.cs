@@ -305,6 +305,7 @@ namespace OpenEphys.Onix1.Design
             var probeViewTop = ImGui.GetCursorScreenPos().Y + ImGui.GetFrameHeight();
             if (ImGui.Button(probePaneCollapsed ? "»" : "«"))
                 probePaneCollapsed = !probePaneCollapsed;
+            ImGuiControls.Tooltip(probePaneCollapsed ? "Show the probe." : "Hide the probe, to give the plot more room.");
 
             var model = source?.ProbeGroup?.Probe?.Annotations?.ModelName;
             if (!probePaneCollapsed)
