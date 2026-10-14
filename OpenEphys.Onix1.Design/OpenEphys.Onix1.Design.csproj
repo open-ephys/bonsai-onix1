@@ -14,11 +14,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Bonsai.Design" Version="2.9.0" />
-    <PackageReference Include="Bonsai.Dsp" Version="2.9.0" />
-    <PackageReference Include="Bonsai.Design.Visualizers" Version="2.9.0" />
-    <PackageReference Include="Bonsai.System.Design" Version="2.9.0" />
-    <PackageReference Include="clroni" Version="6.3.0" />
+    <PackageReference Include="Bonsai.Design" Version="2.9.1" />
+    <PackageReference Include="Bonsai.Dsp" Version="2.9.1" />
+    <PackageReference Include="Bonsai.Design.Visualizers" Version="2.9.1" />
+    <PackageReference Include="Bonsai.System.Design" Version="2.9.1" />
+    <PackageReference Include="clroni" Version="6.3.1" />
     <PackageReference Include="Hexa.NET.ImGui" Version="2.2.9" GeneratePathProperty="true" />
     <PackageReference Include="Hexa.NET.ImGui.Backends" Version="1.0.18" GeneratePathProperty="true" />
     <PackageReference Include="Hexa.NET.Utilities" Version="2.2.9" />
