@@ -6,7 +6,7 @@ Acquisition System](https://open-ephys.github.io/onix-docs).
 - Library documentation: https://open-ephys.github.io/bonsai-onix1-docs
 - Hardware documentation: https://open-ephys.github.io/onix-docs
 
-### Run in Visual Studio 2022
+### Run in Visual Studio
 1. Double click the `Setup.cmd` file in the `.bonsai` folder. This will install a
    portable version of Bonsai in the folder along with its required packages.
 1. Open `OpenEphys.Onix1.sln` in Visual Studio (Community Edition is fine).
@@ -36,3 +36,26 @@ Acquisition System](https://open-ephys.github.io/onix-docs).
 
 ![Enable native code debugging](./images/native-code-debugging.webp)
 
+#### Break on ONI exceptions
+
+##### Disable Just My Code
+1. Navigate to `Tools` > `Options`.
+1. Navigate to  `Debugging` > `General`.
+1. Uncheck `Enable Just My Code`.
+1. Click <kbd>OK</kbd>.
+
+![Options](./images/options.webp) ![Disable Just My Code](./images/just-my-code.webp)
+
+##### Add `oni.ONIException` to Exception Settings
+1. Navigate to `Debug` > `Windows` > `Exception Settings`
+   (<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>E</kbd>).
+1. Select the `Common Language Runtime Exceptions` row.
+1. Click the green <kbd>+</kbd> button to add an exception to the selected
+   category.
+1. Type `oni.ONIException` and press <kbd>Enter</kbd>.
+1. Make sure the checkbox next to `oni.ONIException` is checked.
+
+![Exception settings](./images/exception-settings.webp)
+![Common language runtime exceptions](./images/common-language-runtime-exceptions.webp)
+![Exception search](./images/exception-search.webp)
+![Break on ONI exceptions](./images/break-on-oni-exceptions.webp)
