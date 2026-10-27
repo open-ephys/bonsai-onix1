@@ -18,15 +18,15 @@
     <PackageReference Include="Bonsai.Dsp" Version="2.9.1" />
     <PackageReference Include="Bonsai.Design.Visualizers" Version="2.9.1" />
     <PackageReference Include="Bonsai.System.Design" Version="2.9.1" />
+    <!-- NB: referenced directly although only OpenEphys.Onix1 uses it, since its native libraries are copied
+         by targets NuGet imports for direct references alone, and debugging from this project needs them. -->
     <PackageReference Include="clroni" Version="6.3.1" />
     <PackageReference Include="Hexa.NET.ImGui" Version="2.2.9" GeneratePathProperty="true" />
     <PackageReference Include="Hexa.NET.ImGui.Backends" Version="1.0.18" GeneratePathProperty="true" />
-    <PackageReference Include="Hexa.NET.Utilities" Version="2.2.9" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="OpenCV.Net" Version="3.4.2" />
+    <PackageReference Include="OpenEphys.EphysVisualization.Design" Version="0.1.0-alpha.1" />
     <PackageReference Include="OpenEphys.ProbeInterface.NET" Version="0.5.0" />
-    <PackageReference Include="OpenTK" Version="3.3.3" />
-    <PackageReference Include="OpenTK.GLControl" Version="3.3.3" />
     <PackageReference Include="ZedGraph" Version="5.1.7" />
   </ItemGroup>
 
@@ -36,15 +36,6 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="OpenEphys.Onix1.Design.Tests" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- NB: pinned for compile-time version floors only. RemoveHostProvidedRuntimeAssemblies
-         below strips the deployed copies at build time. -->
-    <PackageReference Include="System.Memory" Version="4.6.3" />
-    <PackageReference Include="System.Buffers" Version="4.6.1" />
-    <PackageReference Include="System.Numerics.Vectors" Version="4.6.1" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
   </ItemGroup>
 
   <!-- NB: Bonsai.exe already embeds its own copy of these assemblies. A second standalone copy
@@ -75,7 +66,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="Shaders\*" LogicalName="OpenEphys.Onix1.Design.Shaders.%(Filename)%(Extension)" />
   </ItemGroup>
 
   <Target Name="CopyNativeDependencies" AfterTargets="AfterBuild">

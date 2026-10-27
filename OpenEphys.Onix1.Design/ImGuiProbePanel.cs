@@ -1,6 +1,7 @@
 using Hexa.NET.ImGui;
 using System.Numerics;
 using System.Windows.Forms;
+using OpenEphys.EphysVisualization.Design;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -15,8 +16,9 @@ namespace OpenEphys.Onix1.Design
     {
         readonly ImGuiLogConsole log;
 
-        protected ImGuiProbePanel(ImGuiLogConsole log)
+        protected ImGuiProbePanel(ImGuiProbeSelector selector, ImGuiLogConsole log)
         {
+            this.selector = selector;
             this.log = log;
         }
 
@@ -25,7 +27,7 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// The probe selector component shared by all subclasses.
         /// </summary>
-        protected readonly ImGuiProbeSelector selector = new();
+        protected readonly ImGuiProbeSelector selector;
 
         /// <summary>
         /// Pixel width of the props panel on the right side of the layout.
@@ -56,35 +58,28 @@ namespace OpenEphys.Onix1.Design
         /// <inheritdoc/>
         public void Draw()
         {
-            float topOriginScreenY = ImGui.GetCursorScreenPos().Y;
             float topH = ImGui.GetContentRegionAvail().Y;
             float topAvailW = ImGui.GetContentRegionAvail().X;
-            float minimapColW = selector.ComputeMinimapColumnWidth(topH, topAvailW);
+            float minimapColW = selector.MinimapWidth(topH, topAvailW);
             float sameLineGaps = 2f * ImGui.GetStyle().ItemSpacing.X; // minimap<->zoomed and zoomed<->props
             float zoomedW = topAvailW - minimapColW - PropsWidth - sameLineGaps;
 
-            selector.UpdateLayout(topH, zoomedW);
-
             ImGui.BeginChild("##minimapFcol", new Vector2(minimapColW, topH), ImGuiChildFlags.None,
                 ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
-            selector.DrawMinimap(topH);
+            selector.DrawMinimap();
             ImGui.EndChild();
             ImGui.SameLine();
 
             ImGui.BeginChild("##zoomed", new Vector2(zoomedW, topH), ImGuiChildFlags.None,
                 ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
-            selector.DrawZoomedView(topH, SelectionEnabled);
+            selector.DrawZoomedView(SelectionEnabled);
             ImGui.EndChild();
             ImGui.SameLine();
-
-            float propsLeftScreenX = ImGui.GetCursorScreenPos().X;
 
             ImGui.BeginChild("##props", new Vector2(PropsWidth, topH), ImGuiChildFlags.Borders,
                 ImGuiWindowFlags.AlwaysVerticalScrollbar);
             DrawPropsPanel();
             ImGui.EndChild();
-
-            selector.HandleScrollInput(topOriginScreenY + topH, propsLeftScreenX);
         }
     }
 }

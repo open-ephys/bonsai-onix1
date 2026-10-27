@@ -6,11 +6,13 @@ using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Windows.Forms;
+using OpenEphys.EphysVisualization.Design.WinForms;
+using OpenEphys.EphysVisualization.Design;
 
 namespace OpenEphys.Onix1.Design
 {
     /// <summary>
-    /// A Form hosting a single shared ImGui GL context and render timer. Hosts one or more <see
+    /// A Form hosting a single shared ImGui GL context. Hosts one or more <see
     /// cref="IImGuiTabPanel"/>s registered via <see cref="AddTab"/>: with exactly one, its content fills the
     /// window directly (no visible tab bar); with two or more, they're drawn inside an ImGui tab bar, with
     /// only the active tab's content updated each frame. Used directly for standalone single-panel editing
@@ -19,7 +21,6 @@ namespace OpenEphys.Onix1.Design
     internal class ImGuiShellDialog : Form
     {
         readonly ImGuiGLControl glControl;
-        readonly Timer renderTimer;
         readonly List<(string Name, IImGuiTabPanel Panel)> tabs = new();
 
         IImGuiTabPanel sidePanel;
@@ -55,10 +56,6 @@ namespace OpenEphys.Onix1.Design
             glControl.Render += RenderFrame;
             Controls.Add(glControl);
 
-            renderTimer = new Timer { Interval = 16 };
-            renderTimer.Tick += (_, _) => glControl.Invalidate();
-
-            Shown += (_, _) => renderTimer.Start();
             FormClosing += ShellClosing;
         }
 
@@ -143,7 +140,7 @@ namespace OpenEphys.Onix1.Design
                 if (sidePanelTitle != null)
                 {
                     if (sidePanelCollapsed)
-                        ImGuiControls.StackedLabel(sidePanelTitle.ToUpper());
+                        ImGuiWidgets.StackedLabel(sidePanelTitle.ToUpper());
                     else
                     {
                         ImGui.SameLine();
@@ -215,7 +212,7 @@ namespace OpenEphys.Onix1.Design
 
         void ShellClosing(object sender, FormClosingEventArgs e)
         {
-            renderTimer.Stop();
+            glControl.Paced = false;
 
             // NB: every close path (Close button, window X, Alt+F4/system menu) runs the same CanClose
             // gate. WinForms auto-sets DialogResult to Cancel for a modal dialog closed via X/Alt+F4 even
@@ -231,7 +228,7 @@ namespace OpenEphys.Onix1.Design
             if (!e.Cancel && sidePanel != null && !sidePanel.CanClose(DialogResult))
                 e.Cancel = true;
 
-            if (e.Cancel) renderTimer.Start();
+            if (e.Cancel) glControl.Paced = true;
         }
     }
 }

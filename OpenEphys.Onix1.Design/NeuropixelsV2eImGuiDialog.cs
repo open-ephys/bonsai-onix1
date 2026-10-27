@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using Hexa.NET.ImGui;
 using Newtonsoft.Json;
 using OpenEphys.ProbeInterface.NET;
+using OpenEphys.EphysVisualization.Design;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -125,85 +126,51 @@ namespace OpenEphys.Onix1.Design
 
         protected override void HandleProbeSpecificShortcuts(bool shift)
         {
-            if (ImGui.IsKeyPressed(ImGuiKey.A, false)) showActivityColors = !showActivityColors;
-            if (ImGui.IsKeyPressed(ImGuiKey.B, false))
-            {
-                bankSelectMode = !bankSelectMode;
-                selector.ClearSelection();
-            }
+            if (!bankSelectMode && ImGui.IsKeyPressed(ImGuiKey.A, false)) showActivityColors = !showActivityColors;
+            if (selector.Hovered && ImGui.IsKeyPressed(ImGuiKey.B, false)) SetBankSelectMode(!bankSelectMode);
         }
 
-        #endregion
-
-        /// <summary>
-        /// Opens the dialog.
-        /// </summary>
-        public NeuropixelsV2eImGuiDialog(IConfigureNeuropixelsV2 configureNode, string probeName, ImGuiLogConsole log)
-            : base(probeName, log)
+        void SetBankSelectMode(bool on)
         {
-            // NB: start the view at a 2 mm vertical box that extends 300 um below contact 0
-            selector.DefaultZoomWindow = 2000f;
-            selector.DefaultScrollY = 700f;
-
-            this.configureNode = configureNode ?? throw new ArgumentNullException(nameof(configureNode));
-            isBeta = configureNode is ConfigureNeuropixelsV2BetaPsbDecoder;
-
-            survey.SurveyCompleted += () => HasChanges = true;
-            scan.ScanCompleted += OnScanCompleted;
-
-            SetupSelectorCallbacks();
-            LoadOrCreateProbeGroup();
-            RefreshProbeState();
+            if (on == bankSelectMode) return;
+            bankSelectMode = on;
+            selector.ClearSelection();
         }
 
-        #region Selector callback wiring
-
-        static uint BankColor(int bankIndex) => bankIndex % 2 == 0 ? ImGuiPalette.AzureBlue : ImGuiPalette.CobaltBlue;
-
-        void SetupSelectorCallbacks()
+        void DrawSelectionSection()
         {
-            selector.GetFillColor = idx =>
-            {
-                if (bankSelectMode)
-                {
-                    var bank = probeGroup.GetBank(idx);
-                    var key = (probeGroup.GetShank(idx), bank);
-                    bool pending = pendingBanks.Contains(key);
-                    bool inSurvey = surveyBanks.Contains(key);
-                    if (pending) return selector.DragIntent == DragSelectIntent.Remove ? ColorContactDisabled : BankColor(bank);
-                    return inSurvey ? BankColor(bank) : ColorContactDisabled;
-                }
-                var data = CurrentDisplayData();
-                if (showActivityColors && data != null && idx < data.Length) return ActivityColor(data[idx]);
-                return DefaultContactFillColor(idx);
-            };
-            selector.IsBlocked = DefaultIsBlocked;
-            selector.SelectionChanged += (_, _) =>
-            {
-                if (!bankSelectMode) return;
-                var pending = new HashSet<(int, int)>();
-                for (int i = 0; i < selector.DragBoxContacts.Length && i < allContacts.Count; i++)
-                    if (selector.DragBoxContacts[i])
-                        pending.Add((probeGroup.GetShank(i), probeGroup.GetBank(i)));
-                if (pending.Count == 0) return;
-                if (selector.DragIntent == DragSelectIntent.Remove)
-                    surveyBanks.ExceptWith(pending);
-                else
-                    surveyBanks.UnionWith(pending);
-                selector.ClearSelection();
-            };
+            ImGui.Text("Selection");
+            ImGui.Spacing();
+
+            if (ImGui.RadioButton("Channels##seltarget", !bankSelectMode)) SetBankSelectMode(false);
+            ImGuiWidgets.Tooltip("Select contacts to enable or pin them. Equivalent to pressing B over the probe view.");
+            ImGui.SameLine();
+            if (ImGui.RadioButton("Banks##seltarget", bankSelectMode)) SetBankSelectMode(true);
+            ImGuiWidgets.Tooltip("Select whole banks (384 contacts each) instead of individual contacts, to choose " +
+                "which banks the survey sweeps through. Run the survey itself from the headstage panel. Equivalent " +
+                "to pressing B over the probe view.");
         }
 
-        #endregion
-
-        #region ImGuiProbePanel overrides
-
-        protected override void DrawPropsPanel()
+        void DrawRulerSection()
         {
-            selector.FillColorOverridesBlocked = bankSelectMode || (showActivityColors && CurrentDisplayData() != null);
-            selector.SelectionSkipsBlocked = !bankSelectMode;
-            selector.ModeLabel = bankSelectMode ? "MODE: BANK SELECT (B to exit)" : "MODE: CHANNEL SELECT";
+            ImGui.Text("Rulers");
+            ImGui.Spacing();
+            selector.DrawRulerControls();
+        }
+
+        // NB: the selector's settings depend only on bank select and whether activity colors are shown, so they're
+        // only updated when one of those changes.
+        (bool, bool)? selectorView;
+
+        void UpdateSelectorView()
+        {
             bool actColorsActive = !bankSelectMode && showActivityColors && CurrentDisplayData() != null;
+            var view = (bankSelectMode, actColorsActive);
+            if (view == selectorView) return;
+            selectorView = view;
+
+            selector.FillColorOverridesBlocked = bankSelectMode || actColorsActive;
+            selector.SelectionSkipsBlocked = !bankSelectMode;
             selector.Legend = bankSelectMode
                 ? new LegendEntry[]
                   {
@@ -222,12 +189,78 @@ namespace OpenEphys.Onix1.Design
                           new(ImGuiProbeSelector.BlockedFillColor, "Unavailable", DottedOutline: true),
                           new(ImGuiProbeSelector.SelectionBorderColor, "Editable selection", OutlineOnly: true),
                       };
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Opens the dialog.
+        /// </summary>
+        public NeuropixelsV2eImGuiDialog(IConfigureNeuropixelsV2 configureNode, string probeName, ImGuiLogConsole log)
+            : base(probeName, log)
+        {
+            this.configureNode = configureNode ?? throw new ArgumentNullException(nameof(configureNode));
+            isBeta = configureNode is ConfigureNeuropixelsV2BetaPsbDecoder;
+
+            survey.SurveyCompleted += () => HasChanges = true;
+            scan.ScanCompleted += OnScanCompleted;
+
+            SetupSelectorCallbacks();
+            LoadOrCreateProbeGroup();
+            RefreshProbeState();
+        }
+
+        #region Selector callback wiring
+
+        static uint BankColor(int bankIndex) => bankIndex % 2 == 0 ? ImGuiPalette.AzureBlue : ImGuiPalette.CobaltBlue;
+
+        void SetupSelectorCallbacks()
+        {
+            selector.FillColor = idx =>
+            {
+                if (bankSelectMode)
+                {
+                    var bank = probeGroup.GetBank(idx);
+                    var key = (probeGroup.GetShank(idx), bank);
+                    bool pending = pendingBanks.Contains(key);
+                    bool inSurvey = surveyBanks.Contains(key);
+                    if (pending) return selector.DragIntent == DragSelectIntent.Remove ? ColorContactDisabled : BankColor(bank);
+                    return inSurvey ? BankColor(bank) : ColorContactDisabled;
+                }
+                var data = CurrentDisplayData();
+                if (showActivityColors && data != null && idx < data.Length) return ActivityColor(data[idx]);
+                return DefaultContactFillColor(idx);
+            };
+            selector.Blocked = DefaultIsBlocked;
+            selector.SelectionChanged += (_, _) =>
+            {
+                if (!bankSelectMode) return;
+                var pending = new HashSet<(int, int)>();
+                for (int i = 0; i < selector.Contacts.Count && i < allContacts.Count; i++)
+                    if (selector.Contacts[i].InDragBox)
+                        pending.Add((probeGroup.GetShank(i), probeGroup.GetBank(i)));
+                if (pending.Count == 0) return;
+                if (selector.DragIntent == DragSelectIntent.Remove)
+                    surveyBanks.ExceptWith(pending);
+                else
+                    surveyBanks.UnionWith(pending);
+                selector.ClearSelection();
+            };
+        }
+
+        #endregion
+
+        #region ImGuiProbePanel overrides
+
+        protected override void DrawPropsPanel()
+        {
+            UpdateSelectorView();
 
             if (bankSelectMode)
             {
                 pendingBanks.Clear();
-                for (int i = 0; i < selector.DragBoxContacts.Length && i < allContacts.Count; i++)
-                    if (selector.DragBoxContacts[i])
+                for (int i = 0; i < selector.Contacts.Count && i < allContacts.Count; i++)
+                    if (selector.Contacts[i].InDragBox)
                         pendingBanks.Add((probeGroup.GetShank(i), probeGroup.GetBank(i)));
             }
 
@@ -235,6 +268,10 @@ namespace OpenEphys.Onix1.Design
             DrawTitleBar();
             ImGui.Separator();
             DrawFileSection();
+            ImGui.Separator();
+            DrawSelectionSection();
+            ImGui.Separator();
+            DrawRulerSection();
             ImGui.Separator();
             DrawChannelSection();
             ImGui.Separator();
@@ -289,8 +326,8 @@ namespace OpenEphys.Onix1.Design
 
         void WriteBackBufs()
         {
-            ImGuiControls.WriteString(gainCalBuf, configureNode.ProbeConfiguration.GainCalibrationFileName ?? "");
-            ImGuiControls.WriteString(probeFileBuf, configureNode.ProbeConfiguration.ProbeInterfaceFileName  ?? "");
+            ImGuiStrings.WriteString(gainCalBuf, configureNode.ProbeConfiguration.GainCalibrationFileName ?? "");
+            ImGuiStrings.WriteString(probeFileBuf, configureNode.ProbeConfiguration.ProbeInterfaceFileName  ?? "");
         }
 
         #endregion

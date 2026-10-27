@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using Hexa.NET.ImGui;
 using Newtonsoft.Json;
 using OpenEphys.ProbeInterface.NET;
+using OpenEphys.EphysVisualization.Design;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -22,13 +23,14 @@ namespace OpenEphys.Onix1.Design
         protected IReadOnlyList<Contact> allContacts = Array.Empty<Contact>();
         protected readonly MultiplexedContactState channelState = new();
         protected readonly byte[] probeFileBuf = new byte[512];
-        protected const uint ColorContactEnabled = ImGuiPalette.AmberGold;
-        protected const uint ColorContactPinned = ImGuiPalette.NeonPink;
-        protected const uint ColorContactDisabled = ImGuiPalette.Grey0x4D;
+        protected static readonly uint ColorContactEnabled = ImGuiPalette.AmberGold;
+        protected static readonly uint ColorContactPinned = ImGuiPalette.NeonPink;
+        protected static readonly uint ColorContactDisabled = ImGuiPalette.Grey0x4D;
         protected const float ComboboxStartWidthPx = 165f;
 
+        // NB: start the view at a 2 mm vertical box that extends 300 um below contact 0
         protected ImGuiNeuropixelsDialog(string probeName, ImGuiLogConsole log)
-            : base(log)
+            : base(new ImGuiProbeSelector(zoomWindow: 2000f, scrollY: 700f), log)
         {
             this.probeName = probeName;
         }
@@ -176,20 +178,20 @@ namespace OpenEphys.Onix1.Design
             bool invert = InvertPolarity;
             if (ImGui.Checkbox("Invert polarity##cfg", ref invert))
                 InvertPolarity = invert;
-            ImGuiControls.Tooltip("Flip the sign of the recorded voltage, correcting for the inverting amplifier in Neuropixels probes that otherwise makes spikes appear as positive deflections instead of the expected negative ones.");
+            ImGuiWidgets.Tooltip("Flip the sign of the recorded voltage, correcting for the inverting amplifier in Neuropixels probes that otherwise makes spikes appear as positive deflections instead of the expected negative ones.");
         }
 
         protected void DrawEnablePinButtons()
         {
-            bool anySelected = selector.SelectedContacts.Any(s => s);
+            bool anySelected = selector.Contacts.Any(c => c.Selected);
 
             if (!anySelected) ImGui.BeginDisabled();
             if (ImGui.Button("Enable (E)##enable")) EnableSelectedContacts();
-            ImGuiControls.Tooltip("Enable the selected contacts, wiring each one to an available recording channel.",
+            ImGuiWidgets.Tooltip("Enable the selected contacts, wiring each one to an available recording channel.",
                 "Select at least one contact first.");
             ImGui.SameLine();
             if (ImGui.Button("Enable & Pin (P)##enablepin")) EnableAndPinSelectedContacts();
-            ImGuiControls.Tooltip("Enable the selected contacts and pin their channel assignment so it survives future preset or probe type changes.",
+            ImGuiWidgets.Tooltip("Enable the selected contacts and pin their channel assignment so it survives future preset or probe type changes.",
                 "Select at least one contact first.");
             if (!anySelected) ImGui.EndDisabled();
 
@@ -197,15 +199,15 @@ namespace OpenEphys.Onix1.Design
 
             bool anySelectedPinned = false;
             if (anySelected)
-                for (int i = 0; i < selector.SelectedContacts.Length && i < allContacts.Count; i++)
-                    if (selector.SelectedContacts[i] &&
+                for (int i = 0; i < selector.Contacts.Count && i < allContacts.Count; i++)
+                    if (selector.Contacts[i].Selected &&
                         channelState.ElectrodeToChannel.TryGetValue(i, out int pch) &&
                         channelState.PinnedChannels.Contains(pch))
                     { anySelectedPinned = true; break; }
 
             if (!anySelectedPinned) ImGui.BeginDisabled();
             if (ImGui.Button("Unpin (Shift+P)##unpinsel")) UnpinSelectedContacts();
-            ImGuiControls.Tooltip("Release the pin on the selected contacts' channels, allowing a future preset or probe type change to reassign them.",
+            ImGuiWidgets.Tooltip("Release the pin on the selected contacts' channels, allowing a future preset or probe type change to reassign them.",
                 "Select a pinned contact first.");
             if (!anySelectedPinned) ImGui.EndDisabled();
 
@@ -214,7 +216,7 @@ namespace OpenEphys.Onix1.Design
             bool noPins = channelState.PinnedChannels.Count == 0;
             if (noPins) ImGui.BeginDisabled();
             if (ImGui.Button("Unpin All##unpinall")) ClearPins();
-            ImGuiControls.Tooltip("Release every pin on this probe, allowing all channels to be reassigned by a future preset or probe type change.",
+            ImGuiWidgets.Tooltip("Release every pin on this probe, allowing all channels to be reassigned by a future preset or probe type change.",
                 "No channels are pinned.");
             if (noPins) ImGui.EndDisabled();
         }
@@ -223,7 +225,7 @@ namespace OpenEphys.Onix1.Design
         {
             var selectedContactIndices = new List<int>();
             for (int i = 0; i < allContacts.Count; i++)
-                if (i < selector.SelectedContacts.Length && selector.SelectedContacts[i])
+                if (i < selector.Contacts.Count && selector.Contacts[i].Selected)
                     selectedContactIndices.Add(i);
             if (selectedContactIndices.Count == 0) return;
             EnableElectrodes(selectedContactIndices);
@@ -236,8 +238,8 @@ namespace OpenEphys.Onix1.Design
         protected void EnableAndPinSelectedContacts()
         {
             var candidateIndices = new List<int>();
-            for (int i = 0; i < selector.SelectedContacts.Length; i++)
-                if (i < allContacts.Count && selector.SelectedContacts[i] && !channelState.BlockedContactIndices.Contains(i))
+            for (int i = 0; i < selector.Contacts.Count; i++)
+                if (i < allContacts.Count && selector.Contacts[i].Selected && !channelState.BlockedContactIndices.Contains(i))
                     candidateIndices.Add(i);
             if (candidateIndices.Count == 0) return;
 
@@ -272,9 +274,9 @@ namespace OpenEphys.Onix1.Design
         protected void UnpinSelectedContacts()
         {
             bool any = false;
-            for (int i = 0; i < selector.SelectedContacts.Length && i < allContacts.Count; i++)
+            for (int i = 0; i < selector.Contacts.Count && i < allContacts.Count; i++)
             {
-                if (!selector.SelectedContacts[i]) continue;
+                if (!selector.Contacts[i].Selected) continue;
                 if (!channelState.ElectrodeToChannel.TryGetValue(i, out int ch)) continue;
                 foreach (var pinChannel in GetChannelsToPin(i, ch))
                     if (channelState.PinnedChannels.Remove(pinChannel))
@@ -333,7 +335,7 @@ namespace OpenEphys.Onix1.Design
 
             var description = ProbeGroup.Probe.Annotations.GetAnnotation<string>("description");
             if (!string.IsNullOrEmpty(description))
-                ImGuiControls.Tooltip(description);
+                ImGuiWidgets.Tooltip(description);
 
             var options = DefaultGeometryOptions;
             if (options.Count == 0) return;
@@ -348,7 +350,7 @@ namespace OpenEphys.Onix1.Design
                         QuickLoadDefaultGeometry(option);
                 ImGui.EndCombo();
             }
-            ImGuiControls.Tooltip("Load the electrode layout for this probe model. Replaces the current channel map, contact state, and survey data.");
+            ImGuiWidgets.Tooltip("Load the electrode layout for this probe model. Replaces the current channel map, contact state, and survey data.");
         }
 
         void QuickLoadDefaultGeometry(DefaultGeometryOption option)
@@ -391,17 +393,17 @@ namespace OpenEphys.Onix1.Design
             ImGui.Spacing();
 
             string pf = ProbeConfigurationBase.ProbeInterfaceFileName ?? "";
-            ImGuiControls.WriteString(probeFileBuf, pf);
+            ImGuiStrings.WriteString(probeFileBuf, pf);
             ImGui.SetNextItemWidth(fileTargetW);
             unsafe
             {
                 fixed (byte* p = probeFileBuf)
                     if (ImGui.InputText("##probefile", p, (nuint)probeFileBuf.Length))
-                        ProbeConfigurationBase.ProbeInterfaceFileName = ImGuiControls.ReadBuffer(probeFileBuf);
+                        ProbeConfigurationBase.ProbeInterfaceFileName = ImGuiStrings.ReadBuffer(probeFileBuf);
             }
             if (!string.IsNullOrEmpty(ProbeConfigurationBase.ProbeInterfaceFileName))
             {
-                ImGuiControls.Tooltip(ProbeConfigurationBase.ProbeInterfaceFileName);
+                ImGuiWidgets.Tooltip(ProbeConfigurationBase.ProbeInterfaceFileName);
             }
 
             ImGui.SameLine();
@@ -422,19 +424,19 @@ namespace OpenEphys.Onix1.Design
                 if (ofd.ShowDialog() == DialogResult.OK)
                     OnProbeFileNameChanged(ofd.FileName);
             }
-            ImGuiControls.Tooltip("Open a file browser to load an existing ProbeInterface file that specifies the channel map, contact state, and previous survey results.");
+            ImGuiWidgets.Tooltip("Open a file browser to load an existing ProbeInterface file that specifies the channel map, contact state, and previous survey results.");
 
             bool canSave = !string.IsNullOrEmpty(ProbeConfigurationBase.ProbeInterfaceFileName);
             string saveLabel = HasChanges ? "Save Changes*##save" : "Save##save";
             if (!canSave) ImGui.BeginDisabled();
             if (ImGui.Button(saveLabel)) SaveProbeGroup();
-            ImGuiControls.Tooltip("Save the current channel map, contact state, and survey data to the specified ProbeInterface file.",
+            ImGuiWidgets.Tooltip("Save the current channel map, contact state, and survey data to the specified ProbeInterface file.",
                 "Choose a file with Open or Save As... first.");
             if (!canSave) ImGui.EndDisabled();
             ImGui.SameLine();
             if (ImGui.Button("Save As...##save"))
                 SaveProbeGroupAs();
-            ImGuiControls.Tooltip("Choose a file path and save the current channel map, contact state, and survey data to a new ProbeInterface file.");
+            ImGuiWidgets.Tooltip("Choose a file path and save the current channel map, contact state, and survey data to a new ProbeInterface file.");
         }
 
         protected void SaveProbeGroup()
@@ -617,7 +619,7 @@ namespace OpenEphys.Onix1.Design
         {
             var sel = new List<int>();
             for (int i = 0; i < allContacts.Count; i++)
-                if (i < selector.InspectedContacts.Length && selector.InspectedContacts[i])
+                if (i < selector.Contacts.Count && selector.Contacts[i].Inspected)
                     sel.Add(i);
 
             bool usingHover = false;
@@ -637,8 +639,8 @@ namespace OpenEphys.Onix1.Design
             ImGui.TextDisabled(usingHover ? "Hovering" : $"{sel.Count} selected");
             ImGui.Spacing();
 
-            ImGuiControls.InfoRow("Index", IndexList(sel));
-            ImGuiControls.InfoRow("Channel", ChannelList(sel, channelState));
+            ImGuiWidgets.InfoRow("Index", IndexList(sel));
+            ImGuiWidgets.InfoRow("Channel", ChannelList(sel, channelState));
 
             DrawProbeSpecificContactInfo(sel);
 
@@ -652,19 +654,19 @@ namespace OpenEphys.Onix1.Design
                 if (c.PosY < yMin) yMin = c.PosY;
                 if (c.PosY > yMax) yMax = c.PosY;
             }
-            ImGuiControls.InfoRow("X", xMin == xMax ? $"{xMin:0} um" : $"{xMin:0} to {xMax:0} um");
-            ImGuiControls.InfoRow("Y", yMin == yMax ? $"{yMin:0} um" : $"{yMin:0} to {yMax:0} um");
+            ImGuiWidgets.InfoRow("X", xMin == xMax ? $"{xMin:0} um" : $"{xMin:0} to {xMax:0} um");
+            ImGuiWidgets.InfoRow("Y", yMin == yMax ? $"{yMin:0} um" : $"{yMin:0} to {yMax:0} um");
 
             DrawContactMetrics(sel);
 
             int pinnedCount = sel.Count(i =>
                 channelState.ElectrodeToChannel.TryGetValue(i, out int pch) && channelState.PinnedChannels.Contains(pch));
-            ImGuiControls.InfoRow("Pinned", pinnedCount == 0 ? "false"
+            ImGuiWidgets.InfoRow("Pinned", pinnedCount == 0 ? "false"
                 : pinnedCount == sel.Count ? "true"
                 : $"{pinnedCount}/{sel.Count}");
 
             int blockedCount = sel.Count(i => channelState.BlockedContactIndices.Contains(i));
-            ImGuiControls.InfoRow("Blocked", blockedCount == 0 ? "false"
+            ImGuiWidgets.InfoRow("Blocked", blockedCount == 0 ? "false"
                 : blockedCount == sel.Count ? "true"
                 : $"{blockedCount}/{sel.Count}");
         }

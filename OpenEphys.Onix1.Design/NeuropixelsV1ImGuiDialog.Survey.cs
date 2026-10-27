@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Hexa.NET.ImGui;
+using OpenEphys.EphysVisualization.Design;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -17,12 +18,6 @@ namespace OpenEphys.Onix1.Design
         void DrawSurveySection()
         {
             ImGui.Text("Electrode Survey");
-            ImGui.Spacing();
-
-            if (ImGui.Checkbox("Select survey banks (B)##bsm", ref bankSelectMode))
-                selector.ClearSelection();
-            ImGuiControls.Tooltip("Select whole banks instead of individual contacts, to choose which banks the survey sweeps through. Equivalent to pressing B. Run the survey itself from the headstage panel.");
-
             ImGui.Spacing();
 
             switch (survey.Status)
@@ -62,22 +57,27 @@ namespace OpenEphys.Onix1.Design
             if (survey.IsStale)
                 ImGui.TextColored(ColorTextWarning, "Survey data is over 24h old.");
 
+            // NB: Banks colors contacts by bank, so activity colors can't show there. The checkbox is disabled so it
+            // doesn't look like it does something.
+            ImGui.BeginDisabled(bankSelectMode);
             ImGui.Checkbox("Show activity colors##actcol", ref showActivityColors);
-            ImGuiControls.Tooltip("Color each contact on the probe view by its measured activity from the last survey, instead of its enabled/pinned state. Equivalent to pressing A.");
+            ImGuiWidgets.Tooltip("Color each contact on the probe view by its measured activity from the last survey, instead of its enabled/pinned state. Equivalent to pressing A.",
+                "Activity colors are not shown while selecting banks.");
+            ImGui.EndDisabled();
 
-            if (!showActivityColors) return;
+            if (!showActivityColors || bankSelectMode) return;
 
             ImGui.Spacing();
 
             int mi = (int)selectedMetric;
             ImGui.RadioButton("SNR##met", ref mi, (int)SurveyActivityMetric.SNR);
-            ImGuiControls.Tooltip("Color contacts by signal-to-noise ratio (SNR): the average peak-to-peak amplitude of spikes detected on the contact (signal), divided by the estimated standard deviation of the background signal (noise).");
+            ImGuiWidgets.Tooltip("Color contacts by signal-to-noise ratio (SNR): the average peak-to-peak amplitude of spikes detected on the contact (signal), divided by the estimated standard deviation of the background signal (noise).");
             ImGui.SameLine();
             ImGui.RadioButton("Firing Rate (Hz)##met", ref mi, (int)SurveyActivityMetric.FireRate);
-            ImGuiControls.Tooltip("Color contacts by firing rate: the number of spikes detected on the contact per second.");
+            ImGuiWidgets.Tooltip("Color contacts by firing rate: the number of spikes detected on the contact per second.");
             ImGui.SameLine();
             ImGui.RadioButton("SNR × Rate##met", ref mi, (int)SurveyActivityMetric.Combined);
-            ImGuiControls.Tooltip("Color contacts by signal-to-noise ratio (SNR) multiplied by firing rate, favoring contacts with both strong, clean spikes and frequent firing.");
+            ImGuiWidgets.Tooltip("Color contacts by signal-to-noise ratio (SNR) multiplied by firing rate, favoring contacts with both strong, clean spikes and frequent firing.");
             if ((SurveyActivityMetric)mi != selectedMetric)
             {
                 actRanges[selectedMetric] = (actMin, actMax);
@@ -156,13 +156,13 @@ namespace OpenEphys.Onix1.Design
                 if (sel.Count == 1 && sel[0] < data.Length)
                 {
                     var v = data[sel[0]];
-                    ImGuiControls.InfoRow(label, v.HasValue ? $"{v.Value:F2}" : "—");
+                    ImGuiWidgets.InfoRow(label, v.HasValue ? $"{v.Value:F2}" : "—");
                 }
                 else
                 {
                     var vals = sel.Where(i => i < data.Length && data[i].HasValue)
                                   .Select(i => data[i].Value).ToArray();
-                    if (vals.Length > 0) ImGuiControls.InfoRow(label, $"avg {vals.Average():F2} / max {vals.Max():F2}");
+                    if (vals.Length > 0) ImGuiWidgets.InfoRow(label, $"avg {vals.Average():F2} / max {vals.Max():F2}");
                 }
             }
 

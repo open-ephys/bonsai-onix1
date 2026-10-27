@@ -1,15 +1,14 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using System.Windows.Forms;
 using Bonsai;
 using Bonsai.Design;
-using Bonsai.Expressions;
 using Hexa.NET.ImGui;
 using OpenCV.Net;
+using OpenEphys.EphysVisualization.Design;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -22,91 +21,68 @@ namespace OpenEphys.Onix1.Design
     /// registered it.
     /// </remarks>
     /// <typeparam name="TFrame">The data frame type the scope displays.</typeparam>
-    public class ProbeScopeVisualizer<TFrame> : DialogTypeVisualizer
+    public class ProbeScopeVisualizer<TFrame> : WaveformScopeVisualizer
     {
         const float ProbePaneWidth = 260f;
-        const int DrainMilliseconds = 15;
         const float CollapsedPaneWidth = 28f;
 
-        ProbeScope<TFrame> node;
-        readonly ConcurrentQueue<object> pending = new();
-        Timer drainTimer;
-        readonly ImGuiProbeSelector selector = new();
-        ImGuiLfpViewerPanel waveform;
-        ImGuiProbeScopeControlStrip<TFrame> strip;
-
-        ImGuiHoverGLControl canvas;
-        DisplayPacer pacer;
+        readonly ImGuiProbeSelector selector = new(zoomWindowFraction: 1f) { ShowGrid = false };
+        ImGuiProbeScopeBandColumns<TFrame> bands;
         EventLoopScheduler scheduler;
-
         string deviceName;
-
-        // NB: shown in the pane rather than thrown. The scope is a view on data it does not change, so a
-        // mistake in it must not stop the workflow, and closing the window, correcting the name and
-        // reopening it should work while the workflow runs. Set on the scheduler thread as well as this
-        // one, and read once a frame.
-        volatile string fault;
         bool probePaneCollapsed;
         ProbeScopeSource<TFrame> source;
-        float stripHeight;
+
+        ProbeScope<TFrame> Node => (ProbeScope<TFrame>)Scope;
+
+        /// <inheritdoc/>
+        protected override long HistoryBytes => Node.HistoryBytes;
+
+        /// <inheritdoc/>
+        protected override string Unit => Node.Unit;
+
+        /// <inheritdoc/>
+        protected override IEnumerable<ImGuiKey> Hotkeys => selector.Hotkeys;
+
+        /// <inheritdoc/>
+        protected override string FaultHint => "Close this window, correct the ProbeScope's DeviceName, and open it again.";
 
         /// <inheritdoc/>
         public override void Load(IServiceProvider provider)
         {
+            base.Load(provider);
             var context = (ITypeVisualizerContext)provider.GetService(typeof(ITypeVisualizerContext));
             var workflowBuilder = (WorkflowBuilder)provider.GetService(typeof(WorkflowBuilder));
-            node = (ProbeScope<TFrame>)ExpressionBuilder.GetWorkflowElement(context.Source);
-            fault = null;
+            var node = Node;
 
             try { deviceName = UpstreamDevice.Resolve(workflowBuilder?.Workflow, context.Source, node.DeviceName, node.DeviceNameOf); }
-            catch (InvalidOperationException ex) { fault = $"ProbeScope: {ex.Message}"; }
+            catch (InvalidOperationException ex) { Fail($"ProbeScope: {ex.Message}"); }
 
-            // NB: no plot can be wider than the widest monitor unless its window spans two, so that is as
-            // much horizontal detail as is ever worth holding.
-            waveform = new(node, node.HistoryBytes, Screen.AllScreens.Max(screen => screen.Bounds.Width)) { Unit = node.Unit };
-            selector.ShowGrid = false;
-            selector.DefaultZoomWindowFraction = 1f;
-
-            strip = new ImGuiProbeScopeControlStrip<TFrame>(node);
-
+            bands = new ImGuiProbeScopeBandColumns<TFrame>(node, () => Paused);
+            columns = new[] { bands.BandColumn, bands.FiltersColumn }.Concat(StandardColumns.All)
+                .Append(new ControlStripColumn("Rulers", DrawRulerControls)).ToArray();
             scheduler = new EventLoopScheduler();
-
-            canvas = new ImGuiHoverGLControl(waveform.Hotkeys.Concat(selector.Hotkeys))
-            {
-                Size = new System.Drawing.Size(1100, 620),
-                Dock = DockStyle.Fill
-            };
-            canvas.Render += RenderFrame;
-
-            // NB: paced from the handle's lifetime rather than Load's, since a handle can be recreated.
-            canvas.HandleCreated += (_, _) => pacer = new DisplayPacer(canvas.Handle);
-            canvas.HandleDestroyed += (_, _) => StopPacer();
-            canvas.Paint += (_, _) => pacer?.Painted();
-
-            var visualizerService = (IDialogTypeVisualizerService)provider.GetService(typeof(IDialogTypeVisualizerService));
-            visualizerService?.AddControl(canvas);
-
-            // NB: each frame applies what has arrived, and so does a timer, which runs while the window is
-            // minimized and paints nothing, so that what arrives meanwhile is applied rather than held.
-            drainTimer = new Timer { Interval = DrainMilliseconds };
-            drainTimer.Tick += (_, _) => Drain();
-            drainTimer.Start();
         }
+
+        ControlStripColumn[] columns = Array.Empty<ControlStripColumn>();
 
         /// <inheritdoc/>
         /// <remarks>
-        /// What the band chain produces is queued and applied at the start of each frame, rather than handed to
-        /// <see cref="Show"/> one value at a time as the base class does, which at a probe's rate would keep the
-        /// window from painting, or in batches on a timer, as <see cref="BufferedVisualizer"/> delivers them, which
-        /// would feed the frames unevenly.
+        /// What the band chain produces is handed to the viewer as it arrives rather than in batches on a timer, as
+        /// <see cref="BufferedVisualizer"/> delivers them, which would feed the frames unevenly.
         /// </remarks>
-        public override IObservable<object> Visualize(IObservable<IObservable<object>> source, IServiceProvider provider) =>
-            Observable.Create<object>(_ =>
-                BindBands(source.Merge().Cast<TFrame>()).Subscribe(pending.Enqueue, ex => fault = ex.Message));
-
-        IObservable<object> BindBands(IObservable<TFrame> frames)
+        public override IObservable<object> Visualize(IObservable<IObservable<object>> source, IServiceProvider provider)
         {
-            if (fault is not null)
+            // NB: the node is taken once here rather than in the chain, which runs on its own thread and may do so
+            // after the window has unloaded.
+            var node = Node;
+            return Observable.Create<object>(_ =>
+                BindBands(node, source.Merge().Cast<TFrame>()).Subscribe(Forward, ex => Fail(ex.Message)));
+        }
+
+        IObservable<object> BindBands(ProbeScope<TFrame> node, IObservable<TFrame> frames)
+        {
+            if (Faulted)
                 return Observable.Never<object>();
 
             // NB: off the acquisition thread the frames arrive on, so the band filters never hold it up, and onto
@@ -117,10 +93,10 @@ namespace OpenEphys.Onix1.Design
                 // nothing orders before the visualizer subscribes. A frame arriving proves it has.
                 .Publish(shared => shared
                     .Take(1)
-                    .Select(_ => ResolveSource())
+                    .Select(_ => ResolveSource(node))
                     .Where(probe => probe is not null)
                     .SelectMany(probe => Observable.Return<object>(probe)
-                        .Concat(strip.BandSelected
+                        .Concat(bands.BandSelected
                             .Select(band => BandOutput(probe, band, shared))
                             .Switch()
                         )
@@ -128,7 +104,7 @@ namespace OpenEphys.Onix1.Design
                 );
         }
 
-        ProbeScopeSource<TFrame> ResolveSource()
+        ProbeScopeSource<TFrame> ResolveSource(ProbeScope<TFrame> node)
         {
             try
             {
@@ -138,7 +114,7 @@ namespace OpenEphys.Onix1.Design
             }
             catch (Exception ex)
             {
-                fault = ex.Message;
+                Fail(ex.Message);
                 return null;
             }
         }
@@ -186,68 +162,44 @@ namespace OpenEphys.Onix1.Design
             return clipped;
         }
 
-        void Drain()
+        // NB: the resolved source goes through the same queue as the samples so that it is applied on the UI
+        // thread, in order, ahead of anything that depends on it.
+        void Forward(object value)
         {
-            while (pending.TryDequeue(out var value))
-                Apply(value);
+            switch (value)
+            {
+                case ProbeScopeSource<TFrame> probe:
+                    Post(() =>
+                    {
+                        source = probe;
+                        selector.Refresh(probe.ProbeGroup);
+                        bands.Bands = probe.Bands;
+                        bands.ReferenceOffered = probe.Reference is not null;
+                    });
+                    break;
+                case ProbeScopeClipping clipping:
+                    PostClipping(clipping.Channels);
+                    break;
+                case ProbeScopeSample sample:
+                    PostData(sample.Data, sample.SampleRate);
+                    break;
+            }
         }
 
         /// <inheritdoc/>
         /// <remarks>
-        /// Nothing is shown through here, since <see cref="Visualize"/> applies what the scope receives itself.
+        /// The probe pane sits left of the plot, and both are left out with the strip while maximized.
         /// </remarks>
-        public override void Show(object value)
+        protected override void DrawFrame()
         {
-        }
-
-        // NB: the resolved source arrives through the same sequence as the samples so that it is applied on the UI
-        // thread, in order, ahead of anything that depends on it.
-        void Apply(object value)
-        {
-            if (value is ProbeScopeSource<TFrame> probe)
-            {
-                source = probe;
-                selector.Refresh(probe.ProbeGroup);
-                strip.Bands = probe.Bands;
-                strip.ReferenceOffered = probe.Reference is not null;
-                return;
-            }
-
-            if (value is ProbeScopeClipping clipping)
-            {
-                waveform.MarkClipping(clipping.Channels);
-                return;
-            }
-
-            var sample = (ProbeScopeSample)value;
-            waveform.Update(sample.Data, sample.SampleRate);
-        }
-
-        void RenderFrame(object sender, EventArgs e)
-        {
-            Drain();
-            var io = ImGui.GetIO();
-            io.DisplaySize = new Vector2(canvas.Width, canvas.Height);
-
-            ImGui.SetNextWindowPos(Vector2.Zero);
-            ImGui.SetNextWindowSize(io.DisplaySize);
-            ImGui.Begin("Probe Scope##probescope",
-                ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove |
-                ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
+            if (!Faulted)
+                bands.RequestSelection();
 
             var availX = ImGui.GetContentRegionAvail().X;
-
-            // NB: measured from the last frame rather than derived from the widgets, which are the
-            // strip's business and change as columns are added.
-            if (stripHeight <= 0)
-                stripHeight = ImGui.GetTextLineHeight() + ImGui.GetFrameHeight() * 2;
-
-            // NB: maximized, the plot takes the window, and the probe pane and the strip are not drawn.
-            var maximized = waveform.Maximized;
-            var availY = ImGui.GetContentRegionAvail().Y - (maximized ? 0 : stripHeight);
+            var maximized = Maximized;
+            var availY = ImGui.GetContentRegionAvail().Y - (maximized ? 0 : ControlStripHeight);
             var probeWidth = probePaneCollapsed ? CollapsedPaneWidth : ProbePaneWidth;
             var waveWidth = maximized ? availX : Math.Max(200f, availX - probeWidth - ImGui.GetStyle().ItemSpacing.X);
-            var probeOrigin = ImGui.GetCursorScreenPos();
 
             // NB: no vertical padding on either pane, so both start at their own top edge and the
             // two frames land on the same lines.
@@ -257,42 +209,11 @@ namespace OpenEphys.Onix1.Design
             if (!maximized)
                 DrawProbePane(probeWidth, availY);
 
-            ImGui.BeginChild("##wavePane", new Vector2(waveWidth, availY));
-            var message = fault;
-            if (message is null)
-            {
-                waveform.RefreshRate = pacer?.RefreshRate ?? waveform.RefreshRate;
-                strip.RequestSelection();
-                waveform.Draw();
-            }
-            else
-            {
-                // NB: TextUnformatted rather than TextWrapped, which reads its string as a printf format,
-                // and the message is exception text that may contain '%'.
-                ImGui.PushTextWrapPos();
-                ImGui.PushStyleColor(ImGuiCol.Text, ImGuiPalette.VibrantCoral);
-                ImGui.TextUnformatted(message);
-                ImGui.PopStyleColor();
-                ImGui.TextUnformatted("Close this window, correct the ProbeScope's DeviceName, and open it again.");
-                ImGui.PopTextWrapPos();
-            }
-            ImGui.EndChild();
-
+            DrawPlot(new Vector2(waveWidth, availY));
             ImGui.PopStyleVar();
 
             if (!maximized)
-            {
-                var stripTop = ImGui.GetCursorScreenPos().Y;
-                strip.Draw(waveform);
-                stripHeight = ImGui.GetCursorScreenPos().Y - stripTop;
-
-                // Scroll and zoom are handled from the root window, bounded to the probe pane so the
-                // wheel still scrolls the channel list on the waveform side.
-                if (!probePaneCollapsed)
-                    selector.HandleScrollInput(probeOrigin.Y + availY, probeOrigin.X + probeWidth);
-            }
-
-            ImGui.End();
+                DrawControlStrip(columns);
         }
 
         void DrawProbePane(float probeWidth, float availY)
@@ -305,7 +226,7 @@ namespace OpenEphys.Onix1.Design
             var probeViewTop = ImGui.GetCursorScreenPos().Y + ImGui.GetFrameHeight();
             if (ImGui.Button(probePaneCollapsed ? "»" : "«"))
                 probePaneCollapsed = !probePaneCollapsed;
-            ImGuiControls.Tooltip(probePaneCollapsed ? "Show the probe." : "Hide the probe, to give the plot more room.");
+            ImGuiWidgets.Tooltip(probePaneCollapsed ? "Show the probe." : "Hide the probe, to give the plot more room.");
 
             var model = source?.ProbeGroup?.Probe?.Annotations?.ModelName;
             if (!probePaneCollapsed)
@@ -317,43 +238,34 @@ namespace OpenEphys.Onix1.Design
                 }
 
                 ImGui.SetCursorScreenPos(new Vector2(ImGui.GetCursorScreenPos().X, probeViewTop));
-                var probeHeight = ImGui.GetContentRegionAvail().Y;
-                selector.UpdateLayout(probeHeight, ImGui.GetContentRegionAvail().X);
-                selector.DrawZoomedView(probeHeight, selectionEnabled: false);
-
+                selector.DrawZoomedView(selectionEnabled: false);
             }
             else if (!string.IsNullOrEmpty(model))
             {
-                ImGuiControls.StackedLabel(model);
+                ImGuiWidgets.StackedLabel(model);
             }
             ImGui.EndChild();
 
             ImGui.SameLine();
         }
 
-        void StopPacer()
+        // NB: a ruler armed while the probe is hidden would be dropped on the next frame, so the buttons wait for
+        // the probe to be shown.
+        void DrawRulerControls(float width)
         {
-            pacer?.Dispose();
-            pacer = null;
+            ImGui.BeginDisabled(probePaneCollapsed);
+            selector.DrawRulerControls();
+            ImGui.EndDisabled();
         }
 
         /// <inheritdoc/>
         public override void Unload()
         {
-            drainTimer?.Dispose();
-            while (pending.TryDequeue(out _)) { }
-            StopPacer();
             scheduler?.Dispose();
-            waveform?.Dispose();
-            canvas?.Dispose();
-
-            strip = null;
             scheduler = null;
-            waveform = null;
-            canvas = null;
+            bands = null;
             source = null;
-            drainTimer = null;
-            node = null;
+            base.Unload();
         }
     }
 }

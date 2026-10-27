@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using OpenCV.Net;
 using OpenEphys.ProbeInterface.NET;
+using OpenEphys.EphysVisualization.Design;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -53,7 +54,7 @@ namespace OpenEphys.Onix1.Design
     /// window is open the editor hands it a copy of them, as it does any visualizer.
     /// </remarks>
     /// <typeparam name="TFrame">The data frame type the scope displays.</typeparam>
-    public abstract class ProbeScope<TFrame> : WaveformScope
+    public abstract class ProbeScope<TFrame> : WaveformScope<TFrame>
     {
         /// <summary>
         /// Gets or sets the name of the device whose data is displayed.
@@ -94,24 +95,22 @@ namespace OpenEphys.Onix1.Design
         public bool AcCoupled { get; set; } = true;
 
         /// <summary>
-        /// What <see cref="WaveformScope.HistorySeconds"/> costs on this probe, which only a concrete scope can say,
+        /// Gets or sets the number of seconds of data retained behind the display.
+        /// </summary>
+        /// <remarks>
+        /// While the display is paused, the view can be moved back through this much of what has already been
+        /// shown and redrawn at any timebase.
+        /// </remarks>
+        [DefaultValue(10.0)]
+        [Description("The number of seconds of data retained behind the display, which a paused view can " +
+            "be moved back through. Longer histories cost proportionally more memory.")]
+        public double HistorySeconds { get; set; } = 10;
+
+        /// <summary>
+        /// What <see cref="HistorySeconds"/> costs on this probe, which only a concrete scope can say,
         /// knowing its own channel count and fastest band, and how much memory is reasonable to spend.
         /// </summary>
         internal abstract long HistoryBytes { get; }
-
-        /// <inheritdoc/>
-        public override Expression Build(IEnumerable<Expression> arguments)
-        {
-            var source = arguments.First();
-            if (source.Type != typeof(IObservable<TFrame>))
-                throw new InvalidOperationException($"{GetType().Name} displays a sequence of {typeof(TFrame).Name}.");
-
-            // NB: through a call of its own rather than returning the source, which the editor would take for the
-            // upstream node's output and offer that node's visualizers instead of the scope.
-            return Expression.Call(Expression.Constant(this, typeof(ProbeScope<TFrame>)), nameof(Process), null, source);
-        }
-
-        IObservable<TFrame> Process(IObservable<TFrame> source) => source;
 
         /// <summary>
         /// Returns the device name declared on <paramref name="upstreamOperator"/>, or null if
