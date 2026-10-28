@@ -24,7 +24,9 @@ namespace OpenEphys.Onix1.Design
     /// <typeparam name="TFrame">The data frame type the scope displays.</typeparam>
     public class ProbeScopeVisualizer<TFrame> : WaveformScopeVisualizer
     {
-        const float ProbePaneWidth = 260f;
+        const float DefaultProbePaneWidth = 260f;
+        const float MinProbePaneWidth = 120f;
+        const float MinPlotWidth = 200f;
         const float CollapsedPaneWidth = 28f;
 
         readonly ImGuiProbeSelector selector = new(zoomWindowFraction: 1f) { ShowGrid = false };
@@ -32,6 +34,7 @@ namespace OpenEphys.Onix1.Design
         EventLoopScheduler scheduler;
         string deviceName;
         bool probePaneCollapsed;
+        float probePaneWidth = DefaultProbePaneWidth;
         ProbeScopeSource<TFrame> source;
 
         ProbeScope<TFrame> Node => (ProbeScope<TFrame>)Scope;
@@ -250,16 +253,25 @@ namespace OpenEphys.Onix1.Design
             var availX = ImGui.GetContentRegionAvail().X;
             var maximized = Maximized;
             var availY = ImGui.GetContentRegionAvail().Y - (maximized ? 0 : ControlStripHeight);
-            var probeWidth = probePaneCollapsed ? CollapsedPaneWidth : ProbePaneWidth;
-            var waveWidth = maximized ? availX : Math.Max(200f, availX - probeWidth - ImGui.GetStyle().ItemSpacing.X);
+            var gap = ImGui.GetStyle().ItemSpacing.X;
 
             // NB: no vertical padding on either pane, so both start at their own top edge and the
             // two frames land on the same lines.
             var panePadding = ImGui.GetStyle().WindowPadding;
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(panePadding.X, 0));
 
+            var waveWidth = availX;
             if (!maximized)
+            {
+                // NB: clamped every frame rather than only while dragged, so shrinking the window can't leave the
+                // plot narrower than its minimum.
+                probePaneWidth = Math.Max(MinProbePaneWidth, Math.Min(probePaneWidth, availX - gap - MinPlotWidth));
+                var probeWidth = probePaneCollapsed ? CollapsedPaneWidth : probePaneWidth;
+                waveWidth = Math.Max(MinPlotWidth, availX - probeWidth - gap);
+
                 DrawProbePane(probeWidth, availY);
+                DrawPaneSplitter(gap, availY);
+            }
 
             DrawPlot(new Vector2(waveWidth, availY));
             ImGui.PopStyleVar();
@@ -303,8 +315,36 @@ namespace OpenEphys.Onix1.Design
                 ImGuiWidgets.StackedLabel(model);
             }
             ImGui.EndChild();
+        }
 
-            ImGui.SameLine();
+        void DrawPaneSplitter(float width, float height)
+        {
+            ImGui.SameLine(0, 0);
+            if (probePaneCollapsed)
+            {
+                ImGui.Dummy(new Vector2(width, height));
+                ImGui.SameLine(0, 0);
+                return;
+            }
+
+            ImGui.InvisibleButton("##paneSplitter", new Vector2(width, height));
+            var hovered = ImGui.IsItemHovered();
+            var active = ImGui.IsItemActive();
+            if (active)
+                probePaneWidth += ImGui.GetIO().MouseDelta.X;
+            if (hovered && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
+                probePaneWidth = DefaultProbePaneWidth;
+            if (hovered || active)
+                ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeEw);
+            ImGuiWidgets.Tooltip("Drag to resize the probe pane, or double-click to restore its width.");
+
+            var min = ImGui.GetItemRectMin();
+            var max = ImGui.GetItemRectMax();
+            var x = (min.X + max.X) / 2;
+            var color = ImGui.GetColorU32(active ? ImGuiCol.SeparatorActive : hovered ? ImGuiCol.SeparatorHovered : ImGuiCol.Separator);
+            ImGui.GetWindowDrawList().AddLine(new Vector2(x, min.Y), new Vector2(x, max.Y), color, active || hovered ? 2f : 1f);
+
+            ImGui.SameLine(0, 0);
         }
 
         /// <inheritdoc/>
