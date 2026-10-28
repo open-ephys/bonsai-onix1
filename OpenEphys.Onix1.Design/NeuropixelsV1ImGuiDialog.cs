@@ -253,7 +253,9 @@ namespace OpenEphys.Onix1.Design
         {
             ImGui.Text("Rulers");
             ImGui.Spacing();
-            selector.DrawRulerControls();
+            ImGuiRulerControls.DrawToggle(selector, "Add");
+            ImGui.SameLine();
+            ImGuiRulerControls.DrawClear(selector);
         }
 
         // NB: the selector's settings depend only on bank select and whether activity colors are shown, so they're

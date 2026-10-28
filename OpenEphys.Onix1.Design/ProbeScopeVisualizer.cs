@@ -60,8 +60,7 @@ namespace OpenEphys.Onix1.Design
             catch (InvalidOperationException ex) { Fail($"ProbeScope: {ex.Message}"); }
 
             bands = new ImGuiProbeScopeBandColumns<TFrame>(node, () => Paused);
-            columns = new[] { bands.BandColumn, bands.FiltersColumn, bands.OrderColumn }.Concat(StandardColumns.All)
-                .Append(new ControlStripColumn("Rulers", DrawRulerControls)).ToArray();
+            columns = new[] { bands.BandColumn, bands.FiltersColumn, bands.OrderColumn }.Concat(StandardColumns.All).ToArray();
             scheduler = new EventLoopScheduler();
         }
 
@@ -290,6 +289,12 @@ namespace OpenEphys.Onix1.Design
                     ImGui.Text(model);
                 }
 
+                const string RulerLabel = "Ruler";
+                var rulerWidth = ImGui.CalcTextSize(RulerLabel).X + ImGui.GetStyle().FramePadding.X * 2;
+                ImGui.SameLine();
+                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + Math.Max(0, ImGui.GetContentRegionAvail().X - rulerWidth));
+                ImGuiRulerControls.DrawToggle(selector, RulerLabel);
+
                 ImGui.SetCursorScreenPos(new Vector2(ImGui.GetCursorScreenPos().X, probeViewTop));
                 selector.DrawZoomedView(selectionEnabled: false);
             }
@@ -300,15 +305,6 @@ namespace OpenEphys.Onix1.Design
             ImGui.EndChild();
 
             ImGui.SameLine();
-        }
-
-        // NB: a ruler armed while the probe is hidden would be dropped on the next frame, so the buttons wait for
-        // the probe to be shown.
-        void DrawRulerControls(float width)
-        {
-            ImGui.BeginDisabled(probePaneCollapsed);
-            selector.DrawRulerControls();
-            ImGui.EndDisabled();
         }
 
         /// <inheritdoc/>
