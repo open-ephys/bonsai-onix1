@@ -9,6 +9,7 @@ using Bonsai.Design;
 using Hexa.NET.ImGui;
 using OpenCV.Net;
 using OpenEphys.EphysVisualization.Design;
+using OpenEphys.ProbeInterface.NET;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -59,7 +60,7 @@ namespace OpenEphys.Onix1.Design
             catch (InvalidOperationException ex) { Fail($"ProbeScope: {ex.Message}"); }
 
             bands = new ImGuiProbeScopeBandColumns<TFrame>(node, () => Paused);
-            columns = new[] { bands.BandColumn, bands.FiltersColumn }.Concat(StandardColumns.All)
+            columns = new[] { bands.BandColumn, bands.FiltersColumn, bands.OrderColumn }.Concat(StandardColumns.All)
                 .Append(new ControlStripColumn("Rulers", DrawRulerControls)).ToArray();
             scheduler = new EventLoopScheduler();
         }
@@ -122,17 +123,66 @@ namespace OpenEphys.Onix1.Design
         IObservable<object> BandOutput(ProbeScopeSource<TFrame> probe, BandSelection selection, IObservable<TFrame> frames)
         {
             var band = probe.Bands[selection.Band];
+            var rowChannels = selection.Order == ChannelOrder.Depth ? DepthOrder(probe.ProbeGroup) : null;
             var clipping = frames
                 .Select(frame => ClippedRows(band.Raw(frame), probe.AdcMaximum))
                 .Where(channels => channels is not null)
-                .Select(channels => (object)new ProbeScopeClipping(channels));
+                .Select(channels => (object)new ProbeScopeClipping(Reorder(channels, rowChannels)));
 
             var output = selection.AcCoupled && band.AcTransform is not null ? band.AcTransform(frames) : band.Transform(frames);
             if (selection.CommonMedianReference && probe.Reference is not null)
                 output = probe.Reference(output);
 
-            return output.Select(data => (object)new ProbeScopeSample(data, band.SampleRate)).Merge(clipping);
+            // NB: reordered last, since referencing groups the channels by their converter in the device's order.
+            return Observable.Return<object>(new ProbeScopeOrder(rowChannels)).Concat(output
+                .Select(data => (object)new ProbeScopeSample(Reorder(data, rowChannels), band.SampleRate))
+                .Merge(clipping));
         }
+
+        /// <summary>
+        /// The channels of <paramref name="probe"/>'s channel map from the shallowest electrode to the deepest, and
+        /// across the probe where electrodes share a depth, or null where it maps no channels.
+        /// </summary>
+        static int[] DepthOrder(SingleProbeGroup probe)
+        {
+            var contacts = probe?.Probe?.Contacts;
+            if (probe?.ChannelMap is not { Count: > 0 } map || contacts is null)
+                return null;
+
+            return map
+                .OrderByDescending(entry => contacts[entry.Value].PosY)
+                .ThenBy(entry => contacts[entry.Value].PosX)
+                .Select(entry => entry.Key)
+                .ToArray();
+        }
+
+        // NB: a block whose row count the channel map does not match is shown in the device's order, under the
+        // labels of the order asked for.
+        static unsafe Mat Reorder(Mat data, int[] rowChannels)
+        {
+            if (rowChannels is null || data.Rows != rowChannels.Length)
+                return data;
+
+            var reordered = new Mat(data.Size, data.Depth, data.Channels);
+            using (data)
+            {
+                // NB: by pointer, since GetRow allocates a native header per row on every block.
+                var rowBytes = reordered.Step;
+                for (int row = 0; row < rowChannels.Length; row++)
+                {
+                    var from = (byte*)data.Data + (long)rowChannels[row] * data.Step;
+                    var to = (byte*)reordered.Data + (long)row * reordered.Step;
+                    Buffer.MemoryCopy(from, to, rowBytes, rowBytes);
+                }
+            }
+
+            return reordered;
+        }
+
+        static bool[] Reorder(bool[] channels, int[] rowChannels) =>
+            rowChannels is null || channels.Length != rowChannels.Length
+                ? channels
+                : rowChannels.Select(channel => channels[channel]).ToArray();
 
         /// <summary>
         /// The rows of <paramref name="raw"/> holding a sample at either end of the ADC's range, or null where none
@@ -176,6 +226,9 @@ namespace OpenEphys.Onix1.Design
                         bands.Bands = probe.Bands;
                         bands.ReferenceOffered = probe.Reference is not null;
                     });
+                    break;
+                case ProbeScopeOrder order:
+                    Post(() => RowChannels = order.RowChannels);
                     break;
                 case ProbeScopeClipping clipping:
                     PostClipping(clipping.Channels);

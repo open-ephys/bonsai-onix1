@@ -44,6 +44,28 @@ namespace OpenEphys.Onix1.Design
     internal sealed record ProbeScopeClipping(bool[] Channels);
 
     /// <summary>
+    /// The channel each row of the blocks that follow shows, or null for each row showing its own channel.
+    /// </summary>
+    internal sealed record ProbeScopeOrder(int[] RowChannels);
+
+    /// <summary>
+    /// Specifies the order of a probe scope's rows.
+    /// </summary>
+    public enum ChannelOrder
+    {
+        /// <summary>
+        /// By channel number.
+        /// </summary>
+        Channel,
+
+        /// <summary>
+        /// By the depth of each channel's electrode, the deepest at the bottom as the probe is drawn, and across
+        /// the probe where electrodes share a depth.
+        /// </summary>
+        Depth,
+    }
+
+    /// <summary>
     /// Provides a sink that shows a probe schematic beside a live multi-channel waveform viewer for a streaming
     /// probe, opened from the editor as a visualizer is, with the settings a probe scope adds to every waveform
     /// viewer's.
@@ -93,6 +115,18 @@ namespace OpenEphys.Onix1.Design
         [Description("Specifies whether each channel is high-passed at 1 Hz, as AC coupling does on a scope, on " +
             "bands that offer it.")]
         public bool AcCoupled { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets the order of the rows.
+        /// </summary>
+        /// <remarks>
+        /// Only the display is reordered. The data the scope passes on, and anything written from it, keeps the
+        /// device's channel order.
+        /// </remarks>
+        [DefaultValue(ChannelOrder.Depth)]
+        [Description("The order of the rows: by channel number, or by the depth of each channel's electrode on the " +
+            "probe. Only the display is reordered.")]
+        public ChannelOrder ChannelOrder { get; set; } = ChannelOrder.Depth;
 
         /// <summary>
         /// Gets or sets the number of seconds of data retained behind the display.

@@ -8,13 +8,14 @@ namespace OpenEphys.Onix1.Design
 {
     /// <summary>
     /// The signal a probe scope is being asked to display: which band, whether it is referenced against the
-    /// median of the channels sharing its converter, and whether each channel's offset is removed.
+    /// median of the channels sharing its converter, whether each channel's offset is removed, and the order of
+    /// its rows.
     /// </summary>
-    internal readonly record struct BandSelection(int Band, bool CommonMedianReference, bool AcCoupled);
+    internal readonly record struct BandSelection(int Band, bool CommonMedianReference, bool AcCoupled, ChannelOrder Order);
 
     /// <summary>
     /// The columns a <see cref="ProbeScopeVisualizer{TFrame}"/> adds to the control strip, for the band the probe
-    /// is being viewed in and the filters applied to it, and the selection they make.
+    /// is being viewed in, the filters applied to it and the order of its rows, and the selection they make.
     /// </summary>
     /// <remarks>
     /// Referencing and AC coupling sit here beside the band because each is a filter: referencing a spatial
@@ -37,6 +38,7 @@ namespace OpenEphys.Onix1.Design
             selection = new(Current);
             BandColumn = new("Band", DrawBand);
             FiltersColumn = new("Filters", DrawFilters);
+            OrderColumn = new("Order", DrawOrder);
         }
 
         /// <summary>
@@ -48,6 +50,11 @@ namespace OpenEphys.Onix1.Design
         /// The column turning referencing and AC coupling on and off.
         /// </summary>
         public ControlStripColumn FiltersColumn { get; }
+
+        /// <summary>
+        /// The column choosing the order of the rows.
+        /// </summary>
+        public ControlStripColumn OrderColumn { get; }
 
         /// <summary>
         /// The bands to offer, in display order. The owner sets this once the probe is known.
@@ -81,7 +88,7 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        BandSelection Current => new(Band, scope.CommonMedianReference, scope.AcCoupled);
+        BandSelection Current => new(Band, scope.CommonMedianReference, scope.AcCoupled, scope.ChannelOrder);
 
         /// <summary>
         /// Asks for the signal the scope's settings describe if it is not the one last asked for, as when they are
@@ -130,6 +137,29 @@ namespace OpenEphys.Onix1.Design
                 "This band is AC: it is high-pass filtered.");
             ImGui.EndDisabled();
 
+            ImGui.EndDisabled();
+        }
+
+        // NB: a change while paused would discard what the paused view is read from.
+        void DrawOrder(float width)
+        {
+            ImGui.BeginDisabled(paused());
+            ImGui.SetNextItemWidth(width);
+            var open = ImGui.BeginCombo("##order", scope.ChannelOrder.ToString());
+            ImGuiWidgets.Tooltip("Order the rows by channel number, or by the depth of each channel's electrode, " +
+                "the deepest at the bottom as the probe is drawn.");
+            if (open)
+            {
+                foreach (ChannelOrder order in Enum.GetValues(typeof(ChannelOrder)))
+                {
+                    var isSelected = order == scope.ChannelOrder;
+                    if (ImGui.Selectable(order.ToString(), isSelected) && !isSelected)
+                        scope.ChannelOrder = order;
+                    if (isSelected)
+                        ImGui.SetItemDefaultFocus();
+                }
+                ImGui.EndCombo();
+            }
             ImGui.EndDisabled();
         }
 
