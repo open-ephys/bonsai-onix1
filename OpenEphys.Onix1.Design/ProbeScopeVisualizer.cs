@@ -125,7 +125,9 @@ namespace OpenEphys.Onix1.Design
         IObservable<object> BandOutput(ProbeScopeSource<TFrame> probe, BandSelection selection, IObservable<TFrame> frames)
         {
             var band = probe.Bands[selection.Band];
-            var rowChannels = selection.Order == ChannelOrder.Depth ? DepthOrder(probe.ProbeGroup) : null;
+            var order = selection.Order == ChannelOrder.Channel ? null
+                : DepthOrder(probe.ProbeGroup, placed: selection.Order == ChannelOrder.Physical);
+            var rowChannels = order?.Channels;
             var clipping = frames
                 .Select(frame => ClippedRows(band.Raw(frame), probe.AdcMaximum))
                 .Where(channels => channels is not null)
@@ -136,26 +138,31 @@ namespace OpenEphys.Onix1.Design
                 output = probe.Reference(output);
 
             // NB: reordered last, since referencing groups the channels by their converter in the device's order.
-            return Observable.Return<object>(new ProbeScopeOrder(rowChannels)).Concat(output
+            return Observable.Return<object>(new ProbeScopeOrder(order)).Concat(output
                 .Select(data => (object)new ProbeScopeSample(Reorder(data, rowChannels), band.SampleRate))
                 .Merge(clipping));
         }
 
         /// <summary>
         /// The channels of <paramref name="probe"/>'s channel map from the shallowest electrode to the deepest, and
-        /// across the probe where electrodes share a depth, or null where it maps no channels.
+        /// across the probe where electrodes share a depth, placed at their depths if <paramref name="placed"/>,
+        /// or null where it maps no channels.
         /// </summary>
-        static int[] DepthOrder(SingleProbeGroup probe)
+        static RowOrder DepthOrder(SingleProbeGroup probe, bool placed)
         {
             var contacts = probe?.Probe?.Contacts;
             if (probe?.ChannelMap is not { Count: > 0 } map || contacts is null)
                 return null;
 
-            return map
+            var sorted = map
                 .OrderByDescending(entry => contacts[entry.Value].PosY)
                 .ThenBy(entry => contacts[entry.Value].PosX)
-                .Select(entry => entry.Key)
                 .ToArray();
+
+            // NB: down the plot is down the probe, toward the tip, where PosY falls.
+            return new RowOrder(
+                sorted.Select(entry => entry.Key).ToArray(),
+                placed ? sorted.Select(entry => (float)-contacts[entry.Value].PosY).ToArray() : null);
         }
 
         // NB: a block whose row count the channel map does not match is shown in the device's order, under the
@@ -230,7 +237,7 @@ namespace OpenEphys.Onix1.Design
                     });
                     break;
                 case ProbeScopeOrder order:
-                    Post(() => RowChannels = order.RowChannels);
+                    Post(() => Order = order.Order);
                     break;
                 case ProbeScopeClipping clipping:
                     PostClipping(clipping.Channels);

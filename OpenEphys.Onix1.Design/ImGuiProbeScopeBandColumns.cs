@@ -147,7 +147,8 @@ namespace OpenEphys.Onix1.Design
             ImGui.SetNextItemWidth(width);
             var open = ImGui.BeginCombo("##order", scope.ChannelOrder.ToString());
             ImGuiWidgets.Tooltip("Order the rows by channel number, or by the depth of each channel's electrode, " +
-                "the deepest at the bottom as the probe is drawn.");
+                "the deepest at the bottom as the probe is drawn. Physical also places each row at its electrode's " +
+                "depth, so unused stretches of the probe show as gaps, and electrodes at one depth overlap.");
             if (open)
             {
                 foreach (ChannelOrder order in Enum.GetValues(typeof(ChannelOrder)))

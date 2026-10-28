@@ -44,9 +44,10 @@ namespace OpenEphys.Onix1.Design
     internal sealed record ProbeScopeClipping(bool[] Channels);
 
     /// <summary>
-    /// The channel each row of the blocks that follow shows, or null for each row showing its own channel.
+    /// The channel each row of the blocks that follow shows and where each row lies, or null for each row showing its
+    /// own channel.
     /// </summary>
-    internal sealed record ProbeScopeOrder(int[] RowChannels);
+    internal sealed record ProbeScopeOrder(RowOrder Order);
 
     /// <summary>
     /// Specifies the order of a probe scope's rows.
@@ -63,6 +64,12 @@ namespace OpenEphys.Onix1.Design
         /// the probe where electrodes share a depth.
         /// </summary>
         Depth,
+
+        /// <summary>
+        /// Like <see cref="Depth"/>, with each row placed at its electrode's depth, so unused stretches of the
+        /// probe show as gaps of their size and electrodes at the same depth overlap.
+        /// </summary>
+        Physical,
     }
 
     /// <summary>
@@ -124,8 +131,8 @@ namespace OpenEphys.Onix1.Design
         /// device's channel order.
         /// </remarks>
         [DefaultValue(ChannelOrder.Depth)]
-        [Description("The order of the rows: by channel number, or by the depth of each channel's electrode on the " +
-            "probe. Only the display is reordered.")]
+        [Description("The order of the rows: by channel number, by the depth of each channel's electrode on the " +
+            "probe, or by depth with each row placed at its electrode's depth. Only the display is reordered.")]
         public ChannelOrder ChannelOrder { get; set; } = ChannelOrder.Depth;
 
         /// <summary>
