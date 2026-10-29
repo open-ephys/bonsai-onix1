@@ -11,7 +11,8 @@ namespace OpenEphys.Onix1.Design
     /// median of the channels sharing its converter, whether each channel's offset is removed, and the order of
     /// its rows.
     /// </summary>
-    internal readonly record struct BandSelection(int Band, bool CommonMedianReference, bool AcCoupled, ChannelOrder Order);
+    internal readonly record struct BandSelection(
+        int Band, bool CommonMedianReference, bool AcCoupled, ChannelOrder Order, bool LanePerShank);
 
     /// <summary>
     /// The columns a <see cref="ProbeScopeVisualizer{TFrame}"/> adds to the control strip, for the band the probe
@@ -72,6 +73,11 @@ namespace OpenEphys.Onix1.Design
         public bool ReferenceOffered { get; set; } = true;
 
         /// <summary>
+        /// How many shanks the probe has. The owner sets this once the probe is known.
+        /// </summary>
+        public int Shanks { get; set; } = 1;
+
+        /// <summary>
         /// The scope's band by name, or the first band where the bands are not yet known or do not include it.
         /// </summary>
         int Band
@@ -88,7 +94,8 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        BandSelection Current => new(Band, scope.CommonMedianReference, scope.AcCoupled, scope.ChannelOrder);
+        BandSelection Current =>
+            new(Band, scope.CommonMedianReference, scope.AcCoupled, scope.ChannelOrder, scope.LanePerShank);
 
         /// <summary>
         /// Asks for the signal the scope's settings describe if it is not the one last asked for, as when they are
@@ -143,8 +150,10 @@ namespace OpenEphys.Onix1.Design
         // NB: a change while paused would discard what the paused view is read from.
         void DrawOrder(float width)
         {
+            const string LanesLabel = "Shanks";
+            var lanesWidth = ImGui.GetFrameHeight() + ImGui.GetStyle().ItemInnerSpacing.X + ImGui.CalcTextSize(LanesLabel).X;
             ImGui.BeginDisabled(paused());
-            ImGui.SetNextItemWidth(width);
+            ImGui.SetNextItemWidth(width - lanesWidth - ImGui.GetStyle().ItemSpacing.X);
             var open = ImGui.BeginCombo("##order", scope.ChannelOrder.ToString());
             ImGuiWidgets.Tooltip("Order the rows by channel number, or by the depth of each channel's electrode, " +
                 "the deepest at the bottom as the probe is drawn. Physical also places each row at its electrode's " +
@@ -161,6 +170,18 @@ namespace OpenEphys.Onix1.Design
                 }
                 ImGui.EndCombo();
             }
+
+            // NB: shown unchecked where it does not apply, as AC is, while the choice is kept.
+            ImGui.SameLine();
+            var lanesOffered = Shanks > 1 && scope.ChannelOrder != ChannelOrder.Channel;
+            ImGui.BeginDisabled(!lanesOffered);
+            var lanes = scope.LanePerShank && lanesOffered;
+            if (ImGui.Checkbox(LanesLabel, ref lanes))
+                scope.LanePerShank = lanes;
+            ImGuiWidgets.Tooltip("Draw each shank in a lane of its own, side by side, lined up by depth.",
+                Shanks > 1 ? "Only while the rows are ordered by depth." : "This probe has one shank.");
+            ImGui.EndDisabled();
+
             ImGui.EndDisabled();
         }
 

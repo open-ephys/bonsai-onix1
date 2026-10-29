@@ -61,13 +61,13 @@ namespace OpenEphys.Onix1.Design
 
         /// <summary>
         /// By the depth of each channel's electrode, the deepest at the bottom as the probe is drawn, and across
-        /// the probe where electrodes share a depth.
+        /// the probe where electrodes share a depth, or each shank in a lane of its own, lined up by depth.
         /// </summary>
         Depth,
 
         /// <summary>
         /// Like <see cref="Depth"/>, with each row placed at its electrode's depth, so unused stretches of the
-        /// probe show as gaps of their size and electrodes at the same depth overlap.
+        /// probe show as gaps of their size and electrodes at the same depth on a shank overlap.
         /// </summary>
         Physical,
     }
@@ -134,6 +134,15 @@ namespace OpenEphys.Onix1.Design
         [Description("The order of the rows: by channel number, by the depth of each channel's electrode on the " +
             "probe, or by depth with each row placed at its electrode's depth. Only the display is reordered.")]
         public ChannelOrder ChannelOrder { get; set; } = ChannelOrder.Depth;
+
+        /// <summary>
+        /// Gets or sets a value specifying whether each shank of a multi-shank probe is drawn in a lane of its own
+        /// when the rows are ordered by depth.
+        /// </summary>
+        [DefaultValue(true)]
+        [Description("Specifies whether each shank of a multi-shank probe is drawn in a lane of its own when the " +
+            "rows are ordered by depth.")]
+        public bool LanePerShank { get; set; } = true;
 
         /// <summary>
         /// Gets or sets the number of seconds of data retained behind the display.

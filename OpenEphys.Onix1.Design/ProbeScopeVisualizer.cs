@@ -126,7 +126,7 @@ namespace OpenEphys.Onix1.Design
         {
             var band = probe.Bands[selection.Band];
             var order = selection.Order == ChannelOrder.Channel ? null
-                : DepthOrder(probe.ProbeGroup, placed: selection.Order == ChannelOrder.Physical);
+                : DepthOrder(probe.ProbeGroup, placed: selection.Order == ChannelOrder.Physical, selection.LanePerShank);
             var rowChannels = order?.Channels;
             var clipping = frames
                 .Select(frame => ClippedRows(band.Raw(frame), probe.AdcMaximum))
@@ -145,24 +145,128 @@ namespace OpenEphys.Onix1.Design
 
         /// <summary>
         /// The channels of <paramref name="probe"/>'s channel map from the shallowest electrode to the deepest, and
-        /// across the probe where electrodes share a depth, placed at their depths if <paramref name="placed"/>,
-        /// or null where it maps no channels.
+        /// across the probe where electrodes share a depth, or each shank in a lane of its own if
+        /// <paramref name="lanePerShank"/>, placed at their depths if <paramref name="placed"/>, or null where it maps
+        /// no channels.
         /// </summary>
-        static RowOrder DepthOrder(SingleProbeGroup probe, bool placed)
+        static RowOrder DepthOrder(SingleProbeGroup probe, bool placed, bool lanePerShank)
         {
             var contacts = probe?.Probe?.Contacts;
             if (probe?.ChannelMap is not { Count: > 0 } map || contacts is null)
                 return null;
 
+            var shanks = ShanksOf(probe);
+            var laned = lanePerShank && shanks.Count > 1;
+            int ShankOf(KeyValuePair<int, int> entry) =>
+                laned ? shanks.IndexOf(contacts[entry.Value].ShankId ?? string.Empty) : 0;
+
             var sorted = map
-                .OrderByDescending(entry => contacts[entry.Value].PosY)
+                .OrderBy(ShankOf)
+                .ThenByDescending(entry => contacts[entry.Value].PosY)
                 .ThenBy(entry => contacts[entry.Value].PosX)
                 .ToArray();
 
             // NB: down the plot is down the probe, toward the tip, where PosY falls.
+            var depths = sorted.Select(entry => (float)-contacts[entry.Value].PosY).ToArray();
+            var lanes = laned ? sorted.Select(ShankOf).ToArray() : null;
             return new RowOrder(
                 sorted.Select(entry => entry.Key).ToArray(),
-                placed ? sorted.Select(entry => (float)-contacts[entry.Value].PosY).ToArray() : null);
+                placed ? SplitShared(depths, lanes) : lanes is null ? null : LevelRows(depths, lanes),
+                lanes);
+        }
+
+        /// <summary>
+        /// The depths of rows, with rows sharing a depth in a lane spread across the pitch below it in their order.
+        /// </summary>
+        /// <remarks>
+        /// So that each has a row of its own where many electrodes share a depth, as on a high density probe, while
+        /// depth stays proportional down the plot. The pitch, the smallest step between depths, and the most rows
+        /// sharing one are the probe's, so every lane keeps one scale.
+        /// </remarks>
+        /// <param name="depths">Each row's depth, never less than the one before it in its lane.</param>
+        /// <param name="lanes">Each row's lane, a lane's rows together, or null for one lane.</param>
+        static float[] SplitShared(float[] depths, int[] lanes)
+        {
+            bool Shares(int i) => i > 0 && (lanes is null || lanes[i] == lanes[i - 1]) && depths[i] == depths[i - 1];
+            bool SameLane(int i) => i > 0 && (lanes is null || lanes[i] == lanes[i - 1]);
+
+            var pitch = float.PositiveInfinity;
+            var shared = 1;
+            var rank = new int[depths.Length];
+            for (int i = 0; i < depths.Length; i++)
+            {
+                rank[i] = Shares(i) ? rank[i - 1] + 1 : 0;
+                shared = Math.Max(shared, rank[i] + 1);
+                if (SameLane(i) && depths[i] > depths[i - 1])
+                    pitch = Math.Min(pitch, depths[i] - depths[i - 1]);
+            }
+
+            if (shared == 1)
+                return depths;
+            if (float.IsPositiveInfinity(pitch))
+                pitch = 1;
+
+            return depths.Select((depth, i) => depth + rank[i] * pitch / shared).ToArray();
+        }
+
+        static List<string> ShanksOf(SingleProbeGroup probe) =>
+            probe?.Probe?.Contacts is { } contacts && probe.ChannelMap is { } map
+                ? map.Select(entry => contacts[entry.Value].ShankId ?? string.Empty)
+                    .Distinct()
+                    .OrderBy(shank => shank, StringComparer.Ordinal)
+                    .ToList()
+                : new List<string>();
+
+        /// <summary>
+        /// Positions, in rows, that space the lane with the most rows evenly and put every other lane's rows level
+        /// with the rows of that lane at the same depth.
+        /// </summary>
+        /// <remarks>
+        /// A depth between two of that lane's depths takes a position between theirs, and one beyond its ends a
+        /// position at its average spacing. Positions are whole rows, so that the rows stay a row apart, and a row
+        /// that would land on or above the one before it in its lane goes on the next row down, as electrodes
+        /// sharing a depth do in that lane.
+        /// </remarks>
+        /// <param name="depths">Each row's depth, never less than the one before it in its lane.</param>
+        /// <param name="lanes">Each row's lane, a lane's rows together.</param>
+        static float[] LevelRows(float[] depths, int[] lanes)
+        {
+            var reference = lanes.GroupBy(lane => lane).OrderByDescending(lane => lane.Count()).First().Key;
+            var levels = new List<(float Depth, int Row)>();
+            var row = 0;
+            for (int i = 0; i < depths.Length; i++)
+            {
+                if (lanes[i] != reference)
+                    continue;
+                if (levels.Count == 0 || depths[i] > levels[levels.Count - 1].Depth)
+                    levels.Add((depths[i], row));
+                row++;
+            }
+
+            var span = levels[levels.Count - 1].Depth - levels[0].Depth;
+            var rowsPerDepth = span > 0 ? (levels[levels.Count - 1].Row - levels[0].Row) / span : 0;
+            float RowAt(float depth)
+            {
+                if (depth <= levels[0].Depth)
+                    return levels[0].Row - (levels[0].Depth - depth) * rowsPerDepth;
+                if (depth >= levels[levels.Count - 1].Depth)
+                    return levels[levels.Count - 1].Row + (depth - levels[levels.Count - 1].Depth) * rowsPerDepth;
+
+                var next = levels.FindIndex(level => level.Depth >= depth);
+                var (above, below) = (levels[next - 1], levels[next]);
+                return above.Row + (depth - above.Depth) / (below.Depth - above.Depth) * (below.Row - above.Row);
+            }
+
+            var positions = new float[depths.Length];
+            for (int i = 0; i < depths.Length; i++)
+            {
+                var position = MathF.Round(RowAt(depths[i]));
+                if (i > 0 && lanes[i] == lanes[i - 1])
+                    position = Math.Max(position, positions[i - 1] + 1);
+                positions[i] = position;
+            }
+
+            return positions;
         }
 
         // NB: a block whose row count the channel map does not match is shown in the device's order, under the
@@ -234,6 +338,7 @@ namespace OpenEphys.Onix1.Design
                         selector.Refresh(probe.ProbeGroup);
                         bands.Bands = probe.Bands;
                         bands.ReferenceOffered = probe.Reference is not null;
+                        bands.Shanks = ShanksOf(probe.ProbeGroup).Count;
                     });
                     break;
                 case ProbeScopeOrder order:
