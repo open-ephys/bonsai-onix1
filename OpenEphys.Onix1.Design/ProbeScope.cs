@@ -83,7 +83,7 @@ namespace OpenEphys.Onix1.Design
     /// window is open the editor hands it a copy of them, as it does any visualizer.
     /// </remarks>
     /// <typeparam name="TFrame">The data frame type the scope displays.</typeparam>
-    public abstract class ProbeScope<TFrame> : WaveformScope<TFrame>
+    public abstract class ProbeScope<TFrame> : WaveformScopeBuilder<TFrame>
     {
         /// <summary>
         /// Gets or sets the name of the device whose data is displayed.

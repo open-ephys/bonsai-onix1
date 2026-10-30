@@ -22,7 +22,7 @@ namespace OpenEphys.Onix1.Design
     /// registered it.
     /// </remarks>
     /// <typeparam name="TFrame">The data frame type the scope displays.</typeparam>
-    public class ProbeScopeVisualizer<TFrame> : WaveformScopeVisualizer
+    public class ProbeScopeVisualizer<TFrame> : WaveformScopeVisualizerBase
     {
         const float DefaultProbePaneWidth = 260f;
         const float MinProbePaneWidth = 120f;
