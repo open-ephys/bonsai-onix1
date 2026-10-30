@@ -97,6 +97,17 @@ namespace OpenEphys.Onix1.Design
         BandSelection Current =>
             new(Band, scope.CommonMedianReference, scope.AcCoupled, scope.ChannelOrder, scope.LanePerShank);
 
+        bool LanesOffered => Shanks > 1 && scope.ChannelOrder != ChannelOrder.Channel;
+
+        /// <summary>
+        /// Answers K, which turns Shanks on and off while its checkbox can be. Called once a frame.
+        /// </summary>
+        public void AnswerKeys()
+        {
+            if (!ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.K, false) && LanesOffered && !paused())
+                scope.LanePerShank = !scope.LanePerShank;
+        }
+
         /// <summary>
         /// Asks for the signal the scope's settings describe if it is not the one last asked for, as when they are
         /// changed in the property grid or once the bands are known. Called once a frame.
@@ -173,12 +184,12 @@ namespace OpenEphys.Onix1.Design
 
             // NB: shown unchecked where it does not apply, as AC is, while the choice is kept.
             ImGui.SameLine();
-            var lanesOffered = Shanks > 1 && scope.ChannelOrder != ChannelOrder.Channel;
+            var lanesOffered = LanesOffered;
             ImGui.BeginDisabled(!lanesOffered);
             var lanes = scope.LanePerShank && lanesOffered;
             if (ImGui.Checkbox(LanesLabel, ref lanes))
                 scope.LanePerShank = lanes;
-            ImGuiWidgets.Tooltip("Draw each shank in a lane of its own, side by side, lined up by depth.",
+            ImGuiWidgets.Tooltip("Draw each shank in a lane of its own, side by side, lined up by depth.\nKey: K",
                 Shanks > 1 ? "Only while the rows are ordered by depth." : "This probe has one shank.");
             ImGui.EndDisabled();
 

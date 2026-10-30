@@ -65,7 +65,7 @@ namespace OpenEphys.Onix1.Design
         protected override string Unit => Node.Unit;
 
         /// <inheritdoc/>
-        protected override IEnumerable<ImGuiKey> Hotkeys => selector.Hotkeys;
+        protected override IEnumerable<ImGuiKey> Hotkeys => selector.Hotkeys.Concat(new[] { ImGuiKey.P, ImGuiKey.K });
 
         /// <inheritdoc/>
         protected override string FaultHint => "Close this window, correct the ProbeScope's DeviceName, and open it again.";
@@ -422,6 +422,12 @@ namespace OpenEphys.Onix1.Design
         {
             if (!Faulted)
                 bands.RequestSelection();
+            bands.AnswerKeys();
+
+            // NB: not while maximized, where the pane is not drawn and its state would change out of sight.
+            var maximized = Maximized;
+            if (!maximized && !ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.P, false))
+                probePaneCollapsed = !probePaneCollapsed;
 
             // NB: only a new selection scrolls the probe, so a pan away from it holds until the next one.
             var selected = SelectedChannel;
@@ -432,7 +438,6 @@ namespace OpenEphys.Onix1.Design
             revealedChannel = selected;
 
             var availX = ImGui.GetContentRegionAvail().X;
-            var maximized = Maximized;
             var availY = ImGui.GetContentRegionAvail().Y - (maximized ? 0 : ControlStripHeight);
             var gap = ImGui.GetStyle().ItemSpacing.X;
 
@@ -475,7 +480,8 @@ namespace OpenEphys.Onix1.Design
             var probeViewTop = ImGui.GetCursorScreenPos().Y + ImGui.GetFrameHeight();
             if (ImGui.Button(probePaneCollapsed ? "»" : "«"))
                 probePaneCollapsed = !probePaneCollapsed;
-            ImGuiWidgets.Tooltip(probePaneCollapsed ? "Show the probe." : "Hide the probe, to give the plot more room.");
+            ImGuiWidgets.Tooltip((probePaneCollapsed ? "Show the probe." : "Hide the probe, to give the plot more room.") +
+                "\nKey: P");
 
             var model = source?.ProbeGroup?.Probe?.Annotations?.ModelName;
             if (!probePaneCollapsed)
