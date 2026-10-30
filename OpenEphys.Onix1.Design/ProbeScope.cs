@@ -145,6 +145,15 @@ namespace OpenEphys.Onix1.Design
         public bool LanePerShank { get; set; } = true;
 
         /// <summary>
+        /// Gets or sets a value specifying whether channels are drawn in the colors of the groups assigned to them on
+        /// the probe, and channels in no group in grey, rather than in the palette's.
+        /// </summary>
+        [DefaultValue(false)]
+        [Description("Specifies whether channels are drawn in the colors of the groups assigned to them on the probe, " +
+            "and channels in no group in grey, rather than in the palette's.")]
+        public bool ShowGroups { get; set; }
+
+        /// <summary>
         /// Gets or sets the number of seconds of data retained behind the display.
         /// </summary>
         /// <remarks>

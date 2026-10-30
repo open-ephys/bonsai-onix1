@@ -35,15 +35,17 @@ namespace OpenEphys.Onix1.Design
         static readonly uint ColorContactSelected = ImGuiPalette.White;
         static readonly uint ColorContactHovered = 0xFFC2EFFFu;
 
-        static readonly LegendEntry[] ProbeLegend =
-        {
-            new(ColorContactSelected, "Selected"),
-            new(ColorContactHovered, "Hovered"),
-            new(ColorContactEnabled, "Enabled"),
-            new(ImGuiProbeSelector.BlockedFillColor, "Not enabled", DottedOutline: true),
-        };
+        // NB: group n's key is GroupKeys[n - 1].
+        static readonly ImGuiKey[] GroupKeys = Enumerable.Range(1, 9).Select(n => ImGuiKey.Key0 + n).ToArray();
 
-        readonly ImGuiProbeSelector selector = new(zoomWindowFraction: 1f) { ShowGrid = false, Legend = ProbeLegend };
+        // NB: no legend, since the probe was configured in the configuration dialog, which explains its colors, and
+        // the group swatches name the groups'.
+        readonly ImGuiProbeSelector selector = new(zoomWindowFraction: 1f) { ShowGrid = false };
+        Dictionary<int, int> groupOfChannel = new();
+        ChannelSettings[] groupedFrom;
+        Func<int, int> traceGroup;
+        int lastGroupKey = -1;
+        double lastGroupKeyTime;
         Dictionary<int, int> contactOfChannel = new();
         int[] channelOfContact = Array.Empty<int>();
         int selectedContact = -1;
@@ -65,7 +67,8 @@ namespace OpenEphys.Onix1.Design
         protected override string Unit => Node.Unit;
 
         /// <inheritdoc/>
-        protected override IEnumerable<ImGuiKey> Hotkeys => selector.Hotkeys.Concat(new[] { ImGuiKey.P, ImGuiKey.K });
+        protected override IEnumerable<ImGuiKey> Hotkeys =>
+            selector.Hotkeys.Concat(new[] { ImGuiKey.P, ImGuiKey.K, ImGuiKey.G }).Concat(GroupKeys);
 
         /// <inheritdoc/>
         protected override string FaultHint => "Close this window, correct the ProbeScope's DeviceName, and open it again.";
@@ -82,18 +85,185 @@ namespace OpenEphys.Onix1.Design
             catch (InvalidOperationException ex) { Fail($"ProbeScope: {ex.Message}"); }
 
             bands = new ImGuiProbeScopeBandColumns<TFrame>(node, () => Paused);
-            columns = new[] { bands.BandColumn, bands.FiltersColumn, bands.OrderColumn }.Concat(StandardColumns.All).ToArray();
+            var standard = StandardColumns;
+            columns = new[]
+            {
+                bands.BandColumn, bands.FiltersColumn, bands.OrderColumn, standard.Timebase, standard.ChannelHeight,
+                standard.Range, standard.Palette, new ControlStripColumn("Groups", DrawGroups), standard.Display,
+            };
             scheduler = new EventLoopScheduler();
 
             selector.FillColor = ContactColor;
             selector.Blocked = contact => ChannelOf(contact) < 0;
             selector.SelectionChanged += SelectContacts;
+            traceGroup = TraceGroup;
         }
 
+        // NB: while groups are shown, a contact is the color of its channel's trace.
         uint ContactColor(int contact) =>
             contact == selectedContact ? ColorContactSelected
             : contact == hoveredContact ? ColorContactHovered
+            : Node.ShowGroups ? GroupColor(TraceGroup(ChannelOf(contact)))
             : ColorContactEnabled;
+
+        // NB: groups are numbered from 1 on the probe, as their keys are, and from 0 in the palette, where a negative
+        // group is none.
+        int TraceGroup(int channel) => GroupOf(channel) - 1;
+
+        int GroupOf(int channel) => Groups().TryGetValue(channel, out var group) ? group : 0;
+
+        // NB: the node's groups by channel, worked out again only when its channel settings are replaced, since they
+        // are read for every row and contact every frame.
+        Dictionary<int, int> Groups()
+        {
+            var channels = Node.Channels;
+            if (!ReferenceEquals(groupedFrom, channels))
+            {
+                groupedFrom = channels;
+                groupOfChannel = new();
+                foreach (var entry in channels ?? Array.Empty<ChannelSettings>())
+                {
+                    if (entry.Group > 0)
+                        groupOfChannel[entry.Index] = entry.Group;
+                }
+            }
+
+            return groupOfChannel;
+        }
+
+        // NB: the channels given join group, leaving whatever group they were in, and with replace its other members
+        // leave it, or with group 0 they leave their groups. A new array rather than the entries changed in place,
+        // since the plot works its masks out again only when the array is replaced. An entry left with nothing to
+        // say is dropped.
+        void AssignGroup(int[] channels, int group, bool replace)
+        {
+            var assigned = new HashSet<int>(channels);
+            var entries = (Node.Channels ?? Array.Empty<ChannelSettings>())
+                .Select(entry => new ChannelSettings
+                {
+                    Index = entry.Index,
+                    Hidden = entry.Hidden,
+                    Group = assigned.Remove(entry.Index) ? group : replace && entry.Group == group ? 0 : entry.Group,
+                })
+                .Concat(assigned.Select(channel => new ChannelSettings { Index = channel, Group = group }))
+                .Where(entry => entry.Hidden || entry.Group > 0)
+                .OrderBy(entry => entry.Index)
+                .ToArray();
+            Node.Channels = entries.Length > 0 ? entries : null;
+        }
+
+        int[] GroupChannels(int group) => Groups().Where(entry => entry.Value == group).Select(entry => entry.Key).ToArray();
+
+        void SelectGroup(int group)
+        {
+            var channels = GroupChannels(group);
+            if (channels.Length > 0)
+                selector.Select(channels.Select(ContactOf).Where(contact => contact >= 0));
+        }
+
+        void FitGroup(int group)
+        {
+            var channels = GroupChannels(group);
+            if (channels.Length > 0)
+                ZoomTo(channels);
+        }
+
+        // NB: the probe's selection becomes the group with replace, or joins it without.
+        void GroupSelection(int group, bool replace)
+        {
+            var channels = SelectedContactChannels();
+            if (channels.Length == 0)
+                return;
+            AssignGroup(channels, group, replace);
+            Node.ShowGroups = true;
+        }
+
+        // NB: the buttons the group keys press, each in its group's color, faint while the group is empty.
+        void DrawGroupSwatches()
+        {
+            var spacing = ImGui.GetStyle().ItemInnerSpacing.X;
+            var side = Math.Min(ImGui.GetFrameHeight(),
+                MathF.Floor((ImGui.GetContentRegionAvail().X - spacing * (GroupKeys.Length - 1)) / GroupKeys.Length));
+            var draw = ImGui.GetWindowDrawList();
+            var io = ImGui.GetIO();
+
+            for (int n = 1; n <= GroupKeys.Length; n++)
+            {
+                if (n > 1)
+                    ImGui.SameLine(0, spacing);
+                var min = ImGui.GetCursorScreenPos();
+                ImGui.InvisibleButton($"##group{n}", new Vector2(side));
+                var hovered = ImGui.IsItemHovered();
+                var count = GroupChannels(n).Length;
+
+                if (hovered && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left) && !io.KeyCtrl && !io.KeyShift)
+                    FitGroup(n);
+                else if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
+                {
+                    if (io.KeyCtrl != io.KeyShift) GroupSelection(n, replace: io.KeyCtrl);
+                    else if (!io.KeyCtrl) SelectGroup(n);
+                }
+
+                var color = GroupColor(n - 1);
+                draw.AddRectFilled(min, min + new Vector2(side), count > 0 ? color : ImGuiPalette.WithAlpha(color, 0x40),
+                    ImGui.GetStyle().FrameRounding);
+                if (hovered)
+                    draw.AddRect(min, min + new Vector2(side), ImGuiPalette.White, ImGui.GetStyle().FrameRounding);
+                var label = n.ToString();
+                var text = ImGui.CalcTextSize(label);
+                draw.AddText(min + (new Vector2(side) - text) / 2,
+                    count == 0 ? ImGuiPalette.WithAlpha(ImGuiPalette.White, 0x80)
+                    : Luminance(color) > 0.4f ? ImGuiPalette.Black : ImGuiPalette.White, label);
+
+                ImGuiWidgets.Tooltip($"Group {n}: {(count > 0 ? $"{count} channels" : "empty")}.\nClick to select it on " +
+                    "the probe, double-click to fit it to the plot, Shift+click to add the probe's selection to it, and " +
+                    $"Ctrl+click to make the probe's selection the group.\nKeys: {n}, {n} twice, Shift+{n}, Ctrl+{n}");
+            }
+        }
+
+        // NB: relative luminance of a packed 0xAABBGGRR color, without linearizing, which is close enough to choose
+        // black or white text on it.
+        static float Luminance(uint color) =>
+            (0.2126f * (color & 0xFF) + 0.7152f * (color >> 8 & 0xFF) + 0.0722f * (color >> 16 & 0xFF)) / 255f;
+
+        void DrawGroups(float width)
+        {
+            var node = Node;
+            var show = node.ShowGroups;
+            if (ImGui.Checkbox("Show", ref show))
+                node.ShowGroups = show;
+            ImGuiWidgets.Tooltip("Draw each channel in its group's color, on the traces and the probe, and channels in " +
+                "no group in grey.\nKey: G\n1 to 9 selects a group on the probe, and pressing it twice fits it to the " +
+                "plot. Shift+1 to 9 adds the probe's selected contacts to a group, Ctrl+1 to 9 makes them the group, " +
+                "and Delete over the probe takes them out of their groups.");
+        }
+
+        // NB: anywhere in the window, since no other keys are digits, though they act on the probe's selection. A
+        // group's number pressed twice in quick succession fits it, as F would after the first.
+        void AnswerGroupKeys()
+        {
+            var io = ImGui.GetIO();
+            if (io.WantTextInput)
+                return;
+
+            for (int n = 1; n <= GroupKeys.Length; n++)
+            {
+                if (!ImGui.IsKeyPressed(GroupKeys[n - 1], false))
+                    continue;
+
+                if (io.KeyCtrl != io.KeyShift)
+                    GroupSelection(n, replace: io.KeyCtrl);
+                else if (!io.KeyCtrl)
+                {
+                    var again = n == lastGroupKey && ImGui.GetTime() - lastGroupKeyTime < io.MouseDoubleClickTime;
+                    SelectGroup(n);
+                    if (again)
+                        FitGroup(n);
+                    lastGroupKey = n;
+                    lastGroupKeyTime = ImGui.GetTime();
+                }
+            }
+        }
 
         int ChannelOf(int contact) => (uint)contact < (uint)channelOfContact.Length ? channelOfContact[contact] : -1;
 
@@ -428,6 +598,10 @@ namespace OpenEphys.Onix1.Design
             var maximized = Maximized;
             if (!maximized && !ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.P, false))
                 probePaneCollapsed = !probePaneCollapsed;
+            if (!ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.G, false))
+                Node.ShowGroups = !Node.ShowGroups;
+            AnswerGroupKeys();
+            ChannelGroup = Node.ShowGroups ? traceGroup : null;
 
             // NB: only a new selection scrolls the probe, so a pan away from it holds until the next one.
             var selected = SelectedChannel;
@@ -475,9 +649,11 @@ namespace OpenEphys.Onix1.Design
                 ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
             KeysElsewhere = !probePaneCollapsed && ImGui.IsWindowHovered(ImGuiHoveredFlags.ChildWindows);
 
-            // NB: a button's height, which is the row the plot's time labels take as well, so the
-            // probe view and the plot begin on the same line
-            var probeViewTop = ImGui.GetCursorScreenPos().Y + ImGui.GetFrameHeight();
+            // NB: a selected ruler takes Delete first, as the probe view answers it.
+            if (KeysElsewhere && !selector.RulerSelected && !ImGui.GetIO().WantTextInput && !ImGui.GetIO().KeyShift &&
+                ImGui.IsKeyPressed(ImGuiKey.Delete, false) && SelectedContactChannels() is { Length: > 0 } ungrouped)
+                AssignGroup(ungrouped, 0, replace: false);
+
             if (ImGui.Button(probePaneCollapsed ? "»" : "«"))
                 probePaneCollapsed = !probePaneCollapsed;
             ImGuiWidgets.Tooltip((probePaneCollapsed ? "Show the probe." : "Hide the probe, to give the plot more room.") +
@@ -492,27 +668,22 @@ namespace OpenEphys.Onix1.Design
                     ImGui.Text(model);
                 }
 
-                const string FitLabel = "Fit";
-                const string RulerLabel = "Ruler";
-                var padding = ImGui.GetStyle().FramePadding.X * 2;
-                var buttonsWidth = ImGui.CalcTextSize(FitLabel).X + ImGui.CalcTextSize(RulerLabel).X + 2 * padding
-                    + ImGui.GetStyle().ItemSpacing.X;
-                ImGui.SameLine();
-                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + Math.Max(0, ImGui.GetContentRegionAvail().X - buttonsWidth));
+                // NB: set apart from the title above, as controls rather than part of the heading.
+                ImGui.Dummy(new Vector2(0, ImGui.GetStyle().ItemSpacing.Y));
 
                 var channels = SelectedContactChannels();
                 ImGui.BeginDisabled(channels.Length == 0);
                 var fitPressed = !ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.F, false)
                     && ImGui.IsWindowHovered(ImGuiHoveredFlags.ChildWindows);
-                if ((ImGui.Button(FitLabel) || fitPressed) && channels.Length > 0)
+                if ((ImGui.Button("Fit") || fitPressed) && channels.Length > 0)
                     ZoomTo(channels);
                 ImGui.EndDisabled();
                 ImGuiWidgets.Tooltip("Fit the selected contacts' channels to the plot.\nKey: F over the probe",
                     "Select contacts on the probe first.");
                 ImGui.SameLine();
-                ImGuiRulerControls.DrawToggle(selector, RulerLabel);
+                ImGuiRulerControls.DrawToggle(selector, "Ruler");
 
-                ImGui.SetCursorScreenPos(new Vector2(ImGui.GetCursorScreenPos().X, probeViewTop));
+                DrawGroupSwatches();
                 selector.DrawZoomedView(selectionEnabled: true);
             }
             else if (!string.IsNullOrEmpty(model))
