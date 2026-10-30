@@ -14,18 +14,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Bonsai.Design" Version="2.9.0" />
-    <PackageReference Include="Bonsai.Dsp" Version="2.9.0" />
-    <PackageReference Include="Bonsai.Design.Visualizers" Version="2.9.0" />
-    <PackageReference Include="Bonsai.System.Design" Version="2.9.0" />
-    <PackageReference Include="clroni" Version="6.3.0" />
+    <PackageReference Include="Bonsai.Design" Version="2.9.1" />
+    <PackageReference Include="Bonsai.Dsp" Version="2.9.1" />
+    <PackageReference Include="Bonsai.Design.Visualizers" Version="2.9.1" />
+    <PackageReference Include="Bonsai.System.Design" Version="2.9.1" />
+    <!-- NB: referenced directly although only OpenEphys.Onix1 uses it, since its native libraries are copied
+         by targets NuGet imports for direct references alone, and debugging from this project needs them. -->
+    <PackageReference Include="clroni" Version="6.3.1" />
     <PackageReference Include="Hexa.NET.ImGui" Version="2.2.9" GeneratePathProperty="true" />
     <PackageReference Include="Hexa.NET.ImGui.Backends" Version="1.0.18" GeneratePathProperty="true" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="OpenCV.Net" Version="3.4.2" />
+    <PackageReference Include="OpenEphys.EphysVisualization.Design" Version="0.1.0-alpha.9" />
     <PackageReference Include="OpenEphys.ProbeInterface.NET" Version="0.5.0" />
-    <PackageReference Include="OpenTK" Version="3.3.3" />
-    <PackageReference Include="OpenTK.GLControl" Version="3.3.3" />
     <PackageReference Include="ZedGraph" Version="5.1.7" />
   </ItemGroup>
 
@@ -35,15 +36,6 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="OpenEphys.Onix1.Design.Tests" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- NB: pinned for compile-time version floors only. RemoveHostProvidedRuntimeAssemblies
-         below strips the deployed copies at build time. -->
-    <PackageReference Include="System.Memory" Version="4.6.3" />
-    <PackageReference Include="System.Buffers" Version="4.6.1" />
-    <PackageReference Include="System.Numerics.Vectors" Version="4.6.1" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
   </ItemGroup>
 
   <!-- NB: Bonsai.exe already embeds its own copy of these assemblies. A second standalone copy
@@ -108,10 +100,7 @@
     <ProbeInterfaceJsonSource Include="Resources\OEHSRHS2116.json" />
   </ItemGroup>
 
-  <UsingTask
-    TaskName="GZipCompress"
-    TaskFactory="RoslynCodeTaskFactory"
-    AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+  <UsingTask TaskName="GZipCompress" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
     <ParameterGroup>
       <SourceFile ParameterType="System.String" Required="true" />
       <DestinationFile ParameterType="System.String" Required="true" />
@@ -139,13 +128,8 @@ using (var gzip = new GZipStream(output, CompressionLevel.Optimal))
     GZipCompress for a source .json newer than its own (already-computed) .gz output,
     skipping the rest on every build where the source hasn't changed.
   -->
-  <Target Name="CompressProbeInterfaceResources"
-          BeforeTargets="AssignTargetPaths"
-          Inputs="@(ProbeInterfaceJsonSource)"
-          Outputs="@(ProbeInterfaceJsonSource->'$(IntermediateOutputPath)Resources\%(Filename)%(Extension).gz')">
-    <GZipCompress
-      SourceFile="%(ProbeInterfaceJsonSource.Identity)"
-      DestinationFile="$(IntermediateOutputPath)Resources\%(ProbeInterfaceJsonSource.Filename)%(ProbeInterfaceJsonSource.Extension).gz" />
+  <Target Name="CompressProbeInterfaceResources" BeforeTargets="AssignTargetPaths" Inputs="@(ProbeInterfaceJsonSource)" Outputs="@(ProbeInterfaceJsonSource->'$(IntermediateOutputPath)Resources\%(Filename)%(Extension).gz')">
+    <GZipCompress SourceFile="%(ProbeInterfaceJsonSource.Identity)" DestinationFile="$(IntermediateOutputPath)Resources\%(ProbeInterfaceJsonSource.Filename)%(ProbeInterfaceJsonSource.Extension).gz" />
   </Target>
 
   <!--

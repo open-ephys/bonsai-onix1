@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using Hexa.NET.ImGui;
 using Newtonsoft.Json;
 using OpenEphys.ProbeInterface.NET;
+using OpenEphys.EphysVisualization.Design;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -206,9 +207,9 @@ namespace OpenEphys.Onix1.Design
             lfpGainIdx  = Array.IndexOf(GainValues, configureNode.ProbeConfiguration.LfpAmplifierGain);
             refIdx = Array.IndexOf(ReferenceValues, configureNode.ProbeConfiguration.Reference);
 
-            ImGuiControls.WriteString(gainCalBuf, configureNode.ProbeConfiguration.GainCalibrationFileName ?? "");
-            ImGuiControls.WriteString(adcCalBuf, configureNode.ProbeConfiguration.AdcCalibrationFileName ?? "");
-            ImGuiControls.WriteString(probeFileBuf, configureNode.ProbeConfiguration.ProbeInterfaceFileName ?? "");
+            ImGuiStrings.WriteString(gainCalBuf, configureNode.ProbeConfiguration.GainCalibrationFileName ?? "");
+            ImGuiStrings.WriteString(adcCalBuf, configureNode.ProbeConfiguration.AdcCalibrationFileName ?? "");
+            ImGuiStrings.WriteString(probeFileBuf, configureNode.ProbeConfiguration.ProbeInterfaceFileName ?? "");
 
             RestoreActivityData();
             InitSurveyBanks();
@@ -223,83 +224,53 @@ namespace OpenEphys.Onix1.Design
 
         protected override void HandleProbeSpecificShortcuts(bool shift)
         {
-            if (ImGui.IsKeyPressed(ImGuiKey.A, false)) showActivityColors = !showActivityColors;
-            if (ImGui.IsKeyPressed(ImGuiKey.B, false))
-            {
-                bankSelectMode = !bankSelectMode;
-                selector.ClearSelection();
-            }
+            if (!bankSelectMode && ImGui.IsKeyPressed(ImGuiKey.A, false)) showActivityColors = !showActivityColors;
+            if (selector.Hovered && ImGui.IsKeyPressed(ImGuiKey.B, false)) SetBankSelectMode(!bankSelectMode);
         }
 
-        #endregion
-
-        /// <summary>
-        /// Initializes a new instance of <see cref="NeuropixelsV1ImGuiDialog"/>.
-        /// </summary>
-        public NeuropixelsV1ImGuiDialog(IConfigureNeuropixelsV1 configureNode, string probeName, ImGuiLogConsole log)
-            : base(probeName, log)
+        void SetBankSelectMode(bool on)
         {
-            selector.DefaultZoomWindowMicrons = 2000f;
-            selector.DefaultScrollYMicrons = 700f;
-
-            this.configureNode = configureNode ?? throw new ArgumentNullException(nameof(configureNode));
-
-            survey.SurveyCompleted += () => HasChanges = true;
-            scan.ScanCompleted += OnScanCompleted;
-
-            SetupSelectorCallbacks();
-            LoadOrCreateProbeGroup();
-            RefreshProbeState();
+            if (on == bankSelectMode) return;
+            bankSelectMode = on;
+            selector.ClearSelection();
         }
 
-        static uint BankColor(int bankIndex) => bankIndex % 2 == 0 ? ImGuiPalette.AzureBlue : ImGuiPalette.CobaltBlue;
-
-        void SetupSelectorCallbacks()
+        void DrawSelectionSection()
         {
-            selector.GetFillColor = idx =>
-            {
-                if (bankSelectMode)
-                {
-                    var bank = NeuropixelsV1ProbeGroup.GetBank(idx);
-                    bool pending = pendingBanks.Contains(bank);
-                    bool inSurvey = surveyBanks.Contains(bank);
-                    if (pending) return selector.DragIntent == DragSelectIntent.Remove ? ColorContactDisabled : BankColor(bank);
-                    return inSurvey ? BankColor(bank) : ColorContactDisabled;
-                }
-                var data = CurrentDisplayData();
-                if (showActivityColors && data != null && idx < data.Length) return ActivityColor(data[idx]);
-                return DefaultContactFillColor(idx);
-            };
+            ImGui.Text("Selection");
+            ImGui.Spacing();
 
-            // On variants with per-channel-group bank selection, a contact on a column disabled by the
-            // current ColumnPattern is blocked too. It can't be enabled or pinned, in addition to the
-            // ordinary pin-collision blocking every variant already gets from DefaultIsBlocked.
-            selector.IsBlocked = idx => DefaultIsBlocked(idx) ||
-                (probeGroup is NeuropixelsNP1110ProbeGroup channelGroupProbe && !channelGroupProbe.IsColumnEnabled(idx));
-            selector.SelectionChanged += (_, _) =>
-            {
-                if (!bankSelectMode) return;
-                var pending = new HashSet<int>();
-                for (int i = 0; i < selector.DragBoxContacts.Length && i < allContacts.Count; i++)
-                    if (selector.DragBoxContacts[i])
-                        pending.Add(NeuropixelsV1ProbeGroup.GetBank(i));
-                if (pending.Count == 0) return;
-                if (selector.DragIntent == DragSelectIntent.Remove)
-                    surveyBanks.ExceptWith(pending);
-                else
-                    surveyBanks.UnionWith(pending);
-                selector.ClearSelection();
-            };
+            if (ImGui.RadioButton("Channels##seltarget", !bankSelectMode)) SetBankSelectMode(false);
+            ImGuiWidgets.Tooltip("Select contacts to enable or pin them. Equivalent to pressing B over the probe view.");
+            ImGui.SameLine();
+            if (ImGui.RadioButton("Banks##seltarget", bankSelectMode)) SetBankSelectMode(true);
+            ImGuiWidgets.Tooltip("Select whole banks instead of individual contacts, to choose which banks the " +
+                "survey sweeps through. Run the survey itself from the headstage panel. Equivalent to pressing B " +
+                "over the probe view.");
         }
 
-        #region ImGuiProbePanel overrides
-
-        protected override void DrawPropsPanel()
+        void DrawRulerSection()
         {
-            selector.FillColorOverridesBlocked = bankSelectMode || (showActivityColors && CurrentDisplayData() != null);
-            selector.SelectionSkipsBlocked = !bankSelectMode;
-            selector.ModeLabel = bankSelectMode ? "MODE: BANK SELECT (B to exit)" : "MODE: CHANNEL SELECT";
+            ImGui.Text("Rulers");
+            ImGui.Spacing();
+            ImGuiRulerControls.DrawToggle(selector, "Add");
+            ImGui.SameLine();
+            ImGuiRulerControls.DrawClear(selector);
+        }
+
+        // NB: the selector's settings depend only on bank select and whether activity colors are shown, so they're
+        // only updated when one of those changes.
+        (bool, bool)? selectorView;
+
+        void UpdateSelectorView()
+        {
             bool actColorsActive = !bankSelectMode && showActivityColors && CurrentDisplayData() != null;
+            var view = (bankSelectMode, actColorsActive);
+            if (view == selectorView) return;
+            selectorView = view;
+
+            selector.FillColorOverridesBlocked = bankSelectMode || actColorsActive;
+            selector.SelectionSkipsBlocked = !bankSelectMode;
             selector.Legend = bankSelectMode
                 ? new LegendEntry[]
                   {
@@ -318,12 +289,77 @@ namespace OpenEphys.Onix1.Design
                           new(ImGuiProbeSelector.BlockedFillColor, "Unavailable", DottedOutline: true),
                           new(ImGuiProbeSelector.SelectionBorderColor, "Editable selection", OutlineOnly: true),
                       };
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="NeuropixelsV1ImGuiDialog"/>.
+        /// </summary>
+        public NeuropixelsV1ImGuiDialog(IConfigureNeuropixelsV1 configureNode, string probeName, ImGuiLogConsole log)
+            : base(probeName, log)
+        {
+            this.configureNode = configureNode ?? throw new ArgumentNullException(nameof(configureNode));
+
+            survey.SurveyCompleted += () => HasChanges = true;
+            scan.ScanCompleted += OnScanCompleted;
+
+            SetupSelectorCallbacks();
+            LoadOrCreateProbeGroup();
+            RefreshProbeState();
+        }
+
+        static uint BankColor(int bankIndex) => bankIndex % 2 == 0 ? ImGuiPalette.AzureBlue : ImGuiPalette.CobaltBlue;
+
+        void SetupSelectorCallbacks()
+        {
+            selector.FillColor = idx =>
+            {
+                if (bankSelectMode)
+                {
+                    var bank = NeuropixelsV1ProbeGroup.GetBank(idx);
+                    bool pending = pendingBanks.Contains(bank);
+                    bool inSurvey = surveyBanks.Contains(bank);
+                    if (pending) return selector.DragIntent == DragSelectIntent.Remove ? ColorContactDisabled : BankColor(bank);
+                    return inSurvey ? BankColor(bank) : ColorContactDisabled;
+                }
+                var data = CurrentDisplayData();
+                if (showActivityColors && data != null && idx < data.Length) return ActivityColor(data[idx]);
+                return DefaultContactFillColor(idx);
+            };
+
+            // On variants with per-channel-group bank selection, a contact on a column disabled by the
+            // current ColumnPattern is blocked too. It can't be enabled or pinned, in addition to the
+            // ordinary pin-collision blocking every variant already gets from DefaultIsBlocked.
+            selector.Blocked = idx => DefaultIsBlocked(idx) ||
+                (probeGroup is NeuropixelsNP1110ProbeGroup channelGroupProbe && !channelGroupProbe.IsColumnEnabled(idx));
+            selector.SelectionChanged += (_, _) =>
+            {
+                if (!bankSelectMode) return;
+                var pending = new HashSet<int>();
+                for (int i = 0; i < selector.Contacts.Count && i < allContacts.Count; i++)
+                    if (selector.Contacts[i].InDragBox)
+                        pending.Add(NeuropixelsV1ProbeGroup.GetBank(i));
+                if (pending.Count == 0) return;
+                if (selector.DragIntent == DragSelectIntent.Remove)
+                    surveyBanks.ExceptWith(pending);
+                else
+                    surveyBanks.UnionWith(pending);
+                selector.ClearSelection();
+            };
+        }
+
+        #region ImGuiProbePanel overrides
+
+        protected override void DrawPropsPanel()
+        {
+            UpdateSelectorView();
 
             if (bankSelectMode)
             {
                 pendingBanks.Clear();
-                for (int i = 0; i < selector.DragBoxContacts.Length && i < allContacts.Count; i++)
-                    if (selector.DragBoxContacts[i])
+                for (int i = 0; i < selector.Contacts.Count && i < allContacts.Count; i++)
+                    if (selector.Contacts[i].InDragBox)
                         pendingBanks.Add(NeuropixelsV1ProbeGroup.GetBank(i));
             }
 
@@ -331,6 +367,10 @@ namespace OpenEphys.Onix1.Design
             DrawTitleBar();
             ImGui.Separator();
             DrawFileSection();
+            ImGui.Separator();
+            DrawSelectionSection();
+            ImGui.Separator();
+            DrawRulerSection();
             ImGui.Separator();
             DrawChannelSection();
             ImGui.Separator();
@@ -413,16 +453,16 @@ namespace OpenEphys.Onix1.Design
         {
             float fileTargetW = ComputeFileRowInputWidth();
             string current = getPath() ?? "";
-            ImGuiControls.WriteString(buf, current);
+            ImGuiStrings.WriteString(buf, current);
             ImGui.SetNextItemWidth(fileTargetW);
             unsafe
             {
                 fixed (byte* p = buf)
                     if (ImGui.InputText(id, p, (nuint)buf.Length))
-                        setPath(ImGuiControls.ReadBuffer(buf));
+                        setPath(ImGuiStrings.ReadBuffer(buf));
             }
             if (!string.IsNullOrEmpty(getPath()))
-                ImGuiControls.Tooltip(getPath());
+                ImGuiWidgets.Tooltip(getPath());
 
             ImGui.SameLine();
             if (ImGui.Button("Open..." + id))
@@ -439,7 +479,7 @@ namespace OpenEphys.Onix1.Design
                 if (ofd.ShowDialog() == DialogResult.OK)
                     setPath(ofd.FileName);
             }
-            ImGuiControls.Tooltip(tooltip);
+            ImGuiWidgets.Tooltip(tooltip);
         }
 
         #endregion
@@ -451,28 +491,28 @@ namespace OpenEphys.Onix1.Design
             ImGui.SetNextItemWidth(ComboboxStartWidthPx);
             if (ImGui.Combo("Spike Gain##spikegain", ref spikeGainIdx, GainNames, GainNames.Length))
                 configureNode.ProbeConfiguration.SpikeAmplifierGain = GainValues[spikeGainIdx];
-            ImGuiControls.Tooltip("Amplifier gain applied to the spike-band (300 Hz-10 kHz, or DC-10 kHz if the spike filter is off).");
+            ImGuiWidgets.Tooltip("Amplifier gain applied to the spike-band (300 Hz-10 kHz, or DC-10 kHz if the spike filter is off).");
 
             ImGui.SetNextItemWidth(ComboboxStartWidthPx);
             if (ImGui.Combo("LFP Gain##lfpgain", ref lfpGainIdx, GainNames, GainNames.Length))
                 configureNode.ProbeConfiguration.LfpAmplifierGain = GainValues[lfpGainIdx];
-            ImGuiControls.Tooltip("Amplifier gain applied to the LFP band (0.5-500 Hz).");
+            ImGuiWidgets.Tooltip("Amplifier gain applied to the LFP band (0.5-500 Hz).");
 
             ImGui.SetNextItemWidth(ComboboxStartWidthPx);
             if (ImGui.Combo("Reference##ref", ref refIdx, ReferenceNames, ReferenceNames.Length))
                 configureNode.ProbeConfiguration.Reference = ReferenceValues[refIdx];
-            ImGuiControls.Tooltip("Choose the voltage reference for every recording channel: External or the probe Tip electrode.");
+            ImGuiWidgets.Tooltip("Choose the voltage reference for every recording channel: External or the probe Tip electrode.");
 
             bool spikeFilter = configureNode.ProbeConfiguration.SpikeFilter;
             if (ImGui.Checkbox("300 Hz spike-band high-pass filter##filter", ref spikeFilter))
                 configureNode.ProbeConfiguration.SpikeFilter = spikeFilter;
-            ImGuiControls.Tooltip("Activate a 300 Hz high-pass filter on the spike-band data stream.");
+            ImGuiWidgets.Tooltip("Activate a 300 Hz high-pass filter on the spike-band data stream.");
 
             var presetNames = presets.Select(p => p.ToString()).ToArray();
             ImGui.SetNextItemWidth(ComboboxStartWidthPx);
             if (ImGui.Combo("Preset##preset", ref presetIdx, presetNames, presetNames.Length))
                 ApplyPreset(presets[presetIdx]);
-            ImGuiControls.Tooltip("Apply a ready-made channel selection in a single step. Overrides current enabled/pinned contacts.");
+            ImGuiWidgets.Tooltip("Apply a ready-made channel selection in a single step. Overrides current enabled/pinned contacts.");
 
             if (presets[presetIdx] != NeuropixelsV1Preset.None)
             {
@@ -481,7 +521,7 @@ namespace OpenEphys.Onix1.Design
                 ImGui.SetNextItemWidth(ComboboxStartWidthPx);
                 if (ImGui.SliderInt("Offset##presetoffset", ref presetOffset, 0, maxOffset))
                     ApplyPreset(preset);
-                ImGuiControls.Tooltip("Tip offset, in banks, added to the preset. Clamped so no atom's bank exceeds the probe's bank range.");
+                ImGuiWidgets.Tooltip("Tip offset, in banks, added to the preset. Clamped so no atom's bank exceeds the probe's bank range.");
             }
 
             if (probeGroup is NeuropixelsNP1110ProbeGroup np1110Probe)
@@ -489,7 +529,7 @@ namespace OpenEphys.Onix1.Design
                 ImGui.SetNextItemWidth(ComboboxStartWidthPx);
                 if (ImGui.Combo("Column Mode##columnmode", ref columnPatternIdx, ColumnPatternNames, ColumnPatternNames.Length))
                     ApplyColumnPattern(ColumnPatternValues[columnPatternIdx]);
-                ImGuiControls.Tooltip("Which physical columns are enabled. Contacts on disabled columns are blocked: they cannot be enabled or pinned.");
+                ImGuiWidgets.Tooltip("Which physical columns are enabled. Contacts on disabled columns are blocked: they cannot be enabled or pinned.");
 
                 DrawColumnPatternConflictPopup();
             }
@@ -558,14 +598,14 @@ namespace OpenEphys.Onix1.Design
             var pattern = pendingColumnPattern.Value;
             var defaultPreset = DefaultPresetFor(pattern);
 
-            var choice = ImGuiControls.ConfirmModal(ColumnPatternConflictPopupId,
+            var choice = ImGuiWidgets.ConfirmModal(ColumnPatternConflictPopupId,
                 $"The current electrode selection can't be represented under {pattern} column mode. " +
                 $"Continuing will reset the probe to its default {pattern} selection, \"{defaultPreset.DisplayName}\".",
                 acceptLabel: "Reset and Continue");
 
-            if (choice == ImGuiControls.ModalChoice.Pending) return;
+            if (choice == ModalChoice.Pending) return;
 
-            if (choice == ImGuiControls.ModalChoice.Accepted)
+            if (choice == ModalChoice.Accepted)
             {
                 presetIdx = Array.IndexOf(presets, defaultPreset);
                 presetOffset = 0;
@@ -580,12 +620,12 @@ namespace OpenEphys.Onix1.Design
         protected override void DrawProbeSpecificContactInfo(IReadOnlyList<int> sel)
         {
             var banks = sel.Select(NeuropixelsV1ProbeGroup.GetBank).Distinct().Select(Neuropixels.BankDisplayName);
-            ImGuiControls.InfoRow("Bank(s)", banks.Any() ? string.Join(",", banks) : "-");
+            ImGuiWidgets.InfoRow("Bank(s)", banks.Any() ? string.Join(",", banks) : "-");
 
             if (probeGroup is NeuropixelsNP1110ProbeGroup channelGroupProbe)
             {
                 var groups = sel.Select(channelGroupProbe.GetChannelGroup).Distinct().OrderBy(g => g);
-                ImGuiControls.InfoRow("Channel Group(s)", groups.Any() ? string.Join(",", groups) : "-");
+                ImGuiWidgets.InfoRow("Channel Group(s)", groups.Any() ? string.Join(",", groups) : "-");
             }
         }
     }

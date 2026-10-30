@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Hexa.NET.ImGui;
+using OpenEphys.EphysVisualization.Design;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -13,7 +14,7 @@ namespace OpenEphys.Onix1.Design
             ImGui.SetNextItemWidth(ComboboxStartWidthPx);
             if (ImGui.Combo("Reference##ref", ref refIdx, ReferenceNames, ReferenceNames.Length))
                 configureNode.ProbeConfiguration.Reference = ReferenceValues[refIdx];
-            ImGuiControls.Tooltip("Choose which electrode serves as the voltage reference for every recording channel.");
+            ImGuiWidgets.Tooltip("Choose which electrode serves as the voltage reference for every recording channel.");
 
             if (configureNode.ProbeConfiguration.Reference == NeuropixelsV2ReferenceSource.Tip)
                 DrawTipReferenceShankCheckboxes();
@@ -22,7 +23,7 @@ namespace OpenEphys.Onix1.Design
             ImGui.SetNextItemWidth(ComboboxStartWidthPx);
             if (ImGui.Combo("Preset##preset", ref presetIdx, presetNames, presetNames.Length))
                 ApplyPreset(presets[presetIdx]);
-            ImGuiControls.Tooltip("Apply a ready-made channel selection in a single step. Note: this overrides all current enabled and/or pinned contacts.");
+            ImGuiWidgets.Tooltip("Apply a ready-made channel selection in a single step. Note: this overrides all current enabled and/or pinned contacts.");
         }
 
         void DrawTipReferenceShankCheckboxes()
@@ -39,17 +40,17 @@ namespace OpenEphys.Onix1.Design
                 }
                 if (s < probeGroup.ShankCount - 1) ImGui.SameLine();
             }
-            ImGuiControls.Tooltip("Choose which shank(s) contribute their tip structure to the reference. Selecting more than one shorts them together, which is sometimes desirable.");
+            ImGuiWidgets.Tooltip("Choose which shank(s) contribute their tip structure to the reference. Selecting more than one shorts them together, which is sometimes desirable.");
             ImGui.Unindent();
         }
 
         protected override void DrawProbeSpecificContactInfo(IReadOnlyList<int> sel)
         {
             var shanks = sel.Select(i => probeGroup.GetShank(i)).Distinct();
-            ImGuiControls.InfoRow("Shank(s)", shanks.Count() == 0 ? "-" : string.Join(",", shanks));
+            ImGuiWidgets.InfoRow("Shank(s)", shanks.Count() == 0 ? "-" : string.Join(",", shanks));
 
             var banks = sel.Select(i => probeGroup.GetBank(i)).Distinct().Select(Neuropixels.BankDisplayName);
-            ImGuiControls.InfoRow("Banks(s)", shanks.Count() == 0 ? "-" : string.Join(",", banks));
+            ImGuiWidgets.InfoRow("Banks(s)", shanks.Count() == 0 ? "-" : string.Join(",", banks));
         }
 
         void ApplyPreset(NeuropixelsV2ChannelPreset preset)
