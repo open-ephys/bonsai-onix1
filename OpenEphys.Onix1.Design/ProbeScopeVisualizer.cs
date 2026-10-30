@@ -29,7 +29,26 @@ namespace OpenEphys.Onix1.Design
         const float MinPlotWidth = 200f;
         const float CollapsedPaneWidth = 28f;
 
-        readonly ImGuiProbeSelector selector = new(zoomWindowFraction: 1f) { ShowGrid = false };
+        // NB: the colors of the configuration dialogs' enabled contacts, with the plot's selection white as its
+        // selected label's box is, and hover amber three quarters of the way to white.
+        static readonly uint ColorContactEnabled = ImGuiPalette.AmberGold;
+        static readonly uint ColorContactSelected = ImGuiPalette.White;
+        static readonly uint ColorContactHovered = 0xFFC2EFFFu;
+
+        static readonly LegendEntry[] ProbeLegend =
+        {
+            new(ColorContactSelected, "Selected"),
+            new(ColorContactHovered, "Hovered"),
+            new(ColorContactEnabled, "Enabled"),
+            new(ImGuiProbeSelector.BlockedFillColor, "Not enabled", DottedOutline: true),
+        };
+
+        readonly ImGuiProbeSelector selector = new(zoomWindowFraction: 1f) { ShowGrid = false, Legend = ProbeLegend };
+        Dictionary<int, int> contactOfChannel = new();
+        int[] channelOfContact = Array.Empty<int>();
+        int selectedContact = -1;
+        int hoveredContact = -1;
+        int revealedChannel = -1;
         ImGuiProbeScopeBandColumns<TFrame> bands;
         EventLoopScheduler scheduler;
         string deviceName;
@@ -65,7 +84,48 @@ namespace OpenEphys.Onix1.Design
             bands = new ImGuiProbeScopeBandColumns<TFrame>(node, () => Paused);
             columns = new[] { bands.BandColumn, bands.FiltersColumn, bands.OrderColumn }.Concat(StandardColumns.All).ToArray();
             scheduler = new EventLoopScheduler();
+
+            selector.FillColor = ContactColor;
+            selector.Blocked = contact => ChannelOf(contact) < 0;
+            selector.SelectionChanged += SelectContacts;
         }
+
+        uint ContactColor(int contact) =>
+            contact == selectedContact ? ColorContactSelected
+            : contact == hoveredContact ? ColorContactHovered
+            : ColorContactEnabled;
+
+        int ChannelOf(int contact) => (uint)contact < (uint)channelOfContact.Length ? channelOfContact[contact] : -1;
+
+        int ContactOf(int channel) => contactOfChannel.TryGetValue(channel, out var contact) ? contact : -1;
+
+        void MapContacts(SingleProbeGroup probe)
+        {
+            contactOfChannel = probe?.ChannelMap?.ToDictionary(entry => entry.Key, entry => entry.Value) ?? new();
+            var contacts = contactOfChannel.Count > 0 ? contactOfChannel.Values.Max() + 1 : 0;
+            channelOfContact = Enumerable.Repeat(-1, contacts).ToArray();
+            foreach (var entry in contactOfChannel)
+                channelOfContact[entry.Value] = entry.Key;
+        }
+
+        // NB: one contact selects its channel and brings it into view. Several are only fitted when asked, so the
+        // selection stays what Fit acts on rather than a zoom applied at once.
+        void SelectContacts(object sender, EventArgs e)
+        {
+            var channels = SelectedContactChannels();
+            if (channels.Length == 1)
+            {
+                SelectedChannel = channels[0];
+                Reveal(channels[0]);
+            }
+        }
+
+        // NB: a contact no channel records has nothing to show.
+        int[] SelectedContactChannels() => Enumerable.Range(0, selector.Contacts.Count)
+            .Where(contact => selector.Contacts[contact].Selected)
+            .Select(ChannelOf)
+            .Where(channel => channel >= 0)
+            .ToArray();
 
         ControlStripColumn[] columns = Array.Empty<ControlStripColumn>();
 
@@ -336,6 +396,7 @@ namespace OpenEphys.Onix1.Design
                     {
                         source = probe;
                         selector.Refresh(probe.ProbeGroup);
+                        MapContacts(probe.ProbeGroup);
                         bands.Bands = probe.Bands;
                         bands.ReferenceOffered = probe.Reference is not null;
                         bands.Shanks = ShanksOf(probe.ProbeGroup).Count;
@@ -362,6 +423,14 @@ namespace OpenEphys.Onix1.Design
             if (!Faulted)
                 bands.RequestSelection();
 
+            // NB: only a new selection scrolls the probe, so a pan away from it holds until the next one.
+            var selected = SelectedChannel;
+            selectedContact = ContactOf(selected);
+            hoveredContact = ContactOf(HoveredChannel);
+            if (selected != revealedChannel && selectedContact >= 0)
+                selector.Reveal(selectedContact);
+            revealedChannel = selected;
+
             var availX = ImGui.GetContentRegionAvail().X;
             var maximized = Maximized;
             var availY = ImGui.GetContentRegionAvail().Y - (maximized ? 0 : ControlStripHeight);
@@ -373,6 +442,7 @@ namespace OpenEphys.Onix1.Design
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(panePadding.X, 0));
 
             var waveWidth = availX;
+            KeysElsewhere = false;
             if (!maximized)
             {
                 // NB: clamped every frame rather than only while dragged, so shrinking the window can't leave the
@@ -385,6 +455,8 @@ namespace OpenEphys.Onix1.Design
                 DrawPaneSplitter(gap, availY);
             }
 
+            // NB: a probe not drawn this frame keeps the contact last hovered, which the pointer has since left.
+            HoveredChannel = !maximized && !probePaneCollapsed ? ChannelOf(selector.HoveredContactIndex) : -1;
             DrawPlot(new Vector2(waveWidth, availY));
             ImGui.PopStyleVar();
 
@@ -396,6 +468,7 @@ namespace OpenEphys.Onix1.Design
         {
             ImGui.BeginChild("##probePane", new Vector2(probeWidth, availY),
                 ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
+            KeysElsewhere = !probePaneCollapsed && ImGui.IsWindowHovered(ImGuiHoveredFlags.ChildWindows);
 
             // NB: a button's height, which is the row the plot's time labels take as well, so the
             // probe view and the plot begin on the same line
@@ -413,14 +486,28 @@ namespace OpenEphys.Onix1.Design
                     ImGui.Text(model);
                 }
 
+                const string FitLabel = "Fit";
                 const string RulerLabel = "Ruler";
-                var rulerWidth = ImGui.CalcTextSize(RulerLabel).X + ImGui.GetStyle().FramePadding.X * 2;
+                var padding = ImGui.GetStyle().FramePadding.X * 2;
+                var buttonsWidth = ImGui.CalcTextSize(FitLabel).X + ImGui.CalcTextSize(RulerLabel).X + 2 * padding
+                    + ImGui.GetStyle().ItemSpacing.X;
                 ImGui.SameLine();
-                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + Math.Max(0, ImGui.GetContentRegionAvail().X - rulerWidth));
+                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + Math.Max(0, ImGui.GetContentRegionAvail().X - buttonsWidth));
+
+                var channels = SelectedContactChannels();
+                ImGui.BeginDisabled(channels.Length == 0);
+                var fitPressed = !ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.F, false)
+                    && ImGui.IsWindowHovered(ImGuiHoveredFlags.ChildWindows);
+                if ((ImGui.Button(FitLabel) || fitPressed) && channels.Length > 0)
+                    ZoomTo(channels);
+                ImGui.EndDisabled();
+                ImGuiWidgets.Tooltip("Fit the selected contacts' channels to the plot.\nKey: F over the probe",
+                    "Select contacts on the probe first.");
+                ImGui.SameLine();
                 ImGuiRulerControls.DrawToggle(selector, RulerLabel);
 
                 ImGui.SetCursorScreenPos(new Vector2(ImGui.GetCursorScreenPos().X, probeViewTop));
-                selector.DrawZoomedView(selectionEnabled: false);
+                selector.DrawZoomedView(selectionEnabled: true);
             }
             else if (!string.IsNullOrEmpty(model))
             {
@@ -462,6 +549,7 @@ namespace OpenEphys.Onix1.Design
         /// <inheritdoc/>
         public override void Unload()
         {
+            selector.SelectionChanged -= SelectContacts;
             scheduler?.Dispose();
             scheduler = null;
             bands = null;
