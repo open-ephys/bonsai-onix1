@@ -709,19 +709,24 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <remarks>
         /// On the raw counts, before scaling and any filter, which smear a clipped stretch away from the limits and
-        /// move its baseline. Null when nothing clipped, so a clean recording sends the display nothing.
+        /// move its baseline. Null when nothing clipped, so a clean recording sends the display nothing. The counts
+        /// are unsigned 16-bit, as every band's source is.
         /// </remarks>
-        static bool[] ClippedRows(Mat raw, double maximum)
+        internal static unsafe bool[] ClippedRows(Mat raw, double maximum)
         {
-            using var low = new Mat(raw.Rows, 1, raw.Depth, 1);
-            using var high = new Mat(raw.Rows, 1, raw.Depth, 1);
+            using var low = new Mat(raw.Rows, 1, Depth.U16, 1);
+            using var high = new Mat(raw.Rows, 1, Depth.U16, 1);
             CV.Reduce(raw, low, 1, ReduceOperation.Min);
             CV.Reduce(raw, high, 1, ReduceOperation.Max);
 
+            // NB: by pointer, since GetReal is a P/Invoke per value and was a seventh of the band thread.
+            var lows = (byte*)low.Data;
+            var highs = (byte*)high.Data;
             bool[] clipped = null;
             for (int row = 0; row < raw.Rows; row++)
             {
-                if (low.GetReal(row, 0) <= 0 || high.GetReal(row, 0) >= maximum)
+                if (*(ushort*)(lows + (long)row * low.Step) == 0 ||
+                    *(ushort*)(highs + (long)row * high.Step) >= maximum)
                 {
                     clipped ??= new bool[raw.Rows];
                     clipped[row] = true;
