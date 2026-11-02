@@ -58,10 +58,19 @@ namespace OpenEphys.Onix1
             var useCmr = UseCommonMedianReference;
 
             return source.Select(input => {
-                var output = new Mat(input.AmplifierData.Size, Depth.F32, input.AmplifierData.Channels);
-                CV.ConvertScale(input.AmplifierData, output, 3.05176, 3.05176 * -NeuropixelsV2.AdcMidpoint);
+                var output = ToMicrovolts(input.AmplifierData);
                 return useCmr ? Neuropixels.ApplyCmrF32(output, groups) : output;
             });
+        }
+
+        /// <summary>
+        /// Converts NeuropixelsV2 amplifier data to microvolts, as a new <see cref="Depth.F32"/> matrix.
+        /// </summary>
+        internal static Mat ToMicrovolts(Mat amplifierData)
+        {
+            var output = new Mat(amplifierData.Size, Depth.F32, amplifierData.Channels);
+            CV.ConvertScale(amplifierData, output, 3.05176, 3.05176 * -NeuropixelsV2.AdcMidpoint);
+            return output;
         }
 
         /// <summary>

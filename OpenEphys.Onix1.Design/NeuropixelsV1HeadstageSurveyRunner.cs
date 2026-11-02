@@ -404,22 +404,10 @@ namespace OpenEphys.Onix1.Design
             // Zip), and without Publish/RefCount each would independently re-run the frame buffering in
             // NeuropixelsV1eData.Generate() and the scaling/CMR work in NeuropixelsV1Scale.Process for
             // every frame.
-            var scaled = new NeuropixelsV1Scale
-            {
-                Band = NeuropixelsV1EphysBand.Spike,
-                AmplifierGain = spikeAmplifierGain,
-                UseCommonMedianReference = true
-            }.Process(dataStream).Publish().RefCount();
-
-            // NB: no software bandpass since he spike band is already shaped by hardware (the round's
-            // SpikeFilter bit plus the analog front end's inherent ~10 kHz low-pass).
-            var spikeStream = new DetectSpikes
-            {
-                Threshold          = new[] { spikeThreshold },
-                Length             = 60,
-                Delay              = 15,
-                WaveformRefinement = SpikeWaveformRefinement.AlignPeaks
-            }.Process(scaled);
+            // NB: the round sets the probe's spike filter, so the band is already shaped in hardware.
+            var scaled = SpikeDetection.NeuropixelsV1Signal(dataStream, spikeAmplifierGain, spikeFilter: true)
+                .Publish().RefCount();
+            var spikeStream = SpikeDetection.Detect(scaled, NeuropixelsV1.SamplesPerChannelPerSecond, new[] { spikeThreshold });
 
             var combined = spikeStream.Zip(scaled, (spikes, scaled) => (spikes, scaled));
 

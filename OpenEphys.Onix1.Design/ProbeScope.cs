@@ -11,16 +11,16 @@ namespace OpenEphys.Onix1.Design
 {
     /// <summary>
     /// One selectable band of a probe: a short display name, a description of its passband for the dropdown, the
-    /// rate at which that band produces samples, how it is computed from the device's frames, and the raw counts it
-    /// comes from, which clipping is checked on. Where it has an AC coupled variant, that variant's passband and
-    /// how it is computed; a band already high-passed well above the coupling's cutoff has none.
+    /// rate at which that band produces samples, the raw counts in each frame it comes from, which clipping is
+    /// checked on, and how it is computed from those counts. Where it has an AC coupled variant, that variant's
+    /// passband and how it is computed; a band already high-passed well above the coupling's cutoff has none.
     /// </summary>
     internal sealed record ProbeScopeBand<TFrame>(
         string Name, string Description, int SampleRate,
-        Func<IObservable<TFrame>, IObservable<Mat>> Transform,
-        Func<TFrame, Mat> Raw,
+        Func<TFrame, Mat> Source,
+        Func<IObservable<Mat>, IObservable<Mat>> Transform,
         string AcDescription = null,
-        Func<IObservable<TFrame>, IObservable<Mat>> AcTransform = null);
+        Func<IObservable<Mat>, IObservable<Mat>> AcTransform = null);
 
     /// <summary>
     /// Everything a <see cref="ProbeScopeVisualizer{TFrame}"/> needs from a resolved device: the probe geometry, the
@@ -152,6 +152,37 @@ namespace OpenEphys.Onix1.Design
         [Description("Specifies whether channels are drawn in the colors of the groups assigned to them on the probe, " +
             "and channels in no group in grey, rather than in the palette's.")]
         public bool ShowGroups { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value specifying whether spikes are detected and an expanded channel's are shown beside
+        /// it.
+        /// </summary>
+        [DefaultValue(false)]
+        [Description("Specifies whether spikes are detected and an expanded channel's are shown beside it.")]
+        public bool ShowSpikes { get; set; }
+
+        /// <summary>
+        /// Gets or sets the threshold spikes are detected at on every channel, in microvolts, crossed going down.
+        /// </summary>
+        [DefaultValue(SpikeDetection.DefaultThreshold)]
+        [Description("The threshold spikes are detected at on every channel, in microvolts, crossed going down.")]
+        public double SpikeThreshold { get; set; } = SpikeDetection.DefaultThreshold;
+
+        /// <summary>
+        /// Gets or sets the duration of each spike's waveform, in milliseconds.
+        /// </summary>
+        [DefaultValue(SpikeDetection.WaveformSeconds * 1000)]
+        [Description("The duration of each spike's waveform, in milliseconds.")]
+        public double SpikeWindow { get; set; } = SpikeDetection.WaveformSeconds * 1000;
+
+        /// <summary>
+        /// Gets or sets the time in each spike's waveform before its peak, or before its threshold crossing where the
+        /// peak comes first, in milliseconds.
+        /// </summary>
+        [DefaultValue(SpikeDetection.WaveformDelaySeconds * 1000)]
+        [Description("The time in each spike's waveform before its peak, or before its threshold crossing where the " +
+            "peak comes first, in milliseconds.")]
+        public double SpikePreTrigger { get; set; } = SpikeDetection.WaveformDelaySeconds * 1000;
 
         /// <summary>
         /// Gets or sets the number of seconds of data retained behind the display.

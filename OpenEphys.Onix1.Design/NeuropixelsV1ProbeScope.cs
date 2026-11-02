@@ -51,19 +51,12 @@ namespace OpenEphys.Onix1.Design
             const int spikeRate = NeuropixelsV1.SamplesPerChannelPerSecond;
             const int lfpRate = NeuropixelsV1.SamplesPerChannelPerSecond / NeuropixelsV1.FramesPerRoundRobin;
 
-            IObservable<Mat> ScaleSpike(IObservable<NeuropixelsV1DataFrame> frames) =>
-                new NeuropixelsV1Scale
-                {
-                    Band = NeuropixelsV1EphysBand.Spike,
-                    AmplifierGain = configuration.SpikeAmplifierGain
-                }.Process(frames);
-
-            IObservable<Mat> ScaleLfp(IObservable<NeuropixelsV1DataFrame> frames) =>
-                new NeuropixelsV1Scale
-                {
-                    Band = NeuropixelsV1EphysBand.Lfp,
-                    AmplifierGain = configuration.LfpAmplifierGain
-                }.Process(frames);
+            var spikeGain = configuration.SpikeAmplifierGain;
+            var lfpGain = configuration.LfpAmplifierGain;
+            IObservable<Mat> ScaleSpike(IObservable<Mat> counts) =>
+                counts.Select(data => NeuropixelsV1Scale.ToMicrovolts(data, spikeGain));
+            IObservable<Mat> ScaleLfp(IObservable<Mat> counts) =>
+                counts.Select(data => NeuropixelsV1Scale.ToMicrovolts(data, lfpGain));
 
             static IObservable<Mat> AcCouple(IObservable<Mat> source, int sampleRate) =>
                 new Butterworth
@@ -90,28 +83,20 @@ namespace OpenEphys.Onix1.Design
             // such and a software spike band is carved out of it, as for NeuropixelsV2.
             if (configuration.SpikeFilter)
             {
-                bands.Add(new("Spike", "300 Hz to 9 kHz", spikeRate, ScaleSpike, RawSpike));
+                bands.Add(new("Spike", "300 Hz to 9 kHz", spikeRate, RawSpike, ScaleSpike));
             }
             else
             {
-                bands.Add(new("Wideband", "0.2 Hz to 9 kHz", spikeRate, ScaleSpike, RawSpike,
+                bands.Add(new("Wideband", "0.2 Hz to 9 kHz", spikeRate, RawSpike, ScaleSpike,
                     AcDescription: "1 Hz to 9 kHz",
-                    AcTransform: frames => AcCouple(ScaleSpike(frames), spikeRate)));
-                bands.Add(new("Spike", "300 Hz to 9 kHz", spikeRate,
-                    frames => new Butterworth
-                    {
-                        SampleRate = spikeRate,
-                        Cutoff1 = 300.0,
-                        Cutoff2 = 9000.0,
-                        FilterType = FilterType.BandPass,
-                        FilterOrder = 2
-                    }.Process(ScaleSpike(frames)),
-                    RawSpike));
+                    AcTransform: counts => AcCouple(ScaleSpike(counts), spikeRate)));
+                bands.Add(new("Spike", SpikeDetection.BandDescription, spikeRate, RawSpike,
+                    counts => SpikeDetection.SpikeBand(ScaleSpike(counts), spikeRate)));
             }
 
-            bands.Add(new("LFP", "0.2 Hz to 500 Hz", lfpRate, ScaleLfp, RawLfp,
+            bands.Add(new("LFP", "0.2 Hz to 500 Hz", lfpRate, RawLfp, ScaleLfp,
                 AcDescription: "1 Hz to 500 Hz",
-                AcTransform: frames => AcCouple(ScaleLfp(frames), lfpRate)));
+                AcTransform: counts => AcCouple(ScaleLfp(counts), lfpRate)));
 
             return new(v1.ProbeGroup, bands, Reference, (1 << NeuropixelsV1.AdcBits) - 1);
         }

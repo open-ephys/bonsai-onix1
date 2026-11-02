@@ -13,7 +13,7 @@ namespace OpenEphys.Onix1.Design
         internal PortName Port { get; set; } = PortName.PortA;
         internal double? PortVoltage { get; set; }
         internal bool EditingHardwareAddr { get; set; }
-        internal double SpikeThreshold { get; set; } = -50;
+        internal double SpikeThreshold { get; set; } = SpikeDetection.DefaultThreshold;
         internal float TimePerBankSeconds { get; set; } = 5f;
         internal bool RecordSurveyData { get; set; }
         internal CancellationTokenSource Cts { get; set; }

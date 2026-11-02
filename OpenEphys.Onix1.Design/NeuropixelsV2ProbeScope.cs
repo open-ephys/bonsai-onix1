@@ -47,8 +47,8 @@ namespace OpenEphys.Onix1.Design
             const int lfpDecimation = 12;
             const int lfpRate = sampleRate / lfpDecimation;
 
-            static IObservable<Mat> Scale(IObservable<NeuropixelsV2DataFrame> frames) =>
-                new NeuropixelsV2Scale().Process(frames);
+            static IObservable<Mat> Scale(IObservable<Mat> counts) =>
+                counts.Select(NeuropixelsV2Scale.ToMicrovolts);
 
             static IObservable<Mat> LowPass(IObservable<Mat> source) =>
                 new Butterworth
@@ -63,12 +63,12 @@ namespace OpenEphys.Onix1.Design
             // times cheaper and the history twelve times longer. Content within 500 Hz of a multiple of the new
             // rate folds into the passband, so the low-pass runs twice ahead of keeping every 12th sample, some
             // 48 dB down by 2 kHz; Decimate's own anti-aliasing FIR barely attenuates there.
-            static IObservable<Mat> Lfp(IObservable<NeuropixelsV2DataFrame> frames) =>
+            static IObservable<Mat> Lfp(IObservable<Mat> counts) =>
                 new Decimate
                 {
                     Factor = lfpDecimation,
                     Downsampling = DownsamplingMethod.None
-                }.Process(LowPass(LowPass(Scale(frames))));
+                }.Process(LowPass(LowPass(Scale(counts))));
 
             static IObservable<Mat> AcCouple(IObservable<Mat> source, int rate) =>
                 new Butterworth
@@ -89,22 +89,14 @@ namespace OpenEphys.Onix1.Design
             // NB: each band is declared beside the transforms that produce it so they cannot drift.
             var bands = new ProbeScopeBand<NeuropixelsV2DataFrame>[]
             {
-                new("Wideband", "0.5 Hz to 10 kHz", sampleRate, Scale, Raw,
+                new("Wideband", "0.5 Hz to 10 kHz", sampleRate, Raw, Scale,
                     AcDescription: "1 Hz to 10 kHz",
-                    AcTransform: frames => AcCouple(Scale(frames), sampleRate)),
-                new("Spike", "300 Hz to 9 kHz", sampleRate,
-                    frames => new Butterworth
-                    {
-                        SampleRate = sampleRate,
-                        Cutoff1 = 300.0,
-                        Cutoff2 = 9000.0,
-                        FilterType = FilterType.BandPass,
-                        FilterOrder = 2
-                    }.Process(Scale(frames)),
-                    Raw),
-                new("LFP", "0.5 Hz to 500 Hz", lfpRate, Lfp, Raw,
+                    AcTransform: counts => AcCouple(Scale(counts), sampleRate)),
+                new("Spike", SpikeDetection.BandDescription, sampleRate, Raw,
+                    counts => SpikeDetection.SpikeBand(Scale(counts), sampleRate)),
+                new("LFP", "0.5 Hz to 500 Hz", lfpRate, Raw, Lfp,
                     AcDescription: "1 Hz to 500 Hz",
-                    AcTransform: frames => AcCouple(Lfp(frames), lfpRate)),
+                    AcTransform: counts => AcCouple(Lfp(counts), lfpRate)),
             };
 
             return new(v2.ProbeGroup, bands, Reference, (1 << NeuropixelsV2.AdcBits) - 1);

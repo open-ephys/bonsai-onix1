@@ -4,6 +4,8 @@ using System.Linq;
 using System.Numerics;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
+using System.Runtime.InteropServices;
 using Bonsai;
 using Bonsai.Design;
 using Hexa.NET.ImGui;
@@ -28,6 +30,16 @@ namespace OpenEphys.Onix1.Design
         const float MinProbePaneWidth = 120f;
         const float MinPlotWidth = 200f;
         const float CollapsedPaneWidth = 28f;
+        const float DefaultSpikePaneWidth = 240f;
+        const float MinSpikePaneWidth = 120f;
+
+        // NB: the largest spike amplitude kept, either side of zero, in microvolts, wide enough for the largest units
+        // a probe records.
+        const double SpikeSpan = 1000;
+
+        // NB: the detector's cost is mostly per block, not per sample, and a device can send blocks of a few samples,
+        // so the shown signal is gathered into blocks this long, in seconds, before detection.
+        const double SpikeBlockSeconds = 0.005;
 
         // NB: the colors of the configuration dialogs' enabled contacts, with the plot's selection white as its
         // selected label's box is, and hover amber three quarters of the way to white.
@@ -56,7 +68,25 @@ namespace OpenEphys.Onix1.Design
         string deviceName;
         bool probePaneCollapsed;
         float probePaneWidth = DefaultProbePaneWidth;
+        float spikePaneWidth = DefaultSpikePaneWidth;
         ProbeScopeSource<TFrame> source;
+
+        // NB: made on the band chain's thread when detection first starts, and drawn on the window's, where its GL
+        // objects are made.
+        volatile ImGuiSpikeView spikes;
+        BehaviorSubject<SpikeSettings> spikeSettings;
+
+        sealed record SpikeSettings(bool Show, double Threshold, double Window, double PreTrigger)
+        {
+            public SpikeSettings(ProbeScope<TFrame> node)
+                : this(node.ShowSpikes, node.SpikeThreshold, node.SpikeWindow, node.SpikePreTrigger)
+            {
+            }
+        }
+
+        // NB: spikes found while the plot is paused are dropped, so the pane stays the plot's companion rather than
+        // gathering what the plot no longer shows.
+        volatile bool spikesPaused;
 
         ProbeScope<TFrame> Node => (ProbeScope<TFrame>)Scope;
 
@@ -68,7 +98,7 @@ namespace OpenEphys.Onix1.Design
 
         /// <inheritdoc/>
         protected override IEnumerable<ImGuiKey> Hotkeys =>
-            selector.Hotkeys.Concat(new[] { ImGuiKey.P, ImGuiKey.K, ImGuiKey.G }).Concat(GroupKeys);
+            selector.Hotkeys.Concat(new[] { ImGuiKey.P, ImGuiKey.K, ImGuiKey.G, ImGuiKey.U }).Concat(GroupKeys);
 
         /// <inheritdoc/>
         protected override string FaultHint => "Close this window, correct the ProbeScope's DeviceName, and open it again.";
@@ -89,9 +119,11 @@ namespace OpenEphys.Onix1.Design
             columns = new[]
             {
                 bands.BandColumn, bands.FiltersColumn, bands.OrderColumn, standard.Timebase, standard.ChannelHeight,
-                standard.Range, standard.Palette, new ControlStripColumn("Groups", DrawGroups), standard.Display,
+                standard.Range, standard.Palette, new ControlStripColumn("Groups", DrawGroups),
+                new ControlStripColumn("Spikes (uV)", DrawSpikes), standard.Display,
             };
             scheduler = new EventLoopScheduler();
+            spikeSettings = new(new SpikeSettings(node));
 
             selector.FillColor = ContactColor;
             selector.Blocked = contact => ChannelOf(contact) < 0;
@@ -226,6 +258,109 @@ namespace OpenEphys.Onix1.Design
         static float Luminance(uint color) =>
             (0.2126f * (color & 0xFF) + 0.7152f * (color >> 8 & 0xFF) + 0.0722f * (color >> 16 & 0xFF)) / 255f;
 
+        void DrawSpikes(float width)
+        {
+            var node = Node;
+            var show = node.ShowSpikes;
+            if (ImGui.Checkbox("##showSpikes", ref show))
+                node.ShowSpikes = show;
+            ImGuiWidgets.Tooltip("Detect spikes on every channel, in the signal shown, and show an expanded channel's " +
+                "beside it, each waveform drawn over all those before it.\nKey: U");
+
+            var style = ImGui.GetStyle();
+            const string MoreLabel = "...";
+            var moreWidth = ImGui.CalcTextSize(MoreLabel).X + 2 * style.FramePadding.X;
+            ImGui.SameLine(0, style.ItemInnerSpacing.X);
+            var threshold = node.SpikeThreshold;
+            ImGui.SetNextItemWidth(Math.Max(1, width - ImGui.GetFrameHeight() - moreWidth - 2 * style.ItemInnerSpacing.X));
+            ImGui.InputDouble("##spikeThreshold", ref threshold, "%.0f");
+            if (ImGui.IsItemDeactivatedAfterEdit())
+                node.SpikeThreshold = threshold;
+            ImGuiWidgets.Tooltip("The threshold spikes are detected at on every channel, crossed going down. A new one " +
+                "starts the spikes over, applied once you leave the field.");
+
+            const string SettingsPopup = "##spikeSettings";
+            ImGui.SameLine(0, style.ItemInnerSpacing.X);
+            if (ImGui.Button(MoreLabel))
+                ImGui.OpenPopup(SettingsPopup);
+            ImGuiWidgets.Tooltip($"{node.SpikeWindow:g} ms window, {node.SpikePreTrigger:g} ms pre-trigger. Click to " +
+                "change them.");
+
+            if (ImGui.BeginPopup(SettingsPopup))
+            {
+                const string WindowLabel = "Window (ms)";
+                const string PreTriggerLabel = "Pre-trigger (ms)";
+                // NB: SameLine's offset counts from the popup's edge, not from inside its padding.
+                var fieldX = style.WindowPadding.X + style.ItemSpacing.X
+                    + Math.Max(ImGui.CalcTextSize(WindowLabel).X, ImGui.CalcTextSize(PreTriggerLabel).X);
+                var fieldWidth = ImGui.CalcTextSize("00.000").X + 2 * style.FramePadding.X;
+
+                ImGui.AlignTextToFramePadding();
+                ImGui.Text(WindowLabel);
+                ImGui.SameLine(fieldX);
+                var window = node.SpikeWindow;
+                ImGui.SetNextItemWidth(fieldWidth);
+                ImGui.InputDouble("##spikeWindow", ref window, "%g");
+                if (ImGui.IsItemDeactivatedAfterEdit() && window > 0)
+                {
+                    node.SpikeWindow = window;
+                    node.SpikePreTrigger = Math.Min(node.SpikePreTrigger, window);
+                }
+                ImGuiWidgets.Tooltip("The duration of each spike's waveform. A new one starts the spikes over, applied " +
+                    "once you leave the field.");
+
+                ImGui.AlignTextToFramePadding();
+                ImGui.Text(PreTriggerLabel);
+                ImGui.SameLine(fieldX);
+                var preTrigger = node.SpikePreTrigger;
+                ImGui.SetNextItemWidth(fieldWidth);
+                ImGui.InputDouble("##spikePreTrigger", ref preTrigger, "%g");
+                if (ImGui.IsItemDeactivatedAfterEdit())
+                    node.SpikePreTrigger = Math.Max(0, Math.Min(preTrigger, node.SpikeWindow));
+                ImGuiWidgets.Tooltip("The time in each spike's waveform before its peak, or before its threshold " +
+                    "crossing where the peak comes first. A new one starts the spikes over, applied once you leave " +
+                    "the field.");
+
+                ImGui.EndPopup();
+            }
+        }
+
+        // NB: a header row as tall as the plot's time labels, so the spikes start level with the plot.
+        void DrawSpikePane(float width, float height)
+        {
+            ImGui.BeginChild("##spikePane", new Vector2(width, height),
+                ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
+
+            var row = ExpandedRow;
+            var channel = row?.Channel ?? -1;
+            ImGui.AlignTextToFramePadding();
+            ImGui.Text(channel >= 0 ? $"Spikes on {channel}" : "Spikes");
+            const string ClearLabel = "Clear";
+            var clearWidth = ImGui.CalcTextSize(ClearLabel).X + ImGui.GetStyle().FramePadding.X * 2;
+            ImGui.SameLine();
+            ImGui.SetCursorPosX(ImGui.GetCursorPosX() + Math.Max(0, ImGui.GetContentRegionAvail().X - clearWidth));
+            if (ImGui.Button(ClearLabel))
+                spikes?.Clear();
+            ImGuiWidgets.Tooltip("Start every channel's spikes over.");
+
+            var view = spikes;
+            if (view is null)
+                ImGui.TextDisabled("Waiting for the probe.");
+            else if (row is not { } expanded)
+                view.Flush();
+            else
+            {
+                // NB: on the expanded row's own lines, so a spike stands as tall as its trace.
+                ImGui.SetCursorScreenPos(new Vector2(ImGui.GetCursorScreenPos().X, expanded.Top));
+                var size = new Vector2(ImGui.GetContentRegionAvail().X, expanded.Height);
+                var (center, range) = Amplitude;
+                if (view.Draw(channel, size, ChannelColor(channel), center, range, Node.SpikeThreshold) is double dropped)
+                    Node.SpikeThreshold = Math.Round(dropped);
+            }
+
+            ImGui.EndChild();
+        }
+
         void DrawGroups(float width)
         {
             var node = Node;
@@ -337,6 +472,41 @@ namespace OpenEphys.Onix1.Design
                 );
         }
 
+        // NB: from what the plot is shown, in the device's channel order, straight into the spike view, which queues
+        // them for the window's thread. Nothing goes on to the display chain. Starting over, for a new band,
+        // reference or spike setting, empties the view, since what it holds was found in another signal.
+        IObservable<object> DetectSpikes(ProbeScopeSource<TFrame> probe, IObservable<Mat> signal, int sampleRate,
+            SpikeSettings settings) => Observable.Defer(() =>
+        {
+            if (probe.ProbeGroup?.ChannelMap is not { Count: > 0 } map)
+                return Observable.Empty<object>();
+
+            var (length, delay) = SpikeDetection.WaveformSamples(sampleRate, settings.Window / 1000, settings.PreTrigger / 1000);
+            var view = spikes;
+            if (view is null)
+                spikes = view = new ImGuiSpikeView(map.Keys.Max() + 1, length, delay, sampleRate, SpikeSpan) { Unit = Unit };
+            else
+                view.Reshape(length, delay, sampleRate);
+
+            var samples = new float[length];
+            var blocks = new Bonsai.Dsp.Buffer { Count = Math.Max(length, (int)Math.Round(SpikeBlockSeconds * sampleRate)) }
+                .Process(signal);
+            return SpikeDetection.Detect(blocks, length, delay, new[] { settings.Threshold },
+                    Bonsai.Dsp.SpikeWaveformRefinement.AlignPeaks)
+                .Do(collection =>
+                {
+                    if (spikesPaused)
+                        return;
+                    foreach (var spike in collection)
+                    {
+                        Marshal.Copy(spike.Waveform.Data, samples, 0, samples.Length);
+                        view.Add(spike.ChannelIndex, samples);
+                    }
+                })
+                .IgnoreElements()
+                .Select(_ => (object)null);
+        });
+
         ProbeScopeSource<TFrame> ResolveSource(ProbeScope<TFrame> node)
         {
             try
@@ -358,19 +528,26 @@ namespace OpenEphys.Onix1.Design
             var order = selection.Order == ChannelOrder.Channel ? null
                 : DepthOrder(probe.ProbeGroup, placed: selection.Order == ChannelOrder.Physical, selection.LanePerShank);
             var rowChannels = order?.Channels;
-            var clipping = frames
-                .Select(frame => ClippedRows(band.Raw(frame), probe.AdcMaximum))
+            var counts = frames.Select(band.Source);
+            var clipping = counts
+                .Select(data => ClippedRows(data, probe.AdcMaximum))
                 .Where(channels => channels is not null)
                 .Select(channels => (object)new ProbeScopeClipping(Reorder(channels, rowChannels)));
 
-            var output = selection.AcCoupled && band.AcTransform is not null ? band.AcTransform(frames) : band.Transform(frames);
+            var output = selection.AcCoupled && band.AcTransform is not null ? band.AcTransform(counts) : band.Transform(counts);
             if (selection.CommonMedianReference && probe.Reference is not null)
                 output = probe.Reference(output);
 
             // NB: reordered last, since referencing groups the channels by their converter in the device's order.
-            return Observable.Return<object>(new ProbeScopeOrder(order)).Concat(output
-                .Select(data => (object)new ProbeScopeSample(Reorder(data, rowChannels), band.SampleRate))
-                .Merge(clipping));
+            return output.Publish(signal => Observable.Return<object>(new ProbeScopeOrder(order))
+                .Concat(signal
+                    .Select(data => (object)new ProbeScopeSample(Reorder(data, rowChannels), band.SampleRate))
+                    .Merge(clipping))
+                .Merge(spikeSettings
+                    .Select(settings => settings.Show
+                        ? DetectSpikes(probe, signal, band.SampleRate, settings)
+                        : Observable.Empty<object>())
+                    .Switch()));
         }
 
         /// <summary>
@@ -506,17 +683,16 @@ namespace OpenEphys.Onix1.Design
             if (rowChannels is null || data.Rows != rowChannels.Length)
                 return data;
 
+            // NB: data is not disposed, since spike detection shares it and holds it past this block.
             var reordered = new Mat(data.Size, data.Depth, data.Channels);
-            using (data)
+
+            // NB: by pointer, since GetRow allocates a native header per row on every block.
+            var rowBytes = reordered.Step;
+            for (int row = 0; row < rowChannels.Length; row++)
             {
-                // NB: by pointer, since GetRow allocates a native header per row on every block.
-                var rowBytes = reordered.Step;
-                for (int row = 0; row < rowChannels.Length; row++)
-                {
-                    var from = (byte*)data.Data + (long)rowChannels[row] * data.Step;
-                    var to = (byte*)reordered.Data + (long)row * reordered.Step;
-                    Buffer.MemoryCopy(from, to, rowBytes, rowBytes);
-                }
+                var from = (byte*)data.Data + (long)rowChannels[row] * data.Step;
+                var to = (byte*)reordered.Data + (long)row * reordered.Step;
+                Buffer.MemoryCopy(from, to, rowBytes, rowBytes);
             }
 
             return reordered;
@@ -600,8 +776,20 @@ namespace OpenEphys.Onix1.Design
                 probePaneCollapsed = !probePaneCollapsed;
             if (!ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.G, false))
                 Node.ShowGroups = !Node.ShowGroups;
+            if (!ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.U, false))
+                Node.ShowSpikes = !Node.ShowSpikes;
             AnswerGroupKeys();
             ChannelGroup = Node.ShowGroups ? traceGroup : null;
+
+            // NB: any new spike setting, or detection turned off, starts the spikes over, since what has accumulated
+            // was found under the old ones.
+            var spikeRequest = new SpikeSettings(Node);
+            if (spikeRequest != spikeSettings.Value)
+            {
+                spikes?.Clear();
+                spikeSettings.OnNext(spikeRequest);
+            }
+            spikesPaused = Paused;
 
             // NB: only a new selection scrolls the probe, so a pan away from it holds until the next one.
             var selected = SelectedChannel;
@@ -634,9 +822,28 @@ namespace OpenEphys.Onix1.Design
                 DrawPaneSplitter(gap, availY);
             }
 
+            // NB: only beside an expanded channel, the one view whose rows the spikes can share. Known from the frame
+            // before, so the pane follows an expand or collapse a frame late.
+            var spikePane = !maximized && Node.ShowSpikes && ExpandedRow is not null;
+            if (spikePane)
+            {
+                spikePaneWidth = Math.Max(MinSpikePaneWidth, Math.Min(spikePaneWidth, waveWidth - gap - MinPlotWidth));
+                waveWidth -= spikePaneWidth + gap;
+            }
+
             // NB: a probe not drawn this frame keeps the contact last hovered, which the pointer has since left.
             HoveredChannel = !maximized && !probePaneCollapsed ? ChannelOf(selector.HoveredContactIndex) : -1;
             DrawPlot(new Vector2(waveWidth, availY));
+            if (spikePane)
+            {
+                ImGui.SameLine(0, 0);
+                Splitter("##spikeSplitter", new Vector2(gap, availY), ref spikePaneWidth, DefaultSpikePaneWidth, -1,
+                    "Drag to resize the spike pane, or double-click to restore its width.");
+                ImGui.SameLine(0, 0);
+                DrawSpikePane(spikePaneWidth, availY);
+            }
+            else
+                spikes?.Flush();
             ImGui.PopStyleVar();
 
             if (!maximized)
@@ -703,30 +910,38 @@ namespace OpenEphys.Onix1.Design
                 return;
             }
 
-            ImGui.InvisibleButton("##paneSplitter", new Vector2(width, height));
+            Splitter("##paneSplitter", new Vector2(width, height), ref probePaneWidth, DefaultProbePaneWidth, 1,
+                "Drag to resize the probe pane, or double-click to restore its width.");
+            ImGui.SameLine(0, 0);
+        }
+
+        // NB: side is 1 for a pane left of the splitter, which a drag to the right widens, and -1 for one right of it.
+        static void Splitter(string id, Vector2 size, ref float paneWidth, float defaultWidth, int side, string tooltip)
+        {
+            ImGui.InvisibleButton(id, size);
             var hovered = ImGui.IsItemHovered();
             var active = ImGui.IsItemActive();
             if (active)
-                probePaneWidth += ImGui.GetIO().MouseDelta.X;
+                paneWidth += side * ImGui.GetIO().MouseDelta.X;
             if (hovered && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
-                probePaneWidth = DefaultProbePaneWidth;
+                paneWidth = defaultWidth;
             if (hovered || active)
                 ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeEw);
-            ImGuiWidgets.Tooltip("Drag to resize the probe pane, or double-click to restore its width.");
+            ImGuiWidgets.Tooltip(tooltip);
 
             var min = ImGui.GetItemRectMin();
             var max = ImGui.GetItemRectMax();
             var x = (min.X + max.X) / 2;
             var color = ImGui.GetColorU32(active ? ImGuiCol.SeparatorActive : hovered ? ImGuiCol.SeparatorHovered : ImGuiCol.Separator);
             ImGui.GetWindowDrawList().AddLine(new Vector2(x, min.Y), new Vector2(x, max.Y), color, active || hovered ? 2f : 1f);
-
-            ImGui.SameLine(0, 0);
         }
 
         /// <inheritdoc/>
         public override void Unload()
         {
             selector.SelectionChanged -= SelectContacts;
+            spikeSettings?.Dispose();
+            spikes = null;
             scheduler?.Dispose();
             scheduler = null;
             bands = null;
