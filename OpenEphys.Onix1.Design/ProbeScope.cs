@@ -78,9 +78,8 @@ namespace OpenEphys.Onix1.Design
     /// viewer's.
     /// </summary>
     /// <remarks>
-    /// Each concrete scope supplies how to read the device name off the upstream data operator and how to turn its
-    /// <see cref="DeviceInfo"/> into geometry and bands. The frames pass through unchanged, and while the scope's
-    /// window is open the editor hands it a copy of them, as it does any visualizer.
+    /// The frames pass through unchanged, and while the scope's window is open the editor hands it a copy of them,
+    /// as it does any visualizer.
     /// </remarks>
     /// <typeparam name="TFrame">The data frame type the scope displays.</typeparam>
     public abstract class ProbeScope<TFrame> : WaveformScopeBuilder<TFrame>
@@ -99,8 +98,7 @@ namespace OpenEphys.Onix1.Design
         /// Gets or sets the name of the band displayed.
         /// </summary>
         /// <remarks>
-        /// By name rather than position, since which bands a probe offers depends on its configuration. A name the
-        /// probe does not offer shows its first band.
+        /// By name rather than position, since which bands a probe offers depends on its configuration.
         /// </remarks>
         [Description("The name of the band displayed. Left empty, or naming a band the probe does not offer, the " +
             "first band is shown.")]
@@ -218,10 +216,6 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// Gets or sets the number of seconds of data retained behind the display.
         /// </summary>
-        /// <remarks>
-        /// While the display is paused, the view can be moved back through this much of what has already been
-        /// shown and redrawn at any timebase.
-        /// </remarks>
         [DefaultValue(10.0)]
         [Description("The number of seconds of data retained behind the display, which a paused view can " +
             "be moved back through. Longer histories cost proportionally more memory.")]

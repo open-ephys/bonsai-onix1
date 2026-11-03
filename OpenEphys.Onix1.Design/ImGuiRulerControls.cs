@@ -5,8 +5,6 @@ namespace OpenEphys.Onix1.Design
 {
     static class ImGuiRulerControls
     {
-        // NB: lit while a ruler waits to be placed, since R arms one with nothing else on screen to say so until
-        // the pointer is over the view.
         public static void DrawToggle(ImGuiProbeSelector selector, string label)
         {
             var placing = selector.PlacingRuler;

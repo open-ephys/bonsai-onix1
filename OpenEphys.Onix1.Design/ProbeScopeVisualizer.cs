@@ -19,10 +19,6 @@ namespace OpenEphys.Onix1.Design
     /// Provides a type visualizer that shows a <see cref="ProbeScope{TFrame}"/>'s data as a probe schematic beside a
     /// live multi-channel waveform viewer.
     /// </summary>
-    /// <remarks>
-    /// The device is resolved once the first frame arrives, since data flowing proves the configuration operator has
-    /// registered it.
-    /// </remarks>
     /// <typeparam name="TFrame">The data frame type the scope displays.</typeparam>
     public class ProbeScopeVisualizer<TFrame> : WaveformScopeVisualizerBase
     {
@@ -32,28 +28,21 @@ namespace OpenEphys.Onix1.Design
         const float DefaultEventPaneWidth = 240f;
         const float MinEventPaneWidth = 120f;
 
-        // NB: the largest waveform amplitude kept, either side of zero, in microvolts, wide enough for the largest
-        // units a probe records.
+        // The largest waveform amplitude kept, either side of zero, in microvolts.
         const double EventSpan = 1000;
 
         // NB: the detector's cost is mostly per block, not per sample, and a device can send blocks of a few samples,
         // so the shown signal is gathered into blocks this long, in seconds, before detection.
         const double DetectionBlockSeconds = 0.005;
 
-        // NB: the colors of the configuration dialogs' enabled contacts, with the plot's selection white as its
-        // selected label's box is, and hover amber three quarters of the way to white.
         static readonly uint ColorContactEnabled = ImGuiPalette.AmberGold;
         static readonly uint ColorContactSelected = ImGuiPalette.White;
         static readonly uint ColorContactHovered = 0xFFC2EFFFu;
 
-        // NB: cyan, a color Plasma never reaches, for the probe's selection while contacts show the event rate.
         static readonly uint ColorRateSelection = 0xFFFFFF00u;
 
-        // NB: group n's key is GroupKeys[n - 1].
         static readonly ImGuiKey[] GroupKeys = Enumerable.Range(1, 9).Select(n => ImGuiKey.Key0 + n).ToArray();
 
-        // NB: no legend, since the probe was configured in the configuration dialog, which explains its colors, and
-        // the group swatches name the groups'.
         readonly ImGuiProbeSelector selector = new(zoomWindowFraction: 1f) { ShowGrid = false };
         Dictionary<int, int> groupOfChannel = new();
         ChannelSettings[] groupedFrom;
@@ -126,7 +115,6 @@ namespace OpenEphys.Onix1.Design
 
             bands = new ImGuiProbeScopeBandColumns<TFrame>(node, () => Paused);
             var standard = StandardColumns;
-            // NB: Threshold is a checkbox, a threshold of four characters, its settings button and Clear.
             var display = standard.Display;
             columns = new[]
             {
@@ -147,9 +135,6 @@ namespace OpenEphys.Onix1.Design
             traceGroup = TraceGroup;
         }
 
-        // NB: while groups are shown, a contact is the color of its channel's trace. On the event rate's scale every
-        // contact shows its rate, the selected and hovered ones outlined instead, since a selection's white fill
-        // would read as the highest rate.
         uint ContactColor(int contact) =>
             rateColored ? RateColor(ChannelOf(contact))
             : contact == selectedContact ? ColorContactSelected
@@ -170,8 +155,6 @@ namespace OpenEphys.Onix1.Design
             return Plasma.DefaultMap[(int)(t * 255f)];
         }
 
-        // NB: shows the coloring in effect, which each choice brings about by turning on what it needs, so turning
-        // groups or detection off elsewhere moves it on.
         void DrawContactColoring()
         {
             var node = Node;
@@ -200,9 +183,6 @@ namespace OpenEphys.Onix1.Design
                 "threshold crossings if they are not already.\nKey: U turns detection on and off");
         }
 
-        // NB: the contact under the pointer, or else the one selected on the probe, or else the plot's selected
-        // channel's, or else only the point under the pointer. What does not apply is left out rather than shown
-        // empty.
         void DrawContactInfo()
         {
             var contact = selector.HoveredContactIndex;
@@ -251,8 +231,6 @@ namespace OpenEphys.Onix1.Design
             return sole;
         }
 
-        // NB: as the event view prints a rate, since one decays every frame between events and a finer one would
-        // flicker in its last digit.
         static string TwoFigures(double value)
         {
             if (value < 0.001)
@@ -261,8 +239,6 @@ namespace OpenEphys.Onix1.Design
             return Math.Round(value, Math.Min(decimals, 4)).ToString(System.Globalization.CultureInfo.CurrentCulture);
         }
 
-        // NB: the group swatches or the rate's scale, whichever colors the contacts, in a row as tall as the taller
-        // of them, so switching leaves the probe below where it was.
         void DrawColorKey()
         {
             var style = ImGui.GetStyle();
@@ -296,7 +272,6 @@ namespace OpenEphys.Onix1.Design
             ImGui.InputDouble("##rateScaleTop", ref top, "%g");
             if (ImGui.IsItemDeactivatedAfterEdit() && top > 0)
             {
-                // NB: a brightest end left at the scale's top stays there.
                 if (rateHigh >= scale)
                     rateHigh = (float)top;
                 node.EventRateScale = top;
@@ -311,8 +286,6 @@ namespace OpenEphys.Onix1.Design
 
         int GroupOf(int channel) => Groups().TryGetValue(channel, out var group) ? group : 0;
 
-        // NB: the node's groups by channel, worked out again only when its channel settings are replaced, since they
-        // are read for every row and contact every frame.
         Dictionary<int, int> Groups()
         {
             var channels = Node.Channels;
@@ -330,10 +303,8 @@ namespace OpenEphys.Onix1.Design
             return groupOfChannel;
         }
 
-        // NB: the channels given join group, leaving whatever group they were in, and with replace its other members
-        // leave it, or with group 0 they leave their groups. A new array rather than the entries changed in place,
-        // since the plot works its masks out again only when the array is replaced. An entry left with nothing to
-        // say is dropped.
+        // NB: a new array rather than the entries changed in place, since the plot works its masks out again only
+        // when the array is replaced.
         void AssignGroup(int[] channels, int group, bool replace)
         {
             var assigned = new HashSet<int>(channels);
@@ -367,7 +338,6 @@ namespace OpenEphys.Onix1.Design
                 ZoomTo(channels);
         }
 
-        // NB: the probe's selection becomes the group with replace, or joins it without.
         void GroupSelection(int group, bool replace)
         {
             var channels = SelectedContactChannels();
@@ -377,7 +347,6 @@ namespace OpenEphys.Onix1.Design
             Node.ShowGroups = true;
         }
 
-        // NB: the buttons the group keys press, each in its group's color, faint while the group is empty.
         void DrawGroupSwatches()
         {
             var spacing = ImGui.GetStyle().ItemInnerSpacing.X;
@@ -516,7 +485,6 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
-        // NB: a header row as tall as the plot's time labels, so the waveforms start level with the plot.
         void DrawEventPane(float width, float height)
         {
             ImGui.BeginChild("##eventPane", new Vector2(width, height),
@@ -541,7 +509,6 @@ namespace OpenEphys.Onix1.Design
                 view.Flush();
             else
             {
-                // NB: on the expanded row's own lines, so a waveform stands as tall as its trace.
                 ImGui.SetCursorScreenPos(new Vector2(ImGui.GetCursorScreenPos().X, expanded.Top));
                 var size = new Vector2(ImGui.GetContentRegionAvail().X, expanded.Height);
                 var (center, range) = Amplitude;
@@ -576,8 +543,8 @@ namespace OpenEphys.Onix1.Design
             ImGui.PopStyleVar();
         }
 
-        // NB: in the window's left padding, so a hidden probe pane's only trace takes no width from the plot. The
-        // padding lies partly outside the window's clip rect, so the handle sets its own.
+        // NB: the window's left padding, where the handle sits, lies partly outside the window's clip rect, so the
+        // handle sets its own.
         void DrawProbeHandle(float height)
         {
             const float BarWidth = 4;
@@ -595,7 +562,6 @@ namespace OpenEphys.Onix1.Design
                 : ImGuiCol.ScrollbarGrab);
             ImGuiWidgets.Tooltip("Show the probe.\nKey: P");
 
-            // NB: level with the plot's frame, below its header row.
             var draw = ImGui.GetWindowDrawList();
             var top = min.Y + ImGui.GetFrameHeight();
             var x = MathF.Floor((min.X + max.X - BarWidth) / 2);
@@ -613,8 +579,6 @@ namespace OpenEphys.Onix1.Design
             ImGui.SetCursorScreenPos(cursor);
         }
 
-        // NB: anywhere in the window, since no other keys are digits, though they act on the probe's selection. A
-        // group's number pressed twice in quick succession fits it, as F would after the first.
         void AnswerGroupKeys()
         {
             var io = ImGui.GetIO();
@@ -653,8 +617,6 @@ namespace OpenEphys.Onix1.Design
                 channelOfContact[entry.Value] = entry.Key;
         }
 
-        // NB: one contact selects its channel and brings it into view. Several are only fitted when asked, so the
-        // selection stays what Fit acts on rather than a zoom applied at once.
         void SelectContacts(object sender, EventArgs e)
         {
             var channels = SelectedContactChannels();
@@ -667,7 +629,6 @@ namespace OpenEphys.Onix1.Design
                 SelectedChannel = -1;
         }
 
-        // NB: a contact no channel records has nothing to show.
         int[] SelectedContactChannels() => Enumerable.Range(0, selector.Contacts.Count)
             .Where(contact => selector.Contacts[contact].Selected)
             .Select(ChannelOf)
@@ -714,9 +675,7 @@ namespace OpenEphys.Onix1.Design
                 );
         }
 
-        // NB: from what the plot is shown, in the device's channel order, straight into the event view, which queues
-        // them for the window's thread. Nothing goes on to the display chain. Starting over, for a new band,
-        // reference or crossing setting, empties the view, since what it holds was found in another signal.
+        // NB: in the device's channel order, into the event view, which queues them for the window's thread.
         IObservable<object> DetectCrossings(ProbeScopeSource<TFrame> probe, IObservable<Mat> signal, int sampleRate,
             CrossingSettings settings) => Observable.Defer(() =>
         {
@@ -829,9 +788,8 @@ namespace OpenEphys.Onix1.Design
         /// The depths of rows, with rows sharing a depth in a lane spread across the pitch below it in their order.
         /// </summary>
         /// <remarks>
-        /// So that each has a row of its own where many electrodes share a depth, as on a high density probe, while
-        /// depth stays proportional down the plot. The pitch, the smallest step between depths, and the most rows
-        /// sharing one are the probe's, so every lane keeps one scale.
+        /// The pitch, the smallest step between depths, and the most rows sharing one are the probe's, so every lane
+        /// keeps one scale.
         /// </remarks>
         /// <param name="depths">Each row's depth, never less than the one before it in its lane.</param>
         /// <param name="lanes">Each row's lane, a lane's rows together, or null for one lane.</param>
@@ -871,12 +829,6 @@ namespace OpenEphys.Onix1.Design
         /// Positions, in rows, that space the lane with the most rows evenly and put every other lane's rows level
         /// with the rows of that lane at the same depth.
         /// </summary>
-        /// <remarks>
-        /// A depth between two of that lane's depths takes a position between theirs, and one beyond its ends a
-        /// position at its average spacing. Positions are whole rows, so that the rows stay a row apart, and a row
-        /// that would land on or above the one before it in its lane goes on the next row down, as electrodes
-        /// sharing a depth do in that lane.
-        /// </remarks>
         /// <param name="depths">Each row's depth, never less than the one before it in its lane.</param>
         /// <param name="lanes">Each row's lane, a lane's rows together.</param>
         static float[] LevelRows(float[] depths, int[] lanes)
@@ -919,8 +871,6 @@ namespace OpenEphys.Onix1.Design
             return positions;
         }
 
-        // NB: a block whose row count the channel map does not match is shown in the device's order, under the
-        // labels of the order asked for.
         static unsafe Mat Reorder(Mat data, int[] rowChannels)
         {
             if (rowChannels is null || data.Rows != rowChannels.Length)
@@ -952,8 +902,7 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         /// <remarks>
         /// On the raw counts, before scaling and any filter, which smear a clipped stretch away from the limits and
-        /// move its baseline. Null when nothing clipped, so a clean recording sends the display nothing. The counts
-        /// are unsigned 16-bit, as every band's source is.
+        /// move its baseline. The counts are unsigned 16-bit, as every band's source is.
         /// </remarks>
         internal static unsafe bool[] ClippedRows(Mat raw, double maximum)
         {
@@ -1009,17 +958,12 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <inheritdoc/>
-        /// <remarks>
-        /// The probe pane sits left of the plot and the event pane right of it. The probe pane is left out with the
-        /// strip while maximized, and the event pane, which shares the plot's rows, is kept.
-        /// </remarks>
         protected override void DrawFrame()
         {
             if (!Faulted)
                 bands.RequestSelection();
             bands.AnswerKeys();
 
-            // NB: not while maximized, where the pane is not drawn and its state would change out of sight.
             var maximized = Maximized;
             if (!maximized && !ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.P, false))
                 Node.ShowProbe = !Node.ShowProbe;
@@ -1030,8 +974,6 @@ namespace OpenEphys.Onix1.Design
             AnswerGroupKeys();
             ChannelGroup = Node.ShowGroups ? traceGroup : null;
 
-            // NB: any new crossing setting, or detection turned off, starts the events over, since what has
-            // accumulated was found under the old ones.
             var crossingRequest = new CrossingSettings(Node);
             if (crossingRequest != crossingSettings.Value)
             {
@@ -1045,12 +987,9 @@ namespace OpenEphys.Onix1.Design
                     eventView.RateTimeConstant = Node.CrossingRateTimeConstant;
             }
 
-            // NB: only while crossings are detected, since otherwise there is no rate to show and the contacts are
-            // colored as groups color them.
             rateColored = Node.ColorContactsByEventRate && Node.ShowThresholdCrossings && events is not null;
             selector.SelectedOutlineColor = rateColored ? ColorRateSelection : ImGuiProbeSelector.SelectionBorderColor;
 
-            // NB: only a new selection scrolls the probe, so a pan away from it holds until the next one.
             var selected = SelectedChannel;
             selectedContact = ContactOf(selected);
             hoveredContact = ContactOf(HoveredChannel);
@@ -1062,8 +1001,6 @@ namespace OpenEphys.Onix1.Design
             var availY = ImGui.GetContentRegionAvail().Y - (maximized ? 0 : ControlStripHeight);
             var gap = ImGui.GetStyle().ItemSpacing.X;
 
-            // NB: no vertical padding on either pane, so both start at their own top edge and the
-            // two frames land on the same lines.
             var panePadding = ImGui.GetStyle().WindowPadding;
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(panePadding.X, 0));
 
@@ -1074,8 +1011,6 @@ namespace OpenEphys.Onix1.Design
                 DrawProbeHandle(availY);
             if (probePane)
             {
-                // NB: clamped every frame rather than only while dragged, so shrinking the window can't leave the
-                // plot narrower than its minimum.
                 probePaneWidth = Math.Max(MinProbePaneWidth, Math.Min(probePaneWidth, availX - gap - MinPlotWidth));
                 waveWidth = Math.Max(MinPlotWidth, availX - probePaneWidth - gap);
 
@@ -1086,8 +1021,7 @@ namespace OpenEphys.Onix1.Design
                 ImGui.SameLine(0, 0);
             }
 
-            // NB: only beside an expanded channel, the one view whose rows the waveforms can share. Known from the
-            // frame before, so the pane follows an expand or collapse a frame late.
+            // NB: ExpandedRow is known from the frame before, so the pane follows an expand or collapse a frame late.
             var eventPane = Node.ShowThresholdCrossings && ExpandedRow is not null;
             if (eventPane)
             {
@@ -1182,7 +1116,6 @@ namespace OpenEphys.Onix1.Design
                 ImGuiChildFlags.None, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
             selector.DrawZoomedView(selectionEnabled: true);
 
-            // NB: not while placing a ruler, whose clicks are its points.
             if (!selector.PlacingRuler && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left) &&
                 ChannelOf(selector.HoveredContactIndex) >= 0)
                 ToggleExpanded();
@@ -1190,8 +1123,7 @@ namespace OpenEphys.Onix1.Design
             DrawContactInfo();
             ImGui.EndChild();
 
-            // NB: the plot's frame color and weight, in filled rects on whole pixels as it draws them, since AddRect
-            // anti-aliases a 1 px line across two.
+            // NB: filled rects on whole pixels, since AddRect anti-aliases a 1 px line across two.
             var (l, t, r, b) = (MathF.Floor(min.X), MathF.Floor(min.Y), MathF.Floor(max.X), MathF.Floor(max.Y));
             const float weight = 1;
             var color = ImGuiPalette.Grey0x88;
@@ -1203,7 +1135,7 @@ namespace OpenEphys.Onix1.Design
             ImGui.EndChild();
         }
 
-        // NB: side is 1 for a pane left of the splitter, which a drag to the right widens, and -1 for one right of it.
+        // side is 1 for a pane left of the splitter, which a drag to the right widens, and -1 for one right of it.
         static void Splitter(string id, Vector2 size, ref float paneWidth, float defaultWidth, int side, string tooltip)
         {
             ImGui.InvisibleButton(id, size);
@@ -1217,7 +1149,6 @@ namespace OpenEphys.Onix1.Design
                 ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeEw);
             ImGuiWidgets.Tooltip(tooltip);
 
-            // NB: drawn only while hovered or dragged, so at rest the panes are set apart by the gap alone.
             if (!hovered && !active)
                 return;
             var min = ImGui.GetItemRectMin();

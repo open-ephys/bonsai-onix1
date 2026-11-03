@@ -80,11 +80,9 @@ namespace OpenEphys.Onix1.Design
             IObservable<Mat> Reference(IObservable<Mat> source) =>
                 source.Select(data => Neuropixels.ApplyCmrF32(data, adcGroups));
 
-            // NB: each band is declared beside the transforms that produce it so they cannot drift.
             var bands = new List<ProbeScopeBand<NeuropixelsV1DataFrame>>();
 
-            // NB: with the hardware spike filter off, the spike stream is wideband, so it is offered as
-            // such and a software spike band is carved out of it, as for NeuropixelsV2.
+            // NB: with the hardware spike filter off, the spike stream is wideband.
             if (configuration.SpikeFilter)
             {
                 bands.Add(new("Spike", "300 Hz to 9 kHz", spikeRate, RawSpike, ScaleSpike));

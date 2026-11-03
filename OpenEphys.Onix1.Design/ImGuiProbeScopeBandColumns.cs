@@ -18,11 +18,6 @@ namespace OpenEphys.Onix1.Design
     /// The columns a <see cref="ProbeScopeVisualizer{TFrame}"/> adds to the control strip, for the band the probe
     /// is being viewed in, the filters applied to it and the order of its rows, and the selection they make.
     /// </summary>
-    /// <remarks>
-    /// Referencing and AC coupling sit here beside the band because each is a filter: referencing a spatial
-    /// high-pass across the ADC group, AC coupling a temporal one on each channel. Turning either on defines a
-    /// different signal exactly as choosing another band does, and all three rebind the chain.
-    /// </remarks>
     /// <typeparam name="TFrame">The data frame type of the scope whose settings the columns show.</typeparam>
     internal sealed class ImGuiProbeScopeBandColumns<TFrame>
     {
@@ -37,8 +32,6 @@ namespace OpenEphys.Onix1.Design
             this.scope = scope;
             this.paused = paused;
             selection = new(Current);
-            // NB: each wide enough for its widest content: the longest band name, two checkboxes, and the longest
-            // order beside Shanks.
             BandColumn = new("Band", DrawBand, 100);
             FiltersColumn = new("Filters", DrawFilters, 90);
             OrderColumn = new("Order", DrawOrder, 150);
@@ -121,7 +114,6 @@ namespace OpenEphys.Onix1.Design
                 selection.OnNext(current);
         }
 
-        // NB: a change while paused would not show until resumed.
         void DrawBand(float width)
         {
             ImGui.BeginDisabled(paused());
@@ -134,7 +126,6 @@ namespace OpenEphys.Onix1.Design
         {
             ImGui.BeginDisabled(paused());
 
-            // NB: shown unchecked where the probe does not offer it, as AC is where the band does not.
             ImGui.BeginDisabled(!ReferenceOffered);
             var cmr = scope.CommonMedianReference && ReferenceOffered;
             if (ImGui.Checkbox("CMR", ref cmr))
@@ -148,8 +139,6 @@ namespace OpenEphys.Onix1.Design
             var acOffered = band >= Bands.Count || Bands[band].AcDescription is not null;
             ImGui.BeginDisabled(!acOffered);
 
-            // NB: shown unchecked where the band does not offer it, since nothing is applied there, while the
-            // choice is kept for the next band that does.
             var ac = scope.AcCoupled && acOffered;
             if (ImGui.Checkbox("AC", ref ac))
                 scope.AcCoupled = ac;
@@ -184,7 +173,6 @@ namespace OpenEphys.Onix1.Design
                 ImGui.EndCombo();
             }
 
-            // NB: shown unchecked where it does not apply, as AC is, while the choice is kept.
             ImGui.SameLine();
             var lanesOffered = LanesOffered;
             ImGui.BeginDisabled(!lanesOffered);

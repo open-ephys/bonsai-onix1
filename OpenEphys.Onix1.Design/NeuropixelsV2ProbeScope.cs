@@ -63,9 +63,8 @@ namespace OpenEphys.Onix1.Design
                     FilterOrder = 2
                 }.Process(source);
 
-            // NB: down to the rate NeuropixelsV1's LFP band arrives at, which makes everything downstream twelve
-            // times cheaper and the history twelve times longer. Content within 500 Hz of a multiple of the new
-            // rate folds into the passband, so the low-pass runs twice ahead of keeping every 12th sample, some
+            // NB: down to the rate NeuropixelsV1's LFP band arrives at. Content within 500 Hz of a multiple of the
+            // new rate folds into the passband, so the low-pass runs twice ahead of keeping every 12th sample, some
             // 48 dB down by 2 kHz; Decimate's own anti-aliasing FIR barely attenuates there.
             static IObservable<Mat> Lfp(IObservable<Mat> counts) =>
                 new Decimate
@@ -83,14 +82,12 @@ namespace OpenEphys.Onix1.Design
                     FilterOrder = 2
                 }.Process(source);
 
-            // NB: every band comes from the one wideband stream.
             static Mat Raw(NeuropixelsV2DataFrame frame) => frame.AmplifierData;
 
             var adcGroups = NeuropixelsV2.AdcChannelGroups();
             IObservable<Mat> Reference(IObservable<Mat> source) =>
                 source.Select(data => Neuropixels.ApplyCmrF32(data, adcGroups));
 
-            // NB: each band is declared beside the transforms that produce it so they cannot drift.
             var bands = new ProbeScopeBand<NeuropixelsV2DataFrame>[]
             {
                 new("Wideband", "0.5 Hz to 10 kHz", sampleRate, Raw, Scale,
