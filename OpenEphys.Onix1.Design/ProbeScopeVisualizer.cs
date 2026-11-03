@@ -123,14 +123,13 @@ namespace OpenEphys.Onix1.Design
 
             bands = new ImGuiProbeScopeBandColumns<TFrame>(node, () => Paused);
             var standard = StandardColumns;
-            // NB: Probe and Groups are a checkbox each, and Spikes a checkbox, a threshold of four characters and its
-            // settings button.
+            // NB: Spikes is a checkbox, a threshold of four characters and its settings button.
+            var display = standard.Display;
             columns = new[]
             {
                 bands.BandColumn, bands.FiltersColumn, bands.OrderColumn, standard.Timebase, standard.ChannelHeight,
-                standard.Range, standard.Palette, new ControlStripColumn("Probe", DrawProbe, 55),
-                new ControlStripColumn("Groups", DrawGroups, 55),
-                new ControlStripColumn("Spikes (uV)", DrawSpikes, 110), standard.Display,
+                standard.Range, standard.Palette, new ControlStripColumn("Spikes (uV)", DrawSpikes, 110),
+                new ControlStripColumn(display.Label, width => DrawDisplay(display, width), display.Width),
             };
             scheduler = new EventLoopScheduler();
             spikeSettings = new(new SpikeSettings(node));
@@ -371,25 +370,59 @@ namespace OpenEphys.Onix1.Design
             ImGui.EndChild();
         }
 
-        void DrawProbe(float width)
+        // NB: beside Clipping in the standard Display column, which leans on two things its API does not promise:
+        // that Clipping is the last item it draws, and the shortened frame padding it draws its two lines of
+        // checkboxes with and pops before returning, pushed again here so Groups sits level with Clipping.
+        void DrawDisplay(ControlStripColumn display, float width)
         {
-            var node = Node;
-            var show = node.ShowProbe;
-            if (ImGui.Checkbox("Show##showProbe", ref show))
-                node.ShowProbe = show;
-            ImGuiWidgets.Tooltip("Show the probe beside the plot, or hide it to give the plot more room.\nKey: P");
-        }
+            display.Draw(width);
+            ImGui.SameLine();
 
-        void DrawGroups(float width)
-        {
+            var padding = ImGui.GetStyle().FramePadding;
+            var line = (ImGui.GetTextLineHeight() + ImGui.GetFrameHeight()) / 2;
+            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding,
+                new Vector2(padding.X, Math.Max(0, (line - ImGui.GetFontSize()) / 2)));
             var node = Node;
             var show = node.ShowGroups;
-            if (ImGui.Checkbox("Show", ref show))
+            if (ImGui.Checkbox("Groups", ref show))
                 node.ShowGroups = show;
             ImGuiWidgets.Tooltip("Draw each channel in its group's color, on the traces and the probe, and channels in " +
                 "no group in grey.\nKey: G\n1 to 9 selects a group on the probe, and pressing it twice fits it to the " +
                 "plot. Shift+1 to 9 adds the probe's selected contacts to a group, Ctrl+1 to 9 makes them the group, " +
                 "and Delete over the probe takes them out of their groups.");
+            ImGui.PopStyleVar();
+        }
+
+        // NB: in the window's left padding, so a hidden probe pane's only trace takes no width from the plot. The
+        // padding lies partly outside the window's clip rect, so the handle sets its own.
+        void DrawProbeHandle(float height)
+        {
+            const float BarWidth = 4;
+            var cursor = ImGui.GetCursorScreenPos();
+            var style = ImGui.GetStyle();
+            var min = new Vector2(ImGui.GetWindowPos().X, cursor.Y);
+            var max = new Vector2(cursor.X, cursor.Y + height - style.ScrollbarSize - style.ItemSpacing.Y / 2);
+
+            ImGui.PushClipRect(min, max, false);
+            ImGui.SetCursorScreenPos(min);
+            if (ImGui.InvisibleButton("##showProbe", max - min))
+                Node.ShowProbe = true;
+            var color = ImGui.GetColorU32(ImGui.IsItemHovered() || ImGui.IsItemActive()
+                ? ImGuiCol.SeparatorHovered
+                : ImGuiCol.ScrollbarGrab);
+            ImGuiWidgets.Tooltip("Show the probe.\nKey: P");
+
+            // NB: level with the plot's frame, below its header row.
+            var draw = ImGui.GetWindowDrawList();
+            var top = min.Y + ImGui.GetFrameHeight();
+            var x = MathF.Floor((min.X + max.X - BarWidth) / 2);
+            draw.AddRectFilled(new Vector2(x, top), new Vector2(x + BarWidth, max.Y), color);
+            var arrow = ImGui.GetFontSize();
+            ImGuiP.RenderArrow(draw,
+                new Vector2(MathF.Floor((min.X + max.X - arrow) / 2), MathF.Floor((min.Y + top - arrow) / 2)),
+                color, ImGuiDir.Right, 1);
+            ImGui.PopClipRect();
+            ImGui.SetCursorScreenPos(cursor);
         }
 
         // NB: anywhere in the window, since no other keys are digits, though they act on the probe's selection. A
@@ -836,6 +869,8 @@ namespace OpenEphys.Onix1.Design
             var waveWidth = availX;
             KeysElsewhere = false;
             var probePane = !maximized && Node.ShowProbe;
+            if (!maximized && !probePane)
+                DrawProbeHandle(availY);
             if (probePane)
             {
                 // NB: clamped every frame rather than only while dragged, so shrinking the window can't leave the
@@ -890,11 +925,18 @@ namespace OpenEphys.Onix1.Design
                 AssignGroup(ungrouped, 0, replace: false);
 
             var model = source?.ProbeGroup?.Probe?.Annotations?.ModelName;
+            var header = ImGui.GetCursorScreenPos();
+            var headerRight = header.X + ImGui.GetContentRegionAvail().X;
             if (!string.IsNullOrEmpty(model))
             {
                 ImGui.AlignTextToFramePadding();
                 ImGui.Text(model);
+                ImGui.SameLine();
             }
+            ImGui.SetCursorScreenPos(new Vector2(headerRight - ImGui.GetFrameHeight(), header.Y));
+            if (ImGui.ArrowButton("##hideProbe", ImGuiDir.Left))
+                Node.ShowProbe = false;
+            ImGuiWidgets.Tooltip("Hide the probe to give the plot more room.\nKey: P");
 
             // NB: framed on the plot's frame's top and bottom lines, which the plot lays out a header row of one
             // frame height down and a scroll bar and half an item spacing up from the bottom.
