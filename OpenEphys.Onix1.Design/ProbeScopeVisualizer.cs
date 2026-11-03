@@ -913,11 +913,16 @@ namespace OpenEphys.Onix1.Design
             selector.DrawZoomedView(selectionEnabled: true);
             ImGui.EndChild();
 
-            // NB: the plot's frame color and weight, on whole pixels as its frame is.
-            ImGui.GetWindowDrawList().AddRect(
-                new Vector2(MathF.Floor(min.X) + 0.5f, MathF.Floor(min.Y) + 0.5f),
-                new Vector2(MathF.Floor(max.X) - 0.5f, MathF.Floor(max.Y) - 0.5f),
-                ImGuiPalette.Grey0x88, 0, ImDrawFlags.None, 1);
+            // NB: the plot's frame color and weight, in filled rects on whole pixels as it draws them, since AddRect
+            // anti-aliases a 1 px line across two.
+            var (l, t, r, b) = (MathF.Floor(min.X), MathF.Floor(min.Y), MathF.Floor(max.X), MathF.Floor(max.Y));
+            const float weight = 1;
+            var color = ImGuiPalette.Grey0x88;
+            var draw = ImGui.GetWindowDrawList();
+            draw.AddRectFilled(new Vector2(l, t), new Vector2(r, t + weight), color);
+            draw.AddRectFilled(new Vector2(l, b - weight), new Vector2(r, b), color);
+            draw.AddRectFilled(new Vector2(l, t), new Vector2(l + weight, b), color);
+            draw.AddRectFilled(new Vector2(r - weight, t), new Vector2(r, b), color);
             ImGui.EndChild();
         }
 
