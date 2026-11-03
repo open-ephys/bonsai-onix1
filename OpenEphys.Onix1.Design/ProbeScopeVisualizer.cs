@@ -29,7 +29,6 @@ namespace OpenEphys.Onix1.Design
         const float DefaultProbePaneWidth = 260f;
         const float MinProbePaneWidth = 120f;
         const float MinPlotWidth = 200f;
-        const float CollapsedPaneWidth = 28f;
         const float DefaultSpikePaneWidth = 240f;
         const float MinSpikePaneWidth = 120f;
 
@@ -66,7 +65,6 @@ namespace OpenEphys.Onix1.Design
         ImGuiProbeScopeBandColumns<TFrame> bands;
         EventLoopScheduler scheduler;
         string deviceName;
-        bool probePaneCollapsed;
         float probePaneWidth = DefaultProbePaneWidth;
         float spikePaneWidth = DefaultSpikePaneWidth;
         ProbeScopeSource<TFrame> source;
@@ -119,7 +117,8 @@ namespace OpenEphys.Onix1.Design
             columns = new[]
             {
                 bands.BandColumn, bands.FiltersColumn, bands.OrderColumn, standard.Timebase, standard.ChannelHeight,
-                standard.Range, standard.Palette, new ControlStripColumn("Groups", DrawGroups),
+                standard.Range, standard.Palette, new ControlStripColumn("Probe", DrawProbe),
+                new ControlStripColumn("Groups", DrawGroups),
                 new ControlStripColumn("Spikes (uV)", DrawSpikes), standard.Display,
             };
             scheduler = new EventLoopScheduler();
@@ -359,6 +358,15 @@ namespace OpenEphys.Onix1.Design
             }
 
             ImGui.EndChild();
+        }
+
+        void DrawProbe(float width)
+        {
+            var node = Node;
+            var show = node.ShowProbe;
+            if (ImGui.Checkbox("Show##showProbe", ref show))
+                node.ShowProbe = show;
+            ImGuiWidgets.Tooltip("Show the probe beside the plot, or hide it to give the plot more room.\nKey: P");
         }
 
         void DrawGroups(float width)
@@ -767,7 +775,8 @@ namespace OpenEphys.Onix1.Design
 
         /// <inheritdoc/>
         /// <remarks>
-        /// The probe pane sits left of the plot, and both are left out with the strip while maximized.
+        /// The probe pane sits left of the plot and the spike pane right of it. The probe pane is left out with the
+        /// strip while maximized, and the spike pane, which shares the plot's rows, is kept.
         /// </remarks>
         protected override void DrawFrame()
         {
@@ -778,7 +787,7 @@ namespace OpenEphys.Onix1.Design
             // NB: not while maximized, where the pane is not drawn and its state would change out of sight.
             var maximized = Maximized;
             if (!maximized && !ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.P, false))
-                probePaneCollapsed = !probePaneCollapsed;
+                Node.ShowProbe = !Node.ShowProbe;
             if (!ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.G, false))
                 Node.ShowGroups = !Node.ShowGroups;
             if (!ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.U, false))
@@ -815,21 +824,24 @@ namespace OpenEphys.Onix1.Design
 
             var waveWidth = availX;
             KeysElsewhere = false;
-            if (!maximized)
+            var probePane = !maximized && Node.ShowProbe;
+            if (probePane)
             {
                 // NB: clamped every frame rather than only while dragged, so shrinking the window can't leave the
                 // plot narrower than its minimum.
                 probePaneWidth = Math.Max(MinProbePaneWidth, Math.Min(probePaneWidth, availX - gap - MinPlotWidth));
-                var probeWidth = probePaneCollapsed ? CollapsedPaneWidth : probePaneWidth;
-                waveWidth = Math.Max(MinPlotWidth, availX - probeWidth - gap);
+                waveWidth = Math.Max(MinPlotWidth, availX - probePaneWidth - gap);
 
-                DrawProbePane(probeWidth, availY);
-                DrawPaneSplitter(gap, availY);
+                DrawProbePane(probePaneWidth, availY);
+                ImGui.SameLine(0, 0);
+                Splitter("##paneSplitter", new Vector2(gap, availY), ref probePaneWidth, DefaultProbePaneWidth, 1,
+                    "Drag to resize the probe pane, or double-click to restore its width.");
+                ImGui.SameLine(0, 0);
             }
 
             // NB: only beside an expanded channel, the one view whose rows the spikes can share. Known from the frame
             // before, so the pane follows an expand or collapse a frame late.
-            var spikePane = !maximized && Node.ShowSpikes && ExpandedRow is not null;
+            var spikePane = Node.ShowSpikes && ExpandedRow is not null;
             if (spikePane)
             {
                 spikePaneWidth = Math.Max(MinSpikePaneWidth, Math.Min(spikePaneWidth, waveWidth - gap - MinPlotWidth));
@@ -837,7 +849,7 @@ namespace OpenEphys.Onix1.Design
             }
 
             // NB: a probe not drawn this frame keeps the contact last hovered, which the pointer has since left.
-            HoveredChannel = !maximized && !probePaneCollapsed ? ChannelOf(selector.HoveredContactIndex) : -1;
+            HoveredChannel = probePane ? ChannelOf(selector.HoveredContactIndex) : -1;
             DrawPlot(new Vector2(waveWidth, availY));
             if (spikePane)
             {
@@ -859,65 +871,54 @@ namespace OpenEphys.Onix1.Design
         {
             ImGui.BeginChild("##probePane", new Vector2(probeWidth, availY),
                 ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
-            KeysElsewhere = !probePaneCollapsed && ImGui.IsWindowHovered(ImGuiHoveredFlags.ChildWindows);
+            KeysElsewhere = ImGui.IsWindowHovered(ImGuiHoveredFlags.ChildWindows);
 
             // NB: a selected ruler takes Delete first, as the probe view answers it.
             if (KeysElsewhere && !selector.RulerSelected && !ImGui.GetIO().WantTextInput && !ImGui.GetIO().KeyShift &&
                 ImGui.IsKeyPressed(ImGuiKey.Delete, false) && SelectedContactChannels() is { Length: > 0 } ungrouped)
                 AssignGroup(ungrouped, 0, replace: false);
 
-            if (ImGui.Button(probePaneCollapsed ? "»" : "«"))
-                probePaneCollapsed = !probePaneCollapsed;
-            ImGuiWidgets.Tooltip((probePaneCollapsed ? "Show the probe." : "Hide the probe, to give the plot more room.") +
-                "\nKey: P");
-
             var model = source?.ProbeGroup?.Probe?.Annotations?.ModelName;
-            if (!probePaneCollapsed)
+            if (!string.IsNullOrEmpty(model))
             {
-                if (!string.IsNullOrEmpty(model))
-                {
-                    ImGui.SameLine();
-                    ImGui.Text(model);
-                }
-
-                // NB: set apart from the title above, as controls rather than part of the heading.
-                ImGui.Dummy(new Vector2(0, ImGui.GetStyle().ItemSpacing.Y));
-
-                var channels = SelectedContactChannels();
-                ImGui.BeginDisabled(channels.Length == 0);
-                var fitPressed = !ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.F, false)
-                    && ImGui.IsWindowHovered(ImGuiHoveredFlags.ChildWindows);
-                if ((ImGui.Button("Fit") || fitPressed) && channels.Length > 0)
-                    ZoomTo(channels);
-                ImGui.EndDisabled();
-                ImGuiWidgets.Tooltip("Fit the selected contacts' channels to the plot.\nKey: F over the probe",
-                    "Select contacts on the probe first.");
-                ImGui.SameLine();
-                ImGuiRulerControls.DrawToggle(selector, "Ruler");
-
-                DrawGroupSwatches();
-                selector.DrawZoomedView(selectionEnabled: true);
+                ImGui.AlignTextToFramePadding();
+                ImGui.Text(model);
             }
-            else if (!string.IsNullOrEmpty(model))
-            {
-                ImGuiWidgets.StackedLabel(model);
-            }
+
+            // NB: framed on the plot's frame's top and bottom lines, which the plot lays out a header row of one
+            // frame height down and a scroll bar and half an item spacing up from the bottom.
+            var style = ImGui.GetStyle();
+            var paneTop = ImGui.GetWindowPos().Y;
+            var min = new Vector2(ImGui.GetCursorScreenPos().X, paneTop + ImGui.GetFrameHeight());
+            var max = new Vector2(min.X + ImGui.GetContentRegionAvail().X,
+                paneTop + availY - style.ScrollbarSize - style.ItemSpacing.Y / 2);
+            ImGui.SetCursorScreenPos(min);
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, style.ItemSpacing);
+            ImGui.BeginChild("##probeFrame", max - min, ImGuiChildFlags.AlwaysUseWindowPadding,
+                ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
+            ImGui.PopStyleVar();
+
+            var channels = SelectedContactChannels();
+            ImGui.BeginDisabled(channels.Length == 0);
+            var fitPressed = KeysElsewhere && !ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.F, false);
+            if ((ImGui.Button("Fit") || fitPressed) && channels.Length > 0)
+                ZoomTo(channels);
+            ImGui.EndDisabled();
+            ImGuiWidgets.Tooltip("Fit the selected contacts' channels to the plot.\nKey: F over the probe",
+                "Select contacts on the probe first.");
+            ImGui.SameLine();
+            ImGuiRulerControls.DrawToggle(selector, "Ruler");
+
+            DrawGroupSwatches();
+            selector.DrawZoomedView(selectionEnabled: true);
             ImGui.EndChild();
-        }
 
-        void DrawPaneSplitter(float width, float height)
-        {
-            ImGui.SameLine(0, 0);
-            if (probePaneCollapsed)
-            {
-                ImGui.Dummy(new Vector2(width, height));
-                ImGui.SameLine(0, 0);
-                return;
-            }
-
-            Splitter("##paneSplitter", new Vector2(width, height), ref probePaneWidth, DefaultProbePaneWidth, 1,
-                "Drag to resize the probe pane, or double-click to restore its width.");
-            ImGui.SameLine(0, 0);
+            // NB: the plot's frame color and weight, on whole pixels as its frame is.
+            ImGui.GetWindowDrawList().AddRect(
+                new Vector2(MathF.Floor(min.X) + 0.5f, MathF.Floor(min.Y) + 0.5f),
+                new Vector2(MathF.Floor(max.X) - 0.5f, MathF.Floor(max.Y) - 0.5f),
+                ImGuiPalette.Grey0x88, 0, ImDrawFlags.None, 1);
+            ImGui.EndChild();
         }
 
         // NB: side is 1 for a pane left of the splitter, which a drag to the right widens, and -1 for one right of it.
@@ -934,11 +935,14 @@ namespace OpenEphys.Onix1.Design
                 ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeEw);
             ImGuiWidgets.Tooltip(tooltip);
 
+            // NB: drawn only while hovered or dragged, so at rest the panes are set apart by the gap alone.
+            if (!hovered && !active)
+                return;
             var min = ImGui.GetItemRectMin();
             var max = ImGui.GetItemRectMax();
             var x = (min.X + max.X) / 2;
-            var color = ImGui.GetColorU32(active ? ImGuiCol.SeparatorActive : hovered ? ImGuiCol.SeparatorHovered : ImGuiCol.Separator);
-            ImGui.GetWindowDrawList().AddLine(new Vector2(x, min.Y), new Vector2(x, max.Y), color, active || hovered ? 2f : 1f);
+            ImGui.GetWindowDrawList().AddLine(new Vector2(x, min.Y), new Vector2(x, max.Y),
+                ImGui.GetColorU32(ImGuiCol.SeparatorHovered), 2f);
         }
 
         /// <inheritdoc/>

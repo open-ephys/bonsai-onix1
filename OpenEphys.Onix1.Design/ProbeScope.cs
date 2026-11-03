@@ -145,6 +145,13 @@ namespace OpenEphys.Onix1.Design
         public bool LanePerShank { get; set; } = true;
 
         /// <summary>
+        /// Gets or sets a value specifying whether the probe is shown beside the plot.
+        /// </summary>
+        [DefaultValue(true)]
+        [Description("Specifies whether the probe is shown beside the plot.")]
+        public bool ShowProbe { get; set; } = true;
+
+        /// <summary>
         /// Gets or sets a value specifying whether channels are drawn in the colors of the groups assigned to them on
         /// the probe, and channels in no group in grey, rather than in the palette's.
         /// </summary>
