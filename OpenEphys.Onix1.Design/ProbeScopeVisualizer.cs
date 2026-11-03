@@ -95,6 +95,15 @@ namespace OpenEphys.Onix1.Design
         protected override string Unit => Node.Unit;
 
         /// <inheritdoc/>
+        protected override double MaxRange => Node.MaxRange;
+
+        /// <inheritdoc/>
+        protected override double MinRange => Node.MinRange;
+
+        /// <inheritdoc/>
+        protected override void DrawOffscreen() => spikes?.Flush();
+
+        /// <inheritdoc/>
         protected override IEnumerable<ImGuiKey> Hotkeys =>
             selector.Hotkeys.Concat(new[] { ImGuiKey.P, ImGuiKey.K, ImGuiKey.G, ImGuiKey.U }).Concat(GroupKeys);
 
@@ -114,12 +123,14 @@ namespace OpenEphys.Onix1.Design
 
             bands = new ImGuiProbeScopeBandColumns<TFrame>(node, () => Paused);
             var standard = StandardColumns;
+            // NB: Probe and Groups are a checkbox each, and Spikes a checkbox, a threshold of four characters and its
+            // settings button.
             columns = new[]
             {
                 bands.BandColumn, bands.FiltersColumn, bands.OrderColumn, standard.Timebase, standard.ChannelHeight,
-                standard.Range, standard.Palette, new ControlStripColumn("Probe", DrawProbe),
-                new ControlStripColumn("Groups", DrawGroups),
-                new ControlStripColumn("Spikes (uV)", DrawSpikes), standard.Display,
+                standard.Range, standard.Palette, new ControlStripColumn("Probe", DrawProbe, 55),
+                new ControlStripColumn("Groups", DrawGroups, 55),
+                new ControlStripColumn("Spikes (uV)", DrawSpikes, 110), standard.Display,
             };
             scheduler = new EventLoopScheduler();
             spikeSettings = new(new SpikeSettings(node));

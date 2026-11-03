@@ -40,6 +40,10 @@ namespace OpenEphys.Onix1.Design
 
         internal override string Unit => "uV";
 
+        internal override double MaxRange => 5000;
+
+        internal override double MinRange => 10;
+
         internal override ProbeScopeSource<NeuropixelsV1DataFrame> CreateSource(DeviceInfo info)
         {
             if (info is not NeuropixelsV1PsbDecoderDeviceInfo v1)

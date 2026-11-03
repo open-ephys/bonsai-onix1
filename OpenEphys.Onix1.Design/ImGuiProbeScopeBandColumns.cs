@@ -37,9 +37,11 @@ namespace OpenEphys.Onix1.Design
             this.scope = scope;
             this.paused = paused;
             selection = new(Current);
-            BandColumn = new("Band", DrawBand);
-            FiltersColumn = new("Filters", DrawFilters);
-            OrderColumn = new("Order", DrawOrder);
+            // NB: each wide enough for its widest content: the longest band name, two checkboxes, and the longest
+            // order beside Shanks.
+            BandColumn = new("Band", DrawBand, 100);
+            FiltersColumn = new("Filters", DrawFilters, 90);
+            OrderColumn = new("Order", DrawOrder, 150);
         }
 
         /// <summary>

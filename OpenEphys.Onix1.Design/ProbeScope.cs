@@ -226,5 +226,15 @@ namespace OpenEphys.Onix1.Design
         /// Unit the bands produce.
         /// </summary>
         internal abstract string Unit { get; }
+
+        /// <summary>
+        /// The largest amplitude a channel's row may span, in <see cref="Unit"/>.
+        /// </summary>
+        internal abstract double MaxRange { get; }
+
+        /// <summary>
+        /// The smallest amplitude a channel's row may span, in <see cref="Unit"/>.
+        /// </summary>
+        internal abstract double MinRange { get; }
     }
 }
