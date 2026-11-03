@@ -161,35 +161,59 @@ namespace OpenEphys.Onix1.Design
         public bool ShowGroups { get; set; }
 
         /// <summary>
-        /// Gets or sets a value specifying whether spikes are detected and an expanded channel's are shown beside
-        /// it.
+        /// Gets or sets a value specifying whether threshold crossings are detected on every channel, and an expanded
+        /// channel's waveforms shown beside it.
         /// </summary>
         [DefaultValue(false)]
-        [Description("Specifies whether spikes are detected and an expanded channel's are shown beside it.")]
-        public bool ShowSpikes { get; set; }
+        [Description("Specifies whether threshold crossings are detected on every channel, and an expanded channel's " +
+            "waveforms shown beside it.")]
+        public bool ShowThresholdCrossings { get; set; }
 
         /// <summary>
-        /// Gets or sets the threshold spikes are detected at on every channel, in microvolts, crossed going down.
+        /// Gets or sets the threshold, in microvolts, whose crossing going down is detected on every channel.
         /// </summary>
         [DefaultValue(SpikeDetection.DefaultThreshold)]
-        [Description("The threshold spikes are detected at on every channel, in microvolts, crossed going down.")]
-        public double SpikeThreshold { get; set; } = SpikeDetection.DefaultThreshold;
+        [Description("The threshold, in microvolts, whose crossing going down is detected on every channel.")]
+        public double CrossingThreshold { get; set; } = SpikeDetection.DefaultThreshold;
 
         /// <summary>
-        /// Gets or sets the duration of each spike's waveform, in milliseconds.
+        /// Gets or sets the duration of the waveform kept at each threshold crossing, in milliseconds.
         /// </summary>
         [DefaultValue(SpikeDetection.WaveformSeconds * 1000)]
-        [Description("The duration of each spike's waveform, in milliseconds.")]
-        public double SpikeWindow { get; set; } = SpikeDetection.WaveformSeconds * 1000;
+        [Description("The duration of the waveform kept at each threshold crossing, in milliseconds.")]
+        public double CrossingWindow { get; set; } = SpikeDetection.WaveformSeconds * 1000;
 
         /// <summary>
-        /// Gets or sets the time in each spike's waveform before its peak, or before its threshold crossing where the
+        /// Gets or sets the time in each crossing's waveform before its peak, or before the crossing itself where the
         /// peak comes first, in milliseconds.
         /// </summary>
         [DefaultValue(SpikeDetection.WaveformDelaySeconds * 1000)]
-        [Description("The time in each spike's waveform before its peak, or before its threshold crossing where the " +
+        [Description("The time in each crossing's waveform before its peak, or before the crossing itself where the " +
             "peak comes first, in milliseconds.")]
-        public double SpikePreTrigger { get; set; } = SpikeDetection.WaveformDelaySeconds * 1000;
+        public double CrossingPreTrigger { get; set; } = SpikeDetection.WaveformDelaySeconds * 1000;
+
+        /// <summary>
+        /// Gets or sets the time constant, in seconds, over which each channel's threshold crossing rate is averaged.
+        /// </summary>
+        [DefaultValue(10.0)]
+        [Description("The time constant, in seconds, over which each channel's threshold crossing rate is averaged.")]
+        public double CrossingRateTimeConstant { get; set; } = 10;
+
+        /// <summary>
+        /// Gets or sets a value specifying whether the probe's contacts are colored by their channels' threshold
+        /// crossing rates while crossings are detected, rather than as groups color them.
+        /// </summary>
+        [DefaultValue(false)]
+        [Description("Specifies whether the probe's contacts are colored by their channels' threshold crossing rates " +
+            "while crossings are detected, rather than as groups color them.")]
+        public bool ColorContactsByEventRate { get; set; }
+
+        /// <summary>
+        /// Gets or sets the threshold crossing rate, in Hz, at the top of the probe's color scale.
+        /// </summary>
+        [DefaultValue(100.0)]
+        [Description("The threshold crossing rate, in Hz, at the top of the probe's color scale.")]
+        public double EventRateScale { get; set; } = 100;
 
         /// <summary>
         /// Gets or sets the number of seconds of data retained behind the display.

@@ -29,22 +29,25 @@ namespace OpenEphys.Onix1.Design
         const float DefaultProbePaneWidth = 260f;
         const float MinProbePaneWidth = 120f;
         const float MinPlotWidth = 200f;
-        const float DefaultSpikePaneWidth = 240f;
-        const float MinSpikePaneWidth = 120f;
+        const float DefaultEventPaneWidth = 240f;
+        const float MinEventPaneWidth = 120f;
 
-        // NB: the largest spike amplitude kept, either side of zero, in microvolts, wide enough for the largest units
-        // a probe records.
-        const double SpikeSpan = 1000;
+        // NB: the largest waveform amplitude kept, either side of zero, in microvolts, wide enough for the largest
+        // units a probe records.
+        const double EventSpan = 1000;
 
         // NB: the detector's cost is mostly per block, not per sample, and a device can send blocks of a few samples,
         // so the shown signal is gathered into blocks this long, in seconds, before detection.
-        const double SpikeBlockSeconds = 0.005;
+        const double DetectionBlockSeconds = 0.005;
 
         // NB: the colors of the configuration dialogs' enabled contacts, with the plot's selection white as its
         // selected label's box is, and hover amber three quarters of the way to white.
         static readonly uint ColorContactEnabled = ImGuiPalette.AmberGold;
         static readonly uint ColorContactSelected = ImGuiPalette.White;
         static readonly uint ColorContactHovered = 0xFFC2EFFFu;
+
+        // NB: cyan, a color Plasma never reaches, for the probe's selection while contacts show the event rate.
+        static readonly uint ColorRateSelection = 0xFFFFFF00u;
 
         // NB: group n's key is GroupKeys[n - 1].
         static readonly ImGuiKey[] GroupKeys = Enumerable.Range(1, 9).Select(n => ImGuiKey.Key0 + n).ToArray();
@@ -66,25 +69,25 @@ namespace OpenEphys.Onix1.Design
         EventLoopScheduler scheduler;
         string deviceName;
         float probePaneWidth = DefaultProbePaneWidth;
-        float spikePaneWidth = DefaultSpikePaneWidth;
+        float eventPaneWidth = DefaultEventPaneWidth;
+        bool rateColored;
+        float rateLow;
+        float rateHigh;
         ProbeScopeSource<TFrame> source;
 
         // NB: made on the band chain's thread when detection first starts, and drawn on the window's, where its GL
         // objects are made.
-        volatile ImGuiSpikeView spikes;
-        BehaviorSubject<SpikeSettings> spikeSettings;
+        volatile ImGuiEventView events;
+        BehaviorSubject<CrossingSettings> crossingSettings;
 
-        sealed record SpikeSettings(bool Show, double Threshold, double Window, double PreTrigger)
+        sealed record CrossingSettings(bool Show, double Threshold, double Window, double PreTrigger)
         {
-            public SpikeSettings(ProbeScope<TFrame> node)
-                : this(node.ShowSpikes, node.SpikeThreshold, node.SpikeWindow, node.SpikePreTrigger)
+            public CrossingSettings(ProbeScope<TFrame> node)
+                : this(node.ShowThresholdCrossings, node.CrossingThreshold, node.CrossingWindow,
+                    node.CrossingPreTrigger)
             {
             }
         }
-
-        // NB: spikes found while the plot is paused are dropped, so the pane stays the plot's companion rather than
-        // gathering what the plot no longer shows.
-        volatile bool spikesPaused;
 
         ProbeScope<TFrame> Node => (ProbeScope<TFrame>)Scope;
 
@@ -101,7 +104,7 @@ namespace OpenEphys.Onix1.Design
         protected override double MinRange => Node.MinRange;
 
         /// <inheritdoc/>
-        protected override void DrawOffscreen() => spikes?.Flush();
+        protected override void DrawOffscreen() => events?.Flush();
 
         /// <inheritdoc/>
         protected override IEnumerable<ImGuiKey> Hotkeys =>
@@ -123,29 +126,184 @@ namespace OpenEphys.Onix1.Design
 
             bands = new ImGuiProbeScopeBandColumns<TFrame>(node, () => Paused);
             var standard = StandardColumns;
-            // NB: Spikes is a checkbox, a threshold of four characters and its settings button.
+            // NB: Threshold is a checkbox, a threshold of four characters, its settings button and Clear.
             var display = standard.Display;
             columns = new[]
             {
                 bands.BandColumn, bands.FiltersColumn, bands.OrderColumn, standard.Timebase, standard.ChannelHeight,
-                standard.Range, standard.Palette, new ControlStripColumn("Spikes (uV)", DrawSpikes, 110),
+                standard.Range, standard.Palette, new ControlStripColumn("Threshold (uV)", DrawCrossings, 160),
                 new ControlStripColumn(display.Label, width => DrawDisplay(display, width), display.Width),
             };
             scheduler = new EventLoopScheduler();
-            spikeSettings = new(new SpikeSettings(node));
+            crossingSettings = new(new CrossingSettings(node));
 
+            rateHigh = (float)node.EventRateScale;
             selector.FillColor = ContactColor;
+            selector.OutlineColor = ContactOutline;
+            selector.ShowCoordinateReadout = false;
+            selector.ShowScrollBars = true;
             selector.Blocked = contact => ChannelOf(contact) < 0;
             selector.SelectionChanged += SelectContacts;
             traceGroup = TraceGroup;
         }
 
-        // NB: while groups are shown, a contact is the color of its channel's trace.
+        // NB: while groups are shown, a contact is the color of its channel's trace. On the event rate's scale every
+        // contact shows its rate, the selected and hovered ones outlined instead, since a selection's white fill
+        // would read as the highest rate.
         uint ContactColor(int contact) =>
-            contact == selectedContact ? ColorContactSelected
+            rateColored ? RateColor(ChannelOf(contact))
+            : contact == selectedContact ? ColorContactSelected
             : contact == hoveredContact ? ColorContactHovered
             : Node.ShowGroups ? GroupColor(TraceGroup(ChannelOf(contact)))
             : ColorContactEnabled;
+
+        uint ContactOutline(int contact) =>
+            !rateColored ? 0
+            : contact == selectedContact ? ColorContactSelected
+            : contact == hoveredContact ? ColorContactHovered
+            : 0;
+
+        uint RateColor(int channel)
+        {
+            var rate = (float)(events?.EventRate(channel) ?? 0);
+            var t = rateHigh > rateLow ? Math.Max(0f, Math.Min(1f, (rate - rateLow) / (rateHigh - rateLow))) : 0f;
+            return Plasma.DefaultMap[(int)(t * 255f)];
+        }
+
+        // NB: shows the coloring in effect, which each choice brings about by turning on what it needs, so turning
+        // groups or detection off elsewhere moves it on.
+        void DrawContactColoring()
+        {
+            var node = Node;
+            var shown = rateColored ? 2 : node.ShowGroups ? 1 : 0;
+            if (ImGui.RadioButton("Default##contactColor", ref shown, 0))
+            {
+                node.ColorContactsByEventRate = false;
+                node.ShowGroups = false;
+            }
+            ImGuiWidgets.Tooltip("Color the contacts amber, and the traces in the palette's colors.");
+            ImGui.SameLine();
+            if (ImGui.RadioButton("Groups##contactColor", ref shown, 1))
+            {
+                node.ColorContactsByEventRate = false;
+                node.ShowGroups = true;
+            }
+            ImGuiWidgets.Tooltip("Color each contact and its trace by the channel's group, and channels in no group " +
+                "grey.\nKey: G");
+            ImGui.SameLine();
+            if (ImGui.RadioButton("Rate##contactColor", ref shown, 2))
+            {
+                node.ColorContactsByEventRate = true;
+                node.ShowThresholdCrossings = true;
+            }
+            ImGuiWidgets.Tooltip("Color each contact by its channel's event rate, on the scale below, detecting " +
+                "threshold crossings if they are not already.\nKey: U turns detection on and off");
+        }
+
+        // NB: the contact under the pointer, or else the one selected on the probe, or else the plot's selected
+        // channel's, or else only the point under the pointer. What does not apply is left out rather than shown
+        // empty.
+        void DrawContactInfo()
+        {
+            var contact = selector.HoveredContactIndex;
+            if (contact < 0)
+                contact = SoleSelectedContact();
+            if (contact < 0)
+                contact = selectedContact;
+
+            var first = new List<string>();
+            var second = new List<string>();
+            var units = selector.CoordinateUnits;
+            if (source?.ProbeGroup?.Probe?.Contacts is { } contacts && (uint)contact < (uint)contacts.Count)
+            {
+                var c = contacts[contact];
+                var channel = ChannelOf(contact);
+                first.Add(channel >= 0 ? $"Ch {channel}" : "Not recorded");
+                first.Add($"Contact {(string.IsNullOrEmpty(c.ContactId) ? contact.ToString() : c.ContactId)}");
+                if (!string.IsNullOrEmpty(c.ShankId))
+                    first.Add($"Shank {c.ShankId}");
+                second.Add($"({c.PosX:0.#}, {c.PosY:0.#}) {units}");
+                if (channel >= 0 && GroupOf(channel) is var group and > 0)
+                    second.Add($"Group {group}");
+                if (channel >= 0 && Node.ShowThresholdCrossings && events is { } view)
+                    second.Add($"{TwoFigures(view.EventRate(channel))} Hz");
+            }
+            else if (selector.PointerPosition is { } point)
+                first.Add($"({point.X:0.#}, {point.Y:0.#}) {units}");
+
+            ImGui.PushStyleColor(ImGuiCol.Text, ImGuiPalette.Grey0x99);
+            ImGui.Text(string.Join("   ", first));
+            ImGui.Text(string.Join("   ", second));
+            ImGui.PopStyleColor();
+        }
+
+        int SoleSelectedContact()
+        {
+            var sole = -1;
+            for (int i = 0; i < selector.Contacts.Count; i++)
+            {
+                if (!selector.Contacts[i].Selected)
+                    continue;
+                if (sole >= 0)
+                    return -1;
+                sole = i;
+            }
+            return sole;
+        }
+
+        // NB: as the event view prints a rate, since one decays every frame between events and a finer one would
+        // flicker in its last digit.
+        static string TwoFigures(double value)
+        {
+            if (value < 0.001)
+                return "0";
+            var decimals = Math.Max(0, 1 - (int)Math.Floor(Math.Log10(value)));
+            return Math.Round(value, Math.Min(decimals, 4)).ToString(System.Globalization.CultureInfo.CurrentCulture);
+        }
+
+        // NB: the group swatches or the rate's scale, whichever colors the contacts, in a row as tall as the taller
+        // of them, so switching leaves the probe below where it was.
+        void DrawColorKey()
+        {
+            var style = ImGui.GetStyle();
+            var height = ImGui.GetFrameHeight() + 2 * style.ItemSpacing.Y + ImGui.GetTextLineHeight();
+            ImGui.BeginChild("##colorKey", new Vector2(0, height), ImGuiChildFlags.None,
+                ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
+            if (rateColored)
+                DrawRateScale();
+            else
+                DrawGroupSwatches();
+            ImGui.EndChild();
+        }
+
+        void DrawRateScale()
+        {
+            var node = Node;
+            var style = ImGui.GetStyle();
+
+            // NB: half an item spacing down, so the handles, which stand above the bar, are not clipped by the row.
+            ImGui.SetCursorPosY(ImGui.GetCursorPosY() + style.ItemSpacing.Y / 2);
+            var fieldWidth = ImGui.CalcTextSize("10000").X + 2 * style.FramePadding.X;
+            var scale = (float)node.EventRateScale;
+            ImGuiColormapRangeSlider.Draw("##rateScale", Plasma.DefaultMap, 0, scale, ref rateLow, ref rateHigh,
+                ImGui.GetContentRegionAvail().X - fieldWidth - style.ItemInnerSpacing.X, valueFormat: "0.#",
+                minHandleTooltip: "The event rate, in Hz, at or below which a contact is the scale's darkest.",
+                maxHandleTooltip: "The event rate, in Hz, at or above which a contact is the scale's brightest.");
+
+            ImGui.SameLine(0, style.ItemInnerSpacing.X);
+            var top = node.EventRateScale;
+            ImGui.SetNextItemWidth(fieldWidth);
+            ImGui.InputDouble("##rateScaleTop", ref top, "%g");
+            if (ImGui.IsItemDeactivatedAfterEdit() && top > 0)
+            {
+                // NB: a brightest end left at the scale's top stays there.
+                if (rateHigh >= scale)
+                    rateHigh = (float)top;
+                node.EventRateScale = top;
+            }
+            ImGuiWidgets.Tooltip("The event rate, in Hz, at the right end of the scale, applied once you leave " +
+                "the field.");
+        }
 
         // NB: groups are numbered from 1 on the probe, as their keys are, and from 0 in the palette, where a negative
         // group is none.
@@ -267,104 +425,129 @@ namespace OpenEphys.Onix1.Design
         static float Luminance(uint color) =>
             (0.2126f * (color & 0xFF) + 0.7152f * (color >> 8 & 0xFF) + 0.0722f * (color >> 16 & 0xFF)) / 255f;
 
-        void DrawSpikes(float width)
+        void DrawCrossings(float width)
         {
             var node = Node;
-            var show = node.ShowSpikes;
-            if (ImGui.Checkbox("##showSpikes", ref show))
-                node.ShowSpikes = show;
-            ImGuiWidgets.Tooltip("Detect spikes on every channel, in the signal shown, and show an expanded channel's " +
-                "beside it, each waveform drawn over all those before it.\nKey: U");
+            var show = node.ShowThresholdCrossings;
+            if (ImGui.Checkbox("##showCrossings", ref show))
+                node.ShowThresholdCrossings = show;
+            ImGuiWidgets.Tooltip("Detect threshold crossings on every channel, in the signal shown, and show an " +
+                "expanded channel's waveforms beside it, each drawn over all those before it.\nKey: U");
 
             var style = ImGui.GetStyle();
             const string MoreLabel = "...";
+            const string ClearLabel = "Clear";
             var moreWidth = ImGui.CalcTextSize(MoreLabel).X + 2 * style.FramePadding.X;
+            var clearWidth = ImGui.CalcTextSize(ClearLabel).X + 2 * style.FramePadding.X;
             ImGui.SameLine(0, style.ItemInnerSpacing.X);
-            var threshold = node.SpikeThreshold;
-            ImGui.SetNextItemWidth(Math.Max(1, width - ImGui.GetFrameHeight() - moreWidth - 2 * style.ItemInnerSpacing.X));
-            ImGui.InputDouble("##spikeThreshold", ref threshold, "%.0f");
+            var threshold = node.CrossingThreshold;
+            ImGui.SetNextItemWidth(Math.Max(1,
+                width - ImGui.GetFrameHeight() - moreWidth - clearWidth - 3 * style.ItemInnerSpacing.X));
+            ImGui.InputDouble("##crossingThreshold", ref threshold, "%.0f");
             if (ImGui.IsItemDeactivatedAfterEdit())
-                node.SpikeThreshold = threshold;
-            ImGuiWidgets.Tooltip("The threshold spikes are detected at on every channel, crossed going down. A new one " +
-                "starts the spikes over, applied once you leave the field.");
+                node.CrossingThreshold = threshold;
+            ImGuiWidgets.Tooltip("The threshold whose crossing going down is detected on every channel. A new one " +
+                "starts the events over, applied once you leave the field.");
 
-            const string SettingsPopup = "##spikeSettings";
+            const string SettingsPopup = "##crossingSettings";
             ImGui.SameLine(0, style.ItemInnerSpacing.X);
             if (ImGui.Button(MoreLabel))
                 ImGui.OpenPopup(SettingsPopup);
-            ImGuiWidgets.Tooltip($"{node.SpikeWindow:g} ms window, {node.SpikePreTrigger:g} ms pre-trigger. Click to " +
-                "change them.");
+            ImGuiWidgets.Tooltip($"{node.CrossingWindow:g} ms window, {node.CrossingPreTrigger:g} ms pre-trigger, " +
+                $"{node.CrossingRateTimeConstant:g} s rate time constant. Click to change them.");
+
+            ImGui.SameLine(0, style.ItemInnerSpacing.X);
+            ImGui.BeginDisabled(!node.ShowThresholdCrossings || events is null);
+            if (ImGui.Button(ClearLabel))
+                events?.Clear();
+            ImGui.EndDisabled();
+            ImGuiWidgets.Tooltip("Start every channel's events over: their waveforms, counts and rates.",
+                "Detect threshold crossings first.\nKey: U");
 
             if (ImGui.BeginPopup(SettingsPopup))
             {
                 const string WindowLabel = "Window (ms)";
                 const string PreTriggerLabel = "Pre-trigger (ms)";
+                const string RateLabel = "Rate time constant (s)";
                 // NB: SameLine's offset counts from the popup's edge, not from inside its padding.
-                var fieldX = style.WindowPadding.X + style.ItemSpacing.X
-                    + Math.Max(ImGui.CalcTextSize(WindowLabel).X, ImGui.CalcTextSize(PreTriggerLabel).X);
+                var fieldX = style.WindowPadding.X + style.ItemSpacing.X + Math.Max(ImGui.CalcTextSize(RateLabel).X,
+                    Math.Max(ImGui.CalcTextSize(WindowLabel).X, ImGui.CalcTextSize(PreTriggerLabel).X));
                 var fieldWidth = ImGui.CalcTextSize("00.000").X + 2 * style.FramePadding.X;
 
                 ImGui.AlignTextToFramePadding();
                 ImGui.Text(WindowLabel);
                 ImGui.SameLine(fieldX);
-                var window = node.SpikeWindow;
+                var window = node.CrossingWindow;
                 ImGui.SetNextItemWidth(fieldWidth);
-                ImGui.InputDouble("##spikeWindow", ref window, "%g");
+                ImGui.InputDouble("##crossingWindow", ref window, "%g");
                 if (ImGui.IsItemDeactivatedAfterEdit() && window > 0)
                 {
-                    node.SpikeWindow = window;
-                    node.SpikePreTrigger = Math.Min(node.SpikePreTrigger, window);
+                    node.CrossingWindow = window;
+                    node.CrossingPreTrigger = Math.Min(node.CrossingPreTrigger, window);
                 }
-                ImGuiWidgets.Tooltip("The duration of each spike's waveform. A new one starts the spikes over, applied " +
-                    "once you leave the field.");
+                ImGuiWidgets.Tooltip("The duration of the waveform kept at each crossing. A new one starts the " +
+                    "events over, applied once you leave the field.");
 
                 ImGui.AlignTextToFramePadding();
                 ImGui.Text(PreTriggerLabel);
                 ImGui.SameLine(fieldX);
-                var preTrigger = node.SpikePreTrigger;
+                var preTrigger = node.CrossingPreTrigger;
                 ImGui.SetNextItemWidth(fieldWidth);
-                ImGui.InputDouble("##spikePreTrigger", ref preTrigger, "%g");
+                ImGui.InputDouble("##crossingPreTrigger", ref preTrigger, "%g");
                 if (ImGui.IsItemDeactivatedAfterEdit())
-                    node.SpikePreTrigger = Math.Max(0, Math.Min(preTrigger, node.SpikeWindow));
-                ImGuiWidgets.Tooltip("The time in each spike's waveform before its peak, or before its threshold " +
-                    "crossing where the peak comes first. A new one starts the spikes over, applied once you leave " +
-                    "the field.");
+                    node.CrossingPreTrigger = Math.Max(0, Math.Min(preTrigger, node.CrossingWindow));
+                ImGuiWidgets.Tooltip("The time in each crossing's waveform before its peak, or before the " +
+                    "crossing itself where the peak comes first. A new one starts the events over, applied once you " +
+                    "leave the field.");
+
+                ImGui.AlignTextToFramePadding();
+                ImGui.Text(RateLabel);
+                ImGui.SameLine(fieldX);
+                var rateTimeConstant = node.CrossingRateTimeConstant;
+                ImGui.SetNextItemWidth(fieldWidth);
+                ImGui.InputDouble("##crossingRateTimeConstant", ref rateTimeConstant, "%g");
+                if (ImGui.IsItemDeactivatedAfterEdit() && rateTimeConstant > 0)
+                    node.CrossingRateTimeConstant = rateTimeConstant;
+                ImGuiWidgets.Tooltip("The time over which each channel's event rate is averaged. A longer one " +
+                    "steadies the rate, and a shorter one follows a change sooner. It applies without starting the " +
+                    "events over, once you leave the field.");
 
                 ImGui.EndPopup();
             }
         }
 
-        // NB: a header row as tall as the plot's time labels, so the spikes start level with the plot.
-        void DrawSpikePane(float width, float height)
+        // NB: a header row as tall as the plot's time labels, so the waveforms start level with the plot.
+        void DrawEventPane(float width, float height)
         {
-            ImGui.BeginChild("##spikePane", new Vector2(width, height),
+            ImGui.BeginChild("##eventPane", new Vector2(width, height),
                 ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
 
             var row = ExpandedRow;
             var channel = row?.Channel ?? -1;
             ImGui.AlignTextToFramePadding();
-            ImGui.Text(channel >= 0 ? $"Spikes on {channel}" : "Spikes");
+            ImGui.Text(channel >= 0 ? $"Ch {channel}" : string.Empty);
             const string ClearLabel = "Clear";
             var clearWidth = ImGui.CalcTextSize(ClearLabel).X + ImGui.GetStyle().FramePadding.X * 2;
             ImGui.SameLine();
             ImGui.SetCursorPosX(ImGui.GetCursorPosX() + Math.Max(0, ImGui.GetContentRegionAvail().X - clearWidth));
-            if (ImGui.Button(ClearLabel))
-                spikes?.Clear();
-            ImGuiWidgets.Tooltip("Start every channel's spikes over.");
+            if (ImGui.SmallButton(ClearLabel))
+                events?.Clear();
+            ImGuiWidgets.Tooltip("Start every channel's events over.");
 
-            var view = spikes;
+            var view = events;
             if (view is null)
                 ImGui.TextDisabled("Waiting for the probe.");
             else if (row is not { } expanded)
                 view.Flush();
             else
             {
-                // NB: on the expanded row's own lines, so a spike stands as tall as its trace.
+                // NB: on the expanded row's own lines, so a waveform stands as tall as its trace.
                 ImGui.SetCursorScreenPos(new Vector2(ImGui.GetCursorScreenPos().X, expanded.Top));
                 var size = new Vector2(ImGui.GetContentRegionAvail().X, expanded.Height);
                 var (center, range) = Amplitude;
-                if (view.Draw(channel, size, ChannelColor(channel), center, range, Node.SpikeThreshold) is double dropped)
-                    Node.SpikeThreshold = Math.Round(dropped);
+                var threshold = Node.CrossingThreshold;
+                if (view.Draw(channel, size, ChannelColor(channel), center, range, threshold) is double dropped)
+                    Node.CrossingThreshold = Math.Round(dropped);
             }
 
             ImGui.EndChild();
@@ -417,9 +600,14 @@ namespace OpenEphys.Onix1.Design
             var top = min.Y + ImGui.GetFrameHeight();
             var x = MathF.Floor((min.X + max.X - BarWidth) / 2);
             draw.AddRectFilled(new Vector2(x, top), new Vector2(x + BarWidth, max.Y), color);
+            ImGui.PopClipRect();
+
+            // NB: the chevron's left side on the bar's. ImGui centers its arrow in a box the font's size, with its
+            // back 0.3 of that left of center, and it reaches past the padding into the empty corner above the
+            // plot's labels.
             var arrow = ImGui.GetFontSize();
-            ImGuiP.RenderArrow(draw,
-                new Vector2(MathF.Floor((min.X + max.X - arrow) / 2), MathF.Floor((min.Y + top - arrow) / 2)),
+            ImGui.PushClipRect(min, new Vector2(x + arrow, top), false);
+            ImGuiP.RenderArrow(draw, new Vector2(x - 0.2f * arrow, MathF.Floor((min.Y + top - arrow) / 2)),
                 color, ImGuiDir.Right, 1);
             ImGui.PopClipRect();
             ImGui.SetCursorScreenPos(cursor);
@@ -475,6 +663,8 @@ namespace OpenEphys.Onix1.Design
                 SelectedChannel = channels[0];
                 Reveal(channels[0]);
             }
+            else if (channels.Length == 0)
+                SelectedChannel = -1;
         }
 
         // NB: a contact no channel records has nothing to show.
@@ -524,35 +714,36 @@ namespace OpenEphys.Onix1.Design
                 );
         }
 
-        // NB: from what the plot is shown, in the device's channel order, straight into the spike view, which queues
+        // NB: from what the plot is shown, in the device's channel order, straight into the event view, which queues
         // them for the window's thread. Nothing goes on to the display chain. Starting over, for a new band,
-        // reference or spike setting, empties the view, since what it holds was found in another signal.
-        IObservable<object> DetectSpikes(ProbeScopeSource<TFrame> probe, IObservable<Mat> signal, int sampleRate,
-            SpikeSettings settings) => Observable.Defer(() =>
+        // reference or crossing setting, empties the view, since what it holds was found in another signal.
+        IObservable<object> DetectCrossings(ProbeScopeSource<TFrame> probe, IObservable<Mat> signal, int sampleRate,
+            CrossingSettings settings) => Observable.Defer(() =>
         {
             if (probe.ProbeGroup?.ChannelMap is not { Count: > 0 } map)
                 return Observable.Empty<object>();
 
             var (length, delay) = SpikeDetection.WaveformSamples(sampleRate, settings.Window / 1000, settings.PreTrigger / 1000);
-            var view = spikes;
+            var view = events;
             if (view is null)
-                spikes = view = new ImGuiSpikeView(map.Keys.Max() + 1, length, delay, sampleRate, SpikeSpan) { Unit = Unit };
+                events = view = new ImGuiEventView(map.Keys.Max() + 1, length, delay, sampleRate, EventSpan)
+                {
+                    Unit = Unit,
+                };
             else
                 view.Reshape(length, delay, sampleRate);
 
             var samples = new float[length];
-            var blocks = new Bonsai.Dsp.Buffer { Count = Math.Max(length, (int)Math.Round(SpikeBlockSeconds * sampleRate)) }
-                .Process(signal);
+            var blockLength = Math.Max(length, (int)Math.Round(DetectionBlockSeconds * sampleRate));
+            var blocks = new Bonsai.Dsp.Buffer { Count = blockLength }.Process(signal);
             return SpikeDetection.Detect(blocks, length, delay, new[] { settings.Threshold },
                     Bonsai.Dsp.SpikeWaveformRefinement.AlignPeaks)
                 .Do(collection =>
                 {
-                    if (spikesPaused)
-                        return;
-                    foreach (var spike in collection)
+                    foreach (var crossing in collection)
                     {
-                        Marshal.Copy(spike.Waveform.Data, samples, 0, samples.Length);
-                        view.Add(spike.ChannelIndex, samples);
+                        Marshal.Copy(crossing.Waveform.Data, samples, 0, samples.Length);
+                        view.Add(crossing.ChannelIndex, samples);
                     }
                 })
                 .IgnoreElements()
@@ -595,9 +786,9 @@ namespace OpenEphys.Onix1.Design
                 .Concat(signal
                     .Select(data => (object)new ProbeScopeSample(Reorder(data, rowChannels), band.SampleRate))
                     .Merge(clipping))
-                .Merge(spikeSettings
+                .Merge(crossingSettings
                     .Select(settings => settings.Show
-                        ? DetectSpikes(probe, signal, band.SampleRate, settings)
+                        ? DetectCrossings(probe, signal, band.SampleRate, settings)
                         : Observable.Empty<object>())
                     .Switch()));
         }
@@ -735,7 +926,7 @@ namespace OpenEphys.Onix1.Design
             if (rowChannels is null || data.Rows != rowChannels.Length)
                 return data;
 
-            // NB: data is not disposed, since spike detection shares it and holds it past this block.
+            // NB: data is not disposed, since crossing detection shares it and holds it past this block.
             var reordered = new Mat(data.Size, data.Depth, data.Channels);
 
             // NB: by pointer, since GetRow allocates a native header per row on every block.
@@ -819,8 +1010,8 @@ namespace OpenEphys.Onix1.Design
 
         /// <inheritdoc/>
         /// <remarks>
-        /// The probe pane sits left of the plot and the spike pane right of it. The probe pane is left out with the
-        /// strip while maximized, and the spike pane, which shares the plot's rows, is kept.
+        /// The probe pane sits left of the plot and the event pane right of it. The probe pane is left out with the
+        /// strip while maximized, and the event pane, which shares the plot's rows, is kept.
         /// </remarks>
         protected override void DrawFrame()
         {
@@ -835,19 +1026,29 @@ namespace OpenEphys.Onix1.Design
             if (!ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.G, false))
                 Node.ShowGroups = !Node.ShowGroups;
             if (!ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.U, false))
-                Node.ShowSpikes = !Node.ShowSpikes;
+                Node.ShowThresholdCrossings = !Node.ShowThresholdCrossings;
             AnswerGroupKeys();
             ChannelGroup = Node.ShowGroups ? traceGroup : null;
 
-            // NB: any new spike setting, or detection turned off, starts the spikes over, since what has accumulated
-            // was found under the old ones.
-            var spikeRequest = new SpikeSettings(Node);
-            if (spikeRequest != spikeSettings.Value)
+            // NB: any new crossing setting, or detection turned off, starts the events over, since what has
+            // accumulated was found under the old ones.
+            var crossingRequest = new CrossingSettings(Node);
+            if (crossingRequest != crossingSettings.Value)
             {
-                spikes?.Clear();
-                spikeSettings.OnNext(spikeRequest);
+                events?.Clear();
+                crossingSettings.OnNext(crossingRequest);
             }
-            spikesPaused = Paused;
+            if (events is { } eventView)
+            {
+                eventView.Paused = Paused;
+                if (Node.CrossingRateTimeConstant > 0)
+                    eventView.RateTimeConstant = Node.CrossingRateTimeConstant;
+            }
+
+            // NB: only while crossings are detected, since otherwise there is no rate to show and the contacts are
+            // colored as groups color them.
+            rateColored = Node.ColorContactsByEventRate && Node.ShowThresholdCrossings && events is not null;
+            selector.SelectedOutlineColor = rateColored ? ColorRateSelection : ImGuiProbeSelector.SelectionBorderColor;
 
             // NB: only a new selection scrolls the probe, so a pan away from it holds until the next one.
             var selected = SelectedChannel;
@@ -885,28 +1086,28 @@ namespace OpenEphys.Onix1.Design
                 ImGui.SameLine(0, 0);
             }
 
-            // NB: only beside an expanded channel, the one view whose rows the spikes can share. Known from the frame
-            // before, so the pane follows an expand or collapse a frame late.
-            var spikePane = Node.ShowSpikes && ExpandedRow is not null;
-            if (spikePane)
+            // NB: only beside an expanded channel, the one view whose rows the waveforms can share. Known from the
+            // frame before, so the pane follows an expand or collapse a frame late.
+            var eventPane = Node.ShowThresholdCrossings && ExpandedRow is not null;
+            if (eventPane)
             {
-                spikePaneWidth = Math.Max(MinSpikePaneWidth, Math.Min(spikePaneWidth, waveWidth - gap - MinPlotWidth));
-                waveWidth -= spikePaneWidth + gap;
+                eventPaneWidth = Math.Max(MinEventPaneWidth, Math.Min(eventPaneWidth, waveWidth - gap - MinPlotWidth));
+                waveWidth -= eventPaneWidth + gap;
             }
 
             // NB: a probe not drawn this frame keeps the contact last hovered, which the pointer has since left.
             HoveredChannel = probePane ? ChannelOf(selector.HoveredContactIndex) : -1;
             DrawPlot(new Vector2(waveWidth, availY));
-            if (spikePane)
+            if (eventPane)
             {
                 ImGui.SameLine(0, 0);
-                Splitter("##spikeSplitter", new Vector2(gap, availY), ref spikePaneWidth, DefaultSpikePaneWidth, -1,
-                    "Drag to resize the spike pane, or double-click to restore its width.");
+                Splitter("##eventSplitter", new Vector2(gap, availY), ref eventPaneWidth, DefaultEventPaneWidth, -1,
+                    "Drag to resize the event pane, or double-click to restore its width.");
                 ImGui.SameLine(0, 0);
-                DrawSpikePane(spikePaneWidth, availY);
+                DrawEventPane(eventPaneWidth, availY);
             }
             else
-                spikes?.Flush();
+                events?.Flush();
             ImGui.PopStyleVar();
 
             if (!maximized)
@@ -933,14 +1134,34 @@ namespace OpenEphys.Onix1.Design
                 ImGui.Text(model);
                 ImGui.SameLine();
             }
-            ImGui.SetCursorScreenPos(new Vector2(headerRight - ImGui.GetFrameHeight(), header.Y));
+            var style = ImGui.GetStyle();
+            var inner = style.ItemInnerSpacing.X;
+            var fitWidth = ImGui.CalcTextSize("Fit").X + 2 * style.FramePadding.X;
+            var rulerWidth = ImGui.CalcTextSize("Ruler").X + 2 * style.FramePadding.X;
+            var arrowX = headerRight - ImGui.GetFrameHeight();
+            var small = new Vector2(style.FramePadding.X, 0);
+            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, small);
+            ImGui.SetCursorScreenPos(new Vector2(arrowX - inner - rulerWidth - inner - fitWidth,
+                header.Y + style.FramePadding.Y));
+            var channels = SelectedContactChannels();
+            ImGui.BeginDisabled(channels.Length == 0);
+            var fitPressed = KeysElsewhere && !ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.F, false);
+            if ((ImGui.Button("Fit") || fitPressed) && channels.Length > 0)
+                ZoomTo(channels);
+            ImGui.EndDisabled();
+            ImGuiWidgets.Tooltip("Fit the selected contacts' channels to the plot.\nKey: F over the probe",
+                "Select contacts on the probe first.");
+            ImGui.SameLine(0, inner);
+            ImGuiRulerControls.DrawToggle(selector, "Ruler");
+            ImGui.PopStyleVar();
+
+            ImGui.SetCursorScreenPos(new Vector2(arrowX, header.Y));
             if (ImGui.ArrowButton("##hideProbe", ImGuiDir.Left))
                 Node.ShowProbe = false;
             ImGuiWidgets.Tooltip("Hide the probe to give the plot more room.\nKey: P");
 
             // NB: framed on the plot's frame's top and bottom lines, which the plot lays out a header row of one
             // frame height down and a scroll bar and half an item spacing up from the bottom.
-            var style = ImGui.GetStyle();
             var paneTop = ImGui.GetWindowPos().Y;
             var min = new Vector2(ImGui.GetCursorScreenPos().X, paneTop + ImGui.GetFrameHeight());
             var max = new Vector2(min.X + ImGui.GetContentRegionAvail().X,
@@ -951,19 +1172,22 @@ namespace OpenEphys.Onix1.Design
                 ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
             ImGui.PopStyleVar();
 
-            var channels = SelectedContactChannels();
-            ImGui.BeginDisabled(channels.Length == 0);
-            var fitPressed = KeysElsewhere && !ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.F, false);
-            if ((ImGui.Button("Fit") || fitPressed) && channels.Length > 0)
-                ZoomTo(channels);
-            ImGui.EndDisabled();
-            ImGuiWidgets.Tooltip("Fit the selected contacts' channels to the plot.\nKey: F over the probe",
-                "Select contacts on the probe first.");
-            ImGui.SameLine();
-            ImGuiRulerControls.DrawToggle(selector, "Ruler");
+            DrawContactColoring();
+            DrawColorKey();
 
-            DrawGroupSwatches();
+            // NB: the probe in a child of its own, since the selector fills whatever room is left and the contact's
+            // strip below needs its height kept.
+            var infoHeight = 2 * ImGui.GetTextLineHeight() + 2 * style.ItemSpacing.Y;
+            ImGui.BeginChild("##probeView", new Vector2(0, Math.Max(1, ImGui.GetContentRegionAvail().Y - infoHeight)),
+                ImGuiChildFlags.None, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
             selector.DrawZoomedView(selectionEnabled: true);
+
+            // NB: not while placing a ruler, whose clicks are its points.
+            if (!selector.PlacingRuler && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left) &&
+                ChannelOf(selector.HoveredContactIndex) >= 0)
+                ToggleExpanded();
+            ImGui.EndChild();
+            DrawContactInfo();
             ImGui.EndChild();
 
             // NB: the plot's frame color and weight, in filled rects on whole pixels as it draws them, since AddRect
@@ -1007,8 +1231,8 @@ namespace OpenEphys.Onix1.Design
         public override void Unload()
         {
             selector.SelectionChanged -= SelectContacts;
-            spikeSettings?.Dispose();
-            spikes = null;
+            crossingSettings?.Dispose();
+            events = null;
             scheduler?.Dispose();
             scheduler = null;
             bands = null;
