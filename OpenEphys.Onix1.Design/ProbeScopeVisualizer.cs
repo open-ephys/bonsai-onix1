@@ -46,7 +46,7 @@ namespace OpenEphys.Onix1.Design
         readonly ImGuiProbeSelector selector = new(zoomWindowFraction: 1f) { ShowGrid = false };
         Dictionary<int, int> groupOfChannel = new();
         ChannelSettings[] groupedFrom;
-        Func<int, int> traceGroup;
+        Func<int, int> groupOf;
         int lastGroupKey = -1;
         double lastGroupKeyTime;
         Dictionary<int, int> contactOfChannel = new();
@@ -132,14 +132,14 @@ namespace OpenEphys.Onix1.Design
             selector.ShowScrollBars = true;
             selector.Blocked = contact => ChannelOf(contact) < 0;
             selector.SelectionChanged += SelectContacts;
-            traceGroup = TraceGroup;
+            groupOf = GroupOf;
         }
 
         uint ContactColor(int contact) =>
             rateColored ? RateColor(ChannelOf(contact))
             : contact == selectedContact ? ColorContactSelected
             : contact == hoveredContact ? ColorContactHovered
-            : Node.ShowGroups ? GroupColor(TraceGroup(ChannelOf(contact)))
+            : Node.ShowGroups ? GroupColor(GroupOf(ChannelOf(contact)))
             : ColorContactEnabled;
 
         uint ContactOutline(int contact) =>
@@ -280,10 +280,6 @@ namespace OpenEphys.Onix1.Design
                 "the field.");
         }
 
-        // NB: groups are numbered from 1 on the probe, as their keys are, and from 0 in the palette, where a negative
-        // group is none.
-        int TraceGroup(int channel) => GroupOf(channel) - 1;
-
         int GroupOf(int channel) => Groups().TryGetValue(channel, out var group) ? group : 0;
 
         Dictionary<int, int> Groups()
@@ -303,24 +299,8 @@ namespace OpenEphys.Onix1.Design
             return groupOfChannel;
         }
 
-        // NB: a new array rather than the entries changed in place, since the plot works its masks out again only
-        // when the array is replaced.
-        void AssignGroup(int[] channels, int group, bool replace)
-        {
-            var assigned = new HashSet<int>(channels);
-            var entries = (Node.Channels ?? Array.Empty<ChannelSettings>())
-                .Select(entry => new ChannelSettings
-                {
-                    Index = entry.Index,
-                    Hidden = entry.Hidden,
-                    Group = assigned.Remove(entry.Index) ? group : replace && entry.Group == group ? 0 : entry.Group,
-                })
-                .Concat(assigned.Select(channel => new ChannelSettings { Index = channel, Group = group }))
-                .Where(entry => entry.Hidden || entry.Group > 0)
-                .OrderBy(entry => entry.Index)
-                .ToArray();
-            Node.Channels = entries.Length > 0 ? entries : null;
-        }
+        void AssignGroup(int[] channels, int group, bool replace) =>
+            Node.Channels = ChannelSettings.WithGroup(Node.Channels, channels, group, replace);
 
         int[] GroupChannels(int group) => Groups().Where(entry => entry.Value == group).Select(entry => entry.Key).ToArray();
 
@@ -372,7 +352,7 @@ namespace OpenEphys.Onix1.Design
                     else if (!io.KeyCtrl) SelectGroup(n);
                 }
 
-                var color = GroupColor(n - 1);
+                var color = GroupColor(n);
                 draw.AddRectFilled(min, min + new Vector2(side), count > 0 ? color : ImGuiPalette.WithAlpha(color, 0x40),
                     ImGui.GetStyle().FrameRounding);
                 if (hovered)
@@ -972,7 +952,7 @@ namespace OpenEphys.Onix1.Design
             if (!ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.U, false))
                 Node.ShowThresholdCrossings = !Node.ShowThresholdCrossings;
             AnswerGroupKeys();
-            ChannelGroup = Node.ShowGroups ? traceGroup : null;
+            ChannelGroup = Node.ShowGroups ? groupOf : null;
 
             var crossingRequest = new CrossingSettings(Node);
             if (crossingRequest != crossingSettings.Value)
