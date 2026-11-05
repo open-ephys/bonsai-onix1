@@ -23,8 +23,8 @@ namespace OpenEphys.Onix1
 
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(NeuropixelsV1.NameConverter))]
-        [Description(SingleDeviceFactory.DeviceNameDescription)]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Description(DeviceFactoryStrings.DeviceNameDescription)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace OpenEphys.Onix1
         /// </remarks>
         [Description("Number of super-frames (384 channels from spike band and 32 channels from " +
             "LFP band) to buffer before propagating data. Must be a multiple of 12.")]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public int BufferSize
         {
             get => bufferSize;
@@ -53,7 +53,7 @@ namespace OpenEphys.Onix1
         /// of the electrodes.
         /// </remarks>
         [Description("Determines if the channels are returned ordered by depth.")]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public bool OrderByDepth { get; set; } = false;
 
         /// <summary>

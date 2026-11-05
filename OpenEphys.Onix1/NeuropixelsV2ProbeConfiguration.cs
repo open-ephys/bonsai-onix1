@@ -59,7 +59,7 @@ namespace OpenEphys.Onix1
         /// property to true will apply a gain of -1 to undo this effect.
         /// </para>
         /// </remarks>
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         [Description("Invert the polarity of the electrode voltages acquired by the probe.")]
         public bool InvertPolarity { get; set; } = true;
 
@@ -83,7 +83,7 @@ namespace OpenEphys.Onix1
         /// in which case the probe is configured without gain correction instead.
         /// </para>
         /// </remarks>
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the gain calibration file for this probe.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
@@ -94,7 +94,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         [XmlIgnore]
         [JsonIgnore]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         [Description("Defines the reference for the probe.")]
         public abstract Enum Reference { get; set; }
 
@@ -112,7 +112,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Gets or sets the file path where the ProbeInterface configuration will be saved.
         /// </summary>
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         [Description("File path to where the ProbeInterface file exists for this probe.")]
         [FileNameFilter(ProbeInterfaceHelper.ProbeInterfaceFileNameFilter)]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]

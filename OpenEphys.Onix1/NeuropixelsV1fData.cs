@@ -22,8 +22,8 @@ namespace OpenEphys.Onix1
 
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(NeuropixelsV1f.NameConverter))]
-        [Description(SingleDeviceFactory.DeviceNameDescription)]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Description(DeviceFactoryStrings.DeviceNameDescription)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace OpenEphys.Onix1
         /// of the electrodes.
         /// </remarks>
         [Description("Determines if the channels are returned ordered by depth.")]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public bool OrderByDepth { get; set; } = false;
 
         /// <summary>

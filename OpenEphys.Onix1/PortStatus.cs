@@ -18,7 +18,7 @@ namespace OpenEphys.Onix1
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(PortController.NameConverter))]
-        [Description(SingleDeviceFactory.DeviceNameDescription)]
+        [Description(DeviceFactoryStrings.DeviceNameDescription)]
         public string DeviceName { get; set; }
 
         /// <summary>

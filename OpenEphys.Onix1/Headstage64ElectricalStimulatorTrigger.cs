@@ -22,8 +22,8 @@ namespace OpenEphys.Onix1
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(Headstage64ElectricalStimulator.NameConverter))]
-        [Description(SingleDeviceFactory.DeviceNameDescription)]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Description(DeviceFactoryStrings.DeviceNameDescription)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>

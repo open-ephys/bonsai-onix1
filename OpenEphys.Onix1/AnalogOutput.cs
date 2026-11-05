@@ -25,8 +25,8 @@ namespace OpenEphys.Onix1
 
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(AnalogIO.NameConverter))]
-        [Description(SingleDeviceFactory.DeviceNameDescription)]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Description(DeviceFactoryStrings.DeviceNameDescription)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -40,7 +40,7 @@ namespace OpenEphys.Onix1
         /// and 10 volts are sent directly to the DACs.
         /// </remarks>
         [Description("The data type used to represent analog samples.")]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public AnalogIODataType DataType { get; set; } = AnalogIODataType.S16;
 
         /// <summary>

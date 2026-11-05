@@ -29,7 +29,7 @@ namespace OpenEphys.Onix1
         /// Gets or sets a string specifying the device driver used to communicate with hardware.
         /// </summary>
         [Description("Specifies the device driver used to communicate with hardware.")]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         [TypeConverter(typeof(ContextDriverConverter))]
         public string Driver { get; set; } = OnixContextTask.DefaultDriver;
 
@@ -44,7 +44,7 @@ namespace OpenEphys.Onix1
         /// the host computer.
         /// </remarks>
         [Description("The index of the host interconnect between the ONI controller and host computer.")]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public int Index { get; set; } = OnixContextTask.DefaultIndex;
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace OpenEphys.Onix1
         /// </para>
         /// </remarks>
         [Description("Specifies how strictly hardware validation checks are enforced.")]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public ValidationLevel ValidationLevel { get; set; } = ValidationLevel.Normal;
 
         /// <summary>

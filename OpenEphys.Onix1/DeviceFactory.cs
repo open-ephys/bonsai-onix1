@@ -69,24 +69,17 @@ namespace OpenEphys.Onix1
         public IObservable<T> Process<T>(IObservable<T> source) where T : TContext => Process((IObservable<TContext>)source).Cast<T>();
 
 
-        internal const string ConfigurationCategory = DeviceFactory.ConfigurationCategory;
-        internal const string AcquisitionCategory = DeviceFactory.AcquisitionCategory;
+        internal const string ConfigurationCategory = DeviceFactoryStrings.ConfigurationCategory;
+        internal const string AcquisitionCategory = DeviceFactoryStrings.AcquisitionCategory;
     }
 
     /// <summary>
-    /// Static strings constant for DeviceFactory 
+    /// Static string constants shared by device factory classes.
     /// </summary>
-    public static class DeviceFactory
+    internal static class DeviceFactoryStrings
     {
         internal const string ConfigurationCategory = "Configuration";
         internal const string AcquisitionCategory = "Acquisition";
-    }
-
-    /// <summary>
-    /// Static strings constant for SingleDeviceFactory
-    /// </summary>
-    public static class SingleDeviceFactory
-    {
         internal const string DeviceNameDescription = "The unique device name.";
         internal const string DeviceAddressDescription = "The device address.";
     }
@@ -102,8 +95,8 @@ namespace OpenEphys.Onix1
     /// </remarks>
     public abstract class SingleDeviceFactory<TContext> : DeviceFactory<TContext>, IDeviceConfiguration<TContext>, IAddressableDevice where TContext : ContextTask
     {
-        internal const string DeviceNameDescription = SingleDeviceFactory.DeviceNameDescription;
-        internal const string DeviceAddressDescription = SingleDeviceFactory.DeviceAddressDescription;
+        internal const string DeviceNameDescription = DeviceFactoryStrings.DeviceNameDescription;
+        internal const string DeviceAddressDescription = DeviceFactoryStrings.DeviceAddressDescription;
 
         internal SingleDeviceFactory(Type deviceType)
         {

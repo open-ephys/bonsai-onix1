@@ -36,8 +36,8 @@ namespace OpenEphys.Onix1
         /// communication.
         /// </remarks>
         [TypeConverter(typeof(PolledBno055.NameConverter))]
-        [Description(SingleDeviceFactory.DeviceNameDescription)]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Description(DeviceFactoryStrings.DeviceNameDescription)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace OpenEphys.Onix1
         /// cref="Bno055DataFrame"/>, with the exception of <c>Clock</c> and <c>HubClock</c>, will be set to
         /// 0.
         /// </remarks>
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         [Description("Specifies which data registers should be read from the chip.")]
         [TypeConverter(typeof(FlagsConverter))]
         public PolledBno055Registers PolledRegisters { get; set; } = PolledBno055Registers.All;

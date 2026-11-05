@@ -22,8 +22,8 @@ namespace OpenEphys.Onix1
     {
         /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
         [TypeConverter(typeof(NeuropixelsV2Beta.NameConverter))]
-        [Description(SingleDeviceFactory.DeviceNameDescription)]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Description(DeviceFactoryStrings.DeviceNameDescription)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace OpenEphys.Onix1
         /// Buffer size sets the number of frames that are buffered before propagating data.
         /// </remarks>
         [Description("The number of samples collected for each channel that are used to create a single NeuropixelsV2eBetaDataFrame.")]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public int BufferSize { get; set; } = 30;
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace OpenEphys.Onix1
         /// of the electrodes.
         /// </remarks>
         [Description("Determines if the channels are returned ordered by depth.")]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public bool OrderByDepth { get; set; } = false;
 
         /// <summary>
