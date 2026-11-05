@@ -22,15 +22,34 @@ namespace OpenEphys.Onix1
         internal const string DefaultDriver = "riffa";
         internal const int DefaultIndex = 0;
 
+        // In ONIX, HardwareAddress is a 32-bit integer where bits 16-17 represent
+        // the synchronization mode of the controller:
+        // If all zero the controller is in standalone mode.
+
+        // TODO : This is actually a naive approach, kept for keeping the original code behavior.
+        // However, nothing guarantees that all controllers are synchronized before acquisition starts 
+        // in all of them.
+        // the 0x00FF0000 is kept to maintain the original code, but it should be changed to 0x00030000
+
         /// <inheritdoc/>
-        protected override FrameClockResetMode GetFrameClockResetMode()
+        protected override bool GetFrameClockResetOnStart()
         {
             int address = HardwareAddress;
             int mode = (address & 0x00FF0000) >> 16;
-            return mode == 0 ? FrameClockResetMode.Synchronized : FrameClockResetMode.Independent;
+            return mode == 0;
         }
 
-        #region oni.Context Properties
+        /// <inheritdoc/>
+        protected override void PerformControllerSynchronization()
+        {
+            int address = HardwareAddress;
+            int mode = (address & 0x00FF0000) >> 16;
+            if (mode != 0)
+            {
+                ResetFrameClock();
+            }
+        }
+
         // Port A and Port B each have a bit in PORTFUNC
         internal PassthroughState HubState
         {
@@ -50,8 +69,6 @@ namespace OpenEphys.Onix1
 
             return hubAddress + 7;
         }
-
-        #endregion
 
 
     }

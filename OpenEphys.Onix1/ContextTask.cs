@@ -314,18 +314,18 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Performs implementation-specific check to determine
-        /// how the frame clock should be reset when acquisition starts
+        /// Gets a value indicating whether the frame clock is reset when acquisition starts.
         /// </summary>
-        /// <remarks>
-        /// When starting acquisition the global frame clock must be reset to 0.
-        /// The recommended way of doing so is to do it alongside acquisition
-        /// by passing a <c>true</c> argument to the <see cref="oni.Context.Start"/> call.
-        /// However, there might be cases where the frame clock must be reset independently or
-        /// not at all, for example when using multiple synchronized boards.
-        /// </remarks>
-        /// <returns>A <see cref="FrameClockResetMode"/> value indicating how the frame clock should be reset.</returns>
-        protected virtual FrameClockResetMode GetFrameClockResetMode() => FrameClockResetMode.Synchronized;
+        /// <remarks>The default implementation returns <see langword="true"/>.</remarks>
+        /// <returns><see langword="true"/> if the frame clock is reset on acquisition start; otherwise, <see langword="false"/>.</returns>
+        protected virtual bool GetFrameClockResetOnStart() => true;
+
+        /// <summary>
+        /// Performs synchronization between multiple ONI controller, if applicable and configured in the hardware. 
+        /// This method is called after the context is configured and before acquisition starts.
+        /// </summary>
+        /// <remarks>The default implementation does nothing.</remarks>
+        protected virtual void PerformControllerSynchronization() { }
 
         internal Task StartAsync(int blockReadSize, int blockWriteSize, CancellationToken cancellationToken = default)
         {
@@ -352,21 +352,9 @@ namespace OpenEphys.Onix1
                         ctx.BlockReadSize = blockReadSize;
                         ctx.BlockWriteSize = blockWriteSize;
 
-                        // NB : Start acquisition and reset frame clock according to the
-                        // desired mode
-                        switch (GetFrameClockResetMode())
-                        {
-                            case FrameClockResetMode.Synchronized:
-                                ctx.Start(true);
-                                break;
-                            case FrameClockResetMode.Independent:
-                                ctx.ResetFrameClock();
-                                ctx.Start(false);
-                                break;
-                            default:
-                                ctx.Start(false);
-                                break;
-                        }
+                        PerformControllerSynchronization();
+
+                        ctx.Start(GetFrameClockResetOnStart());
 
                     }
                     catch (oni.ONIException ex) when (ex.Number == -20)
@@ -539,6 +527,11 @@ namespace OpenEphys.Onix1
         /// <returns>The value of the specified option.</returns>
         public int GetCustomOption(int option) => ctx.GetCustomOption(option);
 
+        /// <summary>
+        /// Resets the frame clock for the underlying <see cref="oni.Context"/> and ONI controller.
+        /// </summary>
+        protected void ResetFrameClock() => ctx.ResetFrameClock();
+
 
         // NB: This is for actions that require synchronized register access and might
         // be called asynchronously with context dispose
@@ -573,7 +566,7 @@ namespace OpenEphys.Onix1
         /// Reads a single <see cref="oni.Frame"/> from the controller 
         /// </summary>
         /// <returns>The <see cref="oni.Frame"/> read from the controller.</returns>
-        protected oni.Frame ReadFrame()
+        private oni.Frame ReadFrame()
         {
             lock (readLock)
             {
@@ -638,24 +631,5 @@ namespace OpenEphys.Onix1
             disposeContextContinuation.GetAwaiter().GetResult();
             GC.SuppressFinalize(this);
         }
-    }
-
-    /// <summary>
-    /// Specifies the mode of resetting the frame clock when starting acquisition on a <see cref="ContextTask"/>.
-    /// </summary>
-    public enum FrameClockResetMode
-    {
-        /// <summary>
-        /// The frame clock will be reset by the <see cref="oni.Context.Start"/> call with a <c>true</c> argument
-        /// </summary>
-        Synchronized,
-        /// <summary>
-        /// The frame clock will be reset by an independent <see cref="oni.Context.ResetFrameClock"/> call
-        /// </summary>
-        Independent,
-        /// <summary>
-        /// The frame clock will not be reset by the <see cref="oni.Context.Start"/> call or an independent <see cref="oni.Context.ResetFrameClock"/> call
-        /// </summary>
-        None
     }
 }
