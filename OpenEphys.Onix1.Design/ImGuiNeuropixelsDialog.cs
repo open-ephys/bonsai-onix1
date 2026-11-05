@@ -30,7 +30,7 @@ namespace OpenEphys.Onix1.Design
 
         // NB: start the view at a 2 mm vertical box that extends 300 um below contact 0
         protected ImGuiNeuropixelsDialog(string probeName, ImGuiLogConsole log)
-            : base(new ImGuiProbeSelector(zoomWindow: 2000f, scrollY: 700f), log)
+            : base(new ImGuiProbeSelector(zoomWindow: 2000f, centerY: 700f), log)
         {
             this.probeName = probeName;
         }

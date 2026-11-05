@@ -471,7 +471,7 @@ namespace OpenEphys.Onix1.Design
             ImGui.BeginChild("##eventPane", new Vector2(width, height),
                 ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
 
-            var row = ExpandedRow;
+            var row = Expanded;
             var channel = row?.Channel ?? -1;
             ImGui.AlignTextToFramePadding();
             ImGui.Text(channel >= 0 ? $"Ch {channel}" : string.Empty);
@@ -492,9 +492,9 @@ namespace OpenEphys.Onix1.Design
             {
                 ImGui.SetCursorScreenPos(new Vector2(ImGui.GetCursorScreenPos().X, expanded.Top));
                 var size = new Vector2(ImGui.GetContentRegionAvail().X, expanded.Height);
-                var (center, range) = Amplitude;
+                var (center, span) = Amplitude;
                 var threshold = Node.CrossingThreshold;
-                if (view.Draw(channel, size, ChannelColor(channel), center, range, threshold) is double dropped)
+                if (view.Draw(channel, size, ChannelColor(channel), center, span, threshold) is double dropped)
                     Node.CrossingThreshold = Math.Round(dropped);
             }
 
@@ -969,7 +969,8 @@ namespace OpenEphys.Onix1.Design
             }
 
             rateColored = Node.ColorContactsByEventRate && Node.ShowThresholdCrossings && events is not null;
-            selector.SelectedOutlineColor = rateColored ? ColorRateSelection : ImGuiProbeSelector.SelectionBorderColor;
+            selector.SelectedOutlineColor =
+                rateColored ? ColorRateSelection : ImGuiProbeSelector.DefaultSelectedOutlineColor;
 
             var selected = SelectedChannel;
             selectedContact = ContactOf(selected);
@@ -1002,8 +1003,8 @@ namespace OpenEphys.Onix1.Design
                 ImGui.SameLine(0, 0);
             }
 
-            // NB: ExpandedRow is known from the frame before, so the pane follows an expand or collapse a frame late.
-            var eventPane = Node.ShowThresholdCrossings && ExpandedRow is not null;
+            // NB: Expanded is known from the frame before, so the pane follows an expand or collapse a frame late.
+            var eventPane = Node.ShowThresholdCrossings && Expanded is not null;
             if (eventPane)
             {
                 eventPaneWidth = Math.Max(MinEventPaneWidth, Math.Min(eventPaneWidth, waveWidth - gap - MinPlotWidth));

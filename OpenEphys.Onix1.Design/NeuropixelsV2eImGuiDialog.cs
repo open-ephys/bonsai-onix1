@@ -181,7 +181,7 @@ namespace OpenEphys.Onix1.Design
                 : actColorsActive
                     ? new LegendEntry[]
                       {
-                          new(ImGuiProbeSelector.SelectionBorderColor, "Editable selection", OutlineOnly: true),
+                          new(ImGuiProbeSelector.DefaultSelectedOutlineColor, "Editable selection", OutlineOnly: true),
                       }
                     : new LegendEntry[]
                       {
@@ -189,7 +189,7 @@ namespace OpenEphys.Onix1.Design
                           new(ColorContactEnabled, "Enabled"),
                           new(ColorContactDisabled, "Disabled"),
                           new(ImGuiProbeSelector.BlockedFillColor, "Unavailable", DottedOutline: true),
-                          new(ImGuiProbeSelector.SelectionBorderColor, "Editable selection", OutlineOnly: true),
+                          new(ImGuiProbeSelector.DefaultSelectedOutlineColor, "Editable selection", OutlineOnly: true),
                       };
         }
 
