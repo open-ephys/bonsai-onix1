@@ -193,9 +193,9 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// Gets or sets the time constant, in seconds, over which each channel's threshold crossing rate is averaged.
         /// </summary>
-        [DefaultValue(10.0)]
+        [DefaultValue(1.0)]
         [Description("The time constant, in seconds, over which each channel's threshold crossing rate is averaged.")]
-        public double CrossingRateTimeConstant { get; set; } = 10;
+        public double CrossingRateTimeConstant { get; set; } = 1;
 
         /// <summary>
         /// Gets or sets a value specifying whether the probe's contacts are colored by their channels' threshold
@@ -209,9 +209,9 @@ namespace OpenEphys.Onix1.Design
         /// <summary>
         /// Gets or sets the threshold crossing rate, in Hz, at the top of the probe's color scale.
         /// </summary>
-        [DefaultValue(100.0)]
+        [DefaultValue(50.0)]
         [Description("The threshold crossing rate, in Hz, at the top of the probe's color scale.")]
-        public double EventRateScale { get; set; } = 100;
+        public double EventRateScale { get; set; } = 50;
 
         /// <summary>
         /// Gets or sets the number of seconds of data retained behind the display.
