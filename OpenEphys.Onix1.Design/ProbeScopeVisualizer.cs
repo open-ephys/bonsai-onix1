@@ -62,7 +62,6 @@ namespace OpenEphys.Onix1.Design
         float eventPaneWidth = DefaultEventPaneWidth;
         bool rateColored;
         float rateLow;
-        float rateHigh;
         ProbeScopeSource<TFrame> source;
 
         // NB: made on the band chain's thread when detection first starts, and drawn on the window's, where its GL
@@ -126,7 +125,6 @@ namespace OpenEphys.Onix1.Design
             scheduler = new EventLoopScheduler();
             crossingSettings = new(new CrossingSettings(node));
 
-            rateHigh = (float)node.EventRateScale;
             selector.FillColor = ContactColor;
             selector.OutlineColor = ContactOutline;
             selector.ShowCoordinateReadout = false;
@@ -152,7 +150,8 @@ namespace OpenEphys.Onix1.Design
         uint RateColor(int channel)
         {
             var rate = (float)(events?.EventRate(channel) ?? 0);
-            var t = rateHigh > rateLow ? Math.Max(0f, Math.Min(1f, (rate - rateLow) / (rateHigh - rateLow))) : 0f;
+            var top = (float)Node.EventRateScale;
+            var t = top > rateLow ? Math.Max(0f, Math.Min(1f, (rate - rateLow) / (top - rateLow))) : 0f;
             return Plasma.DefaultMap[(int)(t * 255f)];
         }
 
@@ -261,24 +260,18 @@ namespace OpenEphys.Onix1.Design
             // NB: half an item spacing down, so the handles, which stand above the bar, are not clipped by the row.
             ImGui.SetCursorPosY(ImGui.GetCursorPosY() + style.ItemSpacing.Y / 2);
             var fieldWidth = ImGui.CalcTextSize("10000").X + 2 * style.FramePadding.X;
-            var scale = (float)node.EventRateScale;
-            ImGuiColormapRangeSlider.Draw("##rateScale", Plasma.DefaultMap, 0, scale, ref rateLow, ref rateHigh,
+            ImGuiColormapRangeSlider.DrawFloor("##rateScale", Plasma.DefaultMap, 0, (float)node.EventRateScale, ref rateLow,
                 ImGui.GetContentRegionAvail().X - fieldWidth - style.ItemInnerSpacing.X, valueFormat: "0.#",
-                minHandleTooltip: "The event rate, in Hz, at or below which a contact is the scale's darkest.",
-                maxHandleTooltip: "The event rate, in Hz, at or above which a contact is the scale's brightest.");
+                tooltip: "The event rate, in Hz, at or below which a contact is the scale's darkest.");
 
             ImGui.SameLine(0, style.ItemInnerSpacing.X);
             var top = node.EventRateScale;
             ImGui.SetNextItemWidth(fieldWidth);
             ImGui.InputDouble("##rateScaleTop", ref top, "%g");
             if (ImGui.IsItemDeactivatedAfterEdit() && top > 0)
-            {
-                if (rateHigh >= scale)
-                    rateHigh = (float)top;
                 node.EventRateScale = top;
-            }
-            ImGuiWidgets.Tooltip("The event rate, in Hz, at the right end of the scale, applied once you leave " +
-                "the field.");
+            ImGuiWidgets.Tooltip("The event rate, in Hz, at or above which a contact is the scale's brightest, " +
+                "applied once you leave the field.");
         }
 
         int GroupOf(int channel) => Groups().TryGetValue(channel, out var group) ? group : 0;
