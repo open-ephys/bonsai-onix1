@@ -191,30 +191,63 @@ namespace OpenEphys.Onix1.Design
             if (contact < 0)
                 contact = selectedContact;
 
-            var first = new List<string>();
-            var second = new List<string>();
-            var units = selector.CoordinateUnits;
+            const string NotApplicable = "n.a.";
+            string channelText = NotApplicable, contactText = NotApplicable, shank = NotApplicable;
+            string group = NotApplicable, rate = NotApplicable;
             if (source?.ProbeGroup?.Probe?.Contacts is { } contacts && (uint)contact < (uint)contacts.Count)
             {
                 var c = contacts[contact];
                 var channel = ChannelOf(contact);
-                first.Add(channel >= 0 ? $"Ch {channel}" : "Not recorded");
-                first.Add($"Contact {(string.IsNullOrEmpty(c.ContactId) ? contact.ToString() : c.ContactId)}");
+                if (channel >= 0)
+                    channelText = channel.ToString();
+                contactText = string.IsNullOrEmpty(c.ContactId) ? contact.ToString() : c.ContactId;
                 if (!string.IsNullOrEmpty(c.ShankId))
-                    first.Add($"Shank {c.ShankId}");
-                second.Add($"({c.PosX:0.#}, {c.PosY:0.#}) {units}");
-                if (channel >= 0 && GroupOf(channel) is var group and > 0)
-                    second.Add($"Group {group}");
+                    shank = c.ShankId;
+                if (channel >= 0 && GroupOf(channel) is var number and > 0)
+                    group = number.ToString();
                 if (channel >= 0 && Node.ShowThresholdCrossings && events is { } view)
-                    second.Add($"{TwoFigures(view.EventRate(channel))} Hz");
+                    rate = TwoFigures(view.EventRate(channel));
             }
-            else if (selector.PointerPosition is { } point)
-                first.Add($"({point.X:0.#}, {point.Y:0.#}) {units}");
 
+            var column = ImGui.CalcTextSize("Elec 0000   ").X;
             ImGui.PushStyleColor(ImGuiCol.Text, ImGuiPalette.Grey0x99);
-            ImGui.Text(string.Join("   ", first));
-            ImGui.Text(string.Join("   ", second));
+            InfoRow(column, $"Ch {channelText}", $"Elec {contactText}", $"Shk {shank}");
+            InfoRow(column, $"Grp {group}", $"{rate} Hz");
             ImGui.PopStyleColor();
+        }
+
+        /// <summary>
+        /// Shows where the pointer is on the probe in the view's lower right corner, above its scroll bar, as the
+        /// trace view shows the time and amplitude under the pointer.
+        /// </summary>
+        void DrawPointerReadout()
+        {
+            if (selector.PointerPosition is not { } point)
+                return;
+
+            var style = ImGui.GetStyle();
+            var text = $"({point.X:0.#}, {point.Y:0.#}) {selector.CoordinateUnits}";
+            var size = ImGui.CalcTextSize(text);
+            var corner = ImGui.GetWindowPos() + ImGui.GetWindowSize() - new Vector2(0, style.ScrollbarSize) - size -
+                2 * style.FramePadding;
+
+            // NB: framed as the trace view frames its readout, whose helper the library keeps internal.
+            var min = corner - style.FramePadding;
+            var max = corner + size + style.FramePadding;
+            var draw = ImGui.GetWindowDrawList();
+            draw.AddRectFilled(min, max, ImGuiPalette.WithAlpha(ImGuiPalette.Black, 0xBB), style.ChildRounding);
+            draw.AddRect(min, max, ImGui.GetColorU32(ImGuiCol.Border), style.ChildRounding);
+            draw.AddText(corner, ImGui.GetColorU32(ImGuiCol.Text), text);
+        }
+
+        static void InfoRow(float column, params string[] fields)
+        {
+            for (int i = 0; i < fields.Length; i++)
+            {
+                if (i > 0)
+                    ImGui.SameLine(i * column);
+                ImGui.Text(fields[i]);
+            }
         }
 
         int SoleSelectedContact()
@@ -1041,17 +1074,16 @@ namespace OpenEphys.Onix1.Design
             {
                 ImGui.AlignTextToFramePadding();
                 ImGui.Text(model);
-                ImGui.SameLine();
             }
             var style = ImGui.GetStyle();
             var inner = style.ItemInnerSpacing.X;
             var fitWidth = ImGui.CalcTextSize("Fit").X + 2 * style.FramePadding.X;
             var rulerWidth = ImGui.CalcTextSize("Ruler").X + 2 * style.FramePadding.X;
             var arrowX = headerRight - ImGui.GetFrameHeight();
+            var buttonY = header.Y + style.FramePadding.Y;
             var small = new Vector2(style.FramePadding.X, 0);
             ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, small);
-            ImGui.SetCursorScreenPos(new Vector2(arrowX - inner - rulerWidth - inner - fitWidth,
-                header.Y + style.FramePadding.Y));
+            ImGui.SetCursorScreenPos(new Vector2(arrowX - inner - rulerWidth - inner - fitWidth, buttonY));
             var channels = SelectedContactChannels();
             ImGui.BeginDisabled(channels.Length == 0);
             var fitPressed = probeHovered &&!ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.F, false);
@@ -1064,17 +1096,17 @@ namespace OpenEphys.Onix1.Design
             ImGuiRulerControls.DrawToggle(selector, "Ruler");
             ImGui.PopStyleVar();
 
-            ImGui.SetCursorScreenPos(new Vector2(arrowX, header.Y));
-            if (ImGui.ArrowButton("##hideProbe", ImGuiDir.Left))
+            ImGui.SetCursorScreenPos(new Vector2(arrowX, buttonY));
+            if (ImGuiP.ArrowButtonEx("##hideProbe", ImGuiDir.Left,
+                new Vector2(ImGui.GetFrameHeight(), ImGui.GetTextLineHeight()), ImGuiButtonFlags.None))
                 Node.ShowProbe = false;
             ImGuiWidgets.Tooltip("Hide the probe to give the plot more room.\nKey: P");
 
-            // NB: framed on the plot's frame's top and bottom lines, which the plot lays out a header row of one
-            // frame height down and a scroll bar and half an item spacing up from the bottom.
+            // NB: framed from the plot's frame's top line, which the plot lays out a header row of one frame height
+            // down, to the bottom of its scroll bar, which is the bottom of the pane.
             var paneTop = ImGui.GetWindowPos().Y;
             var min = new Vector2(ImGui.GetCursorScreenPos().X, paneTop + ImGui.GetFrameHeight());
-            var max = new Vector2(min.X + ImGui.GetContentRegionAvail().X,
-                paneTop + availY - style.ScrollbarSize - style.ItemSpacing.Y / 2);
+            var max = new Vector2(min.X + ImGui.GetContentRegionAvail().X, paneTop + availY);
             ImGui.SetCursorScreenPos(min);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, style.ItemSpacing);
             ImGui.BeginChild("##probeFrame", max - min, ImGuiChildFlags.AlwaysUseWindowPadding,
@@ -1090,11 +1122,13 @@ namespace OpenEphys.Onix1.Design
             ImGui.BeginChild("##probeView", new Vector2(0, Math.Max(1, ImGui.GetContentRegionAvail().Y - infoHeight)),
                 ImGuiChildFlags.None, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
             selector.DrawZoomedView(selectionEnabled: true);
+            DrawPointerReadout();
 
             if (!selector.PlacingRuler && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left) &&
                 ChannelOf(selector.HoveredContactIndex) >= 0)
                 ToggleExpanded();
             ImGui.EndChild();
+            var infoTop = ImGui.GetCursorScreenPos().Y;
             DrawContactInfo();
             ImGui.EndChild();
 
@@ -1107,6 +1141,8 @@ namespace OpenEphys.Onix1.Design
             draw.AddRectFilled(new Vector2(l, b - weight), new Vector2(r, b), color);
             draw.AddRectFilled(new Vector2(l, t), new Vector2(l + weight, b), color);
             draw.AddRectFilled(new Vector2(r - weight, t), new Vector2(r, b), color);
+            var rule = MathF.Floor(infoTop - style.ItemSpacing.Y / 2);
+            draw.AddRectFilled(new Vector2(l, rule), new Vector2(r, rule + weight), color);
             ImGui.EndChild();
         }
 
