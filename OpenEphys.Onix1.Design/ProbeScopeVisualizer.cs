@@ -54,6 +54,7 @@ namespace OpenEphys.Onix1.Design
         int selectedContact = -1;
         int hoveredContact = -1;
         int revealedChannel = -1;
+        bool probeHovered;
         ImGuiProbeScopeBandColumns<TFrame> bands;
         EventLoopScheduler scheduler;
         string deviceName;
@@ -985,7 +986,7 @@ namespace OpenEphys.Onix1.Design
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(panePadding.X, 0));
 
             var waveWidth = availX;
-            KeysElsewhere = false;
+            probeHovered = false;
             var probePane = !maximized && Node.ShowProbe;
             if (!maximized && !probePane)
                 DrawProbeHandle(availY);
@@ -1010,8 +1011,8 @@ namespace OpenEphys.Onix1.Design
             }
 
             // NB: a probe not drawn this frame keeps the contact last hovered, which the pointer has since left.
-            HoveredChannel = probePane ? ChannelOf(selector.HoveredContactIndex) : -1;
-            DrawPlot(new Vector2(waveWidth, availY));
+            DrawPlot(new Vector2(waveWidth, availY), probePane ? ChannelOf(selector.HoveredContactIndex) : -1,
+                probeHovered);
             if (eventPane)
             {
                 ImGui.SameLine(0, 0);
@@ -1032,10 +1033,10 @@ namespace OpenEphys.Onix1.Design
         {
             ImGui.BeginChild("##probePane", new Vector2(probeWidth, availY),
                 ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
-            KeysElsewhere = ImGui.IsWindowHovered(ImGuiHoveredFlags.ChildWindows);
+            probeHovered = ImGui.IsWindowHovered(ImGuiHoveredFlags.ChildWindows);
 
             // NB: a selected ruler takes Delete first, as the probe view answers it.
-            if (KeysElsewhere && !selector.RulerSelected && !ImGui.GetIO().WantTextInput && !ImGui.GetIO().KeyShift &&
+            if (probeHovered &&!selector.RulerSelected && !ImGui.GetIO().WantTextInput && !ImGui.GetIO().KeyShift &&
                 ImGui.IsKeyPressed(ImGuiKey.Delete, false) && SelectedContactChannels() is { Length: > 0 } ungrouped)
                 AssignGroup(ungrouped, 0, replace: false);
 
@@ -1059,7 +1060,7 @@ namespace OpenEphys.Onix1.Design
                 header.Y + style.FramePadding.Y));
             var channels = SelectedContactChannels();
             ImGui.BeginDisabled(channels.Length == 0);
-            var fitPressed = KeysElsewhere && !ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.F, false);
+            var fitPressed = probeHovered &&!ImGui.GetIO().WantTextInput && ImGui.IsKeyPressed(ImGuiKey.F, false);
             if ((ImGui.Button("Fit") || fitPressed) && channels.Length > 0)
                 ZoomTo(channels);
             ImGui.EndDisabled();
