@@ -29,7 +29,7 @@ namespace OpenEphys.Onix1
     /// Additionally, this operator exposes important information about the underlying ONI hardware such as
     /// the device table, clock rates, and block read and write sizes. <strong>In summary, <see
     /// cref="ContextTask"/> forms a complete interface for all hardware interaction within the library: all
-    /// physical interaction with the ONIX system ultimately passes through this class.</strong>
+    /// physical interaction with the ONI controller ultimately passes through this class.</strong>
     /// </remarks>
     public abstract class ContextTask : IDisposable
     {
@@ -530,7 +530,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <param name="option">The option to set.</param>
         /// <param name="value">The value to set for the option.</param>
-        public void SetCustomOption(int option, int value) => ctx.SetCustomOption(option, value);
+        protected void SetCustomOption(int option, int value) => ctx.SetCustomOption(option, value);
 
         /// <summary>
         /// Gets a custom option for the underlying <see cref="oni.Context"/>. The meaning of the option is implementation-specific.

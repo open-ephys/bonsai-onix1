@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
-using System.Reflection;
 using System.Reactive.Disposables;
+using System.Reflection;
 using System.Threading;
 using oni;
 
@@ -120,7 +120,7 @@ namespace OpenEphys.Onix1
 
         public static DeviceContext GetPassthroughDeviceContext(this DeviceContext device, Type expectedType)
         {
-            var ctx = (device.Context as Onix1.OnixContextTask) ?? throw new NotSupportedException("Passthough is only supported by onix1 library classes");
+            var ctx = (device.Context as Onix1.OnixContextTask) ?? throw new NotSupportedException("Passthrough is only supported by onix1 library classes");
             return GetPassthroughDeviceContext(ctx, device.Address, expectedType);
         }
 

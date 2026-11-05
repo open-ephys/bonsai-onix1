@@ -16,6 +16,10 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Provides an abstract base class for all device configuration operators.
     /// </summary>
+    /// <typeparam name="TContext">
+    /// A type derived from <see cref="ContextTask"/> that represents the 
+    /// ONI controller that this device is compatible with.
+    /// </typeparam>
     /// <remarks>
     /// ONI devices usually require a specific sequence of configuration and parameterization
     /// steps before they can be interacted with. The <see cref="DeviceFactory"/> provides
@@ -38,12 +42,31 @@ namespace OpenEphys.Onix1
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance
         /// prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that hold configuration actions.</param>
+        /// <param name="source">A sequence of <typeparamref name="TContext"/> instances that hold configuration actions.</param>
         /// <returns>
         /// The original sequence modified by adding additional configuration actions required to configure
         /// all the devices in the device group.
         /// </returns>
         public abstract IObservable<TContext> Process(IObservable<TContext> source);
+
+        /// <summary>
+        /// Configures all devices in the device group while preserving the derived context type of the input sequence.
+        /// </summary>
+        /// <remarks>
+        /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance
+        /// prior to data acquisition.
+        /// </remarks>
+        /// <typeparam name="T">
+        /// The specific type of the context task, which must derive from <typeparamref name="TContext"/>.
+        /// </typeparam>
+        /// <param name="source">
+        /// A sequence of <typeparamref name="T"/> instances that hold configuration actions.
+        /// </param>
+        /// <returns>
+        /// The original sequence of <typeparamref name="T"/> instances, modified by adding the configuration
+        /// actions required to configure all the devices in the device group.
+        /// </returns>
+        public IObservable<T> Process<T>(IObservable<T> source) where T : TContext => Process((IObservable<TContext>)source).Cast<T>();
 
 
         internal const string ConfigurationCategory = DeviceFactory.ConfigurationCategory;
