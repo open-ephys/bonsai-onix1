@@ -253,7 +253,7 @@ namespace OpenEphys.Onix1.Design
             float thr = (float)state.SpikeThreshold;
             ImGui.SetNextItemWidth(thrAvail * 0.33f);
             if (ImGui.InputFloat("Spike threshold (uV)##thr", ref thr, 5f, 10f, "%.1f")) state.SpikeThreshold = thr;
-            ImGuiWidgets.Tooltip("Voltage a channel must cross, relative to baseline, to be counted as a spike during the survey.");
+            ImGuiWidgets.Tooltip($"Voltage a channel must cross, relative to baseline, to be counted as a spike during the survey. The survey detects spikes after a {SpikeDetection.BandDescription} band-pass filter and common median referencing.");
 
             float tpb = state.TimePerBankSeconds;
             ImGui.SetNextItemWidth(thrAvail * 0.33f);
