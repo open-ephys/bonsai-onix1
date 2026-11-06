@@ -38,13 +38,16 @@ namespace OpenEphys.Onix1.Design
         /// <param name="setHeadstagePort">
         /// Writes an edited port back onto the headstage's own configuration node.
         /// </param>
+        /// <param name="initialPortVoltage">Initial voltage override, seeded from the headstage's own configured
+        /// port voltage (<c>null</c> if it is auto-negotiated).</param>
         /// <param name="setHeadstagePortVoltage">
         /// Writes an edited voltage override back onto the headstage's own configuration node, for the same
         /// reason as <paramref name="setHeadstagePort"/>.
         /// </param>
         /// <param name="log">The hosting shell's console log.</param>
         internal NeuropixelsV1HeadstageControlPanel(IReadOnlyList<NeuropixelsV1SurveyTarget> targets, SurveyHeadstageFactory buildHeadstage,
-            PortName initialPort, Action<PortName> setHeadstagePort, Action<double?> setHeadstagePortVoltage, ImGuiLogConsole log)
+            PortName initialPort, Action<PortName> setHeadstagePort,
+            double? initialPortVoltage, Action<double?> setHeadstagePortVoltage, ImGuiLogConsole log)
         {
             this.targets = targets ?? throw new ArgumentNullException(nameof(targets));
             this.buildHeadstage = buildHeadstage ?? throw new ArgumentNullException(nameof(buildHeadstage));
@@ -52,6 +55,7 @@ namespace OpenEphys.Onix1.Design
             this.setHeadstagePortVoltage = setHeadstagePortVoltage ?? throw new ArgumentNullException(nameof(setHeadstagePortVoltage));
             this.log = log ?? throw new ArgumentNullException(nameof(log));
             state.Port = initialPort;
+            state.PortVoltage = initialPortVoltage;
             if (targets.Count == 1) targets[0].Selected = true;
         }
 
@@ -157,7 +161,7 @@ namespace OpenEphys.Onix1.Design
                     state.PortVoltage = overrideV ? (double?)5.0 : null;
                     setHeadstagePortVoltage(state.PortVoltage);
                 }
-                ImGuiWidgets.Tooltip("Manually set the headstage's supply voltage instead of auto-negotiating it.");
+                ImGuiWidgets.Tooltip("Manually set the headstage's supply voltage instead of auto-negotiating it. Changing this here also updates the headstage's own voltage setting.");
                 if (overrideV)
                 {
                     ImGui.SameLine();

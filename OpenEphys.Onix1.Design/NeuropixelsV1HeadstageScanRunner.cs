@@ -52,7 +52,7 @@ namespace OpenEphys.Onix1.Design
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var (headstage, _) = buildHeadstage(port, portVoltage);
+                var (headstage, scanPortVoltage) = buildHeadstage(port, portVoltage);
                 foreach (var target in targets)
                     target.SelectDecoder(headstage).Enable = false;
 
@@ -89,7 +89,11 @@ namespace OpenEphys.Onix1.Design
                 }
 
                 if (scanException != null)
-                    log($"Scan [{scanException.GetType().Name}]: {scanException.Message}.", true);
+                {
+                    var voltage = HeadstageConnection.DescribePortVoltage(portVoltage, scanPortVoltage.Applied);
+                    log($"Scan [{scanException.GetType().Name}]: {scanException.Message} ({voltage}).", true);
+                    if (!portVoltage.HasValue) log(HeadstageConnection.AutoPortVoltageHint, false);
+                }
 
                 foreach (var target in targets.Where(t => !resolvedTargets.Contains(t)))
                     target.Dialog.Scan.NotDetected();
