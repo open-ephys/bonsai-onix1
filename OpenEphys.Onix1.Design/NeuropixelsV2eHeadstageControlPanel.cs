@@ -259,7 +259,7 @@ namespace OpenEphys.Onix1.Design
             ImGui.SetNextItemWidth(thrAvail * 0.33f);
             if (ImGui.InputFloat("Time per bank (s)##tpb", ref tpb, 5f, 30f, "%.0f"))
                 state.TimePerBankSeconds = Math.Max(2f, Math.Min(300f, tpb));
-            ImGuiWidgets.Tooltip("How long to record from each selected bank while sweeping through the survey, in seconds.");
+            ImGuiWidgets.Tooltip($"How long to record from each selected bank while sweeping through the survey, in seconds. Each bank also records an extra {NeuropixelsSurveyState.SettlingSeconds:0} s first, while the amplifiers settle, which is left out of the statistics.");
 
             bool anySelectedHasProbeFile = targets.Any(t => t.Selected &&
                 !string.IsNullOrEmpty(t.Dialog.ConfigureNeuropixelsV2.ProbeConfiguration.ProbeInterfaceFileName) &&
@@ -267,7 +267,7 @@ namespace OpenEphys.Onix1.Design
             if (!anySelectedHasProbeFile) { state.RecordSurveyData = false; ImGui.BeginDisabled(); }
             bool rec = state.RecordSurveyData;
             if (ImGui.Checkbox("Record raw data##recraw", ref rec)) state.RecordSurveyData = rec;
-            ImGuiWidgets.Tooltip("Save the raw, unfiltered voltage traces collected during the survey to disk, alongside the summary statistics, for each selected probe that has a ProbeInterface file.",
+            ImGuiWidgets.Tooltip("Save the raw, unfiltered voltage traces collected during the survey to disk, alongside the summary statistics, for each selected probe that has a ProbeInterface file. Each bank's recording includes its settling period.",
                 "Requires at least one selected probe to have a ProbeInterface file.");
             if (!anySelectedHasProbeFile) ImGui.EndDisabled();
         }
@@ -278,7 +278,7 @@ namespace OpenEphys.Onix1.Design
             bool disabled = !anySelected || blockedByScan;
             if (disabled) ImGui.BeginDisabled();
             if (ImGui.Button("Start Survey##hssurvey")) StartSurvey();
-            ImGuiWidgets.Tooltip("Sweep through the selected banks of every checked probe, concurrently, recording from each for the configured time and computing per-contact activity statistics.",
+            ImGuiWidgets.Tooltip($"Sweep through the selected banks of every checked probe, concurrently, recording from each for the configured time and computing per-contact activity statistics. Each bank first records an extra {NeuropixelsSurveyState.SettlingSeconds:0} s while the amplifiers settle, which is left out of the statistics.",
                 blockedByScan ? "A probe identity scan is currently running." : "Select at least one probe first.");
             if (disabled) ImGui.EndDisabled();
         }
