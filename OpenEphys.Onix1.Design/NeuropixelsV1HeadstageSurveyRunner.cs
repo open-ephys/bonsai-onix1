@@ -171,6 +171,7 @@ namespace OpenEphys.Onix1.Design
             }
 
             double? appliedVoltage = null;
+            bool portVoltageHintLogged = false;
             try
             {
                 while (true)
@@ -235,7 +236,13 @@ namespace OpenEphys.Onix1.Design
                         catch (OperationCanceledException) { throw; }
                         catch (Exception ex)
                         {
-                            log($"Survey round, attempt {attempt + 1} [{ex.GetType().Name}]: {ex.Message}. Retrying...", true);
+                            var voltage = HeadstageConnection.DescribePortVoltage(portVoltageOverride, appliedVoltage);
+                            log($"Survey round, attempt {attempt + 1} [{ex.GetType().Name}]: {ex.Message} ({voltage}). Retrying...", true);
+                            if (!portVoltageOverride.HasValue && !portVoltageHintLogged)
+                            {
+                                log(HeadstageConnection.AutoPortVoltageHint, false);
+                                portVoltageHintLogged = true;
+                            }
                             await Task.Delay(RetryDelayMs, cancellationToken);
                         }
                     }
