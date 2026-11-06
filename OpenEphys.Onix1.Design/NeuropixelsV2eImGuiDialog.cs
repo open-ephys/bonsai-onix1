@@ -188,7 +188,7 @@ namespace OpenEphys.Onix1.Design
                           new(ColorContactPinned, "Enabled & Pinned"),
                           new(ColorContactEnabled, "Enabled"),
                           new(ColorContactDisabled, "Disabled"),
-                          new(ImGuiProbeSelector.BlockedFillColor, "Unavailable", DottedOutline: true),
+                          new(ImGuiProbeSelector.BlockedFillColor, "Blocked", DottedOutline: true),
                           new(ImGuiProbeSelector.DefaultSelectedOutlineColor, "Editable selection", OutlineOnly: true),
                       };
         }
