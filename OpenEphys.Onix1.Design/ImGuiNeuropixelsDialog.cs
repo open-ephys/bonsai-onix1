@@ -308,16 +308,49 @@ namespace OpenEphys.Onix1.Design
 
         protected void UnpinSelectedContacts()
         {
-            bool any = false;
+            var selected = new List<int>();
             for (int i = 0; i < selector.Contacts.Count && i < allContacts.Count; i++)
+                if (selector.Contacts[i].Selected) selected.Add(i);
+            UnpinContacts(selected);
+        }
+
+        protected void UnpinContacts(IEnumerable<int> contactIndices)
+        {
+            bool any = false;
+            foreach (int i in contactIndices)
             {
-                if (!selector.Contacts[i].Selected) continue;
                 if (!channelState.ElectrodeToChannel.TryGetValue(i, out int ch)) continue;
                 foreach (var pinChannel in GetChannelsToPin(i, ch))
                     if (channelState.PinnedChannels.Remove(pinChannel))
                         any = true;
             }
-            if (any) RecomputeBlockedIndices();
+            if (!any) return;
+            RecomputeBlockedIndices();
+            HasChanges = true;
+        }
+
+        /// <summary>
+        /// The enabled contact whose pinned channel blocks <paramref name="contactIndex"/>, or -1 if the
+        /// contact isn't blocked by a pin.
+        /// </summary>
+        protected int BlockingContact(int contactIndex)
+        {
+            if (!channelState.BlockedContactIndices.Contains(contactIndex)) return -1;
+            if (!channelState.ElectrodePotentialChannel.TryGetValue(contactIndex, out int ch)) return -1;
+            foreach (var kvp in channelState.ElectrodeToChannel)
+                if (kvp.Value == ch) return kvp.Key;
+            return -1;
+        }
+
+        /// <summary>
+        /// Why <paramref name="contactIndex"/> can't be enabled, or <c>null</c> if it can.
+        /// </summary>
+        protected virtual string BlockReason(int contactIndex)
+        {
+            if (!channelState.BlockedContactIndices.Contains(contactIndex)) return null;
+            channelState.ElectrodePotentialChannel.TryGetValue(contactIndex, out int ch);
+            int holder = BlockingContact(contactIndex);
+            return holder >= 0 ? $"channel {ch} pinned by contact {holder}" : $"channel {ch} pinned";
         }
 
         /// <summary>Fallback contact-color logic (enabled/pinned/disabled) shared by every subclass's selector wiring.</summary>
@@ -705,10 +738,22 @@ namespace OpenEphys.Onix1.Design
                 : pinnedCount == sel.Count ? "true"
                 : $"{pinnedCount}/{sel.Count}");
 
-            int blockedCount = sel.Count(i => channelState.BlockedContactIndices.Contains(i));
+            int blockedCount = sel.Count(i => BlockReason(i) != null);
             ImGuiWidgets.InfoRow("Blocked", blockedCount == 0 ? "false"
+                : sel.Count == 1 ? BlockReason(sel[0])
                 : blockedCount == sel.Count ? "true"
                 : $"{blockedCount}/{sel.Count}");
+
+            // NB: hover-only info disappears as soon as the mouse moves to a button, so the action is offered
+            // only for an inspected selection.
+            if (usingHover) return;
+            var blockers = sel.Select(BlockingContact).Where(j => j >= 0).Distinct().ToList();
+            if (blockers.Count == 0) return;
+            ImGui.Spacing();
+            string label = blockers.Count == 1 ? $"Unpin Contact {blockers[0]}" : $"Unpin {blockers.Count} Blocking Contacts";
+            if (ImGui.Button($"{label}##unpinblockers")) UnpinContacts(blockers);
+            ImGuiWidgets.Tooltip("Release the pins that block the selected contacts, so they can be enabled. " +
+                "The blocking contacts stay enabled until another contact takes their channels.");
         }
 
         protected static string IndexList(IReadOnlyList<int> sel)

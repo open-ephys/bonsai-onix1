@@ -166,6 +166,11 @@ namespace OpenEphys.Onix1.Design
                 ? channelGroupProbe.GetSurvivingChannels(channelGroupProbe.GetChannelGroup(contactIndex), NeuropixelsV1ProbeGroup.GetBank(contactIndex))
                 : base.GetChannelsToPin(contactIndex, channel);
 
+        protected override string BlockReason(int contactIndex) =>
+            probeGroup is NeuropixelsNP1110ProbeGroup channelGroupProbe && !channelGroupProbe.IsColumnEnabled(contactIndex)
+                ? "column off in column mode"
+                : base.BlockReason(contactIndex);
+
         protected override void ReplaceProbeGroupFromJson(string json) =>
             probeGroup = JsonConvert.DeserializeObject<NeuropixelsV1ProbeGroup>(json, new NeuropixelsV1ProbeGroupConverter())
                 ?? throw new InvalidDataException("The probe interface data did not produce a valid probe group.");
@@ -286,7 +291,7 @@ namespace OpenEphys.Onix1.Design
                           new(ColorContactPinned, "Enabled & Pinned"),
                           new(ColorContactEnabled, "Enabled"),
                           new(ColorContactDisabled, "Disabled"),
-                          new(ImGuiProbeSelector.BlockedFillColor, "Unavailable", DottedOutline: true),
+                          new(ImGuiProbeSelector.BlockedFillColor, "Blocked", DottedOutline: true),
                           new(ImGuiProbeSelector.DefaultSelectedOutlineColor, "Editable selection", OutlineOnly: true),
                       };
         }
