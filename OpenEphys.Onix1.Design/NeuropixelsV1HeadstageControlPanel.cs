@@ -56,6 +56,16 @@ namespace OpenEphys.Onix1.Design
             this.log = log ?? throw new ArgumentNullException(nameof(log));
             state.Port = initialPort;
             state.PortVoltage = initialPortVoltage;
+
+            // NB: the probes' files can disagree. The first one wins, and each probe flags its own results when
+            // they were measured with other settings.
+            var stored = targets.Select(t => t.Dialog.Survey.Results).FirstOrDefault(r => r != null);
+            if (stored != null)
+            {
+                state.SpikeThreshold = stored.SpikeThresholdUv;
+                state.TimePerBankSeconds = stored.TimePerBankSeconds;
+                state.RecordSurveyData = stored.RecordedRaw;
+            }
             if (targets.Count == 1) targets[0].Selected = true;
         }
 

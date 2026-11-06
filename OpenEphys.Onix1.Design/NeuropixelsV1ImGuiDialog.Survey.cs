@@ -193,6 +193,11 @@ namespace OpenEphys.Onix1.Design
             probeGroup.Probe.Annotations.SetAnnotation<string>("survey_datetime", survey.CompletedAt.Value.ToString("o"));
             probeGroup.Probe.Annotations.SetAnnotation<float>("survey_spike_threshold_uV", results.SpikeThresholdUv);
             probeGroup.Probe.Annotations.SetAnnotation<float>("survey_time_per_bank", results.TimePerBankSeconds);
+            probeGroup.Probe.Annotations.SetAnnotation<bool>("survey_recorded_raw", results.RecordedRaw);
+            if (results.ProbeSerialNumber.HasValue)
+                probeGroup.Probe.Annotations.SetAnnotation<string>("serial_number", results.ProbeSerialNumber.Value.ToString());
+            else
+                probeGroup.Probe.Annotations.RemoveAnnotation("serial_number");
             var bankIncluded = allContacts
                 .Select((_, i) => results.SurveyBanks.Contains(NeuropixelsV1ProbeGroup.GetBank(i)))
                 .ToArray();
@@ -200,6 +205,25 @@ namespace OpenEphys.Onix1.Design
         }
 
         void RestoreActivityData()
+        {
+            surveyBanks.Clear();
+            pendingBanks.Clear();
+            if (probeGroup.Probe != null)
+                surveyBanks.UnionWith(StoredSurveyBanks());
+            RestoreSurveyResults();
+        }
+
+        IEnumerable<int> StoredSurveyBanks()
+        {
+            var bi = probeGroup.Probe.GetContactAnnotation<bool>("survey_bank_included");
+            if (bi == null) yield break;
+            for (int i = 0; i < allContacts.Count && i < bi.Length; i++)
+                if (bi[i])
+                    yield return NeuropixelsV1ProbeGroup.GetBank(i);
+        }
+
+        // NB: leaves the bank selection alone, so it can run again when a scan finds the probe's serial number.
+        void RestoreSurveyResults()
         {
             // code below contains early exits, so make sure we clear the survey state so that nothing old is
             // hanging around
@@ -209,20 +233,9 @@ namespace OpenEphys.Onix1.Design
             showActivityColors = false;
             actRangeInitialized = false;
             actRanges.Clear();
-            surveyBanks.Clear();
-            pendingBanks.Clear();
 
             var probe = probeGroup.Probe;
             if (probe == null) return;
-
-            var bi = probe.GetContactAnnotation<bool>("survey_bank_included");
-            if (bi != null && bi.Length > 0)
-            {
-                surveyBanks.Clear();
-                for (int i = 0; i < allContacts.Count && i < bi.Length; i++)
-                    if (bi[i])
-                        surveyBanks.Add(NeuropixelsV1ProbeGroup.GetBank(i));
-            }
 
             DateTimeOffset.TryParse(probe.Annotations.GetAnnotation<string>("survey_datetime"), out var dt);
 
@@ -234,8 +247,14 @@ namespace OpenEphys.Onix1.Design
             var noiseArr = probe.GetContactAnnotation<float>("survey_noise");
             if (noiseArr == null || noiseArr.Length == 0) return;
 
+            ulong? serialNumber = ulong.TryParse(probe.Annotations.GetAnnotation<string>("serial_number"), out var sn)
+                ? sn : null;
+            if (!SurveyMatchesProbe(serialNumber, scan.Status == NeuropixelsV1ScanStatus.Detected ? scan.SerialNumber : null))
+                return;
+
             var thr = probe.Annotations.GetAnnotation<float?>("survey_spike_threshold_uV") ?? -50f;
             var tpb = probe.Annotations.GetAnnotation<float?>("survey_time_per_bank") ?? 5f;
+            var recordedRaw = probe.Annotations.GetAnnotation<bool?>("survey_recorded_raw") ?? false;
 
             var amp   = new float?[allContacts.Count];
             var rate  = new float?[allContacts.Count];
@@ -249,7 +268,8 @@ namespace OpenEphys.Onix1.Design
             for (int i = 0; i < allContacts.Count && i < noiseArr.Length; i++)
                 noise[i] = float.IsNaN(noiseArr[i]) ? (float?)null : noiseArr[i];
 
-            survey.Restore(new NeuropixelsV1SurveyResults(amp, rate, noise, thr, tpb, surveyBanks), dt);
+            survey.Restore(new NeuropixelsV1SurveyResults(amp, rate, noise, thr, tpb, recordedRaw, serialNumber,
+                StoredSurveyBanks().ToList()), dt);
         }
     }
 }

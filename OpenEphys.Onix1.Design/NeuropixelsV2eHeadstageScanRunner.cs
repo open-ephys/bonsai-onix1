@@ -67,7 +67,7 @@ namespace OpenEphys.Onix1.Design
                     foreach (var target in targets)
                     {
                         var decoder = target.SelectDecoder(headstage);
-                        var info = TryGetDeviceInfo<NeuropixelsV2PsbDecoderDeviceInfo>(decoder.DeviceName);
+                        var info = HeadstageConnection.TryGetDeviceInfo<NeuropixelsV2PsbDecoderDeviceInfo>(decoder.DeviceName);
                         if (info != null && info.ProbeSerialNumber.HasValue)
                             resolved.Add((target, info.ProbePartNumber, info.ProbeSerialNumber));
                     }
@@ -103,13 +103,6 @@ namespace OpenEphys.Onix1.Design
                 foreach (var target in targets.Where(t => t.Dialog.Scan.Status == NeuropixelsV1ScanStatus.Running))
                     target.Dialog.Scan.Status = NeuropixelsV1ScanStatus.Idle;
             }
-        }
-
-        static T TryGetDeviceInfo<T>(string deviceName) where T : DeviceInfo
-        {
-            T result = null;
-            DeviceManager.GetDevice(deviceName).Subscribe(info => result = info as T, _ => { });
-            return result;
         }
     }
 }

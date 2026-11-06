@@ -56,6 +56,41 @@ namespace OpenEphys.Onix1.Design
         protected abstract string PrimaryCalibrationFileName { get; }
 
         /// <summary>
+        /// The serial number on the first line of a Neuropixels calibration file, or <c>null</c> if it can't be read.
+        /// </summary>
+        protected static ulong? CalibrationFileSerialNumber(string path)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(path) || !File.Exists(path)) return null;
+                using var reader = new StreamReader(path);
+                return ulong.TryParse(reader.ReadLine()?.Trim(), out var serialNumber) ? serialNumber : null;
+            }
+            catch (IOException) { return null; }
+            catch (UnauthorizedAccessException) { return null; }
+        }
+
+        /// <summary>
+        /// Whether survey results measured on the probe with serial number <paramref name="surveySerialNumber"/>
+        /// may be shown for the probe this dialog configures. Logs why when they may not.
+        /// </summary>
+        /// <param name="surveySerialNumber">The serial number stored with the survey results, if any.</param>
+        /// <param name="scannedSerialNumber">The serial number found by a probe scan, if one has run. Otherwise
+        /// the serial number in the primary calibration file is used.</param>
+        protected bool SurveyMatchesProbe(ulong? surveySerialNumber, ulong? scannedSerialNumber)
+        {
+            var probeSerialNumber = scannedSerialNumber ?? CalibrationFileSerialNumber(PrimaryCalibrationFileName);
+            string reason =
+                !surveySerialNumber.HasValue ? "they don't record which probe they were measured on" :
+                !probeSerialNumber.HasValue ? "this probe's serial number is unknown. Select its calibration file or scan for probes" :
+                surveySerialNumber != probeSerialNumber ? $"they were measured on probe SN {surveySerialNumber}, and this probe is SN {probeSerialNumber}" :
+                null;
+            if (reason != null)
+                Log($"Warning: {probeName}: survey results in the probe interface file are not shown: {reason}.", true);
+            return reason == null;
+        }
+
+        /// <summary>
         /// Whether the recorded voltage sign is inverted.
         /// </summary>
         protected abstract bool InvertPolarity { get; set; }
@@ -590,9 +625,8 @@ namespace OpenEphys.Onix1.Design
                 MessageBox.Show($"Failed to load probe interface file:\n{ex.Message}", "Load Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            RefreshProbeState();
-
             Log($"Loaded probeinterface file {newPath}");
+            RefreshProbeState();
 
             HasChanges = false;
         }
