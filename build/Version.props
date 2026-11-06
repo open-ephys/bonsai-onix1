@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup Condition="'$(ContinuousIntegrationBuild)' != 'true'">
     <!-- When making local builds DevVersion can be overridden to generate multiple local versions -->
-    <DevVersion Condition="'$(DevVersion)' == ''">0</DevVersion>
+    <DevVersion Condition="'$(DevVersion)' == ''">9</DevVersion>
 
     <VersionSuffix>dev$(DevVersion)</VersionSuffix>
     <_FileVersionRevision>$([MSBuild]::Add(60000, $(DevVersion)))</_FileVersionRevision>
