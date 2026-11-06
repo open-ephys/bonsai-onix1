@@ -56,6 +56,7 @@ namespace OpenEphys.Onix1.Design
             this.log = log ?? throw new ArgumentNullException(nameof(log));
             state.Port = initialPort;
             state.PortVoltage = initialPortVoltage;
+            foreach (var target in targets) target.Dialog.SurveySettings = state;
 
             // NB: the probes' files can disagree. The first one wins, and each probe flags its own results when
             // they were measured with other settings.

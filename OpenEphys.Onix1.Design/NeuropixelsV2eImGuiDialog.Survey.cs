@@ -53,6 +53,16 @@ namespace OpenEphys.Onix1.Design
             if (survey.IsStale)
                 ImGui.TextColored(ColorTextWarning, "Survey data is over 24h old.");
 
+            var changes = survey.Results == null ? null : SurveySettingsChanges(survey.Results);
+            if (changes?.Count > 0)
+            {
+                ImGui.PushTextWrapPos(0f);
+                ImGui.PushStyleColor(ImGuiCol.Text, ColorTextWarning);
+                ImGui.TextUnformatted($"Settings changed since this survey: {string.Join(", ", changes)}.");
+                ImGui.PopStyleColor();
+                ImGui.PopTextWrapPos();
+            }
+
             // NB: Banks colors contacts by bank, so activity colors can't show there. The checkbox is disabled so it
             // doesn't look like it does something.
             ImGui.BeginDisabled(bankSelectMode);
@@ -116,6 +126,26 @@ namespace OpenEphys.Onix1.Design
             {
                 actRanges[selectedMetric] = (actMin, actMax);
             }
+        }
+
+        /// <summary>
+        /// The survey settings that differ from those <paramref name="results"/> were measured with, described for
+        /// the user. Each probe checks its own, since the probes' stored settings can differ from each other.
+        /// </summary>
+        List<string> SurveySettingsChanges(NeuropixelsV2eSurveyResults results)
+        {
+            var changes = new List<string>();
+            var settings = SurveySettings;
+            if (settings != null)
+            {
+                if (Math.Abs(settings.SpikeThreshold - results.SpikeThresholdUv) > 0.05)
+                    changes.Add($"spike threshold (was {results.SpikeThresholdUv:0.0} uV)");
+                if (Math.Abs(settings.TimePerBankSeconds - results.TimePerBankSeconds) > 0.05)
+                    changes.Add($"time per bank (was {results.TimePerBankSeconds:0} s)");
+            }
+            if (!surveyBanks.SetEquals(results.SurveyBanks))
+                changes.Add("banks");
+            return changes;
         }
 
         float?[] CurrentDisplayData()

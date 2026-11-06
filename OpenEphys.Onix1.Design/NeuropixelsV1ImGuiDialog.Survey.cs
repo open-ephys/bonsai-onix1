@@ -57,6 +57,16 @@ namespace OpenEphys.Onix1.Design
             if (survey.IsStale)
                 ImGui.TextColored(ColorTextWarning, "Survey data is over 24h old.");
 
+            var changes = survey.Results == null ? null : SurveySettingsChanges(survey.Results);
+            if (changes?.Count > 0)
+            {
+                ImGui.PushTextWrapPos(0f);
+                ImGui.PushStyleColor(ImGuiCol.Text, ColorTextWarning);
+                ImGui.TextUnformatted($"Settings changed since this survey: {string.Join(", ", changes)}.");
+                ImGui.PopStyleColor();
+                ImGui.PopTextWrapPos();
+            }
+
             // NB: Banks colors contacts by bank, so activity colors can't show there. The checkbox is disabled so it
             // doesn't look like it does something.
             ImGui.BeginDisabled(bankSelectMode);
@@ -120,6 +130,28 @@ namespace OpenEphys.Onix1.Design
             {
                 actRanges[selectedMetric] = (actMin, actMax);
             }
+        }
+
+        /// <summary>
+        /// The survey settings that differ from those <paramref name="results"/> were measured with, described for
+        /// the user. Each probe checks its own, since the probes' stored settings can differ from each other.
+        /// </summary>
+        List<string> SurveySettingsChanges(NeuropixelsV1SurveyResults results)
+        {
+            var changes = new List<string>();
+            var settings = SurveySettings;
+            if (settings != null)
+            {
+                if (Math.Abs(settings.SpikeThreshold - results.SpikeThresholdUv) > 0.05)
+                    changes.Add($"spike threshold (was {results.SpikeThresholdUv:0.0} uV)");
+                if (Math.Abs(settings.TimePerBankSeconds - results.TimePerBankSeconds) > 0.05)
+                    changes.Add($"time per bank (was {results.TimePerBankSeconds:0} s)");
+            }
+            if (results.SpikeAmplifierGain.HasValue && results.SpikeAmplifierGain != configureNode.ProbeConfiguration.SpikeAmplifierGain)
+                changes.Add($"spike gain (was {results.SpikeAmplifierGain})");
+            if (!surveyBanks.SetEquals(results.SurveyBanks))
+                changes.Add("banks");
+            return changes;
         }
 
         float?[] CurrentDisplayData()
@@ -194,6 +226,10 @@ namespace OpenEphys.Onix1.Design
             probeGroup.Probe.Annotations.SetAnnotation<float>("survey_spike_threshold_uV", results.SpikeThresholdUv);
             probeGroup.Probe.Annotations.SetAnnotation<float>("survey_time_per_bank", results.TimePerBankSeconds);
             probeGroup.Probe.Annotations.SetAnnotation<bool>("survey_recorded_raw", results.RecordedRaw);
+            if (results.SpikeAmplifierGain.HasValue)
+                probeGroup.Probe.Annotations.SetAnnotation<string>("survey_spike_amplifier_gain", results.SpikeAmplifierGain.Value.ToString());
+            else
+                probeGroup.Probe.Annotations.RemoveAnnotation("survey_spike_amplifier_gain");
             if (results.ProbeSerialNumber.HasValue)
                 probeGroup.Probe.Annotations.SetAnnotation<string>("serial_number", results.ProbeSerialNumber.Value.ToString());
             else
@@ -255,6 +291,8 @@ namespace OpenEphys.Onix1.Design
             var thr = probe.Annotations.GetAnnotation<float?>("survey_spike_threshold_uV") ?? -50f;
             var tpb = probe.Annotations.GetAnnotation<float?>("survey_time_per_bank") ?? 5f;
             var recordedRaw = probe.Annotations.GetAnnotation<bool?>("survey_recorded_raw") ?? false;
+            NeuropixelsV1Gain? spikeGain = Enum.TryParse<NeuropixelsV1Gain>(
+                probe.Annotations.GetAnnotation<string>("survey_spike_amplifier_gain"), out var gain) ? gain : null;
 
             var amp   = new float?[allContacts.Count];
             var rate  = new float?[allContacts.Count];
@@ -268,7 +306,7 @@ namespace OpenEphys.Onix1.Design
             for (int i = 0; i < allContacts.Count && i < noiseArr.Length; i++)
                 noise[i] = float.IsNaN(noiseArr[i]) ? (float?)null : noiseArr[i];
 
-            survey.Restore(new NeuropixelsV1SurveyResults(amp, rate, noise, thr, tpb, recordedRaw, serialNumber,
+            survey.Restore(new NeuropixelsV1SurveyResults(amp, rate, noise, thr, tpb, recordedRaw, serialNumber, spikeGain,
                 StoredSurveyBanks().ToList()), dt);
         }
     }

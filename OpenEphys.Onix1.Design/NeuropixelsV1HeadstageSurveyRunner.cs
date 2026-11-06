@@ -169,6 +169,7 @@ namespace OpenEphys.Onix1.Design
                 state.Target.Dialog.Survey.Complete(new NeuropixelsV1SurveyResults(
                     state.AllAmplitude, state.AllFireRate, state.AllNoise,
                     (float)spikeThreshold, timePerBankSeconds, state.RecordingFolder != null, state.ProbeSerialNumber,
+                    state.Target.Dialog.ConfigureNeuropixelsV1.ProbeConfiguration.SpikeAmplifierGain,
                     state.Target.Dialog.SurveyBanks));
             }
 
