@@ -395,7 +395,8 @@ namespace OpenEphys.Onix1.Design
 
             var npxData = new NeuropixelsV1eData { DeviceName = deviceName, BufferSize = BufferSize };
             int framesToCollect = Math.Max(1, (int)Math.Round(timePerBankSeconds * NeuropixelsV1.SamplesPerChannelPerSecond / BufferSize));
-            var rawStream = npxData.Generate().Take(framesToCollect).Timeout(DataSilenceTimeout);
+            int settlingFrames = (int)Math.Round(NeuropixelsSurveyState.SettlingSeconds * NeuropixelsV1.SamplesPerChannelPerSecond / BufferSize);
+            var rawStream = npxData.Generate().Take(settlingFrames + framesToCollect).Timeout(DataSilenceTimeout);
 
             IObservable<NeuropixelsV1DataFrame> dataStream = recordingFilePath != null
                 ? DataFrameWriter.DataFrameWriter.WriteBuffered(
@@ -416,7 +417,9 @@ namespace OpenEphys.Onix1.Design
                 .Publish().RefCount();
             var spikeStream = SpikeDetection.Detect(scaled, NeuropixelsV1.SamplesPerChannelPerSecond, new[] { spikeThreshold });
 
-            var combined = spikeStream.Zip(scaled, (spikes, scaled) => (spikes, scaled));
+            // NB: settling frames are skipped only here, after filtering, so any filter start-up transient is
+            // discarded along with the amplifier settling.
+            var combined = spikeStream.Zip(scaled, (spikes, scaled) => (spikes, scaled)).Skip(settlingFrames);
 
             return combined.Subscribe(
                 result => activity.Accumulate(result.scaled, result.spikes),
