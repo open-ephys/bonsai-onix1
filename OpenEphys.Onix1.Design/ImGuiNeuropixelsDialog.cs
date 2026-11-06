@@ -211,14 +211,49 @@ namespace OpenEphys.Onix1.Design
                 "Select a pinned contact first.");
             if (!anySelectedPinned) ImGui.EndDisabled();
 
+            bool anyEnabledUnpinned = AnyEnabledUnpinned();
+            if (!anyEnabledUnpinned) ImGui.BeginDisabled();
+            if (ImGui.Button("Pin Enabled (Ctrl+P)##pinenabled")) PinEnabledContacts();
+            ImGuiWidgets.Tooltip("Pin the channel assignment of every enabled contact so it survives future preset or probe type changes. For example, apply a preset, pin it, then unpin the few contacts to edit by hand.",
+                "Every enabled contact is already pinned.");
+            if (!anyEnabledUnpinned) ImGui.EndDisabled();
+
             ImGui.SameLine();
 
             bool noPins = channelState.PinnedChannels.Count == 0;
             if (noPins) ImGui.BeginDisabled();
-            if (ImGui.Button("Unpin All##unpinall")) ClearPins();
+            if (ImGui.Button("Unpin All (Ctrl+Shift+P)##unpinall")) UnpinAllContacts();
             ImGuiWidgets.Tooltip("Release every pin on this probe, allowing all channels to be reassigned by a future preset or probe type change.",
                 "No channels are pinned.");
             if (noPins) ImGui.EndDisabled();
+        }
+
+        bool AnyEnabledUnpinned()
+        {
+            foreach (int idx in channelState.EnabledContactIndices)
+                if (channelState.ElectrodeToChannel.TryGetValue(idx, out int ch) && !channelState.PinnedChannels.Contains(ch))
+                    return true;
+            return false;
+        }
+
+        protected void PinEnabledContacts()
+        {
+            bool any = false;
+            foreach (int idx in channelState.EnabledContactIndices)
+                if (channelState.ElectrodeToChannel.TryGetValue(idx, out int ch))
+                    foreach (var pinChannel in GetChannelsToPin(idx, ch))
+                        if (channelState.PinnedChannels.Add(pinChannel))
+                            any = true;
+            if (!any) return;
+            RecomputeBlockedIndices();
+            HasChanges = true;
+        }
+
+        protected void UnpinAllContacts()
+        {
+            if (channelState.PinnedChannels.Count == 0) return;
+            ClearPins();
+            HasChanges = true;
         }
 
         protected void EnableSelectedContacts()
@@ -605,8 +640,13 @@ namespace OpenEphys.Onix1.Design
 
             if (ImGui.GetIO().WantTextInput) return;
             if (ImGui.IsKeyPressed(ImGuiKey.E, false))           EnableSelectedContacts();
-            if (ImGui.IsKeyPressed(ImGuiKey.P, false) && !shift) EnableAndPinSelectedContacts();
-            if (ImGui.IsKeyPressed(ImGuiKey.P, false) &&  shift) UnpinSelectedContacts();
+            if (ImGui.IsKeyPressed(ImGuiKey.P, false))
+            {
+                if (ctrl && shift)  UnpinAllContacts();
+                else if (ctrl)      PinEnabledContacts();
+                else if (shift)     UnpinSelectedContacts();
+                else                EnableAndPinSelectedContacts();
+            }
             HandleProbeSpecificShortcuts(shift);
         }
 
