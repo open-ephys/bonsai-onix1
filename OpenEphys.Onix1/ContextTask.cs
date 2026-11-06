@@ -300,7 +300,7 @@ namespace OpenEphys.Onix1
             }
             finally
             {
-                 Reset();
+                Reset();
             }
         }
 
@@ -427,7 +427,8 @@ namespace OpenEphys.Onix1
                             // while loop context and will be disposed.
                             Console.WriteLine("Frame collection task has been cancelled by " + this.GetType());
 #endif
-                        };
+                        }
+                        ;
                     },
                     collectFramesToken,
                     TaskCreationOptions.LongRunning,
@@ -586,7 +587,13 @@ namespace OpenEphys.Onix1
             }
         }
 
-        internal oni.Hub GetHub(uint deviceAddress) => ctx.GetHub(deviceAddress);
+        internal oni.Hub GetHub(uint deviceAddress)
+        {
+            lock (regLock)
+            {
+                return ctx.GetHub(deviceAddress);
+            }
+        }
 
         internal uint GetPassthroughDeviceAddress(uint deviceAddress)
         {
