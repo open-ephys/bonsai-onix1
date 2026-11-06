@@ -56,6 +56,12 @@ namespace OpenEphys.Onix1.Design
         protected abstract string PrimaryCalibrationFileName { get; }
 
         /// <summary>
+        /// The headstage's current survey settings, shared by every probe on it, or <c>null</c> where the dialog
+        /// has no survey panel.
+        /// </summary>
+        internal NeuropixelsSurveyState SurveySettings { get; set; }
+
+        /// <summary>
         /// The serial number on the first line of a Neuropixels calibration file, or <c>null</c> if it can't be read.
         /// </summary>
         protected static ulong? CalibrationFileSerialNumber(string path)
