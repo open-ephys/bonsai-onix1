@@ -94,6 +94,7 @@ namespace OpenEphys.Onix1.Design
             internal string TempProbeFile;
             internal NeuropixelsV2eSurveyResults PreviousResults;
             internal DateTimeOffset? PreviousCompletedAt;
+            internal ulong? ProbeSerialNumber;
         }
 
         readonly struct RoundTargetPrep
@@ -188,10 +189,12 @@ namespace OpenEphys.Onix1.Design
             {
                 state.Target.Dialog.Survey.Complete(new NeuropixelsV2eSurveyResults(
                     state.AllAmplitude, state.AllFireRate, state.AllNoise,
-                    (float)spikeThreshold, timePerBankSeconds, state.Target.Dialog.SurveyBanks));
+                    (float)spikeThreshold, timePerBankSeconds, state.RecordingFolder != null, state.ProbeSerialNumber,
+                    state.Target.Dialog.SurveyBanks));
             }
 
             double? appliedVoltage = null;
+            bool portVoltageHintLogged = false;
             try
             {
                 while (true)
@@ -247,13 +250,20 @@ namespace OpenEphys.Onix1.Design
                             roundResults = await CollectRoundStatsAsync(
                                 buildHeadstage, targets, roundPrep, driver, hubIndex, port,
                                 appliedVoltage ?? portVoltageOverride, spikeThreshold,
-                                timePerBankSeconds, cancellationToken, v => appliedVoltage = v);
+                                timePerBankSeconds, cancellationToken, v => appliedVoltage = v,
+                                (target, serialNumber) => states[target].ProbeSerialNumber = serialNumber);
                             break;
                         }
                         catch (OperationCanceledException) { throw; }
                         catch (Exception ex)
                         {
-                            log($"Survey round, attempt {attempt + 1} [{ex.GetType().Name}]: {ex.Message}. Retrying...", true);
+                            var voltage = HeadstageConnection.DescribePortVoltage(portVoltageOverride, appliedVoltage);
+                            log($"Survey round, attempt {attempt + 1} [{ex.GetType().Name}]: {ex.Message} ({voltage}). Retrying...", true);
+                            if (!portVoltageOverride.HasValue && !portVoltageHintLogged)
+                            {
+                                log(HeadstageConnection.AutoPortVoltageHint, false);
+                                portVoltageHintLogged = true;
+                            }
                             await Task.Delay(RetryDelayMs, cancellationToken);
                         }
                     }
@@ -331,7 +341,8 @@ namespace OpenEphys.Onix1.Design
             double spikeThreshold,
             float timePerBankSeconds,
             CancellationToken cancellationToken,
-            Action<double?> onAppliedVoltage)
+            Action<double?> onAppliedVoltage,
+            Action<NeuropixeslV2eSurveyTarget, ulong?> onSerialNumber)
         {
             var (headstage, portVoltage) = buildHeadstage(port, previouslyAppliedVoltage);
 
@@ -382,6 +393,8 @@ namespace OpenEphys.Onix1.Design
             {
                 var stats = await Task.WhenAll(tcsMap.Values.Select(t => t.Task));
                 onAppliedVoltage(portVoltage.Applied);
+                foreach (var a in active)
+                    onSerialNumber(a.Target, HeadstageConnection.TryGetDeviceInfo<NeuropixelsV2PsbDecoderDeviceInfo>(a.DeviceName)?.ProbeSerialNumber);
                 return tcsMap.Keys.Zip(stats, (target, s) => (target, s))
                     .ToDictionary(x => x.target, x => x.s);
             }
@@ -405,7 +418,8 @@ namespace OpenEphys.Onix1.Design
 
             var npxData = new NeuropixelsV2eData { DeviceName = deviceName, BufferSize = BufferSize };
             int framesToCollect = Math.Max(1, (int)Math.Round(timePerBankSeconds * NeuropixelsV2.SamplesPerChannelPerSecond / BufferSize));
-            var rawStream = npxData.Generate().Take(framesToCollect).Timeout(DataSilenceTimeout);
+            int settlingFrames = (int)Math.Round(NeuropixelsSurveyState.SettlingSeconds * NeuropixelsV2.SamplesPerChannelPerSecond / BufferSize);
+            var rawStream = npxData.Generate().Take(settlingFrames + framesToCollect).Timeout(DataSilenceTimeout);
 
             IObservable<NeuropixelsV2DataFrame> dataStream = recordingFilePath != null
                 ? DataFrameWriter.DataFrameWriter.WriteBuffered(
@@ -420,7 +434,9 @@ namespace OpenEphys.Onix1.Design
             var filtered = SpikeDetection.NeuropixelsV2Signal(dataStream).Publish().RefCount();
             var spikeStream = SpikeDetection.Detect(filtered, NeuropixelsV2.SamplesPerChannelPerSecond, new[] { spikeThreshold });
 
-            var combined = spikeStream.Zip(filtered, (spikes, filtered) => (spikes, filtered));
+            // NB: settling frames are skipped only here, after filtering, so the filter's start-up transient is
+            // discarded along with the amplifier settling.
+            var combined = spikeStream.Zip(filtered, (spikes, filtered) => (spikes, filtered)).Skip(settlingFrames);
 
             return combined.Subscribe(
                 result => activity.Accumulate(result.filtered, result.spikes),

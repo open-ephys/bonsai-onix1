@@ -6,8 +6,14 @@ namespace OpenEphys.Onix1.Design
     {
         void OnScanCompleted()
         {
-            if (scan.Status == NeuropixelsV1ScanStatus.Detected)
-                CheckScannedPartNumberAgainstLoadedFile();
+            if (scan.Status != NeuropixelsV1ScanStatus.Detected) return;
+            CheckScannedPartNumberAgainstLoadedFile();
+
+            // NB: the scanned serial number can show or hide stored survey results that were judged against the
+            // calibration file's. Results without a serial number are a survey just run, so they stay.
+            var results = survey.Results;
+            if (results == null || (results.ProbeSerialNumber.HasValue && results.ProbeSerialNumber != scan.SerialNumber))
+                RestoreSurveyResults();
         }
 
         void CheckScannedPartNumberAgainstLoadedFile()

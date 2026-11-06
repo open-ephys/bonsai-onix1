@@ -56,6 +56,47 @@ namespace OpenEphys.Onix1.Design
         protected abstract string PrimaryCalibrationFileName { get; }
 
         /// <summary>
+        /// The headstage's current survey settings, shared by every probe on it, or <c>null</c> where the dialog
+        /// has no survey panel.
+        /// </summary>
+        internal NeuropixelsSurveyState SurveySettings { get; set; }
+
+        /// <summary>
+        /// The serial number on the first line of a Neuropixels calibration file, or <c>null</c> if it can't be read.
+        /// </summary>
+        protected static ulong? CalibrationFileSerialNumber(string path)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(path) || !File.Exists(path)) return null;
+                using var reader = new StreamReader(path);
+                return ulong.TryParse(reader.ReadLine()?.Trim(), out var serialNumber) ? serialNumber : null;
+            }
+            catch (IOException) { return null; }
+            catch (UnauthorizedAccessException) { return null; }
+        }
+
+        /// <summary>
+        /// Whether survey results measured on the probe with serial number <paramref name="surveySerialNumber"/>
+        /// may be shown for the probe this dialog configures. Logs why when they may not.
+        /// </summary>
+        /// <param name="surveySerialNumber">The serial number stored with the survey results, if any.</param>
+        /// <param name="scannedSerialNumber">The serial number found by a probe scan, if one has run. Otherwise
+        /// the serial number in the primary calibration file is used.</param>
+        protected bool SurveyMatchesProbe(ulong? surveySerialNumber, ulong? scannedSerialNumber)
+        {
+            var probeSerialNumber = scannedSerialNumber ?? CalibrationFileSerialNumber(PrimaryCalibrationFileName);
+            string reason =
+                !surveySerialNumber.HasValue ? "they don't record which probe they were measured on" :
+                !probeSerialNumber.HasValue ? "this probe's serial number is unknown. Select its calibration file or scan for probes" :
+                surveySerialNumber != probeSerialNumber ? $"they were measured on probe SN {surveySerialNumber}, and this probe is SN {probeSerialNumber}" :
+                null;
+            if (reason != null)
+                Log($"Warning: {probeName}: survey results in the probe interface file are not shown: {reason}.", true);
+            return reason == null;
+        }
+
+        /// <summary>
         /// Whether the recorded voltage sign is inverted.
         /// </summary>
         protected abstract bool InvertPolarity { get; set; }
@@ -211,14 +252,49 @@ namespace OpenEphys.Onix1.Design
                 "Select a pinned contact first.");
             if (!anySelectedPinned) ImGui.EndDisabled();
 
+            bool anyEnabledUnpinned = AnyEnabledUnpinned();
+            if (!anyEnabledUnpinned) ImGui.BeginDisabled();
+            if (ImGui.Button("Pin Enabled (Ctrl+P)##pinenabled")) PinEnabledContacts();
+            ImGuiWidgets.Tooltip("Pin the channel assignment of every enabled contact so it survives future preset or probe type changes. For example, apply a preset, pin it, then unpin the few contacts to edit by hand.",
+                "Every enabled contact is already pinned.");
+            if (!anyEnabledUnpinned) ImGui.EndDisabled();
+
             ImGui.SameLine();
 
             bool noPins = channelState.PinnedChannels.Count == 0;
             if (noPins) ImGui.BeginDisabled();
-            if (ImGui.Button("Unpin All##unpinall")) ClearPins();
+            if (ImGui.Button("Unpin All (Ctrl+Shift+P)##unpinall")) UnpinAllContacts();
             ImGuiWidgets.Tooltip("Release every pin on this probe, allowing all channels to be reassigned by a future preset or probe type change.",
                 "No channels are pinned.");
             if (noPins) ImGui.EndDisabled();
+        }
+
+        bool AnyEnabledUnpinned()
+        {
+            foreach (int idx in channelState.EnabledContactIndices)
+                if (channelState.ElectrodeToChannel.TryGetValue(idx, out int ch) && !channelState.PinnedChannels.Contains(ch))
+                    return true;
+            return false;
+        }
+
+        protected void PinEnabledContacts()
+        {
+            bool any = false;
+            foreach (int idx in channelState.EnabledContactIndices)
+                if (channelState.ElectrodeToChannel.TryGetValue(idx, out int ch))
+                    foreach (var pinChannel in GetChannelsToPin(idx, ch))
+                        if (channelState.PinnedChannels.Add(pinChannel))
+                            any = true;
+            if (!any) return;
+            RecomputeBlockedIndices();
+            HasChanges = true;
+        }
+
+        protected void UnpinAllContacts()
+        {
+            if (channelState.PinnedChannels.Count == 0) return;
+            ClearPins();
+            HasChanges = true;
         }
 
         protected void EnableSelectedContacts()
@@ -273,16 +349,49 @@ namespace OpenEphys.Onix1.Design
 
         protected void UnpinSelectedContacts()
         {
-            bool any = false;
+            var selected = new List<int>();
             for (int i = 0; i < selector.Contacts.Count && i < allContacts.Count; i++)
+                if (selector.Contacts[i].Selected) selected.Add(i);
+            UnpinContacts(selected);
+        }
+
+        protected void UnpinContacts(IEnumerable<int> contactIndices)
+        {
+            bool any = false;
+            foreach (int i in contactIndices)
             {
-                if (!selector.Contacts[i].Selected) continue;
                 if (!channelState.ElectrodeToChannel.TryGetValue(i, out int ch)) continue;
                 foreach (var pinChannel in GetChannelsToPin(i, ch))
                     if (channelState.PinnedChannels.Remove(pinChannel))
                         any = true;
             }
-            if (any) RecomputeBlockedIndices();
+            if (!any) return;
+            RecomputeBlockedIndices();
+            HasChanges = true;
+        }
+
+        /// <summary>
+        /// The enabled contact whose pinned channel blocks <paramref name="contactIndex"/>, or -1 if the
+        /// contact isn't blocked by a pin.
+        /// </summary>
+        protected int BlockingContact(int contactIndex)
+        {
+            if (!channelState.BlockedContactIndices.Contains(contactIndex)) return -1;
+            if (!channelState.ElectrodePotentialChannel.TryGetValue(contactIndex, out int ch)) return -1;
+            foreach (var kvp in channelState.ElectrodeToChannel)
+                if (kvp.Value == ch) return kvp.Key;
+            return -1;
+        }
+
+        /// <summary>
+        /// Why <paramref name="contactIndex"/> can't be enabled, or <c>null</c> if it can.
+        /// </summary>
+        protected virtual string BlockReason(int contactIndex)
+        {
+            if (!channelState.BlockedContactIndices.Contains(contactIndex)) return null;
+            channelState.ElectrodePotentialChannel.TryGetValue(contactIndex, out int ch);
+            int holder = BlockingContact(contactIndex);
+            return holder >= 0 ? $"channel {ch} pinned by contact {holder}" : $"channel {ch} pinned";
         }
 
         /// <summary>Fallback contact-color logic (enabled/pinned/disabled) shared by every subclass's selector wiring.</summary>
@@ -522,9 +631,8 @@ namespace OpenEphys.Onix1.Design
                 MessageBox.Show($"Failed to load probe interface file:\n{ex.Message}", "Load Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            RefreshProbeState();
-
             Log($"Loaded probeinterface file {newPath}");
+            RefreshProbeState();
 
             HasChanges = false;
         }
@@ -605,8 +713,13 @@ namespace OpenEphys.Onix1.Design
 
             if (ImGui.GetIO().WantTextInput) return;
             if (ImGui.IsKeyPressed(ImGuiKey.E, false))           EnableSelectedContacts();
-            if (ImGui.IsKeyPressed(ImGuiKey.P, false) && !shift) EnableAndPinSelectedContacts();
-            if (ImGui.IsKeyPressed(ImGuiKey.P, false) &&  shift) UnpinSelectedContacts();
+            if (ImGui.IsKeyPressed(ImGuiKey.P, false))
+            {
+                if (ctrl && shift)  UnpinAllContacts();
+                else if (ctrl)      PinEnabledContacts();
+                else if (shift)     UnpinSelectedContacts();
+                else                EnableAndPinSelectedContacts();
+            }
             HandleProbeSpecificShortcuts(shift);
         }
 
@@ -665,10 +778,22 @@ namespace OpenEphys.Onix1.Design
                 : pinnedCount == sel.Count ? "true"
                 : $"{pinnedCount}/{sel.Count}");
 
-            int blockedCount = sel.Count(i => channelState.BlockedContactIndices.Contains(i));
+            int blockedCount = sel.Count(i => BlockReason(i) != null);
             ImGuiWidgets.InfoRow("Blocked", blockedCount == 0 ? "false"
+                : sel.Count == 1 ? BlockReason(sel[0])
                 : blockedCount == sel.Count ? "true"
                 : $"{blockedCount}/{sel.Count}");
+
+            // NB: hover-only info disappears as soon as the mouse moves to a button, so the action is offered
+            // only for an inspected selection.
+            if (usingHover) return;
+            var blockers = sel.Select(BlockingContact).Where(j => j >= 0).Distinct().ToList();
+            if (blockers.Count == 0) return;
+            ImGui.Spacing();
+            string label = blockers.Count == 1 ? $"Unpin Contact {blockers[0]}" : $"Unpin {blockers.Count} Blocking Contacts";
+            if (ImGui.Button($"{label}##unpinblockers")) UnpinContacts(blockers);
+            ImGuiWidgets.Tooltip("Release the pins that block the selected contacts, so they can be enabled. " +
+                "The blocking contacts stay enabled until another contact takes their channels.");
         }
 
         protected static string IndexList(IReadOnlyList<int> sel)

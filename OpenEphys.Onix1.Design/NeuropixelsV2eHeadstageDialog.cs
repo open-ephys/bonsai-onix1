@@ -27,6 +27,7 @@
             InitializeTabs(configureHeadstage.NeuropixelsV2A, configureHeadstage.NeuropixelsV2B, configureHeadstage.Bno055);
             InitializeControlPanel(configureHeadstage.Port,
                 port => configureHeadstage.Port = port,
+                configureHeadstage.PortVoltage?.Requested,
                 voltage => configureHeadstage.PortVoltage = new AutoPortVoltage(voltage));
         }
 
@@ -40,6 +41,7 @@
             InitializeTabs(configureHeadstage.NeuropixelsV2A, configureHeadstage.NeuropixelsV2B, configureHeadstage.Bno055);
             InitializeControlPanel(configureHeadstage.Port,
                 port => configureHeadstage.Port = port,
+                configureHeadstage.PortVoltage?.Requested,
                 voltage => configureHeadstage.PortVoltage = new AutoPortVoltage(voltage));
         }
 

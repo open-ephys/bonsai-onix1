@@ -40,13 +40,16 @@ namespace OpenEphys.Onix1.Design
         /// survey-only parameter: unlike driver/hub index, which are PC-side connection details with no
         /// equivalent on the headstage config node.
         /// </param>
+        /// <param name="initialPortVoltage">Initial voltage override, seeded from the headstage's own configured
+        /// port voltage (<c>null</c> if it is auto-negotiated).</param>
         /// <param name="setHeadstagePortVoltage">
         /// Writes an edited voltage override back onto the headstage's own configuration node, for the same
         /// reason as <paramref name="setHeadstagePort"/>.
         /// </param>
         /// <param name="log">The hosting shell's console log.</param>
         internal NeuropixelsV2eHeadstageControlPanel(IReadOnlyList<NeuropixeslV2eSurveyTarget> targets, SurveyHeadstageFactory buildHeadstage,
-            PortName initialPort, Action<PortName> setHeadstagePort, Action<double?> setHeadstagePortVoltage, ImGuiLogConsole log)
+            PortName initialPort, Action<PortName> setHeadstagePort,
+            double? initialPortVoltage, Action<double?> setHeadstagePortVoltage, ImGuiLogConsole log)
         {
             this.targets = targets ?? throw new ArgumentNullException(nameof(targets));
             this.buildHeadstage = buildHeadstage ?? throw new ArgumentNullException(nameof(buildHeadstage));
@@ -54,6 +57,18 @@ namespace OpenEphys.Onix1.Design
             this.setHeadstagePortVoltage = setHeadstagePortVoltage ?? throw new ArgumentNullException(nameof(setHeadstagePortVoltage));
             this.log = log ?? throw new ArgumentNullException(nameof(log));
             state.Port = initialPort;
+            state.PortVoltage = initialPortVoltage;
+            foreach (var target in targets) target.Dialog.SurveySettings = state;
+
+            // NB: the probes' files can disagree. The first one wins, and each probe flags its own results when
+            // they were measured with other settings.
+            var stored = targets.Select(t => t.Dialog.Survey.Results).FirstOrDefault(r => r != null);
+            if (stored != null)
+            {
+                state.SpikeThreshold = stored.SpikeThresholdUv;
+                state.TimePerBankSeconds = stored.TimePerBankSeconds;
+                state.RecordSurveyData = stored.RecordedRaw;
+            }
             if (targets.Count == 1) targets[0].Selected = true;
         }
 
@@ -159,7 +174,7 @@ namespace OpenEphys.Onix1.Design
                     state.PortVoltage = overrideV ? (double?)5.0 : null;
                     setHeadstagePortVoltage(state.PortVoltage);
                 }
-                ImGuiWidgets.Tooltip("Manually set the headstage's supply voltage instead of auto-negotiating it.");
+                ImGuiWidgets.Tooltip("Manually set the headstage's supply voltage instead of auto-negotiating it. Changing this here also updates the headstage's own voltage setting.");
                 if (overrideV)
                 {
                     ImGui.SameLine();
@@ -249,13 +264,13 @@ namespace OpenEphys.Onix1.Design
             float thr = (float)state.SpikeThreshold;
             ImGui.SetNextItemWidth(thrAvail * 0.33f);
             if (ImGui.InputFloat("Spike threshold (uV)##thr", ref thr, 5f, 10f, "%.1f")) state.SpikeThreshold = thr;
-            ImGuiWidgets.Tooltip("Voltage a channel must cross, relative to baseline, to be counted as a spike during the survey.");
+            ImGuiWidgets.Tooltip($"Voltage a channel must cross, relative to baseline, to be counted as a spike during the survey. The survey detects spikes after a {SpikeDetection.BandDescription} band-pass filter and common median referencing.");
 
             float tpb = state.TimePerBankSeconds;
             ImGui.SetNextItemWidth(thrAvail * 0.33f);
             if (ImGui.InputFloat("Time per bank (s)##tpb", ref tpb, 5f, 30f, "%.0f"))
                 state.TimePerBankSeconds = Math.Max(2f, Math.Min(300f, tpb));
-            ImGuiWidgets.Tooltip("How long to record from each selected bank while sweeping through the survey, in seconds.");
+            ImGuiWidgets.Tooltip($"How long to record from each selected bank while sweeping through the survey, in seconds. Each bank also records an extra {NeuropixelsSurveyState.SettlingSeconds:0} s first, while the amplifiers settle, which is left out of the statistics.");
 
             bool anySelectedHasProbeFile = targets.Any(t => t.Selected &&
                 !string.IsNullOrEmpty(t.Dialog.ConfigureNeuropixelsV2.ProbeConfiguration.ProbeInterfaceFileName) &&
@@ -263,7 +278,7 @@ namespace OpenEphys.Onix1.Design
             if (!anySelectedHasProbeFile) { state.RecordSurveyData = false; ImGui.BeginDisabled(); }
             bool rec = state.RecordSurveyData;
             if (ImGui.Checkbox("Record raw data##recraw", ref rec)) state.RecordSurveyData = rec;
-            ImGuiWidgets.Tooltip("Save the raw, unfiltered voltage traces collected during the survey to disk, alongside the summary statistics, for each selected probe that has a ProbeInterface file.",
+            ImGuiWidgets.Tooltip("Save the raw, unfiltered voltage traces collected during the survey to disk, alongside the summary statistics, for each selected probe that has a ProbeInterface file. Each bank's recording includes its settling period.",
                 "Requires at least one selected probe to have a ProbeInterface file.");
             if (!anySelectedHasProbeFile) ImGui.EndDisabled();
         }
@@ -274,7 +289,7 @@ namespace OpenEphys.Onix1.Design
             bool disabled = !anySelected || blockedByScan;
             if (disabled) ImGui.BeginDisabled();
             if (ImGui.Button("Start Survey##hssurvey")) StartSurvey();
-            ImGuiWidgets.Tooltip("Sweep through the selected banks of every checked probe, concurrently, recording from each for the configured time and computing per-contact activity statistics.",
+            ImGuiWidgets.Tooltip($"Sweep through the selected banks of every checked probe, concurrently, recording from each for the configured time and computing per-contact activity statistics. Each bank first records an extra {NeuropixelsSurveyState.SettlingSeconds:0} s while the amplifiers settle, which is left out of the statistics.",
                 blockedByScan ? "A probe identity scan is currently running." : "Select at least one probe first.");
             if (disabled) ImGui.EndDisabled();
         }
