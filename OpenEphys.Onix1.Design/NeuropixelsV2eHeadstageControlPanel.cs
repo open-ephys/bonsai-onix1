@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Threading;
 using System.Windows.Forms;
 using Hexa.NET.ImGui;
+using OpenEphys.EphysVisualization.Design;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -119,9 +120,9 @@ namespace OpenEphys.Onix1.Design
                 if (ImGui.SmallButton("Edit##hwa"))
                 {
                     state.EditingHardwareAddr = true;
-                    ImGuiControls.WriteString(driverBuf, state.Driver);
+                    ImGuiStrings.WriteString(driverBuf, state.Driver);
                 }
-                ImGuiControls.Tooltip("Edit the hardware address (driver, slot, port) used to scan for probes and run the electrode survey.");
+                ImGuiWidgets.Tooltip("Edit the hardware address (driver, slot, port) used to scan for probes and run the electrode survey.");
             }
             else
             {
@@ -130,16 +131,16 @@ namespace OpenEphys.Onix1.Design
                 {
                     fixed (byte* p = driverBuf)
                         if (ImGui.InputText("Driver##srvdrv", p, (nuint)driverBuf.Length))
-                            state.Driver = ImGuiControls.ReadBuffer(driverBuf);
+                            state.Driver = ImGuiStrings.ReadBuffer(driverBuf);
                 }
-                ImGuiControls.Tooltip("Name of the device driver used to communicate with the ONIX hardware controller this headstage is connected to (e.g. \"riffa\" for a PCIe interface).");
+                ImGuiWidgets.Tooltip("Name of the device driver used to communicate with the ONIX hardware controller this headstage is connected to (e.g. \"riffa\" for a PCIe interface).");
 
                 ImGui.SameLine();
                 ImGui.SetNextItemWidth(100f);
                 int hubIndex = state.HubIndex;
                 if (ImGui.InputInt("Slot##srvslot", ref hubIndex))
                     state.HubIndex = Math.Max(0, hubIndex);
-                ImGuiControls.Tooltip("Index of the host interconnect (e.g., PCIe slot) the ONIX hardware controller uses, as enumerated by the operating system.");
+                ImGuiWidgets.Tooltip("Index of the host interconnect (e.g., PCIe slot) the ONIX hardware controller uses, as enumerated by the operating system.");
 
                 var portNames = Enum.GetNames(typeof(PortName));
                 int portIdx = Array.IndexOf(portNames, state.Port.ToString());
@@ -150,7 +151,7 @@ namespace OpenEphys.Onix1.Design
                     state.Port = (PortName)Enum.Parse(typeof(PortName), portNames[portIdx]);
                     setHeadstagePort(state.Port);
                 }
-                ImGuiControls.Tooltip("Headstage port on the ONIX hardware controller that this headstage is physically connected to. Changing this here also updates the headstage's own port setting.");
+                ImGuiWidgets.Tooltip("Headstage port on the ONIX hardware controller that this headstage is physically connected to. Changing this here also updates the headstage's own port setting.");
 
                 bool overrideV = state.PortVoltage.HasValue;
                 if (ImGui.Checkbox("Override voltage##srvpv", ref overrideV))
@@ -158,7 +159,7 @@ namespace OpenEphys.Onix1.Design
                     state.PortVoltage = overrideV ? (double?)5.0 : null;
                     setHeadstagePortVoltage(state.PortVoltage);
                 }
-                ImGuiControls.Tooltip("Manually set the headstage's supply voltage instead of auto-negotiating it.");
+                ImGuiWidgets.Tooltip("Manually set the headstage's supply voltage instead of auto-negotiating it.");
                 if (overrideV)
                 {
                     ImGui.SameLine();
@@ -169,12 +170,12 @@ namespace OpenEphys.Onix1.Design
                         state.PortVoltage = Math.Round(v, 1);
                         setHeadstagePortVoltage(state.PortVoltage);
                     }
-                    ImGuiControls.Tooltip("Supply voltage to apply to the headstage. Consult the headstage documentation for a safe range before changing this. Changing this here also updates the headstage's own voltage setting.");
+                    ImGuiWidgets.Tooltip("Supply voltage to apply to the headstage. Consult the headstage documentation for a safe range before changing this. Changing this here also updates the headstage's own voltage setting.");
                 }
 
                 ImGui.Spacing();
                 if (ImGui.Button("Apply##hwa")) state.EditingHardwareAddr = false;
-                ImGuiControls.Tooltip("Apply the hardware address above and close this editor.");
+                ImGuiWidgets.Tooltip("Apply the hardware address above and close this editor.");
             }
         }
 
@@ -186,13 +187,13 @@ namespace OpenEphys.Onix1.Design
             if (isScanning)
             {
                 if (ImGui.Button("Cancel##hsscan")) state.Cts?.Cancel();
-                ImGuiControls.Tooltip("Stop the probe identity scan currently in progress.");
+                ImGuiWidgets.Tooltip("Stop the probe identity scan currently in progress.");
             }
             else
             {
                 if (blockedBySurvey) ImGui.BeginDisabled();
                 if (ImGui.Button("Start Scan##hsscan")) StartScan();
-                ImGuiControls.Tooltip("Read each probe's part number and serial number directly from its EEPROM, and confirm the correct headstage is attached, without configuring or streaming from any probe.",
+                ImGuiWidgets.Tooltip("Read each probe's part number and serial number directly from its EEPROM, and confirm the correct headstage is attached, without configuring or streaming from any probe.",
                     "A survey is currently running.");
                 if (blockedBySurvey) ImGui.EndDisabled();
             }
@@ -207,8 +208,8 @@ namespace OpenEphys.Onix1.Design
                         break;
                     case NeuropixelsV1ScanStatus.Detected:
                         ImGui.TextColored(ColorTextSuccess, target.Label);
-                        ImGuiControls.InfoRow("Part No.", scan.PartNumber);
-                        ImGuiControls.InfoRow("SN", scan.SerialNumber.ToString());
+                        ImGuiWidgets.InfoRow("Part No.", scan.PartNumber);
+                        ImGuiWidgets.InfoRow("SN", scan.SerialNumber.ToString());
                         break;
                     case NeuropixelsV1ScanStatus.NotDetected:
                         ImGui.TextDisabled($"{target.Label}: not detected");
@@ -234,7 +235,7 @@ namespace OpenEphys.Onix1.Design
                 if (!hasGainCal)
                 {
                     ImGui.EndDisabled();
-                    ImGuiControls.Tooltip("Requires gain calibration file.");
+                    ImGuiWidgets.Tooltip("Requires gain calibration file.");
                 }
             }
         }
@@ -248,13 +249,13 @@ namespace OpenEphys.Onix1.Design
             float thr = (float)state.SpikeThreshold;
             ImGui.SetNextItemWidth(thrAvail * 0.33f);
             if (ImGui.InputFloat("Spike threshold (uV)##thr", ref thr, 5f, 10f, "%.1f")) state.SpikeThreshold = thr;
-            ImGuiControls.Tooltip("Voltage a channel must cross, relative to baseline, to be counted as a spike during the survey.");
+            ImGuiWidgets.Tooltip("Voltage a channel must cross, relative to baseline, to be counted as a spike during the survey.");
 
             float tpb = state.TimePerBankSeconds;
             ImGui.SetNextItemWidth(thrAvail * 0.33f);
             if (ImGui.InputFloat("Time per bank (s)##tpb", ref tpb, 5f, 30f, "%.0f"))
                 state.TimePerBankSeconds = Math.Max(2f, Math.Min(300f, tpb));
-            ImGuiControls.Tooltip("How long to record from each selected bank while sweeping through the survey, in seconds.");
+            ImGuiWidgets.Tooltip("How long to record from each selected bank while sweeping through the survey, in seconds.");
 
             bool anySelectedHasProbeFile = targets.Any(t => t.Selected &&
                 !string.IsNullOrEmpty(t.Dialog.ConfigureNeuropixelsV2.ProbeConfiguration.ProbeInterfaceFileName) &&
@@ -262,7 +263,7 @@ namespace OpenEphys.Onix1.Design
             if (!anySelectedHasProbeFile) { state.RecordSurveyData = false; ImGui.BeginDisabled(); }
             bool rec = state.RecordSurveyData;
             if (ImGui.Checkbox("Record raw data##recraw", ref rec)) state.RecordSurveyData = rec;
-            ImGuiControls.Tooltip("Save the raw, unfiltered voltage traces collected during the survey to disk, alongside the summary statistics, for each selected probe that has a ProbeInterface file.",
+            ImGuiWidgets.Tooltip("Save the raw, unfiltered voltage traces collected during the survey to disk, alongside the summary statistics, for each selected probe that has a ProbeInterface file.",
                 "Requires at least one selected probe to have a ProbeInterface file.");
             if (!anySelectedHasProbeFile) ImGui.EndDisabled();
         }
@@ -273,7 +274,7 @@ namespace OpenEphys.Onix1.Design
             bool disabled = !anySelected || blockedByScan;
             if (disabled) ImGui.BeginDisabled();
             if (ImGui.Button("Start Survey##hssurvey")) StartSurvey();
-            ImGuiControls.Tooltip("Sweep through the selected banks of every checked probe, concurrently, recording from each for the configured time and computing per-contact activity statistics.",
+            ImGuiWidgets.Tooltip("Sweep through the selected banks of every checked probe, concurrently, recording from each for the configured time and computing per-contact activity statistics.",
                 blockedByScan ? "A probe identity scan is currently running." : "Select at least one probe first.");
             if (disabled) ImGui.EndDisabled();
         }
@@ -287,7 +288,7 @@ namespace OpenEphys.Onix1.Design
             ImGui.Text("Collecting...");
             ImGui.Spacing();
             if (ImGui.Button("Cancel##hssurvey")) state.Cts?.Cancel();
-            ImGuiControls.Tooltip("Stop the electrode survey currently in progress.");
+            ImGuiWidgets.Tooltip("Stop the electrode survey currently in progress.");
         }
 
         void DrawPerTargetStatus()

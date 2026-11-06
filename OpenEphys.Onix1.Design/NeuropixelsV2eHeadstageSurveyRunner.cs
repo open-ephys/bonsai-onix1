@@ -417,24 +417,8 @@ namespace OpenEphys.Onix1.Design
                     enableCompression: true)
                 : rawStream;
 
-            var scaled = new NeuropixelsV2Scale { UseCommonMedianReference = true }.Process(dataStream);
-
-            IObservable<Mat> filtered = new Butterworth
-            {
-                SampleRate  = NeuropixelsV2.SamplesPerChannelPerSecond,
-                Cutoff1     = 300.0,
-                Cutoff2     = 6000.0,
-                FilterType  = FilterType.BandPass,
-                FilterOrder = 2
-            }.Process(scaled).Publish().RefCount();
-
-            var spikeStream = new DetectSpikes
-            {
-                Threshold          = new[] { spikeThreshold },
-                Length             = 60,
-                Delay              = 15,
-                WaveformRefinement = SpikeWaveformRefinement.AlignPeaks
-            }.Process(filtered);
+            var filtered = SpikeDetection.NeuropixelsV2Signal(dataStream).Publish().RefCount();
+            var spikeStream = SpikeDetection.Detect(filtered, NeuropixelsV2.SamplesPerChannelPerSecond, new[] { spikeThreshold });
 
             var combined = spikeStream.Zip(filtered, (spikes, filtered) => (spikes, filtered));
 

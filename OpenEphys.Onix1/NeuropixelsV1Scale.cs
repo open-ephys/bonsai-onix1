@@ -77,8 +77,7 @@ namespace OpenEphys.Onix1
         /// </returns>
         public IObservable<Mat> Process(IObservable<NeuropixelsV1DataFrame> source)
         {
-            double alpha = 1171.875 / ToGainValue(AmplifierGain);
-            double beta = alpha * -NeuropixelsV1.AdcMidpoint;
+            var gain = AmplifierGain;
             var useCmr = UseCommonMedianReference;
             var adcGroups = NeuropixelsV1.AdcChannelGroups();
 
@@ -91,11 +90,21 @@ namespace OpenEphys.Onix1
 
             return source.Select(input =>
             {
-                var raw = getRaw(input);
-                var output = new Mat(raw.Size, Depth.F32, raw.Channels);
-                CV.ConvertScale(raw, output, alpha, beta);
+                var output = ToMicrovolts(getRaw(input), gain);
                 return useCmr ? Neuropixels.ApplyCmrF32(output, adcGroups) : output;
             });
+        }
+
+        /// <summary>
+        /// Converts NeuropixelsV1 spike or LFP data to microvolts, as a new <see cref="Depth.F32"/> matrix, given
+        /// the gain of the amplifier it came from.
+        /// </summary>
+        internal static Mat ToMicrovolts(Mat data, NeuropixelsV1Gain gain)
+        {
+            var alpha = 1171.875 / ToGainValue(gain);
+            var output = new Mat(data.Size, Depth.F32, data.Channels);
+            CV.ConvertScale(data, output, alpha, alpha * -NeuropixelsV1.AdcMidpoint);
+            return output;
         }
 
         static int ToGainValue(NeuropixelsV1Gain gain) => gain switch

@@ -15,15 +15,13 @@ namespace OpenEphys.Onix1.Design
     {
         readonly float[] peakToPeakSum;
         readonly int[] spikeCount;
-        readonly P2Median[] medianAbsDeviation;
+        readonly ChannelNoise noise;
 
         internal SpikeActivityAccumulator(int channelCount)
         {
             peakToPeakSum = new float[channelCount];
             spikeCount = new int[channelCount];
-            medianAbsDeviation = new P2Median[channelCount];
-            for (int i = 0; i < channelCount; i++)
-                medianAbsDeviation[i] = new P2Median();
+            noise = new ChannelNoise(channelCount);
         }
 
         /// <summary>
@@ -42,9 +40,7 @@ namespace OpenEphys.Onix1.Design
                 spikeCount[spike.ChannelIndex]++;
             }
 
-            for (int ch = 0; ch < spikeDetectionTimeSeries.Rows; ch++)
-                for (int s = 0; s < spikeDetectionTimeSeries.Cols; s++)
-                    medianAbsDeviation[ch].Update(Math.Abs((float)spikeDetectionTimeSeries.GetReal(ch, s)));
+            noise.Update(spikeDetectionTimeSeries);
         }
 
         /// <summary>
@@ -56,14 +52,12 @@ namespace OpenEphys.Onix1.Design
             int n = peakToPeakSum.Length;
             var amplitude = new float[n];
             var fireRate = new float[n];
-            var noise = new float[n];
             for (int ch = 0; ch < n; ch++)
             {
                 amplitude[ch] = spikeCount[ch] > 0 ? peakToPeakSum[ch] / spikeCount[ch] : 0f;
                 fireRate[ch] = (float)(spikeCount[ch] / durationSeconds);
-                noise[ch] = medianAbsDeviation[ch].Median / 0.6745f;
             }
-            return (amplitude, fireRate, noise);
+            return (amplitude, fireRate, noise.Sigma());
         }
     }
 }

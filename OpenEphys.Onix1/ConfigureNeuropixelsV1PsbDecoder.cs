@@ -89,7 +89,7 @@ namespace OpenEphys.Onix1
 
                     if (!File.Exists(probeConfiguration.ProbeInterfaceFileName))
                         throw new ArgumentException(
-                            $"A probe interface file must be provided o define the channel map for '{deviceName}'.");
+                            $"A probe interface file must be provided to define the channel map for '{deviceName}'.");
 
                     probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(
                         probeConfiguration.ProbeInterfaceFileName,

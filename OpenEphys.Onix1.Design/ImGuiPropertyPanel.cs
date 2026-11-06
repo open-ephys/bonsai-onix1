@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using OpenEphys.EphysVisualization.Design;
 
 namespace OpenEphys.Onix1.Design
 {
@@ -138,7 +139,7 @@ namespace OpenEphys.Onix1.Design
 
         static void DescriptionTooltip(PropertyDescriptor prop)
         {
-            if (!string.IsNullOrEmpty(prop.Description)) ImGuiControls.Tooltip(prop.Description);
+            if (!string.IsNullOrEmpty(prop.Description)) ImGuiWidgets.Tooltip(prop.Description);
         }
 
         void DrawPropertyRow(PropertyDescriptor prop)
@@ -201,7 +202,7 @@ namespace OpenEphys.Onix1.Design
         {
             string current = currentValue ?? "";
             var buf = fileBuffers.TryGetValue(prop.Name, out var b) ? b : fileBuffers[prop.Name] = new byte[512];
-            ImGuiControls.WriteString(buf, current);
+            ImGuiStrings.WriteString(buf, current);
 
             float openButtonWidth = ImGui.CalcTextSize("Open...", true).X + ImGui.GetStyle().FramePadding.X * 2f;
             float inputWidth = ImGui.GetContentRegionAvail().X - openButtonWidth - ImGui.GetStyle().ItemSpacing.X;
@@ -211,9 +212,9 @@ namespace OpenEphys.Onix1.Design
             {
                 fixed (byte* p = buf)
                     if (ImGui.InputText("##input", p, (nuint)buf.Length))
-                        prop.SetValue(device, ImGuiControls.ReadBuffer(buf));
+                        prop.SetValue(device, ImGuiStrings.ReadBuffer(buf));
             }
-            ImGuiControls.Tooltip(prop.Description);
+            ImGuiWidgets.Tooltip(prop.Description);
             ImGui.SameLine();
             if (ImGui.Button("Open...##open"))
             {
