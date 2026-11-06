@@ -28,6 +28,17 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
+        /// The device info registered under <paramref name="deviceName"/>, or <c>null</c> if there is none or it is
+        /// not a <typeparamref name="T"/>. Call it while the context that registered the device is running.
+        /// </summary>
+        internal static T TryGetDeviceInfo<T>(string deviceName) where T : DeviceInfo
+        {
+            T result = null;
+            DeviceManager.GetDevice(deviceName).Subscribe(info => result = info as T, _ => { });
+            return result;
+        }
+
+        /// <summary>
         /// Describes the port voltage a round ran with, for failure messages.
         /// </summary>
         /// <param name="requested">The manually set voltage, or <c>null</c> if the voltage is auto-negotiated.</param>

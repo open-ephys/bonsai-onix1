@@ -94,6 +94,7 @@ namespace OpenEphys.Onix1.Design
             internal string TempProbeFile;
             internal NeuropixelsV2eSurveyResults PreviousResults;
             internal DateTimeOffset? PreviousCompletedAt;
+            internal ulong? ProbeSerialNumber;
         }
 
         readonly struct RoundTargetPrep
@@ -188,7 +189,8 @@ namespace OpenEphys.Onix1.Design
             {
                 state.Target.Dialog.Survey.Complete(new NeuropixelsV2eSurveyResults(
                     state.AllAmplitude, state.AllFireRate, state.AllNoise,
-                    (float)spikeThreshold, timePerBankSeconds, state.Target.Dialog.SurveyBanks));
+                    (float)spikeThreshold, timePerBankSeconds, state.RecordingFolder != null, state.ProbeSerialNumber,
+                    state.Target.Dialog.SurveyBanks));
             }
 
             double? appliedVoltage = null;
@@ -248,7 +250,8 @@ namespace OpenEphys.Onix1.Design
                             roundResults = await CollectRoundStatsAsync(
                                 buildHeadstage, targets, roundPrep, driver, hubIndex, port,
                                 appliedVoltage ?? portVoltageOverride, spikeThreshold,
-                                timePerBankSeconds, cancellationToken, v => appliedVoltage = v);
+                                timePerBankSeconds, cancellationToken, v => appliedVoltage = v,
+                                (target, serialNumber) => states[target].ProbeSerialNumber = serialNumber);
                             break;
                         }
                         catch (OperationCanceledException) { throw; }
@@ -338,7 +341,8 @@ namespace OpenEphys.Onix1.Design
             double spikeThreshold,
             float timePerBankSeconds,
             CancellationToken cancellationToken,
-            Action<double?> onAppliedVoltage)
+            Action<double?> onAppliedVoltage,
+            Action<NeuropixeslV2eSurveyTarget, ulong?> onSerialNumber)
         {
             var (headstage, portVoltage) = buildHeadstage(port, previouslyAppliedVoltage);
 
@@ -389,6 +393,8 @@ namespace OpenEphys.Onix1.Design
             {
                 var stats = await Task.WhenAll(tcsMap.Values.Select(t => t.Task));
                 onAppliedVoltage(portVoltage.Applied);
+                foreach (var a in active)
+                    onSerialNumber(a.Target, HeadstageConnection.TryGetDeviceInfo<NeuropixelsV2PsbDecoderDeviceInfo>(a.DeviceName)?.ProbeSerialNumber);
                 return tcsMap.Keys.Zip(stats, (target, s) => (target, s))
                     .ToDictionary(x => x.target, x => x.s);
             }

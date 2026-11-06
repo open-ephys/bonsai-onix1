@@ -26,11 +26,13 @@ namespace OpenEphys.Onix1.Design
         // Parameters
         internal float SpikeThresholdUv { get; }
         internal float TimePerBankSeconds { get; }
+        internal bool RecordedRaw { get; }
+        internal ulong? ProbeSerialNumber { get; }
         internal IReadOnlyCollection<(int shank, int bank)> SurveyBanks { get; }
 
         internal NeuropixelsV2eSurveyResults(
             float?[] amplitude, float?[] fireRate, float?[] noise,
-            float spikeThresholdUv, float timePerBankSeconds,
+            float spikeThresholdUv, float timePerBankSeconds, bool recordedRaw, ulong? probeSerialNumber,
             IReadOnlyCollection<(int shank, int bank)> surveyBanks)
         {
             ActivityAmplitude = amplitude ?? throw new ArgumentNullException(nameof(amplitude));
@@ -49,6 +51,8 @@ namespace OpenEphys.Onix1.Design
 
             SpikeThresholdUv = spikeThresholdUv;
             TimePerBankSeconds = timePerBankSeconds;
+            RecordedRaw = recordedRaw;
+            ProbeSerialNumber = probeSerialNumber;
             SurveyBanks = new HashSet<(int, int)>(surveyBanks ?? Array.Empty<(int, int)>());
         }
     }
