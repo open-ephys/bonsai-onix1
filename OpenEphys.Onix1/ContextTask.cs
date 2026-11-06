@@ -428,7 +428,6 @@ namespace OpenEphys.Onix1
                             Console.WriteLine("Frame collection task has been cancelled by " + this.GetType());
 #endif
                         }
-                        ;
                     },
                     collectFramesToken,
                     TaskCreationOptions.LongRunning,
