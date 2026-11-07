@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -437,18 +438,36 @@ namespace OpenEphys.Onix1
                     collectFramesCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                     var framePipeline = RunFramePipeline(frameReceived, collectFramesCancellation);
 
-                    return acquisition = framePipeline.ContinueWith(task =>
+                    acquisition = framePipeline.ContinueWith(task =>
                     {
                         lock (regLock)
                         {
                             collectFramesCancellation?.Dispose();
                             collectFramesCancellation = null;
                             ctx.Stop();
+                        }
 
-                            contextConfiguration.Dispose();
+                        // NB: Not under regLock: if acquisition fails while the workflow is still subscribing, a data
+                        // node can read a register inside DeviceManager.GetDevice (holding its lock) while unregistering
+                        // devices here needs that same lock, deadlocking. Acquisition is only marked completed after this.
+                        contextConfiguration.Dispose();
+
+                        lock (regLock)
+                        {
                             acquisition = Task.CompletedTask;
                         }
                     });
+
+                    // NB: Report errors after cleanup, from a task Dispose does not wait on, so that observers
+                    // disposing the context in response to the error do not deadlock
+                    return acquisition.ContinueWith(_ =>
+                    {
+                        var error = GetTaskError(framePipeline);
+                        if (error != null)
+                        {
+                            frameReceived.OnError(error);
+                        }
+                    }, TaskScheduler.Default);
                 }
         }
 
@@ -463,6 +482,7 @@ namespace OpenEphys.Onix1
             var calibrationConfiguration = new StackDisposable();
 
             Task framePipeline = null;
+            Exception error = null;
             try
             {
                 foreach (var step in steps)
@@ -491,22 +511,38 @@ namespace OpenEphys.Onix1
                 framePipeline = RunFramePipeline(calibrationFrames, calibrationCancellation);
                 completion.GetAwaiter().GetResult();
             }
-            finally
+            catch (Exception ex)
             {
-                // NB: Unsubscribes any pending calibration sequence and stops the frame pipeline. The read
-                // task exits once its current blocking read returns (e.g. on the next heartbeat).
-                calibrationCancellation.Cancel();
-                framePipeline?.GetAwaiter().GetResult();
-                ctx.Stop();
+                error = ex;
+            }
 
-                // NB: Released here rather than at context cleanup
-                calibrationConfiguration.Dispose();
+            // NB: Unsubscribes any pending calibration sequence and stops the frame pipeline. The read
+            // task exits once its current blocking read returns (e.g. on the next heartbeat).
+            calibrationCancellation.Cancel();
+            Exception pipelineError = null;
+            try { framePipeline?.GetAwaiter().GetResult(); }
+            catch (Exception ex) { pipelineError = ex; }
+            ctx.Stop();
+
+            // NB: Released here rather than at context cleanup
+            calibrationConfiguration.Dispose();
+
+            // NB: A pipeline failure cancels calibration, so report its error instead of the cancellation
+            if (pipelineError != null && (error == null || error is OperationCanceledException))
+            {
+                error = pipelineError;
+            }
+
+            if (error != null)
+            {
+                ExceptionDispatchInfo.Capture(error).Throw();
             }
         }
 
         // NB: Starts the read and distribution tasks, feeding all frames read from hardware into sink. The
         // returned task completes once both tasks have finished and all queued frames have been released.
-        // If reading fails, cancellation is requested and the error is forwarded to sink.
+        // If reading or distributing fails, cancellation is requested and the returned task faults with the
+        // error.
         Task RunFramePipeline(IObserver<oni.Frame> sink, CancellationTokenSource frameCancellation)
         {
             var collectFramesToken = frameCancellation.Token;
@@ -555,17 +591,24 @@ namespace OpenEphys.Onix1
                     {
                         if (frameQueue.TryTake(out oni.Frame frame, QueueTimeoutMilliseconds, collectFramesToken))
                         {
-                            sink.OnNext(frame);
-                            frame.Dispose();
+                            try { sink.OnNext(frame); }
+                            finally { frame.Dispose(); }
                         }
                     }
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException) when (collectFramesToken.IsCancellationRequested)
                 {
 #if DEBUG
                     // NB: If the thread stops no frame has been collected
                     Console.WriteLine("Frame distribution task has been cancelled by " + this.GetType());
 #endif
+                }
+                catch (Exception)
+                {
+                    // NB: An observer threw. Stop the read task too, otherwise it keeps queueing frames that are
+                    // never distributed and the error is never reported
+                    frameCancellation.Cancel();
+                    throw;
                 }
             },
             collectFramesToken,
@@ -574,12 +617,6 @@ namespace OpenEphys.Onix1
 
             return Task.WhenAll(distributeFrames, readFrames).ContinueWith(task =>
             {
-                if (readFrames.IsFaulted && readFrames.Exception is AggregateException ex)
-                {
-                    var error = ex.InnerExceptions.Count == 1 ? ex.InnerExceptions[0] : ex;
-                    sink.OnError(error);
-                }
-
                 // Clear queue and free memory
                 while (frameQueue.Count > 0)
                 {
@@ -587,7 +624,22 @@ namespace OpenEphys.Onix1
                     frame.Dispose();
                 }
                 frameQueue.Dispose();
+
+                // NB: Fault the returned task instead of notifying sink here, since an observer disposing the
+                // context in response would wait on this pipeline to complete
+                var error = GetTaskError(readFrames) ?? GetTaskError(distributeFrames);
+                if (error != null)
+                {
+                    ExceptionDispatchInfo.Capture(error).Throw();
+                }
             }, TaskScheduler.Default);
+        }
+
+        static Exception GetTaskError(Task task)
+        {
+            if (!task.IsFaulted) return null;
+            var ex = task.Exception;
+            return ex.InnerExceptions.Count == 1 ? ex.InnerExceptions[0] : ex;
         }
 
         #region oni.Context Properties
