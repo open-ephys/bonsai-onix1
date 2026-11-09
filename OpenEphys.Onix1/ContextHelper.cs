@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reflection;
@@ -213,9 +214,31 @@ namespace OpenEphys.Onix1
         {
             if (deviceType == targetType) return true;
 
-            var equivalentTypes = deviceType.GetCustomAttributes(typeof(EquivalentDataSource), false).Cast<EquivalentDataSource>();
+            var equivalentSource = deviceType.GetCustomAttribute<EquivalentDataSourceAttribute>(false);
+            if (equivalentSource?.BaseType == targetType) return true;
 
-            return equivalentTypes.Any(t => t.BaseType == targetType);
+            var equivalentNodes = deviceType.GetCustomAttributes(typeof(EquivalentDataNodeAttribute), false).Cast<EquivalentDataNodeAttribute>();
+
+            return equivalentNodes.Any(t => GetDataNodeDeviceType(t.NodeType) == targetType);
+        }
+
+        static Type GetDataNodeDeviceType(Type nodeType)
+        {
+            var converters = TypeDescriptor.GetProperties(nodeType)
+                .Cast<PropertyDescriptor>()
+                .Select(property => property.Converter)
+                .OfType<DeviceNameConverter>()
+                .ToArray();
+
+            if (converters.Length != 1)
+            {
+                throw new ArgumentException(
+                    $"The equivalent data node type {nodeType} must have exactly one device name property, " +
+                    $"but {converters.Length} were found.",
+                    nameof(nodeType));
+            }
+
+            return converters[0].DeviceType;
         }
     }
 }
