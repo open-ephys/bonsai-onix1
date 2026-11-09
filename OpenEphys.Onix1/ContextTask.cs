@@ -525,7 +525,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <param name="option">The option to get.</param>
         /// <returns>The value of the specified option.</returns>
-        public int GetCustomOption(int option) => ctx.GetCustomOption(option);
+        protected int GetCustomOption(int option) => ctx.GetCustomOption(option);
 
         /// <summary>
         /// Resets the frame clock for the underlying <see cref="oni.Context"/> and ONI controller.

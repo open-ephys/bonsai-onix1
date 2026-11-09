@@ -73,6 +73,7 @@ namespace OpenEphys.Onix1
         [Category(DevicesCategory)]
         public ConfigureMemoryMonitor MemoryMonitor { get; set; } = new();
 
+        // NB: OnixContextTask is used even though inner devices are generic. This is Onix hardware and will never be anything else
         internal override IEnumerable<IDeviceConfiguration<OnixContextTask>> GetDevices()
         {
             yield return Heartbeat;
