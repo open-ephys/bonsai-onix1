@@ -111,6 +111,28 @@ namespace OpenEphys.Onix1
             return new DeviceContext(deviceInfo.Context, device);
         }
 
+        internal static HubContext GetHubContext(this ContextTask context, uint address, Type expectedType)
+        {
+            Hub hub = context.GetHub(address);
+
+            if (hub.HardwareID != GetDeviceID(expectedType))
+            {
+                ThrowInvalidHubException(expectedType, address);
+            }
+
+            var minVersion = GetMinimumFirmwareVersion(expectedType);
+            var hubVersion = hub.FirmwareVersion & 0x00FFFFFF; // NB: bits 31-24 are reserved
+
+            if (hubVersion < minVersion)
+            {
+                Validate(ValidationLevel.Permissive, new InvalidOperationException(
+                    $"Invalid hub version. The {expectedType.Name} hub of the device at address {address} is version " +
+                    $"0x{hubVersion:X}, but version 0x{minVersion:X} is required."));
+            }
+
+            return new HubContext(context, address);
+        }
+
         // TODO: Maybe we should split the two passthrough-related methods into a different helper file
         public static DeviceContext GetPassthroughDeviceContext(this OnixContextTask context, uint address, Type expectedType)
         {
@@ -165,6 +187,11 @@ namespace OpenEphys.Onix1
         static void ThrowInvalidDeviceException(Type expectedType, uint address)
         {
             throw new InvalidOperationException($"Invalid device ID. The device found at address {address} is not a '{expectedType.Name}' device.");
+        }
+
+        static void ThrowInvalidHubException(Type expectedType, uint address)
+        {
+            throw new InvalidOperationException($"Invalid hub ID. The hub of the device at address {address} is not a '{expectedType.Name}' hub.");
         }
 
         static void ThrowInvalidDeviceVersionException(Type expectedType, uint address, uint deviceVersion, uint minimumVersion)

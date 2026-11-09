@@ -757,7 +757,18 @@ namespace OpenEphys.Onix1
             }
         }
 
-        internal oni.Hub GetHub(uint deviceAddress) => ctx.GetHub(deviceAddress);
+        /// <summary>
+        /// Gets the metadata of the hub that contains the specified device, read from the hardware.
+        /// </summary>
+        /// <param name="deviceAddress">The fully-qualified address of a device on the hub.</param>
+        /// <returns>The hub metadata.</returns>
+        protected internal oni.Hub GetHub(uint deviceAddress)
+        {
+            lock (regLock)
+            {
+                return ctx.GetHub(deviceAddress);
+            }
+        }
 
         #endregion
 
