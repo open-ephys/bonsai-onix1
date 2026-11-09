@@ -27,6 +27,8 @@ namespace OpenEphys.Onix1
             targetType = deviceType;
         }
 
+        internal Type DeviceType => targetType;
+
         static bool IsGroup(IWorkflowExpressionBuilder builder)
         {
             return builder is IncludeWorkflowBuilder || builder is GroupWorkflowBuilder;
