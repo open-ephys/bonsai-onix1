@@ -17,7 +17,7 @@ namespace OpenEphys.Onix1
     [Description("Produces a sequence of Rhs2116TriggerDataFrame objects indicating the time and status of stimulus trigger events.")]
     public class Rhs2116TriggerData : Source<Rhs2116TriggerDataFrame>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(Rhs2116Trigger.NameConverter))]
         [Description(DeviceFactoryStrings.DeviceNameDescription)]
         [Category(DeviceFactoryStrings.ConfigurationCategory)]

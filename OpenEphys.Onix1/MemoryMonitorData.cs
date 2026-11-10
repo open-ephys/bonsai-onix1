@@ -16,7 +16,7 @@ namespace OpenEphys.Onix1
     [Description("Produces a sequence of memory usage data frames.")]
     public class MemoryMonitorData : Source<MemoryMonitorDataFrame>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(MemoryMonitor.NameConverter))]
         [Description(DeviceFactoryStrings.DeviceNameDescription)]
         [Category(DeviceFactoryStrings.ConfigurationCategory)]

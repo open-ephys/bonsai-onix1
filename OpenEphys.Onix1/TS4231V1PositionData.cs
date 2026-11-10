@@ -44,7 +44,7 @@ namespace OpenEphys.Onix1
     [Description("Produces a sequence of 3D positions from an array of Triad Semiconductor TS4231 receivers beneath a pair of SteamVR V1 base stations.")]
     public class TS4231V1PositionData : Source<TS4231V1PositionDataFrame>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(TS4231V1.NameConverter))]
         [Description(DeviceFactoryStrings.DeviceNameDescription)]
         [Category(DeviceFactoryStrings.ConfigurationCategory)]

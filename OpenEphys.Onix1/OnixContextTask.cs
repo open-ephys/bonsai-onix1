@@ -2,7 +2,14 @@
 
 namespace OpenEphys.Onix1
 {
-    /// <inheritdoc/>
+    /// <summary>
+    /// Encapsulates a single ONI context and orchestrates interaction with an ONIX system.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="OnixContextTask"/> is the <see cref="ContextTask"/> for ONIX hardware and is created by
+    /// the <see cref="CreateContext"/> operator. Configuration operators that require ONIX-specific
+    /// functionality, such as headstages, only accept an <see cref="OnixContextTask"/>.
+    /// </remarks>
     public sealed class OnixContextTask : ContextTask
     {
         /// <inheritdoc/>
@@ -31,7 +38,11 @@ namespace OpenEphys.Onix1
         // in all of them.
         // the 0x00FF0000 is kept to maintain the original code, but it should be changed to 0x00030000
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Gets a value indicating whether the frame clock is reset when acquisition starts.
+        /// </summary>
+        /// <remarks>The result depends on the synchronization configuration of the ONIX controller.</remarks>
+        /// <returns><see langword="true"/> if the frame clock is reset on acquisition start; otherwise, <see langword="false"/>.</returns>
         protected override bool GetFrameClockResetOnStart()
         {
             int address = HardwareAddress;
@@ -39,7 +50,11 @@ namespace OpenEphys.Onix1
             return mode == 0;
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Performs synchronization between multiple ONI controllers, if applicable and configured in the hardware.
+        /// This method is called after the context is configured and before acquisition starts.
+        /// </summary>
+        /// <remarks>Resets the frame clock if required by the synchronization configuration of the ONIX controller.</remarks>
         protected override void PerformControllerSynchronization()
         {
             int address = HardwareAddress;

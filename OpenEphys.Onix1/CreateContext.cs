@@ -6,7 +6,7 @@ using System.Reactive.Linq;
 namespace OpenEphys.Onix1
 {
     /// <summary>
-    /// Creates a <see cref="OnixContextTask"/> that orchestrates data acquisition for an ONIX system.
+    /// Creates an <see cref="OnixContextTask"/> that orchestrates data acquisition for an ONIX system.
     /// </summary>
     /// <remarks>
     /// ONIX is built on top of the <see href="https://open-ephys.github.io/ONI/">Open Neuro Interface
@@ -48,7 +48,7 @@ namespace OpenEphys.Onix1
         public int Index { get; set; } = OnixContextTask.DefaultIndex;
 
         /// <summary>
-        /// Sets the hardware validation level of the <see cref="ContextTask"/>.
+        /// Sets the hardware validation level of the <see cref="OnixContextTask"/>.
         /// </summary>
         /// <remarks>
         /// Downstream configuration operators may validate the hardware they configure before allowing

@@ -56,7 +56,7 @@ namespace OpenEphys.Onix1
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance
         /// prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="OnixContextTask"/> instances that holds configuration actions.</param>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that holds configuration actions.</param>
         /// <returns>The original sequence modified by adding additional configuration actions required to configure a heartbeat device./></returns>
         public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
         {

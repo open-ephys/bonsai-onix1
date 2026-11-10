@@ -72,7 +72,7 @@ namespace OpenEphys.Onix1
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance
         /// prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="OnixContextTask"/> instances that hold configuration actions.</param>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that hold configuration actions.</param>
         /// <returns>
         /// The original sequence modified by adding additional configuration actions required to configure
         /// a ONIX breakout board Harp sync input device.

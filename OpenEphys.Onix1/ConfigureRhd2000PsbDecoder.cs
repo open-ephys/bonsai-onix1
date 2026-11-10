@@ -8,7 +8,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// This is a low-level device that is only useful within the context of an appropriate <see
-    /// cref="MultiDeviceFactory"/>, e.g. <see cref="ConfigureHeadstageNeuropixelsV2Rhd2000e"/>.
+    /// cref="MultiDeviceFactory{TContext}"/>, e.g. <see cref="ConfigureHeadstageNeuropixelsV2Rhd2000e"/>.
     /// </remarks>
     [Description("Configures a parallel serial bus decoder for an embedded Rhd2000 data stream.")]
     public class ConfigureRhd2000PsbDecoder : SingleDeviceFactory<OnixContextTask>

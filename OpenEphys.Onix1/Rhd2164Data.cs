@@ -29,7 +29,7 @@ namespace OpenEphys.Onix1
                                                                33, 35, 37, 39, 41, 43, 45, 47,
                                                                49, 51, 53, 55, 57, 59, 61, 63};
 
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(Rhd2164.NameConverter))]
         [Description(DeviceFactoryStrings.DeviceNameDescription)]
         [Category(DeviceFactoryStrings.ConfigurationCategory)]

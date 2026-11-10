@@ -150,6 +150,9 @@ namespace OpenEphys.Onix1
         const int HeadstageIdRhd2216Variant = 11;
         const int HeadstageIdRhd2132Variant = 12;
 
+        const int AnalogSwitchSettleTimeMilliseconds = 20;
+        const int AnalogSupplySettleTimeMilliseconds = 500;
+
         const byte Gpo10NeuropixelVddaEnableMask = 1 << 3; // Used to turn on Probe VDDA supply
         const byte Gpo10NeuropixelResetMask = 1 << 7; // Used to issue full reset commands to probe
         const byte Gpo32NeuropixelI2cSelectionMask = 1 << 3; // Used to route I2C to probe
@@ -190,11 +193,11 @@ namespace OpenEphys.Onix1
             // configure deserializer I2C aliases
             var deserializer = new I2CRegisterContext(device, DS90UB9x.DES_ADDR);
 
-            uint alias = NeuropixelsV2.ProbeAddress << 1;
+            uint alias = NeuropixelsV2.ProbeI2CAddress << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID1, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias1, alias);
 
-            alias = NeuropixelsV2.FlexEEPROMAddress << 1;
+            alias = NeuropixelsV2.FlexEepromI2CAddress << 1;
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveID2, alias);
             deserializer.WriteByte((uint)DS90UB9xDeserializerI2CRegister.SlaveAlias2, alias);
 
@@ -262,7 +265,7 @@ namespace OpenEphys.Onix1
             var gpo32Config = serializer.ReadByte((uint)DS90UB933SerializerI2CRegister.Gpio32);
             gpo32Config = (byte)(gpo32Config & ~Gpo32Rhd2000VddaEnableMask);
             serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, gpo32Config);
-            Thread.Sleep(10);
+            Thread.Sleep(AnalogSwitchSettleTimeMilliseconds);
         }
 
         internal static void DeselectProbe(I2CRegisterContext serializer)
@@ -270,7 +273,7 @@ namespace OpenEphys.Onix1
             var gpo32Config = serializer.ReadByte((uint)DS90UB933SerializerI2CRegister.Gpio32);
             gpo32Config |= Gpo32NeuropixelI2cSelectionMask;
             serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, gpo32Config);
-            Thread.Sleep(10);
+            Thread.Sleep(AnalogSwitchSettleTimeMilliseconds);
         }
 
         internal static void EnableRhd2000Controller(I2CRegisterContext serializer)
@@ -278,12 +281,12 @@ namespace OpenEphys.Onix1
             var gpo32Config = serializer.ReadByte((uint)DS90UB933SerializerI2CRegister.Gpio32);
             gpo32Config |= Gpo32Rhd2000VddaEnableMask;
             serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, gpo32Config);
-            Thread.Sleep(1);
+            Thread.Sleep(AnalogSwitchSettleTimeMilliseconds);
 
             gpo32Config = serializer.ReadByte((uint)DS90UB933SerializerI2CRegister.Gpio32);
             gpo32Config = (byte)(gpo32Config & ~Gpo32Rhd2000ControllerEnableMask);
             serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio32, gpo32Config);
-            Thread.Sleep(10);
+            Thread.Sleep(AnalogSwitchSettleTimeMilliseconds);
         }
 
         static void EnableProbeSupply(I2CRegisterContext serializer)
@@ -291,7 +294,7 @@ namespace OpenEphys.Onix1
             var gpo10Config = serializer.ReadByte((uint)DS90UB933SerializerI2CRegister.Gpio10);
             gpo10Config |= Gpo10NeuropixelVddaEnableMask;
             serializer.WriteByte((uint)DS90UB933SerializerI2CRegister.Gpio10, gpo10Config);
-            Thread.Sleep(10);
+            Thread.Sleep(AnalogSupplySettleTimeMilliseconds);
         }
 
         static void ResetProbe(I2CRegisterContext serializer)

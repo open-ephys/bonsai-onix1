@@ -20,7 +20,7 @@ namespace OpenEphys.Onix1
     [Description("Produces a sequence of Rhs2116DataFrame objects with data from an Intan Rhs2116 bioacquisition chip.")]
     public class Rhs2116Data : Source<Rhs2116DataFrame>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(Rhs2116.NameConverter))]
         public string DeviceName { get; set; }
 

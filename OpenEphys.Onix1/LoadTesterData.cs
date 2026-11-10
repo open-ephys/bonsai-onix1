@@ -16,7 +16,7 @@ namespace OpenEphys.Onix1
     [Description("Produces a sequence of load tester data frames.")]
     public class LoadTesterData : Source<LoadTesterDataFrame>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(LoadTester.NameConverter))]
         [Description(DeviceFactoryStrings.DeviceNameDescription)]
         [Category(DeviceFactoryStrings.ConfigurationCategory)]

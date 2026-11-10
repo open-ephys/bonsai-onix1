@@ -16,7 +16,7 @@ namespace OpenEphys.Onix1
     [Description("Produces a sequence of heartbeat data frames.")]
     public class HeartbeatData : Source<HeartbeatDataFrame>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(Heartbeat.NameConverter))]
         [Description(DeviceFactoryStrings.DeviceNameDescription)]
         [Category(DeviceFactoryStrings.ConfigurationCategory)]
