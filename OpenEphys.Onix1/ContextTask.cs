@@ -428,7 +428,6 @@ namespace OpenEphys.Onix1
                             Console.WriteLine("Frame collection task has been cancelled by " + this.GetType());
 #endif
                         }
-                        ;
                     },
                     collectFramesToken,
                     TaskCreationOptions.LongRunning,
@@ -604,7 +603,13 @@ namespace OpenEphys.Onix1
             }
         }
 
-        internal oni.Hub GetHub(uint deviceAddress) => ctx.GetHub(deviceAddress);
+        internal oni.Hub GetHub(uint deviceAddress)
+        {
+            lock (regLock)
+            {
+                return ctx.GetHub(deviceAddress);
+            }
+        }
 
         #endregion
 

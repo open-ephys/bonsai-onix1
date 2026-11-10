@@ -21,17 +21,16 @@ namespace OpenEphys.Onix1
         readonly BitArray ShankConfig;
         readonly BitArray[] BaseConfigs;
 
-        public NeuropixelsV1fRegisterContext(DeviceContext deviceContext, NeuropixelsV1ProbeConfiguration configuration, NeuropixelsV1eProbeGroup probeGroup)
+        public NeuropixelsV1fRegisterContext(DeviceContext deviceContext, ulong probeSerialNumber, NeuropixelsV1ProbeConfiguration configuration, NeuropixelsV1ProbeGroup probeGroup)
             : base(deviceContext, NeuropixelsV1.ProbeI2CAddress)
         {
             device = deviceContext;
-            var metaData = new NeuropixelsV1fMetadata(device);
 
             NeuropixelsV1AdcCalibration? adcCalibration = null;
             if (!File.Exists(configuration.AdcCalibrationFileName))
             {
                 ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
-                    $"No ADC calibration file was specified for the probe with serial number {metaData.ProbeSerialNumber}."));
+                    $"No ADC calibration file was specified for the probe with serial number {probeSerialNumber}."));
             }
             else
             {
@@ -41,12 +40,11 @@ namespace OpenEphys.Onix1
                 {
                     throw new ArgumentException($"The calibration file \"{configuration.AdcCalibrationFileName}\" is invalid.");
                 }
-                else if (adcCalibration.Value.SerialNumber != metaData.ProbeSerialNumber)
+                else if (adcCalibration.Value.SerialNumber != probeSerialNumber)
                 {
                     ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
-                        $"The probe serial number ({metaData.ProbeSerialNumber}) does not " +
+                        $"The probe serial number ({probeSerialNumber}) does not " +
                         $"match the ADC calibration file serial number ({adcCalibration.Value.SerialNumber})."));
-                    adcCalibration = null;
                 }
             }
 
@@ -54,7 +52,7 @@ namespace OpenEphys.Onix1
             if (!File.Exists(configuration.GainCalibrationFileName))
             {
                 ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
-                    $"No gain calibration file was specified for the probe with serial number {metaData.ProbeSerialNumber}."));
+                    $"No gain calibration file was specified for the probe with serial number {probeSerialNumber}."));
             }
             else
             {
@@ -65,12 +63,11 @@ namespace OpenEphys.Onix1
                 {
                     throw new ArgumentException($"The calibration file \"{configuration.GainCalibrationFileName}\" is invalid.");
                 }
-                else if (gainCorrection.Value.SerialNumber != metaData.ProbeSerialNumber)
+                else if (gainCorrection.Value.SerialNumber != probeSerialNumber)
                 {
                     ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
-                        $"The probe serial number ({metaData.ProbeSerialNumber}) does not " +
+                        $"The probe serial number ({probeSerialNumber}) does not " +
                         $"match the gain calibration file serial number ({gainCorrection.Value.SerialNumber})."));
-                    gainCorrection = null;
                 }
             }
 
@@ -112,7 +109,7 @@ namespace OpenEphys.Onix1
         internal void WriteShiftRegisters()
         {
             // shank configuration
-            // NB: no read check because of ASIC bug that is documented in IMEC-API comments
+            // NB: no read check, because of an ASIC bug affecting this register
             var shankBytes = BitHelper.ToBitReversedBytes(ShankConfig);
 
             WriteByte(NeuropixelsV1f.SR_LENGTH1, (uint)shankBytes.Length % 0x100);
