@@ -30,6 +30,14 @@ namespace OpenEphys.Onix1.Design
         /// Whether the probe view selects banks for the survey instead of contacts. Channel editing is off meanwhile.
         /// </summary>
         protected bool bankSelectMode;
+
+        // NB: the path is a node property, but New, Open, and Save As change it together with the channel
+        // configuration. This is the path of the file that matches the last channel configuration the user kept, so
+        // discarding the channel configuration can put it back. Otherwise a discarded New would leave the node
+        // without its file.
+        string keptProbeInterfaceFileName;
+        bool discardOnClose;
+
         protected static readonly uint ColorContactEnabled = ImGuiPalette.AmberGold;
         protected static readonly uint ColorContactPinned = ImGuiPalette.NeonPink;
         protected static readonly uint ColorContactDisabled = ImGuiPalette.Grey0x4D;
@@ -44,6 +52,35 @@ namespace OpenEphys.Onix1.Design
 
         /// <inheritdoc/>
         public override bool HasChanges { get; protected set; }
+
+        /// <inheritdoc/>
+        public override bool CanClose(DialogResult pendingResult)
+        {
+            if (!HasChanges)
+            {
+                discardOnClose = false;
+                return true;
+            }
+
+            // NB: whatever is still unsaved after the prompt is discarded. That covers No, and a save that failed.
+            bool close = PromptSaveOnClose();
+            discardOnClose = close && HasChanges;
+            return close;
+        }
+
+        /// <inheritdoc/>
+        public override void Closed()
+        {
+            if (discardOnClose)
+                ProbeConfigurationBase.ProbeInterfaceFileName = keptProbeInterfaceFileName;
+        }
+
+        /// <summary>
+        /// Records the node's probe interface path as the one to restore if the channel configuration's changes are
+        /// discarded. Called once the probe group is first loaded.
+        /// </summary>
+        protected void KeepProbeInterfaceFileName() =>
+            keptProbeInterfaceFileName = ProbeConfigurationBase.ProbeInterfaceFileName;
 
         #region Seams implemented by probe-specific subclasses
 
@@ -625,6 +662,7 @@ namespace OpenEphys.Onix1.Design
                 File.WriteAllText(path, JsonConvert.SerializeObject(ProbeGroup, Formatting.Indented));
                 Log($"Probeinterface file saved to {path}");
                 HasChanges = false;
+                keptProbeInterfaceFileName = path;
             }
             catch (Exception ex)
             {
@@ -701,9 +739,10 @@ namespace OpenEphys.Onix1.Design
             RefreshProbeState();
 
             HasChanges = false;
+            keptProbeInterfaceFileName = newPath;
         }
 
-        protected bool PromptSaveOnClose()
+        bool PromptSaveOnClose()
         {
             var path = ProbeConfigurationBase.ProbeInterfaceFileName;
             bool fileExists = !string.IsNullOrEmpty(path) && File.Exists(path);

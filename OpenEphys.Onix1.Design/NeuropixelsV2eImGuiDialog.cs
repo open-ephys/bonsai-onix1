@@ -185,6 +185,7 @@ namespace OpenEphys.Onix1.Design
 
             SetupSelectorCallbacks();
             LoadOrCreateProbeGroup();
+            KeepProbeInterfaceFileName();
             RefreshProbeState();
         }
 
@@ -253,13 +254,6 @@ namespace OpenEphys.Onix1.Design
             ImGui.Separator();
             DrawContactInfo();
             HandleKeyboardShortcuts();
-        }
-
-        public override bool CanClose(DialogResult pendingResult)
-        {
-            if (HasChanges)
-                return PromptSaveOnClose();
-            return true;
         }
 
         #endregion

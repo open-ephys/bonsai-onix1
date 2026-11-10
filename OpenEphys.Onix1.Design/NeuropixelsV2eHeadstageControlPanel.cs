@@ -83,6 +83,9 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <inheritdoc/>
+        public void Closed() { }
+
+        /// <inheritdoc/>
         public void Draw()
         {
             bool isScanning = targets.Any(t => t.Dialog.Scan.Status == NeuropixelsV1ScanStatus.Running);

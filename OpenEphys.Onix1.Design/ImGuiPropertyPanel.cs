@@ -42,6 +42,8 @@ namespace OpenEphys.Onix1.Design
         /// <inheritdoc/>
         public bool CanClose(DialogResult pendingResult) => true;
 
+        public void Closed() { }
+
         /// <summary>
         /// Initializes a new instance of <see cref="ImGuiPropertyPanel"/>.
         /// </summary>

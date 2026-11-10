@@ -56,6 +56,9 @@ namespace OpenEphys.Onix1.Design
         public virtual bool CanClose(DialogResult pendingResult) => true;
 
         /// <inheritdoc/>
+        public virtual void Closed() { }
+
+        /// <inheritdoc/>
         public void Draw()
         {
             float topH = ImGui.GetContentRegionAvail().Y;

@@ -57,6 +57,7 @@ namespace OpenEphys.Onix1.Design
             Controls.Add(glControl);
 
             FormClosing += ShellClosing;
+            FormClosed += ShellClosed;
         }
 
         /// <summary>
@@ -229,6 +230,15 @@ namespace OpenEphys.Onix1.Design
                 e.Cancel = true;
 
             if (e.Cancel) glControl.Paced = true;
+        }
+
+        // NB: panels act on their close decisions only here, because a later panel can still veto the close after
+        // an earlier one has agreed to it.
+        void ShellClosed(object sender, FormClosedEventArgs e)
+        {
+            foreach (var (_, panel) in tabs)
+                panel.Closed();
+            sidePanel?.Closed();
         }
     }
 }
