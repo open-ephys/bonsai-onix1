@@ -42,7 +42,6 @@ namespace OpenEphys.Onix1.Design
         bool actRangeInitialized;
         readonly Dictionary<SurveyActivityMetric, (float min, float max)> actRanges = new();
         bool showActivityColors = false;
-        bool bankSelectMode = false;
         readonly HashSet<(int shank, int bank)> surveyBanks  = new();
         readonly HashSet<(int shank, int bank)> pendingBanks = new();
 
@@ -135,29 +134,6 @@ namespace OpenEphys.Onix1.Design
             if (on == bankSelectMode) return;
             bankSelectMode = on;
             selector.ClearSelection();
-        }
-
-        void DrawSelectionSection()
-        {
-            ImGui.Text("Selection");
-            ImGui.Spacing();
-
-            if (ImGui.RadioButton("Channels##seltarget", !bankSelectMode)) SetBankSelectMode(false);
-            ImGuiWidgets.Tooltip("Select contacts to enable or pin them. Equivalent to pressing B over the probe view.");
-            ImGui.SameLine();
-            if (ImGui.RadioButton("Banks##seltarget", bankSelectMode)) SetBankSelectMode(true);
-            ImGuiWidgets.Tooltip("Select whole banks (384 contacts each) instead of individual contacts, to choose " +
-                "which banks the survey sweeps through. Run the survey itself from the headstage panel. Equivalent " +
-                "to pressing B over the probe view.");
-        }
-
-        void DrawRulerSection()
-        {
-            ImGui.Text("Rulers");
-            ImGui.Spacing();
-            ImGuiRulerControls.DrawToggle(selector, "Add");
-            ImGui.SameLine();
-            ImGuiRulerControls.DrawClear(selector);
         }
 
         // NB: the selector's settings depend only on bank select and whether activity colors are shown, so they're
@@ -269,13 +245,9 @@ namespace OpenEphys.Onix1.Design
             ImGui.Spacing();
             DrawTitleBar();
             ImGui.Separator();
-            DrawFileSection();
+            DrawProbeSettingsSection();
             ImGui.Separator();
-            DrawSelectionSection();
-            ImGui.Separator();
-            DrawRulerSection();
-            ImGui.Separator();
-            DrawChannelSection();
+            DrawChannelConfigurationSection();
             ImGui.Separator();
             DrawSurveySection();
             ImGui.Separator();
@@ -329,7 +301,6 @@ namespace OpenEphys.Onix1.Design
         void WriteBackBufs()
         {
             ImGuiStrings.WriteString(gainCalBuf, configureNode.ProbeConfiguration.GainCalibrationFileName ?? "");
-            ImGuiStrings.WriteString(probeFileBuf, configureNode.ProbeConfiguration.ProbeInterfaceFileName  ?? "");
         }
 
         #endregion

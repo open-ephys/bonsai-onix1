@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Windows.Forms;
 using Hexa.NET.ImGui;
 using Newtonsoft.Json;
@@ -22,7 +23,13 @@ namespace OpenEphys.Onix1.Design
         protected readonly string probeName;
         protected IReadOnlyList<Contact> allContacts = Array.Empty<Contact>();
         protected readonly MultiplexedContactState channelState = new();
-        protected readonly byte[] probeFileBuf = new byte[512];
+        static readonly Vector4 ColorTextUnsaved = ImGui.ColorConvertU32ToFloat4(ImGuiPalette.AmberGold);
+        const string BankSelectHint = "Turn off \"Select banks to survey\" to edit channels.";
+
+        /// <summary>
+        /// Whether the probe view selects banks for the survey instead of contacts. Channel editing is off meanwhile.
+        /// </summary>
+        protected bool bankSelectMode;
         protected static readonly uint ColorContactEnabled = ImGuiPalette.AmberGold;
         protected static readonly uint ColorContactPinned = ImGuiPalette.NeonPink;
         protected static readonly uint ColorContactDisabled = ImGuiPalette.Grey0x4D;
@@ -124,7 +131,7 @@ namespace OpenEphys.Onix1.Design
 
         /// <summary>
         /// The bundled default probe-interface geometries this probe family offers to quick-load, in
-        /// display order. Empty hides the title bar's quick-load combo entirely.
+        /// display order. Empty hides the channel map section's New combo entirely.
         /// </summary>
         protected abstract IReadOnlyList<DefaultGeometryOption> DefaultGeometryOptions { get; }
 
@@ -134,8 +141,14 @@ namespace OpenEphys.Onix1.Design
         protected abstract void DrawCalibrationFileSection();
 
         /// <summary>
-        /// Draws probe-specific channel controls (e.g. reference/preset/gain), between the
-        /// invert-polarity checkbox and the enable/pin buttons.
+        /// Draws probe-specific settings that are saved with the workflow (e.g. reference and gain), between the
+        /// calibration files and the invert-polarity checkbox.
+        /// </summary>
+        protected abstract void DrawProbeSpecificSettings();
+
+        /// <summary>
+        /// Draws probe-specific controls that change the channel configuration (e.g. presets), between the
+        /// file buttons and the enable/pin buttons.
         /// </summary>
         protected abstract void DrawProbeSpecificChannelControls();
 
@@ -199,20 +212,7 @@ namespace OpenEphys.Onix1.Design
 
         #endregion
 
-        #region Channel section (invert-polarity + enable/pin/unpin)
-
-        protected void DrawChannelSection()
-        {
-            ImGui.Text("Channel Configuration");
-            ImGui.Spacing();
-
-            DrawInvertPolarityCheckbox();
-            DrawProbeSpecificChannelControls();
-
-            ImGui.Spacing();
-
-            DrawEnablePinButtons();
-        }
+        #region Invert polarity and enable/pin/unpin controls
 
         protected void DrawInvertPolarityCheckbox()
         {
@@ -229,11 +229,11 @@ namespace OpenEphys.Onix1.Design
             if (!anySelected) ImGui.BeginDisabled();
             if (ImGui.Button("Enable (E)##enable")) EnableSelectedContacts();
             ImGuiWidgets.Tooltip("Enable the selected contacts, wiring each one to an available recording channel.",
-                "Select at least one contact first.");
+                DisabledHint("Select at least one contact first."));
             ImGui.SameLine();
             if (ImGui.Button("Enable & Pin (P)##enablepin")) EnableAndPinSelectedContacts();
             ImGuiWidgets.Tooltip("Enable the selected contacts and pin their channel assignment so it survives future preset or probe type changes.",
-                "Select at least one contact first.");
+                DisabledHint("Select at least one contact first."));
             if (!anySelected) ImGui.EndDisabled();
 
             ImGui.SameLine();
@@ -249,14 +249,14 @@ namespace OpenEphys.Onix1.Design
             if (!anySelectedPinned) ImGui.BeginDisabled();
             if (ImGui.Button("Unpin (Shift+P)##unpinsel")) UnpinSelectedContacts();
             ImGuiWidgets.Tooltip("Release the pin on the selected contacts' channels, allowing a future preset or probe type change to reassign them.",
-                "Select a pinned contact first.");
+                DisabledHint("Select a pinned contact first."));
             if (!anySelectedPinned) ImGui.EndDisabled();
 
             bool anyEnabledUnpinned = AnyEnabledUnpinned();
             if (!anyEnabledUnpinned) ImGui.BeginDisabled();
             if (ImGui.Button("Pin Enabled (Ctrl+P)##pinenabled")) PinEnabledContacts();
             ImGuiWidgets.Tooltip("Pin the channel assignment of every enabled contact so it survives future preset or probe type changes. For example, apply a preset, pin it, then unpin the few contacts to edit by hand.",
-                "Every enabled contact is already pinned.");
+                DisabledHint("Every enabled contact is already pinned."));
             if (!anyEnabledUnpinned) ImGui.EndDisabled();
 
             ImGui.SameLine();
@@ -265,9 +265,11 @@ namespace OpenEphys.Onix1.Design
             if (noPins) ImGui.BeginDisabled();
             if (ImGui.Button("Unpin All (Ctrl+Shift+P)##unpinall")) UnpinAllContacts();
             ImGuiWidgets.Tooltip("Release every pin on this probe, allowing all channels to be reassigned by a future preset or probe type change.",
-                "No channels are pinned.");
+                DisabledHint("No channels are pinned."));
             if (noPins) ImGui.EndDisabled();
         }
+
+        string DisabledHint(string hint) => bankSelectMode ? BankSelectHint : hint;
 
         bool AnyEnabledUnpinned()
         {
@@ -406,13 +408,20 @@ namespace OpenEphys.Onix1.Design
 
         #endregion
 
-        #region File section (calibration + probe-interface file I/O)
+        #region Probe settings and channel configuration sections
 
-        protected void DrawFileSection()
+        // NB: the sections are split by where their settings are saved. Probe settings are node properties and are
+        // saved with the workflow. The channel configuration is saved in the probe interface file.
+        protected void DrawProbeSettingsSection()
         {
+            ImGui.Text("Probe Settings");
+            ImGuiWidgets.Tooltip("These settings are saved with the workflow.");
+            ImGui.Spacing();
+
             DrawCalibrationFileSection();
             ImGui.Spacing();
-            DrawProbeInterfaceFileSection();
+            DrawProbeSpecificSettings();
+            DrawInvertPolarityCheckbox();
         }
 
         /// <summary>
@@ -445,21 +454,6 @@ namespace OpenEphys.Onix1.Design
             var description = ProbeGroup.Probe.Annotations.GetAnnotation<string>("description");
             if (!string.IsNullOrEmpty(description))
                 ImGuiWidgets.Tooltip(description);
-
-            var options = DefaultGeometryOptions;
-            if (options.Count == 0) return;
-
-            ImGui.SameLine();
-            ImGui.SetCursorPosX(ImGui.GetCursorPosX() + ImGui.GetContentRegionAvail().X - ComboboxStartWidthPx);
-            ImGui.SetNextItemWidth(ComboboxStartWidthPx);
-            if (ImGui.BeginCombo("##defaultgeometry", "Select a probe..."))
-            {
-                foreach (var option in options)
-                    if (ImGui.Selectable(option.DisplayName))
-                        QuickLoadDefaultGeometry(option);
-                ImGui.EndCombo();
-            }
-            ImGuiWidgets.Tooltip("Load the electrode layout for this probe model. Replaces the current channel map, contact state, and survey data.");
         }
 
         void QuickLoadDefaultGeometry(DefaultGeometryOption option)
@@ -494,28 +488,39 @@ namespace OpenEphys.Onix1.Design
             return ImGui.GetContentRegionAvail().X - openButtonWidth - ImGui.GetStyle().ItemSpacing.X;
         }
 
-        protected void DrawProbeInterfaceFileSection()
+        protected void DrawChannelConfigurationSection()
         {
-            float fileTargetW = ComputeFileRowInputWidth();
-
-            ImGui.Text("Probe Interface File");
+            ImGui.Text("Channel Configuration");
+            ImGuiWidgets.Tooltip("The enabled and pinned contacts and the survey results are saved in a ProbeInterface " +
+                "file, not in the workflow. Saving the workflow does not save them. Save them here.");
+            if (HasChanges)
+            {
+                ImGui.SameLine();
+                ImGui.TextColored(ColorTextUnsaved, "Unsaved changes");
+            }
             ImGui.Spacing();
 
+            // NB: the path is shown as text, not an editable field, because typing a path would point the node
+            // at a file without loading it, and the channel map on screen would no longer match the file.
             string pf = ProbeConfigurationBase.ProbeInterfaceFileName ?? "";
-            ImGuiStrings.WriteString(probeFileBuf, pf);
-            ImGui.SetNextItemWidth(fileTargetW);
-            unsafe
+            if (pf.Length == 0)
             {
-                fixed (byte* p = probeFileBuf)
-                    if (ImGui.InputText("##probefile", p, (nuint)probeFileBuf.Length))
-                        ProbeConfigurationBase.ProbeInterfaceFileName = ImGuiStrings.ReadBuffer(probeFileBuf);
+                ImGui.TextDisabled("No file");
             }
-            if (!string.IsNullOrEmpty(ProbeConfigurationBase.ProbeInterfaceFileName))
+            else
             {
-                ImGuiWidgets.Tooltip(ProbeConfigurationBase.ProbeInterfaceFileName);
+                // NB: TextDisabled treats its string as a printf format, and a path may contain '%'.
+                var fullPath = FullPathOrAsIs(pf);
+                float margin = ImGui.GetStyle().ItemSpacing.X * 2f;
+                ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled));
+                ImGui.TextUnformatted(FitPathToWidth(fullPath, ImGui.GetContentRegionAvail().X - margin));
+                ImGui.PopStyleColor();
+                ImGuiWidgets.Tooltip(fullPath);
             }
+            ImGui.Spacing();
 
-            ImGui.SameLine();
+            if (DrawNewChannelMapCombo())
+                ImGui.SameLine();
             if (ImGui.Button("Open...##probefile"))
             {
                 var calFile = PrimaryCalibrationFileName;
@@ -535,17 +540,78 @@ namespace OpenEphys.Onix1.Design
             }
             ImGuiWidgets.Tooltip("Open a file browser to load an existing ProbeInterface file that specifies the channel map, contact state, and previous survey results.");
 
-            bool canSave = !string.IsNullOrEmpty(ProbeConfigurationBase.ProbeInterfaceFileName);
-            string saveLabel = HasChanges ? "Save Changes*##save" : "Save##save";
-            if (!canSave) ImGui.BeginDisabled();
-            if (ImGui.Button(saveLabel)) SaveProbeGroup();
-            ImGuiWidgets.Tooltip("Save the current channel map, contact state, and survey data to the specified ProbeInterface file.",
-                "Choose a file with Open or Save As... first.");
-            if (!canSave) ImGui.EndDisabled();
+            ImGui.SameLine();
+            if (!HasChanges) ImGui.BeginDisabled();
+            if (ImGui.Button("Save##save")) SaveOrSaveAs();
+            ImGuiWidgets.Tooltip("Save the current channel map, contact state, and survey data to the ProbeInterface file. " +
+                "With no file chosen, asks where to save it.",
+                "There are no unsaved changes.");
+            if (!HasChanges) ImGui.EndDisabled();
             ImGui.SameLine();
             if (ImGui.Button("Save As...##save"))
                 SaveProbeGroupAs();
             ImGuiWidgets.Tooltip("Choose a file path and save the current channel map, contact state, and survey data to a new ProbeInterface file.");
+
+            // NB: in bank mode the probe view colors contacts by bank, so channel edits would happen out of sight.
+            ImGui.Spacing();
+            if (bankSelectMode)
+                ImGui.TextDisabled("Channel editing is off while selecting banks to survey.");
+            ImGui.BeginDisabled(bankSelectMode);
+            DrawProbeSpecificChannelControls();
+            ImGui.Spacing();
+            DrawEnablePinButtons();
+            ImGui.EndDisabled();
+        }
+
+        bool DrawNewChannelMapCombo()
+        {
+            var options = DefaultGeometryOptions;
+            if (options.Count == 0) return false;
+
+            if (ImGui.BeginCombo("##newchannelmap", "New", ImGuiComboFlags.WidthFitPreview))
+            {
+                foreach (var option in options)
+                    if (ImGui.Selectable(option.DisplayName))
+                        QuickLoadDefaultGeometry(option);
+                ImGui.EndCombo();
+            }
+            ImGuiWidgets.Tooltip("Start a new channel map from the electrode layout of a probe model. Replaces the " +
+                "current channel map, contact state, and survey data, and leaves the current file untouched.");
+            return true;
+        }
+
+        // NB: cuts the middle of the path so that both the drive and the whole file name stay readable.
+        static string FitPathToWidth(string path, float width)
+        {
+            if (ImGui.CalcTextSize(path).X <= width) return path;
+
+            int nameStart = path.Length - Path.GetFileName(path).Length;
+            if (nameStart == 0) return path;
+
+            string tail = "..." + path.Substring(nameStart - 1);
+            int lo = 0, hi = nameStart - 1;
+            while (lo < hi)
+            {
+                int mid = (lo + hi + 1) / 2;
+                if (ImGui.CalcTextSize(path.Substring(0, mid) + tail).X <= width) lo = mid;
+                else hi = mid - 1;
+            }
+            return path.Substring(0, lo) + tail;
+        }
+
+        static string FullPathOrAsIs(string path)
+        {
+            try { return Path.GetFullPath(path); }
+            catch (Exception ex) when (ex is ArgumentException || ex is NotSupportedException || ex is PathTooLongException)
+            {
+                return path;
+            }
+        }
+
+        void SaveOrSaveAs()
+        {
+            if (string.IsNullOrEmpty(ProbeConfigurationBase.ProbeInterfaceFileName)) SaveProbeGroupAs();
+            else SaveProbeGroup();
         }
 
         protected void SaveProbeGroup()
@@ -705,13 +771,13 @@ namespace OpenEphys.Onix1.Design
 
             if (ctrl && ImGui.IsKeyPressed(ImGuiKey.S, false))
             {
-                bool hasFile = !string.IsNullOrEmpty(ProbeConfigurationBase.ProbeInterfaceFileName);
-                if (hasFile) SaveProbeGroup();
-                else         SaveProbeGroupAs();
+                SaveOrSaveAs();
                 return;
             }
 
             if (ImGui.GetIO().WantTextInput) return;
+            HandleProbeSpecificShortcuts(shift);
+            if (bankSelectMode) return;
             if (ImGui.IsKeyPressed(ImGuiKey.E, false))           EnableSelectedContacts();
             if (ImGui.IsKeyPressed(ImGuiKey.P, false))
             {
@@ -720,7 +786,6 @@ namespace OpenEphys.Onix1.Design
                 else if (shift)     UnpinSelectedContacts();
                 else                EnableAndPinSelectedContacts();
             }
-            HandleProbeSpecificShortcuts(shift);
         }
 
         #endregion
@@ -745,6 +810,14 @@ namespace OpenEphys.Onix1.Design
 
             ImGui.Spacing();
             ImGui.Text("Contact Info");
+            ImGui.Spacing();
+
+            ImGui.AlignTextToFramePadding();
+            ImGui.TextUnformatted("Rulers");
+            ImGui.SameLine();
+            ImGuiRulerControls.DrawToggle(selector, "Add");
+            ImGui.SameLine();
+            ImGuiRulerControls.DrawClear(selector);
             ImGui.Spacing();
 
             if (sel.Count == 0) { ImGui.TextDisabled("No contacts selected."); return; }
@@ -786,7 +859,7 @@ namespace OpenEphys.Onix1.Design
 
             // NB: hover-only info disappears as soon as the mouse moves to a button, so the action is offered
             // only for an inspected selection.
-            if (usingHover) return;
+            if (usingHover || bankSelectMode) return;
             var blockers = sel.Select(BlockingContact).Where(j => j >= 0).Distinct().ToList();
             if (blockers.Count == 0) return;
             ImGui.Spacing();

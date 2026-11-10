@@ -9,7 +9,7 @@ namespace OpenEphys.Onix1.Design
     // channel selection.
     internal partial class NeuropixelsV2eImGuiDialog
     {
-        protected override void DrawProbeSpecificChannelControls()
+        protected override void DrawProbeSpecificSettings()
         {
             ImGui.SetNextItemWidth(ComboboxStartWidthPx);
             if (ImGui.Combo("Reference##ref", ref refIdx, ReferenceNames, ReferenceNames.Length))
@@ -18,7 +18,10 @@ namespace OpenEphys.Onix1.Design
 
             if (configureNode.ProbeConfiguration.Reference == NeuropixelsV2ReferenceSource.Tip)
                 DrawTipReferenceShankCheckboxes();
+        }
 
+        protected override void DrawProbeSpecificChannelControls()
+        {
             var presetNames = presets.Select(p => p.ToString()).ToArray();
             ImGui.SetNextItemWidth(ComboboxStartWidthPx);
             if (ImGui.Combo("Preset##preset", ref presetIdx, presetNames, presetNames.Length))

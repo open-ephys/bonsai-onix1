@@ -16,6 +16,14 @@ namespace OpenEphys.Onix1.Design
             ImGui.Text("Electrode Survey");
             ImGui.Spacing();
 
+            bool selectBanks = bankSelectMode;
+            if (ImGui.Checkbox("Select banks to survey (B)##selectbanks", ref selectBanks))
+                SetBankSelectMode(selectBanks);
+            ImGuiWidgets.Tooltip("Select whole banks (384 contacts each) instead of individual contacts, to choose " +
+                "which banks the survey sweeps through. Run the survey itself from the headstage panel. Equivalent " +
+                "to pressing B over the probe view.");
+            ImGui.Spacing();
+
             switch (survey.Status)
             {
                 case NeuropixelsV2eSurveyStatus.Idle:
@@ -63,7 +71,7 @@ namespace OpenEphys.Onix1.Design
                 ImGui.PopTextWrapPos();
             }
 
-            // NB: Banks colors contacts by bank, so activity colors can't show there. The checkbox is disabled so it
+            // NB: selecting banks colors contacts by bank, so activity colors can't show there. The checkbox is disabled so it
             // doesn't look like it does something.
             ImGui.BeginDisabled(bankSelectMode);
             ImGui.Checkbox("Show activity colors##actcol", ref showActivityColors);
