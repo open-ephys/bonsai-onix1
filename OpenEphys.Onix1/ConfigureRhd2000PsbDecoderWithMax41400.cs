@@ -10,7 +10,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// This is a low-level device that is only useful within the context of an appropriate <see
-    /// cref="MultiDeviceFactory"/>, e.g. <see cref="ConfigureHeadstageNeuropixelsV2Rhd2000e"/>.
+    /// cref="MultiDeviceFactory{TContext}"/>, e.g. <see cref="ConfigureHeadstageNeuropixelsV2Rhd2000e"/>.
     /// </remarks>
     [Description("Configures a secondary NeuropixelsV2 device.")]
     public class ConfigureRhd2000PsbDecoderWithMax41400 : ConfigureRhd2000PsbDecoder

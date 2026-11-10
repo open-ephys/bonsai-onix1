@@ -16,7 +16,7 @@ namespace OpenEphys.Onix1
     [Description("Sends loopback data to an ONIX breakout board.")]
     public class LoadTesterLoopback : Sink<ulong>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(LoadTester.NameConverter))]
         [Description(DeviceFactoryStrings.DeviceNameDescription)]
         [Category(DeviceFactoryStrings.ConfigurationCategory)]

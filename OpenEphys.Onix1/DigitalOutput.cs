@@ -20,7 +20,7 @@ namespace OpenEphys.Onix1
     [Description("Sends digital output data to an ONIX breakout board.")]
     public class DigitalOutput : Sink<DigitalPortState>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(DigitalIO.NameConverter))]
         [Description(DeviceFactoryStrings.DeviceNameDescription)]
         [Category(DeviceFactoryStrings.ConfigurationCategory)]

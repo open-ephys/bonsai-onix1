@@ -23,7 +23,7 @@ namespace OpenEphys.Onix1
     [Description("Produces a sequence of analog input frames from an ONIX breakout board.")]
     public class AnalogInput : Source<AnalogInputDataFrame>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(AnalogIO.NameConverter))]
         [Description(DeviceFactoryStrings.DeviceNameDescription)]
         [Category(DeviceFactoryStrings.ConfigurationCategory)]

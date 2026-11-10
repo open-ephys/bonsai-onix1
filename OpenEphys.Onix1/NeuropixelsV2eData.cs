@@ -19,7 +19,7 @@ namespace OpenEphys.Onix1
     [Description("Produces a sequence of NeuropixelsV2DataFrame objects from a Neuropixels V2 device.")]
     public class NeuropixelsV2eData : Source<NeuropixelsV2DataFrame>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(NeuropixelsV2.NameConverter))]
         [Description(DeviceFactoryStrings.DeviceNameDescription)]
         [Category(DeviceFactoryStrings.ConfigurationCategory)]

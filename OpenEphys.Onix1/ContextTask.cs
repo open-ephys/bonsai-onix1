@@ -18,7 +18,8 @@ namespace OpenEphys.Onix1
     /// interface for communication with a host PC. One requirement of ONI is that a host application must
     /// hold a "context" that contains handles for hardware communication, data acquisition parameters, etc.
     /// for a particular ONI Controller, such as the ONIX PCIe card. <see cref="ContextTask"/> fulfills
-    /// this role for this library. Additionally, once data acquisition is started by the <see
+    /// this role for this library, with controller-specific functionality provided by derived classes such
+    /// as <see cref="OnixContextTask"/>. Additionally, once data acquisition is started by the <see
     /// cref="StartAcquisition"/> operator, <see cref="ContextTask"/> performs the following:
     /// <list type="bullet">
     /// <item><description>Configures hardware settings and performs device configuration.</description></item>
@@ -192,6 +193,11 @@ namespace OpenEphys.Onix1
             return groupedFrames.Where(deviceFrames => deviceFrames.Key == deviceAddress).Merge();
         }
 
+        /// <summary>
+        /// Verifies that the context can currently be configured.
+        /// </summary>
+        /// <exception cref="ObjectDisposedException">The context has been disposed.</exception>
+        /// <exception cref="InvalidOperationException">Acquisition is running.</exception>
         protected void AssertConfigurationContext()
         {
             if (disposed)
@@ -321,7 +327,7 @@ namespace OpenEphys.Onix1
         protected virtual bool GetFrameClockResetOnStart() => true;
 
         /// <summary>
-        /// Performs synchronization between multiple ONI controller, if applicable and configured in the hardware. 
+        /// Performs synchronization between multiple ONI controllers, if applicable and configured in the hardware.
         /// This method is called after the context is configured and before acquisition starts.
         /// </summary>
         /// <remarks>The default implementation does nothing.</remarks>
@@ -563,7 +569,7 @@ namespace OpenEphys.Onix1
         }
 
         /// <summary>
-        /// Reads a single <see cref="oni.Frame"/> from the controller 
+        /// Reads a single <see cref="oni.Frame"/> from the controller.
         /// </summary>
         /// <returns>The <see cref="oni.Frame"/> read from the controller.</returns>
         private oni.Frame ReadFrame()

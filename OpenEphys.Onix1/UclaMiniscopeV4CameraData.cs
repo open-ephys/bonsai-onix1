@@ -15,7 +15,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     public class UclaMiniscopeV4CameraData : Source<UclaMiniscopeV4CameraFrame>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(UclaMiniscopeV4.NameConverter))]
         [Description(DeviceFactoryStrings.DeviceNameDescription)]
         [Category(DeviceFactoryStrings.ConfigurationCategory)]

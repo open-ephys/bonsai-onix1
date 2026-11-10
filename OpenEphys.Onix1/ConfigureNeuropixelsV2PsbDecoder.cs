@@ -11,7 +11,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// This is a low-level device that is only useful within the context of an appropriate <see
-    /// cref="MultiDeviceFactory"/>, e.g. <see cref="ConfigureHeadstageNeuropixelsV2e"/>.
+    /// cref="MultiDeviceFactory{TContext}"/>, e.g. <see cref="ConfigureHeadstageNeuropixelsV2e"/>.
     /// <para>
     /// After each shift register write, the probe's status is checked to confirm the write succeeded. A
     /// failure on one of the four shank registers indicates that the corresponding shank may be damaged, and

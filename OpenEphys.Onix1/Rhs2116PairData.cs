@@ -19,7 +19,7 @@ namespace OpenEphys.Onix1
     /// </remarks>
     public class Rhs2116PairData : Source<Rhs2116PairDataFrame>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(Rhs2116Pair.NameConverter))]
         public string DeviceName { get; set; }
 

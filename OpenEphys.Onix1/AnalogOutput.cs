@@ -23,7 +23,7 @@ namespace OpenEphys.Onix1
     {
         const AnalogIOVoltageRange OutputRange = AnalogIOVoltageRange.TenVolts;
 
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(AnalogIO.NameConverter))]
         [Description(DeviceFactoryStrings.DeviceNameDescription)]
         [Category(DeviceFactoryStrings.ConfigurationCategory)]

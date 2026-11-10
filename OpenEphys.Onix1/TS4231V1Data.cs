@@ -25,7 +25,7 @@ namespace OpenEphys.Onix1
     [Description("Produces a sequence of decoded optical signals produced by a pair of SteamVR V1 base stations.")]
     public class TS4231V1Data : Source<TS4231V1DataFrame>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(TS4231V1.NameConverter))]
         [Description(DeviceFactoryStrings.DeviceNameDescription)]
         [Category(DeviceFactoryStrings.ConfigurationCategory)]

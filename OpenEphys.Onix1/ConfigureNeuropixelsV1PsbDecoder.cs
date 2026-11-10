@@ -9,7 +9,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// This is a low-level device that is only useful within the context of an appropriate <see
-    /// cref="MultiDeviceFactory"/>, e.g. <see cref="ConfigureHeadstageNeuropixelsV1e"/>.
+    /// cref="MultiDeviceFactory{TContext}"/>, e.g. <see cref="ConfigureHeadstageNeuropixelsV1e"/>.
     /// <para>
     /// After each base shift register write, the probe's status is checked to confirm the write succeeded,
     /// which otherwise indicates that the probe's base ASIC may be damaged. A failed check throws an

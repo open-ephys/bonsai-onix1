@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     public class Nric1384Data : Source<NeuropixelsV1DataFrame>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [Description(DeviceFactoryStrings.DeviceNameDescription)]
         [Category(DeviceFactoryStrings.ConfigurationCategory)]
         [TypeConverter(typeof(Nric1384.NameConverter))]

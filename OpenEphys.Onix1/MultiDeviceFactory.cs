@@ -8,6 +8,9 @@ namespace OpenEphys.Onix1
     /// Provides an abstract base class for configuration operators responsible for
     /// registering all devices within a logical group in the internal device manager.
     /// </summary>
+    /// <typeparam name="TContext">
+    /// The type of <see cref="ContextTask"/> required by the devices in the group.
+    /// </typeparam>
     /// <remarks>
     /// <para>
     /// This class allows configuration of logical groups of devices that share some common functionality
@@ -20,8 +23,13 @@ namespace OpenEphys.Onix1
     /// </para>
     /// <para>
     /// These device groups are the most common starting point for configuration
-    /// of an ONIX system, and the <see cref="MultiDeviceFactory"/> provides a modular abstraction for flexible
+    /// of an ONIX system, and the <see cref="MultiDeviceFactory{TContext}"/> provides a modular abstraction for flexible
     /// assembly and sequencing of device groups.
+    /// </para>
+    /// <para>
+    /// A <see cref="MultiDeviceFactory{TContext}"/> can contain a mix of devices requiring both
+    /// <typeparamref name="TContext"/> and <see cref="ContextTask"/>, since the underlying generic
+    /// uses contravariance.
     /// </para>
     /// </remarks>
     public abstract class MultiDeviceFactory<TContext> : DeviceFactory<TContext>, INamedElement where TContext : ContextTask
@@ -43,7 +51,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <remarks>
         /// A human-readable identifier that is used as a prefix for the <see
-        /// cref="SingleDeviceFactory.DeviceName"/> of each device in the the group. 
+        /// cref="SingleDeviceFactory{TContext}.DeviceName"/> of each device in the the group. 
         /// </remarks>
         [Description("The unique device group name.")]
         [Category(ConfigurationCategory)]
@@ -79,7 +87,7 @@ namespace OpenEphys.Onix1
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> instance
         /// prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="ContextTask"/> instances that hold configuration actions.</param>
+        /// <param name="source">A sequence of <typeparamref name="TContext"/> instances that hold configuration actions.</param>
         /// <returns>
         /// The original sequence modified by adding additional configuration actions required to configure
         /// all the devices in the device group.

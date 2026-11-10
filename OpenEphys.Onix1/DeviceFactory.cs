@@ -17,14 +17,14 @@ namespace OpenEphys.Onix1
     /// Provides an abstract base class for all device configuration operators.
     /// </summary>
     /// <typeparam name="TContext">
-    /// A type derived from <see cref="ContextTask"/> that represents the 
-    /// ONI controller that this device is compatible with.
+    /// The type of <see cref="ContextTask"/> required by the configured devices.
     /// </typeparam>
     /// <remarks>
-    /// ONI devices usually require a specific sequence of configuration and parameterization
-    /// steps before they can be interacted with. The <see cref="DeviceFactory"/> provides
-    /// a modular abstraction for flexible assembly and sequencing of both single and multi-
-    /// device configuration.
+    /// ONI devices usually require a specific sequence of configuration and parameterization steps before
+    /// they can be interacted with. Operators derived from this class schedule these steps for the hardware
+    /// they configure. <typeparamref name="TContext"/> indicates which ONI controllers that hardware is
+    /// compatible with: <see cref="ContextTask"/> for any controller, or a derived type, such as <see
+    /// cref="OnixContextTask"/>, for hardware specific to a particular controller.
     /// </remarks>
     [WorkflowElementCategory(ElementCategory.Sink)]
     [Combinator]
@@ -88,9 +88,12 @@ namespace OpenEphys.Onix1
     /// Abstract base for configuration operators responsible for registering a single device within the
     /// internal device manager.
     /// </summary>
+    /// <typeparam name="TContext">
+    /// The type of <see cref="ContextTask"/> required by the configured device.
+    /// </typeparam>
     /// <remarks>
     /// ONI devices usually require a specific sequence of configuration and parameterization steps before
-    /// they can be interacted with. The <see cref="SingleDeviceFactory"/> provides a modular abstraction
+    /// they can be interacted with. The <see cref="SingleDeviceFactory{TContext}"/> provides a modular abstraction
     /// allowing flexible assembly and sequencing of of all device-specific configuration code.
     /// </remarks>
     public abstract class SingleDeviceFactory<TContext> : DeviceFactory<TContext>, IDeviceConfiguration<TContext>, IAddressableDevice where TContext : ContextTask
@@ -110,7 +113,7 @@ namespace OpenEphys.Onix1
         /// The device name provides a unique, human-readable identifier that is used to link software
         /// elements for configuration, control, and data streaming to hardware. For instance, it can be used
         /// to link configuration operators to data IO operators within a workflow. This value is
-        /// usually not set manually, but is assigned in a <see cref="MultiDeviceFactory"/> to correspond to a
+        /// usually not set manually, but is assigned in a <see cref="MultiDeviceFactory{TContext}"/> to correspond to a
         /// fixed address with a piece of hardware such as a headstage. This address is used for software
         /// communication.
         /// </remarks>
@@ -126,7 +129,7 @@ namespace OpenEphys.Onix1
         /// This is a fully-qualified numerical hardware address of a device within the device table produced
         /// by an <see href="https://open-ephys.github.io/ONI/">ONI</see>-compliant
         /// acquisition system. This value is usually not set manually, but is assigned in a <see
-        /// cref="MultiDeviceFactory"/> to correspond to a fixed address with a piece of hardware such as a
+        /// cref="MultiDeviceFactory{TContext}"/> to correspond to a fixed address with a piece of hardware such as a
         /// headstage. This address is used for hardware communication.
         /// </remarks>
         [Description(DeviceAddressDescription)]
