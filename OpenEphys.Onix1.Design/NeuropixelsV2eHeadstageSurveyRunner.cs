@@ -18,7 +18,7 @@ namespace OpenEphys.Onix1.Design
     {
         internal string Label { get; }
         internal NeuropixelsV2eImGuiDialog Dialog { get; }
-        internal Func<MultiDeviceFactory, ConfigureNeuropixelsV2PsbDecoder> SelectDecoder { get; }
+        internal Func<MultiDeviceFactory<OnixContextTask>, ConfigureNeuropixelsV2PsbDecoder> SelectDecoder { get; }
 
         /// <summary>
         /// Whether this target is included in the current/next survey run.
@@ -26,7 +26,7 @@ namespace OpenEphys.Onix1.Design
         internal bool Selected { get; set; }
 
         internal NeuropixeslV2eSurveyTarget(string label, NeuropixelsV2eImGuiDialog dialog,
-            Func<MultiDeviceFactory, ConfigureNeuropixelsV2PsbDecoder> selectDecoder)
+            Func<MultiDeviceFactory<OnixContextTask>, ConfigureNeuropixelsV2PsbDecoder> selectDecoder)
         {
             Label = label;
             Dialog = dialog ?? throw new ArgumentNullException(nameof(dialog));
@@ -41,7 +41,7 @@ namespace OpenEphys.Onix1.Design
     /// never references a concrete headstage type or decoder property name directly -- only through
     /// <see cref="NeuropixeslV2eSurveyTarget.SelectDecoder"/>.
     /// </summary>
-    internal delegate (MultiDeviceFactory Headstage, AutoPortVoltage PortVoltage) SurveyHeadstageFactory(
+    internal delegate (MultiDeviceFactory<OnixContextTask> Headstage, AutoPortVoltage PortVoltage) SurveyHeadstageFactory(
         PortName port, double? portVoltageOverride);
 
     /// <summary>

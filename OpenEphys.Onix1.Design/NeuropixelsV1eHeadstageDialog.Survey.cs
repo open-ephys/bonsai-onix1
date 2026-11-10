@@ -21,7 +21,7 @@ namespace OpenEphys.Onix1.Design
             ClientSize = new Size(ClientSize.Width + (int)SurveyPanelWidth, ClientSize.Height);
         }
 
-        static (MultiDeviceFactory Headstage, AutoPortVoltage PortVoltage) BuildSurveyHeadstage(PortName port, double? portVoltage)
+        static (MultiDeviceFactory<OnixContextTask> Headstage, AutoPortVoltage PortVoltage) BuildSurveyHeadstage(PortName port, double? portVoltage)
         {
             var headstage = new ConfigureHeadstageNeuropixelsV1e
             {

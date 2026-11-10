@@ -25,7 +25,7 @@ namespace OpenEphys.Onix1.Design
 
         // TODO: always builds a plain ConfigureHeadstageNeuropixelsV2e survey pipeline, even for the Beta
         // ctor overload. This may not be correct.
-        static (MultiDeviceFactory Headstage, AutoPortVoltage PortVoltage) BuildSurveyHeadstage(PortName port, double? portVoltage)
+        static (MultiDeviceFactory<OnixContextTask> Headstage, AutoPortVoltage PortVoltage) BuildSurveyHeadstage(PortName port, double? portVoltage)
         {
             var headstage = new ConfigureHeadstageNeuropixelsV2e
             {

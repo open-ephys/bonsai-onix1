@@ -71,7 +71,7 @@ namespace OpenEphys.Onix1
         /// reference. Only meaningful when <see cref="Reference"/> is
         /// <see cref="NeuropixelsV2ReferenceSource.Tip"/>; unused otherwise.
         /// </summary>
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         [Description("The shanks whose tip electrodes form the reference, when Reference is Tip.")]
         public List<int> TipReferenceShanks { get; set; } = new();
 
