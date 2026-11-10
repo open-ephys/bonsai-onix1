@@ -59,9 +59,9 @@ namespace OpenEphys.Onix1
         event Func<ContextTask, IDisposable> ConfigureAndLatchLinkEvent;
         event Func<ContextTask, IDisposable> ConfigureAndLatchDeviceEvent;
         event Func<ContextTask, IDisposable> ConfigureDirectDeviceEvent;
-        readonly List<CalibrationStep> calibrationSteps = new();
+        readonly List<PreAcquisitionStep> preAcquisitionSteps = new();
 
-        sealed class CalibrationStep
+        sealed class PreAcquisitionStep
         {
             public uint DeviceAddress;
             public Func<IObservable<oni.Frame>, IObservable<oni.Frame>> Data;
@@ -272,8 +272,8 @@ namespace OpenEphys.Onix1
         // which each data selector receives the frames of its device address. Data selectors must only
         // consume frames (register access would deadlock) and their sequences must complete, otherwise
         // acquisition start will block. The IDisposable returned by configure is disposed as soon as
-        // calibration stops, instead of at context cleanup.
-        internal void ConfigureCalibration(
+        // pre-acquisition stops, instead of at context cleanup.
+        internal void ConfigurePreAcquisition(
             uint deviceAddress,
             Func<IObservable<oni.Frame>, IObservable<oni.Frame>> data,
             Func<ContextTask, IDisposable> configure)
@@ -284,7 +284,7 @@ namespace OpenEphys.Onix1
             lock (regLock)
             {
                 AssertConfigurationContext();
-                calibrationSteps.Add(new CalibrationStep
+                preAcquisitionSteps.Add(new PreAcquisitionStep
                 {
                     DeviceAddress = deviceAddress,
                     Data = data,
@@ -382,10 +382,10 @@ namespace OpenEphys.Onix1
                         throw new InvalidOperationException("Acquisition already running in the current context.");
                     }
 
-                    // NB: Take ownership of registered calibration steps alongside the other configuration
+                    // NB: Take ownership of registered pre-acquisition steps alongside the other configuration
                     // stages so that they are consumed even if configuration fails
-                    var calibration = calibrationSteps.ToArray();
-                    calibrationSteps.Clear();
+                    var preAcquisition = preAcquisitionSteps.ToArray();
+                    preAcquisitionSteps.Clear();
 
                     // NB: Configure context before starting acquisition or the the settings (e.g. Block read
                     // and write sizes) will not be respected
@@ -397,11 +397,11 @@ namespace OpenEphys.Onix1
                         ctx.BlockReadSize = blockReadSize;
                         ctx.BlockWriteSize = blockWriteSize;
 
-                        // NB: Calibration runs after all other configuration stages. It is not part of
+                        // NB: Pre-acquisition runs after all other configuration stages. It is not part of
                         // ConfigureContext because it needs the block read size to be set.
                         using (ValidationScope.Enter(ValidationLevel))
                         {
-                            RunCalibration(calibration, cancellationToken);
+                            RunPreAcquisition(preAcquisition, cancellationToken);
                         }
 
                         PerformControllerSynchronization();
@@ -477,15 +477,15 @@ namespace OpenEphys.Onix1
                 }
         }
 
-        // NB: Runs a single acquisition for all calibration steps. Must be called with block sizes already
+        // NB: Runs a single acquisition for all pre-acquisition steps. Must be called with block sizes already
         // set and acquisition stopped, and returns with acquisition stopped again.
-        void RunCalibration(CalibrationStep[] steps, CancellationToken cancellationToken)
+        void RunPreAcquisition(PreAcquisitionStep[] steps, CancellationToken cancellationToken)
         {
             if (steps.Length == 0) return;
 
-            using var calibrationFrames = new Subject<oni.Frame>();
-            using var calibrationCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            var calibrationConfiguration = new StackDisposable();
+            using var preAcquisitionFrames = new Subject<oni.Frame>();
+            using var preAcquisitionCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var preAcquisitionConfiguration = new StackDisposable();
 
             Task framePipeline = null;
             Exception error = null;
@@ -494,7 +494,7 @@ namespace OpenEphys.Onix1
                 foreach (var step in steps)
                 {
                     // NB: perform configuration action and push resulting IDisposable onto stack
-                    calibrationConfiguration.Push(step.Configure(this));
+                    preAcquisitionConfiguration.Push(step.Configure(this));
                 }
 
                 // NB: Evaluate selectors eagerly so that any synchronous failure happens before acquisition
@@ -503,18 +503,18 @@ namespace OpenEphys.Onix1
                     .Select(step =>
                     {
                         var address = step.DeviceAddress;
-                        return step.Data(calibrationFrames.Where(frame => frame.DeviceAddress == address))
+                        return step.Data(preAcquisitionFrames.Where(frame => frame.DeviceAddress == address))
                             ?? throw new InvalidOperationException(
-                                $"The calibration data selector for device address {address} returned a null sequence.");
+                                $"The pre-acquisition data selector for device address {address} returned a null sequence.");
                     })
                     .ToArray();
                 var completion = sequences
                     .Merge()
                     .LastOrDefaultAsync()
-                    .ToTask(calibrationCancellation.Token);
+                    .ToTask(preAcquisitionCancellation.Token);
 
                 ctx.Start(false); // NB: The frame clock reset, if any, is performed by the main acquisition start
-                framePipeline = RunFramePipeline(calibrationFrames, calibrationCancellation);
+                framePipeline = RunFramePipeline(preAcquisitionFrames, preAcquisitionCancellation);
                 completion.GetAwaiter().GetResult();
             }
             catch (Exception ex)
@@ -522,18 +522,18 @@ namespace OpenEphys.Onix1
                 error = ex;
             }
 
-            // NB: Unsubscribes any pending calibration sequence and stops the frame pipeline. The read
+            // NB: Unsubscribes any pending pre-acquisition sequence and stops the frame pipeline. The read
             // task exits once its current blocking read returns (e.g. on the next heartbeat).
-            calibrationCancellation.Cancel();
+            preAcquisitionCancellation.Cancel();
             Exception pipelineError = null;
             try { framePipeline?.GetAwaiter().GetResult(); }
             catch (Exception ex) { pipelineError = ex; }
             ctx.Stop();
 
             // NB: Released here rather than at context cleanup
-            calibrationConfiguration.Dispose();
+            preAcquisitionConfiguration.Dispose();
 
-            // NB: A pipeline failure cancels calibration, so report its error instead of the cancellation
+            // NB: A pipeline failure cancels pre-acquisition, so report its error instead of the cancellation
             if (pipelineError != null && (error == null || error is OperationCanceledException))
             {
                 error = pipelineError;

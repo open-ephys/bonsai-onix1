@@ -41,7 +41,7 @@ namespace OpenEphys.Onix1
                 .SubscribeSafe(observer));
         }
 
-        public static IObservable<TContext> ConfigureCalibration<TContext>(
+        public static IObservable<TContext> ConfigurePreAcquisition<TContext>(
             this IObservable<TContext> source,
             uint deviceAddress,
             bool enabled,
@@ -52,11 +52,11 @@ namespace OpenEphys.Onix1
             // produces no frames and acquisition start would block, so it must not be registered at all.
             if (!enabled) return source;
 
-            // NB: The outer observer is only needed to forward errors produced by the calibration data
+            // NB: The outer observer is only needed to forward errors produced by the pre-acquisition data
             // sequence to this node; configure errors are already handled by ConfigureContext
             return Observable.Create<TContext>(observer => source
                 .ConfigureContext(
-                    (context, action) => context.ConfigureCalibration(
+                    (context, action) => context.ConfigurePreAcquisition(
                         deviceAddress,
                         frames => data(frames)?.Do(_ => { }, observer.OnError),
                         ctx => action((TContext)ctx)),
