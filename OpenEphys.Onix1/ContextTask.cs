@@ -95,7 +95,15 @@ namespace OpenEphys.Onix1
             contextIndex = index;
             ValidationLevel = validationLevel;
             ctx = new oni.Context(contextDriver, contextIndex);
-            Initialize();
+            try
+            {
+                Initialize();
+            }
+            catch
+            {
+                ctx.Dispose();
+                throw;
+            }
         }
 
         private void Initialize()

@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenEphys.Onix1", "OpenEphy
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenEphys.Onix1.Design", "OpenEphys.Onix1.Design\OpenEphys.Onix1.Design.csproj", "{149E86EC-B865-463D-81A8-8290CA7F8871}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenEphys.Onix1.Tests", "OpenEphys.Onix1.Tests\OpenEphys.Onix1.Tests.csproj", "{B88274E6-3F6D-42D7-BC7D-F188AE18548D}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F8644FAC-94E5-4E73-B809-925ABABE35B1}"
 	ProjectSection(SolutionItems) = preProject
 		Directory.Build.props = Directory.Build.props
@@ -26,6 +28,10 @@ Global
 		{149E86EC-B865-463D-81A8-8290CA7F8871}.Debug|x64.Build.0 = Debug|x64
 		{149E86EC-B865-463D-81A8-8290CA7F8871}.Release|x64.ActiveCfg = Release|x64
 		{149E86EC-B865-463D-81A8-8290CA7F8871}.Release|x64.Build.0 = Release|x64
+		{B88274E6-3F6D-42D7-BC7D-F188AE18548D}.Debug|x64.ActiveCfg = Debug|x64
+		{B88274E6-3F6D-42D7-BC7D-F188AE18548D}.Debug|x64.Build.0 = Debug|x64
+		{B88274E6-3F6D-42D7-BC7D-F188AE18548D}.Release|x64.ActiveCfg = Release|x64
+		{B88274E6-3F6D-42D7-BC7D-F188AE18548D}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
