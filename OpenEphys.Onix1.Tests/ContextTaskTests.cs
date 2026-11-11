@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Threading;
 using Xunit;
 
 namespace OpenEphys.Onix1.Tests
@@ -30,6 +32,25 @@ namespace OpenEphys.Onix1.Tests
             // refuses to open it again with ONI_ERETRIG
             error = Assert.Throws<oni.ONIException>(() => new GenericContextTask(TestDriver.Name, TestDriver.BadDeviceTableIndex));
             Assert.Equal(TestDriver.RepeatedDeviceIndexError, error.Number);
+        }
+
+        // A read failure during acquisition is reported to frame observers, which may dispose the context in
+        // response, as a workflow does when it is torn down by the error.
+        [Fact]
+        public void ReadFailure_ObserverDisposesContext_DoesNotDeadlock()
+        {
+            var context = new GenericContextTask(TestDriver.Name, TestDriver.Index);
+            context.WriteRegister(context.DeviceTable.Keys.First(), TestDriver.ReadFaultRegister, 1);
+
+            using var disposed = new ManualResetEventSlim();
+            context.GroupedFrames.Subscribe(_ => { }, _ =>
+            {
+                context.Dispose();
+                disposed.Set();
+            });
+
+            context.StartAsync((int)context.MaxReadFrameSize, (int)context.MaxWriteFrameSize);
+            Assert.True(disposed.Wait(TimeSpan.FromSeconds(5)), "Disposing the context from the error handler did not return.");
         }
 
         sealed class GenericContextTask : ContextTask

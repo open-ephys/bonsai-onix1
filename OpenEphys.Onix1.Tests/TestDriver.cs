@@ -14,6 +14,9 @@ namespace OpenEphys.Onix1.Tests
     {
         internal const string Name = "test";
 
+        /// <summary>A host index that opens without injected failures.</summary>
+        internal const int Index = 0;
+
         /// <summary>A host index whose hubs report firmware version 0xFFFF, which is never supported.</summary>
         internal const int UnsupportedFirmwareIndex = 128;
 
@@ -23,6 +26,10 @@ namespace OpenEphys.Onix1.Tests
         /// <summary>A host index that opens and is held, but whose device table repeats a device index, so
         /// that initialization fails with ONI_EDEVIDXREPEAT.</summary>
         internal const int BadDeviceTableIndex = 130;
+
+        /// <summary>A register of any test device that, written with N > 0, makes every data stream read
+        /// after the next N fail with ONI_EREADFAILURE.</summary>
+        internal const uint ReadFaultRegister = 4;
 
         // liboni error codes
         internal const int InitError = -22; // ONI_EINIT

@@ -468,12 +468,6 @@ namespace OpenEphys.Onix1
 
                     return acquisition = Task.WhenAll(distributeFrames, readFrames).ContinueWith(task =>
                     {
-                        if (readFrames.IsFaulted && readFrames.Exception is AggregateException ex)
-                        {
-                            var error = ex.InnerExceptions.Count == 1 ? ex.InnerExceptions[0] : ex;
-                            frameReceived.OnError(error);
-                        }
-
                         lock (regLock)
                         {
                             collectFramesCancellation?.Dispose();
@@ -491,6 +485,14 @@ namespace OpenEphys.Onix1
 
                             contextConfiguration.Dispose();
                             acquisition = Task.CompletedTask;
+                        }
+
+                        // NB: Reported after acquisition is marked complete and regLock is released, since an
+                        // observer may respond by disposing this context, which waits for both.
+                        if (readFrames.IsFaulted && readFrames.Exception is AggregateException ex)
+                        {
+                            var error = ex.InnerExceptions.Count == 1 ? ex.InnerExceptions[0] : ex;
+                            frameReceived.OnError(error);
                         }
                     });
                 }
