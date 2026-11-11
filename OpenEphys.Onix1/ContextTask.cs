@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
@@ -59,6 +60,7 @@ namespace OpenEphys.Onix1
         event Func<ContextTask, IDisposable> ConfigureAndLatchLinkEvent;
         event Func<ContextTask, IDisposable> ConfigureAndLatchDeviceEvent;
         event Func<ContextTask, IDisposable> ConfigureDirectDeviceEvent;
+        readonly List<(Action<Exception> Report, Exception Error)> configurationErrors = new();
 
         // FrameReceived observable sequence
         readonly Subject<oni.Frame> frameReceived = new();
@@ -221,24 +223,24 @@ namespace OpenEphys.Onix1
 
         // NB: This is where actions that reconfigure the hub state, or otherwise change the device table
         // should be queued.
-        internal void ConfigureAndLatchController(Func<ContextTask, IDisposable> configure)
+        internal void ConfigureAndLatchController(Func<ContextTask, IDisposable> configure, Action<Exception> reportError)
         {
             lock (regLock)
             {
                 AssertConfigurationContext();
-                ConfigureAndLatchControllerEvent += configure;
+                ConfigureAndLatchControllerEvent += DeferErrors(configure, reportError);
             }
         }
 
         // NB: This is where actions that calibrate port voltage or otherwise check link lock state should be
         // queued. A hardware reset will be issued after these actions run, so they should not assume that
         // the device table is finalized or that register state will be preserved.
-        internal void ConfigureAndLatchLink(Func<ContextTask, IDisposable> configure)
+        internal void ConfigureAndLatchLink(Func<ContextTask, IDisposable> configure, Action<Exception> reportError)
         {
             lock (regLock)
             {
                 AssertConfigurationContext();
-                ConfigureAndLatchLinkEvent += configure;
+                ConfigureAndLatchLinkEvent += DeferErrors(configure, reportError);
             }
         }
 
@@ -246,24 +248,68 @@ namespace OpenEphys.Onix1
         // effect or can survive a reset should be queued. Actions queued using this method should assume that
         // the device table is finalized and cannot be changed. A hardware reset will be issued after these
         // actions run, so registers that revert to a default value on reset will be not be preserved.
-        internal void ConfigureAndLatchDevice(Func<ContextTask, IDisposable> configure)
+        internal void ConfigureAndLatchDevice(Func<ContextTask, IDisposable> configure, Action<Exception> reportError)
         {
             lock (regLock)
             {
                 AssertConfigurationContext();
-                ConfigureAndLatchDeviceEvent += configure;
+                ConfigureAndLatchDeviceEvent += DeferErrors(configure, reportError);
             }
         }
 
         // NB: This is where actions that configure device registers that would be defaulted by a reset should
         // be queued. Actions queued using this method should assume that the device table is finalized and
         // cannot be changed. A hardware reset will be _not_ be issued after these actions run.
-        internal void ConfigureDirectDevice(Func<ContextTask, IDisposable> configure)
+        internal void ConfigureDirectDevice(Func<ContextTask, IDisposable> configure, Action<Exception> reportError)
         {
             lock (regLock)
             {
                 AssertConfigurationContext();
-                ConfigureDirectDeviceEvent += configure;
+                ConfigureDirectDeviceEvent += DeferErrors(configure, reportError);
+            }
+        }
+
+        // NB: Errors raised by a configuration action, or by disposing the configuration it returns, are
+        // reported by ReportConfigurationErrors once no lock is held, since the operator that queued the action
+        // may respond by disposing this context. The action and its disposal always run while holding regLock.
+        Func<ContextTask, IDisposable> DeferErrors(Func<ContextTask, IDisposable> configure, Action<Exception> reportError)
+        {
+            return context =>
+            {
+                IDisposable configuration;
+                try
+                {
+                    configuration = configure(context);
+                }
+                catch (Exception ex)
+                {
+                    configurationErrors.Add((reportError, ex));
+                    throw;
+                }
+
+                return Disposable.Create(() =>
+                {
+                    try { configuration.Dispose(); }
+                    catch (Exception ex)
+                    {
+                        configurationErrors.Add((reportError, ex));
+                    }
+                });
+            };
+        }
+
+        void ReportConfigurationErrors()
+        {
+            (Action<Exception> Report, Exception Error)[] errors;
+            lock (regLock)
+            {
+                errors = configurationErrors.ToArray();
+                configurationErrors.Clear();
+            }
+
+            foreach (var (report, error) in errors)
+            {
+                report(error);
             }
         }
 
@@ -343,159 +389,167 @@ namespace OpenEphys.Onix1
 
         internal Task StartAsync(int blockReadSize, int blockWriteSize, CancellationToken cancellationToken = default)
         {
-            lock (disposeLock)
-                lock (regLock)
-                {
-                    if (disposed)
+            try
+            {
+                lock (disposeLock)
+                    lock (regLock)
                     {
-                        throw new ObjectDisposedException(GetType().FullName);
-                    }
-
-                    if (!acquisition.IsCompleted)
-                    {
-                        throw new InvalidOperationException("Acquisition already running in the current context.");
-                    }
-
-                    // NB: Configure context before starting acquisition or the the settings (e.g. Block read
-                    // and write sizes) will not be respected
-                    var contextConfiguration = ConfigureContext();
-
-                    try
-                    {
-                        // set block read and write size
-                        ctx.BlockReadSize = blockReadSize;
-                        ctx.BlockWriteSize = blockWriteSize;
-
-                        PerformControllerSynchronization();
-
-                        ctx.Start(GetFrameClockResetOnStart());
-
-                    }
-                    catch (oni.ONIException ex) when (ex.Number == -20)
-                    {
-                        lock (regLock)
+                        if (disposed)
                         {
-                            ctx.Stop();
-                            contextConfiguration.Dispose();
+                            throw new ObjectDisposedException(GetType().FullName);
                         }
-                        throw new InvalidOperationException($"The requested read size of {blockReadSize} bytes is too small for the current " +
-                            $"hardware configuration, which requires at least {ctx.MaxReadFrameSize} bytes.", ex);
-                    }
-                    catch (oni.ONIException ex) when (ex.Number == -24)
-                    {
-                        lock (regLock)
-                        {
-                            ctx.Stop();
-                            contextConfiguration.Dispose();
-                        }
-                        throw new InvalidOperationException($"The requested write size of {blockWriteSize} bytes is too small for the current " +
-                            $"hardware configuration, which requires at least {ctx.MaxWriteFrameSize} bytes.", ex);
-                    }
-                    catch
-                    {
-                        lock (regLock)
-                        {
-                            ctx.Stop();
-                            contextConfiguration.Dispose();
-                        }
-                        throw;
-                    }
 
-                    // TODO: If during the creation of of collectFramesCancellation, collectFramesToken, frameQueue, readFrames, or distributeFrames
-                    // an exception is thrown, contextConfiguration will not be disposed. The process will need to be restarted to get out of deadlock
-                    collectFramesCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                    var collectFramesToken = collectFramesCancellation.Token;
-                    var frameQueue = new BlockingCollection<oni.Frame>(MaxQueuedFrames);
+                        if (!acquisition.IsCompleted)
+                        {
+                            throw new InvalidOperationException("Acquisition already running in the current context.");
+                        }
 
-                    readFrames = Task.Factory.StartNew(() =>
-                    {
+                        // NB: Configure context before starting acquisition or the the settings (e.g. Block read
+                        // and write sizes) will not be respected
+                        var contextConfiguration = ConfigureContext();
+
                         try
                         {
-                            while (!collectFramesToken.IsCancellationRequested)
-                            {
-                                // NB: This is a blocking call and there is no safe way to terminate it
-                                // other than ending the process. For this reason, it is the job of the
-                                // hardware to provide enough data (e.g. through a HeartbeatDevice") for
-                                // this call to return.
-                                oni.Frame frame;
-                                try { frame = ReadFrame(); }
-                                catch (Exception)
-                                {
-                                    collectFramesCancellation.Cancel();
-                                    throw;
-                                }
-                                frameQueue.Add(frame, collectFramesToken);
+                            // set block read and write size
+                            ctx.BlockReadSize = blockReadSize;
+                            ctx.BlockWriteSize = blockWriteSize;
 
+                            PerformControllerSynchronization();
+
+                            ctx.Start(GetFrameClockResetOnStart());
+
+                        }
+                        catch (oni.ONIException ex) when (ex.Number == -20)
+                        {
+                            lock (regLock)
+                            {
+                                ctx.Stop();
+                                contextConfiguration.Dispose();
                             }
+                            throw new InvalidOperationException($"The requested read size of {blockReadSize} bytes is too small for the current " +
+                                $"hardware configuration, which requires at least {ctx.MaxReadFrameSize} bytes.", ex);
                         }
-                        catch (OperationCanceledException)
+                        catch (oni.ONIException ex) when (ex.Number == -24)
                         {
-#if DEBUG
-                            // NB: If FrameQueue.Add has not been called, frame has ref count 0 when it exits
-                            // while loop context and will be disposed.
-                            Console.WriteLine("Frame collection task has been cancelled by " + this.GetType());
-#endif
-                        }
-                    },
-                    collectFramesToken,
-                    TaskCreationOptions.LongRunning,
-                    TaskScheduler.Default);
-
-                    distributeFrames = Task.Factory.StartNew(() =>
-                    {
-                        try
-                        {
-                            while (!collectFramesToken.IsCancellationRequested)
+                            lock (regLock)
                             {
-                                if (frameQueue.TryTake(out oni.Frame frame, QueueTimeoutMilliseconds, collectFramesToken))
+                                ctx.Stop();
+                                contextConfiguration.Dispose();
+                            }
+                            throw new InvalidOperationException($"The requested write size of {blockWriteSize} bytes is too small for the current " +
+                                $"hardware configuration, which requires at least {ctx.MaxWriteFrameSize} bytes.", ex);
+                        }
+                        catch
+                        {
+                            lock (regLock)
+                            {
+                                ctx.Stop();
+                                contextConfiguration.Dispose();
+                            }
+                            throw;
+                        }
+
+                        // TODO: If during the creation of of collectFramesCancellation, collectFramesToken, frameQueue, readFrames, or distributeFrames
+                        // an exception is thrown, contextConfiguration will not be disposed. The process will need to be restarted to get out of deadlock
+                        collectFramesCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                        var collectFramesToken = collectFramesCancellation.Token;
+                        var frameQueue = new BlockingCollection<oni.Frame>(MaxQueuedFrames);
+
+                        readFrames = Task.Factory.StartNew(() =>
+                        {
+                            try
+                            {
+                                while (!collectFramesToken.IsCancellationRequested)
                                 {
-                                    frameReceived.OnNext(frame);
+                                    // NB: This is a blocking call and there is no safe way to terminate it
+                                    // other than ending the process. For this reason, it is the job of the
+                                    // hardware to provide enough data (e.g. through a HeartbeatDevice") for
+                                    // this call to return.
+                                    oni.Frame frame;
+                                    try { frame = ReadFrame(); }
+                                    catch (Exception)
+                                    {
+                                        collectFramesCancellation.Cancel();
+                                        throw;
+                                    }
+                                    frameQueue.Add(frame, collectFramesToken);
+
+                                }
+                            }
+                            catch (OperationCanceledException)
+                            {
+#if DEBUG
+                                // NB: If FrameQueue.Add has not been called, frame has ref count 0 when it exits
+                                // while loop context and will be disposed.
+                                Console.WriteLine("Frame collection task has been cancelled by " + this.GetType());
+#endif
+                            }
+                        },
+                        collectFramesToken,
+                        TaskCreationOptions.LongRunning,
+                        TaskScheduler.Default);
+
+                        distributeFrames = Task.Factory.StartNew(() =>
+                        {
+                            try
+                            {
+                                while (!collectFramesToken.IsCancellationRequested)
+                                {
+                                    if (frameQueue.TryTake(out oni.Frame frame, QueueTimeoutMilliseconds, collectFramesToken))
+                                    {
+                                        frameReceived.OnNext(frame);
+                                        frame.Dispose();
+                                    }
+                                }
+                            }
+                            catch (OperationCanceledException)
+                            {
+#if DEBUG
+                                // NB: If the thread stops no frame has been collected
+                                Console.WriteLine("Frame distribution task has been cancelled by " + this.GetType());
+#endif
+                            }
+                        },
+                        collectFramesToken,
+                        TaskCreationOptions.LongRunning,
+                        TaskScheduler.Default);
+
+                        return acquisition = Task.WhenAll(distributeFrames, readFrames).ContinueWith(task =>
+                        {
+                            lock (regLock)
+                            {
+                                collectFramesCancellation?.Dispose();
+                                collectFramesCancellation = null;
+
+                                // Clear queue and free memory
+                                while (frameQueue?.Count > 0)
+                                {
+                                    var frame = frameQueue.Take();
                                     frame.Dispose();
                                 }
+                                frameQueue?.Dispose();
+                                frameQueue = null;
+                                ctx.Stop();
+
+                                contextConfiguration.Dispose();
+                                acquisition = Task.CompletedTask;
                             }
-                        }
-                        catch (OperationCanceledException)
-                        {
-#if DEBUG
-                            // NB: If the thread stops no frame has been collected
-                            Console.WriteLine("Frame distribution task has been cancelled by " + this.GetType());
-#endif
-                        }
-                    },
-                    collectFramesToken,
-                    TaskCreationOptions.LongRunning,
-                    TaskScheduler.Default);
 
-                    return acquisition = Task.WhenAll(distributeFrames, readFrames).ContinueWith(task =>
-                    {
-                        lock (regLock)
-                        {
-                            collectFramesCancellation?.Dispose();
-                            collectFramesCancellation = null;
-
-                            // Clear queue and free memory
-                            while (frameQueue?.Count > 0)
+                            // NB: Reported after acquisition is marked complete and regLock is released, since an
+                            // observer may respond by disposing this context, which waits for both.
+                            ReportConfigurationErrors();
+                            if (readFrames.IsFaulted && readFrames.Exception is AggregateException ex)
                             {
-                                var frame = frameQueue.Take();
-                                frame.Dispose();
+                                var error = ex.InnerExceptions.Count == 1 ? ex.InnerExceptions[0] : ex;
+                                frameReceived.OnError(error);
                             }
-                            frameQueue?.Dispose();
-                            frameQueue = null;
-                            ctx.Stop();
-
-                            contextConfiguration.Dispose();
-                            acquisition = Task.CompletedTask;
-                        }
-
-                        // NB: Reported after acquisition is marked complete and regLock is released, since an
-                        // observer may respond by disposing this context, which waits for both.
-                        if (readFrames.IsFaulted && readFrames.Exception is AggregateException ex)
-                        {
-                            var error = ex.InnerExceptions.Count == 1 ? ex.InnerExceptions[0] : ex;
-                            frameReceived.OnError(error);
-                        }
-                    });
-                }
+                        });
+                    }
+            }
+            finally
+            {
+                ReportConfigurationErrors();
+            }
         }
 
         #region oni.Context Properties

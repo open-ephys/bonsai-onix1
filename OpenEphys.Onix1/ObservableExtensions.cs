@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reactive;
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace OpenEphys.Onix1
@@ -9,17 +8,17 @@ namespace OpenEphys.Onix1
     {
         public static IObservable<TContext> ConfigureAndLatchController<TContext>(this IObservable<TContext> source, Func<TContext, IDisposable> configure) where TContext : ContextTask
         {
-            return source.ConfigureContext((context, action) => context.ConfigureAndLatchController(ctx => action((TContext)ctx)), configure);
+            return source.ConfigureContext((context, action, reportError) => context.ConfigureAndLatchController(ctx => action((TContext)ctx), reportError), configure);
         }
 
         public static IObservable<TContext> ConfigureAndLatchLink<TContext>(this IObservable<TContext> source, Func<TContext, IDisposable> configure) where TContext : ContextTask
         {
-            return source.ConfigureContext((context, action) => context.ConfigureAndLatchLink(ctx => action((TContext)ctx)), configure);
+            return source.ConfigureContext((context, action, reportError) => context.ConfigureAndLatchLink(ctx => action((TContext)ctx), reportError), configure);
         }
 
         public static IObservable<TContext> ConfigureAndLatchDevice<TContext>(this IObservable<TContext> source, Func<TContext, IDisposable> configure) where TContext : ContextTask
         {
-            return source.ConfigureContext((context, action) => context.ConfigureAndLatchDevice(ctx => action((TContext)ctx)), configure);
+            return source.ConfigureContext((context, action, reportError) => context.ConfigureAndLatchDevice(ctx => action((TContext)ctx), reportError), configure);
         }
 
         public static IObservable<TContext> ConfigureAndLatchDevice<TContext>(this IObservable<TContext> source, Func<TContext, IObserver<TContext>, IDisposable> configure) where TContext : ContextTask
@@ -31,7 +30,7 @@ namespace OpenEphys.Onix1
 
         public static IObservable<TContext> ConfigureDirectDevice<TContext>(this IObservable<TContext> source, Func<TContext, IDisposable> configure) where TContext : ContextTask
         {
-            return source.ConfigureContext((context, action) => context.ConfigureDirectDevice(ctx => action((TContext)ctx)), configure);
+            return source.ConfigureContext((context, action, reportError) => context.ConfigureDirectDevice(ctx => action((TContext)ctx), reportError), configure);
         }
 
         public static IObservable<TContext> ConfigureDirectDevice<TContext>(this IObservable<TContext> source, Func<TContext, IObserver<TContext>, IDisposable> configure) where TContext : ContextTask
@@ -43,7 +42,7 @@ namespace OpenEphys.Onix1
 
         static IObservable<TContext> ConfigureContext<TContext>(
             this IObservable<TContext> source,
-            Action<TContext, Func<TContext, IDisposable>> configureContext,
+            Action<TContext, Func<TContext, IDisposable>, Action<Exception>> configureContext,
             Func<TContext, IDisposable> configure) where TContext : ContextTask
         {
             return Observable.Create<TContext>(observer =>
@@ -51,26 +50,7 @@ namespace OpenEphys.Onix1
                 var contextObserver = Observer.Create<TContext>(
                     context =>
                     {
-                        configureContext(context, ctx =>
-                        {
-                            try
-                            {
-                                var disposable = configure(ctx);
-                                return Disposable.Create(() =>
-                                {
-                                    try { disposable.Dispose(); }
-                                    catch (Exception ex)
-                                    {
-                                        observer.OnError(ex);
-                                    }
-                                });
-                            }
-                            catch (Exception ex)
-                            {
-                                observer.OnError(ex);
-                                throw;
-                            }
-                        });
+                        configureContext(context, configure, observer.OnError);
                         observer.OnNext(context);
                     },
                     observer.OnError,
