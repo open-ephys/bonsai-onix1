@@ -10,7 +10,31 @@ on:
     types: [published] # 3) Generates a package that is a full release package (X.Y.Z) that is published to Github and NuGet automatically
 
 jobs:
+  # NB: Windows only. The tests target .NET Framework and use the native ONI test driver, which
+  # clroni ships for Windows.
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [debug, release]
+    runs-on: windows-latest
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.x
+
+      - name: Test
+        run: dotnet test OpenEphys.Onix1.Tests --configuration ${{ matrix.configuration }} --logger "console;verbosity=normal"
+
   build_and_publish:
+    needs: [test]
     uses: open-ephys/github-actions/.github/workflows/build_dotnet_publish_nuget.yml@main
     secrets:
       NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
