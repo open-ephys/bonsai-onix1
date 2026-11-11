@@ -20,10 +20,10 @@ namespace OpenEphys.Onix1
     [Description("Produces a sequence of NeuropixelsV2eBetaDataFrame objects from a NeuropixelsV2-Beta probe.")]
     public class NeuropixelsV2eBetaData : Source<NeuropixelsV2BetaDataFrame>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(NeuropixelsV2Beta.NameConverter))]
-        [Description(SingleDeviceFactory.DeviceNameDescription)]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Description(DeviceFactoryStrings.DeviceNameDescription)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace OpenEphys.Onix1
         /// Buffer size sets the number of frames that are buffered before propagating data.
         /// </remarks>
         [Description("The number of samples collected for each channel that are used to create a single NeuropixelsV2eBetaDataFrame.")]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public int BufferSize { get; set; } = 30;
 
         /// <summary>

@@ -15,10 +15,10 @@ namespace OpenEphys.Onix1
     /// </summary>
     public class UclaMiniscopeV4CameraData : Source<UclaMiniscopeV4CameraFrame>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(UclaMiniscopeV4.NameConverter))]
-        [Description(SingleDeviceFactory.DeviceNameDescription)]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Description(DeviceFactoryStrings.DeviceNameDescription)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -34,7 +34,7 @@ namespace OpenEphys.Onix1
         /// 10-bit data. These artifacts are not present in the data itself, only in the real-time visualizer.
         /// </remarks>
         [Description("The bit-depth used to represent pixel intensity values.")]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public UclaMiniscopeV4ImageDepth DataType { get; set; } = UclaMiniscopeV4ImageDepth.U8;
 
         /// <summary>

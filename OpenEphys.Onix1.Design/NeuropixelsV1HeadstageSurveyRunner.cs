@@ -17,7 +17,7 @@ namespace OpenEphys.Onix1.Design
     {
         internal string Label { get; }
         internal NeuropixelsV1ImGuiDialog Dialog { get; }
-        internal Func<MultiDeviceFactory, ConfigureNeuropixelsV1PsbDecoder> SelectDecoder { get; }
+        internal Func<MultiDeviceFactory<OnixContextTask>, ConfigureNeuropixelsV1PsbDecoder> SelectDecoder { get; }
 
         /// <summary>
         /// Whether this target is included in the current/next survey run.
@@ -25,7 +25,7 @@ namespace OpenEphys.Onix1.Design
         internal bool Selected { get; set; }
 
         internal NeuropixelsV1SurveyTarget(string label, NeuropixelsV1ImGuiDialog dialog,
-            Func<MultiDeviceFactory, ConfigureNeuropixelsV1PsbDecoder> selectDecoder)
+            Func<MultiDeviceFactory<OnixContextTask>, ConfigureNeuropixelsV1PsbDecoder> selectDecoder)
         {
             Label = label;
             Dialog = dialog ?? throw new ArgumentNullException(nameof(dialog));

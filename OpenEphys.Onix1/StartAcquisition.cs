@@ -65,7 +65,7 @@ namespace OpenEphys.Onix1
         /// </para>
         /// </remarks>
         [Description("Number of bytes read per cycle of the acquisition thread.")]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public int ReadSize
         {
             get => readSize;
@@ -88,7 +88,7 @@ namespace OpenEphys.Onix1
         /// <see cref="ReadSize"/> bytes have accumulated in the input buffer.
         /// </remarks>
         [Description("The number of bytes that are pre-allocated for writing data to hardware.")]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public int WriteSize { get; set; } = 2048;
 
         /// <summary>

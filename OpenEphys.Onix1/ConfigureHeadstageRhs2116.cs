@@ -24,7 +24,7 @@ namespace OpenEphys.Onix1
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.HeadstageRhs2116Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures an ONIX Rhs2116 headstage.")]
-    public class ConfigureHeadstageRhs2116 : MultiDeviceFactory
+    public class ConfigureHeadstageRhs2116 : MultiDeviceFactory<OnixContextTask>
     {
         PortName port;
         readonly ConfigureHeadstageRhs2116LinkController LinkController = new();
@@ -107,7 +107,7 @@ namespace OpenEphys.Onix1
             set => LinkController.PortVoltage = value;
         }
 
-        internal override IEnumerable<IDeviceConfiguration> GetDevices()
+        internal override IEnumerable<IDeviceConfiguration<OnixContextTask>> GetDevices()
         {
             yield return LinkController;
             yield return Rhs2116Pair;

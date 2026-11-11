@@ -11,7 +11,7 @@ namespace OpenEphys.Onix1
     /// using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Configures a Bosch Bno055 9-axis inertial measurement unit.")]
-    public class ConfigureBno055 : SingleDeviceFactory
+    public class ConfigureBno055 : SingleDeviceFactory<ContextTask>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureBno055"/> class.

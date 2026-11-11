@@ -16,9 +16,9 @@ namespace OpenEphys.Onix1
     [Description("Produces a sequence of port status information.")]
     public class PortStatus : Source<PortStatusFrame>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(PortController.NameConverter))]
-        [Description(SingleDeviceFactory.DeviceNameDescription)]
+        [Description(DeviceFactoryStrings.DeviceNameDescription)]
         public string DeviceName { get; set; }
 
         /// <summary>

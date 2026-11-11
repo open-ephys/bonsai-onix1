@@ -29,5 +29,6 @@
   <ItemGroup>
     <InternalsVisibleTo Include="OpenEphys.Onix1.Design" />
     <InternalsVisibleTo Include="OpenEphys.Onix1.Tests" />
+    <InternalsVisibleTo Include="OpenEphys.AcquisitionBoard" />
   </ItemGroup>
 </Project>

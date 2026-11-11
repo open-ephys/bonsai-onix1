@@ -20,9 +20,9 @@ namespace OpenEphys.Onix1
     [Description("Controls a headstage-64 onboard optical stimulus sequencer.")]
     public class Headstage64OpticalStimulatorTrigger : Sink<bool>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(Headstage64OpticalStimulator.NameConverter))]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>

@@ -18,7 +18,7 @@ namespace OpenEphys.Onix1
     /// </remarks>
     [TypeConverter(typeof(SortedPropertyConverter))]
     [Description("Configures analog inputs and outputs.")]
-    public class ConfigureAnalogIO : SingleDeviceFactory
+    public class ConfigureAnalogIO : SingleDeviceFactory<ContextTask>
     {
         /// <summary>
         /// Initialize a new instance of <see cref="ConfigureAnalogIO"/> class.

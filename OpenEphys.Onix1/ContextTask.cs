@@ -18,7 +18,8 @@ namespace OpenEphys.Onix1
     /// interface for communication with a host PC. One requirement of ONI is that a host application must
     /// hold a "context" that contains handles for hardware communication, data acquisition parameters, etc.
     /// for a particular ONI Controller, such as the ONIX PCIe card. <see cref="ContextTask"/> fulfills
-    /// this role for this library. Additionally, once data acquisition is started by the <see
+    /// this role for this library, with controller-specific functionality provided by derived classes such
+    /// as <see cref="OnixContextTask"/>. Additionally, once data acquisition is started by the <see
     /// cref="StartAcquisition"/> operator, <see cref="ContextTask"/> performs the following:
     /// <list type="bullet">
     /// <item><description>Configures hardware settings and performs device configuration.</description></item>
@@ -29,9 +30,9 @@ namespace OpenEphys.Onix1
     /// Additionally, this operator exposes important information about the underlying ONI hardware such as
     /// the device table, clock rates, and block read and write sizes. <strong>In summary, <see
     /// cref="ContextTask"/> forms a complete interface for all hardware interaction within the library: all
-    /// physical interaction with the ONIX system ultimately passes through this class.</strong>
+    /// physical interaction with the ONI controller ultimately passes through this class.</strong>
     /// </remarks>
-    public class ContextTask : IDisposable
+    public abstract class ContextTask : IDisposable
     {
         readonly oni.Context ctx;
 
@@ -47,9 +48,6 @@ namespace OpenEphys.Onix1
         /// the task is stopped
         /// </summary>
         const int QueueTimeoutMilliseconds = 200;
-
-        internal const string DefaultDriver = "riffa";
-        internal const int DefaultIndex = 0;
 
         // NB: Decouple OnNext() from hardware reads
         bool disposed;
@@ -72,8 +70,8 @@ namespace OpenEphys.Onix1
         readonly object regLock = new();
         readonly object disposeLock = new();
 
-        readonly string contextDriver = DefaultDriver;
-        readonly int contextIndex = DefaultIndex;
+        readonly string contextDriver;
+        readonly int contextIndex;
 
         readonly ValidationLevel ValidationLevel;
 
@@ -98,13 +96,6 @@ namespace OpenEphys.Onix1
             ValidationLevel = validationLevel;
             ctx = new oni.Context(contextDriver, contextIndex);
             Initialize();
-            var (major, _) = GenericHelper.GetFirmwareVersionComponents(GetHub(0).FirmwareVersion);
-            if (major != 2)
-            {
-                throw new NotSupportedException("This library requires version 2.x of the ONIX firmware. "
-                    + "Please perform a firmware update to use this library. Instructions can be found at "
-                    + "https://open-ephys.github.io/onix-docs/Hardware%20Guide/PCIe%20Controller/updating-gateware.html");
-            }
         }
 
         private void Initialize()
@@ -202,7 +193,12 @@ namespace OpenEphys.Onix1
             return groupedFrames.Where(deviceFrames => deviceFrames.Key == deviceAddress).Merge();
         }
 
-        void AssertConfigurationContext()
+        /// <summary>
+        /// Verifies that the context can currently be configured.
+        /// </summary>
+        /// <exception cref="ObjectDisposedException">The context has been disposed.</exception>
+        /// <exception cref="InvalidOperationException">Acquisition is running.</exception>
+        protected void AssertConfigurationContext()
         {
             if (disposed)
             {
@@ -323,6 +319,20 @@ namespace OpenEphys.Onix1
             }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the frame clock is reset when acquisition starts.
+        /// </summary>
+        /// <remarks>The default implementation returns <see langword="true"/>.</remarks>
+        /// <returns><see langword="true"/> if the frame clock is reset on acquisition start; otherwise, <see langword="false"/>.</returns>
+        protected virtual bool GetFrameClockResetOnStart() => true;
+
+        /// <summary>
+        /// Performs synchronization between multiple ONI controllers, if applicable and configured in the hardware.
+        /// This method is called after the context is configured and before acquisition starts.
+        /// </summary>
+        /// <remarks>The default implementation does nothing.</remarks>
+        protected virtual void PerformControllerSynchronization() { }
+
         internal Task StartAsync(int blockReadSize, int blockWriteSize, CancellationToken cancellationToken = default)
         {
             lock (disposeLock)
@@ -348,19 +358,9 @@ namespace OpenEphys.Onix1
                         ctx.BlockReadSize = blockReadSize;
                         ctx.BlockWriteSize = blockWriteSize;
 
-                        // TODO: Stuff related to sync mode is 100% ONIX, not ONI. Therefore, in the long term,
-                        // another place to do this separation might be needed
-                        int address = ctx.HardwareAddress;
-                        int mode = (address & 0x00FF0000) >> 16;
-                        if (mode == 0) // Standalone mode
-                        {
-                            ctx.Start(true);
-                        }
-                        else // If synchronized mode, reset counter independently
-                        {
-                            ctx.ResetFrameClock();
-                            ctx.Start(false);
-                        }
+                        PerformControllerSynchronization();
+
+                        ctx.Start(GetFrameClockResetOnStart());
 
                     }
                     catch (oni.ONIException ex) when (ex.Number == -20)
@@ -518,12 +518,25 @@ namespace OpenEphys.Onix1
         /// <inheritdoc cref = "StartAcquisition.WriteSize"/>
         public int BlockWriteSize => ctx.BlockWriteSize;
 
-        // Port A and Port B each have a bit in PORTFUNC
-        internal PassthroughState HubState
-        {
-            get => (PassthroughState)ctx.GetCustomOption((int)oni.ONIXOption.PORTFUNC);
-            set => ctx.SetCustomOption((int)oni.ONIXOption.PORTFUNC, (int)value);
-        }
+        /// <summary>
+        /// Sets a custom option for the underlying <see cref="oni.Context"/>. The meaning of the option and value is implementation-specific.
+        /// </summary>
+        /// <param name="option">The option to set.</param>
+        /// <param name="value">The value to set for the option.</param>
+        protected void SetCustomOption(int option, int value) => ctx.SetCustomOption(option, value);
+
+        /// <summary>
+        /// Gets a custom option for the underlying <see cref="oni.Context"/>. The meaning of the option is implementation-specific.
+        /// </summary>
+        /// <param name="option">The option to get.</param>
+        /// <returns>The value of the specified option.</returns>
+        protected int GetCustomOption(int option) => ctx.GetCustomOption(option);
+
+        /// <summary>
+        /// Resets the frame clock for the underlying <see cref="oni.Context"/> and ONI controller.
+        /// </summary>
+        protected void ResetFrameClock() => ctx.ResetFrameClock();
+
 
         // NB: This is for actions that require synchronized register access and might
         // be called asynchronously with context dispose
@@ -554,6 +567,10 @@ namespace OpenEphys.Onix1
             }
         }
 
+        /// <summary>
+        /// Reads a single <see cref="oni.Frame"/> from the controller.
+        /// </summary>
+        /// <returns>The <see cref="oni.Frame"/> read from the controller.</returns>
         private oni.Frame ReadFrame()
         {
             lock (readLock)
@@ -592,19 +609,6 @@ namespace OpenEphys.Onix1
             {
                 return ctx.GetHub(deviceAddress);
             }
-        }
-
-        internal uint GetPassthroughDeviceAddress(uint deviceAddress)
-        {
-            var hubAddress = (deviceAddress & 0xFF00u) >> 8;
-            if (hubAddress == 0)
-            {
-                throw new ArgumentException(
-                    "Device addresses on hub zero cannot be used to create passthrough devices.",
-                    nameof(deviceAddress));
-            }
-
-            return hubAddress + 7;
         }
 
         #endregion

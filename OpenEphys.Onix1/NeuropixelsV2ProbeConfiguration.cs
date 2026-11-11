@@ -25,7 +25,7 @@ namespace OpenEphys.Onix1
         /// property to true will apply a gain of -1 to undo this effect.
         /// </para>
         /// </remarks>
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         [Description("Invert the polarity of the electrode voltages acquired by the probe.")]
         public bool InvertPolarity { get; set; } = true;
 
@@ -49,7 +49,7 @@ namespace OpenEphys.Onix1
         /// in which case the probe is configured without gain correction instead.
         /// </para>
         /// </remarks>
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the gain calibration file for this probe.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
@@ -62,7 +62,7 @@ namespace OpenEphys.Onix1
         /// External and Ground are not shank-specific. When set to <see cref="NeuropixelsV2ReferenceSource.Tip"/>,
         /// which shanks actually contribute to the reference is given by <see cref="TipReferenceShanks"/>.
         /// </remarks>
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         [Description("Defines the reference for the probe.")]
         public NeuropixelsV2ReferenceSource Reference { get; set; } = NeuropixelsV2ReferenceSource.External;
 
@@ -71,14 +71,14 @@ namespace OpenEphys.Onix1
         /// reference. Only meaningful when <see cref="Reference"/> is
         /// <see cref="NeuropixelsV2ReferenceSource.Tip"/>; unused otherwise.
         /// </summary>
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         [Description("The shanks whose tip electrodes form the reference, when Reference is Tip.")]
         public List<int> TipReferenceShanks { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the file path where the ProbeInterface configuration will be saved.
         /// </summary>
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         [Description("File path to where the ProbeInterface file exists for this probe.")]
         [FileNameFilter(ProbeInterfaceHelper.ProbeInterfaceFileNameFilter)]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]

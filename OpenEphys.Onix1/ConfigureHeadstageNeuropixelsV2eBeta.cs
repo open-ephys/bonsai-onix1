@@ -31,7 +31,7 @@ namespace OpenEphys.Onix1
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV2eHeadstageEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a NeuropixelsV2eBeta headstage.")]
-    public class ConfigureHeadstageNeuropixelsV2eBeta : MultiDeviceFactory
+    public class ConfigureHeadstageNeuropixelsV2eBeta : MultiDeviceFactory<OnixContextTask>
     {
         PortName port;
         readonly ConfigureHeadstageNeuropixelsV2eBetaPortController PortControl = new();
@@ -148,7 +148,7 @@ namespace OpenEphys.Onix1
             NeuropixelsV2B.SyncProbes = serializer => ConfigureHeadstageNeuropixelsV2eBetaDS90UB9x.SyncProbes(serializer);
         }
 
-        internal override IEnumerable<IDeviceConfiguration> GetDevices()
+        internal override IEnumerable<IDeviceConfiguration<OnixContextTask>> GetDevices()
         {
             yield return PortControl;
             yield return Serdes; // must come before dependent devices that follow
@@ -178,7 +178,7 @@ namespace OpenEphys.Onix1
         public bool EnableLed { get; set; } = true;
 
         override private protected void ConfigureSerdes(DeviceContext device)
-        {   
+        {
             // default to disabled and let individual instances re-enable
             device.WriteRegister(DS90UB9x.ENABLE, 0);
 

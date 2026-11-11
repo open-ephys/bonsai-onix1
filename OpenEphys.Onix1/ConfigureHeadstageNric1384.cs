@@ -24,7 +24,7 @@ namespace OpenEphys.Onix1
     /// </list>
     /// </remarks>
     [Description("Configures a Nric1384 headstage.")]
-    public class ConfigureHeadstageNric1384 : MultiDeviceFactory
+    public class ConfigureHeadstageNric1384 : MultiDeviceFactory<OnixContextTask>
     {
         PortName port;
         readonly ConfigureHeadstageNric1384PortController PortControl = new();
@@ -102,7 +102,7 @@ namespace OpenEphys.Onix1
             set => PortControl.PortVoltage = value;
         }
 
-        internal override IEnumerable<IDeviceConfiguration> GetDevices()
+        internal override IEnumerable<IDeviceConfiguration<OnixContextTask>> GetDevices()
         {
             yield return PortControl;
             yield return Nric1384;

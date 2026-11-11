@@ -20,7 +20,7 @@ namespace OpenEphys.Onix1.Design
         /// <param name="hubIndex">Host interconnect index for the ONIX hardware controller.</param>
         /// <param name="readSize">The <see cref="StartAcquisition.ReadSize"/> to acquire with.</param>
         /// <param name="onError">Called if the configuration pipeline fails.</param>
-        internal static IDisposable Configure(MultiDeviceFactory headstage, string driver, int hubIndex, int readSize, Action<Exception> onError)
+        internal static IDisposable Configure(MultiDeviceFactory<OnixContextTask> headstage, string driver, int hubIndex, int readSize, Action<Exception> onError)
         {
             var pipeline = new StartAcquisition() { ReadSize = readSize}.Process(
                 headstage.Process(new CreateContext { Driver = driver, Index = hubIndex }.Generate()));

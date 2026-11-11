@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Reactive.Subjects;
-using Bonsai;
 
 namespace OpenEphys.Onix1
 {
@@ -13,7 +12,7 @@ namespace OpenEphys.Onix1
     /// using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Configures a heartbeat device.")]
-    public class ConfigurePersistentHeartbeat : SingleDeviceFactory
+    public class ConfigurePersistentHeartbeat : SingleDeviceFactory<ContextTask>
     {
         readonly BehaviorSubject<uint> beatsPerSecond = new(100);
 

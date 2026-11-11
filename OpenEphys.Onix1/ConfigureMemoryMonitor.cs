@@ -30,7 +30,7 @@ namespace OpenEphys.Onix1
     /// </list>
     /// </remarks>
     [Description("Configures a hardware memory monitor.")]
-    public class ConfigureMemoryMonitor : SingleDeviceFactory
+    public class ConfigureMemoryMonitor : SingleDeviceFactory<ContextTask>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureMemoryMonitor"/> class.

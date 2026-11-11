@@ -14,10 +14,10 @@ namespace OpenEphys.Onix1
     [Description("Produces a sequence of Harp clock synchronization signals sent to the Harp input in the ONIX breakout board.")]
     public class HarpSyncInputData : Source<HarpSyncInputDataFrame>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(HarpSyncInput.NameConverter))]
-        [Description(SingleDeviceFactory.DeviceNameDescription)]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Description(DeviceFactoryStrings.DeviceNameDescription)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>

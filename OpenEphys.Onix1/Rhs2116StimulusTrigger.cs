@@ -15,7 +15,7 @@ namespace OpenEphys.Onix1
     /// </remarks>
     public class Rhs2116StimulusTrigger : Sink<double>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(Rhs2116Trigger.NameConverter))]
         public string DeviceName { get; set; }
 

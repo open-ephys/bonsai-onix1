@@ -10,7 +10,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// This is a low-level device that is only useful within the context of an appropriate <see
-    /// cref="MultiDeviceFactory"/>, e.g. <see cref="ConfigureHeadstageNeuropixelsV2Rhd2000e"/>.
+    /// cref="MultiDeviceFactory{TContext}"/>, e.g. <see cref="ConfigureHeadstageNeuropixelsV2Rhd2000e"/>.
     /// </remarks>
     [Description("Configures a secondary NeuropixelsV2 device.")]
     public class ConfigureRhd2000PsbDecoderWithMax41400 : ConfigureRhd2000PsbDecoder
@@ -36,13 +36,13 @@ namespace OpenEphys.Onix1
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
         /// prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="ContextTask"/> that holds all configuration
+        /// <param name="source">A sequence of <see cref="OnixContextTask"/> that holds all configuration
         /// actions.</param>
         /// <returns>
         /// The original sequence with the side effect of an additional configuration action to configure a
         /// Rhd2000 and Max41400-based thermistor amplifier.
         /// </returns>
-        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
+        public override IObservable<OnixContextTask> Process(IObservable<OnixContextTask> source)
         {
             const uint MAX41400GAIN = 0x82;
             var deviceAddress = DeviceAddress;

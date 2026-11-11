@@ -40,7 +40,7 @@ namespace OpenEphys.Onix1
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV2Rhd2000eHeadstageEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a hybrid NeuropixelsV2/Rhd2000 headstage.")]
-    public class ConfigureHeadstageNeuropixelsV2Rhd2000e : MultiDeviceFactory
+    public class ConfigureHeadstageNeuropixelsV2Rhd2000e : MultiDeviceFactory<OnixContextTask>
     {
         PortName port;
         readonly ConfigureHeadstageNeuropixelsV2Rhd2000ePortController PortControl = new();
@@ -134,7 +134,7 @@ namespace OpenEphys.Onix1
             Rhd2000.GetChipId = () => Serdes.Rhd2000Chip;
         }
 
-        internal override IEnumerable<IDeviceConfiguration> GetDevices()
+        internal override IEnumerable<IDeviceConfiguration<OnixContextTask>> GetDevices()
         {
             yield return PortControl;
             yield return Serdes; // must come before dependent devices that follow

@@ -2,12 +2,13 @@
 
 namespace OpenEphys.Onix1
 {
-    internal interface IDeviceConfiguration
+    interface IDeviceConfiguration
     {
         string DeviceName { get; set; }
-
         Type DeviceType { get; }
-
-        IObservable<ContextTask> Process(IObservable<ContextTask> source);
+    }
+    interface IDeviceConfiguration<in TContext> : IDeviceConfiguration where TContext : ContextTask
+    {
+        IObservable<T> Process<T>(IObservable<T> source) where T : TContext;
     }
 }

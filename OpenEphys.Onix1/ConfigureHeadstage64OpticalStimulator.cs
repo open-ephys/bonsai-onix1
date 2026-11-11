@@ -17,7 +17,7 @@ namespace OpenEphys.Onix1
     /// </remarks>
     [Description("Configures a headstage-64 optical stimulator.")]
     [Editor("OpenEphys.Onix1.Design.Headstage64OpticalStimulatorComponentEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
-    public class ConfigureHeadstage64OpticalStimulator : SingleDeviceFactory
+    public class ConfigureHeadstage64OpticalStimulator : SingleDeviceFactory<ContextTask>
     {
         readonly BehaviorSubject<bool> arm = new(true);
         readonly BehaviorSubject<double> maxCurrent = new(100);
@@ -352,12 +352,12 @@ namespace OpenEphys.Onix1
         {
             double R = Math.Pow(currentMa / 3.833e+05, 1 / -0.9632);
             uint s = (uint)Math.Round(256 * (R - MinRheostatResistanceOhms) / PotResistanceOhms);
-            return s > 255 ? 255 : s < 0 ? 0 :s;
+            return s > 255 ? 255 : s < 0 ? 0 : s;
         }
 
         internal static double PotSettingToMilliamps(uint potSetting)
         {
-            var R = MinRheostatResistanceOhms + PotResistanceOhms * potSetting / 255; 
+            var R = MinRheostatResistanceOhms + PotResistanceOhms * potSetting / 255;
             return 3.833e+05 * Math.Pow(R, -0.9632);
         }
 

@@ -5,7 +5,7 @@ namespace OpenEphys.Onix1
     class NeuropixelsV2PsbDecoderDeviceInfo : DeviceInfo
     {
         public NeuropixelsV2PsbDecoderDeviceInfo(
-            ContextTask context,
+            OnixContextTask context,
             Type deviceType,
             uint deviceAddress,
             ushort streamIndex,

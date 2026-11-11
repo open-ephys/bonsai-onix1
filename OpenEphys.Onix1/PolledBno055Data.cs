@@ -31,13 +31,13 @@ namespace OpenEphys.Onix1
         /// The device name provides a unique, human-readable identifier that is used to link software
         /// elements for configuration, control, and data streaming to hardware. For instance, it can be used
         /// to link configuration operators to data IO operators within a workflow. This value is
-        /// usually not set manually, but is assigned in a <see cref="MultiDeviceFactory"/> to correspond to a
+        /// usually not set manually, but is assigned in a <see cref="MultiDeviceFactory{TContext}"/> to correspond to a
         /// fixed address with a piece of hardware such as a headstage. This address is used for software
         /// communication.
         /// </remarks>
         [TypeConverter(typeof(PolledBno055.NameConverter))]
-        [Description(SingleDeviceFactory.DeviceNameDescription)]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Description(DeviceFactoryStrings.DeviceNameDescription)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace OpenEphys.Onix1
         /// cref="Bno055DataFrame"/>, with the exception of <c>Clock</c> and <c>HubClock</c>, will be set to
         /// 0.
         /// </remarks>
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         [Description("Specifies which data registers should be read from the chip.")]
         [TypeConverter(typeof(FlagsConverter))]
         public PolledBno055Registers PolledRegisters { get; set; } = PolledBno055Registers.All;

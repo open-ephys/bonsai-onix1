@@ -71,7 +71,7 @@ namespace OpenEphys.Onix1
         /// The spike-band is from DC to 10 kHz if <see cref="SpikeFilter"/> is set to false, while the 
         /// spike-band is from 300 Hz to 10 kHz if <see cref="SpikeFilter"/> is set to true.
         /// </remarks>
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         [Description("Amplifier gain for spike-band.")]
         public NeuropixelsV1Gain SpikeAmplifierGain { get; set; } = NeuropixelsV1Gain.Gain1000;
 
@@ -81,7 +81,7 @@ namespace OpenEphys.Onix1
         /// <remarks>
         /// The LFP band is from 0.5 to 500 Hz.
         /// </remarks>
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         [Description("Amplifier gain for LFP-band.")]
         public NeuropixelsV1Gain LfpAmplifierGain { get; set; } = NeuropixelsV1Gain.Gain50;
 
@@ -94,7 +94,7 @@ namespace OpenEphys.Onix1
         /// Setting to <see cref="NeuropixelsV1ReferenceSource.External"/> will use the external reference, while 
         /// <see cref="NeuropixelsV1ReferenceSource.Tip"/> sets the reference to the electrode at the tip of the probe.
         /// </remarks>
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         [Description("Reference selection.")]
         public NeuropixelsV1ReferenceSource Reference { get; set; } = NeuropixelsV1ReferenceSource.External;
 
@@ -105,7 +105,7 @@ namespace OpenEphys.Onix1
         /// If set to true, the spike-band has a 300 Hz high-pass filter which will be activated. If set to
         /// false, the high-pass filter will not to be activated.
         /// </remarks>
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         [Description("If true, activates a 300 Hz high-pass filter in the spike-band data stream.")]
         public bool SpikeFilter { get; set; } = true;
 
@@ -135,7 +135,7 @@ namespace OpenEphys.Onix1
         [FileNameFilter("Gain calibration files (*_gainCalValues.csv)|*_gainCalValues.csv")]
         [Description("Path to the Neuropixels 1.0 gain calibration file.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public string GainCalibrationFileName { get; set; }
 
         /// <summary>
@@ -164,7 +164,7 @@ namespace OpenEphys.Onix1
         [FileNameFilter("ADC calibration files (*_ADCCalibration.csv)|*_ADCCalibration.csv")]
         [Description("Path to the Neuropixels 1.0 ADC calibration file.")]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public string AdcCalibrationFileName { get; set; }
 
         /// <summary>
@@ -173,7 +173,7 @@ namespace OpenEphys.Onix1
         /// <remarks>
         /// If left empty, the ProbeInterface configuration will not be saved.
         /// </remarks>
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         [Description("File path to where the ProbeInterface file exists for this probe.")]
         [FileNameFilter(ProbeInterfaceHelper.ProbeInterfaceFileNameFilter)]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
@@ -191,7 +191,7 @@ namespace OpenEphys.Onix1
         /// Setting this property to true will apply a gain of -1 to undo this effect.
         /// </para>
         /// </remarks>
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         [Description("Invert the polarity of the electrode voltages acquired by the probe.")]
         public bool InvertPolarity { get; set; } = true;
     }

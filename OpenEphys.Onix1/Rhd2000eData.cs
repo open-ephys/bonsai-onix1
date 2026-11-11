@@ -20,10 +20,10 @@ namespace OpenEphys.Onix1
     [Description("Produces a sequence of Rhd2000DataFrame objects from a Rhd2000 bioamplifier chip.")]
     public class Rhd2000eData : Source<Rhd2000DataFrame>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(Rhd2000PsbDecoder.NameConverter))]
-        [Description(SingleDeviceFactory.DeviceNameDescription)]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Description(DeviceFactoryStrings.DeviceNameDescription)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace OpenEphys.Onix1
         /// cref="Rhd2000DataFrame"/>.
         /// </remarks>
         [Description("The number of samples collected from each channel that are used to create a single Rhd2000DataFrame.")]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public int BufferSize { get; set; } = 30;
 
         /// <summary>

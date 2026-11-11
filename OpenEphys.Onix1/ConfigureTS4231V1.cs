@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1
     /// arena.
     /// </remarks>
     [Description("Configures a TS4231 receiver array.")]
-    public class ConfigureTS4231V1 : SingleDeviceFactory
+    public class ConfigureTS4231V1 : SingleDeviceFactory<ContextTask>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureTS4231V1"/> class.

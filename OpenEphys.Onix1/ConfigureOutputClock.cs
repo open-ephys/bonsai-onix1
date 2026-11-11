@@ -18,7 +18,7 @@ namespace OpenEphys.Onix1
     /// logged by external recording systems for post-hoc synchronization with ONIX data.
     /// </remarks>
     [Description("Configures the ONIX breakout board's output clock.")]
-    public class ConfigureOutputClock : SingleDeviceFactory
+    public class ConfigureOutputClock : SingleDeviceFactory<ContextTask>
     {
         readonly BehaviorSubject<bool> gate = new(false);
         double frequencyHz = 1e6;

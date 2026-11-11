@@ -17,7 +17,7 @@ namespace OpenEphys.Onix1
     /// </remarks>
     [Description("Configures a headstage-64 onboard electrical stimulator.")]
     [Editor("OpenEphys.Onix1.Design.Headstage64ElectricalStimulatorComponentEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
-    public class ConfigureHeadstage64ElectricalStimulator : SingleDeviceFactory
+    public class ConfigureHeadstage64ElectricalStimulator : SingleDeviceFactory<ContextTask>
     {
         readonly BehaviorSubject<bool> arm = new(false);
         readonly BehaviorSubject<double> phaseOneCurrent = new(0);

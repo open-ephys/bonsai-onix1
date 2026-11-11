@@ -17,7 +17,7 @@ namespace OpenEphys.Onix1
     /// <c>DeviceName</c>.
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.Rhs2116StimulusSequenceEditor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
-    public class ConfigureRhs2116Trigger : SingleDeviceFactory
+    public class ConfigureRhs2116Trigger : SingleDeviceFactory<ContextTask>
     {
         readonly BehaviorSubject<Rhs2116StimulusSequencePair> stimulusSequence = new(new Rhs2116StimulusSequencePair());
         readonly BehaviorSubject<bool> triggerArmed = new(true);

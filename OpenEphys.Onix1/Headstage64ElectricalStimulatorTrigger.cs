@@ -20,10 +20,10 @@ namespace OpenEphys.Onix1
     [Description("Controls a headstage-64 onboard electrical stimulus sequencer.")]
     public class Headstage64ElectricalStimulatorTrigger : Sink<bool>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(Headstage64ElectricalStimulator.NameConverter))]
-        [Description(SingleDeviceFactory.DeviceNameDescription)]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Description(DeviceFactoryStrings.DeviceNameDescription)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>

@@ -9,7 +9,7 @@ namespace OpenEphys.Onix1
     /// </summary>
     /// <remarks>
     /// This is a low-level device that is only useful within the context of an appropriate <see
-    /// cref="MultiDeviceFactory"/>, e.g. <see cref="ConfigureHeadstageNeuropixelsV1e"/>.
+    /// cref="MultiDeviceFactory{TContext}"/>, e.g. <see cref="ConfigureHeadstageNeuropixelsV1e"/>.
     /// <para>
     /// After each base shift register write, the probe's status is checked to confirm the write succeeded,
     /// which otherwise indicates that the probe's base ASIC may be damaged. A failed check throws an
@@ -20,7 +20,7 @@ namespace OpenEphys.Onix1
     /// </remarks>
     [Description("Configures a parallel serial bus decoder for a NeuropixelsV1 probe.")]
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV1Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
-    public class ConfigureNeuropixelsV1PsbDecoder : SingleDeviceFactory, IConfigureNeuropixelsV1
+    public class ConfigureNeuropixelsV1PsbDecoder : SingleDeviceFactory<OnixContextTask>, IConfigureNeuropixelsV1
     {
 
         /// <summary>
@@ -53,12 +53,12 @@ namespace OpenEphys.Onix1
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
         /// prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="ContextTask"/> that holds all configuration actions.</param>
+        /// <param name="source">A sequence of <see cref="OnixContextTask"/> that holds all configuration actions.</param>
         /// <returns>
         /// The original sequence with the side effect of an additional configuration action to configure
         /// a NeuropixelsV1 device.
         /// </returns>
-        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
+        public override IObservable<OnixContextTask> Process(IObservable<OnixContextTask> source)
         {
             var enable = Enable;
             var deviceName = DeviceName;

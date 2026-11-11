@@ -14,7 +14,7 @@ namespace OpenEphys.Onix1
     /// using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Configures a heartbeat device.")]
-    public class ConfigureHeartbeat : SingleDeviceFactory
+    public class ConfigureHeartbeat : SingleDeviceFactory<ContextTask>
     {
         readonly BehaviorSubject<uint> beatsPerSecond = new(10);
 

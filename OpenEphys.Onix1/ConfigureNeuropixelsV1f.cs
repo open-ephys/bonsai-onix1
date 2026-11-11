@@ -21,7 +21,7 @@ namespace OpenEphys.Onix1
     /// </remarks>
     [Editor("OpenEphys.Onix1.Design.NeuropixelsV1Editor, OpenEphys.Onix1.Design", typeof(ComponentEditor))]
     [Description("Configures a NeuropixelsV1 device attached to an ONIX NeuropixelsV1f headstage.")]
-    public class ConfigureNeuropixelsV1f : SingleDeviceFactory, IConfigureNeuropixelsV1
+    public class ConfigureNeuropixelsV1f : SingleDeviceFactory<OnixContextTask>, IConfigureNeuropixelsV1
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureNeuropixelsV1f"/> class.
@@ -126,12 +126,12 @@ namespace OpenEphys.Onix1
         /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
         /// prior to data acquisition.
         /// </remarks>
-        /// <param name="source">A sequence of <see cref="ContextTask"/> that holds all configuration actions.</param>
+        /// <param name="source">A sequence of <see cref="OnixContextTask"/> that holds all configuration actions.</param>
         /// <returns>
         /// The original sequence with the side effect of an additional configuration action to configure
         /// a NeuropixelsV1 device.
         /// </returns>
-        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
+        public override IObservable<OnixContextTask> Process(IObservable<OnixContextTask> source)
         {
             var enable = Enable;
             var probeConfiguration = ProbeConfiguration;

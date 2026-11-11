@@ -13,7 +13,7 @@ namespace OpenEphys.Onix1
     /// exception unless <see cref="ContextTask.ValidationLevel"/> is <see cref="ValidationLevel.Permissive"/>,
     /// in which case a warning is produced instead and configuration proceeds.
     /// </remarks>
-    public class ConfigureNric1384 : SingleDeviceFactory
+    public class ConfigureNric1384 : SingleDeviceFactory<ContextTask>
     {
         /// <summary>
         /// Initialize a new instance of a <see cref="ConfigureNric1384"/> class.

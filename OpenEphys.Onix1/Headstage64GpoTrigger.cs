@@ -22,10 +22,10 @@ namespace OpenEphys.Onix1
     [Description("Triggers a headstage-64 stimulator using the port controller's general purpose output (GPO)")]
     public class Headstage64GpoTrigger : Sink<bool>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(ConfigureHeadstage64.Headstage64PortController.NameConverter))]
-        [Description(SingleDeviceFactory.DeviceNameDescription)]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Description(DeviceFactoryStrings.DeviceNameDescription)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>

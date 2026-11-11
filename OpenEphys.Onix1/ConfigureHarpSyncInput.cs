@@ -32,7 +32,7 @@ namespace OpenEphys.Onix1
     /// </para>
     /// </remarks>
     [Description("Configures a ONIX breakout board Harp sync input.")]
-    public class ConfigureHarpSyncInput : SingleDeviceFactory
+    public class ConfigureHarpSyncInput : SingleDeviceFactory<ContextTask>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureHarpSyncInput"/> class.

@@ -19,10 +19,10 @@ namespace OpenEphys.Onix1
     [Description("Produces a sequence of NeuropixelsV2DataFrame objects from a Neuropixels V2 device.")]
     public class NeuropixelsV2eData : Source<NeuropixelsV2DataFrame>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(NeuropixelsV2.NameConverter))]
-        [Description(SingleDeviceFactory.DeviceNameDescription)]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Description(DeviceFactoryStrings.DeviceNameDescription)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace OpenEphys.Onix1
         /// millisecond of data from each channel.
         /// </remarks>
         [Description("The number of samples collected from each channel that are used to create a single NeuropixelsV2eDataFrame.")]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public int BufferSize { get; set; } = 30;
 
         /// <summary>

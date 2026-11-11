@@ -11,7 +11,7 @@ namespace OpenEphys.Onix1
     /// cref="Rhd2164Data"/>, using a shared <c>DeviceName</c>.
     /// </remarks>
     [Description("Configures a Rhd2164 device.")]
-    public class ConfigureRhd2164 : SingleDeviceFactory
+    public class ConfigureRhd2164 : SingleDeviceFactory<ContextTask>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureRhd2164"/> class.

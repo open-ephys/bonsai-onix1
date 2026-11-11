@@ -23,10 +23,10 @@ namespace OpenEphys.Onix1
     [Description("Produces a sequence of analog input frames from an ONIX breakout board.")]
     public class AnalogInput : Source<AnalogInputDataFrame>
     {
-        /// <inheritdoc cref = "SingleDeviceFactory.DeviceName"/>
+        /// <inheritdoc cref = "SingleDeviceFactory{TContext}.DeviceName"/>
         [TypeConverter(typeof(AnalogIO.NameConverter))]
-        [Description(SingleDeviceFactory.DeviceNameDescription)]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Description(DeviceFactoryStrings.DeviceNameDescription)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace OpenEphys.Onix1
         /// millisecond of data from each channel.
         /// </remarks>
         [Description("The number of analog samples that are buffered for each channel before data is propagated.")]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public int BufferSize { get; set; } = 100;
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace OpenEphys.Onix1
         /// are represented as 32-bit floating point voltages.
         /// </remarks>
         [Description("The data type used to represent analog samples.")]
-        [Category(DeviceFactory.ConfigurationCategory)]
+        [Category(DeviceFactoryStrings.ConfigurationCategory)]
         public AnalogIODataType DataType { get; set; } = AnalogIODataType.S16;
 
         static Mat CreateVoltageScale(int bufferSize, float[] voltsPerDivision)
