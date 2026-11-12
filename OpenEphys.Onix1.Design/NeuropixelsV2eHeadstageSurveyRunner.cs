@@ -21,9 +21,14 @@ namespace OpenEphys.Onix1.Design
         internal Func<MultiDeviceFactory<OnixContextTask>, ConfigureNeuropixelsV2PsbDecoder> SelectDecoder { get; }
 
         /// <summary>
-        /// Whether this target is included in the current/next survey run.
+        /// Whether the probe is enabled. This is the probe node's Enable property, so it decides both whether the
+        /// workflow configures the probe and whether the survey includes it.
         /// </summary>
-        internal bool Selected { get; set; }
+        internal bool Enabled
+        {
+            get => Dialog.ConfigureNeuropixelsV2.Enable;
+            set => Dialog.ConfigureNeuropixelsV2.Enable = value;
+        }
 
         internal NeuropixeslV2eSurveyTarget(string label, NeuropixelsV2eImGuiDialog dialog,
             Func<MultiDeviceFactory<OnixContextTask>, ConfigureNeuropixelsV2PsbDecoder> selectDecoder)
@@ -46,9 +51,9 @@ namespace OpenEphys.Onix1.Design
 
     /// <summary>
     /// Concurrent, round-based electrode-activity survey runner shared by every NeuropixelsV2e-family
-    /// headstage dialog. Selected probes are surveyed together, sharing one real hardware pipeline per
-    /// round: round <c>r</c> configures every selected probe still having a bank left at index <c>r</c> of
-    /// its own bank list, and every other decoder on the headstage (unselected, or already finished) is
+    /// headstage dialog. Enabled probes are surveyed together, sharing one real hardware pipeline per
+    /// round: round <c>r</c> configures every enabled probe still having a bank left at index <c>r</c> of
+    /// its own bank list, and every other decoder on the headstage (disabled, or already finished) is
     /// explicitly disabled -- a probe that isn't part of a round must never be left enabled by default.
     /// </summary>
     internal static class NeuropixelsV2eHeadstageSurveyRunner
@@ -124,7 +129,7 @@ namespace OpenEphys.Onix1.Design
             Action<string, bool> log,
             CancellationToken cancellationToken)
         {
-            var selected = targets.Where(t => t.Selected).ToList();
+            var selected = targets.Where(t => t.Enabled).ToList();
             if (selected.Count == 0) return;
 
             var states = new Dictionary<NeuropixeslV2eSurveyTarget, TargetRunState>();

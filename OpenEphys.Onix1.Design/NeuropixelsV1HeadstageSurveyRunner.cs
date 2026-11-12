@@ -20,9 +20,14 @@ namespace OpenEphys.Onix1.Design
         internal Func<MultiDeviceFactory<OnixContextTask>, ConfigureNeuropixelsV1PsbDecoder> SelectDecoder { get; }
 
         /// <summary>
-        /// Whether this target is included in the current/next survey run.
+        /// Whether the probe is enabled. This is the probe node's Enable property, so it decides both whether the
+        /// workflow configures the probe and whether the survey includes it.
         /// </summary>
-        internal bool Selected { get; set; }
+        internal bool Enabled
+        {
+            get => Dialog.ConfigureNeuropixelsV1.Enable;
+            set => Dialog.ConfigureNeuropixelsV1.Enable = value;
+        }
 
         internal NeuropixelsV1SurveyTarget(string label, NeuropixelsV1ImGuiDialog dialog,
             Func<MultiDeviceFactory<OnixContextTask>, ConfigureNeuropixelsV1PsbDecoder> selectDecoder)
@@ -34,10 +39,10 @@ namespace OpenEphys.Onix1.Design
     }
 
     /// <summary>
-    /// Electrode-activity survey runner for NeuropixelsV1-family headstages. Selected probes are surveyed
-    /// together, sharing one real hardware pipeline per round: round <c>r</c> configures every selected probe
+    /// Electrode-activity survey runner for NeuropixelsV1-family headstages. Enabled probes are surveyed
+    /// together, sharing one real hardware pipeline per round: round <c>r</c> configures every enabled probe
     /// still having a bank left at index <c>r</c> of its own bank list, and every other decoder on the
-    /// headstage (unselected, or already finished) is explicitly disabled .
+    /// headstage (disabled, or already finished) is explicitly disabled .
     /// </summary>
     internal static class NeuropixelsV1HeadstageSurveyRunner
     {
@@ -111,7 +116,7 @@ namespace OpenEphys.Onix1.Design
             Action<string, bool> log,
             CancellationToken cancellationToken)
         {
-            var selected = targets.Where(t => t.Selected).ToList();
+            var selected = targets.Where(t => t.Enabled).ToList();
             if (selected.Count == 0) return;
 
             var states = new Dictionary<NeuropixelsV1SurveyTarget, TargetRunState>();

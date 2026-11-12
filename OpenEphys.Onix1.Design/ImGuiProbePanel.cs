@@ -46,6 +46,11 @@ namespace OpenEphys.Onix1.Design
         protected virtual string ProbeViewMessage => null;
 
         /// <summary>
+        /// Whether the props panel is drawn disabled.
+        /// </summary>
+        protected virtual bool PropsDisabled => false;
+
+        /// <summary>
         /// Draw the contents of the right-hand props panel each frame.
         /// </summary>
         protected abstract void DrawPropsPanel();
@@ -95,7 +100,9 @@ namespace OpenEphys.Onix1.Design
 
             ImGui.BeginChild("##props", new Vector2(PropsWidth, topH), ImGuiChildFlags.Borders,
                 ImGuiWindowFlags.AlwaysVerticalScrollbar);
+            ImGui.BeginDisabled(PropsDisabled);
             DrawPropsPanel();
+            ImGui.EndDisabled();
             ImGui.EndChild();
         }
 

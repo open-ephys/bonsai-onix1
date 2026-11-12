@@ -62,8 +62,18 @@ namespace OpenEphys.Onix1.Design
         /// </remarks>
         internal bool ChannelConfigurationChosen { get; private protected set; }
 
+        /// <summary>
+        /// Where the user enables the probe, which the message shown while it is disabled names.
+        /// </summary>
+        internal string EnableLocation { get; set; } = "the property grid";
+
         /// <inheritdoc/>
-        protected override string ProbeViewMessage => ChannelConfigurationChosen ? null
+        protected override bool PropsDisabled => !ProbeEnabled;
+
+        /// <inheritdoc/>
+        protected override string ProbeViewMessage =>
+            !ProbeEnabled ? $"{probeName} is disabled, so the workflow does not configure or record it. Enable it in {EnableLocation}."
+            : ChannelConfigurationChosen ? null
             : DefaultGeometryOptions.Count > 0
                 ? "No channel configuration. Choose a probe model from New, or open a ProbeInterface file."
                 : "No channel configuration. Open a ProbeInterface file.";
@@ -610,7 +620,7 @@ namespace OpenEphys.Onix1.Design
             var partNumber = scannedPartNumberToOffer;
             if (partNumber == null) return;
             scannedPartNumberToOffer = null;
-            if (ChannelConfigurationChosen) return;
+            if (ChannelConfigurationChosen || !ProbeEnabled) return;
 
             if (DefaultGeometryFor(partNumber) is not DefaultGeometryOption option)
             {
@@ -963,7 +973,7 @@ namespace OpenEphys.Onix1.Design
             bool ctrl = ImGui.IsKeyDown(ImGuiKey.LeftCtrl) || ImGui.IsKeyDown(ImGuiKey.RightCtrl);
             bool shift = ImGui.IsKeyDown(ImGuiKey.LeftShift) || ImGui.IsKeyDown(ImGuiKey.RightShift);
 
-            if (!ChannelConfigurationChosen)
+            if (!ChannelConfigurationChosen || !ProbeEnabled)
                 return;
 
             if (ctrl && ImGui.IsKeyPressed(ImGuiKey.S, false))
