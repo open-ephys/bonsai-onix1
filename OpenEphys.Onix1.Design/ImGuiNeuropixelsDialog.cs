@@ -71,10 +71,10 @@ namespace OpenEphys.Onix1.Design
         /// <inheritdoc/>
         public override bool CanClose(DialogResult pendingResult)
         {
-            // NB: anything but OK discards every change, so there's nothing to ask about. A disabled probe is not
-            // configured, so it runs without a file.
+            // NB: anything but OK discards every change, so there's nothing to ask about. A missing file alone does not
+            // prompt, since the title bar already says what to do, and a probe that is not plugged in has no file.
             discardOnClose = false;
-            if (pendingResult != DialogResult.OK || !HasChanges && (FileExists || !ProbeEnabled))
+            if (pendingResult != DialogResult.OK || !HasChanges)
                 return true;
 
             // NB: whatever is still unsaved after the prompt is discarded. That covers No, and a save that failed.
@@ -120,6 +120,11 @@ namespace OpenEphys.Onix1.Design
         /// Whether the node configures the probe, which then needs a probe interface file to run.
         /// </summary>
         protected abstract bool ProbeEnabled { get; }
+
+        /// <summary>
+        /// The serial number a probe scan found, or <c>null</c> if no scan has found the probe.
+        /// </summary>
+        protected abstract ulong? ScannedSerialNumber { get; }
 
         /// <summary>
         /// The calibration file used as a fallback directory when browsing for a probe-interface file.
@@ -529,14 +534,20 @@ namespace OpenEphys.Onix1.Design
             DrawFileStatus();
         }
 
-        // NB: right-aligned in the title bar, so that a missing file or unsaved changes are the first thing seen. "No
-        // file" alone covers both, since with no file nothing is saved.
+        // NB: right-aligned in the title bar, so that a missing file or unsaved changes are the first thing seen. With
+        // no file, it says what to do next, which also covers any unsaved changes, since with no file nothing is saved.
         void DrawFileStatus()
         {
             bool noFile = string.IsNullOrEmpty(ProbeConfigurationBase.ProbeInterfaceFileName);
-            var (status, tooltip) = noFile
-                ? ("No file", "No ProbeInterface file is set, and the workflow will not run without one. " +
-                    "Save the channel configuration to create one, or open an existing file.")
+            var (status, tooltip) = noFile && !ChannelConfigurationChosen
+                ? DefaultGeometryOptions.Count > 0
+                    ? ("Open a file or choose New", "No ProbeInterface file is set, and the workflow will not run " +
+                        "without one. Open an existing file, or choose a probe model from New and save it to a file.")
+                    : ("Open a file", "No ProbeInterface file is set, and the workflow will not run without one. " +
+                        "Open an existing file.")
+                : noFile
+                ? ("Save to a file", "No ProbeInterface file is set, and the workflow will not run without one. " +
+                    "Save the channel configuration to a file.")
                 : HasChanges
                     ? ("Unsaved changes", "The channel configuration has changes that are not saved to its file.")
                     : (null, null);
@@ -549,6 +560,69 @@ namespace OpenEphys.Onix1.Design
 
             ImGui.TextColored(ColorTextUnsaved, status);
             ImGuiWidgets.Tooltip(tooltip);
+        }
+
+        /// <summary>
+        /// Resolves a part number to its probe family's variant, or returns <c>null</c> if the family does not know
+        /// it. Two part numbers with the same variant are the same probe model.
+        /// </summary>
+        protected abstract object ResolveVariant(string partNumber);
+
+        /// <summary>
+        /// The layout New offers for the probe model with part number <paramref name="partNumber"/>, or
+        /// <c>null</c> if New offers none.
+        /// </summary>
+        DefaultGeometryOption? DefaultGeometryFor(string partNumber)
+        {
+            if (string.IsNullOrEmpty(partNumber)) return null;
+
+            foreach (var option in DefaultGeometryOptions)
+                if (string.Equals(Path.GetFileNameWithoutExtension(option.ResourceName), partNumber, StringComparison.OrdinalIgnoreCase))
+                    return option;
+
+            // NB: New lists one part number per model, so an alias, such as a probe with a mounting cap, is matched
+            // through its variant.
+            var variant = ResolveVariant(partNumber);
+            if (variant == null) return null;
+            foreach (var option in DefaultGeometryOptions)
+                if (ReferenceEquals(ResolveVariant(Path.GetFileNameWithoutExtension(option.ResourceName)), variant))
+                    return option;
+
+            return null;
+        }
+
+        // NB: a scan finishes on a background thread, where a message box must not be shown, so the offer waits for
+        // the headstage panel's next frame.
+        volatile string scannedPartNumberToOffer;
+
+        /// <summary>
+        /// Records that a scan found the probe, so that the headstage panel offers its model's layout if no channel
+        /// configuration is chosen. Called from the scan's thread.
+        /// </summary>
+        protected void OfferScannedModel(string partNumber) => scannedPartNumberToOffer = partNumber;
+
+        /// <summary>
+        /// Offers to load the layout for the probe a scan found, if the scan found one while no channel configuration
+        /// was chosen. Called by the headstage panel each frame.
+        /// </summary>
+        internal void ShowScannedModelOffer()
+        {
+            var partNumber = scannedPartNumberToOffer;
+            if (partNumber == null) return;
+            scannedPartNumberToOffer = null;
+            if (ChannelConfigurationChosen) return;
+
+            if (DefaultGeometryFor(partNumber) is not DefaultGeometryOption option)
+            {
+                Log($"{probeName}: the scan found a {partNumber} probe, which New has no layout for. Open a ProbeInterface file for it.");
+                return;
+            }
+
+            var answer = MessageBox.Show($"The scan found a {partNumber} probe for {probeName}, which has no channel " +
+                $"configuration.\n\nLoad the {option.DisplayName} layout? It is not saved until you save it.",
+                $"{probeName}: Load Probe Layout", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (answer == DialogResult.Yes)
+                QuickLoadDefaultGeometry(option);
         }
 
         void QuickLoadDefaultGeometry(DefaultGeometryOption option)
@@ -752,10 +826,11 @@ namespace OpenEphys.Onix1.Design
 
         /// <summary>
         /// The file name suggested when no file is set: the probe's serial number, which identifies the probe, and
-        /// the probe's name, which identifies its position on the headstage.
+        /// the probe's name, which identifies its position on the headstage. The serial number comes from a scan, or
+        /// else from the calibration file.
         /// </summary>
         string SuggestedProbeFileName() =>
-            CalibrationFileSerialNumber(PrimaryCalibrationFileName) is ulong serialNumber
+            (ScannedSerialNumber ?? CalibrationFileSerialNumber(PrimaryCalibrationFileName)) is ulong serialNumber
                 ? $"{serialNumber}_{probeName}.json"
                 : $"{probeName}.json";
 
@@ -860,21 +935,12 @@ namespace OpenEphys.Onix1.Design
                 return true;
             }
 
-            // NB: with no channel configuration chosen, the probe group is a placeholder, which must not be saved.
-            if (!ChannelConfigurationChosen)
-            {
-                var close = MessageBox.Show($"{probeName} has no channel configuration, and the workflow will not run " +
-                    "without one. Choose a probe model from New, or open a ProbeInterface file.\n\nClose anyway?",
-                    $"{probeName}: No Channel Configuration", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-                return close == DialogResult.Yes;
-            }
-
             var missing = string.IsNullOrEmpty(path)
                 ? $"{probeName} has no probe interface file"
                 : $"{probeName}'s probe interface file, {Path.GetFileName(path)}, does not exist";
-            var unsaved = HasChanges ? ", and its channel configuration has unsaved changes" : "";
             var consequence = ProbeEnabled ? " The workflow will not run without the file." : "";
-            var answer = MessageBox.Show($"{missing}{unsaved}.{consequence}\n\nSave the channel configuration to a file now?",
+            var answer = MessageBox.Show($"{missing}, and its channel configuration has unsaved changes.{consequence}" +
+                "\n\nSave the channel configuration to a file now?",
                 $"{probeName}: No Probe Interface File", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
             if (answer == DialogResult.Cancel) return false;
             if (answer == DialogResult.No) return true;

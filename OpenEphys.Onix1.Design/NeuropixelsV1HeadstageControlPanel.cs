@@ -95,6 +95,9 @@ namespace OpenEphys.Onix1.Design
         /// <inheritdoc/>
         public void Draw()
         {
+            foreach (var target in targets)
+                target.Dialog.ShowScannedModelOffer();
+
             bool isScanning = targets.Any(t => t.Dialog.Scan.Status == NeuropixelsV1ScanStatus.Running);
             // NB: Do not filter by t.Selected since checkbox is checked a single time at Start() time
             bool isSurveying = targets.Any(t => t.Dialog.Survey.Status == NeuropixelsV1SurveyStatus.Running);
