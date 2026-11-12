@@ -17,6 +17,7 @@ namespace OpenEphys.Onix1.Design
     internal partial class NeuropixelsV1ImGuiDialog : ImGuiNeuropixelsDialog<NeuropixelsV1ProbeGroup>
     {
         readonly IConfigureNeuropixelsV1 configureNode;
+        readonly NeuropixelsV1ProbeConfiguration originalProbeConfiguration;
         NeuropixelsV1ProbeGroup probeGroup;
 
         // Survey (execution/hardware config lives on the headstage-level control panel; this dialog only
@@ -93,6 +94,8 @@ namespace OpenEphys.Onix1.Design
             get => configureNode.ProbeConfiguration.InvertPolarity;
             set => configureNode.ProbeConfiguration.InvertPolarity = value;
         }
+
+        protected override void RestoreProbeConfiguration() => configureNode.ProbeConfiguration = originalProbeConfiguration;
 
         // Enabling a contact enables the whole channel group it belongs to: every distinct (channel
         // group, bank) pair implied by the given contacts is selected via SelectElectrodeGroup, which
@@ -279,6 +282,7 @@ namespace OpenEphys.Onix1.Design
             : base(probeName, log)
         {
             this.configureNode = configureNode ?? throw new ArgumentNullException(nameof(configureNode));
+            originalProbeConfiguration = new NeuropixelsV1ProbeConfiguration(configureNode.ProbeConfiguration);
 
             survey.SurveyCompleted += () => HasChanges = true;
             scan.ScanCompleted += OnScanCompleted;

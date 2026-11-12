@@ -52,9 +52,55 @@ namespace OpenEphys.Onix1.Design
             FormBorderStyle = FormBorderStyle.Sizable;
             DoubleBuffered = true;
 
+            var okButton = new Button
+            {
+                Text = "OK",
+                DialogResult = DialogResult.OK,
+                Size = new Size(144, 32),
+                UseVisualStyleBackColor = true
+            };
+
+            var cancelButton = new Button
+            {
+                Text = "Cancel",
+                DialogResult = DialogResult.Cancel,
+                Size = new Size(144, 32),
+                UseVisualStyleBackColor = true
+            };
+
+            var buttons = new FlowLayoutPanel
+            {
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.RightToLeft,
+                Margin = new Padding(4)
+            };
+            buttons.Controls.Add(cancelButton);
+            buttons.Controls.Add(okButton);
+
+            var layout = new TableLayoutPanel
+            {
+                ColumnCount = 1,
+                RowCount = 2,
+                Dock = DockStyle.Fill,
+                Margin = new Padding(4)
+            };
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 42F));
+
             glControl = new ImGuiGLControl { Dock = DockStyle.Fill };
             glControl.Render += RenderFrame;
-            Controls.Add(glControl);
+
+            layout.Controls.Add(glControl, 0, 0);
+            layout.Controls.Add(buttons, 0, 1);
+            Controls.Add(layout);
+
+            // NB: no AcceptButton, because Enter must commit an ImGui text field without closing the dialog. The GL
+            // control takes Esc for ImGui, so CancelButton only covers Esc while a button has focus. DrawContent
+            // handles it otherwise.
+            CancelButton = cancelButton;
 
             FormClosing += ShellClosing;
             FormClosed += ShellClosed;
@@ -100,6 +146,12 @@ namespace OpenEphys.Onix1.Design
         // (tab area + side panel together) instead of a single tab's own content.
         void DrawContent()
         {
+            // NB: this runs before anything is drawn, so an active text field or open popup still counts. Esc
+            // then goes to them instead of closing the dialog.
+            if (ImGui.IsKeyPressed(ImGuiKey.Escape, false) && !ImGui.IsAnyItemActive() &&
+                !ImGui.IsPopupOpen("", ImGuiPopupFlags.AnyPopupId | ImGuiPopupFlags.AnyPopupLevel))
+                DialogResult = DialogResult.Cancel;
+
             float availY = ImGui.GetContentRegionAvail().Y;
             bool formResized = Math.Abs(availY - lastAvailY) > 0.5f;
             lastAvailY = availY;
@@ -237,8 +289,8 @@ namespace OpenEphys.Onix1.Design
         void ShellClosed(object sender, FormClosedEventArgs e)
         {
             foreach (var (_, panel) in tabs)
-                panel.Closed();
-            sidePanel?.Closed();
+                panel.Closed(DialogResult);
+            sidePanel?.Closed(DialogResult);
         }
     }
 }

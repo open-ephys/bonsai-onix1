@@ -56,7 +56,7 @@ namespace OpenEphys.Onix1.Design
         public virtual bool CanClose(DialogResult pendingResult) => true;
 
         /// <inheritdoc/>
-        public virtual void Closed() { }
+        public virtual void Closed(DialogResult result) { }
 
         /// <inheritdoc/>
         public void Draw()

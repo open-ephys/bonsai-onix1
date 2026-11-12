@@ -25,6 +25,7 @@ namespace OpenEphys.Onix1.Design
 
         // Config node
         readonly IConfigureNeuropixelsV2 configureNode;
+        readonly NeuropixelsV2ProbeConfiguration originalProbeConfiguration;
 
         // Probe state
         NeuropixelsV2ProbeGroup probeGroup;
@@ -97,6 +98,8 @@ namespace OpenEphys.Onix1.Design
             get => configureNode.ProbeConfiguration.InvertPolarity;
             set => configureNode.ProbeConfiguration.InvertPolarity = value;
         }
+
+        protected override void RestoreProbeConfiguration() => configureNode.ProbeConfiguration = originalProbeConfiguration;
 
         protected override void EnableElectrodes(IEnumerable<int> contactIndices) => probeGroup.EnableElectrodes(contactIndices);
 
@@ -178,6 +181,7 @@ namespace OpenEphys.Onix1.Design
             : base(probeName, log)
         {
             this.configureNode = configureNode ?? throw new ArgumentNullException(nameof(configureNode));
+            originalProbeConfiguration = configureNode.ProbeConfiguration.Clone();
             isBeta = configureNode is ConfigureNeuropixelsV2BetaPsbDecoder;
 
             survey.SurveyCompleted += () => HasChanges = true;

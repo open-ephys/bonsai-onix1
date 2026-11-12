@@ -56,7 +56,8 @@ namespace OpenEphys.Onix1.Design
         /// <inheritdoc/>
         public override bool CanClose(DialogResult pendingResult)
         {
-            if (!HasChanges)
+            // NB: anything but OK discards every change, so there's nothing to ask about.
+            if (pendingResult != DialogResult.OK || !HasChanges)
             {
                 discardOnClose = false;
                 return true;
@@ -69,11 +70,18 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <inheritdoc/>
-        public override void Closed()
+        public override void Closed(DialogResult result)
         {
-            if (discardOnClose)
+            if (result != DialogResult.OK)
+                RestoreProbeConfiguration();
+            else if (discardOnClose)
                 ProbeConfigurationBase.ProbeInterfaceFileName = keptProbeInterfaceFileName;
         }
+
+        /// <summary>
+        /// Puts back the probe configuration the node had when the dialog opened.
+        /// </summary>
+        protected abstract void RestoreProbeConfiguration();
 
         /// <summary>
         /// Records the node's probe interface path as the one to restore if the channel configuration's changes are

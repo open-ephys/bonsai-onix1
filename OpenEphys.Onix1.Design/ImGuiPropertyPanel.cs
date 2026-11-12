@@ -21,6 +21,7 @@ namespace OpenEphys.Onix1.Design
     {
         readonly object device;
         readonly PropertyDescriptorCollection properties;
+        readonly List<(PropertyDescriptor, object)> originalValues;
         readonly Dictionary<string, byte[]> fileBuffers = new();
 
         // Computed once, on the first Draw() call (text measurement needs an active ImGui frame,
@@ -42,7 +43,14 @@ namespace OpenEphys.Onix1.Design
         /// <inheritdoc/>
         public bool CanClose(DialogResult pendingResult) => true;
 
-        public void Closed() { }
+        /// <inheritdoc/>
+        public void Closed(DialogResult result)
+        {
+            if (result == DialogResult.OK) return;
+            foreach (var (prop, value) in originalValues)
+                if (!Equals(prop.GetValue(device), value))
+                    prop.SetValue(device, value);
+        }
 
         /// <summary>
         /// Initializes a new instance of <see cref="ImGuiPropertyPanel"/>.
@@ -60,6 +68,12 @@ namespace OpenEphys.Onix1.Design
                 ? new Attribute[] { new BrowsableAttribute(true), new DeviceTablePropertyAttribute(false) }
                 : Array.Empty<Attribute>();
             properties = TypeDescriptor.GetProperties(device, attrs);
+            // NB: the panel only ever replaces property values, never changes one in place, so the values
+            // themselves are enough to undo its edits.
+            originalValues = properties.Cast<PropertyDescriptor>()
+                .Where(p => !p.IsReadOnly)
+                .Select(p => (p, p.GetValue(device)))
+                .ToList();
         }
 
         /// <inheritdoc/>

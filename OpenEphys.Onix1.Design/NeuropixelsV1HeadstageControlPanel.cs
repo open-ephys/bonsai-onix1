@@ -21,6 +21,8 @@ namespace OpenEphys.Onix1.Design
         readonly SurveyHeadstageFactory buildHeadstage;
         readonly Action<PortName> setHeadstagePort;
         readonly Action<double?> setHeadstagePortVoltage;
+        readonly PortName initialPort;
+        readonly double? initialPortVoltage;
         readonly ImGuiLogConsole log;
         readonly NeuropixelsSurveyState state = new();
         readonly byte[] driverBuf = new byte[64];
@@ -54,6 +56,8 @@ namespace OpenEphys.Onix1.Design
             this.setHeadstagePort = setHeadstagePort ?? throw new ArgumentNullException(nameof(setHeadstagePort));
             this.setHeadstagePortVoltage = setHeadstagePortVoltage ?? throw new ArgumentNullException(nameof(setHeadstagePortVoltage));
             this.log = log ?? throw new ArgumentNullException(nameof(log));
+            this.initialPort = initialPort;
+            this.initialPortVoltage = initialPortVoltage;
             state.Port = initialPort;
             state.PortVoltage = initialPortVoltage;
             foreach (var target in targets) target.Dialog.SurveySettings = state;
@@ -81,7 +85,12 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <inheritdoc/>
-        public void Closed() { }
+        public void Closed(DialogResult result)
+        {
+            if (result == DialogResult.OK) return;
+            if (state.Port != initialPort) setHeadstagePort(initialPort);
+            if (state.PortVoltage != initialPortVoltage) setHeadstagePortVoltage(initialPortVoltage);
+        }
 
         /// <inheritdoc/>
         public void Draw()
