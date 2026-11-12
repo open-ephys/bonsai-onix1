@@ -680,27 +680,72 @@ namespace OpenEphys.Onix1.Design
 
         protected void SaveProbeGroupAs()
         {
-            string currentPath = ProbeConfigurationBase.ProbeInterfaceFileName ?? "";
-            string calFile = PrimaryCalibrationFileName ?? "";
+            var path = AskForProbeInterfaceFile("Save Probe Interface File As");
+            if (path == null) return;
+
+            ProbeConfigurationBase.ProbeInterfaceFileName = path;
+            SaveProbeGroup();
+        }
+
+        /// <summary>
+        /// Asks where to save the channel configuration and returns the chosen path, or <c>null</c> if the user
+        /// cancels. The dialog starts at the current file, or at the suggested name and folder when there is none.
+        /// </summary>
+        string AskForProbeInterfaceFile(string title)
+        {
+            var current = ProbeConfigurationBase.ProbeInterfaceFileName;
             using var sfd = new SaveFileDialog
             {
-                Title           = "Save Probe Interface File As",
-                Filter          = ProbeInterfaceHelper.ProbeInterfaceFileNameFilter,
-                DefaultExt      = "json",
-                FileName        = Path.GetFileName(currentPath.Length > 0 ? currentPath : GetDefaultProbeFileBaseName() + ".json"),
-                OverwritePrompt = true,
+                Title            = title,
+                Filter           = ProbeInterfaceHelper.ProbeInterfaceFileNameFilter,
+                DefaultExt       = "json",
+                FileName         = string.IsNullOrEmpty(current) ? SuggestedProbeFileName() : Path.GetFileName(current),
+                InitialDirectory = SuggestedProbeFileFolder() ?? "",
+                OverwritePrompt  = true,
             };
 
-            if (!string.IsNullOrEmpty(currentPath) && File.Exists(currentPath))
-                sfd.InitialDirectory = Path.GetDirectoryName(currentPath);
-            else if (!string.IsNullOrEmpty(calFile) && File.Exists(calFile))
-                sfd.InitialDirectory = Path.GetDirectoryName(calFile);
+            return sfd.ShowDialog() == DialogResult.OK ? sfd.FileName : null;
+        }
 
-            if (sfd.ShowDialog() == DialogResult.OK)
+        /// <summary>
+        /// The file name suggested when no file is set: the probe's serial number, which identifies the probe, and
+        /// the probe's name, which identifies its position on the headstage.
+        /// </summary>
+        string SuggestedProbeFileName() =>
+            CalibrationFileSerialNumber(PrimaryCalibrationFileName) is ulong serialNumber
+                ? $"{serialNumber}_{probeName}.json"
+                : $"{probeName}.json";
+
+        /// <summary>
+        /// The folder the save dialog starts in: the current file's, the workflow's, or the calibration file's,
+        /// whichever is found first, or <c>null</c> if none is.
+        /// </summary>
+        string SuggestedProbeFileFolder()
+        {
+            var current = ProbeConfigurationBase.ProbeInterfaceFileName;
+            if (!string.IsNullOrEmpty(current))
             {
-                ProbeConfigurationBase.ProbeInterfaceFileName = sfd.FileName;
-                SaveProbeGroup();
+                var folder = Path.GetDirectoryName(FullPathOrAsIs(current));
+                if (Directory.Exists(folder))
+                    return folder;
             }
+
+            // NB: Bonsai sets the working directory to the workflow's folder when it opens or saves a workflow, but
+            // a new workflow that has never been saved leaves it wherever it was. So it is taken for the workflow's
+            // folder only when it holds a workflow.
+            try
+            {
+                var workingDirectory = Environment.CurrentDirectory;
+                if (Directory.EnumerateFiles(workingDirectory, "*.bonsai").Any())
+                    return workingDirectory;
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) { }
+
+            var calFile = PrimaryCalibrationFileName;
+            if (!string.IsNullOrEmpty(calFile) && File.Exists(calFile))
+                return Path.GetDirectoryName(FullPathOrAsIs(calFile));
+
+            return null;
         }
 
         protected void WritePinnedState()
@@ -769,22 +814,10 @@ namespace OpenEphys.Onix1.Design
                 "Unsaved Changes", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (create == DialogResult.No) return true;
 
-            using var sfd = new SaveFileDialog
+            var chosen = AskForProbeInterfaceFile("Save Probe Interface File");
+            if (chosen != null)
             {
-                Title      = "Save Probe Interface File",
-                Filter     = ProbeInterfaceHelper.ProbeInterfaceFileNameFilter,
-                DefaultExt = "json",
-                FileName   = GetDefaultProbeFileBaseName() + ".json"
-            };
-
-            var calFile = PrimaryCalibrationFileName;
-
-            if (!string.IsNullOrEmpty(calFile) && File.Exists(calFile))
-                sfd.InitialDirectory = Path.GetDirectoryName(calFile);
-
-            if (sfd.ShowDialog() == DialogResult.OK)
-            {
-                ProbeConfigurationBase.ProbeInterfaceFileName = sfd.FileName;
+                ProbeConfigurationBase.ProbeInterfaceFileName = chosen;
                 SaveProbeGroup();
                 return true;
             }
@@ -793,18 +826,6 @@ namespace OpenEphys.Onix1.Design
                 "Unsaved Changes", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
 
             return discard == DialogResult.Yes;
-        }
-
-        protected string GetDefaultProbeFileBaseName()
-        {
-            var calFile = PrimaryCalibrationFileName;
-            if (string.IsNullOrEmpty(calFile) || !File.Exists(calFile)) return probeName;
-            try
-            {
-                var firstLine = File.ReadLines(calFile).FirstOrDefault()?.Trim();
-                return string.IsNullOrEmpty(firstLine) ? probeName : firstLine;
-            }
-            catch { return probeName; }
         }
 
         #endregion
