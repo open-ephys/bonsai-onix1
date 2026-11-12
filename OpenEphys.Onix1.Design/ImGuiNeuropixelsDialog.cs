@@ -608,12 +608,13 @@ namespace OpenEphys.Onix1.Design
             ImGuiWidgets.Tooltip("Open a file browser to load an existing ProbeInterface file that specifies the channel map, contact state, and previous survey results.");
 
             ImGui.SameLine();
-            if (!HasChanges) ImGui.BeginDisabled();
+            // NB: saving clears HasChanges, so it is read once, or the end would not match the begin.
+            ImGui.BeginDisabled(!HasChanges);
             if (ImGui.Button("Save##save")) SaveOrSaveAs();
             ImGuiWidgets.Tooltip("Save the current channel map, contact state, and survey data to the ProbeInterface file. " +
                 "With no file chosen, asks where to save it.",
                 "There are no unsaved changes.");
-            if (!HasChanges) ImGui.EndDisabled();
+            ImGui.EndDisabled();
             ImGui.SameLine();
             if (ImGui.Button("Save As...##save"))
                 SaveProbeGroupAs();
