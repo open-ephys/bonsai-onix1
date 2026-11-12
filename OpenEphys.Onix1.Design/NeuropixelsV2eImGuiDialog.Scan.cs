@@ -23,6 +23,16 @@ namespace OpenEphys.Onix1.Design
         protected override ulong? ScannedSerialNumber =>
             scan.Status == NeuropixelsV1ScanStatus.Detected ? scan.SerialNumber : null;
 
+        // NB: a part number the family does not know cannot be shown to match.
+        protected override bool ScannedProbeMatches()
+        {
+            try { return TryValidatePartNumber(scan.PartNumber, probeGroup, out _); }
+            catch (NotSupportedException) { return false; }
+        }
+
+        protected override string ScannedPartNumber =>
+            scan.Status == NeuropixelsV1ScanStatus.Detected ? scan.PartNumber : null;
+
         protected override object ResolveVariant(string partNumber)
         {
             try { return NeuropixelsV2VariantRegistry.Resolve(partNumber); }

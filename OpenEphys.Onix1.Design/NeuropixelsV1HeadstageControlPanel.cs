@@ -234,7 +234,8 @@ namespace OpenEphys.Onix1.Design
             foreach (var target in targets)
             {
                 bool enabled = target.Enabled;
-                if (HeadstageProbeRows.DrawEnableRow(target.Label, target.Dialog.Scan, ref enabled, hardwareBusy))
+                if (HeadstageProbeRows.DrawEnableRow(target.Label, target.Dialog.Scan, ref enabled, hardwareBusy,
+                    target.Dialog.ScannedModel, target.Dialog.LoadScannedModel, target.Dialog.MismatchedModel))
                     target.Enabled = enabled;
             }
         }

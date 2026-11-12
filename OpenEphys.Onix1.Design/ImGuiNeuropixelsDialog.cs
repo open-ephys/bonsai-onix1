@@ -137,6 +137,11 @@ namespace OpenEphys.Onix1.Design
         protected abstract ulong? ScannedSerialNumber { get; }
 
         /// <summary>
+        /// The part number a probe scan found, or <c>null</c> if no scan has found the probe.
+        /// </summary>
+        protected abstract string ScannedPartNumber { get; }
+
+        /// <summary>
         /// The calibration file used as a fallback directory when browsing for a probe-interface file.
         /// </summary>
         protected abstract string PrimaryCalibrationFileName { get; }
@@ -632,6 +637,38 @@ namespace OpenEphys.Onix1.Design
                 $"configuration.\n\nLoad the {option.DisplayName} layout? It is not saved until you save it.",
                 $"{probeName}: Load Probe Layout", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (answer == DialogResult.Yes)
+                QuickLoadDefaultGeometry(option);
+        }
+
+        /// <summary>
+        /// The part number New lists for the model a probe scan found, such as NP2013 for an NP2014, or <c>null</c>
+        /// if no scan has found the probe or New offers no layout for its model.
+        /// </summary>
+        internal string ScannedModel =>
+            DefaultGeometryFor(ScannedPartNumber) is DefaultGeometryOption option
+                ? Path.GetFileNameWithoutExtension(option.ResourceName)
+                : null;
+
+        /// <summary>
+        /// The model of the loaded channel configuration when it does not match the probe a scan found, or
+        /// <c>null</c> when it matches, no scan has found the probe, or no channel configuration is chosen.
+        /// </summary>
+        internal string MismatchedModel =>
+            ChannelConfigurationChosen && ScannedPartNumber != null && !ScannedProbeMatches()
+                ? ProbeGroup.Probe.Annotations.ModelName
+                : null;
+
+        /// <summary>
+        /// Whether the loaded channel configuration is for the model of the probe a scan found.
+        /// </summary>
+        protected abstract bool ScannedProbeMatches();
+
+        /// <summary>
+        /// Loads the layout New offers for the model a probe scan found, as choosing it from New does.
+        /// </summary>
+        internal void LoadScannedModel()
+        {
+            if (DefaultGeometryFor(ScannedPartNumber) is DefaultGeometryOption option)
                 QuickLoadDefaultGeometry(option);
         }
 
