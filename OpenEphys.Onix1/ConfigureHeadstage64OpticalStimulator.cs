@@ -263,6 +263,7 @@ namespace OpenEphys.Onix1
                 }
 
                 return new CompositeDisposable(
+                    DeviceManager.RegisterDevice(deviceName, device, DeviceType),
                     maxCurrent.SubscribeSafe(observer, value =>
                         device.WriteRegister(Headstage64OpticalStimulator.MAXCURRENT, Headstage64OpticalStimulator.MilliampsToPotSetting(value))),
                     channelOneCurrent.SubscribeSafe(observer, value =>
@@ -286,8 +287,7 @@ namespace OpenEphys.Onix1
                     burstsPerTrain.SubscribeSafe(observer, value =>
                         device.WriteRegister(Headstage64OpticalStimulator.TRAINCOUNT, value)),
                     delay.SubscribeSafe(observer, value =>
-                        device.WriteRegister(Headstage64OpticalStimulator.TRAINDELAY, (uint)(1000 * value))),
-                    DeviceManager.RegisterDevice(deviceName, device, DeviceType));
+                        device.WriteRegister(Headstage64OpticalStimulator.TRAINDELAY, (uint)(1000 * value))));
             })
             .ConfigureDirectDevice((context, observer) =>
             {
