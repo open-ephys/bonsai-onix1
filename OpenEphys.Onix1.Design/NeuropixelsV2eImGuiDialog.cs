@@ -101,6 +101,8 @@ namespace OpenEphys.Onix1.Design
 
         protected override void RestoreProbeConfiguration() => configureNode.ProbeConfiguration = originalProbeConfiguration;
 
+        protected override bool ProbeEnabled => configureNode.Enable;
+
         protected override void EnableElectrodes(IEnumerable<int> contactIndices) => probeGroup.EnableElectrodes(contactIndices);
 
         protected override void ReplaceProbeGroupFromJson(string json) =>

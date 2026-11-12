@@ -147,10 +147,15 @@ namespace OpenEphys.Onix1
 
                 if (enable)
                 {
-                    if (File.Exists(probeConfiguration.ProbeInterfaceFileName))
-                    {
-                        probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(probeConfiguration.ProbeInterfaceFileName, typeof(NeuropixelsV1ProbeGroup)) as NeuropixelsV1ProbeGroup;
-                    }
+                    if (!File.Exists(probeConfiguration.ProbeInterfaceFileName))
+                        throw new ArgumentException(
+                            $"A probe interface file must be provided to define the channel map for '{deviceName}'.");
+
+                    probeGroup = ProbeInterfaceHelper.LoadExternalProbeInterfaceFile(
+                        probeConfiguration.ProbeInterfaceFileName,
+                        typeof(NeuropixelsV1ProbeGroup)) as NeuropixelsV1ProbeGroup
+                        ?? throw new InvalidDataException(
+                            $"Probe interface file '{probeConfiguration.ProbeInterfaceFileName}' did not produce a valid {nameof(NeuropixelsV1ProbeGroup)}.");
 
                     if (!new NeuropixelsV1FlexEeprom(device).TryRead(out var probeMetadata))
                     {

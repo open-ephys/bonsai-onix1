@@ -57,12 +57,11 @@ namespace OpenEphys.Onix1.Design
         /// <inheritdoc/>
         public override bool CanClose(DialogResult pendingResult)
         {
-            // NB: anything but OK discards every change, so there's nothing to ask about.
-            if (pendingResult != DialogResult.OK || !HasChanges)
-            {
-                discardOnClose = false;
+            // NB: anything but OK discards every change, so there's nothing to ask about. A disabled probe is not
+            // configured, so it runs without a file.
+            discardOnClose = false;
+            if (pendingResult != DialogResult.OK || !HasChanges && (FileExists || !ProbeEnabled))
                 return true;
-            }
 
             // NB: whatever is still unsaved after the prompt is discarded. That covers No, and a save that failed.
             bool close = PromptSaveOnClose();
@@ -102,6 +101,11 @@ namespace OpenEphys.Onix1.Design
         /// The probe configuration's ProbeInterface.NET-facing surface.
         /// </summary>
         protected abstract IProbeInterfaceConfiguration ProbeConfigurationBase { get; }
+
+        /// <summary>
+        /// Whether the node configures the probe, which then needs a probe interface file to run.
+        /// </summary>
+        protected abstract bool ProbeEnabled { get; }
 
         /// <summary>
         /// The calibration file used as a fallback directory when browsing for a probe-interface file.
@@ -818,37 +822,44 @@ namespace OpenEphys.Onix1.Design
             keptProbeInterfaceFileName = newPath;
         }
 
+        bool FileExists
+        {
+            get
+            {
+                var path = ProbeConfigurationBase.ProbeInterfaceFileName;
+                return !string.IsNullOrEmpty(path) && File.Exists(path);
+            }
+        }
+
         bool PromptSaveOnClose()
         {
             var path = ProbeConfigurationBase.ProbeInterfaceFileName;
-            bool fileExists = !string.IsNullOrEmpty(path) && File.Exists(path);
-
-            if (fileExists)
+            if (FileExists)
             {
                 var r = MessageBox.Show($"Save changes to {Path.GetFileName(path)}?",
-                    "Unsaved Changes", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+                    $"{probeName}: Unsaved Changes", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
                 if (r == DialogResult.Cancel) return false;
                 if (r == DialogResult.Yes) SaveProbeGroup();
                 return true;
             }
 
-            var create = MessageBox.Show(
-                $"There are unsaved {probeName} channel configuration changes.\nWould you like to save them to a probe interface file?",
-                "Unsaved Changes", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-            if (create == DialogResult.No) return true;
+            var missing = string.IsNullOrEmpty(path)
+                ? $"{probeName} has no probe interface file"
+                : $"{probeName}'s probe interface file, {Path.GetFileName(path)}, does not exist";
+            var unsaved = HasChanges ? ", and its channel configuration has unsaved changes" : "";
+            var consequence = ProbeEnabled ? " The workflow will not run without the file." : "";
+            var answer = MessageBox.Show($"{missing}{unsaved}.{consequence}\n\nSave the channel configuration to a file now?",
+                $"{probeName}: No Probe Interface File", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
+            if (answer == DialogResult.Cancel) return false;
+            if (answer == DialogResult.No) return true;
 
+            // NB: cancelling the file dialog keeps this dialog open, so the user can choose again.
             var chosen = AskForProbeInterfaceFile("Save Probe Interface File");
-            if (chosen != null)
-            {
-                ProbeConfigurationBase.ProbeInterfaceFileName = chosen;
-                SaveProbeGroup();
-                return true;
-            }
+            if (chosen == null) return false;
 
-            var discard = MessageBox.Show("Discard unsaved changes and close?",
-                "Unsaved Changes", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-
-            return discard == DialogResult.Yes;
+            ProbeConfigurationBase.ProbeInterfaceFileName = chosen;
+            SaveProbeGroup();
+            return true;
         }
 
         #endregion

@@ -76,10 +76,10 @@ namespace OpenEphys.Onix1
         public List<int> TipReferenceShanks { get; set; } = new();
 
         /// <summary>
-        /// Gets or sets the file path where the ProbeInterface configuration will be saved.
+        /// Gets or sets the path of the ProbeInterface file that defines the probe's channel map.
         /// </summary>
         [Category(DeviceFactoryStrings.ConfigurationCategory)]
-        [Description("File path to where the ProbeInterface file exists for this probe.")]
+        [Description("The ProbeInterface file that defines this probe's channel map. Required when the probe is enabled.")]
         [FileNameFilter(ProbeInterfaceHelper.ProbeInterfaceFileNameFilter)]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string ProbeInterfaceFileName { get; set; }

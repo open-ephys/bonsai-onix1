@@ -97,6 +97,8 @@ namespace OpenEphys.Onix1.Design
 
         protected override void RestoreProbeConfiguration() => configureNode.ProbeConfiguration = originalProbeConfiguration;
 
+        protected override bool ProbeEnabled => configureNode.Enable;
+
         // Enabling a contact enables the whole channel group it belongs to: every distinct (channel
         // group, bank) pair implied by the given contacts is selected via SelectElectrodeGroup, which
         // replaces that group's prior bank selection with just the bank(s) touched by this call. 

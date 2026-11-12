@@ -39,7 +39,7 @@ namespace OpenEphys.Onix1
                 }
             }
 
-            throw new NotSupportedException($"Unrecognized Neuropixels {familyName} part number '{partNumber}'.");
+            throw new NotSupportedException($"Unrecognized {familyName} part number '{partNumber}'.");
         }
     }
 }
