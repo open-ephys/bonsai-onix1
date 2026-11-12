@@ -18,7 +18,7 @@ namespace OpenEphys.Onix1.Design
 
         void CheckScannedPartNumberAgainstLoadedFile()
         {
-            if (scan.Status != NeuropixelsV1ScanStatus.Detected) return;
+            if (scan.Status != NeuropixelsV1ScanStatus.Detected || !ChannelConfigurationChosen) return;
 
             if (!TryValidatePartNumber(scan.PartNumber, probeGroup, out var mismatchMessage))
                 Log($"Warning: {mismatchMessage}", true);

@@ -355,10 +355,13 @@ namespace OpenEphys.Onix1.Design
             DrawChannelConfigurationSection();
             ImGui.Separator();
             DrawProbeSettingsSection();
-            ImGui.Separator();
-            DrawSurveySection();
-            ImGui.Separator();
-            DrawContactInfo();
+            if (ChannelConfigurationChosen)
+            {
+                ImGui.Separator();
+                DrawSurveySection();
+                ImGui.Separator();
+                DrawContactInfo();
+            }
             HandleKeyboardShortcuts();
         }
 
@@ -375,6 +378,7 @@ namespace OpenEphys.Onix1.Design
                 {
                     ReplaceProbeGroupFromJson(File.ReadAllText(pc.ProbeInterfaceFileName));
                     Log($"Loaded probeinterface file {pc.ProbeInterfaceFileName}");
+                    ChannelConfigurationChosen = true;
                     return;
                 }
                 catch (Exception ex)
@@ -383,8 +387,8 @@ namespace OpenEphys.Onix1.Design
                 }
             }
 
-            // No file configured (or it failed to load): start from the standard NP1.0 probe as a
-            // reasonable default to edit from.
+            // NB: the rest of the dialog expects a probe group, so a placeholder stands in until the user chooses a
+            // channel configuration. It is never shown or saved.
             ReplaceProbeGroupFromJson(DesignResource.LoadDefaultJson("NP1000.json"));
         }
 

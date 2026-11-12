@@ -246,6 +246,9 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
+        const string NoChannelConfigurationHint = "Requires a channel configuration. In the probe's tab, choose a " +
+            "probe model from New, or open a ProbeInterface file.";
+
         void DrawProbeSelection()
         {
             ImGui.Text("Probes to survey");
@@ -254,14 +257,17 @@ namespace OpenEphys.Onix1.Design
             {
                 var pc = target.Dialog.ConfigureNeuropixelsV1.ProbeConfiguration;
                 bool hasCal = !string.IsNullOrEmpty(pc.GainCalibrationFileName) && !string.IsNullOrEmpty(pc.AdcCalibrationFileName);
-                if (!hasCal) { target.Selected = false; ImGui.BeginDisabled(); }
-                bool selected = hasCal && target.Selected;
+                var blocked = !target.Dialog.ChannelConfigurationChosen ? NoChannelConfigurationHint
+                    : !hasCal ? "Requires gain and ADC calibration files."
+                    : null;
+                if (blocked != null) { target.Selected = false; ImGui.BeginDisabled(); }
+                bool selected = blocked == null && target.Selected;
                 if (ImGui.Checkbox($"{target.Label}##survsel", ref selected))
                     target.Selected = selected;
-                if (!hasCal)
+                if (blocked != null)
                 {
                     ImGui.EndDisabled();
-                    ImGuiWidgets.Tooltip("Requires gain and ADC calibration files.");
+                    ImGuiWidgets.Tooltip(blocked);
                 }
             }
         }

@@ -24,7 +24,6 @@ namespace OpenEphys.Onix1.Design
         protected IReadOnlyList<Contact> allContacts = Array.Empty<Contact>();
         protected readonly MultiplexedContactState channelState = new();
         static readonly Vector4 ColorTextUnsaved = ImGui.ColorConvertU32ToFloat4(ImGuiPalette.AmberGold);
-        const string UnsavedChanges = "Unsaved changes";
         const string BankSelectHint = "Turn off \"Select banks to survey\" to edit channels.";
 
         /// <summary>
@@ -53,6 +52,21 @@ namespace OpenEphys.Onix1.Design
 
         /// <inheritdoc/>
         public override bool HasChanges { get; protected set; }
+
+        /// <summary>
+        /// Whether the user has chosen a channel configuration, by opening a file or choosing a model from New.
+        /// </summary>
+        /// <remarks>
+        /// Until then, the probe group is a placeholder that is never shown, so the probe view, the channel controls,
+        /// the survey, and saving are unavailable.
+        /// </remarks>
+        internal bool ChannelConfigurationChosen { get; private protected set; }
+
+        /// <inheritdoc/>
+        protected override string ProbeViewMessage => ChannelConfigurationChosen ? null
+            : DefaultGeometryOptions.Count > 0
+                ? "No channel configuration. Choose a probe model from New, or open a ProbeInterface file."
+                : "No channel configuration. Open a ProbeInterface file.";
 
         /// <inheritdoc/>
         public override bool CanClose(DialogResult pendingResult)
@@ -497,46 +511,44 @@ namespace OpenEphys.Onix1.Design
             ImGui.TextDisabled(probeName);
             ImGui.SameLine();
 
-            var modelName = ProbeGroup.Probe.Annotations.ModelName;
             ImGui.AlignTextToFramePadding();
-            ImGui.TextUnformatted(string.IsNullOrEmpty(modelName) ? "(no probe loaded)" : modelName);
+            if (ChannelConfigurationChosen)
+            {
+                var modelName = ProbeGroup.Probe.Annotations.ModelName;
+                ImGui.TextUnformatted(string.IsNullOrEmpty(modelName) ? "(no probe loaded)" : modelName);
 
-            var description = ProbeGroup.Probe.Annotations.GetAnnotation<string>("description");
-            if (!string.IsNullOrEmpty(description))
-                ImGuiWidgets.Tooltip(description);
+                var description = ProbeGroup.Probe.Annotations.GetAnnotation<string>("description");
+                if (!string.IsNullOrEmpty(description))
+                    ImGuiWidgets.Tooltip(description);
+            }
+            else
+            {
+                ImGui.TextDisabled("No probe chosen");
+            }
 
             DrawFileStatus();
         }
 
-        // NB: right-aligned in the title bar, so that a missing file or unsaved changes are the first thing seen.
+        // NB: right-aligned in the title bar, so that a missing file or unsaved changes are the first thing seen. "No
+        // file" alone covers both, since with no file nothing is saved.
         void DrawFileStatus()
         {
             bool noFile = string.IsNullOrEmpty(ProbeConfigurationBase.ProbeInterfaceFileName);
-            if (!noFile && !HasChanges) return;
-
-            const string NoFile = "No file";
-            float spacing = ImGui.GetStyle().ItemSpacing.X;
-            float width = (noFile ? ImGui.CalcTextSize(NoFile).X : 0f)
-                + (noFile && HasChanges ? spacing : 0f)
-                + (HasChanges ? ImGui.CalcTextSize(UnsavedChanges).X : 0f);
+            var (status, tooltip) = noFile
+                ? ("No file", "No ProbeInterface file is set, and the workflow will not run without one. " +
+                    "Save the channel configuration to create one, or open an existing file.")
+                : HasChanges
+                    ? ("Unsaved changes", "The channel configuration has changes that are not saved to its file.")
+                    : (null, null);
+            if (status == null) return;
 
             ImGui.SameLine();
-            float slack = ImGui.GetContentRegionAvail().X - width;
+            float slack = ImGui.GetContentRegionAvail().X - ImGui.CalcTextSize(status).X;
             if (slack > 0f)
                 ImGui.SetCursorPosX(ImGui.GetCursorPosX() + slack);
 
-            if (noFile)
-            {
-                ImGui.TextColored(ColorTextUnsaved, NoFile);
-                ImGuiWidgets.Tooltip("No ProbeInterface file is set, and the workflow will not run without one. " +
-                    "Save the channel configuration to create one, or open an existing file.");
-                if (HasChanges) ImGui.SameLine();
-            }
-            if (HasChanges)
-            {
-                ImGui.TextColored(ColorTextUnsaved, UnsavedChanges);
-                ImGuiWidgets.Tooltip("The channel configuration has changes that are not saved to its file.");
-            }
+            ImGui.TextColored(ColorTextUnsaved, status);
+            ImGuiWidgets.Tooltip(tooltip);
         }
 
         void QuickLoadDefaultGeometry(DefaultGeometryOption option)
@@ -559,6 +571,7 @@ namespace OpenEphys.Onix1.Design
             }
 
             ProbeConfigurationBase.ProbeInterfaceFileName = null;
+            ChannelConfigurationChosen = true;
             RefreshProbeState();
             Log($"Loaded default probe {option.DisplayName}");
             HasChanges = true;
@@ -610,6 +623,9 @@ namespace OpenEphys.Onix1.Design
                     OnProbeFileNameChanged(ofd.FileName);
             }
             ImGuiWidgets.Tooltip("Open a file browser to load an existing ProbeInterface file that specifies the channel map, contact state, and previous survey results.");
+
+            if (!ChannelConfigurationChosen)
+                return;
 
             ImGui.SameLine();
             // NB: saving clears HasChanges, so it is read once, or the end would not match the begin.
@@ -816,6 +832,7 @@ namespace OpenEphys.Onix1.Design
                 return;
             }
             Log($"Loaded probeinterface file {newPath}");
+            ChannelConfigurationChosen = true;
             RefreshProbeState();
 
             HasChanges = false;
@@ -841,6 +858,15 @@ namespace OpenEphys.Onix1.Design
                 if (r == DialogResult.Cancel) return false;
                 if (r == DialogResult.Yes) SaveProbeGroup();
                 return true;
+            }
+
+            // NB: with no channel configuration chosen, the probe group is a placeholder, which must not be saved.
+            if (!ChannelConfigurationChosen)
+            {
+                var close = MessageBox.Show($"{probeName} has no channel configuration, and the workflow will not run " +
+                    "without one. Choose a probe model from New, or open a ProbeInterface file.\n\nClose anyway?",
+                    $"{probeName}: No Channel Configuration", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                return close == DialogResult.Yes;
             }
 
             var missing = string.IsNullOrEmpty(path)
@@ -870,6 +896,9 @@ namespace OpenEphys.Onix1.Design
         {
             bool ctrl = ImGui.IsKeyDown(ImGuiKey.LeftCtrl) || ImGui.IsKeyDown(ImGuiKey.RightCtrl);
             bool shift = ImGui.IsKeyDown(ImGuiKey.LeftShift) || ImGui.IsKeyDown(ImGuiKey.RightShift);
+
+            if (!ChannelConfigurationChosen)
+                return;
 
             if (ctrl && ImGui.IsKeyPressed(ImGuiKey.S, false))
             {

@@ -255,10 +255,13 @@ namespace OpenEphys.Onix1.Design
             DrawChannelConfigurationSection();
             ImGui.Separator();
             DrawProbeSettingsSection();
-            ImGui.Separator();
-            DrawSurveySection();
-            ImGui.Separator();
-            DrawContactInfo();
+            if (ChannelConfigurationChosen)
+            {
+                ImGui.Separator();
+                DrawSurveySection();
+                ImGui.Separator();
+                DrawContactInfo();
+            }
             HandleKeyboardShortcuts();
         }
 
@@ -275,6 +278,7 @@ namespace OpenEphys.Onix1.Design
                 {
                     ReplaceProbeGroupFromJson(File.ReadAllText(pc.ProbeInterfaceFileName));
                     Log($"Loaded probeinterface file {pc.ProbeInterfaceFileName}");
+                    ChannelConfigurationChosen = true;
                     return;
                 }
                 catch (Exception ex)
@@ -282,8 +286,9 @@ namespace OpenEphys.Onix1.Design
                     Log($"Error loading probeinterface file {pc.ProbeInterfaceFileName}: {ex.Message}", true);
                 }
             }
-            // No file configured (or it failed to load): start from the quad-shank probe, the more
-            // prevalent NeuropixelsV2e configuration in the field, as a reasonable default to edit from.
+
+            // NB: the rest of the dialog expects a probe group, so a placeholder stands in until the user chooses a
+            // channel configuration. It is never shown or saved.
             ReplaceProbeGroupFromJson(DesignResource.LoadDefaultJson("NP2013.json"));
         }
 

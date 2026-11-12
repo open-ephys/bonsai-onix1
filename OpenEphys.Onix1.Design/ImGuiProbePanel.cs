@@ -1,4 +1,5 @@
 using Hexa.NET.ImGui;
+using System;
 using System.Numerics;
 using System.Windows.Forms;
 using OpenEphys.EphysVisualization.Design;
@@ -40,6 +41,11 @@ namespace OpenEphys.Onix1.Design
         protected virtual bool SelectionEnabled => true;
 
         /// <summary>
+        /// A message shown in place of the minimap and zoomed view, or <c>null</c> to show the probe.
+        /// </summary>
+        protected virtual string ProbeViewMessage => null;
+
+        /// <summary>
         /// Draw the contents of the right-hand props panel each frame.
         /// </summary>
         protected abstract void DrawPropsPanel();
@@ -67,21 +73,46 @@ namespace OpenEphys.Onix1.Design
             float sameLineGaps = 2f * ImGui.GetStyle().ItemSpacing.X; // minimap<->zoomed and zoomed<->props
             float zoomedW = topAvailW - minimapColW - PropsWidth - sameLineGaps;
 
-            ImGui.BeginChild("##minimapFcol", new Vector2(minimapColW, topH), ImGuiChildFlags.None,
-                ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
-            selector.DrawMinimap();
-            ImGui.EndChild();
-            ImGui.SameLine();
+            var message = ProbeViewMessage;
+            if (message != null)
+            {
+                DrawProbeViewMessage(message, new Vector2(minimapColW + ImGui.GetStyle().ItemSpacing.X + zoomedW, topH));
+            }
+            else
+            {
+                ImGui.BeginChild("##minimapFcol", new Vector2(minimapColW, topH), ImGuiChildFlags.None,
+                    ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
+                selector.DrawMinimap();
+                ImGui.EndChild();
+                ImGui.SameLine();
 
-            ImGui.BeginChild("##zoomed", new Vector2(zoomedW, topH), ImGuiChildFlags.None,
-                ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
-            selector.DrawZoomedView(SelectionEnabled);
-            ImGui.EndChild();
+                ImGui.BeginChild("##zoomed", new Vector2(zoomedW, topH), ImGuiChildFlags.None,
+                    ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
+                selector.DrawZoomedView(SelectionEnabled);
+                ImGui.EndChild();
+            }
             ImGui.SameLine();
 
             ImGui.BeginChild("##props", new Vector2(PropsWidth, topH), ImGuiChildFlags.Borders,
                 ImGuiWindowFlags.AlwaysVerticalScrollbar);
             DrawPropsPanel();
+            ImGui.EndChild();
+        }
+
+        static void DrawProbeViewMessage(string message, Vector2 size)
+        {
+            ImGui.BeginChild("##probeViewMessage", size, ImGuiChildFlags.None,
+                ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
+
+            float wrap = Math.Min(size.X * 0.6f, 480f);
+            var textSize = ImGui.CalcTextSize(message, false, wrap);
+            ImGui.SetCursorPos(new Vector2((size.X - textSize.X) * 0.5f, (size.Y - textSize.Y) * 0.4f));
+            ImGui.PushTextWrapPos(ImGui.GetCursorPosX() + wrap);
+            ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            ImGui.TextUnformatted(message);
+            ImGui.PopStyleColor();
+            ImGui.PopTextWrapPos();
+
             ImGui.EndChild();
         }
     }
