@@ -350,9 +350,9 @@ namespace OpenEphys.Onix1.Design
             ImGui.Spacing();
             DrawTitleBar();
             ImGui.Separator();
-            DrawProbeSettingsSection();
-            ImGui.Separator();
             DrawChannelConfigurationSection();
+            ImGui.Separator();
+            DrawProbeSettingsSection();
             ImGui.Separator();
             DrawSurveySection();
             ImGui.Separator();

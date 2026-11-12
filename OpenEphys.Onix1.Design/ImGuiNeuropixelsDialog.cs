@@ -24,6 +24,7 @@ namespace OpenEphys.Onix1.Design
         protected IReadOnlyList<Contact> allContacts = Array.Empty<Contact>();
         protected readonly MultiplexedContactState channelState = new();
         static readonly Vector4 ColorTextUnsaved = ImGui.ColorConvertU32ToFloat4(ImGuiPalette.AmberGold);
+        const string UnsavedChanges = "Unsaved changes";
         const string BankSelectHint = "Turn off \"Select banks to survey\" to edit channels.";
 
         /// <summary>
@@ -499,6 +500,39 @@ namespace OpenEphys.Onix1.Design
             var description = ProbeGroup.Probe.Annotations.GetAnnotation<string>("description");
             if (!string.IsNullOrEmpty(description))
                 ImGuiWidgets.Tooltip(description);
+
+            DrawFileStatus();
+        }
+
+        // NB: right-aligned in the title bar, so that a missing file or unsaved changes are the first thing seen.
+        void DrawFileStatus()
+        {
+            bool noFile = string.IsNullOrEmpty(ProbeConfigurationBase.ProbeInterfaceFileName);
+            if (!noFile && !HasChanges) return;
+
+            const string NoFile = "No file";
+            float spacing = ImGui.GetStyle().ItemSpacing.X;
+            float width = (noFile ? ImGui.CalcTextSize(NoFile).X : 0f)
+                + (noFile && HasChanges ? spacing : 0f)
+                + (HasChanges ? ImGui.CalcTextSize(UnsavedChanges).X : 0f);
+
+            ImGui.SameLine();
+            float slack = ImGui.GetContentRegionAvail().X - width;
+            if (slack > 0f)
+                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + slack);
+
+            if (noFile)
+            {
+                ImGui.TextColored(ColorTextUnsaved, NoFile);
+                ImGuiWidgets.Tooltip("No ProbeInterface file is set, and the workflow will not run without one. " +
+                    "Save the channel configuration to create one, or open an existing file.");
+                if (HasChanges) ImGui.SameLine();
+            }
+            if (HasChanges)
+            {
+                ImGui.TextColored(ColorTextUnsaved, UnsavedChanges);
+                ImGuiWidgets.Tooltip("The channel configuration has changes that are not saved to its file.");
+            }
         }
 
         void QuickLoadDefaultGeometry(DefaultGeometryOption option)
@@ -535,24 +569,11 @@ namespace OpenEphys.Onix1.Design
 
         protected void DrawChannelConfigurationSection()
         {
-            ImGui.Text("Channel Configuration");
-            ImGuiWidgets.Tooltip("The enabled and pinned contacts and the survey results are saved in a ProbeInterface " +
-                "file, not in the workflow. Saving the workflow does not save them. Save them here.");
-            if (HasChanges)
-            {
-                ImGui.SameLine();
-                ImGui.TextColored(ColorTextUnsaved, "Unsaved changes");
-            }
-            ImGui.Spacing();
-
             // NB: the path is shown as text, not an editable field, because typing a path would point the node
-            // at a file without loading it, and the channel map on screen would no longer match the file.
+            // at a file without loading it, and the channel map on screen would no longer match the file. With no
+            // file, the title bar says so.
             string pf = ProbeConfigurationBase.ProbeInterfaceFileName ?? "";
-            if (pf.Length == 0)
-            {
-                ImGui.TextDisabled("No file");
-            }
-            else
+            if (pf.Length > 0)
             {
                 // NB: TextDisabled treats its string as a printf format, and a path may contain '%'.
                 var fullPath = FullPathOrAsIs(pf);
@@ -560,9 +581,10 @@ namespace OpenEphys.Onix1.Design
                 ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled));
                 ImGui.TextUnformatted(FitPathToWidth(fullPath, ImGui.GetContentRegionAvail().X - margin));
                 ImGui.PopStyleColor();
-                ImGuiWidgets.Tooltip(fullPath);
+                ImGuiWidgets.Tooltip($"{fullPath}\n\nThe enabled and pinned contacts and the survey results are " +
+                    "saved in this ProbeInterface file, not in the workflow. Saving the workflow does not save them.");
+                ImGui.Spacing();
             }
-            ImGui.Spacing();
 
             if (DrawNewChannelMapCombo())
                 ImGui.SameLine();
