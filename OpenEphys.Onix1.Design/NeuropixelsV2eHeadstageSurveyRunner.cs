@@ -190,12 +190,23 @@ namespace OpenEphys.Onix1.Design
                 state.Target.Dialog.Survey.Progress = (float)state.NextIndex / totalRuns;
             }
 
-            static void Complete(TargetRunState state, double spikeThreshold, float timePerBankSeconds)
+            static void Complete(TargetRunState state, double spikeThreshold, float timePerBankSeconds, Action<string, bool> log)
             {
                 state.Target.Dialog.Survey.Complete(new NeuropixelsV2eSurveyResults(
                     state.AllAmplitude, state.AllFireRate, state.AllNoise,
                     (float)spikeThreshold, timePerBankSeconds, state.RecordingFolder != null, state.ProbeSerialNumber,
                     state.Target.Dialog.SurveyBanks));
+
+                // NB: the results live in the channel configuration, which is saved only from the dialog, so the
+                // user has to be told that they are not saved yet.
+                var label = state.Target.Label;
+                var probeFile = state.Target.Dialog.ConfigureNeuropixelsV2.ProbeConfiguration.ProbeInterfaceFileName;
+                log(string.IsNullOrEmpty(probeFile)
+                    ? $"{label}: survey complete. The results were added to the channel configuration, which has no file yet. Save it to a file to keep them."
+                    : $"{label}: survey complete. The results were added to the channel configuration. Save it to keep them in {Path.GetFileName(probeFile)}.",
+                    false);
+                if (state.RecordingFolder != null)
+                    log($"{label}: raw survey data saved in {state.RecordingFolder}", false);
             }
 
             double? appliedVoltage = null;
@@ -221,7 +232,7 @@ namespace OpenEphys.Onix1.Design
                             state.NextIndex++;
                             ReportProgress(state);
                             if (state.NextIndex >= state.OrderedBanks.Count)
-                                Complete(state, spikeThreshold, timePerBankSeconds);
+                                Complete(state, spikeThreshold, timePerBankSeconds, log);
                             continue;
                         }
 
@@ -295,14 +306,14 @@ namespace OpenEphys.Onix1.Design
                         ReportProgress(state);
 
                         if (state.NextIndex >= state.OrderedBanks.Count)
-                            Complete(state, spikeThreshold, timePerBankSeconds);
+                            Complete(state, spikeThreshold, timePerBankSeconds, log);
                     }
                 }
 
                 // Targets with nothing selected to survey (e.g. an empty SurveyBanks) never entered the round
                 // loop at all. Finalize them here with empty-but-valid results.
                 foreach (var state in states.Values.Where(s => s.OrderedBanks.Count == 0))
-                    Complete(state, spikeThreshold, timePerBankSeconds);
+                    Complete(state, spikeThreshold, timePerBankSeconds, log);
             }
             catch (OperationCanceledException)
             {

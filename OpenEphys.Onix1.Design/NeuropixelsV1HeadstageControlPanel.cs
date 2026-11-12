@@ -286,7 +286,7 @@ namespace OpenEphys.Onix1.Design
             if (!anyEnabledHasProbeFile) { state.RecordSurveyData = false; ImGui.BeginDisabled(); }
             bool rec = state.RecordSurveyData;
             if (ImGui.Checkbox("Record raw data##recraw", ref rec)) state.RecordSurveyData = rec;
-            ImGuiWidgets.Tooltip("Save the raw, unfiltered voltage traces collected during the survey to disk, alongside the summary statistics, for each enabled probe that has a ProbeInterface file. Each bank's recording includes its settling period.",
+            ImGuiWidgets.Tooltip("Save the raw, unfiltered voltage traces collected during the survey, for each enabled probe that has a ProbeInterface file. They go in a new folder next to that file, named <file name>_<yyyyMMdd-HHmmss>_survey-data, with one .arrow and one .json file per bank. Each bank's recording includes its settling period. The log names each folder when the survey ends.",
                 "Requires at least one enabled probe to have a ProbeInterface file.");
             if (!anyEnabledHasProbeFile) ImGui.EndDisabled();
         }
