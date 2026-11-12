@@ -139,6 +139,28 @@ namespace OpenEphys.Onix1.Design
             DrawContent();
 
             ImGui.End();
+            UpdateMinimumWidth();
+        }
+
+        int minimumWidth;
+
+        // NB: applied after the frame, since resizing the window from inside a paint would paint again within it.
+        void UpdateMinimumWidth()
+        {
+            float needed = tabs.Select(t => t.Panel).OfType<ImGuiProbePanel>()
+                .Select(p => p.MinimumDisplayWidth)
+                .DefaultIfEmpty(0f)
+                .Max();
+            if (needed <= 0f) return;
+
+            int width = (int)Math.Ceiling(needed) + Width - glControl.Width;
+            if (width == minimumWidth) return;
+
+            minimumWidth = width;
+            BeginInvoke((Action)(() =>
+            {
+                if (!IsDisposed) MinimumSize = new Size(width, MinimumSize.Height);
+            }));
         }
 
         // Same resizable/collapsible top-wrapper-plus-bottom-child split ImGuiProbePanel.Draw() uses for

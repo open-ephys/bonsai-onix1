@@ -36,6 +36,17 @@ namespace OpenEphys.Onix1.Design
         protected virtual float PropsWidth => 500f;
 
         /// <summary>
+        /// The narrowest the props panel gets before it scrolls sideways instead.
+        /// </summary>
+        const float MinimumPropsWidth = 320f;
+
+        /// <summary>
+        /// The width of the whole ImGui display this panel needs at the least, as measured on its last frame, or 0
+        /// before its first. The hosting shell keeps its window at least this wide.
+        /// </summary>
+        internal float MinimumDisplayWidth { get; private set; }
+
+        /// <summary>
         /// When false, the selector suppresses drag-select interaction.
         /// </summary>
         protected virtual bool SelectionEnabled => true;
@@ -74,9 +85,18 @@ namespace OpenEphys.Onix1.Design
         {
             float topH = ImGui.GetContentRegionAvail().Y;
             float topAvailW = ImGui.GetContentRegionAvail().X;
+            var style = ImGui.GetStyle();
             float minimapColW = selector.MinimapWidth(topH, topAvailW);
-            float sameLineGaps = 2f * ImGui.GetStyle().ItemSpacing.X; // minimap<->zoomed and zoomed<->props
-            float zoomedW = topAvailW - minimapColW - PropsWidth - sameLineGaps;
+            float sameLineGaps = 2f * style.ItemSpacing.X; // minimap<->zoomed and zoomed<->props
+
+            // NB: the props panel gives up width before the probe view does, so that the probe, its depth axes
+            // and the legend stay readable. Below its minimum, it scrolls sideways.
+            float minimumZoomedW = 2f * ImGui.CalcTextSize("-10000um").X + 160f;
+            float propsW = Math.Max(MinimumPropsWidth,
+                Math.Min(PropsWidth, topAvailW - minimapColW - minimumZoomedW - sameLineGaps));
+            float zoomedW = topAvailW - minimapColW - propsW - sameLineGaps;
+            MinimumDisplayWidth = ImGui.GetIO().DisplaySize.X - topAvailW
+                + minimapColW + minimumZoomedW + MinimumPropsWidth + sameLineGaps;
 
             var message = ProbeViewMessage;
             if (message != null)
@@ -98,8 +118,15 @@ namespace OpenEphys.Onix1.Design
             }
             ImGui.SameLine();
 
-            ImGui.BeginChild("##props", new Vector2(PropsWidth, topH), ImGuiChildFlags.Borders,
-                ImGuiWindowFlags.AlwaysVerticalScrollbar);
+            var propsFlags = ImGuiWindowFlags.AlwaysVerticalScrollbar;
+            if (propsW < PropsWidth)
+            {
+                // NB: the content keeps the width it has at full size, so the controls are laid out the same and
+                // scroll into view instead of being squeezed.
+                ImGui.SetNextWindowContentSize(new Vector2(PropsWidth - 2f * style.WindowPadding.X - style.ScrollbarSize, 0f));
+                propsFlags |= ImGuiWindowFlags.HorizontalScrollbar;
+            }
+            ImGui.BeginChild("##props", new Vector2(propsW, topH), ImGuiChildFlags.Borders, propsFlags);
             ImGui.BeginDisabled(PropsDisabled);
             DrawPropsPanel();
             ImGui.EndDisabled();
