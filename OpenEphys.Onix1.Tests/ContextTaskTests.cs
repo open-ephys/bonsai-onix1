@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading;
 using Xunit;
 
@@ -50,6 +51,38 @@ namespace OpenEphys.Onix1.Tests
             });
 
             context.StartAsync((int)context.MaxReadFrameSize, (int)context.MaxWriteFrameSize);
+            Assert.True(disposed.Wait(TimeSpan.FromSeconds(5)), "Disposing the context from the error handler did not return.");
+        }
+
+        // A configuration action that fails when acquisition starts is reported to the operator that queued it,
+        // whose observer may dispose the context in response, as a workflow does when it is torn down by the
+        // error.
+        [Fact]
+        public void ConfigurationFailure_ObserverDisposesContext_DoesNotDeadlock()
+        {
+            var context = new GenericContextTask(TestDriver.Name, TestDriver.Index);
+
+            using var errorReported = new ManualResetEventSlim();
+            using var disposed = new ManualResetEventSlim();
+
+            // NB: The source does not complete, like CreateContext, since an error after completion is ignored
+            Observable.Never<GenericContextTask>().StartWith(context)
+                .ConfigureDirectDevice(_ => throw new InvalidOperationException())
+                .Subscribe(_ => { }, _ =>
+                {
+                    errorReported.Set();
+                    context.Dispose();
+                    disposed.Set();
+                });
+
+            // NB: Not on a thread pool thread, where Dispose would run DisposeContext inline while waiting for it,
+            // which does not deadlock. On another thread, so that a deadlock fails the test instead of hanging it.
+            new Thread(() =>
+            {
+                try { context.StartAsync((int)context.MaxReadFrameSize, (int)context.MaxWriteFrameSize); }
+                catch (InvalidOperationException) { }
+            }) { IsBackground = true }.Start();
+            Assert.True(errorReported.Wait(TimeSpan.FromSeconds(5)), "The configuration error was not reported.");
             Assert.True(disposed.Wait(TimeSpan.FromSeconds(5)), "Disposing the context from the error handler did not return.");
         }
 
