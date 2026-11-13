@@ -36,17 +36,13 @@ namespace OpenEphys.Onix1.Design
         readonly HashSet<int> surveyBanks = new();
         readonly HashSet<int> pendingBanks = new();
 
-        int spikeGainIdx, lfpGainIdx, refIdx, presetIdx, columnPatternIdx, presetOffset;
+        int spikeGainIdx, lfpGainIdx, refIdx, presetIdx, presetOffset;
         NeuropixelsV1Preset[] presets = Array.Empty<NeuropixelsV1Preset>();
-        NeuropixelsV1ColumnPattern? pendingColumnPattern;
-        const string ColumnPatternConflictPopupId = "Reset probe for column mode?";
 
         static readonly string[] GainNames = Enum.GetNames(typeof(NeuropixelsV1Gain));
         static readonly NeuropixelsV1Gain[] GainValues = (NeuropixelsV1Gain[])Enum.GetValues(typeof(NeuropixelsV1Gain));
         static readonly string[] ReferenceNames = Enum.GetNames(typeof(NeuropixelsV1ReferenceSource));
         static readonly NeuropixelsV1ReferenceSource[] ReferenceValues = (NeuropixelsV1ReferenceSource[])Enum.GetValues(typeof(NeuropixelsV1ReferenceSource));
-        static readonly NeuropixelsV1ColumnPattern[] ColumnPatternValues = (NeuropixelsV1ColumnPattern[])Enum.GetValues(typeof(NeuropixelsV1ColumnPattern));
-        static readonly string[] ColumnPatternNames = ColumnPatternValues.Select(ColumnPatternDisplayName).ToArray();
 
         // "All", or "Inner (1, 3, 4, 6)"/"Outer (0, 2, 5, 7)". Reads the same active-column sets
         // NeuropixelsV1ProbeGroup.IsColumnEnabled uses, so the label can't drift from the actual behavior.
@@ -207,10 +203,6 @@ namespace OpenEphys.Onix1.Design
             // loaded/restored data, so this always starts at None rather than guessing.
             presetIdx = Array.FindIndex(presets, p => p == NeuropixelsV1Preset.None);
             presetOffset = 0;
-
-            columnPatternIdx = probeGroup is NeuropixelsNP1110ProbeGroup np1110Probe
-                ? Array.IndexOf(ColumnPatternValues, np1110Probe.ColumnPattern)
-                : 0;
 
             spikeGainIdx = Array.IndexOf(GainValues, configureNode.ProbeConfiguration.SpikeAmplifierGain);
             lfpGainIdx  = Array.IndexOf(GainValues, configureNode.ProbeConfiguration.LfpAmplifierGain);
@@ -514,11 +506,10 @@ namespace OpenEphys.Onix1.Design
             if (probeGroup is NeuropixelsNP1110ProbeGroup np1110Probe)
             {
                 ImGui.SetNextItemWidth(ComboboxStartWidthPx);
-                if (ImGui.Combo("Column Mode##columnmode", ref columnPatternIdx, ColumnPatternNames, ColumnPatternNames.Length))
-                    ApplyColumnPattern(ColumnPatternValues[columnPatternIdx]);
-                ImGuiWidgets.Tooltip("Which physical columns are enabled. Contacts on disabled columns are blocked: they cannot be enabled or pinned.");
-
-                DrawColumnPatternConflictPopup();
+                ImGui.LabelText("Column Mode##columnmode", ColumnPatternDisplayName(np1110Probe.ColumnPattern));
+                ImGuiWidgets.Tooltip("Which physical columns are enabled. The preset sets it, since a full set of channels " +
+                    "under Inner or Outer needs the second bank the preset adds. Contacts on disabled columns cannot be " +
+                    "enabled or pinned. Apply a preset to change it.");
             }
         }
 
@@ -537,69 +528,11 @@ namespace OpenEphys.Onix1.Design
                 return;
             }
 
-            if (probeGroup is NeuropixelsNP1110ProbeGroup np1110Probe)
-                columnPatternIdx = Array.IndexOf(ColumnPatternValues, np1110Probe.ColumnPattern);
-
             RebuildMaps();
             ClearPins();
             RecomputeBlockedIndices();
             selector.ClearSelection();
             HasChanges = true;
-        }
-
-        void ApplyColumnPattern(NeuropixelsV1ColumnPattern pattern)
-        {
-            var channelGroupProbe = (NeuropixelsNP1110ProbeGroup)probeGroup;
-            var previous = channelGroupProbe.ColumnPattern;
-            if (pattern == previous) return;
-
-            try
-            {
-                channelGroupProbe.ColumnPattern = pattern;
-            }
-            catch (InvalidOperationException)
-            {
-                columnPatternIdx = Array.IndexOf(ColumnPatternValues, previous);
-                pendingColumnPattern = pattern;
-                ImGui.OpenPopup(ColumnPatternConflictPopupId);
-                return;
-            }
-
-            presetIdx = Array.FindIndex(presets, p => p == NeuropixelsV1Preset.None);
-            presetOffset = 0;
-            RebuildMaps();
-            RecomputeBlockedIndices();
-            HasChanges = true;
-        }
-
-        // Every column mode has at least one registered preset that already produces a conflict-free
-        // selection for it (see NeuropixelsV1VariantRegistry.Np1110Presets); where more than one does
-        // (every "All" preset), the first one registered is the plainest (a single flat bank across
-        // the whole probe) and is used as the default.
-        static NeuropixelsV1Preset DefaultPresetFor(NeuropixelsV1ColumnPattern pattern) =>
-            NeuropixelsV1VariantRegistry.Np1110Presets.First(p => p.RequiredColumnPattern == pattern);
-
-        void DrawColumnPatternConflictPopup()
-        {
-            if (!pendingColumnPattern.HasValue) return;
-            var pattern = pendingColumnPattern.Value;
-            var defaultPreset = DefaultPresetFor(pattern);
-
-            var choice = ImGuiWidgets.ConfirmModal(ColumnPatternConflictPopupId,
-                $"The current electrode selection can't be represented under {pattern} column mode. " +
-                $"Continuing will reset the probe to its default {pattern} selection, \"{defaultPreset.DisplayName}\".",
-                acceptLabel: "Reset and Continue");
-
-            if (choice == ModalChoice.Pending) return;
-
-            if (choice == ModalChoice.Accepted)
-            {
-                presetIdx = Array.IndexOf(presets, defaultPreset);
-                presetOffset = 0;
-                ApplyPreset(defaultPreset);
-            }
-
-            pendingColumnPattern = null;
         }
 
         #endregion
