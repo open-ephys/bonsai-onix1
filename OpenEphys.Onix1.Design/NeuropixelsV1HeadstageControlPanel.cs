@@ -207,7 +207,18 @@ namespace OpenEphys.Onix1.Design
                 if (ImGui.Button("Apply##hwa")) state.EditingHardwareAddr = false;
                 ImGuiWidgets.Tooltip("Apply the hardware address above and close this editor.");
             }
+
+            bool permissive = state.ValidationLevel == ValidationLevel.Permissive;
+            if (ImGui.Checkbox("Permissive validation##srvval", ref permissive))
+                state.ValidationLevel = permissive ? ValidationLevel.Permissive : ValidationLevel.Normal;
+            ImGuiWidgets.Tooltip(PermissiveValidationTooltip);
         }
+
+        internal const string PermissiveValidationTooltip =
+            "Scan for probes and run the electrode survey with Permissive validation: checks that Permissive relaxes, " +
+            "such as a calibration file whose serial number does not match the probe, only log a warning. Checks " +
+            "that no validation level relaxes, such as a calibration file with an invalid format, still stop the " +
+            "survey. Unchecked each time this window opens, and independent of the workflow's CreateContext.";
 
         void DrawScanSection(bool isScanning, bool blockedBySurvey)
         {
@@ -254,8 +265,9 @@ namespace OpenEphys.Onix1.Design
                 {
                     var pc = t.Dialog.ConfigureNeuropixelsV1.ProbeConfiguration;
                     return !t.Dialog.ChannelConfigurationChosen ? HeadstageProbeRows.NoChannelConfiguration(t.Label)
-                        : string.IsNullOrEmpty(pc.GainCalibrationFileName) || string.IsNullOrEmpty(pc.AdcCalibrationFileName)
-                            ? $"{t.Label} needs gain and ADC calibration files."
+                        : state.ValidationLevel != ValidationLevel.Permissive &&
+                          (string.IsNullOrEmpty(pc.GainCalibrationFileName) || string.IsNullOrEmpty(pc.AdcCalibrationFileName))
+                            ? $"{t.Label} needs gain and ADC calibration files, unless Permissive validation is checked."
                             : null;
                 })
                 .Where(reason => reason != null)
@@ -348,16 +360,32 @@ namespace OpenEphys.Onix1.Design
             state.Cts = new CancellationTokenSource();
             NeuropixelsV1HeadstageScanRunner.Start(
                 buildHeadstage, targets,
-                state.Driver, state.HubIndex, state.Port, state.PortVoltage,
+                state.Driver, state.HubIndex, state.ValidationLevel, state.Port, state.PortVoltage,
                 Log, state.Cts.Token);
         }
 
         void StartSurvey()
         {
+            // NB: Permissive turns a missing calibration file into a warning that only reaches the console
+            if (state.ValidationLevel == ValidationLevel.Permissive)
+            {
+                foreach (var target in targets.Where(t => t.Enabled))
+                {
+                    var pc = target.Dialog.ConfigureNeuropixelsV1.ProbeConfiguration;
+                    var missing = new[] { ("gain", pc.GainCalibrationFileName), ("ADC", pc.AdcCalibrationFileName) }
+                        .Where(file => !File.Exists(file.Item2))
+                        .Select(file => file.Item1)
+                        .ToList();
+                    if (missing.Count > 0)
+                        Log($"Warning: {target.Label} has no {string.Join(" or ", missing)} calibration file, so it is " +
+                            "surveyed without calibration.", true);
+                }
+            }
+
             state.Cts = new CancellationTokenSource();
             NeuropixelsV1HeadstageSurveyRunner.Start(
                 buildHeadstage, targets,
-                state.Driver, state.HubIndex, state.Port, state.PortVoltage,
+                state.Driver, state.HubIndex, state.ValidationLevel, state.Port, state.PortVoltage,
                 state.SpikeThreshold, state.TimePerBankSeconds, state.RecordSurveyData,
                 Log, state.Cts.Token);
         }

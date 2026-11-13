@@ -288,6 +288,11 @@ namespace OpenEphys.Onix1.Design
 
             survey.SurveyCompleted += () => HasChanges = true;
             scan.ScanCompleted += OnScanCompleted;
+            scan.ScanCompleted += () =>
+            {
+                WarnIfCalibrationFileSerialNumberDiffers("gain", configureNode.ProbeConfiguration.GainCalibrationFileName);
+                WarnIfCalibrationFileSerialNumberDiffers("ADC", configureNode.ProbeConfiguration.AdcCalibrationFileName);
+            };
 
             SetupSelectorCallbacks();
             LoadOrCreateProbeGroup();

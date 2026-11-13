@@ -60,6 +60,7 @@ namespace OpenEphys.Onix1.Design
             IReadOnlyList<NeuropixelsV1SurveyTarget> targets,
             string driver,
             int hubIndex,
+            ValidationLevel validationLevel,
             PortName port,
             double? portVoltage,
             double spikeThreshold,
@@ -69,7 +70,7 @@ namespace OpenEphys.Onix1.Design
             CancellationToken cancellationToken)
         {
             Task.Run(() => RunAsync(
-                buildHeadstage, targets, driver, hubIndex, port, portVoltage,
+                buildHeadstage, targets, driver, hubIndex, validationLevel, port, portVoltage,
                 spikeThreshold, timePerBankSeconds, recordSurveyData,
                 log, cancellationToken));
         }
@@ -108,6 +109,7 @@ namespace OpenEphys.Onix1.Design
             IReadOnlyList<NeuropixelsV1SurveyTarget> targets,
             string driver,
             int hubIndex,
+            ValidationLevel validationLevel,
             PortName port,
             double? portVoltageOverride,
             double spikeThreshold,
@@ -247,13 +249,14 @@ namespace OpenEphys.Onix1.Design
                         try
                         {
                             roundResults = await CollectRoundStatsAsync(
-                                buildHeadstage, targets, roundPrep, driver, hubIndex, port,
+                                buildHeadstage, targets, roundPrep, driver, hubIndex, validationLevel, port,
                                 appliedVoltage ?? portVoltageOverride, spikeThreshold,
                                 timePerBankSeconds, cancellationToken, v => appliedVoltage = v,
                                 (target, serialNumber) => states[target].ProbeSerialNumber = serialNumber);
                             break;
                         }
                         catch (OperationCanceledException) { throw; }
+                        catch (ValidationException) { throw; } // NB: fails the same way on every attempt, so stop and report it
                         catch (Exception ex)
                         {
                             var voltage = HeadstageConnection.DescribePortVoltage(portVoltageOverride, appliedVoltage);
@@ -335,6 +338,7 @@ namespace OpenEphys.Onix1.Design
             IReadOnlyDictionary<NeuropixelsV1SurveyTarget, RoundTargetPrep> roundPrep,
             string driver,
             int hubIndex,
+            ValidationLevel validationLevel,
             PortName port,
             double? previouslyAppliedVoltage,
             double spikeThreshold,
@@ -368,7 +372,7 @@ namespace OpenEphys.Onix1.Design
 
 
             const int ReadSizePerProbe = 2048;
-            var pipelineSub = HeadstageConnection.Configure(headstage, driver, hubIndex, active.Count * ReadSizePerProbe, ex =>
+            var pipelineSub = HeadstageConnection.Configure(headstage, driver, hubIndex, validationLevel, active.Count * ReadSizePerProbe, ex =>
             {
                 foreach (var tcs in tcsMap.Values)
                 {

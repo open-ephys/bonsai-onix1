@@ -27,12 +27,13 @@ namespace OpenEphys.Onix1.Design
             IReadOnlyList<NeuropixelsV1SurveyTarget> targets,
             string driver,
             int hubIndex,
+            ValidationLevel validationLevel,
             PortName port,
             double? portVoltage,
             Action<string, bool> log,
             CancellationToken cancellationToken)
         {
-            Task.Run(() => RunAsync(buildHeadstage, targets, driver, hubIndex, port, portVoltage, log, cancellationToken));
+            Task.Run(() => RunAsync(buildHeadstage, targets, driver, hubIndex, validationLevel, port, portVoltage, log, cancellationToken));
         }
 
         static void RunAsync(
@@ -40,6 +41,7 @@ namespace OpenEphys.Onix1.Design
             IReadOnlyList<NeuropixelsV1SurveyTarget> targets,
             string driver,
             int hubIndex,
+            ValidationLevel validationLevel,
             PortName port,
             double? portVoltage,
             Action<string, bool> log,
@@ -60,7 +62,7 @@ namespace OpenEphys.Onix1.Design
                 var resolved = new List<(NeuropixelsV1SurveyTarget Target, string PartNumber, ulong? SerialNumber)>();
 
                 const int ReadSize = 1200;  // Minimal for NeuropixeslV1eHeadstage
-                var pipelineSub = HeadstageConnection.Configure(headstage, driver, hubIndex, ReadSize, ex => scanException = ex);
+                var pipelineSub = HeadstageConnection.Configure(headstage, driver, hubIndex, validationLevel, ReadSize, ex => scanException = ex);
 
                 try
                 {

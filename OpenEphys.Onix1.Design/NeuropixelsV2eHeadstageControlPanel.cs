@@ -209,6 +209,11 @@ namespace OpenEphys.Onix1.Design
                 if (ImGui.Button("Apply##hwa")) state.EditingHardwareAddr = false;
                 ImGuiWidgets.Tooltip("Apply the hardware address above and close this editor.");
             }
+
+            bool permissive = state.ValidationLevel == ValidationLevel.Permissive;
+            if (ImGui.Checkbox("Permissive validation##srvval", ref permissive))
+                state.ValidationLevel = permissive ? ValidationLevel.Permissive : ValidationLevel.Normal;
+            ImGuiWidgets.Tooltip(NeuropixelsV1HeadstageControlPanel.PermissiveValidationTooltip);
         }
 
         void DrawScanSection(bool isScanning, bool blockedBySurvey)
@@ -253,8 +258,9 @@ namespace OpenEphys.Onix1.Design
 
             var reasons = enabled
                 .Select(t => !t.Dialog.ChannelConfigurationChosen ? HeadstageProbeRows.NoChannelConfiguration(t.Label)
-                    : string.IsNullOrEmpty(t.Dialog.ConfigureNeuropixelsV2.ProbeConfiguration.GainCalibrationFileName)
-                        ? $"{t.Label} needs a gain calibration file."
+                    : state.ValidationLevel != ValidationLevel.Permissive &&
+                      string.IsNullOrEmpty(t.Dialog.ConfigureNeuropixelsV2.ProbeConfiguration.GainCalibrationFileName)
+                        ? $"{t.Label} needs a gain calibration file, unless Permissive validation is checked."
                         : null)
                 .Where(reason => reason != null)
                 .ToList();
@@ -346,16 +352,27 @@ namespace OpenEphys.Onix1.Design
             state.Cts = new CancellationTokenSource();
             NeuropixelsV2eHeadstageScanRunner.Start(
                 buildHeadstage, targets,
-                state.Driver, state.HubIndex, state.Port, state.PortVoltage,
+                state.Driver, state.HubIndex, state.ValidationLevel, state.Port, state.PortVoltage,
                 Log, state.Cts.Token);
         }
 
         void StartSurvey()
         {
+            // NB: Permissive turns a missing calibration file into a warning that only reaches the console
+            if (state.ValidationLevel == ValidationLevel.Permissive)
+            {
+                foreach (var target in targets.Where(t => t.Enabled &&
+                    !File.Exists(t.Dialog.ConfigureNeuropixelsV2.ProbeConfiguration.GainCalibrationFileName)))
+                {
+                    Log($"Warning: {target.Label} has no gain calibration file, so it is surveyed without gain " +
+                        "correction.", true);
+                }
+            }
+
             state.Cts = new CancellationTokenSource();
             NeuropixelsV2eHeadstageSurveyRunner.Start(
                 buildHeadstage, targets,
-                state.Driver, state.HubIndex, state.Port, state.PortVoltage,
+                state.Driver, state.HubIndex, state.ValidationLevel, state.Port, state.PortVoltage,
                 state.SpikeThreshold, state.TimePerBankSeconds, state.RecordSurveyData,
                 Log, state.Cts.Token);
         }

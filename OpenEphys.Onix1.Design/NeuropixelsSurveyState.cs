@@ -25,5 +25,11 @@ namespace OpenEphys.Onix1.Design
         internal float TimePerBankSeconds { get; set; } = 5f;
         internal bool RecordSurveyData { get; set; }
         internal CancellationTokenSource Cts { get; set; }
+
+        /// <summary>
+        /// How strictly hardware validation checks are enforced during a scan or survey. Independent of the
+        /// workflow's <see cref="CreateContext.ValidationLevel"/>, and reset each time the window opens.
+        /// </summary>
+        internal ValidationLevel ValidationLevel { get; set; } = ValidationLevel.Normal;
     }
 }

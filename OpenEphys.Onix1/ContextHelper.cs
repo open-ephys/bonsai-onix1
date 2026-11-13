@@ -10,6 +10,12 @@ namespace OpenEphys.Onix1
     /// <summary>
     /// Specifies how strictly hardware validation checks are enforced.
     /// </summary>
+    /// <remarks>
+    /// A validation check tests a condition that must hold for the hardware to work as configured, such as a
+    /// calibration file's serial number matching the probe's. If it fails, configuring or acquiring from the
+    /// hardware is known in advance to fail or to produce incorrect or undefined data, so it is not attempted.
+    /// A relaxed validation level attempts it anyway and only warns.
+    /// </remarks>
     public enum ValidationLevel
     {
         /// <summary>
@@ -63,18 +69,20 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <param name="relaxedAt">The <see cref="ValidationLevel"/> level at which this check stops being
         /// fatal.</param>
-        /// <param name="exception">The exception describing the validation failure. Thrown if <see
-        /// cref="ValidationScope.Level"/> is stricter than <paramref name="relaxedAt"/>, otherwise its
-        /// message is printed as a warning.</param>
-        public static void Validate(ValidationLevel relaxedAt, Exception exception)
+        /// <param name="message">Describes the validation failure. Thrown as a <see cref="ValidationException"/>
+        /// if <see cref="ValidationScope.Level"/> is stricter than <paramref name="relaxedAt"/>, otherwise
+        /// printed as a warning.</param>
+        /// <exception cref="ValidationException"><see cref="ValidationScope.Level"/> is stricter than
+        /// <paramref name="relaxedAt"/>.</exception>
+        public static void Validate(ValidationLevel relaxedAt, string message)
         {
             if (ValidationScope.Level >= relaxedAt)
             {
-                Console.Error.WriteLine($"Warning: {exception.Message}");
+                Console.Error.WriteLine($"Warning: {message}");
             }
             else
             {
-                throw exception;
+                throw new ValidationException(message);
             }
         }
 

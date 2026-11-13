@@ -105,9 +105,9 @@ namespace OpenEphys.Onix1
 
                         if (!File.Exists(probeConfiguration.GainCalibrationFileName))
                         {
-                            ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
+                            ContextHelper.Validate(ValidationLevel.Permissive,
                                 $"No gain calibration file was specified for the probe with serial number " +
-                                $"{probeMetadata.ProbeSerialNumber}."));
+                                $"{probeMetadata.ProbeSerialNumber}.");
                         }
                         else
                         {
@@ -115,14 +115,14 @@ namespace OpenEphys.Onix1
 
                             if (!gainCorrection.HasValue)
                             {
-                                throw new ArgumentException(
+                                throw new ValidationException(
                                     $"The calibration file \"{probeConfiguration.GainCalibrationFileName}\" has an invalid format.");
                             }
                             else if (gainCorrection.Value.SerialNumber != probeMetadata.ProbeSerialNumber)
                             {
-                                ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
+                                ContextHelper.Validate(ValidationLevel.Permissive,
                                     $"The probe serial number ({probeMetadata.ProbeSerialNumber}) does not " +
-                                    $"match the gain calibration file serial number: {gainCorrection.Value.SerialNumber}."));
+                                    $"match the gain calibration file serial number: {gainCorrection.Value.SerialNumber}.");
                             }
                         }
 

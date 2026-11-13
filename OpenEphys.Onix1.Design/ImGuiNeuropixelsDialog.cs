@@ -168,6 +168,23 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <summary>
+        /// Logs a warning if a probe scan found this probe and its serial number differs from the one in a
+        /// calibration file. The scan disables the probe decoders, which is where calibration files are checked.
+        /// </summary>
+        /// <param name="kind">The kind of calibration file, such as "gain" or "ADC".</param>
+        /// <param name="path">The path to the calibration file.</param>
+        protected void WarnIfCalibrationFileSerialNumberDiffers(string kind, string path)
+        {
+            if (ScannedSerialNumber is ulong probeSerialNumber &&
+                CalibrationFileSerialNumber(path) is ulong fileSerialNumber &&
+                fileSerialNumber != probeSerialNumber)
+            {
+                Log($"Warning: {probeName}: the probe serial number ({probeSerialNumber}) does not match the {kind} " +
+                    $"calibration file serial number ({fileSerialNumber}).", true);
+            }
+        }
+
+        /// <summary>
         /// Whether survey results measured on the probe with serial number <paramref name="surveySerialNumber"/>
         /// may be shown for the probe this dialog configures. Logs why when they may not.
         /// </summary>
