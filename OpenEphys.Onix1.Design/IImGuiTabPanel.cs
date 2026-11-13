@@ -19,6 +19,12 @@ namespace OpenEphys.Onix1.Design
         bool CanClose(DialogResult pendingResult);
 
         /// <summary>
+        /// Called once the shell has closed, after every panel's <see cref="CanClose"/> allowed it. Unless
+        /// <paramref name="result"/> is <see cref="DialogResult.OK"/>, the panel puts back every setting it changed.
+        /// </summary>
+        void Closed(DialogResult result);
+
+        /// <summary>
         /// Draws the panel's content. Called once per frame while its tab is active.
         /// </summary>
         void Draw();

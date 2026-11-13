@@ -27,12 +27,13 @@ namespace OpenEphys.Onix1.Design
             IReadOnlyList<NeuropixeslV2eSurveyTarget> targets,
             string driver,
             int hubIndex,
+            ValidationLevel validationLevel,
             PortName port,
             double? portVoltage,
             Action<string, bool> log,
             CancellationToken cancellationToken)
         {
-            Task.Run(() => RunAsync(buildHeadstage, targets, driver, hubIndex, port, portVoltage, log, cancellationToken));
+            Task.Run(() => RunAsync(buildHeadstage, targets, driver, hubIndex, validationLevel, port, portVoltage, log, cancellationToken));
         }
 
         static void RunAsync(
@@ -40,6 +41,7 @@ namespace OpenEphys.Onix1.Design
             IReadOnlyList<NeuropixeslV2eSurveyTarget> targets,
             string driver,
             int hubIndex,
+            ValidationLevel validationLevel,
             PortName port,
             double? portVoltage,
             Action<string, bool> log,
@@ -52,7 +54,7 @@ namespace OpenEphys.Onix1.Design
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var (headstage, _) = buildHeadstage(port, portVoltage);
+                var (headstage, scanPortVoltage) = buildHeadstage(port, portVoltage);
                 foreach (var target in targets)
                     target.SelectDecoder(headstage).Enable = false;
 
@@ -60,14 +62,14 @@ namespace OpenEphys.Onix1.Design
                 var resolved = new List<(NeuropixeslV2eSurveyTarget Target, string PartNumber, ulong? SerialNumber)>();
 
                 const int ReadSize = 1200;  // Minimal for NeuropixeslV2eHeadstage
-                var pipelineSub = HeadstageConnection.Configure(headstage, driver, hubIndex, ReadSize, ex => scanException = ex);
+                var pipelineSub = HeadstageConnection.Configure(headstage, driver, hubIndex, validationLevel, ReadSize, ex => scanException = ex);
 
                 try
                 {
                     foreach (var target in targets)
                     {
                         var decoder = target.SelectDecoder(headstage);
-                        var info = TryGetDeviceInfo<NeuropixelsV2PsbDecoderDeviceInfo>(decoder.DeviceName);
+                        var info = HeadstageConnection.TryGetDeviceInfo<NeuropixelsV2PsbDecoderDeviceInfo>(decoder.DeviceName);
                         if (info != null && info.ProbeSerialNumber.HasValue)
                             resolved.Add((target, info.ProbePartNumber, info.ProbeSerialNumber));
                     }
@@ -89,7 +91,11 @@ namespace OpenEphys.Onix1.Design
                 }
 
                 if (scanException != null)
-                    log($"Scan [{scanException.GetType().Name}]: {scanException.Message}.", true);
+                {
+                    var voltage = HeadstageConnection.DescribePortVoltage(portVoltage, scanPortVoltage.Applied);
+                    log($"Scan [{scanException.GetType().Name}]: {scanException.Message} ({voltage}).", true);
+                    if (!portVoltage.HasValue) log(HeadstageConnection.AutoPortVoltageHint, false);
+                }
 
                 foreach (var target in targets.Where(t => !resolvedTargets.Contains(t)))
                     target.Dialog.Scan.NotDetected();
@@ -99,13 +105,6 @@ namespace OpenEphys.Onix1.Design
                 foreach (var target in targets.Where(t => t.Dialog.Scan.Status == NeuropixelsV1ScanStatus.Running))
                     target.Dialog.Scan.Status = NeuropixelsV1ScanStatus.Idle;
             }
-        }
-
-        static T TryGetDeviceInfo<T>(string deviceName) where T : DeviceInfo
-        {
-            T result = null;
-            DeviceManager.GetDevice(deviceName).Subscribe(info => result = info as T, _ => { });
-            return result;
         }
     }
 }

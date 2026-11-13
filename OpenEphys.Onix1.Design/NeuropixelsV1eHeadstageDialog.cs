@@ -29,6 +29,7 @@ namespace OpenEphys.Onix1.Design
 
             InitializeControlPanel(configureHeadstage.Port,
                 port => configureHeadstage.Port = port,
+                configureHeadstage.PortVoltage?.Requested,
                 voltage => configureHeadstage.PortVoltage = new AutoPortVoltage(voltage));
         }
     }

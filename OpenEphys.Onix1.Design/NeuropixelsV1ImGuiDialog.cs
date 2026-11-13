@@ -17,6 +17,7 @@ namespace OpenEphys.Onix1.Design
     internal partial class NeuropixelsV1ImGuiDialog : ImGuiNeuropixelsDialog<NeuropixelsV1ProbeGroup>
     {
         readonly IConfigureNeuropixelsV1 configureNode;
+        readonly NeuropixelsV1ProbeConfiguration originalProbeConfiguration;
         NeuropixelsV1ProbeGroup probeGroup;
 
         // Survey (execution/hardware config lives on the headstage-level control panel; this dialog only
@@ -32,21 +33,16 @@ namespace OpenEphys.Onix1.Design
         bool actRangeInitialized;
         readonly Dictionary<SurveyActivityMetric, (float min, float max)> actRanges = new();
         bool showActivityColors = false;
-        bool bankSelectMode = false;
         readonly HashSet<int> surveyBanks = new();
         readonly HashSet<int> pendingBanks = new();
 
-        int spikeGainIdx, lfpGainIdx, refIdx, presetIdx, columnPatternIdx, presetOffset;
+        int spikeGainIdx, lfpGainIdx, refIdx, presetIdx, presetOffset;
         NeuropixelsV1Preset[] presets = Array.Empty<NeuropixelsV1Preset>();
-        NeuropixelsV1ColumnPattern? pendingColumnPattern;
-        const string ColumnPatternConflictPopupId = "Reset probe for column mode?";
 
         static readonly string[] GainNames = Enum.GetNames(typeof(NeuropixelsV1Gain));
         static readonly NeuropixelsV1Gain[] GainValues = (NeuropixelsV1Gain[])Enum.GetValues(typeof(NeuropixelsV1Gain));
         static readonly string[] ReferenceNames = Enum.GetNames(typeof(NeuropixelsV1ReferenceSource));
         static readonly NeuropixelsV1ReferenceSource[] ReferenceValues = (NeuropixelsV1ReferenceSource[])Enum.GetValues(typeof(NeuropixelsV1ReferenceSource));
-        static readonly NeuropixelsV1ColumnPattern[] ColumnPatternValues = (NeuropixelsV1ColumnPattern[])Enum.GetValues(typeof(NeuropixelsV1ColumnPattern));
-        static readonly string[] ColumnPatternNames = ColumnPatternValues.Select(ColumnPatternDisplayName).ToArray();
 
         // "All", or "Inner (1, 3, 4, 6)"/"Outer (0, 2, 5, 7)". Reads the same active-column sets
         // NeuropixelsV1ProbeGroup.IsColumnEnabled uses, so the label can't drift from the actual behavior.
@@ -94,6 +90,10 @@ namespace OpenEphys.Onix1.Design
             get => configureNode.ProbeConfiguration.InvertPolarity;
             set => configureNode.ProbeConfiguration.InvertPolarity = value;
         }
+
+        protected override void RestoreProbeConfiguration() => configureNode.ProbeConfiguration = originalProbeConfiguration;
+
+        protected override bool ProbeEnabled => configureNode.Enable;
 
         // Enabling a contact enables the whole channel group it belongs to: every distinct (channel
         // group, bank) pair implied by the given contacts is selected via SelectElectrodeGroup, which
@@ -166,6 +166,11 @@ namespace OpenEphys.Onix1.Design
                 ? channelGroupProbe.GetSurvivingChannels(channelGroupProbe.GetChannelGroup(contactIndex), NeuropixelsV1ProbeGroup.GetBank(contactIndex))
                 : base.GetChannelsToPin(contactIndex, channel);
 
+        protected override string BlockReason(int contactIndex) =>
+            probeGroup is NeuropixelsNP1110ProbeGroup channelGroupProbe && !channelGroupProbe.IsColumnEnabled(contactIndex)
+                ? "column off in column mode"
+                : base.BlockReason(contactIndex);
+
         protected override void ReplaceProbeGroupFromJson(string json) =>
             probeGroup = JsonConvert.DeserializeObject<NeuropixelsV1ProbeGroup>(json, new NeuropixelsV1ProbeGroupConverter())
                 ?? throw new InvalidDataException("The probe interface data did not produce a valid probe group.");
@@ -199,18 +204,12 @@ namespace OpenEphys.Onix1.Design
             presetIdx = Array.FindIndex(presets, p => p == NeuropixelsV1Preset.None);
             presetOffset = 0;
 
-            columnPatternIdx = probeGroup is NeuropixelsNP1110ProbeGroup np1110Probe
-                ? Array.IndexOf(ColumnPatternValues, np1110Probe.ColumnPattern)
-                : 0;
-
             spikeGainIdx = Array.IndexOf(GainValues, configureNode.ProbeConfiguration.SpikeAmplifierGain);
             lfpGainIdx  = Array.IndexOf(GainValues, configureNode.ProbeConfiguration.LfpAmplifierGain);
             refIdx = Array.IndexOf(ReferenceValues, configureNode.ProbeConfiguration.Reference);
 
             ImGuiStrings.WriteString(gainCalBuf, configureNode.ProbeConfiguration.GainCalibrationFileName ?? "");
             ImGuiStrings.WriteString(adcCalBuf, configureNode.ProbeConfiguration.AdcCalibrationFileName ?? "");
-            ImGuiStrings.WriteString(probeFileBuf, configureNode.ProbeConfiguration.ProbeInterfaceFileName ?? "");
-
             RestoreActivityData();
             InitSurveyBanks();
             CheckScannedPartNumberAgainstLoadedFile();
@@ -233,29 +232,6 @@ namespace OpenEphys.Onix1.Design
             if (on == bankSelectMode) return;
             bankSelectMode = on;
             selector.ClearSelection();
-        }
-
-        void DrawSelectionSection()
-        {
-            ImGui.Text("Selection");
-            ImGui.Spacing();
-
-            if (ImGui.RadioButton("Channels##seltarget", !bankSelectMode)) SetBankSelectMode(false);
-            ImGuiWidgets.Tooltip("Select contacts to enable or pin them. Equivalent to pressing B over the probe view.");
-            ImGui.SameLine();
-            if (ImGui.RadioButton("Banks##seltarget", bankSelectMode)) SetBankSelectMode(true);
-            ImGuiWidgets.Tooltip("Select whole banks instead of individual contacts, to choose which banks the " +
-                "survey sweeps through. Run the survey itself from the headstage panel. Equivalent to pressing B " +
-                "over the probe view.");
-        }
-
-        void DrawRulerSection()
-        {
-            ImGui.Text("Rulers");
-            ImGui.Spacing();
-            ImGuiRulerControls.DrawToggle(selector, "Add");
-            ImGui.SameLine();
-            ImGuiRulerControls.DrawClear(selector);
         }
 
         // NB: the selector's settings depend only on bank select and whether activity colors are shown, so they're
@@ -286,7 +262,7 @@ namespace OpenEphys.Onix1.Design
                           new(ColorContactPinned, "Enabled & Pinned"),
                           new(ColorContactEnabled, "Enabled"),
                           new(ColorContactDisabled, "Disabled"),
-                          new(ImGuiProbeSelector.BlockedFillColor, "Unavailable", DottedOutline: true),
+                          new(ImGuiProbeSelector.BlockedFillColor, "Blocked", DottedOutline: true),
                           new(ImGuiProbeSelector.DefaultSelectedOutlineColor, "Editable selection", OutlineOnly: true),
                       };
         }
@@ -300,12 +276,19 @@ namespace OpenEphys.Onix1.Design
             : base(probeName, log)
         {
             this.configureNode = configureNode ?? throw new ArgumentNullException(nameof(configureNode));
+            originalProbeConfiguration = new NeuropixelsV1ProbeConfiguration(configureNode.ProbeConfiguration);
 
             survey.SurveyCompleted += () => HasChanges = true;
             scan.ScanCompleted += OnScanCompleted;
+            scan.ScanCompleted += () =>
+            {
+                WarnIfCalibrationFileSerialNumberDiffers("gain", configureNode.ProbeConfiguration.GainCalibrationFileName);
+                WarnIfCalibrationFileSerialNumberDiffers("ADC", configureNode.ProbeConfiguration.AdcCalibrationFileName);
+            };
 
             SetupSelectorCallbacks();
             LoadOrCreateProbeGroup();
+            KeepProbeInterfaceFileName();
             RefreshProbeState();
         }
 
@@ -366,25 +349,17 @@ namespace OpenEphys.Onix1.Design
             ImGui.Spacing();
             DrawTitleBar();
             ImGui.Separator();
-            DrawFileSection();
+            DrawChannelConfigurationSection();
             ImGui.Separator();
-            DrawSelectionSection();
-            ImGui.Separator();
-            DrawRulerSection();
-            ImGui.Separator();
-            DrawChannelSection();
-            ImGui.Separator();
-            DrawSurveySection();
-            ImGui.Separator();
-            DrawContactInfo();
+            DrawProbeSettingsSection();
+            if (ChannelConfigurationChosen)
+            {
+                ImGui.Separator();
+                DrawSurveySection();
+                ImGui.Separator();
+                DrawContactInfo();
+            }
             HandleKeyboardShortcuts();
-        }
-
-        public override bool CanClose(DialogResult pendingResult)
-        {
-            if (HasChanges)
-                return PromptSaveOnClose();
-            return true;
         }
 
         #endregion
@@ -400,6 +375,7 @@ namespace OpenEphys.Onix1.Design
                 {
                     ReplaceProbeGroupFromJson(File.ReadAllText(pc.ProbeInterfaceFileName));
                     Log($"Loaded probeinterface file {pc.ProbeInterfaceFileName}");
+                    ChannelConfigurationChosen = true;
                     return;
                 }
                 catch (Exception ex)
@@ -408,8 +384,8 @@ namespace OpenEphys.Onix1.Design
                 }
             }
 
-            // No file configured (or it failed to load): start from the standard NP1.0 probe as a
-            // reasonable default to edit from.
+            // NB: the rest of the dialog expects a probe group, so a placeholder stands in until the user chooses a
+            // channel configuration. It is never shown or saved.
             ReplaceProbeGroupFromJson(DesignResource.LoadDefaultJson("NP1000.json"));
         }
 
@@ -486,7 +462,7 @@ namespace OpenEphys.Onix1.Design
 
         #region Channel controls
 
-        protected override void DrawProbeSpecificChannelControls()
+        protected override void DrawProbeSpecificSettings()
         {
             ImGui.SetNextItemWidth(ComboboxStartWidthPx);
             if (ImGui.Combo("Spike Gain##spikegain", ref spikeGainIdx, GainNames, GainNames.Length))
@@ -507,31 +483,38 @@ namespace OpenEphys.Onix1.Design
             if (ImGui.Checkbox("300 Hz spike-band high-pass filter##filter", ref spikeFilter))
                 configureNode.ProbeConfiguration.SpikeFilter = spikeFilter;
             ImGuiWidgets.Tooltip("Activate a 300 Hz high-pass filter on the spike-band data stream.");
+        }
 
+        protected override void DrawProbeSpecificChannelControls()
+        {
             var presetNames = presets.Select(p => p.ToString()).ToArray();
             ImGui.SetNextItemWidth(ComboboxStartWidthPx);
+            int previousPresetIdx = presetIdx;
             if (ImGui.Combo("Preset##preset", ref presetIdx, presetNames, presetNames.Length))
-                ApplyPreset(presets[presetIdx]);
-            ImGuiWidgets.Tooltip("Apply a ready-made channel selection in a single step. Overrides current enabled/pinned contacts.");
+            {
+                var chosen = presets[presetIdx];
+                ApplyPresetClearingPins(() => ApplyPreset(chosen), () => presetIdx = previousPresetIdx);
+            }
+            ImGuiWidgets.Tooltip("Start from a ready-made channel selection. It replaces the channel map and clears any pins.");
 
             if (presets[presetIdx] != NeuropixelsV1Preset.None)
             {
                 var preset = presets[presetIdx];
                 int maxOffset = probeGroup.MaxOffset(preset);
                 ImGui.SetNextItemWidth(ComboboxStartWidthPx);
+                int previousOffset = presetOffset;
                 if (ImGui.SliderInt("Offset##presetoffset", ref presetOffset, 0, maxOffset))
-                    ApplyPreset(preset);
+                    ApplyPresetClearingPins(() => ApplyPreset(preset), () => presetOffset = previousOffset);
                 ImGuiWidgets.Tooltip("Tip offset, in banks, added to the preset. Clamped so no atom's bank exceeds the probe's bank range.");
             }
 
             if (probeGroup is NeuropixelsNP1110ProbeGroup np1110Probe)
             {
                 ImGui.SetNextItemWidth(ComboboxStartWidthPx);
-                if (ImGui.Combo("Column Mode##columnmode", ref columnPatternIdx, ColumnPatternNames, ColumnPatternNames.Length))
-                    ApplyColumnPattern(ColumnPatternValues[columnPatternIdx]);
-                ImGuiWidgets.Tooltip("Which physical columns are enabled. Contacts on disabled columns are blocked: they cannot be enabled or pinned.");
-
-                DrawColumnPatternConflictPopup();
+                ImGui.LabelText("Column Mode##columnmode", ColumnPatternDisplayName(np1110Probe.ColumnPattern));
+                ImGuiWidgets.Tooltip("Which physical columns are enabled. The preset sets it, since a full set of channels " +
+                    "under Inner or Outer needs the second bank the preset adds. Contacts on disabled columns cannot be " +
+                    "enabled or pinned. Apply a preset to change it.");
             }
         }
 
@@ -550,69 +533,11 @@ namespace OpenEphys.Onix1.Design
                 return;
             }
 
-            if (probeGroup is NeuropixelsNP1110ProbeGroup np1110Probe)
-                columnPatternIdx = Array.IndexOf(ColumnPatternValues, np1110Probe.ColumnPattern);
-
             RebuildMaps();
             ClearPins();
             RecomputeBlockedIndices();
             selector.ClearSelection();
             HasChanges = true;
-        }
-
-        void ApplyColumnPattern(NeuropixelsV1ColumnPattern pattern)
-        {
-            var channelGroupProbe = (NeuropixelsNP1110ProbeGroup)probeGroup;
-            var previous = channelGroupProbe.ColumnPattern;
-            if (pattern == previous) return;
-
-            try
-            {
-                channelGroupProbe.ColumnPattern = pattern;
-            }
-            catch (InvalidOperationException)
-            {
-                columnPatternIdx = Array.IndexOf(ColumnPatternValues, previous);
-                pendingColumnPattern = pattern;
-                ImGui.OpenPopup(ColumnPatternConflictPopupId);
-                return;
-            }
-
-            presetIdx = Array.FindIndex(presets, p => p == NeuropixelsV1Preset.None);
-            presetOffset = 0;
-            RebuildMaps();
-            RecomputeBlockedIndices();
-            HasChanges = true;
-        }
-
-        // Every column mode has at least one registered preset that already produces a conflict-free
-        // selection for it (see NeuropixelsV1VariantRegistry.Np1110Presets); where more than one does
-        // (every "All" preset), the first one registered is the plainest (a single flat bank across
-        // the whole probe) and is used as the default.
-        static NeuropixelsV1Preset DefaultPresetFor(NeuropixelsV1ColumnPattern pattern) =>
-            NeuropixelsV1VariantRegistry.Np1110Presets.First(p => p.RequiredColumnPattern == pattern);
-
-        void DrawColumnPatternConflictPopup()
-        {
-            if (!pendingColumnPattern.HasValue) return;
-            var pattern = pendingColumnPattern.Value;
-            var defaultPreset = DefaultPresetFor(pattern);
-
-            var choice = ImGuiWidgets.ConfirmModal(ColumnPatternConflictPopupId,
-                $"The current electrode selection can't be represented under {pattern} column mode. " +
-                $"Continuing will reset the probe to its default {pattern} selection, \"{defaultPreset.DisplayName}\".",
-                acceptLabel: "Reset and Continue");
-
-            if (choice == ModalChoice.Pending) return;
-
-            if (choice == ModalChoice.Accepted)
-            {
-                presetIdx = Array.IndexOf(presets, defaultPreset);
-                presetOffset = 0;
-                ApplyPreset(defaultPreset);
-            }
-
-            pendingColumnPattern = null;
         }
 
         #endregion

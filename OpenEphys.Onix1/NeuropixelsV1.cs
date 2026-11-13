@@ -131,32 +131,32 @@ namespace OpenEphys.Onix1
             {
                 if (adc.CompP < 0 || adc.CompP > 0x1F)
                 {
-                    throw new ArgumentOutOfRangeException($"ADC calibration parameter CompP value of {adc.CompP} is invalid.");
+                    throw new ValidationException($"ADC calibration parameter CompP value of {adc.CompP} is invalid.");
                 }
 
                 if (adc.CompN < 0 || adc.CompN > 0x1F)
                 {
-                    throw new ArgumentOutOfRangeException($"ADC calibration parameter CompN value of {adc.CompN} is invalid.");
+                    throw new ValidationException($"ADC calibration parameter CompN value of {adc.CompN} is invalid.");
                 }
 
                 if (adc.Cfix < 0 || adc.Cfix > 0xF)
                 {
-                    throw new ArgumentOutOfRangeException($"ADC calibration parameter Cfix value of {adc.Cfix} is invalid.");
+                    throw new ValidationException($"ADC calibration parameter Cfix value of {adc.Cfix} is invalid.");
                 }
 
                 if (adc.Slope < 0 || adc.Slope > 0x7)
                 {
-                    throw new ArgumentOutOfRangeException($"ADC calibration parameter Slope value of {adc.Slope} is invalid.");
+                    throw new ValidationException($"ADC calibration parameter Slope value of {adc.Slope} is invalid.");
                 }
 
                 if (adc.Coarse < 0 || adc.Coarse > 0x3)
                 {
-                    throw new ArgumentOutOfRangeException($"ADC calibration parameter Coarse value of {adc.Coarse} is invalid.");
+                    throw new ValidationException($"ADC calibration parameter Coarse value of {adc.Coarse} is invalid.");
                 }
 
                 if (adc.Fine < 0 || adc.Fine > 0x3)
                 {
-                    throw new ArgumentOutOfRangeException($"ADC calibration parameter Fine value of {adc.Fine} is invalid.");
+                    throw new ValidationException($"ADC calibration parameter Fine value of {adc.Fine} is invalid.");
                 }
 
                 var configIdx = k % 2;

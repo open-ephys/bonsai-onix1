@@ -20,9 +20,14 @@ namespace OpenEphys.Onix1.Design
         internal Func<MultiDeviceFactory<OnixContextTask>, ConfigureNeuropixelsV1PsbDecoder> SelectDecoder { get; }
 
         /// <summary>
-        /// Whether this target is included in the current/next survey run.
+        /// Whether the probe is enabled. This is the probe node's Enable property, so it decides both whether the
+        /// workflow configures the probe and whether the survey includes it.
         /// </summary>
-        internal bool Selected { get; set; }
+        internal bool Enabled
+        {
+            get => Dialog.ConfigureNeuropixelsV1.Enable;
+            set => Dialog.ConfigureNeuropixelsV1.Enable = value;
+        }
 
         internal NeuropixelsV1SurveyTarget(string label, NeuropixelsV1ImGuiDialog dialog,
             Func<MultiDeviceFactory<OnixContextTask>, ConfigureNeuropixelsV1PsbDecoder> selectDecoder)
@@ -34,10 +39,10 @@ namespace OpenEphys.Onix1.Design
     }
 
     /// <summary>
-    /// Electrode-activity survey runner for NeuropixelsV1-family headstages. Selected probes are surveyed
-    /// together, sharing one real hardware pipeline per round: round <c>r</c> configures every selected probe
+    /// Electrode-activity survey runner for NeuropixelsV1-family headstages. Enabled probes are surveyed
+    /// together, sharing one real hardware pipeline per round: round <c>r</c> configures every enabled probe
     /// still having a bank left at index <c>r</c> of its own bank list, and every other decoder on the
-    /// headstage (unselected, or already finished) is explicitly disabled .
+    /// headstage (disabled, or already finished) is explicitly disabled .
     /// </summary>
     internal static class NeuropixelsV1HeadstageSurveyRunner
     {
@@ -55,6 +60,7 @@ namespace OpenEphys.Onix1.Design
             IReadOnlyList<NeuropixelsV1SurveyTarget> targets,
             string driver,
             int hubIndex,
+            ValidationLevel validationLevel,
             PortName port,
             double? portVoltage,
             double spikeThreshold,
@@ -64,7 +70,7 @@ namespace OpenEphys.Onix1.Design
             CancellationToken cancellationToken)
         {
             Task.Run(() => RunAsync(
-                buildHeadstage, targets, driver, hubIndex, port, portVoltage,
+                buildHeadstage, targets, driver, hubIndex, validationLevel, port, portVoltage,
                 spikeThreshold, timePerBankSeconds, recordSurveyData,
                 log, cancellationToken));
         }
@@ -81,6 +87,7 @@ namespace OpenEphys.Onix1.Design
             internal string TempProbeFile;
             internal NeuropixelsV1SurveyResults PreviousResults;
             internal DateTimeOffset? PreviousCompletedAt;
+            internal ulong? ProbeSerialNumber;
         }
 
         readonly struct RoundTargetPrep
@@ -102,6 +109,7 @@ namespace OpenEphys.Onix1.Design
             IReadOnlyList<NeuropixelsV1SurveyTarget> targets,
             string driver,
             int hubIndex,
+            ValidationLevel validationLevel,
             PortName port,
             double? portVoltageOverride,
             double spikeThreshold,
@@ -110,7 +118,7 @@ namespace OpenEphys.Onix1.Design
             Action<string, bool> log,
             CancellationToken cancellationToken)
         {
-            var selected = targets.Where(t => t.Selected).ToList();
+            var selected = targets.Where(t => t.Enabled).ToList();
             if (selected.Count == 0) return;
 
             var states = new Dictionary<NeuropixelsV1SurveyTarget, TargetRunState>();
@@ -163,14 +171,28 @@ namespace OpenEphys.Onix1.Design
                 state.Target.Dialog.Survey.Progress = (float)state.NextIndex / totalRuns;
             }
 
-            static void Complete(TargetRunState state, double spikeThreshold, float timePerBankSeconds)
+            static void Complete(TargetRunState state, double spikeThreshold, float timePerBankSeconds, Action<string, bool> log)
             {
                 state.Target.Dialog.Survey.Complete(new NeuropixelsV1SurveyResults(
                     state.AllAmplitude, state.AllFireRate, state.AllNoise,
-                    (float)spikeThreshold, timePerBankSeconds, state.Target.Dialog.SurveyBanks));
+                    (float)spikeThreshold, timePerBankSeconds, state.RecordingFolder != null, state.ProbeSerialNumber,
+                    state.Target.Dialog.ConfigureNeuropixelsV1.ProbeConfiguration.SpikeAmplifierGain,
+                    state.Target.Dialog.SurveyBanks));
+
+                // NB: the results live in the channel configuration, which is saved only from the dialog, so the
+                // user has to be told that they are not saved yet.
+                var label = state.Target.Label;
+                var probeFile = state.Target.Dialog.ConfigureNeuropixelsV1.ProbeConfiguration.ProbeInterfaceFileName;
+                log(string.IsNullOrEmpty(probeFile)
+                    ? $"{label}: survey complete. The results were added to the channel configuration, which has no file yet. Save it to a file to keep them."
+                    : $"{label}: survey complete. The results were added to the channel configuration. Save it to keep them in {Path.GetFileName(probeFile)}.",
+                    false);
+                if (state.RecordingFolder != null)
+                    log($"{label}: raw survey data saved in {state.RecordingFolder}", false);
             }
 
             double? appliedVoltage = null;
+            bool portVoltageHintLogged = false;
             try
             {
                 while (true)
@@ -192,7 +214,7 @@ namespace OpenEphys.Onix1.Design
                             state.NextIndex++;
                             ReportProgress(state);
                             if (state.NextIndex >= state.OrderedBanks.Count)
-                                Complete(state, spikeThreshold, timePerBankSeconds);
+                                Complete(state, spikeThreshold, timePerBankSeconds, log);
                             continue;
                         }
 
@@ -227,15 +249,23 @@ namespace OpenEphys.Onix1.Design
                         try
                         {
                             roundResults = await CollectRoundStatsAsync(
-                                buildHeadstage, targets, roundPrep, driver, hubIndex, port,
+                                buildHeadstage, targets, roundPrep, driver, hubIndex, validationLevel, port,
                                 appliedVoltage ?? portVoltageOverride, spikeThreshold,
-                                timePerBankSeconds, cancellationToken, v => appliedVoltage = v);
+                                timePerBankSeconds, cancellationToken, v => appliedVoltage = v,
+                                (target, serialNumber) => states[target].ProbeSerialNumber = serialNumber);
                             break;
                         }
                         catch (OperationCanceledException) { throw; }
+                        catch (ValidationException) { throw; } // NB: fails the same way on every attempt, so stop and report it
                         catch (Exception ex)
                         {
-                            log($"Survey round, attempt {attempt + 1} [{ex.GetType().Name}]: {ex.Message}. Retrying...", true);
+                            var voltage = HeadstageConnection.DescribePortVoltage(portVoltageOverride, appliedVoltage);
+                            log($"Survey round, attempt {attempt + 1} [{ex.GetType().Name}]: {ex.Message} ({voltage}). Retrying...", true);
+                            if (!portVoltageOverride.HasValue && !portVoltageHintLogged)
+                            {
+                                log(HeadstageConnection.AutoPortVoltageHint, false);
+                                portVoltageHintLogged = true;
+                            }
                             await Task.Delay(RetryDelayMs, cancellationToken);
                         }
                     }
@@ -262,14 +292,14 @@ namespace OpenEphys.Onix1.Design
                         ReportProgress(state);
 
                         if (state.NextIndex >= state.OrderedBanks.Count)
-                            Complete(state, spikeThreshold, timePerBankSeconds);
+                            Complete(state, spikeThreshold, timePerBankSeconds, log);
                     }
                 }
 
                 // Targets with nothing selected to survey (e.g. an empty SurveyBanks) never entered the round
                 // loop at all. Finalize them here with empty-but-valid results.
                 foreach (var state in states.Values.Where(s => s.OrderedBanks.Count == 0))
-                    Complete(state, spikeThreshold, timePerBankSeconds);
+                    Complete(state, spikeThreshold, timePerBankSeconds, log);
             }
             catch (OperationCanceledException)
             {
@@ -308,12 +338,14 @@ namespace OpenEphys.Onix1.Design
             IReadOnlyDictionary<NeuropixelsV1SurveyTarget, RoundTargetPrep> roundPrep,
             string driver,
             int hubIndex,
+            ValidationLevel validationLevel,
             PortName port,
             double? previouslyAppliedVoltage,
             double spikeThreshold,
             float timePerBankSeconds,
             CancellationToken cancellationToken,
-            Action<double?> onAppliedVoltage)
+            Action<double?> onAppliedVoltage,
+            Action<NeuropixelsV1SurveyTarget, ulong?> onSerialNumber)
         {
             var (headstage, portVoltage) = buildHeadstage(port, previouslyAppliedVoltage);
 
@@ -340,7 +372,7 @@ namespace OpenEphys.Onix1.Design
 
 
             const int ReadSizePerProbe = 2048;
-            var pipelineSub = HeadstageConnection.Configure(headstage, driver, hubIndex, active.Count * ReadSizePerProbe, ex =>
+            var pipelineSub = HeadstageConnection.Configure(headstage, driver, hubIndex, validationLevel, active.Count * ReadSizePerProbe, ex =>
             {
                 foreach (var tcs in tcsMap.Values)
                 {
@@ -364,6 +396,8 @@ namespace OpenEphys.Onix1.Design
             {
                 var stats = await Task.WhenAll(tcsMap.Values.Select(t => t.Task));
                 onAppliedVoltage(portVoltage.Applied);
+                foreach (var a in active)
+                    onSerialNumber(a.Target, HeadstageConnection.TryGetDeviceInfo<NeuropixelsV1PsbDecoderDeviceInfo>(a.DeviceName)?.ProbeSerialNumber);
                 return tcsMap.Keys.Zip(stats, (target, s) => (target, s))
                     .ToDictionary(x => x.target, x => x.s);
             }
@@ -388,7 +422,8 @@ namespace OpenEphys.Onix1.Design
 
             var npxData = new NeuropixelsV1eData { DeviceName = deviceName, BufferSize = BufferSize };
             int framesToCollect = Math.Max(1, (int)Math.Round(timePerBankSeconds * NeuropixelsV1.SamplesPerChannelPerSecond / BufferSize));
-            var rawStream = npxData.Generate().Take(framesToCollect).Timeout(DataSilenceTimeout);
+            int settlingFrames = (int)Math.Round(NeuropixelsSurveyState.SettlingSeconds * NeuropixelsV1.SamplesPerChannelPerSecond / BufferSize);
+            var rawStream = npxData.Generate().Take(settlingFrames + framesToCollect).Timeout(DataSilenceTimeout);
 
             IObservable<NeuropixelsV1DataFrame> dataStream = recordingFilePath != null
                 ? DataFrameWriter.DataFrameWriter.WriteBuffered(
@@ -409,7 +444,9 @@ namespace OpenEphys.Onix1.Design
                 .Publish().RefCount();
             var spikeStream = SpikeDetection.Detect(scaled, NeuropixelsV1.SamplesPerChannelPerSecond, new[] { spikeThreshold });
 
-            var combined = spikeStream.Zip(scaled, (spikes, scaled) => (spikes, scaled));
+            // NB: settling frames are skipped only here, after filtering, so any filter start-up transient is
+            // discarded along with the amplifier settling.
+            var combined = spikeStream.Zip(scaled, (spikes, scaled) => (spikes, scaled)).Skip(settlingFrames);
 
             return combined.Subscribe(
                 result => activity.Accumulate(result.scaled, result.spikes),

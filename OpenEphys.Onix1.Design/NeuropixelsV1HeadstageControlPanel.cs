@@ -21,7 +21,11 @@ namespace OpenEphys.Onix1.Design
         readonly SurveyHeadstageFactory buildHeadstage;
         readonly Action<PortName> setHeadstagePort;
         readonly Action<double?> setHeadstagePortVoltage;
+        readonly PortName initialPort;
+        readonly double? initialPortVoltage;
+        readonly bool[] initialEnabled;
         readonly ImGuiLogConsole log;
+        readonly Action<IImGuiTabPanel> selectTab;
         readonly NeuropixelsSurveyState state = new();
         readonly byte[] driverBuf = new byte[64];
         static readonly Vector4 ColorTextSuccess = ImGui.ColorConvertU32ToFloat4(ImGuiPalette.BrightFern);
@@ -38,21 +42,45 @@ namespace OpenEphys.Onix1.Design
         /// <param name="setHeadstagePort">
         /// Writes an edited port back onto the headstage's own configuration node.
         /// </param>
+        /// <param name="initialPortVoltage">Initial voltage override, seeded from the headstage's own configured
+        /// port voltage (<c>null</c> if it is auto-negotiated).</param>
         /// <param name="setHeadstagePortVoltage">
         /// Writes an edited voltage override back onto the headstage's own configuration node, for the same
         /// reason as <paramref name="setHeadstagePort"/>.
         /// </param>
         /// <param name="log">The hosting shell's console log.</param>
+        /// <param name="selectTab">Shows a probe's tab in the hosting shell.</param>
         internal NeuropixelsV1HeadstageControlPanel(IReadOnlyList<NeuropixelsV1SurveyTarget> targets, SurveyHeadstageFactory buildHeadstage,
-            PortName initialPort, Action<PortName> setHeadstagePort, Action<double?> setHeadstagePortVoltage, ImGuiLogConsole log)
+            PortName initialPort, Action<PortName> setHeadstagePort,
+            double? initialPortVoltage, Action<double?> setHeadstagePortVoltage, ImGuiLogConsole log,
+            Action<IImGuiTabPanel> selectTab)
         {
             this.targets = targets ?? throw new ArgumentNullException(nameof(targets));
             this.buildHeadstage = buildHeadstage ?? throw new ArgumentNullException(nameof(buildHeadstage));
             this.setHeadstagePort = setHeadstagePort ?? throw new ArgumentNullException(nameof(setHeadstagePort));
             this.setHeadstagePortVoltage = setHeadstagePortVoltage ?? throw new ArgumentNullException(nameof(setHeadstagePortVoltage));
             this.log = log ?? throw new ArgumentNullException(nameof(log));
+            this.selectTab = selectTab ?? throw new ArgumentNullException(nameof(selectTab));
+            this.initialPort = initialPort;
+            this.initialPortVoltage = initialPortVoltage;
             state.Port = initialPort;
-            if (targets.Count == 1) targets[0].Selected = true;
+            state.PortVoltage = initialPortVoltage;
+            initialEnabled = targets.Select(t => t.Enabled).ToArray();
+            foreach (var target in targets)
+            {
+                target.Dialog.SurveySettings = state;
+                target.Dialog.EnableLocation = "Headstage Control";
+            }
+
+            // NB: the probes' files can disagree. The first one wins, and each probe flags its own results when
+            // they were measured with other settings.
+            var stored = targets.Select(t => t.Dialog.Survey.Results).FirstOrDefault(r => r != null);
+            if (stored != null)
+            {
+                state.SpikeThreshold = stored.SpikeThresholdUv;
+                state.TimePerBankSeconds = stored.TimePerBankSeconds;
+                state.RecordSurveyData = stored.RecordedRaw;
+            }
         }
 
         /// <inheritdoc/>
@@ -66,10 +94,23 @@ namespace OpenEphys.Onix1.Design
         }
 
         /// <inheritdoc/>
+        public void Closed(DialogResult result)
+        {
+            if (result == DialogResult.OK) return;
+            if (state.Port != initialPort) setHeadstagePort(initialPort);
+            if (state.PortVoltage != initialPortVoltage) setHeadstagePortVoltage(initialPortVoltage);
+            for (int i = 0; i < targets.Count; i++)
+                targets[i].Enabled = initialEnabled[i];
+        }
+
+        /// <inheritdoc/>
         public void Draw()
         {
+            foreach (var target in targets)
+                target.Dialog.ShowScannedModelOffer();
+
             bool isScanning = targets.Any(t => t.Dialog.Scan.Status == NeuropixelsV1ScanStatus.Running);
-            // NB: Do not filter by t.Selected since checkbox is checked a single time at Start() time
+            // NB: not filtered by t.Enabled, since the probes are read once, when the survey starts.
             bool isSurveying = targets.Any(t => t.Dialog.Survey.Status == NeuropixelsV1SurveyStatus.Running);
             bool hardwareBusy = isScanning || isSurveying;
 
@@ -85,11 +126,6 @@ namespace OpenEphys.Onix1.Design
             ImGui.Spacing();
 
             ImGui.Separator();
-            if (isSurveying) ImGui.BeginDisabled();
-            DrawProbeSelection();
-            if (isSurveying) ImGui.EndDisabled();
-            ImGui.Spacing();
-
             if (!isSurveying)
             {
                 DrawSurveySettings();
@@ -157,7 +193,7 @@ namespace OpenEphys.Onix1.Design
                     state.PortVoltage = overrideV ? (double?)5.0 : null;
                     setHeadstagePortVoltage(state.PortVoltage);
                 }
-                ImGuiWidgets.Tooltip("Manually set the headstage's supply voltage instead of auto-negotiating it.");
+                ImGuiWidgets.Tooltip("Manually set the headstage's supply voltage instead of auto-negotiating it. Changing this here also updates the headstage's own voltage setting.");
                 if (overrideV)
                 {
                     ImGui.SameLine();
@@ -175,68 +211,72 @@ namespace OpenEphys.Onix1.Design
                 if (ImGui.Button("Apply##hwa")) state.EditingHardwareAddr = false;
                 ImGuiWidgets.Tooltip("Apply the hardware address above and close this editor.");
             }
+
+            bool permissive = state.ValidationLevel == ValidationLevel.Permissive;
+            if (ImGui.Checkbox("Permissive validation##srvval", ref permissive))
+                state.ValidationLevel = permissive ? ValidationLevel.Permissive : ValidationLevel.Normal;
+            ImGuiWidgets.Tooltip(PermissiveValidationTooltip);
         }
+
+        internal const string PermissiveValidationTooltip =
+            "Scan for probes and run the electrode survey with Permissive validation: checks that Permissive relaxes, " +
+            "such as a calibration file whose serial number does not match the probe, only log a warning. Checks " +
+            "that no validation level relaxes, such as a calibration file with an invalid format, still stop the " +
+            "survey. Unchecked each time this window opens, and independent of the workflow's CreateContext.";
 
         void DrawScanSection(bool isScanning, bool blockedBySurvey)
         {
-            ImGui.Text("Probe Scan");
-            ImGui.Spacing();
+            ImGui.Text("Probes");
+            ImGui.SameLine();
 
             if (isScanning)
             {
-                if (ImGui.Button("Cancel##hsscan")) state.Cts?.Cancel();
+                if (ImGui.SmallButton("Cancel##hsscan")) state.Cts?.Cancel();
                 ImGuiWidgets.Tooltip("Stop the probe identity scan currently in progress.");
             }
             else
             {
                 if (blockedBySurvey) ImGui.BeginDisabled();
-                if (ImGui.Button("Start Scan##hsscan")) StartScan();
+                if (ImGui.SmallButton("Scan##hsscan")) StartScan();
                 ImGuiWidgets.Tooltip("Read each probe's part number and serial number directly from its EEPROM, and confirm the correct headstage is attached, without configuring or streaming from any probe.",
                     "A survey is currently running.");
                 if (blockedBySurvey) ImGui.EndDisabled();
             }
 
+            // NB: the probes are read once, when a scan or survey starts, so enabling one meanwhile would not
+            // affect the run.
+            bool hardwareBusy = isScanning || blockedBySurvey;
             foreach (var target in targets)
             {
-                var scan = target.Dialog.Scan;
-                switch (scan.Status)
-                {
-                    case NeuropixelsV1ScanStatus.Running:
-                        ImGui.TextUnformatted($"{target.Label}: scanning...");
-                        break;
-                    case NeuropixelsV1ScanStatus.Detected:
-                        ImGui.TextColored(ColorTextSuccess, target.Label);
-                        ImGuiWidgets.InfoRow("Part No.", scan.PartNumber);
-                        ImGuiWidgets.InfoRow("SN", scan.SerialNumber.ToString());
-                        break;
-                    case NeuropixelsV1ScanStatus.NotDetected:
-                        ImGui.TextDisabled($"{target.Label}: not detected");
-                        break;
-                    default:
-                        ImGui.TextDisabled($"{target.Label}: not scanned");
-                        break;
-                }
+                bool enabled = target.Enabled;
+                if (HeadstageProbeRows.DrawEnableRow(target.Label, target.Dialog.Scan, ref enabled, hardwareBusy,
+                    target.Dialog.ScannedModel, () => { target.Dialog.LoadScannedModel(); selectTab(target.Dialog); }, target.Dialog.MismatchedModel))
+                    target.Enabled = enabled;
             }
         }
 
-        void DrawProbeSelection()
+        // NB: every enabled probe is surveyed, so one that can't be blocks the whole survey rather than being
+        // skipped without notice.
+        string SurveyBlocker(bool blockedByScan)
         {
-            ImGui.Text("Probes to survey");
-            ImGui.Spacing();
-            foreach (var target in targets)
-            {
-                var pc = target.Dialog.ConfigureNeuropixelsV1.ProbeConfiguration;
-                bool hasCal = !string.IsNullOrEmpty(pc.GainCalibrationFileName) && !string.IsNullOrEmpty(pc.AdcCalibrationFileName);
-                if (!hasCal) { target.Selected = false; ImGui.BeginDisabled(); }
-                bool selected = hasCal && target.Selected;
-                if (ImGui.Checkbox($"{target.Label}##survsel", ref selected))
-                    target.Selected = selected;
-                if (!hasCal)
+            if (blockedByScan) return "A probe identity scan is currently running.";
+
+            var enabled = targets.Where(t => t.Enabled).ToList();
+            if (enabled.Count == 0) return "Enable at least one probe first.";
+
+            var reasons = enabled
+                .Select(t =>
                 {
-                    ImGui.EndDisabled();
-                    ImGuiWidgets.Tooltip("Requires gain and ADC calibration files.");
-                }
-            }
+                    var pc = t.Dialog.ConfigureNeuropixelsV1.ProbeConfiguration;
+                    return !t.Dialog.ChannelConfigurationChosen ? HeadstageProbeRows.NoChannelConfiguration(t.Label)
+                        : state.ValidationLevel != ValidationLevel.Permissive &&
+                          (string.IsNullOrEmpty(pc.GainCalibrationFileName) || string.IsNullOrEmpty(pc.AdcCalibrationFileName))
+                            ? $"{t.Label} needs gain and ADC calibration files, unless Permissive validation is checked."
+                            : null;
+                })
+                .Where(reason => reason != null)
+                .ToList();
+            return reasons.Count > 0 ? string.Join("\n", reasons) : null;
         }
 
         void DrawSurveySettings()
@@ -248,39 +288,38 @@ namespace OpenEphys.Onix1.Design
             float thr = (float)state.SpikeThreshold;
             ImGui.SetNextItemWidth(thrAvail * 0.33f);
             if (ImGui.InputFloat("Spike threshold (uV)##thr", ref thr, 5f, 10f, "%.1f")) state.SpikeThreshold = thr;
-            ImGuiWidgets.Tooltip("Voltage a channel must cross, relative to baseline, to be counted as a spike during the survey.");
+            ImGuiWidgets.Tooltip("Voltage a channel must cross, relative to baseline, to be counted as a spike during the survey. The survey turns on the probe's spike filter and detects spikes in its spike band after common median referencing.");
 
             float tpb = state.TimePerBankSeconds;
             ImGui.SetNextItemWidth(thrAvail * 0.33f);
             if (ImGui.InputFloat("Time per bank (s)##tpb", ref tpb, 5f, 30f, "%.0f"))
                 state.TimePerBankSeconds = Math.Max(2f, Math.Min(300f, tpb));
-            ImGuiWidgets.Tooltip("How long to record from each selected bank while sweeping through the survey, in seconds.");
+            ImGuiWidgets.Tooltip($"How long to record from each selected bank while sweeping through the survey, in seconds. Each bank also records an extra {NeuropixelsSurveyState.SettlingSeconds:0} s first, while the amplifiers settle, which is left out of the statistics.");
 
-            bool anySelectedHasProbeFile = targets.Any(t => t.Selected &&
+            bool anyEnabledHasProbeFile = targets.Any(t => t.Enabled &&
                 !string.IsNullOrEmpty(t.Dialog.ConfigureNeuropixelsV1.ProbeConfiguration.ProbeInterfaceFileName) &&
                 File.Exists(t.Dialog.ConfigureNeuropixelsV1.ProbeConfiguration.ProbeInterfaceFileName));
-            if (!anySelectedHasProbeFile) { state.RecordSurveyData = false; ImGui.BeginDisabled(); }
+            if (!anyEnabledHasProbeFile) { state.RecordSurveyData = false; ImGui.BeginDisabled(); }
             bool rec = state.RecordSurveyData;
             if (ImGui.Checkbox("Record raw data##recraw", ref rec)) state.RecordSurveyData = rec;
-            ImGuiWidgets.Tooltip("Save the raw, unfiltered voltage traces collected during the survey to disk, alongside the summary statistics, for each selected probe that has a ProbeInterface file.",
-                "Requires at least one selected probe to have a ProbeInterface file.");
-            if (!anySelectedHasProbeFile) ImGui.EndDisabled();
+            ImGuiWidgets.Tooltip("Save the unfiltered voltage traces collected during the survey as arrow files. They go in a new folder next to the probe interface file, named <file name>_<yyyyMMdd-HHmmss>_survey-data, with one .arrow and one .json file per bank. Each bank's recording includes its settling period. The log names each folder when the survey ends.",
+                "Requires at least one enabled probe to have a ProbeInterface file.");
+            if (!anyEnabledHasProbeFile) ImGui.EndDisabled();
         }
 
         void DrawIdle(bool blockedByScan)
         {
-            bool anySelected = targets.Any(t => t.Selected);
-            bool disabled = !anySelected || blockedByScan;
-            if (disabled) ImGui.BeginDisabled();
+            var blocker = SurveyBlocker(blockedByScan);
+            ImGui.BeginDisabled(blocker != null);
             if (ImGui.Button("Start Survey##hssurvey")) StartSurvey();
-            ImGuiWidgets.Tooltip("Sweep through the selected banks of every checked probe, concurrently, recording from each for the configured time and computing per-contact activity statistics.",
-                blockedByScan ? "A probe identity scan is currently running." : "Select at least one probe first.");
-            if (disabled) ImGui.EndDisabled();
+            ImGuiWidgets.Tooltip($"Sweep through the selected banks of every enabled probe, concurrently, recording from each for the configured time and computing per-contact activity statistics. Each bank first records an extra {NeuropixelsSurveyState.SettlingSeconds:0} s while the amplifiers settle, which is left out of the statistics.",
+                blocker);
+            ImGui.EndDisabled();
         }
 
         void DrawRunning()
         {
-            var selected = targets.Where(t => t.Selected).ToList();
+            var selected = targets.Where(t => t.Enabled).ToList();
             float avgProgress = selected.Count == 0 ? 0f : selected.Average(t => t.Dialog.Survey.Progress);
             ImGui.ProgressBar(avgProgress, new Vector2(ImGui.GetContentRegionAvail().X, 0));
             ImGui.Spacing();
@@ -295,7 +334,7 @@ namespace OpenEphys.Onix1.Design
             foreach (var target in targets)
             {
                 bool stillRunning = target.Dialog.Survey.Status == NeuropixelsV1SurveyStatus.Running;
-                if (!target.Selected && !stillRunning) continue;
+                if (!target.Enabled && !stillRunning) continue;
                 var survey = target.Dialog.Survey;
                 switch (survey.Status)
                 {
@@ -325,16 +364,32 @@ namespace OpenEphys.Onix1.Design
             state.Cts = new CancellationTokenSource();
             NeuropixelsV1HeadstageScanRunner.Start(
                 buildHeadstage, targets,
-                state.Driver, state.HubIndex, state.Port, state.PortVoltage,
+                state.Driver, state.HubIndex, state.ValidationLevel, state.Port, state.PortVoltage,
                 Log, state.Cts.Token);
         }
 
         void StartSurvey()
         {
+            // NB: Permissive turns a missing calibration file into a warning that only reaches the console
+            if (state.ValidationLevel == ValidationLevel.Permissive)
+            {
+                foreach (var target in targets.Where(t => t.Enabled))
+                {
+                    var pc = target.Dialog.ConfigureNeuropixelsV1.ProbeConfiguration;
+                    var missing = new[] { ("gain", pc.GainCalibrationFileName), ("ADC", pc.AdcCalibrationFileName) }
+                        .Where(file => !File.Exists(file.Item2))
+                        .Select(file => file.Item1)
+                        .ToList();
+                    if (missing.Count > 0)
+                        Log($"Warning: {target.Label} has no {string.Join(" or ", missing)} calibration file, so it is " +
+                            "surveyed without calibration.", true);
+                }
+            }
+
             state.Cts = new CancellationTokenSource();
             NeuropixelsV1HeadstageSurveyRunner.Start(
                 buildHeadstage, targets,
-                state.Driver, state.HubIndex, state.Port, state.PortVoltage,
+                state.Driver, state.HubIndex, state.ValidationLevel, state.Port, state.PortVoltage,
                 state.SpikeThreshold, state.TimePerBankSeconds, state.RecordSurveyData,
                 Log, state.Cts.Token);
         }

@@ -242,14 +242,14 @@ namespace OpenEphys.Onix1
         {
             if (metadata.Id != HeadstageId)
             {
-                ContextHelper.Validate(ValidationLevel.Permissive, new InvalidOperationException(
-                    $"Expected Headstage-NeuropixelsV2.0e-Beta but found '{metadata.Name}' (ID: {metadata.Id})."));
+                ContextHelper.Validate(ValidationLevel.Permissive,
+                    $"Expected Headstage-NeuropixelsV2.0e-Beta but found '{metadata.Name}' (ID: {metadata.Id}).");
             }
 
             if (metadata.Revision < MinimumRevision)
             {
-                ContextHelper.Validate(ValidationLevel.Permissive, new InvalidOperationException(
-                    $"Headstage version {MinimumRevision} is required but version {metadata.Revision} was detected."));
+                ContextHelper.Validate(ValidationLevel.Permissive,
+                    $"Headstage version {MinimumRevision} is required but version {metadata.Revision} was detected.");
             }
         }
 

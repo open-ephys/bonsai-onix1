@@ -30,8 +30,8 @@ namespace OpenEphys.Onix1
             NeuropixelsV1AdcCalibration? adcCalibration = null;
             if (!File.Exists(adcCalibrationFile))
             {
-                ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
-                    "No ADC calibration file was specified for the Nric1384 chip."));
+                ContextHelper.Validate(ValidationLevel.Permissive,
+                    "No ADC calibration file was specified for the Nric1384 chip.");
             }
             else
             {
@@ -39,15 +39,15 @@ namespace OpenEphys.Onix1
 
                 if (!adcCalibration.HasValue)
                 {
-                    throw new ArgumentException($"The calibration file \"{adcCalibrationFile}\" is invalid.");
+                    throw new ValidationException($"The calibration file \"{adcCalibrationFile}\" is invalid.");
                 }
             }
 
             NeuropixelsV1eGainCorrection? gainCorrection = null;
             if (!File.Exists(gainCalibrationFile))
             {
-                ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
-                    "No gain calibration file was specified for the Nric1384 chip."));
+                ContextHelper.Validate(ValidationLevel.Permissive,
+                    "No gain calibration file was specified for the Nric1384 chip.");
             }
             else
             {
@@ -55,16 +55,16 @@ namespace OpenEphys.Onix1
 
                 if (!gainCorrection.HasValue)
                 {
-                    throw new ArgumentException($"The calibration file \"{gainCalibrationFile}\" is invalid.");
+                    throw new ValidationException($"The calibration file \"{gainCalibrationFile}\" is invalid.");
                 }
             }
 
             if (adcCalibration.HasValue && gainCorrection.HasValue &&
                 adcCalibration.Value.SerialNumber != gainCorrection.Value.SerialNumber)
             {
-                ContextHelper.Validate(ValidationLevel.Permissive, new ArgumentException(
+                ContextHelper.Validate(ValidationLevel.Permissive,
                     $"The ADC calibration file's serial number ({adcCalibration.Value.SerialNumber}) " +
-                    $"does not match the gain calibration file's serial number ({gainCorrection.Value.SerialNumber})."));
+                    $"does not match the gain calibration file's serial number ({gainCorrection.Value.SerialNumber}).");
                 adcCalibration = null;
                 gainCorrection = null;
             }
@@ -110,32 +110,32 @@ namespace OpenEphys.Onix1
             {
                 if (adc.CompP < 0 || adc.CompP > 0x1F)
                 {
-                    throw new ArgumentOutOfRangeException($"ADC calibration parameter CompP value of {adc.CompP} is invalid.");
+                    throw new ValidationException($"ADC calibration parameter CompP value of {adc.CompP} is invalid.");
                 }
 
                 if (adc.CompN < 0 || adc.CompN > 0x1F)
                 {
-                    throw new ArgumentOutOfRangeException($"ADC calibration parameter CompN value of {adc.CompN} is invalid.");
+                    throw new ValidationException($"ADC calibration parameter CompN value of {adc.CompN} is invalid.");
                 }
 
                 if (adc.Cfix < 0 || adc.Cfix > 0xF)
                 {
-                    throw new ArgumentOutOfRangeException($"ADC calibration parameter Cfix value of {adc.Cfix} is invalid.");
+                    throw new ValidationException($"ADC calibration parameter Cfix value of {adc.Cfix} is invalid.");
                 }
 
                 if (adc.Slope < 0 || adc.Slope > 0x7)
                 {
-                    throw new ArgumentOutOfRangeException($"ADC calibration parameter Slope value of {adc.Slope} is invalid.");
+                    throw new ValidationException($"ADC calibration parameter Slope value of {adc.Slope} is invalid.");
                 }
 
                 if (adc.Coarse < 0 || adc.Coarse > 0x3)
                 {
-                    throw new ArgumentOutOfRangeException($"ADC calibration parameter Coarse value of {adc.Coarse} is invalid.");
+                    throw new ValidationException($"ADC calibration parameter Coarse value of {adc.Coarse} is invalid.");
                 }
 
                 if (adc.Fine < 0 || adc.Fine > 0x3)
                 {
-                    throw new ArgumentOutOfRangeException($"ADC calibration parameter Fine value of {adc.Fine} is invalid.");
+                    throw new ValidationException($"ADC calibration parameter Fine value of {adc.Fine} is invalid.");
                 }
 
                 var configIdx = k % 2;
@@ -218,8 +218,8 @@ namespace OpenEphys.Onix1
 
                 if (ReadByte(Nric1384.STATUS) != ShiftRegisterSuccess)
                 {
-                    ContextHelper.Validate(ValidationLevel.Permissive, new InvalidOperationException(
-                        $"Shift register {srAddress} status check failed."));
+                    ContextHelper.Validate(ValidationLevel.Permissive,
+                        $"Shift register {srAddress} status check failed.");
                 }
             }
 

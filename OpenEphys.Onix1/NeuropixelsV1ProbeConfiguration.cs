@@ -68,7 +68,7 @@ namespace OpenEphys.Onix1
         /// Gets or sets the amplifier gain for the spike-band.
         /// </summary>
         /// <remarks>
-        /// The spike-band is from DC to 10 kHz if <see cref="SpikeFilter"/> is set to false, while the 
+        /// The spike-band is from DC to 10 kHz if <see cref="SpikeFilter"/> is set to false, while the
         /// spike-band is from 300 Hz to 10 kHz if <see cref="SpikeFilter"/> is set to true.
         /// </remarks>
         [Category(DeviceFactoryStrings.ConfigurationCategory)]
@@ -89,9 +89,9 @@ namespace OpenEphys.Onix1
         /// Gets or sets the reference for all electrodes.
         /// </summary>
         /// <remarks>
-        /// All electrodes are set to the same reference, which can be either 
-        /// <see cref="NeuropixelsV1ReferenceSource.External"/> or <see cref="NeuropixelsV1ReferenceSource.Tip"/>. 
-        /// Setting to <see cref="NeuropixelsV1ReferenceSource.External"/> will use the external reference, while 
+        /// All electrodes are set to the same reference, which can be either
+        /// <see cref="NeuropixelsV1ReferenceSource.External"/> or <see cref="NeuropixelsV1ReferenceSource.Tip"/>.
+        /// Setting to <see cref="NeuropixelsV1ReferenceSource.External"/> will use the external reference, while
         /// <see cref="NeuropixelsV1ReferenceSource.Tip"/> sets the reference to the electrode at the tip of the probe.
         /// </remarks>
         [Category(DeviceFactoryStrings.ConfigurationCategory)]
@@ -146,7 +146,7 @@ namespace OpenEphys.Onix1
         /// Each probe must be provided with an ADC calibration file that contains probe-specific hardware
         /// settings that is created by IMEC during factory calibration. These files are used to set internal
         /// bias currents, correct for ADC nonlinearities, correct ADC-zero crossing non-monotonicities, etc.
-        /// Using the correct calibration file is mandatory for the probe to operate correctly. 
+        /// Using the correct calibration file is mandatory for the probe to operate correctly.
         /// </para>
         /// <para>
         /// Calibration files are probe-specific and not interchangeable across probes. Calibration files must
@@ -168,13 +168,13 @@ namespace OpenEphys.Onix1
         public string AdcCalibrationFileName { get; set; }
 
         /// <summary>
-        /// Gets or sets the file path where the ProbeInterface configuration will be saved.
+        /// Gets or sets the path of the ProbeInterface file that defines the probe's channel map.
         /// </summary>
         /// <remarks>
-        /// If left empty, the ProbeInterface configuration will not be saved.
+        /// The file is required to acquire data. An enabled probe cannot be configured without it.
         /// </remarks>
         [Category(DeviceFactoryStrings.ConfigurationCategory)]
-        [Description("File path to where the ProbeInterface file exists for this probe.")]
+        [Description("The ProbeInterface file that defines this probe's channel map. Required when the probe is enabled.")]
         [FileNameFilter(ProbeInterfaceHelper.ProbeInterfaceFileNameFilter)]
         [Editor("Bonsai.Design.OpenFileNameEditor, Bonsai.Design", DesignTypes.UITypeEditor)]
         public string ProbeInterfaceFileName { get; set; }

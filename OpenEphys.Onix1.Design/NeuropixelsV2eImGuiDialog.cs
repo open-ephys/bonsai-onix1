@@ -25,6 +25,7 @@ namespace OpenEphys.Onix1.Design
 
         // Config node
         readonly IConfigureNeuropixelsV2 configureNode;
+        readonly NeuropixelsV2ProbeConfiguration originalProbeConfiguration;
 
         // Probe state
         NeuropixelsV2ProbeGroup probeGroup;
@@ -42,7 +43,6 @@ namespace OpenEphys.Onix1.Design
         bool actRangeInitialized;
         readonly Dictionary<SurveyActivityMetric, (float min, float max)> actRanges = new();
         bool showActivityColors = false;
-        bool bankSelectMode = false;
         readonly HashSet<(int shank, int bank)> surveyBanks  = new();
         readonly HashSet<(int shank, int bank)> pendingBanks = new();
 
@@ -99,6 +99,10 @@ namespace OpenEphys.Onix1.Design
             set => configureNode.ProbeConfiguration.InvertPolarity = value;
         }
 
+        protected override void RestoreProbeConfiguration() => configureNode.ProbeConfiguration = originalProbeConfiguration;
+
+        protected override bool ProbeEnabled => configureNode.Enable;
+
         protected override void EnableElectrodes(IEnumerable<int> contactIndices) => probeGroup.EnableElectrodes(contactIndices);
 
         protected override void ReplaceProbeGroupFromJson(string json) =>
@@ -137,29 +141,6 @@ namespace OpenEphys.Onix1.Design
             selector.ClearSelection();
         }
 
-        void DrawSelectionSection()
-        {
-            ImGui.Text("Selection");
-            ImGui.Spacing();
-
-            if (ImGui.RadioButton("Channels##seltarget", !bankSelectMode)) SetBankSelectMode(false);
-            ImGuiWidgets.Tooltip("Select contacts to enable or pin them. Equivalent to pressing B over the probe view.");
-            ImGui.SameLine();
-            if (ImGui.RadioButton("Banks##seltarget", bankSelectMode)) SetBankSelectMode(true);
-            ImGuiWidgets.Tooltip("Select whole banks (384 contacts each) instead of individual contacts, to choose " +
-                "which banks the survey sweeps through. Run the survey itself from the headstage panel. Equivalent " +
-                "to pressing B over the probe view.");
-        }
-
-        void DrawRulerSection()
-        {
-            ImGui.Text("Rulers");
-            ImGui.Spacing();
-            ImGuiRulerControls.DrawToggle(selector, "Add");
-            ImGui.SameLine();
-            ImGuiRulerControls.DrawClear(selector);
-        }
-
         // NB: the selector's settings depend only on bank select and whether activity colors are shown, so they're
         // only updated when one of those changes.
         (bool, bool)? selectorView;
@@ -188,7 +169,7 @@ namespace OpenEphys.Onix1.Design
                           new(ColorContactPinned, "Enabled & Pinned"),
                           new(ColorContactEnabled, "Enabled"),
                           new(ColorContactDisabled, "Disabled"),
-                          new(ImGuiProbeSelector.BlockedFillColor, "Unavailable", DottedOutline: true),
+                          new(ImGuiProbeSelector.BlockedFillColor, "Blocked", DottedOutline: true),
                           new(ImGuiProbeSelector.DefaultSelectedOutlineColor, "Editable selection", OutlineOnly: true),
                       };
         }
@@ -202,13 +183,17 @@ namespace OpenEphys.Onix1.Design
             : base(probeName, log)
         {
             this.configureNode = configureNode ?? throw new ArgumentNullException(nameof(configureNode));
+            originalProbeConfiguration = configureNode.ProbeConfiguration.Clone();
             isBeta = configureNode is ConfigureNeuropixelsV2BetaPsbDecoder;
 
             survey.SurveyCompleted += () => HasChanges = true;
             scan.ScanCompleted += OnScanCompleted;
+            scan.ScanCompleted += () =>
+                WarnIfCalibrationFileSerialNumberDiffers("gain", configureNode.ProbeConfiguration.GainCalibrationFileName);
 
             SetupSelectorCallbacks();
             LoadOrCreateProbeGroup();
+            KeepProbeInterfaceFileName();
             RefreshProbeState();
         }
 
@@ -269,25 +254,17 @@ namespace OpenEphys.Onix1.Design
             ImGui.Spacing();
             DrawTitleBar();
             ImGui.Separator();
-            DrawFileSection();
+            DrawChannelConfigurationSection();
             ImGui.Separator();
-            DrawSelectionSection();
-            ImGui.Separator();
-            DrawRulerSection();
-            ImGui.Separator();
-            DrawChannelSection();
-            ImGui.Separator();
-            DrawSurveySection();
-            ImGui.Separator();
-            DrawContactInfo();
+            DrawProbeSettingsSection();
+            if (ChannelConfigurationChosen)
+            {
+                ImGui.Separator();
+                DrawSurveySection();
+                ImGui.Separator();
+                DrawContactInfo();
+            }
             HandleKeyboardShortcuts();
-        }
-
-        public override bool CanClose(DialogResult pendingResult)
-        {
-            if (HasChanges)
-                return PromptSaveOnClose();
-            return true;
         }
 
         #endregion
@@ -303,6 +280,7 @@ namespace OpenEphys.Onix1.Design
                 {
                     ReplaceProbeGroupFromJson(File.ReadAllText(pc.ProbeInterfaceFileName));
                     Log($"Loaded probeinterface file {pc.ProbeInterfaceFileName}");
+                    ChannelConfigurationChosen = true;
                     return;
                 }
                 catch (Exception ex)
@@ -310,8 +288,9 @@ namespace OpenEphys.Onix1.Design
                     Log($"Error loading probeinterface file {pc.ProbeInterfaceFileName}: {ex.Message}", true);
                 }
             }
-            // No file configured (or it failed to load): start from the quad-shank probe, the more
-            // prevalent NeuropixelsV2e configuration in the field, as a reasonable default to edit from.
+
+            // NB: the rest of the dialog expects a probe group, so a placeholder stands in until the user chooses a
+            // channel configuration. It is never shown or saved.
             ReplaceProbeGroupFromJson(DesignResource.LoadDefaultJson("NP2013.json"));
         }
 
@@ -329,7 +308,6 @@ namespace OpenEphys.Onix1.Design
         void WriteBackBufs()
         {
             ImGuiStrings.WriteString(gainCalBuf, configureNode.ProbeConfiguration.GainCalibrationFileName ?? "");
-            ImGuiStrings.WriteString(probeFileBuf, configureNode.ProbeConfiguration.ProbeInterfaceFileName  ?? "");
         }
 
         #endregion

@@ -52,17 +52,71 @@ namespace OpenEphys.Onix1.Design
             FormBorderStyle = FormBorderStyle.Sizable;
             DoubleBuffered = true;
 
+            var okButton = new Button
+            {
+                Text = "OK",
+                DialogResult = DialogResult.OK,
+                Size = new Size(144, 32),
+                UseVisualStyleBackColor = true
+            };
+
+            var cancelButton = new Button
+            {
+                Text = "Cancel",
+                DialogResult = DialogResult.Cancel,
+                Size = new Size(144, 32),
+                UseVisualStyleBackColor = true
+            };
+
+            var buttons = new FlowLayoutPanel
+            {
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.RightToLeft,
+                Margin = new Padding(4)
+            };
+            buttons.Controls.Add(cancelButton);
+            buttons.Controls.Add(okButton);
+
+            var layout = new TableLayoutPanel
+            {
+                ColumnCount = 1,
+                RowCount = 2,
+                Dock = DockStyle.Fill,
+                Margin = new Padding(4)
+            };
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 42F));
+
             glControl = new ImGuiGLControl { Dock = DockStyle.Fill };
             glControl.Render += RenderFrame;
-            Controls.Add(glControl);
+
+            layout.Controls.Add(glControl, 0, 0);
+            layout.Controls.Add(buttons, 0, 1);
+            Controls.Add(layout);
+
+            // NB: no AcceptButton, because Enter must commit an ImGui text field without closing the dialog. The GL
+            // control takes Esc for ImGui, so CancelButton only covers Esc while a button has focus. DrawContent
+            // handles it otherwise.
+            CancelButton = cancelButton;
 
             FormClosing += ShellClosing;
+            FormClosed += ShellClosed;
         }
 
         /// <summary>
         /// Registers <paramref name="panel"/> as a new tab labeled <paramref name="tabName"/>.
         /// </summary>
         internal void AddTab(string tabName, IImGuiTabPanel panel) => tabs.Add((tabName, panel));
+
+        IImGuiTabPanel tabToSelect;
+
+        /// <summary>
+        /// Makes the tab of <paramref name="panel"/> the active tab on the next frame.
+        /// </summary>
+        internal void SelectTab(IImGuiTabPanel panel) => tabToSelect = panel;
 
         /// <summary>
         /// Registers <paramref name="panel"/> as an always-visible, collapsible column to the left of the
@@ -92,6 +146,28 @@ namespace OpenEphys.Onix1.Design
             DrawContent();
 
             ImGui.End();
+            UpdateMinimumWidth();
+        }
+
+        int minimumWidth;
+
+        // NB: applied after the frame, since resizing the window from inside a paint would paint again within it.
+        void UpdateMinimumWidth()
+        {
+            float needed = tabs.Select(t => t.Panel).OfType<ImGuiProbePanel>()
+                .Select(p => p.MinimumDisplayWidth)
+                .DefaultIfEmpty(0f)
+                .Max();
+            if (needed <= 0f) return;
+
+            int width = (int)Math.Ceiling(needed) + Width - glControl.Width;
+            if (width == minimumWidth) return;
+
+            minimumWidth = width;
+            BeginInvoke((Action)(() =>
+            {
+                if (!IsDisposed) MinimumSize = new Size(width, MinimumSize.Height);
+            }));
         }
 
         // Same resizable/collapsible top-wrapper-plus-bottom-child split ImGuiProbePanel.Draw() uses for
@@ -99,6 +175,12 @@ namespace OpenEphys.Onix1.Design
         // (tab area + side panel together) instead of a single tab's own content.
         void DrawContent()
         {
+            // NB: this runs before anything is drawn, so an active text field or open popup still counts. Esc
+            // then goes to them instead of closing the dialog.
+            if (ImGui.IsKeyPressed(ImGuiKey.Escape, false) && !ImGui.IsAnyItemActive() &&
+                !ImGui.IsPopupOpen("", ImGuiPopupFlags.AnyPopupId | ImGuiPopupFlags.AnyPopupLevel))
+                DialogResult = DialogResult.Cancel;
+
             float availY = ImGui.GetContentRegionAvail().Y;
             bool formResized = Math.Abs(availY - lastAvailY) > 0.5f;
             lastAvailY = availY;
@@ -200,6 +282,7 @@ namespace OpenEphys.Onix1.Design
                 foreach (var (name, panel) in tabs)
                 {
                     var flags = panel.HasChanges ? ImGuiTabItemFlags.UnsavedDocument : ImGuiTabItemFlags.None;
+                    if (panel == tabToSelect) flags |= ImGuiTabItemFlags.SetSelected;
                     if (ImGui.BeginTabItem(name, flags))
                     {
                         panel.Draw();
@@ -207,16 +290,30 @@ namespace OpenEphys.Onix1.Design
                     }
                 }
                 ImGui.EndTabBar();
+                tabToSelect = null;
             }
+        }
+
+        // NB: the window's X, Alt+F4 and the system menu's Close all arrive as SC_CLOSE. They act as OK instead of
+        // the Cancel that WinForms would give them, so closing the window keeps what was set in it. Unsaved
+        // probe interface changes still prompt, through CanClose.
+        protected override void WndProc(ref Message m)
+        {
+            const int WM_SYSCOMMAND = 0x0112;
+            const int SC_CLOSE = 0xF060;
+            if (m.Msg == WM_SYSCOMMAND && ((int)m.WParam & 0xFFF0) == SC_CLOSE)
+            {
+                DialogResult = DialogResult.OK;
+                return;
+            }
+            base.WndProc(ref m);
         }
 
         void ShellClosing(object sender, FormClosingEventArgs e)
         {
             glControl.Paced = false;
 
-            // NB: every close path (Close button, window X, Alt+F4/system menu) runs the same CanClose
-            // gate. WinForms auto-sets DialogResult to Cancel for a modal dialog closed via X/Alt+F4 even
-            // with no Cancel button on the form, so DialogResult can't be used to special-case those paths.
+            // NB: every close path runs the same CanClose gate.
             foreach (var (_, panel) in tabs)
             {
                 if (!panel.CanClose(DialogResult))
@@ -229,6 +326,15 @@ namespace OpenEphys.Onix1.Design
                 e.Cancel = true;
 
             if (e.Cancel) glControl.Paced = true;
+        }
+
+        // NB: panels act on their close decisions only here, because a later panel can still veto the close after
+        // an earlier one has agreed to it.
+        void ShellClosed(object sender, FormClosedEventArgs e)
+        {
+            foreach (var (_, panel) in tabs)
+                panel.Closed(DialogResult);
+            sidePanel?.Closed(DialogResult);
         }
     }
 }

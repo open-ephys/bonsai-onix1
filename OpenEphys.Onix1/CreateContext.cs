@@ -52,8 +52,11 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <remarks>
         /// Downstream configuration operators may validate the hardware they configure before allowing
-        /// acquisition to proceed. This property controls how failures of those checks are treated, making it
-        /// possible to relax them for debugging or prototyping.
+        /// acquisition to proceed. A validation check tests a condition that must hold for the hardware to
+        /// work as configured. If it fails, configuring or acquiring from the hardware is known in advance to
+        /// fail or to produce incorrect or undefined data, so it is not attempted. This property controls how
+        /// failures of those checks are treated, making it possible to relax them for debugging or
+        /// prototyping.
         /// <para>
         /// Relaxing the validation level does not change what data is acquired, only whether unmet preconditions
         /// are treated as fatal. Data acquired under a relaxed strictness therefore cannot be assumed to be

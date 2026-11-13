@@ -66,13 +66,13 @@ namespace OpenEphys.Onix1
             {
                 if (srAddress == NeuropixelsV2Beta.SR_CHAIN5 || srAddress == NeuropixelsV2Beta.SR_CHAIN6)
                 {
-                    ContextHelper.Validate(ValidationLevel.Permissive, new InvalidOperationException(
-                        $"Shift register 0x{srAddress:X2} status check failed."));
+                    ContextHelper.Validate(ValidationLevel.Permissive,
+                        $"Shift register 0x{srAddress:X2} status check failed.");
                 }
                 else
                 {
-                    ContextHelper.Validate(ValidationLevel.Normal, new InvalidOperationException(
-                        $"Shift register 0x{srAddress:X2} status check failed. {ShankName(srAddress)} may be damaged."));
+                    ContextHelper.Validate(ValidationLevel.Normal,
+                        $"Shift register 0x{srAddress:X2} status check failed. {ShankName(srAddress)} may be damaged.");
                 }
             }
         }
