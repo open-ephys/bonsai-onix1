@@ -54,7 +54,7 @@ namespace OpenEphys.Onix1
             else
             {
                 gainCorrection = NeuropixelsV1Helper.TryParseGainCalibrationFile(probeConfiguration.GainCalibrationFileName,
-                    probeConfiguration.SpikeAmplifierGain, probeConfiguration.LfpAmplifierGain, NeuropixelsV1.ElectrodeCount);
+                    probeConfiguration.SpikeAmplifierGain, probeConfiguration.LfpAmplifierGain, probeGroup.Variant.ElectrodeCount);
 
                 if (!gainCorrection.HasValue)
                 {
