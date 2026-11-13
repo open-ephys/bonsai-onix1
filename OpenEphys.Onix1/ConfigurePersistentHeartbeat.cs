@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 
 namespace OpenEphys.Onix1
@@ -54,20 +55,20 @@ namespace OpenEphys.Onix1
             return source.ConfigureAndLatchDevice((context, observer) =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
-                var subscription = beatsPerSecond.SubscribeSafe(observer, newValue =>
-                {
-                    var clkHz = device.ReadRegister(PersistentHeartbeat.CLK_HZ);
-                    var minHeartbeatHz = device.ReadRegister(PersistentHeartbeat.MIN_HB_HZ);
-
-                    if (newValue < minHeartbeatHz || newValue > 10e6)
+                return new CompositeDisposable(
+                    DeviceManager.RegisterDevice(deviceName, device, DeviceType),
+                    beatsPerSecond.SubscribeSafe(observer, newValue =>
                     {
-                        throw new InvalidOperationException($"Value must be between {minHeartbeatHz} Hz and 10 MHz.");
-                    }
+                        var clkHz = device.ReadRegister(PersistentHeartbeat.CLK_HZ);
+                        var minHeartbeatHz = device.ReadRegister(PersistentHeartbeat.MIN_HB_HZ);
 
-                    device.WriteRegister(PersistentHeartbeat.CLK_DIV, clkHz / newValue);
-                });
+                        if (newValue < minHeartbeatHz || newValue > 10e6)
+                        {
+                            throw new InvalidOperationException($"Value must be between {minHeartbeatHz} Hz and 10 MHz.");
+                        }
 
-                return DeviceManager.RegisterDevice(deviceName, device, DeviceType);
+                        device.WriteRegister(PersistentHeartbeat.CLK_DIV, clkHz / newValue);
+                    }));
             });
         }
     }

@@ -150,6 +150,7 @@ namespace OpenEphys.Onix1
                     deviceAddress);
 
                 return new CompositeDisposable(
+                   DeviceManager.RegisterDevice(deviceName, deviceInfo),
                    analogLowCutoff.SubscribeSafe(observer, newValue =>
                    {
                        var regs = Rhs2116Config.AnalogLowCutoffToRegisters[newValue];
@@ -173,8 +174,7 @@ namespace OpenEphys.Onix1
                        rhs2116B.WriteRegister(Rhs2116.BW0, regs[1] << 6 | regs[0]);
                        rhs2116B.WriteRegister(Rhs2116.BW1, regs[3] << 6 | regs[2]);
                        rhs2116B.WriteRegister(Rhs2116.FASTSETTLESAMPLES, Rhs2116Config.AnalogHighCutoffToFastSettleSamples[newValue]);
-                   }),
-                   DeviceManager.RegisterDevice(deviceName, deviceInfo)
+                   })
                );
             });
         }

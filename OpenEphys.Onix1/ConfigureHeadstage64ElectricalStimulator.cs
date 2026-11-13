@@ -226,6 +226,7 @@ namespace OpenEphys.Onix1
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
 
                 return new CompositeDisposable(
+                    DeviceManager.RegisterDevice(deviceName, device, DeviceType),
                     phaseOneCurrent.SubscribeSafe(observer, value =>
                         device.WriteRegister(Headstage64ElectricalStimulator.CURRENT1, Headstage64ElectricalStimulator.MicroampsToCode(value))),
                     interPhaseCurrent.SubscribeSafe(observer, value =>
@@ -239,8 +240,7 @@ namespace OpenEphys.Onix1
                     interPulseInterval.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.INTERPULSEINTERVAL, value)),
                     interBurstInterval.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.INTERBURSTINTERVAL, value)),
                     burstPulseCount.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.BURSTCOUNT, value)),
-                    trainBurstCount.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.TRAINCOUNT, value)),
-                    DeviceManager.RegisterDevice(deviceName, device, DeviceType));
+                    trainBurstCount.SubscribeSafe(observer, value => device.WriteRegister(Headstage64ElectricalStimulator.TRAINCOUNT, value)));
             }).ConfigureDirectDevice((context, observer) =>
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);

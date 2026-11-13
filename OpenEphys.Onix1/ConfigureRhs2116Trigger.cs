@@ -158,6 +158,7 @@ namespace OpenEphys.Onix1
                 }
 
                 return new CompositeDisposable(
+                    DeviceManager.RegisterDevice(deviceName, device, DeviceType),
                     stimulusSequence.SubscribeSafe(observer, newValue =>
                     {
                         WriteStimulusSequence(rhs2116A, newValue.StimulusSequenceA);
@@ -166,8 +167,7 @@ namespace OpenEphys.Onix1
                     triggerArmed.SubscribeSafe(observer, newValue =>
                     {
                         device.WriteRegister(Rhs2116Trigger.TRIGGERARMED, newValue ? 1u : 0u);
-                    }),
-                    DeviceManager.RegisterDevice(deviceName, device, DeviceType));
+                    }));
             });
         }
     }

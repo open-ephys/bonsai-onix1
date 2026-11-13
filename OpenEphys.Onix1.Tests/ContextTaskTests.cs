@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading;
 using Xunit;
 
@@ -84,6 +86,42 @@ namespace OpenEphys.Onix1.Tests
             }) { IsBackground = true }.Start();
             Assert.True(errorReported.Wait(TimeSpan.FromSeconds(5)), "The configuration error was not reported.");
             Assert.True(disposed.Wait(TimeSpan.FromSeconds(5)), "Disposing the context from the error handler did not return.");
+        }
+
+        // A property whose current value fails to apply when acquisition starts fails the configuration action
+        // that subscribed to it, which disposes the configuration made so far and reports the error to the
+        // operator once the context has released its locks.
+        [Fact]
+        public void PropertyFailure_ObserverDisposesContext_DisposesConfiguration()
+        {
+            var context = new GenericContextTask(TestDriver.Name, TestDriver.Index);
+            var property = new BehaviorSubject<int>(0);
+            var applied = new BehaviorSubject<int>(0);
+
+            using var errorReported = new ManualResetEventSlim();
+            using var disposed = new ManualResetEventSlim();
+
+            Observable.Never<GenericContextTask>().StartWith(context)
+                .ConfigureDirectDevice((_, observer) => new CompositeDisposable(
+                    applied.SubscribeSafe(observer, _ => { }),
+                    property.SubscribeSafe(observer, _ => throw new InvalidOperationException())))
+                .Subscribe(_ => { }, _ =>
+                {
+                    errorReported.Set();
+                    context.Dispose();
+                    disposed.Set();
+                });
+
+            // NB: Not on a thread pool thread, for the same reason as ConfigurationFailure_ObserverDisposesContext_DoesNotDeadlock
+            new Thread(() =>
+            {
+                try { context.StartAsync((int)context.MaxReadFrameSize, (int)context.MaxWriteFrameSize); }
+                catch (InvalidOperationException) { }
+            }) { IsBackground = true }.Start();
+            Assert.True(errorReported.Wait(TimeSpan.FromSeconds(5)), "The property error was not reported.");
+            Assert.True(disposed.Wait(TimeSpan.FromSeconds(5)), "Disposing the context from the error handler did not return.");
+            Assert.False(applied.HasObservers, "A subscription made before the failure was not disposed.");
+            Assert.False(property.HasObservers, "The subscription that failed was not disposed.");
         }
 
         sealed class GenericContextTask : ContextTask
