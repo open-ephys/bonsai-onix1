@@ -186,22 +186,24 @@ namespace OpenEphys.Onix1.Design
 
         /// <summary>
         /// Whether survey results measured on the probe with serial number <paramref name="surveySerialNumber"/>
-        /// may be shown for the probe this dialog configures. Logs why when they may not.
+        /// may be shown for the probe this dialog configures: unless a probe scan found a probe with another serial
+        /// number. Logs why when they may not.
         /// </summary>
+        /// <remarks>
+        /// Only a scan reads the serial number from the probe itself. A calibration file's serial number says nothing
+        /// about which probe is attached, so it is not used.
+        /// </remarks>
         /// <param name="surveySerialNumber">The serial number stored with the survey results, if any.</param>
-        /// <param name="scannedSerialNumber">The serial number found by a probe scan, if one has run. Otherwise
-        /// the serial number in the primary calibration file is used.</param>
+        /// <param name="scannedSerialNumber">The serial number found by a probe scan, or <c>null</c> if no scan has
+        /// found the probe.</param>
         protected bool SurveyMatchesProbe(ulong? surveySerialNumber, ulong? scannedSerialNumber)
         {
-            var probeSerialNumber = scannedSerialNumber ?? CalibrationFileSerialNumber(PrimaryCalibrationFileName);
-            string reason =
-                !surveySerialNumber.HasValue ? "they don't record which probe they were measured on" :
-                !probeSerialNumber.HasValue ? "this probe's serial number is unknown. Select its calibration file or scan for probes" :
-                surveySerialNumber != probeSerialNumber ? $"they were measured on probe SN {surveySerialNumber}, and this probe is SN {probeSerialNumber}" :
-                null;
-            if (reason != null)
-                Log($"Warning: {probeName}: survey results in the probe interface file are not shown: {reason}.", true);
-            return reason == null;
+            if (surveySerialNumber is not ulong surveyed || scannedSerialNumber is not ulong scanned || surveyed == scanned)
+                return true;
+
+            Log($"Warning: {probeName}: survey results in the probe interface file are not shown: they were measured " +
+                $"on probe SN {surveyed}, and the scan found SN {scanned}.", true);
+            return false;
         }
 
         /// <summary>

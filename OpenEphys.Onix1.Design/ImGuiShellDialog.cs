@@ -111,6 +111,13 @@ namespace OpenEphys.Onix1.Design
         /// </summary>
         internal void AddTab(string tabName, IImGuiTabPanel panel) => tabs.Add((tabName, panel));
 
+        IImGuiTabPanel tabToSelect;
+
+        /// <summary>
+        /// Makes the tab of <paramref name="panel"/> the active tab on the next frame.
+        /// </summary>
+        internal void SelectTab(IImGuiTabPanel panel) => tabToSelect = panel;
+
         /// <summary>
         /// Registers <paramref name="panel"/> as an always-visible, collapsible column to the left of the
         /// tab group, instead of another tab. At most one side panel is supported.
@@ -275,6 +282,7 @@ namespace OpenEphys.Onix1.Design
                 foreach (var (name, panel) in tabs)
                 {
                     var flags = panel.HasChanges ? ImGuiTabItemFlags.UnsavedDocument : ImGuiTabItemFlags.None;
+                    if (panel == tabToSelect) flags |= ImGuiTabItemFlags.SetSelected;
                     if (ImGui.BeginTabItem(name, flags))
                     {
                         panel.Draw();
@@ -282,6 +290,7 @@ namespace OpenEphys.Onix1.Design
                     }
                 }
                 ImGui.EndTabBar();
+                tabToSelect = null;
             }
         }
 

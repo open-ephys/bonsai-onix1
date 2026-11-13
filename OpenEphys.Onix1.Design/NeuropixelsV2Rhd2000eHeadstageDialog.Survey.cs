@@ -18,7 +18,7 @@ namespace OpenEphys.Onix1.Design
             };
 
             var panel = new NeuropixelsV2eHeadstageControlPanel(targets, BuildSurveyHeadstage, initialPort, setHeadstagePort,
-                initialPortVoltage, setHeadstagePortVoltage, Log);
+                initialPortVoltage, setHeadstagePortVoltage, Log, SelectTab);
             SetSidePanel(panel, SurveyPanelWidth, "Headstage Control");
             ClientSize = new Size(ClientSize.Width + (int)SurveyPanelWidth, ClientSize.Height);
         }

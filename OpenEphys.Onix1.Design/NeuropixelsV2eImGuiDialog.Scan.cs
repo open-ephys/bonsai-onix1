@@ -13,8 +13,8 @@ namespace OpenEphys.Onix1.Design
             CheckScannedPartNumberAgainstLoadedFile();
             OfferScannedModel(scan.PartNumber);
 
-            // NB: the scanned serial number can show or hide stored survey results that were judged against the
-            // calibration file's. Results without a serial number are a survey just run, so they stay.
+            // NB: a scan hides stored survey results measured on another probe, or shows them again when it finds
+            // that probe. Results without a serial number can't be shown to differ, so they stay.
             var results = survey.Results;
             if (results == null || (results.ProbeSerialNumber.HasValue && results.ProbeSerialNumber != scan.SerialNumber))
                 RestoreSurveyResults();

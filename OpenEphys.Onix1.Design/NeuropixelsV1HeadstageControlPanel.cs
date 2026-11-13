@@ -25,6 +25,7 @@ namespace OpenEphys.Onix1.Design
         readonly double? initialPortVoltage;
         readonly bool[] initialEnabled;
         readonly ImGuiLogConsole log;
+        readonly Action<IImGuiTabPanel> selectTab;
         readonly NeuropixelsSurveyState state = new();
         readonly byte[] driverBuf = new byte[64];
         static readonly Vector4 ColorTextSuccess = ImGui.ColorConvertU32ToFloat4(ImGuiPalette.BrightFern);
@@ -48,15 +49,18 @@ namespace OpenEphys.Onix1.Design
         /// reason as <paramref name="setHeadstagePort"/>.
         /// </param>
         /// <param name="log">The hosting shell's console log.</param>
+        /// <param name="selectTab">Shows a probe's tab in the hosting shell.</param>
         internal NeuropixelsV1HeadstageControlPanel(IReadOnlyList<NeuropixelsV1SurveyTarget> targets, SurveyHeadstageFactory buildHeadstage,
             PortName initialPort, Action<PortName> setHeadstagePort,
-            double? initialPortVoltage, Action<double?> setHeadstagePortVoltage, ImGuiLogConsole log)
+            double? initialPortVoltage, Action<double?> setHeadstagePortVoltage, ImGuiLogConsole log,
+            Action<IImGuiTabPanel> selectTab)
         {
             this.targets = targets ?? throw new ArgumentNullException(nameof(targets));
             this.buildHeadstage = buildHeadstage ?? throw new ArgumentNullException(nameof(buildHeadstage));
             this.setHeadstagePort = setHeadstagePort ?? throw new ArgumentNullException(nameof(setHeadstagePort));
             this.setHeadstagePortVoltage = setHeadstagePortVoltage ?? throw new ArgumentNullException(nameof(setHeadstagePortVoltage));
             this.log = log ?? throw new ArgumentNullException(nameof(log));
+            this.selectTab = selectTab ?? throw new ArgumentNullException(nameof(selectTab));
             this.initialPort = initialPort;
             this.initialPortVoltage = initialPortVoltage;
             state.Port = initialPort;
@@ -246,7 +250,7 @@ namespace OpenEphys.Onix1.Design
             {
                 bool enabled = target.Enabled;
                 if (HeadstageProbeRows.DrawEnableRow(target.Label, target.Dialog.Scan, ref enabled, hardwareBusy,
-                    target.Dialog.ScannedModel, target.Dialog.LoadScannedModel, target.Dialog.MismatchedModel))
+                    target.Dialog.ScannedModel, () => { target.Dialog.LoadScannedModel(); selectTab(target.Dialog); }, target.Dialog.MismatchedModel))
                     target.Enabled = enabled;
             }
         }

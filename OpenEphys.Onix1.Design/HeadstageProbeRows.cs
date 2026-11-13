@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Hexa.NET.ImGui;
 using OpenEphys.EphysVisualization.Design;
 
@@ -51,14 +51,18 @@ namespace OpenEphys.Onix1.Design
 
             if (detected)
             {
+                ImGuiWidgets.InfoRow("Part No.", scan.PartNumber);
+                ImGuiWidgets.InfoRow("SN", scan.SerialNumber.ToString());
+
                 if (scannedModel != null)
                 {
                     ImGui.BeginDisabled(busy || !enabled);
-                    if (ImGui.Button($"New config.##{label}"))
+                    if (ImGui.Button($"Create new config. ->##{label}"))
                         loadScannedModel();
                     ImGui.EndDisabled();
                     ImGuiWidgets.Tooltip($"Load the {scannedModel} layout into {label}, as choosing it from New " +
-                        "does. Asks first if there are unsaved changes, and leaves the current file untouched.",
+                        $"does, and show {label}'s tab. Asks first if there are unsaved changes, and leaves the " +
+                        "current file untouched.",
                         busy ? "Not while a scan or survey is running." : $"{label} is disabled.");
                 }
 
@@ -73,9 +77,6 @@ namespace OpenEphys.Onix1.Design
                         $"is for a {mismatchedModel}, so the workflow will not run." +
                         (scannedModel != null ? $" Use New config. to load the {scannedModel} layout." : ""));
                 }
-
-                ImGuiWidgets.InfoRow("Part No.", scan.PartNumber);
-                ImGuiWidgets.InfoRow("SN", scan.SerialNumber.ToString());
             }
 
             ImGui.Spacing();
