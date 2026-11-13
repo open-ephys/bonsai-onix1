@@ -211,18 +211,18 @@ namespace OpenEphys.Onix1.Design
 
         void DrawScanSection(bool isScanning, bool blockedBySurvey)
         {
-            ImGui.Text("Probe Scan");
-            ImGui.Spacing();
+            ImGui.Text("Probes");
+            ImGui.SameLine();
 
             if (isScanning)
             {
-                if (ImGui.Button("Cancel##hsscan")) state.Cts?.Cancel();
+                if (ImGui.SmallButton("Cancel##hsscan")) state.Cts?.Cancel();
                 ImGuiWidgets.Tooltip("Stop the probe identity scan currently in progress.");
             }
             else
             {
                 if (blockedBySurvey) ImGui.BeginDisabled();
-                if (ImGui.Button("Start Scan##hsscan")) StartScan();
+                if (ImGui.SmallButton("Scan##hsscan")) StartScan();
                 ImGuiWidgets.Tooltip("Read each probe's part number and serial number directly from its EEPROM, and confirm the correct headstage is attached, without configuring or streaming from any probe.",
                     "A survey is currently running.");
                 if (blockedBySurvey) ImGui.EndDisabled();
@@ -286,7 +286,7 @@ namespace OpenEphys.Onix1.Design
             if (!anyEnabledHasProbeFile) { state.RecordSurveyData = false; ImGui.BeginDisabled(); }
             bool rec = state.RecordSurveyData;
             if (ImGui.Checkbox("Record raw data##recraw", ref rec)) state.RecordSurveyData = rec;
-            ImGuiWidgets.Tooltip("Save the raw, unfiltered voltage traces collected during the survey, for each enabled probe that has a ProbeInterface file. They go in a new folder next to that file, named <file name>_<yyyyMMdd-HHmmss>_survey-data, with one .arrow and one .json file per bank. Each bank's recording includes its settling period. The log names each folder when the survey ends.",
+            ImGuiWidgets.Tooltip("Save the unfiltered voltage traces collected during the survey as arrow files. They go in a new folder next to the probe interface file, named <file name>_<yyyyMMdd-HHmmss>_survey-data, with one .arrow and one .json file per bank. Each bank's recording includes its settling period. The log names each folder when the survey ends.",
                 "Requires at least one enabled probe to have a ProbeInterface file.");
             if (!anyEnabledHasProbeFile) ImGui.EndDisabled();
         }

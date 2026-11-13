@@ -285,13 +285,26 @@ namespace OpenEphys.Onix1.Design
             }
         }
 
+        // NB: the window's X, Alt+F4 and the system menu's Close all arrive as SC_CLOSE. They act as OK instead of
+        // the Cancel that WinForms would give them, so closing the window keeps what was set in it. Unsaved
+        // probe interface changes still prompt, through CanClose.
+        protected override void WndProc(ref Message m)
+        {
+            const int WM_SYSCOMMAND = 0x0112;
+            const int SC_CLOSE = 0xF060;
+            if (m.Msg == WM_SYSCOMMAND && ((int)m.WParam & 0xFFF0) == SC_CLOSE)
+            {
+                DialogResult = DialogResult.OK;
+                return;
+            }
+            base.WndProc(ref m);
+        }
+
         void ShellClosing(object sender, FormClosingEventArgs e)
         {
             glControl.Paced = false;
 
-            // NB: every close path (Close button, window X, Alt+F4/system menu) runs the same CanClose
-            // gate. WinForms auto-sets DialogResult to Cancel for a modal dialog closed via X/Alt+F4 even
-            // with no Cancel button on the form, so DialogResult can't be used to special-case those paths.
+            // NB: every close path runs the same CanClose gate.
             foreach (var (_, panel) in tabs)
             {
                 if (!panel.CanClose(DialogResult))

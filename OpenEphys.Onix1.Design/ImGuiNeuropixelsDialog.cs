@@ -72,7 +72,7 @@ namespace OpenEphys.Onix1.Design
 
         /// <inheritdoc/>
         protected override string ProbeViewMessage =>
-            !ProbeEnabled ? $"{probeName} is disabled, so the workflow does not configure or record it. Enable it in {EnableLocation}."
+            !ProbeEnabled ? $"{probeName} is disabled. Enable it in {EnableLocation} to configure the probe."
             : ChannelConfigurationChosen ? null
             : DefaultGeometryOptions.Count > 0
                 ? "No channel configuration. Choose a probe model from New, or open a ProbeInterface file."
@@ -553,7 +553,8 @@ namespace OpenEphys.Onix1.Design
         // no file, it says what to do next, which also covers any unsaved changes, since with no file nothing is saved.
         void DrawFileStatus()
         {
-            bool noFile = string.IsNullOrEmpty(ProbeConfigurationBase.ProbeInterfaceFileName);
+            if (!ProbeEnabled) return;
+            var noFile = string.IsNullOrEmpty(ProbeConfigurationBase.ProbeInterfaceFileName);
             var (status, tooltip) = noFile && !ChannelConfigurationChosen
                 ? DefaultGeometryOptions.Count > 0
                     ? ("Open a file or choose New", "No ProbeInterface file is set, and the workflow will not run " +
