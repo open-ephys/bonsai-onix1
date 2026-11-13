@@ -89,16 +89,19 @@ namespace OpenEphys.Onix1
         /// 1) Serial number as the first line.
         /// </para>
         /// <para>
-        /// 2) All remaining lines (384 lines) contain the gain correction values for each channel. First is the channel number,
-        /// followed by the <see cref="NeuropixelsV1Gain"/> values. All elements are separated by commas, and each element is a valid 
-        /// double value. After the channel number, the first 8 values are AP gain corrections, related to the spike-band, and the last 8 values
+        /// 2) All remaining lines contain the gain correction values, with either one line per electrode
+        /// (<paramref name="electrodeCount"/> lines) or one line per channel (<see cref="NeuropixelsV1.ChannelCount"/>
+        /// lines). First is the electrode or channel number, numbered consecutively from zero, followed by the
+        /// <see cref="NeuropixelsV1Gain"/> values. All elements are separated by commas, and each element is a valid 
+        /// double value. After the electrode or channel number, the first 8 values are AP gain corrections, related to the spike-band, and the last 8 values
         /// are LFP gain corrections, for the LFP band.
         /// </para>
         /// </remarks>
         /// <param name="gainCalibrationFile">String defining the path to the gain calibration file.</param>
         /// <param name="apGain">Current <see cref="NeuropixelsV1Gain"/> for the AP data.</param>
         /// <param name="lfpGain">Current <see cref="NeuropixelsV1Gain"/> for the LFP data.</param>
-        /// <param name="electrodeCount">Number of electrodes expected in the calibration file.</param>
+        /// <param name="electrodeCount">Number of electrodes on the probe, which is the number of lines expected in a
+        /// calibration file with one line per electrode.</param>
         /// <returns><see cref="NeuropixelsV1eGainCorrection"/> object that contains the AP and LFP gain correction values. This object is null if the file was not successfully parsed.</returns>
         internal static NeuropixelsV1eGainCorrection? TryParseGainCalibrationFile(string gainCalibrationFile, NeuropixelsV1Gain apGain, NeuropixelsV1Gain lfpGain, int electrodeCount)
         {
@@ -106,19 +109,21 @@ namespace OpenEphys.Onix1
 
             var lines = File.ReadLines(gainCalibrationFile);
 
-            if (lines.Count() != electrodeCount + 1) return null;
+            // NB: Files have either one row per electrode or one row per channel (e.g. UHD probes).
+            var rowCount = lines.Count() - 1;
+            if (rowCount != electrodeCount && rowCount != NeuropixelsV1.ChannelCount) return null;
             if (!ulong.TryParse(lines.ElementAt(0), out var serialNumber)) return null;
 
             if (!lines
                 .Skip(1)
                 .Select(l =>
                 {
-                    var ok = int.TryParse(l.Split(',')[0], out var channel);
-                    return (Ok: ok, Channel: channel);
+                    var ok = int.TryParse(l.Split(',')[0], out var row);
+                    return (Ok: ok, Row: row);
                 })
                 .Where(l => l.Ok)
-                .Select(l => l.Channel)
-                .SequenceEqual(Enumerable.Range(0, electrodeCount))) return null;
+                .Select(l => l.Row)
+                .SequenceEqual(Enumerable.Range(0, rowCount))) return null;
 
             var apIndex = Array.IndexOf(Enum.GetValues(typeof(NeuropixelsV1Gain)), apGain);
             var apGainCorrections = lines
