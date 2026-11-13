@@ -489,17 +489,22 @@ namespace OpenEphys.Onix1.Design
         {
             var presetNames = presets.Select(p => p.ToString()).ToArray();
             ImGui.SetNextItemWidth(ComboboxStartWidthPx);
+            int previousPresetIdx = presetIdx;
             if (ImGui.Combo("Preset##preset", ref presetIdx, presetNames, presetNames.Length))
-                ApplyPreset(presets[presetIdx]);
-            ImGuiWidgets.Tooltip("Apply a ready-made channel selection in a single step. Overrides current enabled/pinned contacts.");
+            {
+                var chosen = presets[presetIdx];
+                ApplyPresetClearingPins(() => ApplyPreset(chosen), () => presetIdx = previousPresetIdx);
+            }
+            ImGuiWidgets.Tooltip("Start from a ready-made channel selection. It replaces the channel map and clears any pins.");
 
             if (presets[presetIdx] != NeuropixelsV1Preset.None)
             {
                 var preset = presets[presetIdx];
                 int maxOffset = probeGroup.MaxOffset(preset);
                 ImGui.SetNextItemWidth(ComboboxStartWidthPx);
+                int previousOffset = presetOffset;
                 if (ImGui.SliderInt("Offset##presetoffset", ref presetOffset, 0, maxOffset))
-                    ApplyPreset(preset);
+                    ApplyPresetClearingPins(() => ApplyPreset(preset), () => presetOffset = previousOffset);
                 ImGuiWidgets.Tooltip("Tip offset, in banks, added to the preset. Clamped so no atom's bank exceeds the probe's bank range.");
             }
 

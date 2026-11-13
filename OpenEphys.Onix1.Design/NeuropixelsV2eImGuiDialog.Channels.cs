@@ -24,9 +24,13 @@ namespace OpenEphys.Onix1.Design
         {
             var presetNames = presets.Select(p => p.ToString()).ToArray();
             ImGui.SetNextItemWidth(ComboboxStartWidthPx);
+            int previousPresetIdx = presetIdx;
             if (ImGui.Combo("Preset##preset", ref presetIdx, presetNames, presetNames.Length))
-                ApplyPreset(presets[presetIdx]);
-            ImGuiWidgets.Tooltip("Apply a ready-made channel selection in a single step. Note: this overrides all current enabled and/or pinned contacts.");
+            {
+                var chosen = presets[presetIdx];
+                ApplyPresetClearingPins(() => ApplyPreset(chosen), () => presetIdx = previousPresetIdx);
+            }
+            ImGuiWidgets.Tooltip("Start from a ready-made channel selection. It replaces the channel map and clears any pins.");
         }
 
         void DrawTipReferenceShankCheckboxes()

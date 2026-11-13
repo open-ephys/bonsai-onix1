@@ -335,7 +335,7 @@ namespace OpenEphys.Onix1.Design
                 DisabledHint("Select at least one contact first."));
             ImGui.SameLine();
             if (ImGui.Button("Enable & Pin (P)##enablepin")) EnableAndPinSelectedContacts();
-            ImGuiWidgets.Tooltip("Enable the selected contacts and pin their channel assignment so it survives future preset or probe type changes.",
+            ImGuiWidgets.Tooltip("Enable the selected contacts and pin their channels, so that enabling other contacts cannot take those channels over.",
                 DisabledHint("Select at least one contact first."));
             if (!anySelected) ImGui.EndDisabled();
 
@@ -351,14 +351,14 @@ namespace OpenEphys.Onix1.Design
 
             if (!anySelectedPinned) ImGui.BeginDisabled();
             if (ImGui.Button("Unpin (Shift+P)##unpinsel")) UnpinSelectedContacts();
-            ImGuiWidgets.Tooltip("Release the pin on the selected contacts' channels, allowing a future preset or probe type change to reassign them.",
+            ImGuiWidgets.Tooltip("Release the pin on the selected contacts' channels, so that enabling other contacts can take them over.",
                 DisabledHint("Select a pinned contact first."));
             if (!anySelectedPinned) ImGui.EndDisabled();
 
             bool anyEnabledUnpinned = AnyEnabledUnpinned();
             if (!anyEnabledUnpinned) ImGui.BeginDisabled();
             if (ImGui.Button("Pin Enabled (Ctrl+P)##pinenabled")) PinEnabledContacts();
-            ImGuiWidgets.Tooltip("Pin the channel assignment of every enabled contact so it survives future preset or probe type changes. For example, apply a preset, pin it, then unpin the few contacts to edit by hand.",
+            ImGuiWidgets.Tooltip("Pin the channel of every enabled contact, so that enabling other contacts cannot take those channels over. For example, apply a preset, pin it, then unpin the few contacts to edit by hand.",
                 DisabledHint("Every enabled contact is already pinned."));
             if (!anyEnabledUnpinned) ImGui.EndDisabled();
 
@@ -367,7 +367,7 @@ namespace OpenEphys.Onix1.Design
             bool noPins = channelState.PinnedChannels.Count == 0;
             if (noPins) ImGui.BeginDisabled();
             if (ImGui.Button("Unpin All (Ctrl+Shift+P)##unpinall")) UnpinAllContacts();
-            ImGuiWidgets.Tooltip("Release every pin on this probe, allowing all channels to be reassigned by a future preset or probe type change.",
+            ImGuiWidgets.Tooltip("Release every pin on this probe, so that enabling other contacts can take any channel over.",
                 DisabledHint("No channels are pinned."));
             if (noPins) ImGui.EndDisabled();
         }
@@ -787,9 +787,52 @@ namespace OpenEphys.Onix1.Design
                 ImGui.TextDisabled("Channel editing is off while selecting banks to survey.");
             ImGui.BeginDisabled(bankSelectMode);
             DrawProbeSpecificChannelControls();
+            ImGui.Separator();
+            ImGui.Text("Electrode Selection");
             ImGui.Spacing();
             DrawEnablePinButtons();
             ImGui.EndDisabled();
+
+            DrawClearPinsPopup();
+        }
+
+        const string ClearPinsPopupId = "Clear pinned channels?";
+        Action pendingPreset;
+        Action declinedPreset;
+
+        /// <summary>
+        /// Applies a preset through <paramref name="apply"/>, after asking first if any channels are pinned, since
+        /// a preset replaces the whole channel map and clears the pins. <paramref name="decline"/> puts the preset
+        /// controls back if the user says no.
+        /// </summary>
+        protected void ApplyPresetClearingPins(Action apply, Action decline)
+        {
+            if (channelState.PinnedChannels.Count == 0)
+            {
+                apply();
+                return;
+            }
+
+            pendingPreset = apply;
+            declinedPreset = decline;
+            ImGui.OpenPopup(ClearPinsPopupId);
+        }
+
+        void DrawClearPinsPopup()
+        {
+            if (pendingPreset == null) return;
+
+            var choice = ImGuiWidgets.ConfirmModal(ClearPinsPopupId,
+                $"A preset replaces the channel map, so applying it clears the {channelState.PinnedChannels.Count} " +
+                "pinned channels.", acceptLabel: "Apply Preset");
+            if (choice == ModalChoice.Pending) return;
+
+            if (choice == ModalChoice.Accepted)
+                pendingPreset();
+            else
+                declinedPreset();
+            pendingPreset = null;
+            declinedPreset = null;
         }
 
         bool DrawNewChannelMapCombo()
