@@ -85,6 +85,7 @@ namespace OpenEphys.Onix1.Design
 
             if (!showActivityColors || bankSelectMode) return;
 
+            DrawShowEnabledOnlyButton();
             ImGui.Spacing();
 
             int mi = (int)selectedMetric;
