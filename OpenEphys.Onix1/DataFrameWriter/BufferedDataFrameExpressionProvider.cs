@@ -37,7 +37,8 @@ namespace OpenEphys.Onix1.DataFrameWriter
             ParameterExpression arrowArrayIndex,
             ParameterExpression batchRows,
             Type frameType,
-            IEnumerable<MemberFieldGroup> fieldGroups)
+            IEnumerable<MemberFieldGroup> fieldGroups,
+            ICollection<IDisposable> resources)
         {
             var frameParameter = Expression.Parameter(typeof(BufferedDataFrame), "bufferedDataFrame");
             var expressions = new List<Expression>();
@@ -53,11 +54,16 @@ namespace OpenEphys.Onix1.DataFrameWriter
                         break;
 
                     case var t when t == typeof(Mat):
+                    {
+                        var buffer = new MatBuffer();
+                        resources.Add(buffer);
+
                         if (group.Fields[0].DataType is RunEndEncodedType)
-                            expressions.Add(BuildRunEndEncodedMatExpression(group, frameType, frameParameter, arrowArrays, arrowArrayIndex));
+                            expressions.Add(BuildRunEndEncodedMatExpression(group, frameType, frameParameter, arrowArrays, arrowArrayIndex, buffer));
                         else
-                            expressions.Add(BuildMatExpression(group, frameType, frameParameter, arrowArrays, arrowArrayIndex, batchRows));
+                            expressions.Add(BuildMatExpression(group, frameType, frameParameter, arrowArrays, arrowArrayIndex, batchRows, buffer));
                         break;
+                    }
 
                     default:
                         throw new NotSupportedException(
@@ -94,7 +100,8 @@ namespace OpenEphys.Onix1.DataFrameWriter
             ParameterExpression frameParameter,
             ParameterExpression arrowArrays,
             ParameterExpression arrowArrayIndex,
-            ParameterExpression batchRows)
+            ParameterExpression batchRows,
+            MatBuffer buffer)
         {
             var combineMatMethod = typeof(BufferedDataFrameExpressionProvider)
                 .GetMethod(nameof(CombineMatObjects), BindingFlags.Static | BindingFlags.NonPublic);
@@ -116,7 +123,8 @@ namespace OpenEphys.Onix1.DataFrameWriter
                 Expression.Lambda<Func<BufferedDataFrame, Mat>>(
                     DataFrameWriterHelper.CreateMemberAccess(
                         Expression.Convert(frameParameter, frameType), group.Member),
-                    frameParameter));
+                    frameParameter),
+                Expression.Constant(buffer));
 
             var loopBody = Expression.Block(
                 Expression.Assign(
@@ -148,7 +156,8 @@ namespace OpenEphys.Onix1.DataFrameWriter
             Type frameType,
             ParameterExpression frameParameter,
             ParameterExpression arrowArrays,
-            ParameterExpression arrowArrayIndex)
+            ParameterExpression arrowArrayIndex,
+            MatBuffer buffer)
         {
             var combineMatMethod = typeof(BufferedDataFrameExpressionProvider)
                 .GetMethod(nameof(CombineMatObjects), BindingFlags.Static | BindingFlags.NonPublic);
@@ -174,7 +183,8 @@ namespace OpenEphys.Onix1.DataFrameWriter
                 Expression.Lambda<Func<BufferedDataFrame, Mat>>(
                     DataFrameWriterHelper.CreateMemberAccess(
                         Expression.Convert(frameParameter, frameType), group.Member),
-                    frameParameter));
+                    frameParameter),
+                Expression.Constant(buffer));
 
             var runEndsArrayCall = Expression.Call(
                 typeof(BufferedDataFrameExpressionProvider)
@@ -284,12 +294,12 @@ namespace OpenEphys.Onix1.DataFrameWriter
             return runEndsBuilder.Build();
         }
 
-        static Mat CombineMatObjects(IList<BufferedDataFrame> frames, Func<BufferedDataFrame, Mat> getter)
+        static Mat CombineMatObjects(IList<BufferedDataFrame> frames, Func<BufferedDataFrame, Mat> getter, MatBuffer buffer)
         {
             Mat first = getter(frames[0]);
             int length = first.Cols * frames.Count;
 
-            Mat dest = new(first.Rows, length, first.Depth, first.Channels);
+            Mat dest = buffer.Get(first.Rows, length, first.Depth, first.Channels);
 
             int samplesPerFrame = first.Cols;
             int rows = first.Rows;
