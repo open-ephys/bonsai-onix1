@@ -84,7 +84,7 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Returns every preset available for this probe.
         /// </summary>
-        public abstract IReadOnlyList<NeuropixelsV1Preset> GetPresets();
+        internal abstract IReadOnlyList<NeuropixelsV1Preset> GetPresets();
 
         /// <summary>
         /// Applies <paramref name="preset"/> at <paramref name="offset"/> banks from the tip, replacing
@@ -94,7 +94,7 @@ namespace OpenEphys.Onix1
         /// leaves the existing channel map unchanged.</param>
         /// <param name="offset">The tip offset, in banks, added to every one of the preset's relative
         /// bank values.</param>
-        public abstract void SelectPreset(NeuropixelsV1Preset preset, int offset);
+        internal abstract void SelectPreset(NeuropixelsV1Preset preset, int offset);
 
         /// <summary>
         /// Returns the highest tip offset <paramref name="preset"/> can be applied at without any
@@ -114,7 +114,7 @@ namespace OpenEphys.Onix1
         /// valid input.</param>
         /// <exception cref="ArgumentException">Thrown if <paramref name="preset"/> is
         /// <see cref="NeuropixelsV1Preset.None"/>.</exception>
-        public int MaxOffset(NeuropixelsV1Preset preset)
+        internal int MaxOffset(NeuropixelsV1Preset preset)
         {
             if (preset == NeuropixelsV1Preset.None)
                 throw new ArgumentException("None has no offset range.", nameof(preset));
@@ -207,7 +207,7 @@ namespace OpenEphys.Onix1
     /// cref="RelativeBanks"/> to pick each channel's actual bank.
     /// </para>
     /// </remarks>
-    public readonly record struct NeuropixelsV1Preset(
+    internal readonly record struct NeuropixelsV1Preset(
         string DisplayName,
         IReadOnlyList<int> RelativeBanks,
         NeuropixelsV1ColumnPattern? RequiredColumnPattern,

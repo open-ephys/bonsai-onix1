@@ -202,7 +202,7 @@ namespace OpenEphys.Onix1
         /// Returns every channel preset available for this probe, generated from its shank count.
         /// </summary>
         /// <returns>The list of channel presets, starting with <see cref="NeuropixelsV2ChannelPreset.None"/>.</returns>
-        public IReadOnlyList<NeuropixelsV2ChannelPreset> GetChannelPresets()
+        internal IReadOnlyList<NeuropixelsV2ChannelPreset> GetChannelPresets()
         {
             var presets = new List<NeuropixelsV2ChannelPreset> { NeuropixelsV2ChannelPreset.None };
 
@@ -236,7 +236,7 @@ namespace OpenEphys.Onix1
         /// </summary>
         /// <param name="preset">The preset to apply. Passing <see cref="NeuropixelsV2ChannelPreset.None"/>
         /// leaves the existing channel map unchanged.</param>
-        public void SelectPreset(NeuropixelsV2ChannelPreset preset)
+        internal void SelectPreset(NeuropixelsV2ChannelPreset preset)
         {
             if (preset == NeuropixelsV2ChannelPreset.None)
                 return;
@@ -372,7 +372,7 @@ namespace OpenEphys.Onix1
     /// the same consecutive range of intra-shank electrode indices on each.
     /// </para>
     /// </remarks>
-    public readonly record struct NeuropixelsV2ChannelPreset(int? Shank, int WindowStart, string DisplayName)
+    internal readonly record struct NeuropixelsV2ChannelPreset(int? Shank, int WindowStart, string DisplayName)
     {
         /// <summary>
         /// The "no preset" value; applying it leaves the existing channel map unchanged.
