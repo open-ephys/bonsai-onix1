@@ -150,6 +150,7 @@ namespace OpenEphys.Onix1
                 device.WriteRegister(Rhs2116.ENABLE, enable ? 1u : 0);
 
                 return new CompositeDisposable(
+                    DeviceManager.RegisterDevice(deviceName, device, DeviceType),
                     analogLowCutoff.SubscribeSafe(observer, newValue =>
                     {
                         var regs = Rhs2116Config.AnalogLowCutoffToRegisters[newValue];
@@ -172,8 +173,7 @@ namespace OpenEphys.Onix1
                     respectExternalActiveStim.SubscribeSafe(observer, newValue =>
                     {
                         device.WriteRegister(Rhs2116.RESPECTSTIMACTIVE, newValue ? 1u : 0u);
-                    }),
-                    DeviceManager.RegisterDevice(deviceName, device, DeviceType)
+                    })
                 );
             });
         }

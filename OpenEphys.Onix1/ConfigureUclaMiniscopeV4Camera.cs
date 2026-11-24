@@ -143,7 +143,7 @@ namespace OpenEphys.Onix1
             var frameRate = FrameRate;
             var interleaveLed = InterleaveLed;
 
-            return source.ConfigureAndLatchDevice(context =>
+            return source.ConfigureAndLatchDevice((context, observer) =>
             {
                 // configure device via the DS90UB9x deserializer device
                 var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
@@ -163,21 +163,22 @@ namespace OpenEphys.Onix1
                     atMega.WriteByte(0x01, 0xFF);
                 });
 
-                var disposables = new List<IDisposable>();
-
                 // NB: the DS90UB9x supports multiple streams and we don't want to overwrite other streams'
                 // enable state
                 if (enable)
                 {
                     device.WriteRegister(DS90UB9x.ENABLE, 1u);
                     ConfigureImager(device, frameRate, interleaveLed);
-
-                    disposables.Add(ledBrightness.Subscribe(value => SetLedBrightness(device, value)));
-                    disposables.Add(sensorGain.Subscribe(value => SetSensorGain(device, value)));
-                    disposables.Add(focus.Subscribe(value => SetLiquidLensVoltage(device, value)));
                 }
 
-                disposables.Add(DeviceManager.RegisterDevice(deviceName, deviceInfo));
+                var disposables = new List<IDisposable> { DeviceManager.RegisterDevice(deviceName, deviceInfo) };
+                if (enable)
+                {
+                    disposables.Add(ledBrightness.SubscribeSafe(observer, value => SetLedBrightness(device, value)));
+                    disposables.Add(sensorGain.SubscribeSafe(observer, value => SetSensorGain(device, value)));
+                    disposables.Add(focus.SubscribeSafe(observer, value => SetLiquidLensVoltage(device, value)));
+                }
+
                 disposables.Add(shutdown);
 
                 return new CompositeDisposable(disposables);

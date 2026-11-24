@@ -67,16 +67,13 @@ namespace OpenEphys.Onix1
             {
                 var device = context.GetDeviceContext(deviceAddress, DeviceType);
                 device.WriteRegister(Heartbeat.ENABLE, enable ? 1u : 0u);
-                var subscription = beatsPerSecond.SubscribeSafe(observer, newValue =>
-                {
-                    var clkHz = device.ReadRegister(Heartbeat.CLK_HZ);
-                    device.WriteRegister(Heartbeat.CLK_DIV, clkHz / newValue);
-                });
-
                 return new CompositeDisposable(
                     DeviceManager.RegisterDevice(deviceName, device, DeviceType),
-                    subscription
-                );
+                    beatsPerSecond.SubscribeSafe(observer, newValue =>
+                    {
+                        var clkHz = device.ReadRegister(Heartbeat.CLK_HZ);
+                        device.WriteRegister(Heartbeat.CLK_DIV, clkHz / newValue);
+                    }));
             });
         }
     }
