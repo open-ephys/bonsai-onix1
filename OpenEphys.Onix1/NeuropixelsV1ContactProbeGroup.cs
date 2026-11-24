@@ -88,7 +88,7 @@ namespace OpenEphys.Onix1
         /// patterns, not meaningful for every probe with a matching bank count.
         /// </remarks>
         /// <returns>The list of presets, starting with <see cref="NeuropixelsV1Preset.None"/>.</returns>
-        public override IReadOnlyList<NeuropixelsV1Preset> GetPresets()
+        internal override IReadOnlyList<NeuropixelsV1Preset> GetPresets()
         {
             var presets = new List<NeuropixelsV1Preset>
             {
@@ -141,7 +141,7 @@ namespace OpenEphys.Onix1
         /// <exception cref="ArgumentException">Thrown if <paramref name="preset"/> is not
         /// <see cref="NeuropixelsV1Preset.None"/> and its widest relative bank exceeds this probe's
         /// bank range even at offset 0. Thrown before any state is changed.</exception>
-        public override void SelectPreset(NeuropixelsV1Preset preset, int offset)
+        internal override void SelectPreset(NeuropixelsV1Preset preset, int offset)
         {
             if (preset == NeuropixelsV1Preset.None)
                 return;
