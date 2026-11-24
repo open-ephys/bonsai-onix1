@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Reactive.Threading.Tasks;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -51,14 +53,20 @@ namespace OpenEphys.Onix1
 
         // NB: Decouple OnNext() from hardware reads
         bool disposed;
-        Task readFrames;
-        Task distributeFrames;
         Task acquisition = Task.CompletedTask;
         CancellationTokenSource collectFramesCancellation;
         event Func<ContextTask, IDisposable> ConfigureAndLatchControllerEvent;
         event Func<ContextTask, IDisposable> ConfigureAndLatchLinkEvent;
         event Func<ContextTask, IDisposable> ConfigureAndLatchDeviceEvent;
         event Func<ContextTask, IDisposable> ConfigureDirectDeviceEvent;
+        readonly List<PreAcquisitionStep> preAcquisitionSteps = new();
+
+        sealed class PreAcquisitionStep
+        {
+            public uint DeviceAddress;
+            public Func<IObservable<oni.Frame>, IObservable<oni.Frame>> Data;
+            public Func<ContextTask, IDisposable> Configure;
+        }
 
         // FrameReceived observable sequence
         readonly Subject<oni.Frame> frameReceived = new();
@@ -267,6 +275,32 @@ namespace OpenEphys.Onix1
             }
         }
 
+        // NB: This is where actions that require a short acquisition before the main one (e.g. ADC
+        // calibration) should be queued. They run after all other stages, sharing a single acquisition in
+        // which each data selector receives the frames of its device address. Data selectors must only
+        // consume frames (register access would deadlock) and their sequences must complete, otherwise
+        // acquisition start will block. The IDisposable returned by configure is disposed as soon as
+        // pre-acquisition stops, instead of at context cleanup.
+        internal void ConfigurePreAcquisition(
+            uint deviceAddress,
+            Func<IObservable<oni.Frame>, IObservable<oni.Frame>> data,
+            Func<ContextTask, IDisposable> configure)
+        {
+            if (data is null) throw new ArgumentNullException(nameof(data));
+            if (configure is null) throw new ArgumentNullException(nameof(configure));
+
+            lock (regLock)
+            {
+                AssertConfigurationContext();
+                preAcquisitionSteps.Add(new PreAcquisitionStep
+                {
+                    DeviceAddress = deviceAddress,
+                    Data = data,
+                    Configure = configure
+                });
+            }
+        }
+
         private IDisposable ConfigureContext()
         {
             var controllerConfigureAndLatchAction = Interlocked.Exchange(ref ConfigureAndLatchControllerEvent, null);
@@ -356,6 +390,11 @@ namespace OpenEphys.Onix1
                         throw new InvalidOperationException("Acquisition already running in the current context.");
                     }
 
+                    // NB: Take ownership of registered pre-acquisition steps alongside the other configuration
+                    // stages so that they are consumed even if configuration fails
+                    var preAcquisition = preAcquisitionSteps.ToArray();
+                    preAcquisitionSteps.Clear();
+
                     // NB: Configure context before starting acquisition or the the settings (e.g. Block read
                     // and write sizes) will not be respected
                     var contextConfiguration = ConfigureContext();
@@ -365,6 +404,13 @@ namespace OpenEphys.Onix1
                         // set block read and write size
                         ctx.BlockReadSize = blockReadSize;
                         ctx.BlockWriteSize = blockWriteSize;
+
+                        // NB: Pre-acquisition runs after all other configuration stages. It is not part of
+                        // ConfigureContext because it needs the block read size to be set.
+                        using (ValidationScope.Enter(ValidationLevel))
+                        {
+                            RunPreAcquisition(preAcquisition, cancellationToken);
+                        }
 
                         PerformControllerSynchronization();
 
@@ -401,99 +447,213 @@ namespace OpenEphys.Onix1
                         throw;
                     }
 
-                    // TODO: If during the creation of of collectFramesCancellation, collectFramesToken, frameQueue, readFrames, or distributeFrames
+                    // TODO: If during the creation of of collectFramesCancellation or the frame pipeline
                     // an exception is thrown, contextConfiguration will not be disposed. The process will need to be restarted to get out of deadlock
                     collectFramesCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                    var collectFramesToken = collectFramesCancellation.Token;
-                    var frameQueue = new BlockingCollection<oni.Frame>(MaxQueuedFrames);
+                    var framePipeline = RunFramePipeline(frameReceived, collectFramesCancellation);
 
-                    readFrames = Task.Factory.StartNew(() =>
+                    acquisition = framePipeline.ContinueWith(task =>
                     {
-                        try
-                        {
-                            while (!collectFramesToken.IsCancellationRequested)
-                            {
-                                // NB: This is a blocking call and there is no safe way to terminate it
-                                // other than ending the process. For this reason, it is the job of the
-                                // hardware to provide enough data (e.g. through a HeartbeatDevice") for
-                                // this call to return.
-                                oni.Frame frame;
-                                try { frame = ReadFrame(); }
-                                catch (Exception)
-                                {
-                                    collectFramesCancellation.Cancel();
-                                    throw;
-                                }
-                                frameQueue.Add(frame, collectFramesToken);
-
-                            }
-                        }
-                        catch (OperationCanceledException)
-                        {
-#if DEBUG
-                            // NB: If FrameQueue.Add has not been called, frame has ref count 0 when it exits
-                            // while loop context and will be disposed.
-                            Console.WriteLine("Frame collection task has been cancelled by " + this.GetType());
-#endif
-                        }
-                    },
-                    collectFramesToken,
-                    TaskCreationOptions.LongRunning,
-                    TaskScheduler.Default);
-
-                    distributeFrames = Task.Factory.StartNew(() =>
-                    {
-                        try
-                        {
-                            while (!collectFramesToken.IsCancellationRequested)
-                            {
-                                if (frameQueue.TryTake(out oni.Frame frame, QueueTimeoutMilliseconds, collectFramesToken))
-                                {
-                                    frameReceived.OnNext(frame);
-                                    frame.Dispose();
-                                }
-                            }
-                        }
-                        catch (OperationCanceledException)
-                        {
-#if DEBUG
-                            // NB: If the thread stops no frame has been collected
-                            Console.WriteLine("Frame distribution task has been cancelled by " + this.GetType());
-#endif
-                        }
-                    },
-                    collectFramesToken,
-                    TaskCreationOptions.LongRunning,
-                    TaskScheduler.Default);
-
-                    return acquisition = Task.WhenAll(distributeFrames, readFrames).ContinueWith(task =>
-                    {
-                        if (readFrames.IsFaulted && readFrames.Exception is AggregateException ex)
-                        {
-                            var error = ex.InnerExceptions.Count == 1 ? ex.InnerExceptions[0] : ex;
-                            frameReceived.OnError(error);
-                        }
-
                         lock (regLock)
                         {
                             collectFramesCancellation?.Dispose();
                             collectFramesCancellation = null;
-
-                            // Clear queue and free memory
-                            while (frameQueue?.Count > 0)
-                            {
-                                var frame = frameQueue.Take();
-                                frame.Dispose();
-                            }
-                            frameQueue?.Dispose();
-                            frameQueue = null;
                             ctx.Stop();
+                        }
 
-                            contextConfiguration.Dispose();
+                        // NB: Not under regLock: if acquisition fails while the workflow is still subscribing, a data
+                        // node can read a register inside DeviceManager.GetDevice (holding its lock) while unregistering
+                        // devices here needs that same lock, deadlocking. Acquisition is only marked completed after this.
+                        contextConfiguration.Dispose();
+
+                        lock (regLock)
+                        {
                             acquisition = Task.CompletedTask;
                         }
                     });
+
+                    // NB: Report errors after cleanup, from a task Dispose does not wait on, so that observers
+                    // disposing the context in response to the error do not deadlock
+                    return acquisition.ContinueWith(_ =>
+                    {
+                        var error = GetTaskError(framePipeline);
+                        if (error != null)
+                        {
+                            frameReceived.OnError(error);
+                        }
+                    }, TaskScheduler.Default);
                 }
+        }
+
+        // NB: Runs a single acquisition for all pre-acquisition steps. Must be called with block sizes already
+        // set and acquisition stopped, and returns with acquisition stopped again.
+        void RunPreAcquisition(PreAcquisitionStep[] steps, CancellationToken cancellationToken)
+        {
+            if (steps.Length == 0) return;
+
+            using var preAcquisitionFrames = new Subject<oni.Frame>();
+            using var preAcquisitionCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var preAcquisitionConfiguration = new StackDisposable();
+
+            Task framePipeline = null;
+            Exception error = null;
+            try
+            {
+                foreach (var step in steps)
+                {
+                    // NB: perform configuration action and push resulting IDisposable onto stack
+                    preAcquisitionConfiguration.Push(step.Configure(this));
+                }
+
+                // NB: Evaluate selectors eagerly so that any synchronous failure happens before acquisition
+                // starts, and subscribe to all sequences before the first frame is produced
+                var sequences = steps
+                    .Select(step =>
+                    {
+                        var address = step.DeviceAddress;
+                        return step.Data(preAcquisitionFrames.Where(frame => frame.DeviceAddress == address))
+                            ?? throw new InvalidOperationException(
+                                $"The pre-acquisition data selector for device address {address} returned a null sequence.");
+                    })
+                    .ToArray();
+                var completion = sequences
+                    .Merge()
+                    .LastOrDefaultAsync()
+                    .ToTask(preAcquisitionCancellation.Token);
+
+                ctx.Start(false); // NB: The frame clock reset, if any, is performed by the main acquisition start
+                framePipeline = RunFramePipeline(preAcquisitionFrames, preAcquisitionCancellation);
+                completion.GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                error = ex;
+            }
+
+            // NB: Unsubscribes any pending pre-acquisition sequence and stops the frame pipeline. The read
+            // task exits once its current blocking read returns (e.g. on the next heartbeat).
+            preAcquisitionCancellation.Cancel();
+            Exception pipelineError = null;
+            try { framePipeline?.GetAwaiter().GetResult(); }
+            catch (Exception ex) { pipelineError = ex; }
+            ctx.Stop();
+
+            // NB: Released here rather than at context cleanup
+            preAcquisitionConfiguration.Dispose();
+
+            // NB: A pipeline failure cancels pre-acquisition, so report its error instead of the cancellation
+            if (pipelineError != null && (error == null || error is OperationCanceledException))
+            {
+                error = pipelineError;
+            }
+
+            if (error != null)
+            {
+                ExceptionDispatchInfo.Capture(error).Throw();
+            }
+        }
+
+        // NB: Starts the read and distribution tasks, feeding all frames read from hardware into sink. The
+        // returned task completes once both tasks have finished and all queued frames have been released.
+        // If reading or distributing fails, cancellation is requested and the returned task faults with the
+        // error.
+        Task RunFramePipeline(IObserver<oni.Frame> sink, CancellationTokenSource frameCancellation)
+        {
+            var collectFramesToken = frameCancellation.Token;
+            var frameQueue = new BlockingCollection<oni.Frame>(MaxQueuedFrames);
+
+            var readFrames = Task.Factory.StartNew(() =>
+            {
+                try
+                {
+                    while (!collectFramesToken.IsCancellationRequested)
+                    {
+                        // NB: This is a blocking call and there is no safe way to terminate it
+                        // other than ending the process. For this reason, it is the job of the
+                        // hardware to provide enough data (e.g. through a HeartbeatDevice") for
+                        // this call to return.
+                        oni.Frame frame;
+                        try { frame = ReadFrame(); }
+                        catch (Exception)
+                        {
+                            frameCancellation.Cancel();
+                            throw;
+                        }
+                        frameQueue.Add(frame, collectFramesToken);
+
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+#if DEBUG
+                    // NB: If FrameQueue.Add has not been called, frame has ref count 0 when it exits
+                    // while loop context and will be disposed.
+                    Console.WriteLine("Frame collection task has been cancelled by " + this.GetType());
+#endif
+                }
+                ;
+            },
+            collectFramesToken,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default);
+
+            var distributeFrames = Task.Factory.StartNew(() =>
+            {
+                try
+                {
+                    while (!collectFramesToken.IsCancellationRequested)
+                    {
+                        if (frameQueue.TryTake(out oni.Frame frame, QueueTimeoutMilliseconds, collectFramesToken))
+                        {
+                            try { sink.OnNext(frame); }
+                            finally { frame.Dispose(); }
+                        }
+                    }
+                }
+                catch (OperationCanceledException) when (collectFramesToken.IsCancellationRequested)
+                {
+#if DEBUG
+                    // NB: If the thread stops no frame has been collected
+                    Console.WriteLine("Frame distribution task has been cancelled by " + this.GetType());
+#endif
+                }
+                catch (Exception)
+                {
+                    // NB: An observer threw. Stop the read task too, otherwise it keeps queueing frames that are
+                    // never distributed and the error is never reported
+                    frameCancellation.Cancel();
+                    throw;
+                }
+            },
+            collectFramesToken,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default);
+
+            return Task.WhenAll(distributeFrames, readFrames).ContinueWith(task =>
+            {
+                // Clear queue and free memory
+                while (frameQueue.Count > 0)
+                {
+                    var frame = frameQueue.Take();
+                    frame.Dispose();
+                }
+                frameQueue.Dispose();
+
+                // NB: Fault the returned task instead of notifying sink here, since an observer disposing the
+                // context in response would wait on this pipeline to complete
+                var error = GetTaskError(readFrames) ?? GetTaskError(distributeFrames);
+                if (error != null)
+                {
+                    ExceptionDispatchInfo.Capture(error).Throw();
+                }
+            }, TaskScheduler.Default);
+        }
+
+        static Exception GetTaskError(Task task)
+        {
+            if (!task.IsFaulted) return null;
+            var ex = task.Exception;
+            return ex.InnerExceptions.Count == 1 ? ex.InnerExceptions[0] : ex;
         }
 
         #region oni.Context Properties
