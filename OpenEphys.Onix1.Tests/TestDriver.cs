@@ -17,6 +17,10 @@ namespace OpenEphys.Onix1.Tests
         /// <summary>A host index that opens without injected failures.</summary>
         internal const int Index = 0;
 
+        /// <summary>Another host index that opens without injected failures, for a second context open at the
+        /// same time as one at <see cref="Index"/>.</summary>
+        internal const int OtherIndex = 1;
+
         /// <summary>A host index whose hubs report firmware version 0xFFFF, which is never supported.</summary>
         internal const int UnsupportedFirmwareIndex = 128;
 
