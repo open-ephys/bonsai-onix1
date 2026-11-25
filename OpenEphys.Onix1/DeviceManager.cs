@@ -39,6 +39,8 @@ namespace OpenEphys.Onix1
                     var info = entry.Value.Subject.GetResult();
                     if (info.Context == deviceInfo.Context && info.DeviceAddress == deviceInfo.DeviceAddress)
                     {
+                        // NB: Release the name registered above, as the caller never receives its disposable
+                        disposable.Dispose();
                         throw new ArgumentException(
                             $"The specified device '{deviceInfo.DeviceType.Name}' could not be registered " +
                             $"because another device '{info.DeviceType.Name}' with the same address " +

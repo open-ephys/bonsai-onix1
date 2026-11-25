@@ -52,13 +52,5 @@ namespace OpenEphys.Onix1.Tests
             context.StartAsync((int)context.MaxReadFrameSize, (int)context.MaxWriteFrameSize);
             Assert.True(disposed.Wait(TimeSpan.FromSeconds(5)), "Disposing the context from the error handler did not return.");
         }
-
-        sealed class GenericContextTask : ContextTask
-        {
-            public GenericContextTask(string driver, int index)
-                : base(driver, index)
-            {
-            }
-        }
     }
 }
