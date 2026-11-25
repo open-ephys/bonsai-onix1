@@ -32,13 +32,14 @@ namespace OpenEphys.Onix1.DataFrameWriter
             );
         }
 
-        internal static Expression<TDelegate> CreateBuilder<TDelegate>(
+        internal static RecordBatchBuilder<T> CreateBuilder<T>(
             IRecordBatchExpressionProvider provider,
             Type frameType,
             IReadOnlyList<MemberFieldGroup> fieldGroups)
         {
             var expressions = new List<Expression>();
             var parameters = new List<ParameterExpression>();
+            var resources = new List<IDisposable>();
 
             var arrowArrays = Expression.Variable(typeof(IArrowArray[]), "arrowArrays");
             var arrowArrayIndex = Expression.Variable(typeof(int), "arrowArrayIndex");
@@ -56,7 +57,7 @@ namespace OpenEphys.Onix1.DataFrameWriter
 
             expressions.AddRange(
                 provider.GetArrayPopulationExpressions(
-                    arrowArrays, arrowArrayIndex, batchRowsVariable, frameType, fieldGroups));
+                    arrowArrays, arrowArrayIndex, batchRowsVariable, frameType, fieldGroups, resources));
 
             var recordBatch = Expression.Variable(typeof(RecordBatch), "recordBatch");
             parameters.Add(recordBatch);
@@ -66,11 +67,13 @@ namespace OpenEphys.Onix1.DataFrameWriter
 
             var createRecordBatch = Expression.Block(parameters, expressions);
 
-            return Expression.Lambda<TDelegate>(
+            var build = Expression.Lambda<Func<IList<T>, Schema, RecordBatch>>(
                 createRecordBatch,
                 provider.InputParameter,
                 schemaParameter
-            );
+            ).Compile();
+
+            return new RecordBatchBuilder<T>(build, resources.ToArray());
         }
     }
 }

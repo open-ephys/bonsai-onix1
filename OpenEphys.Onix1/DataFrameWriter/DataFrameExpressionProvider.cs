@@ -28,7 +28,8 @@ namespace OpenEphys.Onix1.DataFrameWriter
             ParameterExpression arrowArrayIndex,
             ParameterExpression batchRows,
             Type frameType,
-            IEnumerable<MemberFieldGroup> fieldGroups)
+            IEnumerable<MemberFieldGroup> fieldGroups,
+            ICollection<IDisposable> resources)
         {
             var frameParameter = Expression.Parameter(typeof(DataFrame), "dataFrame");
             var expressions = new List<Expression>();

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using Apache.Arrow;
 
 namespace OpenEphys.Onix1.DataFrameWriter
 {
@@ -20,10 +18,10 @@ namespace OpenEphys.Onix1.DataFrameWriter
             var members = DataFrameWriterHelper.GetDataMembers(frameType);
             var fieldGroups = DataFrameWriterHelper.BuildFieldMappings(members, frame);
             var schema = DataFrameWriterHelper.BuildSchema(fieldGroups);
-            var createRecordBatch = RecordBatchExpressionFactory.CreateBuilder<Func<IList<DataFrame>, Schema, RecordBatch>>(
-                new DataFrameExpressionProvider(), frameType, fieldGroups).Compile();
+            var builder = RecordBatchExpressionFactory.CreateBuilder<DataFrame>(
+                new DataFrameExpressionProvider(), frameType, fieldGroups);
             var bufferSize = DataFrameWriterHelper.GetBufferSize(frameType);
-            return new ArrowBatchWriter<DataFrame>(filename, schema, bufferSize, timeout, createRecordBatch, EnableCompression);
+            return new ArrowBatchWriter<DataFrame>(filename, schema, bufferSize, timeout, builder, EnableCompression);
         }
 
         protected override void Write(ArrowBatchWriter<DataFrame> writer, TSource input)
