@@ -164,6 +164,16 @@ namespace OpenEphys.Onix1.Tests
             AssertParsed(Parse(path, NeuropixelsV1.ElectrodeCount));
         }
 
+        // A file in which no correction can be read is invalid: the parser must reject it, not throw
+        // (all rows yielded the same null correction, which passed the single-value check)
+        [Fact]
+        public void UnparsableCorrections_AreRejected()
+        {
+            var bad = string.Join(", ", Enumerable.Repeat("x", NeuropixelsV1Helper.NumberOfGainFactors * 2));
+            var rows = Enumerable.Range(0, NeuropixelsV1.ChannelCount).Select(i => $"{i}, {bad}").ToArray();
+            Assert.Null(Parse(WriteFile(rows), NeuropixelsV1.ElectrodeCount));
+        }
+
         // Real IMEC files write the reference rows as "1.000000", which the current culture read as 1000000 in es-ES and
         // de-DE: the reference filter (exactly 1.0) no longer removed them, so every standard NP 1.0 file was rejected
         [Theory]
@@ -205,6 +215,17 @@ namespace OpenEphys.Onix1.Tests
             Assert.True(calibrated.HasValue);
             Assert.Equal(1.047077, calibrated.Value.ApGainCorrectionFactor);
             Assert.Equal(0.995620, calibrated.Value.LfpGainCorrectionFactor);
+        }
+
+        // Same as above, with the reference rows (all 1.0) present: they used to be filtered out, leaving the null
+        [Fact]
+        public void UnparsableCorrectionsWithReferenceRows_AreRejected()
+        {
+            var bad = string.Join(", ", Enumerable.Repeat("x", NeuropixelsV1Helper.NumberOfGainFactors * 2));
+            var rows = Enumerable.Range(0, NeuropixelsV1.ElectrodeCount)
+                .Select(i => $"{i}, {(NeuropixelsV1.IsInternalReferenceContact(i) ? ReferenceCorrections : bad)}")
+                .ToArray();
+            Assert.Null(Parse(WriteFile(rows), NeuropixelsV1.ElectrodeCount));
         }
     }
 }

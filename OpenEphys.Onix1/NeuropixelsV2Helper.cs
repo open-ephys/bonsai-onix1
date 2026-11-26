@@ -50,15 +50,20 @@ namespace OpenEphys.Onix1
                         .Skip(1)
                         .Select(l =>
                         {
-                            // NB: Calibration files always use '.' as the decimal separator, whatever the regional settings
-                            var ok = double.TryParse(l.Split(',')[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var gainCorrection);
+                            // NB: Calibration files always use '.' as the decimal separator, whatever the regional settings.
+                            // A row without a comma has no second element, and TryParse rejects the resulting null
+                            var ok = double.TryParse(l.Split(',').ElementAtOrDefault(1), NumberStyles.Float, CultureInfo.InvariantCulture, out var gainCorrection);
                             return (Ok: ok, GainCorrection: gainCorrection);
-                        })
-                        .Where(l => l.Ok)
-                        .Select(l => l.GainCorrection)
-                        .Distinct();
+                        });
 
-            return gains.Count() == 1 ? new(serialNumber, gains.First()) : null;
+            // NB: A row without a valid gain correction makes the file invalid, instead of being skipped
+            if (!gains.All(l => l.Ok)) return null;
+
+            var distinctGains = gains
+                                .Select(l => l.GainCorrection)
+                                .Distinct();
+
+            return distinctGains.Count() == 1 ? new(serialNumber, distinctGains.First()) : null;
         }
 
         /// <summary>

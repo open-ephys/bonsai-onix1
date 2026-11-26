@@ -172,7 +172,9 @@ namespace OpenEphys.Onix1
 
             if (lfpGainCorrections.Count() == 2) lfpGainCorrections = lfpGainCorrections.Where(val => val != 1.0); // NB: Reference contacts are always 1.0. Filter this out.
 
-            return (apGainCorrections.Count() != 1 || lfpGainCorrections.Count() != 1)
+            // NB: A single null correction means that no row had valid corrections
+            return (apGainCorrections.Count() != 1 || lfpGainCorrections.Count() != 1 ||
+                    apGainCorrections.First() is null || lfpGainCorrections.First() is null)
                    ? null
                    : new(serialNumber, apGainCorrections.First().Value, lfpGainCorrections.First().Value);
         }
