@@ -54,11 +54,12 @@ namespace OpenEphys.Onix1
             {
                 if (portVoltage.Requested.HasValue)
                 {
-                    return string.Format($"{portVoltage.Requested:0.0}");
+                    // NB: Format with the given culture (ConvertFrom parses with it): a null culture means the current one
+                    return portVoltage.Requested.Value.ToString("0.0", culture);
                 }
                 else if (portVoltage.Applied.HasValue)
                 {
-                    return $"{portVoltage.Applied:0.0} (Auto)";
+                    return string.Format(culture, "{0:0.0} (Auto)", portVoltage.Applied.Value);
                 }
                 else
                 {
@@ -86,7 +87,9 @@ namespace OpenEphys.Onix1
                 {
                     return new AutoPortVoltage(null);
                 }
-                else if (double.TryParse(stringValue, NumberStyles.Number, culture ?? CultureInfo.CurrentCulture, out double result))
+                // NB: Float does not allow group separators, so that the decimal separator of another culture (e.g. "5.5"
+                // where ',' is the decimal separator) is rejected instead of being read as a much larger voltage
+                else if (double.TryParse(stringValue, NumberStyles.Float, culture ?? CultureInfo.CurrentCulture, out double result))
                 {
                     return new AutoPortVoltage(result);
                 }
