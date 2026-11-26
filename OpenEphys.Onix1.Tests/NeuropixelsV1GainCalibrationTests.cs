@@ -143,5 +143,68 @@ namespace OpenEphys.Onix1.Tests
         {
             Assert.Null(Parse(Path.Combine(directory, "missing.csv"), NeuropixelsV1.ElectrodeCount));
         }
+
+        // Calibration files always use '.' as the decimal separator, whatever the computer's regional settings.
+        // Parsing them with the current culture read 1.052347 as 1052347 (es-ES, de-DE) or rejected them (fr-FR)
+        [Theory]
+        [MemberData(nameof(CultureScope.Names), MemberType = typeof(CultureScope))]
+        public void Parse_AnyCulture_ReadsCorrections(string culture)
+        {
+            var path = WriteFile(Rows(NeuropixelsV1.ChannelCount));
+            using var scope = new CultureScope(culture);
+            AssertParsed(Parse(path, NeuropixelsV1.ElectrodeCount));
+        }
+
+        // Windows users can change the separators of their culture in the regional settings
+        [Fact]
+        public void Parse_CustomDecimalSeparator_ReadsCorrections()
+        {
+            var path = WriteFile(Rows(NeuropixelsV1.ChannelCount));
+            using var scope = new CultureScope(CultureScope.CustomSeparators());
+            AssertParsed(Parse(path, NeuropixelsV1.ElectrodeCount));
+        }
+
+        // Real IMEC files write the reference rows as "1.000000", which the current culture read as 1000000 in es-ES and
+        // de-DE: the reference filter (exactly 1.0) no longer removed them, so every standard NP 1.0 file was rejected
+        [Theory]
+        [MemberData(nameof(CultureScope.Names), MemberType = typeof(CultureScope))]
+        public void ReferenceRowsWithDecimals_AnyCulture_AreIgnored(string culture)
+        {
+            var reference = string.Join(", ", Enumerable.Repeat("1.000000", NeuropixelsV1Helper.NumberOfGainFactors * 2));
+            var rows = Enumerable.Range(0, NeuropixelsV1.ElectrodeCount)
+                .Select(i => $"{i}, {(NeuropixelsV1.IsInternalReferenceContact(i) ? reference : Corrections)}")
+                .ToArray();
+            var path = WriteFile(rows);
+            using var scope = new CultureScope(culture);
+            AssertParsed(Parse(path, NeuropixelsV1.ElectrodeCount));
+        }
+
+        // Older IMEC files write "1.0" for the gains that were not calibrated, in every row. The correction for those
+        // gains is 1, but the current culture read it as 10 in es-ES and de-DE and the file was accepted
+        [Theory]
+        [MemberData(nameof(CultureScope.Names), MemberType = typeof(CultureScope))]
+        public void UncalibratedGain_AnyCulture_ReadsOne(string culture)
+        {
+            // NB: Layout of an older NP 1.0 file: Gain50, Gain1500, Gain2000 and Gain3000 uncalibrated (AP and LFP)
+            const string Row = "1.0, 1.055096, 1.061730, 1.035150, 1.047077, 1.0, 1.0, 1.0, " +
+                               "1.0, 0.995620, 1.000170, 0.973494, 0.987255, 1.0, 1.0, 1.0";
+            const string Reference = "1.0, 1.000000, 1.000000, 1.000000, 1.000000, 1.0, 1.0, 1.0, " +
+                                     "1.0, 1.000000, 1.000000, 1.000000, 1.000000, 1.0, 1.0, 1.0";
+            var rows = Enumerable.Range(0, NeuropixelsV1.ElectrodeCount)
+                .Select(i => $"{i}, {(NeuropixelsV1.IsInternalReferenceContact(i) ? Reference : Row)}")
+                .ToArray();
+            var path = WriteFile(rows);
+            using var scope = new CultureScope(culture);
+
+            var uncalibrated = NeuropixelsV1Helper.TryParseGainCalibrationFile(path, NeuropixelsV1Gain.Gain3000, NeuropixelsV1Gain.Gain50, NeuropixelsV1.ElectrodeCount);
+            Assert.True(uncalibrated.HasValue);
+            Assert.Equal(1.0, uncalibrated.Value.ApGainCorrectionFactor);
+            Assert.Equal(1.0, uncalibrated.Value.LfpGainCorrectionFactor);
+
+            var calibrated = NeuropixelsV1Helper.TryParseGainCalibrationFile(path, NeuropixelsV1Gain.Gain1000, NeuropixelsV1Gain.Gain125, NeuropixelsV1.ElectrodeCount);
+            Assert.True(calibrated.HasValue);
+            Assert.Equal(1.047077, calibrated.Value.ApGainCorrectionFactor);
+            Assert.Equal(0.995620, calibrated.Value.LfpGainCorrectionFactor);
+        }
     }
 }

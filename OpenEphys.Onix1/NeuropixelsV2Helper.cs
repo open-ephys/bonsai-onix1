@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -31,14 +32,14 @@ namespace OpenEphys.Onix1
             var lines = File.ReadLines(gainCalibrationFile);
 
             if (lines.Count() != NeuropixelsV2.ChannelCount + 1) return null;
-            if (!ulong.TryParse(lines.ElementAt(0), out var serialNumber)) return null;
+            if (!ulong.TryParse(lines.ElementAt(0), NumberStyles.Integer, CultureInfo.InvariantCulture, out var serialNumber)) return null;
 
             if (!lines
                 .Skip(1)
                 .Select(l =>
                 {
                     var s = l.Split(',')[0];
-                    var ok = int.TryParse(s, out var channel);
+                    var ok = int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out var channel);
                     return (Ok: ok, Channel: channel);
                 })
                 .Where(l => l.Ok)
@@ -49,7 +50,8 @@ namespace OpenEphys.Onix1
                         .Skip(1)
                         .Select(l =>
                         {
-                            var ok = double.TryParse(l.Split(',')[1], out var gainCorrection);
+                            // NB: Calibration files always use '.' as the decimal separator, whatever the regional settings
+                            var ok = double.TryParse(l.Split(',')[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var gainCorrection);
                             return (Ok: ok, GainCorrection: gainCorrection);
                         })
                         .Where(l => l.Ok)

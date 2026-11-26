@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -35,13 +36,13 @@ namespace OpenEphys.Onix1
             var lines = File.ReadLines(adcCalibrationFile);
 
             if (lines.Count() != NeuropixelsV1.AdcCount + 1) return null;
-            if (!ulong.TryParse(lines.ElementAt(0), out var serialNumber)) return null;
+            if (!ulong.TryParse(lines.ElementAt(0), NumberStyles.Integer, CultureInfo.InvariantCulture, out var serialNumber)) return null;
 
             if (!lines
                 .Skip(1)
                 .Select(l =>
                 {
-                    var ok = int.TryParse(l.Split(',')[0], out int adcNumber);
+                    var ok = int.TryParse(l.Split(',')[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int adcNumber);
                     return (Ok: ok, AdcNumber: adcNumber);
                 })
                 .Where(l => l.Ok)
@@ -57,7 +58,7 @@ namespace OpenEphys.Onix1
                                                    .Skip(1)
                                                    .Select(p =>
                                                    {
-                                                       var ok = int.TryParse(p, out int param);
+                                                       var ok = int.TryParse(p, NumberStyles.Integer, CultureInfo.InvariantCulture, out int param);
                                                        return (Ok: ok, Param: param);
                                                    })
                                                    .Where(l => l.Ok)
@@ -112,13 +113,13 @@ namespace OpenEphys.Onix1
             // NB: Files have either one row per electrode or one row per channel (e.g. UHD probes).
             var rowCount = lines.Count() - 1;
             if (rowCount != electrodeCount && rowCount != NeuropixelsV1.ChannelCount) return null;
-            if (!ulong.TryParse(lines.ElementAt(0), out var serialNumber)) return null;
+            if (!ulong.TryParse(lines.ElementAt(0), NumberStyles.Integer, CultureInfo.InvariantCulture, out var serialNumber)) return null;
 
             if (!lines
                 .Skip(1)
                 .Select(l =>
                 {
-                    var ok = int.TryParse(l.Split(',')[0], out var row);
+                    var ok = int.TryParse(l.Split(',')[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var row);
                     return (Ok: ok, Row: row);
                 })
                 .Where(l => l.Ok)
@@ -135,7 +136,8 @@ namespace OpenEphys.Onix1
                                                           .Skip(1)
                                                           .Select(s =>
                                                           {
-                                                              var ok = double.TryParse(s, out var correction);
+                                                              // NB: Calibration files always use '.' as the decimal separator, whatever the regional settings
+                                                              var ok = double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out var correction);
                                                               return (Ok: ok, Correction: correction);
                                                           })
                                                           .Where(l => l.Ok)
@@ -157,7 +159,8 @@ namespace OpenEphys.Onix1
                                                           .Skip(1)
                                                           .Select(s =>
                                                           {
-                                                              var ok = double.TryParse(s, out var correction);
+                                                              // NB: Calibration files always use '.' as the decimal separator, whatever the regional settings
+                                                              var ok = double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out var correction);
                                                               return (Ok: ok, Correction: correction);
                                                           })
                                                           .Where(l => l.Ok)
