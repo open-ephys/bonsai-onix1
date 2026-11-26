@@ -507,6 +507,29 @@ namespace OpenEphys.Onix1.Design
             return channelState.EnabledContactIndices.Contains(idx) ? ColorContactEnabled : ColorContactDisabled;
         }
 
+        // NB: the frame on which the Show Enabled Only button was last held, so that it stops counting as held as soon
+        // as it is no longer drawn
+        int showEnabledOnlyFrame = -1;
+
+        bool ShowEnabledOnly =>
+            showEnabledOnlyFrame >= ImGui.GetFrameCount() - 1 ||
+            ImGui.IsKeyDown(ImGuiKey.H) && !ImGui.GetIO().WantTextInput;
+
+        /// <summary>
+        /// <paramref name="activityColor"/>, or the color of a contact without a survey result if Show Enabled Only is
+        /// held and contact <paramref name="idx"/> is not enabled.
+        /// </summary>
+        protected uint ActivityColorIfShown(int idx, uint activityColor) =>
+            ShowEnabledOnly && !channelState.EnabledContactIndices.Contains(idx) ? ColorContactDisabled : activityColor;
+
+        protected void DrawShowEnabledOnlyButton()
+        {
+            ImGui.Button("Show Enabled Only (H)##enabledonly");
+            if (ImGui.IsItemActive()) showEnabledOnlyFrame = ImGui.GetFrameCount();
+            ImGuiWidgets.Tooltip("While held, show the activity of the enabled contacts only, and draw the others as " +
+                "if they had no survey result. Equivalent to holding H.");
+        }
+
         protected bool DefaultIsBlocked(int idx) => channelState.BlockedContactIndices.Contains(idx);
 
         #endregion

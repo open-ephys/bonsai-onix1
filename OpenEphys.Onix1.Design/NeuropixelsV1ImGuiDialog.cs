@@ -307,7 +307,7 @@ namespace OpenEphys.Onix1.Design
                     return inSurvey ? BankColor(bank) : ColorContactDisabled;
                 }
                 var data = CurrentDisplayData();
-                if (showActivityColors && data != null && idx < data.Length) return ActivityColor(data[idx]);
+                if (showActivityColors && data != null && idx < data.Length) return ActivityColorIfShown(idx, ActivityColor(data[idx]));
                 return DefaultContactFillColor(idx);
             };
 
