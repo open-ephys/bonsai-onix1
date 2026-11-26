@@ -375,6 +375,23 @@ namespace OpenEphys.Onix1
         Off,
     }
 
+    public enum Rhd2000DigitalOutState
+    {
+        /// <summary>
+        /// Specifies that the digital output should be low.
+        /// </summary>
+        Low,
+        /// <summary>
+        /// Specifies that the digital output should be high.
+        /// </summary>
+        High,
+
+        /// <summary>
+        /// Specifies that the digital output should be high-impedance (floating).
+        /// </summary>
+        HighZ,
+    }
+
     /// <summary>
     /// Specifies a chip from the Intan Rhd2000 series.
     /// </summary>
@@ -383,14 +400,14 @@ namespace OpenEphys.Onix1
         /// <summary>
         /// Specifies an Intan Rhd2216 a 16 differential channel chip.
         /// </summary>
-        Rhd2216,
+        Rhd2216 = 2,
         /// <summary>
         /// Specifies an Intan Rhd2132 a 32 unipolar channel chip.
         /// </summary>
-        Rhd2132,
+        Rhd2132 = 1,
         /// <summary>
         /// Specifies an Intan Rhd2132 a 64 unipolar channel chip.
         /// </summary>
-        Rhd2164,
+        Rhd2164 = 4,
     }
 }

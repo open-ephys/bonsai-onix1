@@ -1,0 +1,328 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Reactive.Disposables;
+using System.Reactive.Subjects;
+
+namespace OpenEphys.Onix1
+{
+    /// <summary>
+    /// Configures an Intan SPI decoder device.
+    /// </summary>
+    /// <remarks>
+    /// This is a low-level device that is only useful within the context of an appropriate <see
+    /// cref="MultiDeviceFactory"/>, e.g. <see cref="ConfigureHeadstageIntanSPI"/>.
+    /// </remarks>
+    [Description("Configures an Intan SPI decoderdevice")]
+    public class ConfigureIntanSPI : SingleDeviceFactory
+    {
+        readonly BehaviorSubject<Rhd2000DspCutoff> dspCutoff = new(Rhd2000DspCutoff.Off);
+        readonly BehaviorSubject<Rhd2000AnalogLowCutoff> analogLowCutoff = new(Rhd2000AnalogLowCutoff.Low100mHz);
+        readonly BehaviorSubject<Rhd2000AnalogHighCutoff> analogHighCutoff = new(Rhd2000AnalogHighCutoff.High10000Hz);
+        readonly BehaviorSubject<bool> externalAnalogFilter = new(false);
+        readonly BehaviorSubject<Rhd2000DigitalOutState> digitalOutState = new(Rhd2000DigitalOutState.HighZ);
+
+        public ConfigureIntanSPI()
+            : base(typeof(IntanSPI))
+        {
+        }
+
+        /// <summary>
+        /// Gets or sets the per-channel ADC sampling rate.
+        /// </summary>
+        /// <remarks>
+        /// The amplifiers on the RHD2164 chip, past the analog filter, introduce a DC offset that varies with
+        /// each channel. The <see cref="Rhd2000DspCutoff"/> exists to remove this DC offset and ensure that
+        /// all signals are centered at zero. With it disabled, all the signals will appear centered at
+        /// different values.
+        /// </remarks>
+        [Category(ConfigurationCategory)]
+        [Description("Specifies the per-channel ADC sampling rate.")]
+        public Rhd2000PsbDecoderSampleRate SamplesPerSecond { get; set; } = Rhd2000PsbDecoderSampleRate.ThirtyKiloHertz;
+
+        /// <summary>
+        /// Gets or sets the cutoff frequency for the digital (post-ADC) high-pass filter used for amplifier
+        /// offset removal.
+        /// </summary>
+        /// <remarks>
+        /// The amplifiers on the RHD2164 chip, past the analog filter, introduce a DC offset that varies with
+        /// each channel. The <see cref="Rhd2000DspCutoff"/> exists to remove this DC offset and ensure that
+        /// all signals are centered at zero. With it disabled, all the signals will appear centered at
+        /// different values.
+        /// </remarks>
+        [Category(AcquisitionCategory)]
+        [Description("Specifies the cutoff frequency for the digital (post-ADC) high-pass filter used for amplifier offset removal.")]
+        public Rhd2000DspCutoff DspCutoff
+        {
+            get => dspCutoff.Value;
+            set => dspCutoff.OnNext(value);
+        }
+
+        /// <summary>
+        /// Gets or sets the low cutoff frequency of the analog (pre-ADC) bandpass filter.
+        /// </summary>
+        [Category(AcquisitionCategory)]
+        [Description("Specifies the low cutoff frequency of the analog (pre-ADC) bandpass filter.")]
+        public Rhd2000AnalogLowCutoff AnalogLowCutoff
+        {
+            get => analogLowCutoff.Value;
+            set => analogLowCutoff.OnNext(value);
+        }
+
+        /// <summary>
+        /// Gets or sets the high cutoff frequency of the analog (pre-ADC) bandpass filter.
+        /// </summary>
+        [Category(AcquisitionCategory)]
+        [Description("Specifies the high cutoff frequency of the analog (pre-ADC) bandpass filter.")]
+        public Rhd2000AnalogHighCutoff AnalogHighCutoff
+        {
+            get => analogHighCutoff.Value;
+            set => analogHighCutoff.OnNext(value);
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to use an external analog filter instead of the internal analog filter.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, <see cref="AnalogHighCutoff"/> and <see cref="AnalogLowCutoff"/> will be ignored and the external analog filter will be used instead.
+        /// </remarks>
+        [Category(AcquisitionCategory)]
+        [Description("Specifies whether to use an external analog filter instead of the internal analog filter.")]
+        public bool ExternalAnalogFilter
+        {
+            get => externalAnalogFilter.Value;
+            set => externalAnalogFilter.OnNext(value);
+        }
+
+        /// <summary>
+        /// Gets or sets the digital output state of the RHD2000 chip.
+        /// </summary>
+        [Category(AcquisitionCategory)]
+        [Description("Specifies the digital output state of the RHD2000 chip.")]
+        public Rhd2000DigitalOutState DigitalOutState
+        {
+            get => digitalOutState.Value;
+            set => digitalOutState.OnNext(value);
+        }
+
+        /// <summary>
+        /// Gets or sets the device enable state.
+        /// </summary>
+        /// <remarks>
+        /// If set to true, <see cref="IntanSPIData"/> will produce data. If set to false, 
+        /// <see cref="IntanSPIData "/> will not produce data.
+        /// </remarks>
+        [Category(ConfigurationCategory)]
+        [Description("Specifies whether the Intan SPI device is enabled.")]
+        public bool Enable { get; set; } = true;
+
+        /// <summary>
+        /// Configures a IntanSPI device
+        /// </summary>
+        /// <remarks>
+        /// This will schedule configuration actions to be applied by a <see cref="StartAcquisition"/> node
+        /// prior to data acquisition.
+        /// </remarks>
+        /// <param name="source">A sequence of <see cref="ContextTask"/> that holds all configuration actions.</param>
+        /// <returns>
+        /// The original sequence with the side effect of an additional configuration action to configure
+        /// a IntanSPI device.
+        /// </returns>
+        public override IObservable<ContextTask> Process(IObservable<ContextTask> source)
+        {
+            var enable = Enable;
+            var deviceName = DeviceName;
+            var deviceAddress = DeviceAddress;
+            var samplesPerSecond = SamplesPerSecond;
+            return source.ConfigureAndLatchDevice(context =>
+            {
+                var device = context.GetPassthroughDeviceContext(deviceAddress, typeof(DS90UB9x));
+                var disposables = new List<IDisposable>();
+                Rhd2000ChipId rhdMiso1 = 0;
+                Rhd2000ChipId rhdMiso2 = 0;
+
+                // NB: any I2C transaction can throw, including those triggered by the initial value of each
+                // subscription. Dispose whatever has been created so far so that no subscription is left dangling.
+                try
+                {
+                    if (enable)
+                    {
+                        device.WriteRegister(DS90UB9x.ENABLE, 1u);
+                        var i2c = new I2CRegisterContext(device, IntanSPI.I2CAddress);
+
+                        var adcMux = Rhd2000.ToAdcAndMuxBias(samplesPerSecond.Value * IntanSPI.NumAdcSamplesPerStream);
+
+                        i2c.WriteByte(IntanSPI.CLK_DIV, Rhd2000PsbDecoderSampleRate.ToRegister(samplesPerSecond.Value));
+                        i2c.WriteByte(IntanSPI.ADC_BIAS, (uint)adcMux[0]);
+                        i2c.WriteByte(IntanSPI.MUX_BIAS, (uint)adcMux[1]);
+                        i2c.WriteByte(IntanSPI.FAST_SETTLE, 0u);
+
+                        disposables.Add(dspCutoff.Subscribe(value => SetDspCutoff(i2c, value)));
+                        disposables.Add(analogHighCutoff.Subscribe(value => SetAnalogHighCutoff(i2c, value)));
+                        disposables.Add(analogLowCutoff.Subscribe(value => SetAnalogLowCutoff(i2c, value)));
+                        disposables.Add(externalAnalogFilter.Subscribe(value => i2c.WriteByte(IntanSPI.EXT_FILTER, value ? 1u : 0u)));
+                        disposables.Add(digitalOutState.Subscribe(value => SetDigitalOutState(i2c, value)));
+
+                        i2c.WriteByte(IntanSPI.SYS_ENABLE, 1u);
+
+                        // NB: the chip IDs read 0xFF while the device is still scanning for chips. Both registers
+                        // change together, so only one needs to be polled. If the scan never finishes, assume
+                        // that no chips are present.
+                        var stopwatch = Stopwatch.StartNew();
+                        byte id1;
+                        while ((id1 = i2c.ReadByte(IntanSPI.RHD_ID_1)) == IntanSPI.ScanningChipId &&
+                               stopwatch.ElapsedMilliseconds < IntanSPI.ChipScanTimeoutMilliseconds)
+                        {
+                            // NB: Wait for the scan to finish. The Intan SPI device will return 0xFF for both chip ID registers while scanning.
+                        }
+
+                        byte id2 = i2c.ReadByte(IntanSPI.RHD_ID_2);
+                        rhdMiso1 = ValidateChipId(id1, 1);
+                        rhdMiso2 = ValidateChipId(id2, 2);
+
+                        if (rhdMiso1 == 0 && rhdMiso2 == 0)
+                        {
+                            throw new InvalidOperationException(
+                                $"No Rhd2000 chip was detected.");
+                        }
+
+                        i2c.WriteByte(IntanSPI.DATA_ENABLE, 1u);
+                    }
+
+                    var deviceInfo = new IntanSPIDeviceInfo(context, DeviceType, deviceAddress, rhdMiso1, rhdMiso2);
+                    disposables.Add(DeviceManager.RegisterDevice(deviceName, deviceInfo));
+                }
+                catch
+                {
+                    foreach (var disposable in disposables)
+                    {
+                        disposable.Dispose();
+                    }
+
+                    throw;
+                }
+
+                return new CompositeDisposable(disposables);
+            });
+        }
+
+        // NB: a chip ID of 0 means no chip is present. Any other ID that is not defined by Rhd2000ChipId
+        // (including the scanning value, which means the scan timed out) is invalid. When validation is
+        // permissive, an invalid ID is treated as not present.
+        static Rhd2000ChipId ValidateChipId(byte id, int misoIndex)
+        {
+            if (id == 0)
+            {
+                return 0;
+            }
+
+            if (!Enum.IsDefined(typeof(Rhd2000ChipId), (int)id))
+            {
+                ContextHelper.Validate(ValidationLevel.Permissive, new InvalidOperationException(
+                    $"An invalid Rhd2000 chip ID ({id}) was detected on MISO {misoIndex}."));
+                return 0;
+            }
+
+            return (Rhd2000ChipId)id;
+        }
+
+        static void SetDspCutoff(I2CRegisterContext i2c, Rhd2000DspCutoff cutoff)
+        {
+            uint value = cutoff == Rhd2000DspCutoff.Off ? 0u : (1u << 4) | (uint)cutoff;
+            i2c.WriteByte(IntanSPI.DSP, value);
+        }
+
+        static void SetAnalogHighCutoff(I2CRegisterContext i2c, Rhd2000AnalogHighCutoff cutoff)
+        {
+            var highCutoff = Rhd2000.ToHighCutoffToRegisters(cutoff);
+            i2c.WriteByte(IntanSPI.RH1_DAC1, (uint)highCutoff[0]);
+            i2c.WriteByte(IntanSPI.RH1_DAC2, (uint)highCutoff[1]);
+            i2c.WriteByte(IntanSPI.RH2_DAC1, (uint)highCutoff[2]);
+            i2c.WriteByte(IntanSPI.RH2_DAC2, (uint)highCutoff[3]);
+        }
+
+        static void SetAnalogLowCutoff(I2CRegisterContext i2c, Rhd2000AnalogLowCutoff cutoff)
+        {
+            var lowCutoff = Rhd2000.ToLowCutoffToRegisters(cutoff);
+            i2c.WriteByte(IntanSPI.RL_DAC1, (uint)lowCutoff[0]);
+            i2c.WriteByte(IntanSPI.RL_DAC23, ((uint)lowCutoff[2] << 6) & 0b01000000 | (uint)lowCutoff[1] & 0b00111111);
+        }
+
+        static void SetDigitalOutState(I2CRegisterContext i2c, Rhd2000DigitalOutState state)
+        {
+            uint value = state switch
+            {
+                Rhd2000DigitalOutState.Low => 0b00,
+                Rhd2000DigitalOutState.High => 0b01,
+                _ => 0b10
+            };
+            i2c.WriteByte(IntanSPI.DIGOUT, value);
+        }
+    }
+
+    static class IntanSPI
+    {
+        public const int I2CAddress = 0x60;
+
+        // After a hardware reset, the whole system is halt until this register is set to '1'.
+        // System-level configuration should be done before setting this register to '1'.
+        public const uint SYS_ENABLE = 0;
+        // Enables RHD data streaming. Bit 0: '0' = RHD data streaming disabled, '1' = RHD data streaming enabled
+        public const uint DATA_ENABLE = 1;
+        // Chip id for RHD in MISO1
+        public const uint RHD_ID_1 = 2;
+        // Chip id for RHD in MISO2
+        public const uint RHD_ID_2 = 3;
+        // Clock divider to control sample rate. Actual divider us CLK_DIV + 1 (e.g. 0 is full clock)
+        public const uint CLK_DIV = 4;
+        // ADC Buffer bias. Bits 5:0 of RHD register 1
+        public const uint ADC_BIAS = 5;
+        // MUX bias. Bits 5:0 of RHD register 2
+        public const uint MUX_BIAS = 6;
+        // Bit 0: '0' = Normal operation '1' = enable amplifier fast settle
+        public const uint FAST_SETTLE = 7;
+        // Bit 0: '0' = Use internal analog filter resistors '1' = Use external resistors and disable aux inputs
+        public const uint EXT_FILTER = 8;
+        // High pass filter control. Bits 5:0 of RHD register 8
+        public const uint RH1_DAC1 = 9;
+        // High pass filter control. Bits 4:0 of RHD register 9
+        public const uint RH1_DAC2 = 10;
+        // High pass filter control. Bits 5:0 of RHD register 10
+        public const uint RH2_DAC1 = 11;
+        // High pass filter control. Bits 4:0 of RHD register 11
+        public const uint RH2_DAC2 = 12;
+        // Low pass filter control. Bits 6:0 of RHD register 12
+        public const uint RL_DAC1 = 13;
+        // High pass filter control. Bits 6:0 of RHD register 13
+        public const uint RL_DAC23 = 14;
+        // Bit 4: Enable DSP filter, Bits 3:0 DSP cutoff frequency. Bits 4:0 of RHD register 4
+        public const uint DSP = 15;
+        // Bit 1: '0' RHD digout enabled, '1' RHD digout in HiZ, Bit 0: digout value. Bits 1:0 of RHD register 3
+        public const uint DIGOUT = 16;
+
+        // Frame layout: each channel is interleaved as A1, A2, B1, B2, where the letter is the (DDR) stream and the
+        // number is the MISO line
+        public const int NumAdcSamplesPerStream = 34; // 32 amplifier channels + aux channel + sample index channel
+        public const int NumAdcSamplesPerLine = NumAdcSamplesPerStream * 2; // 2 streams per line
+        public const int NumMisoLines = 2;
+        public const int WordsPerChannel = NumMisoLines * 2; // 2 streams per line
+        public const int FrameSizeWords = NumAdcSamplesPerStream * WordsPerChannel;
+        public const int AmplifierChannelsPerStream = 32;
+        public const int AuxOffset = 32 * WordsPerChannel; // Line 1 stream A word offset of the interleaved auxiliary data
+        public const int SampleIndexOffset = 33 * WordsPerChannel; // Line 1 stream A word offset of the sample index
+        public const int AuxCycleLength = 4; // Number of samples needed to cycle through all auxiliary slots (aux 0-2 + voltage)
+
+        public const byte ScanningChipId = 0xFF; // Chip id register value while the chip scan is in progress
+        public const int ChipScanTimeoutMilliseconds = 1000;
+
+        internal class NameConverter : DeviceNameConverter
+        {
+            public NameConverter()
+                : base(typeof(IntanSPI))
+            {
+            }
+        }
+    }
+
+}
