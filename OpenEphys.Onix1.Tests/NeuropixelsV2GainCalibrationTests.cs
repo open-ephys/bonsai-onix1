@@ -98,6 +98,24 @@ namespace OpenEphys.Onix1.Tests
             Assert.Null(Parse(WriteFile(rows)));
         }
 
+        // A row whose correction cannot be read used to be skipped silently, so a damaged file was accepted
+        [Fact]
+        public void UnparsableCorrection_IsRejected()
+        {
+            var rows = Rows(NeuropixelsV2.ChannelCount);
+            rows[5] = "5,x";
+            Assert.Null(Parse(WriteFile(rows)));
+        }
+
+        // A row without a correction used to throw IndexOutOfRangeException instead of rejecting the file
+        [Fact]
+        public void MissingCorrection_IsRejected()
+        {
+            var rows = Rows(NeuropixelsV2.ChannelCount);
+            rows[5] = "5";
+            Assert.Null(Parse(WriteFile(rows)));
+        }
+
         [Fact]
         public void MissingFile_IsRejected()
         {
