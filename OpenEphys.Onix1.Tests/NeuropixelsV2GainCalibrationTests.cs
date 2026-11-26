@@ -38,6 +38,13 @@ namespace OpenEphys.Onix1.Tests
             Assert.Equal(ExpectedCorrection, correction.Value.GainCorrectionFactor);
         }
 
+        // The format the parser accepts
+        [Fact]
+        public void OneRowPerChannel_IsAccepted()
+        {
+            AssertParsed(Parse(WriteFile(Rows(NeuropixelsV2.ChannelCount))));
+        }
+
         // Calibration files always use '.' as the decimal separator, whatever the computer's regional settings.
         // Parsing them with the current culture read 0.956554 as 956554 (es-ES, de-DE) or rejected them (fr-FR)
         [Theory]
@@ -56,6 +63,45 @@ namespace OpenEphys.Onix1.Tests
             var path = WriteFile(Rows(NeuropixelsV2.ChannelCount));
             using var scope = new CultureScope(CultureScope.CustomSeparators());
             AssertParsed(Parse(path));
+        }
+
+        [Theory]
+        [InlineData(NeuropixelsV2.ChannelCount - 1)]
+        [InlineData(NeuropixelsV2.ChannelCount + 1)]
+        public void WrongRowCount_IsRejected(int rowCount)
+        {
+            Assert.Null(Parse(WriteFile(Rows(rowCount))));
+        }
+
+        [Fact]
+        public void RepeatedChannelNumber_IsRejected()
+        {
+            var rows = Rows(NeuropixelsV2.ChannelCount);
+            rows[10] = $"9,{Correction}";
+            Assert.Null(Parse(WriteFile(rows)));
+        }
+
+        [Fact]
+        public void NonNumericSerialNumber_IsRejected()
+        {
+            var path = WriteFile(Rows(NeuropixelsV2.ChannelCount));
+            File.WriteAllLines(path, new[] { "serial" }.Concat(File.ReadLines(path).Skip(1)).ToArray());
+            Assert.Null(Parse(path));
+        }
+
+        // A probe has a single gain correction: a file with two is not a valid calibration file
+        [Fact]
+        public void DifferingCorrection_IsRejected()
+        {
+            var rows = Rows(NeuropixelsV2.ChannelCount);
+            rows[5] = "5,1.000000";
+            Assert.Null(Parse(WriteFile(rows)));
+        }
+
+        [Fact]
+        public void MissingFile_IsRejected()
+        {
+            Assert.Null(Parse(Path.Combine(directory, "missing.csv")));
         }
     }
 }
